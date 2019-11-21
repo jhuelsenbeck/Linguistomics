@@ -38,7 +38,7 @@ with Style {
 
   let TitleCase(text, height) = Span {
     Separator: Space,
-    TitleWord(each text.Split(Space), height)
+    text != null ? TitleWord(each text.Split(Space), height) : null
   }
 
   let Title(text) = Paragraph {
@@ -133,16 +133,18 @@ with Style {
   let ShowReference(r) = Paragraph {
     LeftIndent: 0.25 inches,
     FirstIndent: -0.25 inches,
-    TitleCase(r.Author, 12),
-    ", '{0}', "(r.Title),
-    r.Year,
-    Space,
     Span {
-      Italic,
-      r.Publisher
+      Separator: ", ",
+      TitleCase(r.Author, 12),
+      r.Title,
+      r.Year,
     },
-    Space,
-    r.Page,
+    Span {
+      ", ",
+      Separator: Space,
+      Italic r.Publisher,
+      r.Page,
+    },
     if (r.Link)
       Span{". Available at: ", Span {Link: r.Link, TextColor: Colors.DarkBlue, r.Link}};
   }
