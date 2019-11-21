@@ -2,6 +2,8 @@ using Format, Units, Math, IO
 //======================================================================
 
 with Metrics {
+  let SansSerif = {TextFamily: TextFamilies.Arial}
+
   let PaperSize = Type.Size(8.5 inches, 11 inches)
   let Margins   = {MarginTB: 0.5 inches, MarginLR: 0.75 inches}
 }
@@ -10,7 +12,7 @@ with Metrics {
 with Style {
   let WhitePaper = Document {
     Size: Metrics.PaperSize,
-    TextFamily: TextFamilies.Garamond,
+    TextFamily: TextFamilies.TimesNewRoman,
     TextHeight: 11.5 pts,
     Metrics.Margins
   }
@@ -105,7 +107,7 @@ with Style {
   let DataLabel(node) = node.Data.Name
 
   let ShowTree(tree) = Tree {
-    TextHeight: 5.5 pts,
+//    TextHeight: 5.5 pts,
     Label: DataLabel,
     Curvature: 30%,
     Bevel: 20%,
@@ -148,7 +150,7 @@ with Style {
   let ShowAuthorFull(a) = Block {
     LeftIndent: 0.25 inches,
     Paragraph {
-      Underline,
+      Bold,
       Separator: Space,
       FirstIndent: -0.25 inches,
       a.First, a.Middle, a.Last
@@ -180,6 +182,23 @@ with Style {
     Block {
       a.Content
     }
+  }
+
+  let LanguageRow(lang) = Row {
+    Background: ((EachIndex mod 2) == 0 ? Colors.White : 97%),
+    lang.Name,
+  }
+
+  let ShowLanguageList(list) = Table {
+    PaddingLR: 2,
+    Columns: [1.5 inch],
+    Row {
+      Background: Colors.DarkGray,
+      TextColor: Colors.White,
+      "Name",
+    },
+    Edge: 0.25 pts {Color: Colors.DarkGray},
+    LanguageRow(each list)
   }
 }
 //======================================================================

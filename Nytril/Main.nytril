@@ -4,6 +4,7 @@ include "Library"
 include "Languages"
 include "CognateClasses"
 include "LanguageTree"
+include "IPA"
 include "Style"
 include "References"
 //======================================================================
@@ -102,90 +103,31 @@ with Content.Conclusion {
 }
 //======================================================================
 
-with Appendix.Languages {
-  let Title = "List of Languages"
-  let Content = Table {
-    PaddingLR: 2,
-    Columns: [1.5 inch, 2 inches, 1.5 inches],
-    Row {
-      Background: Colors.DarkGray,
-      TextColor: Colors.White,
-      "Name",
-      "Cognates",
-      "Cognate Categories",
-    },
-    Edge: 0.25 pts {Color: Colors.DarkGray},
-    LanguageRow(each LanguageList)
-  }
-}
-
-with Appendix.RevBayesSource {
-  let Title   = "RevBayes Source File"
-  let Content = RevBayes.SourceFile
+with Appendix.PhoneticAlphabet {
+  let Title   = "International Phonetic Alphabet"
+  let Content = IPA.ShowAlphabet
 }
 
 with Appendix.ChangA3 {
-  let Title   = "Chang A3"
-  let Content = Style.ShowTree(LanguageBranches.ChangA3)
+  let Title   = "Language Phylogeny"
+  let Content = Style.ShowTree(LanguageTree)
+}
+
+with Appendix.Languages {
+  let Title = "List of Languages"
+  let Content = Style.ShowLanguageList(LanguageList)
 }
 
 with Appendix.ChangA3Nexus {
   let Title = "Change A3 Tree File"
-  let Content = TreeLibrary.NexusFile([LanguageBranches.ChangA3]) {
+  let Content = TreeLibrary.NexusFile([LanguageTree]) {
     TextFamily: TextFamilies.Consolas,
   }
-}
-
-with Appendix.Characters {
-  let Title   = "Character Input File"
-  let Content = Nexus.SourceFile
 }
 
 with Appendix.NytrilSource {
   let Title = "Nytril Source Code"
   let Content = Style.SourceFile(each System.SourceList)
-}
-
-
-//======================================================================
-// These variables determine which languages and cognate categories get used
-//======================================================================
-
-let LanguageCriteria(lang) = true
-
-let LanguageList    = Languages.FindSlice(LanguageCriteria)
-let CognateCategory = CognateCategories.Broad
-
-let CognateGroup = [
-  DefiniteDeterminer,
-  IndefiniteDeterminer,
-]
-
-let MatchingCognate(cogdata) = (cogdata.Category & CognateCategory) > 0
-
-let GetCog(cogdata) = cogdata.Cog
-
-let CogList(lang) = GetCog(each lang.CognateList.FindSlice(MatchingCognate))
-
-let AnyContains(lang, group) = group.Members.Contains(each CogList(lang)).Contains(true)
-
-let GroupIncluded(lang, group) = AnyContains(lang, group) ? group.ShortName : null
-
-let ShowDefForm(cognate) = Span {cognate.Name}
-
-let CognateDescriptor(cognate) = ShowDefForm(cognate)
-
-let LanguageRow(lang) = Row {
-  Background: ((EachIndex mod 2) == 0 ? Colors.White : 97%),
-  lang.Name,
-  Span {
-    Separator: ", ",
-    CognateDescriptor(each CogList(lang))
-  },
-  Span {
-    Separator: "-",
-    GroupIncluded(lang, each CognateGroup),
-  },
 }
 //======================================================================
 
