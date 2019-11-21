@@ -1,0 +1,193 @@
+using Format, Units, Math, IO
+
+include "Library"
+include "Languages"
+include "CognateClasses"
+include "LanguageTree"
+include "Style"
+include "References"
+//======================================================================
+
+let Main.Run = [
+//  Write(Nexus.SourceFile, Nexus.SourcePath),
+//  Write(RevBayes.SourceFile, RevBayes.SourcePath),
+//  Write(WhitePaper, PaperPath Extensions.Word),
+//  Write(WhitePaper, PaperPath Extensions.PDF),
+//  IO.OpenDocument(PaperPath Extensions.PDF),
+]
+//======================================================================
+
+with Info {
+  let MainFolder   = Folders.Source
+  let OutputFolder = MainFolder Folder("Output")
+
+  let PaperPath    = OutputFolder FileName("Paper")
+  let Journal      = "Transactions of the Philological Society"
+  let Publisher    = "The Philological Society"
+  let Title        = "Bayesian Analysis of Word Forms"
+}
+//======================================================================
+
+let Watch = WhitePaper
+
+let WhitePaper = Style.WhitePaper {
+  Title: Info.Title,
+  Style.PageSection {
+    Header: Style.NormalHeader(Info.Journal) {
+      Distance: 0.125 inches,
+      Even: Style.NormalHeader(Info.Journal),
+      First: Block {
+        Paragraph {
+          ParAlignment: ParAlignments.Center,
+          Logo,
+        },
+      }
+    },
+    Block {
+      ParAlignment: ParAlignments.Center,
+      Style.Title(Info.Title {TextUppercase: true}),
+      Paragraph {
+        Span {
+          Separator: ", ",
+          LastSeparator: " and ",
+          Style.Author(each Authors)
+        }
+      },
+    },
+    Style.ShowAbstract(Abstract),
+    Style.ShowContent(each Content),
+    Style.ShowReferences(References)
+  },
+  Style.ShowAppendix(each Appendix)
+}
+//======================================================================
+
+with Abstract {
+  let Title = "Abstract"
+  let Body  = Block {
+    Paragraph {
+      "It all started in a little town called Madrid..."
+    }
+  }
+}
+//======================================================================
+
+with Content.Introduction {
+  let Title = "Introduction"
+  let Body  = Block {
+    Paragraph {
+      "In this paper, we attempt to do the impossible!"
+    }
+  }
+}
+//======================================================================
+
+with Content.Methods {
+  let Title = "Methods"
+  let Body  = Block {
+    Paragraph {
+      "We used any and all means necessary."
+    }
+  }
+}
+//======================================================================
+
+with Content.Conclusion {
+  let Title = "Conclusion"
+  let Body  = Block {
+    Paragraph {
+      "Vene Vidi Vici"
+    }
+  }
+}
+//======================================================================
+
+with Appendix.Languages {
+  let Title = "List of Languages"
+  let Content = Table {
+    PaddingLR: 2,
+    Columns: [1.5 inch, 2 inches, 1.5 inches],
+    Row {
+      Background: Colors.DarkGray,
+      TextColor: Colors.White,
+      "Name",
+      "Cognates",
+      "Cognate Categories",
+    },
+    Edge: 0.25 pts {Color: Colors.DarkGray},
+    LanguageRow(each LanguageList)
+  }
+}
+
+with Appendix.RevBayesSource {
+  let Title   = "RevBayes Source File"
+  let Content = RevBayes.SourceFile
+}
+
+with Appendix.ChangA3 {
+  let Title   = "Chang A3"
+  let Content = Style.ShowTree(LanguageBranches.ChangA3)
+}
+
+with Appendix.ChangA3Nexus {
+  let Title = "Change A3 Tree File"
+  let Content = TreeLibrary.NexusFile([LanguageBranches.ChangA3]) {
+    TextFamily: TextFamilies.Consolas,
+  }
+}
+
+with Appendix.Characters {
+  let Title   = "Character Input File"
+  let Content = Nexus.SourceFile
+}
+
+with Appendix.NytrilSource {
+  let Title = "Nytril Source Code"
+  let Content = Style.SourceFile(each System.SourceList)
+}
+
+
+//======================================================================
+// These variables determine which languages and cognate categories get used
+//======================================================================
+
+let LanguageCriteria(lang) = true
+
+let LanguageList    = Languages.FindSlice(LanguageCriteria)
+let CognateCategory = CognateCategories.Broad
+
+let CognateGroup = [
+  DefiniteDeterminer,
+  IndefiniteDeterminer,
+]
+
+let MatchingCognate(cogdata) = (cogdata.Category & CognateCategory) > 0
+
+let GetCog(cogdata) = cogdata.Cog
+
+let CogList(lang) = GetCog(each lang.CognateList.FindSlice(MatchingCognate))
+
+let AnyContains(lang, group) = group.Members.Contains(each CogList(lang)).Contains(true)
+
+let GroupIncluded(lang, group) = AnyContains(lang, group) ? group.ShortName : null
+
+let ShowDefForm(cognate) = Span {cognate.Name}
+
+let CognateDescriptor(cognate) = ShowDefForm(cognate)
+
+let LanguageRow(lang) = Row {
+  Background: ((EachIndex mod 2) == 0 ? Colors.White : 97%),
+  lang.Name,
+  Span {
+    Separator: ", ",
+    CognateDescriptor(each CogList(lang))
+  },
+  Span {
+    Separator: "-",
+    GroupIncluded(lang, each CognateGroup),
+  },
+}
+//======================================================================
+
+
+

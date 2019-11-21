@@ -1,0 +1,203 @@
+using Format, Units, Math, IO
+//======================================================================
+
+with RevBayes {
+  let FiftyFile   = Info.OutputFolder FileName("ieo_fifty") Extensions.Nexus
+  let ChangA3Tree = Info.OutputFolder FileName("ChangA3.tree")
+  let SourcePath  = Info.OutputFolder FileName("Articles") Extensions.RevBayes
+
+
+  let Comment(text) = Span {TextColor: Colors.Green, LineBreak, "# " text}
+  let String(text) = Span {TextColor: Colors.Red, text.QuoteString}
+
+  let CognateNumber(group) = Span {
+    group.Variable,
+    " := ",
+    group.Members.Length
+  }
+
+  let SourceFile = Style.SourceCodeBlock {
+    "clear()",
+    "morph = readDiscreteCharacterData({0})"(String(Nexus.SourcePath))
+    Empty,
+    "moves = VectorMoves()",
+    "monitors = VectorMonitors()",
+    "trees = readTrees({0})"(String(FiftyFile)),
+    "treetrace = treeTrace(trees)",
+
+    Comment("draw a tree from the empirical tree distribution"),
+    "psi ~ dnEmpiricalTree(treetrace)",
+
+
+    Comment("DO NOT FORGET THIS! See Landis response to my question in Revbayes google group"),
+    "moves.append( mvEmpiricalTree(psi, weight = 2) )",
+
+    Comment("We'll also read in a pre-cooked MAP tree to summarize our results."),
+    Comment("This is the Chang A3 tree"),
+
+    "map_tree = readBranchLengthTrees({0})[1]"(String(ChangA3Tree))
+
+    Comment("Set priors according to the resultant state"),
+
+    "treelength := psi.treeLength()",
+
+    Comment("Number of cognates in (0,1) languages"),
+    "rate_pr_00_01 := treelength / 2",
+
+    Comment("Number of cognates in (1,0) languages"),
+    "rate_pr_00_10 := treelength / 8",
+
+    Comment("Number of definite article cognates in (1,1) languages"),
+    "rate_pr_01_11 := treelength / 9",
+
+    Comment("Number of indefinite article cognates in (1,1) languages"),
+    "rate_pr_10_11 := treelength / 10",
+
+    Comment("Gain of indefinite article with no definiteness marker"),
+    "rate_00_01 ~ dnExponential(rate_pr_00_01)",
+
+    Comment("Gain of definiteness marker with no indefinite article"),
+    "rate_00_10 ~ dnExponential(rate_pr_00_10)"
+
+    Comment("Gain of definiteness marker with indefinite article"),
+    "rate_01_11 ~ dnExponential(rate_pr_01_11)",
+
+    Comment("Gain of indefinite article with definiteness marker"),
+    "rate_10_11 ~ dnExponential(rate_pr_10_11)",
+
+    Comment("Make variables for cognate group counts"),
+    CognateNumber(each CognateGroup),
+
+    "numTotal := {0}"(Span {Separator: " * ", (each CognateGroup).Variable}),
+
+    "for (i in 1:numTotal) {",
+    "  for (j in 1:numTotal) {",
+    "    rates[i][j] <- 0.0",
+    "  }",
+    "}",
+
+  }
+}
+//======================================================================
+
+with Nexus {
+  let SourcePath = Info.OutputFolder FileName("Articles") Extensions.Nexus
+
+  let LanguageLine(lang) = {
+    "    " lang.SymbolName
+  }
+
+  let CharState(lang, group) = AnyContains(lang, group) ? PossibleSymbols[EachIndex+1] : PossibleSymbols[0]
+
+  let CharStates(lang) {
+    CharState(lang, each CognateGroup)
+  }
+
+  let MatrixLine(lang) = Span {
+    "  ",
+    lang.SymbolName,
+    " " * (20 - lang.SymbolName.Length),
+    CharStates(lang)
+  }
+
+  let Comment(text) = Span {TextColor: Colors.Green, "# " text}
+
+  let PossibleSymbols = ('0'..'9' step 1) + ('A'..'Z' step 1) + ('a'..'z' step 1)
+
+  let UsedSymbols = Span {
+    Separator: Space,
+    each PossibleSymbols[0..<CognateGroup.Length]
+  }
+
+  let ClassComment(cc) = "  {0} '{1}' / ,"(EachIndex+1, cc.Description)
+
+  let SourceFile = Style.SourceCodeBlock {
+    Comment("This does not include demonstratives with article-like functions but it does code for Baltic definite adjectives and Iraninian specificity DOM"),
+    Comment("NEXUS"),
+    Empty,
+    Comment("I added the taxa information"),
+    "BEGIN TAXA;",
+    "  DIMENSIONS NTAX={0};"(LanguageList.Length),
+    "  TAXLABELS",
+    LanguageLine(each LanguageList),
+    ";",
+    "END;",
+    Empty,
+    Empty,
+    "BEGIN CHARACTERS;",
+    "DIMENSIONS NewTaxa NTAX={0} NCHAR={1};"(LanguageList.Length, CognateGroup.Length),
+    "FORMAT DATATYPE=STANDARD SYMBOLS=\"{0}\" MISSING=? GAP=-;"(UsedSymbols),
+    "CHARSTATELABELS",
+    "  0 'None' / ,",
+    ClassComment(each CognateGroup),
+    "  ;",
+    Empty,
+    "MATRIX"
+    Empty,
+    MatrixLine(each LanguageList),
+  }
+}
+//======================================================================
+
+with TreeLibrary {
+  let GetNodeTaxa(dictionary, node) {
+    dictionary.AddElement(node.Label, node);
+    GetNodeTaxa(dictionary, each node);
+  }
+
+  let GetLabel(node) = node.Label?.Substitute(node.Label?.FindIndex(' '), '_');
+
+  let GetTaxaLabels(trees) {
+    var d = Type.Dictionary(128);
+    GetNodeTaxa(d, each trees);
+    return GetLabel(each d);
+  }
+
+  let Newick(tree) = Span {
+    if (tree.Length > 0)
+     "(";
+    ,
+    Span {
+      Separator: ",",
+      if (tree.Length > 0)
+        Newick(each tree);
+    },
+    if (tree.Length > 0)
+     ")";
+    ,
+    GetLabel(tree),
+    ":",
+    tree.Branch
+  }
+
+  let ShowTreeLine(tree) = Span {
+    "  tree ",
+    EachSymbol.SymbolName,
+    " = ",
+    Newick(tree),
+    ";"
+  }
+
+  let NexusFile(trees) = TreeCode(trees, GetTaxaLabels(trees))
+
+  let TreeCode(trees, taxa) = TextBlock {
+    "#NEXUS",
+    "BEGIN TAXA;",
+    "  Dimensions ntax={0};"(taxa.Length),
+    Span {
+      "  TAXLABELS ",
+      Span {
+        Separator: Space,
+        taxa,
+      },
+      ";",
+    },
+    "END;",
+    Empty,
+    "BEGIN trees;",
+    ShowTreeLine(each trees),
+    "End;"
+  }
+}
+//======================================================================
+

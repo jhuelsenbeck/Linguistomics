@@ -1,0 +1,204 @@
+using Format, Units, Math, IO
+//======================================================================
+
+with Metrics {
+  let PaperSize = Type.Size(8.5 inches, 11 inches)
+  let Margins   = {MarginTB: 0.5 inches, MarginLR: 0.75 inches}
+}
+//======================================================================
+
+with Style {
+  let WhitePaper = Document {
+    Size: Metrics.PaperSize,
+    TextFamily: TextFamilies.Garamond,
+    TextHeight: 11.5 pts,
+    Metrics.Margins
+  }
+
+  let NormalHeader(text) = Block {
+    Span {{TextUppercase: true} text}
+  }
+
+  let PageSection = Section {
+    SectionBreak: SectionBreaks.NextPage,
+    Footer: Block {
+      Distance: 0.5 inches,
+      ParAlignment: ParAlignments.Center,
+      PageNumber
+    },
+  }
+
+  let TitleWord(text, height) = Span {
+    TextUppercase: true,
+    {TextHeight: height pts} text[0]
+    {TextHeight: height * 0.6 pts} text[1..]
+  }
+
+  let TitleCase(text, height) = Span {
+    Separator: Space,
+    TitleWord(each text.Split(Space), height)
+  }
+
+  let Title(text) = Paragraph {
+    KeepWithNext: true,
+    SpaceBefore: 12 pts,
+    SpaceAfter: 6 pts,
+    ParAlignment: ParAlignments.Center,
+    TextHeight: 14 pts,
+    text
+  }
+
+  let HeaderCentered(text) = Paragraph {
+    KeepWithNext: true,
+    SpaceBefore: 12 pts,
+    SpaceAfter: 6 pts,
+    ParAlignment: ParAlignments.Center,
+    TitleCase(text, 14)
+  }
+
+  let Header1(text) = Paragraph {
+    KeepWithNext: true,
+    SpaceBefore: 18 pts,
+    SpaceAfter: 8 pts,
+    TitleCase(text, 14)
+  }
+
+  let Header2(text) = Paragraph {
+    KeepWithNext: true,
+    SpaceBefore: 12 pts,
+    SpaceAfter: 6 pts,
+    TextHeight: 14 pts,
+    text
+  }
+
+  let Header3(text) = Paragraph {
+    KeepWithNext: true,
+    Border: 0.25 pts,
+    ParBackground: 97%,
+    SpaceAfter: 12 pts,
+    TextHeight: 14 pts,
+    text
+  }
+
+  let SourceFile(source) = Block {
+    Style.Header3(source.Path.GetFileName),
+    Paragraph {
+      LeftIndent: 0.25 inches,
+      ParAlignment: ParAlignments.Left,
+      TextFamily: TextFamilies.Consolas,
+      TextHeight: 8 pts,
+      SourceSelection(source)
+    }
+  }
+
+  let SourceCodeBlock = TextBlock {
+    TextFamily: TextFamilies.Consolas,
+    TextHeight: 10 pts,
+    ParBackground: 97%,
+  }
+
+  let Author(author) = Span {
+    Link: author.Website,
+    author.Title
+  }
+
+  let DataLabel(node) = node.Data.Name
+
+  let ShowTree(tree) = Tree {
+    TextHeight: 5.5 pts,
+    Label: DataLabel,
+    Curvature: 30%,
+    Bevel: 20%,
+    Marker: {TextFamily: TextFamilies.CambriaMath, TextHeight: 4 pts}Chars.Circle {TextColor: Colors.Gray},
+    Width: 6 inches,
+    tree
+  }
+
+  let ShowAbstract(content) = Block {
+    HeaderCentered(content.Title),
+    Block {
+      content.Body
+    }
+  }
+
+  let ShowContent(content) = Block {
+    Header1(content.Title),
+    Block {
+      content.Body
+    }
+  }
+
+  let ShowReference(r) = Paragraph {
+    LeftIndent: 0.25 inches,
+    FirstIndent: -0.25 inches,
+    TitleCase(r.Author, 12),
+    ", '{0}', "(r.Title),
+    r.Year,
+    Space,
+    Span {
+      Italic,
+      r.Publisher
+    },
+    Space,
+    r.Page,
+    if (r.Link)
+      Span{". Available at: ", Span {Link: r.Link, TextColor: Colors.DarkBlue, r.Link}};
+  }
+
+  let ShowAuthorFull(a) = Block {
+    LeftIndent: 0.25 inches,
+    Paragraph {
+      Underline,
+      Separator: Space,
+      FirstIndent: -0.25 inches,
+      a.First, a.Middle, a.Last
+    },
+    Span {
+      Separator: ", ",
+      a.Address
+    },
+    Span {"E-mail: ", a.EMail},
+    Empty
+  }
+
+  let ShowReferences(references) = Block {
+    HeaderCentered("Authors"),
+    ShowAuthorFull(each Authors),
+    HeaderCentered("References"),
+    ShowReference(each references)
+  }
+
+  let ShowAppendix(a) = PageSection {
+    Paragraph {
+      BorderB: 1 pts,
+      ParAlignment: ParAlignments.Center,
+      TextHeight: 14 pts,
+      SpaceAfter: 8 pts,
+      "Appendix {0} - "(EachIndex+1),
+      a.Title,
+    },
+    Block {
+      a.Content
+    }
+  }
+}
+//======================================================================
+
+let Logo = Frame {
+  Width: 5 inches,
+  Height: 0.5 inches,
+  Padding: 4 pts,
+  Background: Type.Color(51, 66, 81),
+  Table {
+    Columns: [4.3 inches, 0.6 inches],
+    Row {
+      Block {
+        "Transactions of the" {TextColor: Type.Color(129, 166, 207), Bold, TextHeight: 12 pts},
+        "Bayesian Society" {Bold, TextHeight: 20 pts, TextColor: Colors.White}
+      },
+      Read(Folders.Source FileName("bayes") Extensions.PNG) {Width: 0.5 inches}
+    }
+  }
+}
+//======================================================================
+
