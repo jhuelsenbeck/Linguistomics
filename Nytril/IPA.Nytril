@@ -4,6 +4,41 @@
 with IPA {
   let Link = Domain("http://www.internationalphoneticalphabet.org") Folder("ipa-charts") Folder("ipa-symbols-chart-complete")
 
+  with CategoryNames {
+    let Bilabial     = "Bilabial"
+    let Labiodental  = "Labiodental"
+    let Dental       = "Dental"
+    let Alveolar     = "Alveolar"
+    let Postalveolar = "Postalveolar"
+    let Retroflex    = "Retroflex"
+    let Palatal      = "Palatal"
+    let Velar        = "Velar"
+    let Uvular       = "Uvular"
+    let Pharyngeal   = "Pharyngeal"
+    let Glottal      = "Glottal"
+  }
+
+  let VdBilabialPlosive       = "b"
+  let VlBilabialPlosive       = "p"
+  let VlAlveolarPlosive       = "t"
+  let VdAlveolarPlosive       = "d"
+  let VlPalatalPlosiv         = "c"
+  let VlVelarPlosiv           = "k"
+  let VlUvularPlosiv          = "q"
+  let VdBilabialNasal         = "m"
+  let VdAlveolarNasal         = "n"
+  let VdAlveolarTrill         = "r"
+  let VlLabiodentalFricative  = "f"
+  let VdLabiodentalFricative  = "v"
+  let VlAlveolarFricative     = "s"
+  let VdAlveolarFricative     = "z"
+  let VlVelarFricative        = "x"
+  let VlGlottalFricative      = "h"
+  let VdPalatalApproximant    = "j"
+  let VdAlveolarLateralApproximant = "l"
+
+
+
   let OpenBackUnrounded           = "ɑ"
   let OpenMidSchwa                = "ɐ"
   let OpenBackRounded             = "ɒ"
@@ -72,7 +107,7 @@ with IPA {
   let CloseCentralRounded         = "ʉ"
   let LaxCloseBackRounded         = "ʊ"
   let VdLabioDentalApproximant    = "ʋ"
-  let VoicedLabioDentalFlap       = "ⱱ"
+  let VdLabioDentalFlap           = "ⱱ"
   let OpenMidBackUnrounded        = "ʌ"
   let VdVelarFricative            = "ɣ"
   let CloseMidBackUnrounded       = "ɤ"
@@ -149,69 +184,55 @@ with IPA {
     let Both(u, v)   = {U: u,     V: v}
     let Voiced(v)    = {U: Empty, V: v}
 
-    with CategoryNames {
-      let Bilabial     = "Bilabial"
-      let Labiodental  = "Labiodental"
-      let Dental       = "Dental"
-      let Alveolar     = "Alveolar"
-      let Postalveolar = "Postalveolar"
-      let Retroflex    = "Retroflex"
-      let Palatal      = "Palatal"
-      let Velar        = "Velar"
-      let Uvular       = "Uvular"
-      let Pharyngeal   = "Pharyngeal"
-      let Glottal      = "Glottal"
-    }
-
     with Plosive {
-      let Bilabial     = Both("p", "b")
+      let Bilabial     = Both(VlBilabialPlosive, VdBilabialPlosive)
       let Labiodental  = None
       let Dental       = None
-      let Alveolar     = Both("t", "d")
+      let Alveolar     = Both(VlAlveolarPlosive, VdAlveolarPlosive)
       let Postalveolar = None
-      let Retroflex    = Both("ʈ", "ɖ")
-      let Palatal      = Both("c", "ɟ")
-      let Velar        = Both("k", "ɡ")
-      let Uvular       = Both("q", "ɢ")
+      let Retroflex    = Both(VlRetroFlexPlosive, VdRetroFlexPlosive)
+      let Palatal      = Both(VlPalatalPlosiv, VdPalatalPlosive)
+      let Velar        = Both(VlVelarPlosiv, VdVelarPlosive)
+      let Uvular       = Both(VlUvularPlosiv, VdUvularPlosive)
       let Pharyngeal   = Both(Empty, null)
-      let Glottal      = Both("ʔ", null)
+      let Glottal      = Both(GlottalPlosive, null)
     }
 
     with Nasal {
-      let Bilabial     = Voiced("m")
-      let Labiodental  = Voiced("ɱ")
+      let Bilabial     = Voiced(VdBilabialNasal)
+      let Labiodental  = Voiced(VdLabioDentalNasal)
       let Dental       = None
-      let Alveolar     = Voiced("n")
+      let Alveolar     = Voiced(VdAlveolarNasal)
       let Postalveolar = None
-      let Retroflex    = Voiced("ɳ")
-      let Palatal      = Voiced("ɲ")
-      let Velar        = Voiced("ŋ")
-      let Uvular       = Voiced("ɴ")
+      let Retroflex    = Voiced(VdRetroFlexNasal)
+      let Palatal      = Voiced(VdPalatalNasal)
+      let Velar        = Voiced(VdVelarNasal)
+      let Uvular       = Voiced(VdUvularNasal)
       let Pharyngeal   = Impossible
       let Glottal      = Impossible
     }
 
     with Trill {
-      let Bilabial     = Voiced("ʙ")
+      let Bilabial     = Voiced(VdBilabialTrill)
       let Labiodental  = None
       let Dental       = None
-      let Alveolar     = Voiced("r")
+      let Alveolar     = Voiced(VdAlveolarTrill)
       let Postalveolar = None
       let Retroflex    = None
       let Palatal      = None
       let Velar        = Impossible
-      let Uvular       = Voiced("ʀ")
+      let Uvular       = Voiced(VdUvularTrill)
       let Pharyngeal   = None
       let Glottal      = Impossible
     }
 
     with TapFlap {
       let Bilabial     = None
-      let Labiodental  = Voiced("ⱱ")
+      let Labiodental  = Voiced(VdLabioDentalFlap)
       let Dental       = None
-      let Alveolar     = Voiced("ɾ")
+      let Alveolar     = Voiced(VdAlveolarTap)
       let Postalveolar = None
-      let Retroflex    = Voiced("ɽ")
+      let Retroflex    = Voiced(VdRetroFlexFlap)
       let Palatal      = None
       let Velar        = Impossible
       let Uvular       = None
@@ -220,24 +241,24 @@ with IPA {
     }
 
     with Fricative {
-      let Bilabial     = Both("ɸ", "β")
-      let Labiodental  = Both("f", "v")
-      let Dental       = Both("θ", "ð")
-      let Alveolar     = Both("s", "z")
-      let Postalveolar = Both("ʃ", "ʒ")
-      let Retroflex    = Both("ʂ", "ʐ")
-      let Palatal      = Both("ç", "ʝ")
-      let Velar        = Both("x", "ɣ")
-      let Uvular       = Both("χ", "ʁ")
-      let Pharyngeal   = Both("ħ", "ʕ")
-      let Glottal      = Both("h", "ɦ")
+      let Bilabial     = Both(VlBilabialFricative, VdBilabialFricative)
+      let Labiodental  = Both(VlLabiodentalFricative, VdLabiodentalFricative)
+      let Dental       = Both(VlDentalFricative, VdDentalFricative)
+      let Alveolar     = Both(VlAlveolarFricative, VdAlveolarFricative)
+      let Postalveolar = Both(VlPostAlveolarFricative, VdPostAlveolarFricative)
+      let Retroflex    = Both(VlRetroFlexFricative, VdRetroFlexFricative)
+      let Palatal      = Both(VlPalatalFricative, VdPalatalFricative)
+      let Velar        = Both(VlVelarFricative, VdVelarFricative)
+      let Uvular       = Both(VlUvularFricative, VdUvularFricative)
+      let Pharyngeal   = Both(VlPharyngealFricative, VdPharyngealFricative)
+      let Glottal      = Both(VlGlottalFricative, VdGlottalFricative)
     }
 
     with LateralFricative {
       let Bilabial     = Impossible
       let Labiodental  = Impossible
       let Dental       = None
-      let Alveolar     = Both("ɬ", "ɮ")
+      let Alveolar     = Both(VlAlveolarLateralFricative, VdAlveolarLateralFricative)
       let Postalveolar = None
       let Retroflex    = None
       let Palatal      = None
@@ -249,13 +270,13 @@ with IPA {
 
     with Approximant {
       let Bilabial     = None
-      let Labiodental  = Voiced("ʋ")
+      let Labiodental  = Voiced(VdLabioDentalApproximant)
       let Dental       = None
-      let Alveolar     = Voiced("ɹ")
+      let Alveolar     = Voiced(VdPostAlveolarApproximant)
       let Postalveolar = None
-      let Retroflex    = Voiced("ɻ")
-      let Palatal      = Voiced("j")
-      let Velar        = Voiced("ɰ")
+      let Retroflex    = Voiced(VdRetroFlexApproximant)
+      let Palatal      = Voiced(VdPalatalApproximant)
+      let Velar        = Voiced(VelarApproximant)
       let Uvular       = None
       let Pharyngeal   = None
       let Glottal      = Impossible
@@ -265,11 +286,11 @@ with IPA {
       let Bilabial     = Impossible
       let Labiodental  = Impossible
       let Dental       = None
-      let Alveolar     = Voiced("l")
+      let Alveolar     = Voiced(VdAlveolarLateralApproximant)
       let Postalveolar = None
-      let Retroflex    = Voiced("ɭ")
-      let Palatal      = Voiced("ʎ")
-      let Velar        = Voiced("ʟ")
+      let Retroflex    = Voiced(VdRetroFlexLateral)
+      let Palatal      = Voiced(VdPalatalLateral)
+      let Velar        = Voiced(VdVelarLateral)
       let Uvular       = None
       let Pharyngeal   = Impossible
       let Glottal      = Impossible
@@ -340,7 +361,7 @@ with IPA {
       Style.TitleBackground,
       TextHeight: 7 pts,
       HeaderCell(Empty),
-      HeaderCell(each PulmonicConsonants.CategoryNames)
+      HeaderCell(each CategoryNames)
     },
 
     DataRow("Plosive", PulmonicConsonants.Plosive),
@@ -378,16 +399,16 @@ with IPA {
       HeaderCell(each ["Clicks", "Voiced implosives", "Ejectives"])
     },
     Row {
-      ConCell(BilabialClick, "Bilabial"), ConCell(VdBilabialimPlosive, "Bilabial"), ConCell("p" Ejective, "Bilabial")
+      ConCell(BilabialClick, "Bilabial"), ConCell(VdBilabialimPlosive, "Bilabial"), ConCell(VlBilabialPlosive Ejective, "Bilabial")
     },
     Row {
-      ConCell(DentalClick, "Dental"), ConCell(VdAlveolarimPlosive, "Dental/alveolar"), ConCell("t" Ejective, "Dental/alveolar")
+      ConCell(DentalClick, "Dental"), ConCell(VdAlveolarimPlosive, "Dental/alveolar"), ConCell(VlAlveolarPlosive Ejective, "Dental/alveolar")
     },
     Row {
-      ConCell(RetroFlexClick, "(Post)alveoalar"), ConCell(VdPalatalImplosive, "Palatal"), ConCell("k" Ejective, "Velar")
+      ConCell(RetroFlexClick, "(Post)alveoalar"), ConCell(VdPalatalImplosive, "Palatal"), ConCell(VlVelarPlosiv Ejective, "Velar")
     },
     Row {
-      ConCell(AlveolarClick, "Palatoalveolar"), ConCell(VdVelarImplosive, "Velar"), ConCell("s" Ejective, "Alveolar fricative")
+      ConCell(AlveolarClick, "Palatoalveolar"), ConCell(VdVelarImplosive, "Velar"), ConCell(VlAlveolarFricative Ejective, "Alveolar fricative")
     },
     Row {
       ConCell(AlveolarLateralClick, "Alveolar lateral"), ConCell(VdUvularImplosive, "Uvular"), ConCell(Ejective, Chars.HorizontalEllipsis)
