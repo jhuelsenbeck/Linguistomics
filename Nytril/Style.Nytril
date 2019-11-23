@@ -2,14 +2,17 @@ using Format, Units, Math, IO
 //======================================================================
 
 with Metrics {
-  let SansSerif = {TextFamily: TextFamilies.Arial}
-
   let PaperSize = Type.Size(8.5 inches, 11 inches)
   let Margins   = {MarginTB: 0.5 inches, MarginLR: 0.75 inches}
 }
 //======================================================================
 
 with Style {
+  let ImpossibleBackground = {Background: 80%}
+  let IPAFamily            = TextFamilies.CambriaMath
+  let SansSerif            = {TextFamily: TextFamilies.Arial}
+  let TitleBackground      = {Background: 90%}
+
   let WhitePaper = Document {
     Size: Metrics.PaperSize,
     TextFamily: TextFamilies.TimesNewRoman,
@@ -38,7 +41,9 @@ with Style {
 
   let TitleCase(text, height) = Span {
     Separator: Space,
-    text != null ? TitleWord(each text.Split(Space), height) : null
+    if text then
+      TitleWord(each text.Split(Space), height)
+    end
   }
 
   let Title(text) = Paragraph {
@@ -145,8 +150,9 @@ with Style {
       Italic r.Publisher,
       r.Page,
     },
-    if (r.Link)
+    if r.Link then
       Span{". Available at: ", Span {Link: r.Link, TextColor: Colors.DarkBlue, r.Link}};
+    end
   }
 
   let ShowAuthorFull(a) = Block {
