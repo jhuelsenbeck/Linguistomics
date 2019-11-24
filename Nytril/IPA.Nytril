@@ -1,15 +1,16 @@
-﻿using Format, Units, IO, Type
+﻿using Format, Units
 //======================================================================
 
 with IPA {
-  let Link = Domain("http://www.internationalphoneticalphabet.org") Folder("ipa-charts") Folder("ipa-symbols-chart-complete")
+  let Link = IO.Domain("http://www.internationalphoneticalphabet.org") IO.Folder("ipa-charts") IO.Folder("ipa-symbols-chart-complete")
 
-  // Type
-  let None      = 0
-  let Vowel     = 0
-  let Consonant = 1
+  let None = 0
 
-  // Form
+  with Category {
+    let Vowel     = 0
+    let Consonant = 1
+  }
+
   with Form {
     let Bilabial     = 0
     let Labiodental  = 1
@@ -25,25 +26,27 @@ with IPA {
   }
 
   with Sound {
-    let Plosive            = 0
-    let Nasal              = 1
-    let Trill              = 2
-    let TapFlap            = 3
-    let Fricative          = 4
+    let Plosive             = 0
+    let Nasal               = 1
+    let Trill               = 2
+    let Tap_Flap            = 3
+    let Fricative           = 4
     let Lateral_Fricative   = 5
-    let Approximant        = 6
+    let Approximant         = 6
     let Lateral_Approximant = 7
   }
 
   with Props {
-    let None     = 0
-    let Voiced   = 1
-    let Pulmonic = 2
+    let Voiced    = 1
+    let Pulmonic  = 2
+    let Click     = 4
+    let Implosive = 8
+    let Extension = 16
   }
 
-  let Set(c, type, form, sound, prop) = {
-    CodePoint: c,
-    Type: type,
+  let Set(c, cat, form, sound, prop) = {
+    Text: c,
+    Cat: cat,
     Form: form,
     Sound: sound,
     Prop: prop
@@ -51,126 +54,134 @@ with IPA {
 
   with Alphabet {
     // Plosives
-    let VlBilabialPlosive            = Set("p", Consonant, Form.Bilabial, Sound.Plosive, Props.Pulmonic)
-    let VdBilabialPlosive            = Set("b", Consonant, Form.Bilabial, Sound.Plosive, Props.Voiced | Props.Pulmonic)
-    let VlAlveolarPlosive            = Set("t", Consonant, Form.Alveolar, Sound.Plosive, Props.Pulmonic)
-    let VdAlveolarPlosive            = Set("d", Consonant, Form.Alveolar, Sound.Plosive, Props.Voiced | Props.Pulmonic)
-    let VlRetroFlexPlosive           = Set("ʈ", Consonant, Form.Retroflex, Sound.Plosive, Props.Pulmonic)
-    let VdRetroFlexPlosive           = Set("ɖ", Consonant, Form.Retroflex, Sound.Plosive, Props.Voiced | Props.Pulmonic)
-    let VlPalatalPlosiv              = Set("c", Consonant, Form.Palatal, Sound.Plosive, Props.Pulmonic)
-    let VdPalatalPlosive             = Set("ɟ", Consonant, Form.Palatal, Sound.Plosive, Props.Voiced | Props.Pulmonic)
-    let VlVelarPlosiv                = Set("k", Consonant, Form.Velar, Sound.Plosive, Props.Pulmonic)
-    let VdVelarPlosive               = Set("ɡ", Consonant, Form.Velar, Sound.Plosive, Props.Voiced | Props.Pulmonic)
-    let VlUvularPlosiv               = Set("q", Consonant, Form.Uvular, Sound.Plosive, Props.Pulmonic)
-    let VdUvularPlosive              = Set("ɢ", Consonant, Form.Uvular, Sound.Plosive, Props.Voiced | Props.Pulmonic)
-    let GlottalPlosive               = Set("ʔ", Consonant, Form.Glottal, Sound.Plosive, Props.Pulmonic)
+    let VlBilabialPlosive            = Set("p", Category.Consonant, Form.Bilabial, Sound.Plosive, Props.Pulmonic)
+    let VdBilabialPlosive            = Set("b", Category.Consonant, Form.Bilabial, Sound.Plosive, Props.Voiced | Props.Pulmonic)
+    let VlAlveolarPlosive            = Set("t", Category.Consonant, Form.Alveolar, Sound.Plosive, Props.Pulmonic)
+    let VdAlveolarPlosive            = Set("d", Category.Consonant, Form.Alveolar, Sound.Plosive, Props.Voiced | Props.Pulmonic)
+    let VlRetroFlexPlosive           = Set("ʈ", Category.Consonant, Form.Retroflex, Sound.Plosive, Props.Pulmonic)
+    let VdRetroFlexPlosive           = Set("ɖ", Category.Consonant, Form.Retroflex, Sound.Plosive, Props.Voiced | Props.Pulmonic)
+    let VlPalatalPlosiv              = Set("c", Category.Consonant, Form.Palatal, Sound.Plosive, Props.Pulmonic)
+    let VdPalatalPlosive             = Set("ɟ", Category.Consonant, Form.Palatal, Sound.Plosive, Props.Voiced | Props.Pulmonic)
+    let VlVelarPlosiv                = Set("k", Category.Consonant, Form.Velar, Sound.Plosive, Props.Pulmonic)
+    let VdVelarPlosive               = Set("ɡ", Category.Consonant, Form.Velar, Sound.Plosive, Props.Voiced | Props.Pulmonic)
+    let VlUvularPlosiv               = Set("q", Category.Consonant, Form.Uvular, Sound.Plosive, Props.Pulmonic)
+    let VdUvularPlosive              = Set("ɢ", Category.Consonant, Form.Uvular, Sound.Plosive, Props.Voiced | Props.Pulmonic)
+    let GlottalPlosive               = Set("ʔ", Category.Consonant, Form.Glottal, Sound.Plosive, Props.Pulmonic)
 														
     // Nasal											
-    let VdBilabialNasal              = Set("m", Consonant, Form.Bilabial, Sound.Nasal, Props.Voiced | Props.Pulmonic)
-    let VdLabioDentalNasal           = Set("ɱ", Consonant, Form.Labiodental, Sound.Nasal, Props.Voiced | Props.Pulmonic)
-    let VdAlveolarNasal              = Set("n", Consonant, Form.Alveolar, Sound.Nasal, Props.Voiced | Props.Pulmonic)
-    let VdRetroFlexNasal             = Set("ɳ", Consonant, Form.Retroflex, Sound.Nasal, Props.Voiced | Props.Pulmonic)
-    let VdPalatalNasal               = Set("ɲ", Consonant, Form.Palatal, Sound.Nasal, Props.Voiced | Props.Pulmonic)
-    let VdVelarNasal                 = Set("ŋ", Consonant, Form.Velar, Sound.Nasal, Props.Voiced | Props.Pulmonic)
-    let VdUvularNasal                = Set("ɴ", Consonant, Form.Uvular, Sound.Nasal, Props.Voiced | Props.Pulmonic)
+    let VdBilabialNasal              = Set("m", Category.Consonant, Form.Bilabial, Sound.Nasal, Props.Voiced | Props.Pulmonic)
+    let VdLabioDentalNasal           = Set("ɱ", Category.Consonant, Form.Labiodental, Sound.Nasal, Props.Voiced | Props.Pulmonic)
+    let VdAlveolarNasal              = Set("n", Category.Consonant, Form.Alveolar, Sound.Nasal, Props.Voiced | Props.Pulmonic)
+    let VdRetroFlexNasal             = Set("ɳ", Category.Consonant, Form.Retroflex, Sound.Nasal, Props.Voiced | Props.Pulmonic)
+    let VdPalatalNasal               = Set("ɲ", Category.Consonant, Form.Palatal, Sound.Nasal, Props.Voiced | Props.Pulmonic)
+    let VdVelarNasal                 = Set("ŋ", Category.Consonant, Form.Velar, Sound.Nasal, Props.Voiced | Props.Pulmonic)
+    let VdUvularNasal                = Set("ɴ", Category.Consonant, Form.Uvular, Sound.Nasal, Props.Voiced | Props.Pulmonic)
 														
     // Trill											
-    let VdBilabialTrill              = Set("ʙ", Consonant, Form.Bilabial, Sound.Trill, Props.Voiced | Props.Pulmonic)
-    let VdAlveolarTrill              = Set("r", Consonant, Form.Alveolar, Sound.Trill, Props.Voiced | Props.Pulmonic)
-    let VdUvularTrill                = Set("ʀ", Consonant, Form.Uvular, Sound.Trill, Props.Voiced | Props.Pulmonic)
+    let VdBilabialTrill              = Set("ʙ", Category.Consonant, Form.Bilabial, Sound.Trill, Props.Voiced | Props.Pulmonic)
+    let VdAlveolarTrill              = Set("r", Category.Consonant, Form.Alveolar, Sound.Trill, Props.Voiced | Props.Pulmonic)
+    let VdUvularTrill                = Set("ʀ", Category.Consonant, Form.Uvular, Sound.Trill, Props.Voiced | Props.Pulmonic)
 														
     // Tap or Flap										
-    let VdLabioDentalFlap            = Set("ⱱ", Consonant, Form.Labiodental, Sound.TapFlap, Props.Voiced | Props.Pulmonic)
-    let VdAlveolarTap                = Set("ɾ", Consonant, Form.Alveolar, Sound.TapFlap, Props.Voiced | Props.Pulmonic)
-    let VdRetroFlexFlap              = Set("ɽ", Consonant, Form.Retroflex, Sound.TapFlap, Props.Voiced | Props.Pulmonic)
+    let VdLabioDentalFlap            = Set("ⱱ", Category.Consonant, Form.Labiodental, Sound.Tap_Flap, Props.Voiced | Props.Pulmonic)
+    let VdAlveolarTap                = Set("ɾ", Category.Consonant, Form.Alveolar, Sound.Tap_Flap, Props.Voiced | Props.Pulmonic)
+    let VdRetroFlexFlap              = Set("ɽ", Category.Consonant, Form.Retroflex, Sound.Tap_Flap, Props.Voiced | Props.Pulmonic)
 														
     // Fricative										
-    let VlDentalFricative            = Set("θ", Consonant, Form.Dental, Sound.Fricative, Props.Pulmonic)
-    let VdDentalFricative            = Set("ð", Consonant, Form.Dental, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlBilabialFricative          = Set("ɸ", Consonant, Form.Bilabial, Sound.Fricative, Props.Pulmonic)
-    let VdBilabialFricative          = Set("β", Consonant, Form.Bilabial, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlLabiodentalFricative       = Set("f", Consonant, Form.Labiodental, Sound.Fricative, Props.Pulmonic)
-    let VdLabiodentalFricative       = Set("v", Consonant, Form.Labiodental, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlAlveolarFricative          = Set("s", Consonant, Form.Alveolar, Sound.Fricative, Props.Pulmonic)
-    let VdAlveolarFricative          = Set("z", Consonant, Form.Alveolar, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlPostAlveolarFricative      = Set("ʃ", Consonant, Form.Postalveolar, Sound.Fricative, Props.Pulmonic)
-    let VdPostAlveolarFricative      = Set("ʒ", Consonant, Form.Postalveolar, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlRetroFlexFricative         = Set("ʂ", Consonant, Form.Retroflex, Sound.Fricative, Props.Pulmonic)
-    let VdRetroFlexFricative         = Set("ʐ", Consonant, Form.Retroflex, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlPalatalFricative           = Set("ç", Consonant, Form.Palatal, Sound.Fricative, Props.Pulmonic)
-    let VdPalatalFricative           = Set("ʝ", Consonant, Form.Palatal, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlVelarFricative             = Set("x", Consonant, Form.Velar, Sound.Fricative, Props.Pulmonic)
-    let VdVelarFricative             = Set("ɣ", Consonant, Form.Velar, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlUvularFricative            = Set("χ", Consonant, Form.Uvular, Sound.Fricative, Props.Pulmonic)
-    let VdUvularFricative            = Set("ʁ", Consonant, Form.Uvular, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlPharyngealFricative        = Set("ħ", Consonant, Form.Pharyngeal, Sound.Fricative, Props.Pulmonic)
-    let VdPharyngealFricative        = Set("ʕ", Consonant, Form.Pharyngeal, Sound.Fricative, Props.Voiced | Props.Pulmonic)
-    let VlGlottalFricative           = Set("h", Consonant, Form.Glottal, Sound.Fricative, Props.Pulmonic)
-    let VdGlottalFricative           = Set("ɦ", Consonant, Form.Glottal, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlDentalFricative            = Set("θ", Category.Consonant, Form.Dental, Sound.Fricative, Props.Pulmonic)
+    let VdDentalFricative            = Set("ð", Category.Consonant, Form.Dental, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlBilabialFricative          = Set("ɸ", Category.Consonant, Form.Bilabial, Sound.Fricative, Props.Pulmonic)
+    let VdBilabialFricative          = Set("β", Category.Consonant, Form.Bilabial, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlLabiodentalFricative       = Set("f", Category.Consonant, Form.Labiodental, Sound.Fricative, Props.Pulmonic)
+    let VdLabiodentalFricative       = Set("v", Category.Consonant, Form.Labiodental, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlAlveolarFricative          = Set("s", Category.Consonant, Form.Alveolar, Sound.Fricative, Props.Pulmonic)
+    let VdAlveolarFricative          = Set("z", Category.Consonant, Form.Alveolar, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlPostAlveolarFricative      = Set("ʃ", Category.Consonant, Form.Postalveolar, Sound.Fricative, Props.Pulmonic)
+    let VdPostAlveolarFricative      = Set("ʒ", Category.Consonant, Form.Postalveolar, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlRetroFlexFricative         = Set("ʂ", Category.Consonant, Form.Retroflex, Sound.Fricative, Props.Pulmonic)
+    let VdRetroFlexFricative         = Set("ʐ", Category.Consonant, Form.Retroflex, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlPalatalFricative           = Set("ç", Category.Consonant, Form.Palatal, Sound.Fricative, Props.Pulmonic)
+    let VdPalatalFricative           = Set("ʝ", Category.Consonant, Form.Palatal, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlVelarFricative             = Set("x", Category.Consonant, Form.Velar, Sound.Fricative, Props.Pulmonic)
+    let VdVelarFricative             = Set("ɣ", Category.Consonant, Form.Velar, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlUvularFricative            = Set("χ", Category.Consonant, Form.Uvular, Sound.Fricative, Props.Pulmonic)
+    let VdUvularFricative            = Set("ʁ", Category.Consonant, Form.Uvular, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlPharyngealFricative        = Set("ħ", Category.Consonant, Form.Pharyngeal, Sound.Fricative, Props.Pulmonic)
+    let VdPharyngealFricative        = Set("ʕ", Category.Consonant, Form.Pharyngeal, Sound.Fricative, Props.Voiced | Props.Pulmonic)
+    let VlGlottalFricative           = Set("h", Category.Consonant, Form.Glottal, Sound.Fricative, Props.Pulmonic)
+    let VdGlottalFricative           = Set("ɦ", Category.Consonant, Form.Glottal, Sound.Fricative, Props.Voiced | Props.Pulmonic)
 														
     // Lateral Fricative								
-    let VlAlveolarLateralFricative   = Set("ɬ", Consonant, Form.Alveolar, Sound.Lateral_Fricative, Props.Pulmonic)
-    let VdAlveolarLateralFricative   = Set("ɮ", Consonant, Form.Alveolar, Sound.Lateral_Fricative, Props.Voiced | Props.Pulmonic)
+    let VlAlveolarLateralFricative   = Set("ɬ", Category.Consonant, Form.Alveolar, Sound.Lateral_Fricative, Props.Pulmonic)
+    let VdAlveolarLateralFricative   = Set("ɮ", Category.Consonant, Form.Alveolar, Sound.Lateral_Fricative, Props.Voiced | Props.Pulmonic)
 														
     // Approximant										
-    let VdLabioDentalApproximant     = Set("ʋ", Consonant, Form.Labiodental, Sound.Approximant, Props.Voiced | Props.Pulmonic)
-    let VdPostAlveolarApproximant    = Set("ɹ", Consonant, Form.Alveolar, Sound.Approximant, Props.Voiced | Props.Pulmonic)
-    let VdRetroFlexApproximant       = Set("ɻ", Consonant, Form.Retroflex, Sound.Approximant, Props.Voiced | Props.Pulmonic)
-    let VdPalatalApproximant         = Set("j", Consonant, Form.Palatal, Sound.Approximant, Props.Voiced | Props.Pulmonic)
-    let VelarApproximant             = Set("ɰ", Consonant, Form.Velar, Sound.Approximant, Props.Voiced | Props.Pulmonic)
+    let VdLabioDentalApproximant     = Set("ʋ", Category.Consonant, Form.Labiodental, Sound.Approximant, Props.Voiced | Props.Pulmonic)
+    let VdPostAlveolarApproximant    = Set("ɹ", Category.Consonant, Form.Alveolar, Sound.Approximant, Props.Voiced | Props.Pulmonic)
+    let VdRetroFlexApproximant       = Set("ɻ", Category.Consonant, Form.Retroflex, Sound.Approximant, Props.Voiced | Props.Pulmonic)
+    let VdPalatalApproximant         = Set("j", Category.Consonant, Form.Palatal, Sound.Approximant, Props.Voiced | Props.Pulmonic)
+    let VelarApproximant             = Set("ɰ", Category.Consonant, Form.Velar, Sound.Approximant, Props.Voiced | Props.Pulmonic)
 														
     // LateralApproximant								
-    let VdAlveolarLateralApproximant = Set("l", Consonant, Form.Alveolar, Sound.Lateral_Approximant, Props.Voiced | Props.Pulmonic)
-    let VdRetroFlexLateral           = Set("ɭ", Consonant, Form.Retroflex, Sound.Lateral_Approximant, Props.Voiced | Props.Pulmonic)
-    let VdPalatalLateral             = Set("ʎ", Consonant, Form.Palatal, Sound.Lateral_Approximant, Props.Voiced | Props.Pulmonic)
-    let VdVelarLateral               = Set("ʟ", Consonant, Form.Velar, Sound.Lateral_Approximant, Props.Voiced | Props.Pulmonic)
+    let VdAlveolarLateralApproximant = Set("l", Category.Consonant, Form.Alveolar, Sound.Lateral_Approximant, Props.Voiced | Props.Pulmonic)
+    let VdRetroFlexLateral           = Set("ɭ", Category.Consonant, Form.Retroflex, Sound.Lateral_Approximant, Props.Voiced | Props.Pulmonic)
+    let VdPalatalLateral             = Set("ʎ", Category.Consonant, Form.Palatal, Sound.Lateral_Approximant, Props.Voiced | Props.Pulmonic)
+    let VdVelarLateral               = Set("ʟ", Category.Consonant, Form.Velar, Sound.Lateral_Approximant, Props.Voiced | Props.Pulmonic)
+
+    // Clicks
+    let BilabialClick                = Set("ʘ", Category.Consonant, None, None, Props.Click)
+    let DentalClick                  = Set("ǀ", Category.Consonant, None, None, Props.Click)
+    let RetroFlexClick               = Set("ǃ", Category.Consonant, None, None, Props.Click)
+    let AlveolarClick                = Set("ǂ", Category.Consonant, None, None, Props.Click)
+    let AlveolarLateralClick         = Set("ǁ", Category.Consonant, None, None, Props.Click)
+
+    // Voiced implosives
+    let VdBilabialimPlosive          = Set("ɓ", Category.Consonant, None, None, Props.Implosive)
+    let VdAlveolarimPlosive          = Set("ɗ", Category.Consonant, None, None, Props.Implosive)
+    let VdPalatalImplosive           = Set("ʄ", Category.Consonant, None, None, Props.Implosive)
+    let VdVelarImplosive             = Set("ɠ", Category.Consonant, None, None, Props.Implosive)
+    let VdUvularImplosive            = Set("ʛ", Category.Consonant, None, None, Props.Implosive)
+
 
     let VdAlveoloPalatalFricative    = Set("ʑ", None, None, None, None)
     let VdEpiglottalFricative        = Set("ʢ", None, None, None, None)
+    let VlAlveoloPalatalFricative    = Set("ɕ", None, None, None, None)
+    let VlMultiplePlaceFricative     = Set("ɧ", None, None, None, None)
+    let VlLabialVelarFricative       = Set("ʍ", None, None, None, None)
+
+    let VdPostAlveolarAffricate      = Set("ʤ", None, None, None, None)
+    let VlPostAlveolarAffricate      = Set("ʧ", None, None, None, None)
+
     let OpenBackUnrounded            = Set("ɑ", None, None, None, None)
+    let RaisedOpenFrontUnrounded     = Set("æ", None, None, None, None)
+    let OpenMidFrontUnrounded        = Set("ɛ", None, None, None, None)
+    let CloseCentralUnrounded        = Set("ɨ", None, None, None, None)
+    let LaxCloseFrontUnrounded       = Set("ɪ", None, None, None, None)
+    let CloseBackUnrounded           = Set("ɯ", None, None, None, None)
+    let OpenMidBackUnrounded         = Set("ʌ", None, None, None, None)
+    let CloseMidBackUnrounded        = Set("ɤ", None, None, None, None)
+
     let OpenMidSchwa                 = Set("ɐ", None, None, None, None)
     let OpenBackRounded              = Set("ɒ", None, None, None, None)
-    let RaisedOpenFrontUnrounded     = Set("æ", None, None, None, None)
-    let VdBilabialimPlosive          = Set("ɓ", None, None, None, None)
     let OpenMidBackRounded           = Set("ɔ", None, None, None, None)
-    let VlAlveoloPalatalFricative    = Set("ɕ", None, None, None, None)
-    let VdAlveolarimPlosive          = Set("ɗ", None, None, None, None)
-    let VdPostAlveolarAffricate      = Set("ʤ", None, None, None, None)
     let Schwa                        = Set("ə", None, None, None, None)
     let CloseMidSchwa                = Set("ɘ", None, None, None, None)
     let RhotacizedSchwa              = Set("ɚ", None, None, None, None)
-    let OpenMidFrontUnrounded        = Set("ɛ", None, None, None, None)
     let OpenMidCentral               = Set("ɜ", None, None, None, None)
     let RhotacizedOpenMidCentral     = Set("ɝ", None, None, None, None)
     let OpenMidCentralRounded        = Set("ɞ", None, None, None, None)
-    let VdPalatalImplosive           = Set("ʄ", None, None, None, None)
-    let VdVelarImplosive             = Set("ɠ", None, None, None, None)
-    let VdUvularImplosive            = Set("ʛ", None, None, None, None)
-    let VlMultiplePlaceFricative     = Set("ɧ", None, None, None, None)
     let LabialPalatalApproximant     = Set("ɥ", None, None, None, None)
     let VlEpiglottalFricative        = Set("ʜ", None, None, None, None)
-    let CloseCentralUnrounded        = Set("ɨ", None, None, None, None)
-    let LaxCloseFrontUnrounded       = Set("ɪ", None, None, None, None)
     let VelarizedVdAlveolarLateral   = Set("ɫ", None, None, None, None)
-    let CloseBackUnrounded           = Set("ɯ", None, None, None, None)
     let FrontCloseMidRounded         = Set("ø", None, None, None, None)
     let RoundedSchwa                 = Set("ɵ", None, None, None, None)
     let FrontOpenMidRounded          = Set("œ", None, None, None, None)
     let FrontOpenRounded             = Set("ɶ", None, None, None, None)
-    let BilabialClick                = Set("ʘ", None, None, None, None)
     let VdAlveolarLateralFlap        = Set("ɺ", None, None, None, None)
-    let VlPostAlveolarAffricate      = Set("ʧ", None, None, None, None)
     let CloseCentralRounded          = Set("ʉ", None, None, None, None)
     let LaxCloseBackRounded          = Set("ʊ", None, None, None, None)
-    let OpenMidBackUnrounded         = Set("ʌ", None, None, None, None)
-    let CloseMidBackUnrounded        = Set("ɤ", None, None, None, None)
-    let VlLabialVelarFricative       = Set("ʍ", None, None, None, None)
     let LaxCloseFrontRounded         = Set("ʏ", None, None, None, None)
     let VdEpiglottalPlosive          = Set("ʡ", None, None, None, None)
-    let DentalClick                  = Set("ǀ", None, None, None, None)
-    let AlveolarLateralClick         = Set("ǁ", None, None, None, None)
-    let AlveolarClick                = Set("ǂ", None, None, None, None)
-    let RetroFlexClick               = Set("ǃ", None, None, None, None)
     let Downstep                     = Set("↓", None, None, None, None)
     let Upstep                       = Set("↑", None, None, None, None)
     let Becomes                      = Set("→", None, None, None, None)
@@ -245,14 +256,16 @@ with IPA {
     }
   }
 
-  let CellSize = Size(20 pts, 30 pts)
+  let CellSize = Type.Size(20 pts, 30 pts)
+
+  let CleanName(s) = s.Substitute(s.FindIndex("_"), Space)
 
   let ShowSound(c) = Canvas {
     HAlign: HAligns.Center,
     X: ((c.Prop & Props.Voiced) != 0 ? CellSize.Width : 0),
     Size: CellSize,
     if c then
-      c.CodePoint
+      c.Text
     else
       Style.ImpossibleBackground
     end
@@ -272,9 +285,9 @@ with IPA {
     end
   }
 
-  let FindSound(c, data) = c.Type == Consonant and ((c.Prop & Props.Pulmonic) > 0) and c.Sound == data.Sound and c.Form == data.Form
+  let FindSound(c, data) = c.Cat == Category.Consonant and ((c.Prop & Props.Pulmonic) > 0) and c.Sound == data.Sound and c.Form == data.Form
 
-  let PulmonicCell(sound, form) = FindCell(Alphabet.FindSlice(FindSound, 2, {Sound: sound, Form: form}))
+  let PulmonicCell(sound, form) = FindCell(Alphabet.FindSlice(FindSound {Sound: sound, Form: form}, 2))
 
   let PulmonicRow(sound) = Row {
     EdgeB: 0.5 pts,
@@ -284,22 +297,29 @@ with IPA {
       Style.TitleBackground,
       PaddingLR: 2 pts,
       TextHeight: 8 pts,
-      EachSymbol.SymbolName.Substitute(EachSymbol.SymbolName.FindIndex("_"), Space)
+      CleanName(EachSymbol.SymbolName)
     },
     PulmonicCell(sound, each Form)
   }
 
   let SymbolHeader(v) = HeaderCell(EachSymbol.SymbolName)
 
-  let PulmonicConsonantTable = Block {
+  let PulmonicTable = Block {
     Table {
       HAlign: HAligns.Center,
-      Edge: 0.5 pts,
+      Style.TableEdge,
       Columns: [(0.8 inches) {EdgeR: 0.5 pts}] + [(0.6 inches) {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * 11,
 
       TitleBar("Pulmonic Consonants", 12),
       Row {
-        Style.TitleBackground,
+        TextHeight: 10 pts,
+        HeaderCell(Empty),
+        HeaderCell("Labial") {ColumnSpan: 2},
+        HeaderCell("Coronal") {ColumnSpan: 4},
+        HeaderCell("Dorsal") {ColumnSpan: 3},
+        HeaderCell("Laryngeal") {ColumnSpan: 2},
+      },
+      Row {
         TextHeight: 7 pts,
         HeaderCell(Empty),
         SymbolHeader(each Form)
@@ -307,28 +327,36 @@ with IPA {
       PulmonicRow(each Sound),
     },
     Paragraph {
-      "Where symbols appear in pairs, the one to the right represents a voiced consonant."
+      "Where symbols appear in pairs, the one to the right represents a modally voiced consonant, except for murmured {0}."(ToText(Alphabet.VlMultiplePlaceFricative))
     }
   }
 
-  let ConCell(c, name) = Cell {
+  let ToText(c) = Span {
+    (each c).Text
+  }
+
+  let ConCell(c, name, ejective) = Cell {
+    EdgeR: 0.5 pts,
     Padding: 2 pts,
     Group {
       VAlign: VAligns.Center,
       Span {
         TextFamily: Style.IPAFamily,
         TextHeight: 18 pts,
-        c,
+        ToText(c),
+        if ejective then
+          Alphabet.Ejective.Text
+        end
       },
       Space,
       name
     }
   }
 
-  let ConsonantTable = Table {
+  let NonPulmonicTable = Table {
     HAlign: HAligns.Center,
-    Edge: 0.5 pts,
-    Columns: [(1.5 inches) {EdgeR: 0.5 pts}],
+    Style.TableEdge,
+    Columns: [2.5 inches, 1.5 inches],
 
     TitleBar("Non-Pulmonic Consonants", 3),
     Row {
@@ -336,25 +364,84 @@ with IPA {
       HeaderCell(each ["Clicks", "Voiced implosives", "Ejectives"])
     },
     Row {
-      ConCell(Alphabet.BilabialClick, "Bilabial"), ConCell(Alphabet.VdBilabialimPlosive, "Bilabial"), ConCell(Alphabet.VlBilabialPlosive Alphabet.Ejective, "Bilabial")
+      ConCell(Alphabet.BilabialClick, "Bilabial fricated", false),
+      ConCell(Alphabet.VdBilabialimPlosive, "Bilabial", false),
+      ConCell(Alphabet.VlBilabialPlosive, "Bilabial", true)
     },
     Row {
-      ConCell(Alphabet.DentalClick, "Dental"), ConCell(Alphabet.VdAlveolarimPlosive, "Dental/alveolar"), ConCell(Alphabet.VlAlveolarPlosive Alphabet.Ejective, "Dental/alveolar")
+      ConCell(Alphabet.DentalClick, "Dental", false),
+      ConCell(Alphabet.VdAlveolarimPlosive, "Dental/alveolar", false),
+      ConCell(Alphabet.VlAlveolarPlosive, "Dental/alveolar", true)
     },
     Row {
-      ConCell(Alphabet.RetroFlexClick, "(Post)alveoalar"), ConCell(Alphabet.VdPalatalImplosive, "Palatal"), ConCell(Alphabet.VlVelarPlosiv Alphabet.Ejective, "Velar")
+      ConCell(Alphabet.RetroFlexClick, "(Post)alveoalar", false),
+      ConCell(Alphabet.VdPalatalImplosive, "Palatal", false),
+      ConCell(Alphabet.VlVelarPlosiv, "Velar", true)
     },
     Row {
-      ConCell(Alphabet.AlveolarClick, "Palatoalveolar"), ConCell(Alphabet.VdVelarImplosive, "Velar"), ConCell(Alphabet.VlAlveolarFricative Alphabet.Ejective, "Alveolar fricative")
+      ConCell(Alphabet.AlveolarClick, "Palatoalveolar", false),
+      ConCell(Alphabet.VdVelarImplosive, "Velar", false),
+      ConCell(Alphabet.VlAlveolarFricative, "Alveolar fricative", true)
     },
     Row {
-      ConCell(Alphabet.AlveolarLateralClick, "Alveolar lateral"), ConCell(Alphabet.VdUvularImplosive, "Uvular"), ConCell(Alphabet.Ejective, Chars.HorizontalEllipsis)
+      ConCell(Alphabet.AlveolarLateralClick, "Alveolar lateral", false),
+      ConCell(Alphabet.VdUvularImplosive, "Uvular", false),
+      ConCell([Alphabet.VlAlveolarPlosive, Alphabet.TieBarBelow, Alphabet.VlAlveolarLateralFricative], "Lateral affricate", true)
     },
   }
 
+  let VarCell(text) = Cell {
+    VAlign: VAligns.Center,
+    CleanName(text.SymbolName)
+  }
+
+  let GetPropNames(props, prop) = {
+    if (props & (1 << EachIndex)) != 0 then
+      CleanName(EachSymbol.SymbolName)
+    end
+  }
+
+  let AlphabetRow(c) = Row {
+    Cell {
+      TextHeight: 14 pts,
+      HAlign: HAligns.Center,
+      VAlign: VAligns.Center,
+      ToText(c)
+    },
+    VarCell(Category.GetReference(c.Cat)),
+    VarCell(Form.GetReference(c.Form)),
+    VarCell(Sound.GetReference(c.Sound)),
+    Cell {
+      VAlign: VAligns.Center,
+      Span {
+        Separator: ", ",
+        GetPropNames(c.Prop, each Props)
+      }
+    }
+  }
+
+  let AlphabetTable = Table {
+    Style.TableEdge,
+    Columns: [30 pts, 60 pts, 110 pts],
+
+    TitleBar("Complete IPA Listing", 5),
+
+    Row {
+      TextHeight: 12 pts,
+      HeaderCell("Text"),
+      HeaderCell("Category") {HAlign: HAligns.Left},
+      HeaderCell("Form") {HAlign: HAligns.Left},
+      HeaderCell("Sound") {HAlign: HAligns.Left},
+      HeaderCell("Properties") {HAlign: HAligns.Left}
+    },
+    AlphabetRow(each Alphabet)
+  }
+
   let ShowAlphabet = Block {
-    PulmonicConsonantTable,
+    PulmonicTable,
     Empty,
-    ConsonantTable
+    NonPulmonicTable,
+    Empty,
+    AlphabetTable
   }
 }
