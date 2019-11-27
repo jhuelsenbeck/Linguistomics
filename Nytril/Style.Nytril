@@ -11,9 +11,16 @@ with Style {
   let ImpossibleBackground = {Background: 80%}
   let IPAFamily            = TextFamilies.CambriaMath
   let SansSerif            = {TextFamily: TextFamilies.Arial}
+  let Extension            = {TextColor: Colors.DarkGray}
   let TitleBackground      = {Background: 90%}
   let TableEdge            = {Edge: 0.3 pts}
   let ColumnEdge           = {EdgeR: 0.3 pts}
+
+  let RowBar(i) = {
+    if i mod 2 != 0 then
+      Background: 95%
+    end
+  }
 
   let WhitePaper = Document {
     Size: Metrics.PaperSize,
@@ -107,8 +114,8 @@ with Style {
   }
 
   let Author(author) = Span {
-    Link: author.Website,
-    author.Title
+    Link: author.FullSymbolName,
+    author.Title,
   }
 
   let DataLabel(node) = node.Data.Name
@@ -157,20 +164,46 @@ with Style {
     end
   }
 
-  let ShowAuthorFull(a) = Block {
+  let ShowAuthorFull(author) = Block {
     LeftIndent: 0.25 inches,
     Paragraph {
-      Bold,
-      Separator: Space,
+      LocationMark: author.FullSymbolName,
       FirstIndent: -0.25 inches,
-      a.First, a.Middle, a.Last
+      Span {
+        Separator: Space,
+        if author.Website then
+          TextColor: Colors.Blue,
+          Link: author.Website,
+        end,
+        author.First, author.Middle, author.Last,
+      }
     },
     Span {
       Separator: ", ",
-      a.Address
+      author.Address
     },
-    Span {"E-mail: ", a.EMail},
+    Span {"E-mail: ", author.EMail},
     Empty
+  }
+
+  let AppendixRow(appendix) = Row {
+    Cell {
+      Span {EachIndex + 1, ")"}
+    },
+    Cell {
+      Span {
+        Link: appendix.FullSymbolName,
+        appendix.Title
+      }
+    }
+  }
+
+  let ShowAppendixTable = Block {
+    HeaderCentered("Appendices"),
+    Table {
+      Columns: [15 pts, 5 inches],
+      AppendixRow(each Appendix)
+    }
   }
 
   let ShowReferences(references) = Block {
@@ -180,17 +213,18 @@ with Style {
     ShowReference(each references)
   }
 
-  let ShowAppendix(a) = PageSection {
+  let ShowAppendix(appendix) = PageSection {
     Paragraph {
       BorderB: 1 pts,
       ParAlignment: ParAlignments.Center,
       TextHeight: 14 pts,
       SpaceAfter: 8 pts,
       "Appendix {0} - "(EachIndex+1),
-      a.Title,
+      LocationMark: appendix.FullSymbolName,
+      appendix.Title,
     },
     Block {
-      a.Content
+      appendix.Content
     }
   }
 
