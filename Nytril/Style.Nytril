@@ -43,15 +43,19 @@ with Style {
   }
 
   let TitleWord(text, height) = Span {
-    {TextHeight: height pts} text[0]
+    {TextHeight: height pts} text[0],
     {TextHeight: height * 0.6 pts} text[1..]
   }
 
-  let TitleCase(text, height) = Span {
-    TextUppercase: true,
-    Separator: Space,
+  let TitleCase(text, height) = {
     if text then
-      TitleWord(each text.Split(Space), height)
+      return Span {
+        TextUppercase: true,
+        Separator: Space,
+        TitleWord(each text.Split(Space), height)
+      }
+    else
+      return null;
     end
   }
 
@@ -147,21 +151,26 @@ with Style {
   let ShowReference(r) = Paragraph {
     LeftIndent: 0.25 inches,
     FirstIndent: -0.25 inches,
-    Span {
-      Separator: ", ",
-      TitleCase(r.Author, 12),
-      r.Title,
-      r.Year,
-    },
-    Span {
-      ", ",
-      Separator: Space,
-      Italic r.Publisher,
-      r.Page,
-    },
+    if r.Author then
+      Span {
+        Separator: ", ",
+        TitleCase(r.Author, 12),
+        r.Title,
+        r.Year,
+      }
+    end,
+    if r.Publisher then
+      Span {
+        ", ",
+        Separator: Space,
+        Italic r.Publisher,
+        r.Page,
+      }
+    end,
     if r.Link then
-      Span{". Available at: ", Span {Link: r.Link, TextColor: Colors.DarkBlue, r.Link}};
-    end
+      ". {0}: "(Lang.AvailableAt),
+      Span {Link: r.Link, TextColor: Colors.DarkBlue, r.Link}
+    end,
   }
 
   let ShowAuthorFull(author) = Block {
