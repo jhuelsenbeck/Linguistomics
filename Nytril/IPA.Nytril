@@ -102,8 +102,24 @@ with IPA {
     Trill,
     LateralFricative,
     LateralApproximant,
-    LateralTapFlap
+    LateralTapFlap,
+    Tenuis,
+    TenuisLateral,
+    Implosive
   }
+
+  let PulmonicManners = [
+    Manners.Nasal,
+    Manners.Stop,
+    Manners.SibilantFricative,
+    Manners.Fricative,
+    Manners.Approximant,
+    Manners.TapFlap,
+    Manners.Trill,
+    Manners.LateralFricative,
+    Manners.LateralApproximant,
+    Manners.LateralTapFlap
+  ]
 
   let MannerNames = [
     "Nasal",
@@ -116,24 +132,26 @@ with IPA {
     "Lateral Fricative",
     "Lateral Approximant",
     "Lateral Tap/flap",
+    "Tenuis",
+    "Tenuis Lateral",
+    "Implosive",
   ]
-
-  let PulmonicManners = Manners[..Manners.LateralTapFlap]
 
   let HasFlag(props, prop) = (props & prop) != 0
 
-  let Set(c, category, form, sound, prop) = {
+  let Set(c, category, place, manner, prop) = {
     Text: c,
     Category: category,
-    Place: form,
-    Manner: sound,
+    Place: place,
+    Manner: manner,
     Prop: prop
   }
 
-  let PC(c, form, sound, prop)  = Set(c, Categories.Consonant, form, sound, prop | Props.Pulmonic)
-  let NPC(c, form, sound, prop) = Set(c, Categories.Consonant, form, sound, prop)
-  let PCI(form, sound, prop)    = PC(null, form, sound, prop)
-  let NPEjective(sound, manner) = NPC(sound.Text EjectiveMark, sound.Place, manner, Props.Ejective)
+  let PC(c, place, manner, prop)  = Set(c, Categories.Consonant, place, manner, prop | Props.Pulmonic)
+  let NPC(c, place, manner, prop) = Set(c, Categories.Consonant, place, manner, prop)
+  let PCI(place, manner, prop)    = PC(null, place, manner, prop)
+  let NPEjective(sound, manner)  = NPC(sound.Text EjectiveMark, sound.Place, manner, Props.Ejective)
+  let NCI(place, manner, prop)    = NPC(null, place, manner, prop)
 
 
   let EqualSound(r, data) =
@@ -143,62 +161,94 @@ with IPA {
     r.Prop.HasFlag(data.Prop)
 
   let Impossible = [
-    PCI(Places.Pharyngeal, Manners.Nasal, None),
+    PCI(Places.Pharyngeal, Manners.Nasal,Props. None),
     PCI(Places.Pharyngeal, Manners.Nasal, Props.Voiced),
-    PCI(Places.Glottal, Manners.Nasal, None),
+    PCI(Places.Glottal, Manners.Nasal, Props.None),
     PCI(Places.Glottal, Manners.Nasal, Props.Voiced),
 
     PCI(Places.Pharyngeal, Manners.Stop, Props.Voiced),
     PCI(Places.Glottal, Manners.Stop, Props.Voiced),
 
-    PCI(Places.Bilabial, Manners.SibilantFricative, None),
+    PCI(Places.Bilabial, Manners.SibilantFricative, Props.None),
     PCI(Places.Bilabial, Manners.SibilantFricative, Props.Voiced),
-    PCI(Places.LabioDental, Manners.SibilantFricative, None),
+    PCI(Places.LabioDental, Manners.SibilantFricative, Props.None),
     PCI(Places.LabioDental, Manners.SibilantFricative, Props.Voiced),
-    PCI(Places.LinguoLabial, Manners.SibilantFricative, None),
+    PCI(Places.LinguoLabial, Manners.SibilantFricative, Props.None),
     PCI(Places.LinguoLabial, Manners.SibilantFricative, Props.Voiced),
 
-    PCI(Places.Velar, Manners.SibilantFricative, None),
+    PCI(Places.Velar, Manners.SibilantFricative, Props.None),
     PCI(Places.Velar, Manners.SibilantFricative, Props.Voiced),
-    PCI(Places.Uvular, Manners.SibilantFricative, None),
+    PCI(Places.Uvular, Manners.SibilantFricative, Props.None),
     PCI(Places.Uvular, Manners.SibilantFricative, Props.Voiced),
-    PCI(Places.Pharyngeal, Manners.SibilantFricative, None),
+    PCI(Places.Pharyngeal, Manners.SibilantFricative, Props.None),
     PCI(Places.Pharyngeal, Manners.SibilantFricative, Props.Voiced),
-    PCI(Places.Glottal, Manners.SibilantFricative, None),
+    PCI(Places.Glottal, Manners.SibilantFricative, Props.None),
     PCI(Places.Glottal, Manners.SibilantFricative, Props.Voiced),
 
-    PCI(Places.Velar, Manners.Trill, None),
+    PCI(Places.Velar, Manners.Trill, Props.None),
     PCI(Places.Velar, Manners.Trill, Props.Voiced),
-    PCI(Places.Glottal, Manners.Trill, None),
+    PCI(Places.Glottal, Manners.Trill, Props.None),
     PCI(Places.Glottal, Manners.Trill, Props.Voiced),
-    PCI(Places.Velar, Manners.TapFlap, None),
+    PCI(Places.Velar, Manners.TapFlap, Props.None),
     PCI(Places.Velar, Manners.TapFlap, Props.Voiced),
-    PCI(Places.Glottal, Manners.TapFlap, None),
+    PCI(Places.Glottal, Manners.TapFlap, Props.None),
     PCI(Places.Glottal, Manners.TapFlap, Props.Voiced),
-    PCI(Places.Bilabial, Manners.LateralFricative, None),
+    PCI(Places.Bilabial, Manners.LateralFricative, Props.None),
     PCI(Places.Bilabial, Manners.LateralFricative, Props.Voiced),
-    PCI(Places.LabioDental, Manners.LateralFricative, None),
+    PCI(Places.LabioDental, Manners.LateralFricative, Props.None),
     PCI(Places.LabioDental, Manners.LateralFricative, Props.Voiced),
-    PCI(Places.Pharyngeal, Manners.LateralFricative, None),
+    PCI(Places.Pharyngeal, Manners.LateralFricative, Props.None),
     PCI(Places.Pharyngeal, Manners.LateralFricative, Props.Voiced),
-    PCI(Places.Glottal, Manners.LateralFricative, None),
+    PCI(Places.Glottal, Manners.LateralFricative, Props.None),
     PCI(Places.Glottal, Manners.LateralFricative, Props.Voiced),
-    PCI(Places.Bilabial, Manners.LateralApproximant, None),
+    PCI(Places.Bilabial, Manners.LateralApproximant, Props.None),
     PCI(Places.Bilabial, Manners.LateralApproximant, Props.Voiced),
-    PCI(Places.LabioDental, Manners.LateralApproximant, None),
+    PCI(Places.LabioDental, Manners.LateralApproximant, Props.None),
     PCI(Places.LabioDental, Manners.LateralApproximant, Props.Voiced),
-    PCI(Places.Pharyngeal, Manners.LateralApproximant, None),
+    PCI(Places.Pharyngeal, Manners.LateralApproximant, Props.None),
     PCI(Places.Pharyngeal, Manners.LateralApproximant, Props.Voiced),
-    PCI(Places.Glottal, Manners.LateralApproximant, None),
+    PCI(Places.Glottal, Manners.LateralApproximant, Props.None),
     PCI(Places.Glottal, Manners.LateralApproximant, Props.Voiced),
-    PCI(Places.Bilabial, Manners.LateralTapFlap, None),
+    PCI(Places.Bilabial, Manners.LateralTapFlap, Props.None),
     PCI(Places.Bilabial, Manners.LateralTapFlap, Props.Voiced),
-    PCI(Places.LabioDental, Manners.LateralTapFlap, None),
+    PCI(Places.LabioDental, Manners.LateralTapFlap, Props.None),
     PCI(Places.LabioDental, Manners.LateralTapFlap, Props.Voiced),
-    PCI(Places.Pharyngeal, Manners.LateralTapFlap, None),
+    PCI(Places.Pharyngeal, Manners.LateralTapFlap, Props.None),
     PCI(Places.Pharyngeal, Manners.LateralTapFlap, Props.Voiced),
-    PCI(Places.Glottal, Manners.LateralTapFlap, None),
+    PCI(Places.Glottal, Manners.LateralTapFlap, Props.None),
     PCI(Places.Glottal, Manners.LateralTapFlap, Props.Voiced),
+
+    NCI(Places.Bilabial, Manners.LateralFricative, Props.Ejective),
+    NCI(Places.Bilabial, Manners.LateralFricative, Props.Ejective | Props.Voiced),
+    NCI(Places.LabioDental, Manners.LateralFricative, Props.Ejective),
+    NCI(Places.LabioDental, Manners.LateralFricative, Props.Ejective | Props.Voiced),
+    NCI(Places.Pharyngeal, Manners.LateralFricative, Props.Ejective),
+    NCI(Places.Pharyngeal, Manners.LateralFricative, Props.Ejective | Props.Voiced),
+
+    NCI(Places.Velar, Manners.Tenuis, Props.Click),
+    NCI(Places.Velar, Manners.Tenuis, Props.Click | Props.Voiced),
+    NCI(Places.Uvular, Manners.Tenuis, Props.Click),
+    NCI(Places.Uvular, Manners.Tenuis, Props.Click | Props.Voiced),
+    NCI(Places.Pharyngeal, Manners.Tenuis, Props.Click),
+    NCI(Places.Pharyngeal, Manners.Tenuis, Props.Click | Props.Voiced),
+
+    NCI(Places.Velar, Manners.Nasal, Props.Click),
+    NCI(Places.Velar, Manners.Nasal, Props.Click | Props.Voiced),
+    NCI(Places.Uvular, Manners.Nasal, Props.Click),
+    NCI(Places.Uvular, Manners.Nasal, Props.Click | Props.Voiced),
+    NCI(Places.Pharyngeal, Manners.Nasal, Props.Click),
+    NCI(Places.Pharyngeal, Manners.Nasal, Props.Click | Props.Voiced),
+
+    NCI(Places.Bilabial, Manners.TenuisLateral, Props.Click),
+    NCI(Places.Bilabial, Manners.TenuisLateral, Props.Click | Props.Voiced),
+    NCI(Places.LabioDental, Manners.TenuisLateral, Props.Click),
+    NCI(Places.LabioDental, Manners.TenuisLateral, Props.Click | Props.Voiced),
+    NCI(Places.Velar, Manners.TenuisLateral, Props.Click),
+    NCI(Places.Velar, Manners.TenuisLateral, Props.Click | Props.Voiced),
+    NCI(Places.Uvular, Manners.TenuisLateral, Props.Click),
+    NCI(Places.Uvular, Manners.TenuisLateral, Props.Click | Props.Voiced),
+    NCI(Places.Pharyngeal, Manners.TenuisLateral, Props.Click),
+    NCI(Places.Pharyngeal, Manners.TenuisLateral, Props.Click | Props.Voiced),
   ]                       									
 
   with Alphabet {
@@ -275,7 +325,7 @@ with IPA {
     let VlPharyngealFricative        = PC("ħ", Places.Pharyngeal, Manners.Fricative, Props.None)
     let VdPharyngealFricative        = PC("ʕ", Places.Pharyngeal, Manners.Fricative, Props.Voiced)
     let VlGlottalFricative           = PC("h", Places.Glottal, Manners.Fricative, Props.None)
-    let VdGlottalFricative           = PC("ɦ", Places.Glottal, Manners.Fricative, Props.Voiced)
+    let VlMultiplePlaceFricative     = PC("ɦ", Places.Glottal, Manners.Fricative, Props.Voiced)
 														
     // Approximant										
     let VlLabioDentalApproximant     = PC("ʋ̥", Places.LabioDental, Manners.Approximant, Props.None)
@@ -362,17 +412,44 @@ with IPA {
     let VlRetroflexFricativeEjective    = NPEjective(VlRetroflexSibFricative, Manners.Fricative)
     let VlPalatalFricativeEjective      = NPEjective(VlPalatalSibFricative, Manners.Fricative)
     let VlVelarFricativeEjective        = NPEjective(VlVelarFricative, Manners.Fricative)
-    let VlUvularFricativeEjective        = NPEjective(VlUvularFricative, Manners.Fricative)
+    let VlUvularFricativeEjective       = NPEjective(VlUvularFricative, Manners.Fricative)
+
+    // Lateral Fricatives
+    let VlPostalveolarLatFricEjective = NPEjective(VlAlveolarLateralFricative, Manners.LateralFricative)
 
 
+    // Clicks
+    let VlBilabialTenuisClick        = NPC("ʘ", Places.Bilabial, Manners.Tenuis, Props.Click)
+    let VdBilabialTenuisClick        = NPC("ʘ̬", Places.Bilabial, Manners.Tenuis, Props.Click | Props.Voiced)
+    let VlDentalTenuisClick          = NPC("ǀ", Places.Dental, Manners.Tenuis, Props.Click)
+    let VdDentalTenuisClick          = NPC("ǀ̬", Places.Dental, Manners.Tenuis, Props.Click | Props.Voiced)
+    let VlAlveolarTenuisClick        = NPC("ǃ", Places.Alveolar, Manners.Tenuis, Props.Click)
+    let VdAlveolarTenuisClick        = NPC("ǃ̬", Places.Alveolar, Manners.Tenuis, Props.Click | Props.Voiced)
+    let VlPalatalTenuisClick         = NPC("ǂ", Places.Palatal, Manners.Tenuis, Props.Click)
+    let VdPalatalTenuisClick         = NPC("ǂ̬", Places.Palatal, Manners.Tenuis, Props.Click | Props.Voiced)
+
+    let VlBilabialNasalClick         = NPC("ʘ̃", Places.Bilabial, Manners.Nasal, Props.Click)
+    let VlDentalNasalClick           = NPC("ǀ̃", Places.Dental, Manners.Nasal, Props.Click)
+    let VlAlveolarNasalClick         = NPC("ǃ̃", Places.Alveolar, Manners.Nasal, Props.Click)
+    let VlPalatalNasalClick          = NPC("ǂ̃", Places.Palatal, Manners.Nasal, Props.Click)
+
+    let VlAlveolarTenuisLateralClick = NPC("ǁ", Places.Alveolar, Manners.TenuisLateral, Props.Click)
+    let VdAlveolarTenuisLateralClick = NPC("ǁ̬", Places.Alveolar, Manners.TenuisLateral, Props.Click | Props.Voiced)
+
+    let VlBilabialImplosiveClick     = NPC("ɓ̥", Places.Bilabial, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdBilabialImplosiveClick     = NPC("ɓ", Places.Bilabial, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlAlveolarImplosiveClick     = NPC("ɗ̥", Places.Alveolar, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdAlveolarImplosiveClick     = NPC("ɗ", Places.Alveolar, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlRetroflexImplosiveClick    = NPC("ᶑ̊", Places.Retroflex, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdRetroflexImplosiveClick    = NPC("ᶑ", Places.Retroflex, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlPalatalImplosiveClick      = NPC("ʄ̊", Places.Palatal, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdPalatalImplosiveClick      = NPC("ʄ", Places.Palatal, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlVelarImplosiveClick        = NPC("ɠ̊", Places.Velar, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdVelarImplosiveClick        = NPC("ɠ", Places.Velar, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlUvularImplosiveClick       = NPC("ʛ̥", Places.Uvular, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdUvularImplosiveClick       = NPC("ʛ", Places.Uvular, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
 
 /*
-    // Clicks
-    let BilabialClick                = Set("ʘ", Categories.Consonant, None, None, Props.Click)
-    let DentalClick                  = Set("ǀ", Categories.Consonant, None, None, Props.Click)
-    let RetroFlexClick               = Set("ǃ", Categories.Consonant, None, None, Props.Click)
-    let AlveolarClick                = Set("ǂ", Categories.Consonant, None, None, Props.Click)
-    let AlveolarLateralClick         = Set("ǁ", Categories.Consonant, None, None, Props.Click)
 
     // Voiced Stops
     let VdBilabialimStop          = Set("ɓ", Categories.Consonant, None, None, Props.Stop)
@@ -380,11 +457,8 @@ with IPA {
     let VdPalatalImStop           = Set("ʄ", Categories.Consonant, None, None, Props.Stop)
     let VdVelarImStop             = Set("ɠ", Categories.Consonant, None, None, Props.Stop)
     let VdUvularImStop            = Set("ʛ", Categories.Consonant, None, None, Props.Stop)
-*/
-
 
     let VdEpiglottalFricative        = Set("ʢ", None, None, None, None)
-    let VlMultiplePlaceFricative     = Set("ɧ", None, None, None, None)
     let VlLabialVelarFricative       = Set("ʍ", None, None, None, None)
 
     let VdPostalveolarAffricate      = Set("ʤ", None, None, None, None)
@@ -418,6 +492,7 @@ with IPA {
     let CloseCentralRounded          = Set("ʉ", None, None, None, None)
     let LaxCloseBackRounded          = Set("ʊ", None, None, None, None)
     let LaxCloseFrontRounded         = Set("ʏ", None, None, None, None)
+*/
   }
 
   let Downstep                     = '↓'
@@ -586,17 +661,20 @@ with IPA {
 
   let NonPulmonicCell(place, manner, props) = SoundBlock(AllSounds.FindSlice(EqualSound NPC(null, place, manner, props)))
 
-  let NPRow(name, manner) = Row {
-    EdgeB: 0.5 pts,
+  let NPRow(name, namerow, props, manner) = Row {
     Cell {
+      EdgeR: 0.5 pts,
       VAlign: VAligns.Center,
-      name
+      if namerow == EachIndex then
+        name
+      end
     },
     Cell {
       VAlign: VAligns.Center,
+      EdgeB: 0.5 pts,
       MannerNames[manner]
     },
-    NonPulmonicCell(each NonPulmonicPlaces, manner, Props.Ejective)
+    NonPulmonicCell(each NonPulmonicPlaces, manner, props)
   }
 
   let NonPulmonicTable = Block {
@@ -604,8 +682,8 @@ with IPA {
       HAlign: HAligns.Center,
       Style.TableEdge,
       Columns: [
-        (45 pts) {EdgeR: 0.5 pts},
-        (45 pts) {EdgeR: 0.5 pts}
+        (50 pts),
+        (75 pts) {EdgeR: 0.5 pts}
       ] +
       [CellSize.Width*2 {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * NonPulmonicPlaces.Length,
 
@@ -616,7 +694,9 @@ with IPA {
         HeaderCell(Span {Bold, Lang.Place, Space, Alphabet.Becomes}),
         PlaceHeader(each NonPulmonicPlaces)
       },
-      NPRow("Ejective", each [Manners.Stop, Manners.Fricative])
+      NPRow("Ejective", 1, Props.Ejective, each [Manners.Stop, Manners.Fricative, Manners.LateralFricative]),
+      NPRow("Click", 1, Props.Click, each [Manners.Tenuis, Manners.Nasal, Manners.TenuisLateral]),
+      NPRow("Implosive", 0, Props.Implosive, each [Manners.Implosive]),
     },
     Paragraph {}
   }
