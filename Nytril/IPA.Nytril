@@ -2,8 +2,6 @@
 //======================================================================
 
 with IPA {
-  let None = 0
-
   flags Props {
     None,
     Voiced,
@@ -15,7 +13,7 @@ with IPA {
   }
 
   let PropNames = [
-    "",
+    Empty,
     "Voiced",
     "Pulmonic",
     "Click",
@@ -34,6 +32,38 @@ with IPA {
     "Vowel",
     "Consonant",
     "Other"
+  ]
+
+  enum Opens {
+    Close,
+    NearClose,
+    CloseMid,
+    Mid,
+    OpenMid,
+    NearOpen,
+    Open
+  }
+
+  let OpenNames = [
+    "Close",
+    "Near-close",
+    "Close-mid",
+    "Mid",
+    "Open-mid",
+    "Near-open",
+    "Open"
+  ]
+
+  enum Positions {
+    Front,
+    Central,
+    Back,
+  }
+
+  let PositionNames = [
+    "Front",
+    "Central",
+    "Back",
   ]
 
   enum Places {
@@ -74,20 +104,9 @@ with IPA {
     "Alveolo-palatal"
   ]
 
-  let PulmonicPlaces = [
-    Places.Bilabial,
-    Places.LabioDental,
-    Places.LinguoLabial,
-    Places.Dental,
-    Places.Alveolar,
-    Places.Postalveolar,
-    Places.Retroflex,
-    Places.Palatal,
-    Places.Velar,
-    Places.Uvular,
-    Places.Pharyngeal,
-    Places.Glottal,
-  ]
+  let FindPulmonic(sound, data) = sound.Place == data.Place and sound.Prop.HasFlag(Props.Pulmonic)
+  let FindPulmonicPlace(place)  = Alphabet.Contains(FindPulmonic{Place: place})
+  let PulmonicPlaces = Places.FindSlice(FindPulmonicPlace)
 
   let NonPulmonicPlaces = [
     Places.Bilabial,
@@ -103,8 +122,8 @@ with IPA {
   ]
 
   enum Manners {
-    Nasal,
     Stop,
+    Nasal,
     SibilantFricative,
     Fricative,
     Approximant,
@@ -121,8 +140,8 @@ with IPA {
   }
 
   let PulmonicManners = [
-    Manners.Nasal,
     Manners.Stop,
+    Manners.Nasal,
     Manners.SibilantFricative,
     Manners.Fricative,
     Manners.Approximant,
@@ -134,8 +153,8 @@ with IPA {
   ]
 
   let MannerNames = [
-    "Nasal",
     "Stop",
+    "Nasal",
     "Sibilant Fricative",
     "Fricative",
     "Approximant",
@@ -178,7 +197,7 @@ with IPA {
     r.Prop.HasFlag(data.Prop)
 
   let Impossible = [
-    PCI(Places.Pharyngeal, Manners.Nasal,Props. None),
+    PCI(Places.Pharyngeal, Manners.Nasal, Props.None),
     PCI(Places.Pharyngeal, Manners.Nasal, Props.Voiced),
     PCI(Places.Glottal, Manners.Nasal, Props.None),
     PCI(Places.Glottal, Manners.Nasal, Props.Voiced),
@@ -484,34 +503,34 @@ with IPA {
 
 
 /*
-    let VdPostalveolarAffricate      = OT("ʤ", None, None, Props.None)
-    let VlPostalveolarAffricate      = OT("ʧ", None, None, None, "Postalveolar Affricate")
-    let OpenBackUnrounded            = Set("ɑ", None, None, Props.None)
-    let RaisedOpenFrontUnrounded     = Set("æ", None, None, Props.None)
-    let OpenMidFrontUnrounded        = Set("ɛ", None, None, Props.None)
-    let CloseCentralUnrounded        = Set("ɨ", None, None, Props.None)
-    let LaxCloseFrontUnrounded       = Set("ɪ", None, None, Props.None)
-    let CloseBackUnrounded           = Set("ɯ", None, None, Props.None)
-    let OpenMidBackUnrounded         = Set("ʌ", None, None, Props.None)
-    let CloseMidBackUnrounded        = Set("ɤ", None, None, Props.None)
+    let VdPostalveolarAffricate      = OT("ʤ", Places.None, Manners.None, Props.None)
+    let VlPostalveolarAffricate      = OT("ʧ", Places.None, Manners.None, None, "Postalveolar Affricate")
+    let OpenBackUnrounded            = Set("ɑ", Places.None, Manners.None, Props.None)
+    let RaisedOpenFrontUnrounded     = Set("æ", Places.None, Manners.None, Props.None)
+    let OpenMidFrontUnrounded        = Set("ɛ", Places.None, Manners.None, Props.None)
+    let CloseCentralUnrounded        = Set("ɨ", Places.None, Manners.None, Props.None)
+    let LaxCloseFrontUnrounded       = Set("ɪ", Places.None, Manners.None, Props.None)
+    let CloseBackUnrounded           = Set("ɯ", Places.None, Manners.None, Props.None)
+    let OpenMidBackUnrounded         = Set("ʌ", Places.None, Manners.None, Props.None)
+    let CloseMidBackUnrounded        = Set("ɤ", Places.None, Manners.None, Props.None)
 
-    let OpenMidSchwa                 = Set("ɐ", None, None, Props.None)
-    let OpenBackRounded              = Set("ɒ", None, None, Props.None)
-    let OpenMidBackRounded           = Set("ɔ", None, None, Props.None)
-    let Schwa                        = Set("ə", None, None, Props.None)
-    let CloseMidSchwa                = Set("ɘ", None, None, Props.None)
-    let RhotacizedSchwa              = Set("ɚ", None, None, Props.None)
-    let OpenMidCentral               = Set("ɜ", None, None, Props.None)
-    let RhotacizedOpenMidCentral     = Set("ɝ", None, None, Props.None)
-    let OpenMidCentralRounded        = Set("ɞ", None, None, Props.None)
-    let VelarizedVdAlveolarLateral   = Set("ɫ", None, None, Props.None)
-    let FrontCloseMidRounded         = Set("ø", None, None, Props.None)
-    let RoundedSchwa                 = Set("ɵ", None, None, Props.None)
-    let FrontOpenMidRounded          = Set("œ", None, None, Props.None)
-    let FrontOpenRounded             = Set("ɶ", None, None, Props.None)
-    let CloseCentralRounded          = Set("ʉ", None, None, Props.None)
-    let LaxCloseBackRounded          = Set("ʊ", None, None, Props.None)
-    let LaxCloseFrontRounded         = Set("ʏ", None, None, Props.None)
+    let OpenMidSchwa                 = Set("ɐ", Places.None, Manners.None, Props.None)
+    let OpenBackRounded              = Set("ɒ", Places.None, Manners.None, Props.None)
+    let OpenMidBackRounded           = Set("ɔ", Places.None, Manners.None, Props.None)
+    let Schwa                        = Set("ə", Places.None, Manners.None, Props.None)
+    let CloseMidSchwa                = Set("ɘ", Places.None, Manners.None, Props.None)
+    let RhotacizedSchwa              = Set("ɚ", Places.None, Manners.None, Props.None)
+    let OpenMidCentral               = Set("ɜ", Places.None, Manners.None, Props.None)
+    let RhotacizedOpenMidCentral     = Set("ɝ", Places.None, Manners.None, Props.None)
+    let OpenMidCentralRounded        = Set("ɞ", Places.None, Manners.None, Props.None)
+    let VelarizedVdAlveolarLateral   = Set("ɫ", Places.None, Manners.None, Props.None)
+    let FrontCloseMidRounded         = Set("ø", Places.None, Manners.None, Props.None)
+    let RoundedSchwa                 = Set("ɵ", Places.None, Manners.None, Props.None)
+    let FrontOpenMidRounded          = Set("œ", Places.None, Manners.None, Props.None)
+    let FrontOpenRounded             = Set("ɶ", Places.None, Manners.None, Props.None)
+    let CloseCentralRounded          = Set("ʉ", Places.None, Manners.None, Props.None)
+    let LaxCloseBackRounded          = Set("ʊ", Places.None, Manners.None, Props.None)
+    let LaxCloseFrontRounded         = Set("ʏ", Places.None, Manners.None, Props.None)
 */
   }
   let Downstep                     = '↓'
