@@ -9,6 +9,7 @@ with IPA {
     Click,
     Ejective,
     Implosive,
+    Rounded,
     Extension,
   }
 
@@ -19,6 +20,7 @@ with IPA {
     "Click",
     "Ejective",
     "Implosive",
+    "Rounded",
     "Extension",
   ]
 
@@ -54,15 +56,19 @@ with IPA {
     "Open"
   ]
 
-  enum Positions {
+  enum Backnesses {
     Front,
+    NearFront,
     Central,
+    NearBack,
     Back,
   }
 
-  let PositionNames = [
+  let BacknessNames = [
     "Front",
+    "Near-Front",
     "Central",
+    "Near-Back",
     "Back",
   ]
 
@@ -106,7 +112,7 @@ with IPA {
 
   let FindPulmonic(sound, data) = sound.Place == data.Place and sound.Prop.HasFlag(Props.Pulmonic)
   let FindPulmonicPlace(place)  = Alphabet.Contains(FindPulmonic{Place: place})
-  let PulmonicPlaces = Places.FindSlice(FindPulmonicPlace)
+  let PulmonicPlaces            = Places.FindSlice(FindPulmonicPlace)
 
   let NonPulmonicPlaces = [
     Places.Bilabial,
@@ -178,7 +184,16 @@ with IPA {
     Place: place,
     Manner: manner,
     Prop: prop,
-    Name: "{0} {1} {2}"(prop.HasFlag(Props.Voiced) ? "Voiced" : "Voiceless", PlaceNames[place], MannerNames[manner])
+    Name: "{0} {1} {2}"(prop.HasFlag(Props.Voiced) ? Lang.Voiced : Lang.Voiceless, PlaceNames[place], MannerNames[manner])
+  }
+
+  let VO(c, open, backness, prop) = {
+    Text: c,
+    Category: Categories.Vowel,
+    Open: open,
+    Backness: backness,
+    Prop: prop,
+    Name: "{0} {1} {2} vowel"(OpenNames[open], BacknessNames[backness], prop.HasFlag(Props.Rounded) ? Lang.Rounded : Lang.Unrounded)
   }
 
   let PC(c, place, manner, prop)  = Set(c, Categories.Consonant, place, manner, prop | Props.Pulmonic)
@@ -195,6 +210,11 @@ with IPA {
     r.Place == data.Place and
     r.Manner == data.Manner and
     r.Prop.HasFlag(data.Prop)
+
+  let VowelPair(r, data) =
+    r.Category == Categories.Vowel and
+    r.Open == data.Open and
+    r.Backness == data.Backness
 
   let Impossible = [
     PCI(Places.Pharyngeal, Manners.Nasal, Props.None),
@@ -501,36 +521,54 @@ with IPA {
     let VlAffricates                 = {Name: "Affricates and double articulations"} +
                                        OT("k͡p", Places.Pharyngeal, Manners.Affricate, Props.None)
 
+    let CloseFrontUnrounded          = VO("i", Opens.Close, Backnesses.Front, Props.None)
+    let CloseFrontRounded            = VO("y", Opens.Close, Backnesses.Front, Props.Rounded)
+    let CloseCentralUnrounded        = VO("ɨ", Opens.Close, Backnesses.Central, Props.None)
+    let CloseCentralRounded          = VO("ʉ", Opens.Close, Backnesses.Central, Props.Rounded)
+    let CloseBackUnrounded           = VO("ɯ", Opens.Close, Backnesses.Back, Props.None)
+    let CloseBackRounded             = VO("u", Opens.Close, Backnesses.Back, Props.Rounded)
+
+    let NearCloseFrontUnrounded      = VO("ɪ", Opens.NearClose, Backnesses.NearFront, Props.None)
+    let NearCloseFrontRounded        = VO("ʏ", Opens.NearClose, Backnesses.NearFront, Props.Rounded)
+    let NearCloseBackRounded         = VO("ʊ", Opens.NearClose, Backnesses.NearBack, Props.Rounded)
+
+    let CloseMidFrontUnrounded       = VO("e", Opens.CloseMid, Backnesses.Front, Props.None)
+    let CloseMidFrontRounded         = VO("ø", Opens.CloseMid, Backnesses.Front, Props.Rounded)
+
+    let Schwa                        = VO("ə", Opens.CloseMid, Backnesses.Central, Props.None)
+    let RoundedSchwa                 = VO("ɵ", Opens.CloseMid, Backnesses.Central, Props.Rounded)
+
+    let CloseMidBackUnrounded        = VO("ɤ", Opens.CloseMid, Backnesses.Back, Props.None)
+    let CloseMidBackRounded          = VO("o", Opens.CloseMid, Backnesses.Back, Props.Rounded)
+
+    let MidFrontUnrounded            = VO("ø̞", Opens.Mid, Backnesses.Front, Props.None)
+    let MidCentralUnrounded          = VO("ə", Opens.Mid, Backnesses.Central, Props.None)
+    let MidBackUnrounded             = VO("o̞", Opens.Mid, Backnesses.Back, Props.None)
+
+    let OpenMidNearFrontUnrounded    = VO("ɛ", Opens.OpenMid, Backnesses.NearFront, Props.None)
+    let OpenMidNearFrontRounded      = VO("œ", Opens.OpenMid, Backnesses.NearFront, Props.Rounded)
+    let OpenMidCentral               = VO("ɜ", Opens.OpenMid, Backnesses.Central, Props.None)
+    let OpenMidCentralRounded        = VO("ɞ", Opens.OpenMid, Backnesses.Central, Props.Rounded)
+    let OpenMidBackUnrounded         = VO("ʌ", Opens.OpenMid, Backnesses.Back, Props.None)
+    let OpenMidBackRounded           = VO("ɔ", Opens.OpenMid, Backnesses.Back, Props.Rounded)
+
+    let FrontOpenRounded             = VO("ɶ", Opens.NearOpen, Backnesses.NearFront, Props.Rounded)
+    let OpenMidSchwa                 = VO("ɐ", Opens.NearOpen, Backnesses.Central, Props.Rounded)
+
+    let OpenBackUnrounded            = VO("ɑ", Opens.Open, Backnesses.Back, Props.None)
+    let OpenBackRounded              = VO("ɒ", Opens.Open, Backnesses.Back, Props.Rounded)
+    let OpenCentralUnrounded         = VO("ä", Opens.Open, Backnesses.Central, Props.None)
+    let OpenNearFrontUnrounded       = VO("a", Opens.Open, Backnesses.NearFront, Props.None)
+    let OpenNearFrontRounded         = VO("ɶ", Opens.Open, Backnesses.NearFront, Props.Rounded)
+
 
 /*
     let VdPostalveolarAffricate      = OT("ʤ", Places.None, Manners.None, Props.None)
     let VlPostalveolarAffricate      = OT("ʧ", Places.None, Manners.None, None, "Postalveolar Affricate")
-    let OpenBackUnrounded            = Set("ɑ", Places.None, Manners.None, Props.None)
     let RaisedOpenFrontUnrounded     = Set("æ", Places.None, Manners.None, Props.None)
-    let OpenMidFrontUnrounded        = Set("ɛ", Places.None, Manners.None, Props.None)
-    let CloseCentralUnrounded        = Set("ɨ", Places.None, Manners.None, Props.None)
-    let LaxCloseFrontUnrounded       = Set("ɪ", Places.None, Manners.None, Props.None)
-    let CloseBackUnrounded           = Set("ɯ", Places.None, Manners.None, Props.None)
-    let OpenMidBackUnrounded         = Set("ʌ", Places.None, Manners.None, Props.None)
-    let CloseMidBackUnrounded        = Set("ɤ", Places.None, Manners.None, Props.None)
-
-    let OpenMidSchwa                 = Set("ɐ", Places.None, Manners.None, Props.None)
-    let OpenBackRounded              = Set("ɒ", Places.None, Manners.None, Props.None)
-    let OpenMidBackRounded           = Set("ɔ", Places.None, Manners.None, Props.None)
-    let Schwa                        = Set("ə", Places.None, Manners.None, Props.None)
-    let CloseMidSchwa                = Set("ɘ", Places.None, Manners.None, Props.None)
     let RhotacizedSchwa              = Set("ɚ", Places.None, Manners.None, Props.None)
-    let OpenMidCentral               = Set("ɜ", Places.None, Manners.None, Props.None)
     let RhotacizedOpenMidCentral     = Set("ɝ", Places.None, Manners.None, Props.None)
-    let OpenMidCentralRounded        = Set("ɞ", Places.None, Manners.None, Props.None)
     let VelarizedVdAlveolarLateral   = Set("ɫ", Places.None, Manners.None, Props.None)
-    let FrontCloseMidRounded         = Set("ø", Places.None, Manners.None, Props.None)
-    let RoundedSchwa                 = Set("ɵ", Places.None, Manners.None, Props.None)
-    let FrontOpenMidRounded          = Set("œ", Places.None, Manners.None, Props.None)
-    let FrontOpenRounded             = Set("ɶ", Places.None, Manners.None, Props.None)
-    let CloseCentralRounded          = Set("ʉ", Places.None, Manners.None, Props.None)
-    let LaxCloseBackRounded          = Set("ʊ", Places.None, Manners.None, Props.None)
-    let LaxCloseFrontRounded         = Set("ʏ", Places.None, Manners.None, Props.None)
 */
   }
   let Downstep                     = '↓'
@@ -589,6 +627,8 @@ with IPA {
 
   let AllSounds = Alphabet + Impossible
 
+  //======================================================================
+
   let TitleBar(name, columns) = Row {
     Cell {
       Padding: 2 pts,
@@ -601,25 +641,25 @@ with IPA {
     }
   }
 
-  let CellSize = Type.Size(20 pts, 20 pts)
+  let BoxSize  = Type.Size(20 pts, 20 pts)
+  let CellSize = Type.Size(BoxSize.Width * 2, BoxSize.Height)
 
   let SoundBox(r) = Canvas {
     HAlign: HAligns.Center,
-    Size: CellSize,
+    Size: BoxSize,
     if (r.Text)
       if (r.Prop.HasFlag(Props.Extension))
         Style.Extension
       end,
-      Style.IPAFamily,
-      TextHeight: CellSize.Height - 4 pts,
-      r.Text
+      TextHeight: BoxSize.Height - 4 pts,
+      ToText(r)
     else
       Style.ImpossibleBackground
     end
   }
 
   let ShowSound(r) = SoundBox(r) {
-    X: (r.Prop.HasFlag(Props.Voiced) ? CellSize.Width : 0),
+    X: (r.Prop.HasFlag(Props.Voiced) ? BoxSize.Width : 0),
   }
 
   let SoundBlock(matches) = Cell {
@@ -630,8 +670,7 @@ with IPA {
         TextHeight: 1 pts,
         Span {
           Canvas {
-            Width: CellSize.Width * 2,
-            Height: CellSize.Height,
+            Size: CellSize,
             ShowSound(each matches)
           }
         }
@@ -669,7 +708,8 @@ with IPA {
   let PulmonicTable = Block {
     Table {
       Style.TableEdge,
-      Columns: [(45 pts) {EdgeR: 0.5 pts}] + [CellSize.Width*2 {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * PulmonicPlaces.Length,
+      Columns: [(45 pts) {EdgeR: 0.5 pts}] +
+               [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * PulmonicPlaces.Length,
 
       TitleBar(Lang.PConsonants, PulmonicPlaces.Length+1),
       Row {
@@ -696,8 +736,10 @@ with IPA {
   }
 
   let ToText(c) = Span {
-    (each c).Text
+    Style.IPAFamily,
+    c.Text
   }
+  //======================================================================
 
   let NonPulmonicCell(place, manner, props) = SoundBlock(AllSounds.FindSlice(EqualSound NPC(null, place, manner, props)))
 
@@ -728,6 +770,98 @@ with IPA {
     end
   }
 
+  let NonPulmonicTable = Block {
+    Table {
+      HAlign: HAligns.Center,
+      Style.TableEdge,
+      Columns: [50 pts, (75 pts) {EdgeR: 0.5 pts}] +
+               [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * NonPulmonicPlaces.Length,
+
+      TitleBar(Lang.NPConsonants, NonPulmonicPlaces.Length+2),
+      Row {
+        TextHeight: 7 pts,
+        HeaderCell(Empty),
+        HeaderCell(Span {Bold, Lang.Place, Space, Alphabet.Becomes}),
+        PlaceHeader(each NonPulmonicPlaces)
+      },
+      NPRow(Lang.Ejective, 1, Props.Ejective, each [Manners.Stop, Manners.Fricative, Manners.LateralFricative]),
+      NPRow(Lang.Click, 1, Props.Click, each [Manners.Tenuis, Manners.Nasal, Manners.TenuisLateral]),
+      NPRow(Lang.Implosive, 0, Props.Implosive, each [Manners.Implosive]),
+    },
+    Paragraph {}
+  }
+  //======================================================================
+
+  let OtherCell(r) = Row {
+    VAlign: VAligns.Center,
+    Cell {
+      TextHeight: 20 pts,
+      ToText(r),
+    },
+    Cell {
+      r.Name
+    }
+  }
+
+  let OtherTable = Block {
+    Table {
+      HAlign: HAligns.Center,
+      Style.TableEdge,
+      Columns: [28 pts, (3 inches) {EdgeR: 0.5 pts}],
+
+      TitleBar(Lang.OtherSymbols, 2),
+      OtherCell(each Alphabet.FindSlice(EqualOther)),
+    },
+    Paragraph {}
+  }
+  //======================================================================
+
+  let ShowVowel(sound) = SoundBox(sound) {
+    X: (sound.Prop.HasFlag(Props.Rounded) ? BoxSize.Width : 0),
+  }
+
+  let VowelBlock(matches) = Cell {
+    HAlign: HAligns.Center,
+    TextHeight: BoxSize.Height,
+    if (matches.Length == 2)
+      Span {
+        ToText(matches[0]),
+        " • " {TextColor: Colors.LightGray},
+        ToText(matches[1]),
+      }
+    else
+      ToText(matches[0]),
+    end
+  }
+
+  let VowelCell(open, backness) = VowelBlock(Alphabet.FindSlice(VowelPair {Open: open, Backness: backness}))
+
+  let VowelRow(open) = Row {
+    Cell {
+      VAlign: VAligns.Center,
+      EdgeB: 0.5 pts,
+      OpenNames[open]
+    },
+    VowelCell(open, each Backnesses)
+  }
+
+  let VowelTable = Block {
+    Table {
+      HAlign: HAligns.Center,
+      Style.TableEdge,
+      Columns: [(1 inch){EdgeR: 0.5 pts}] + [BoxSize.Width*3 {EdgeR: 0.25 pts}] * Backnesses.Length,
+
+      TitleBar("Vowels", Backnesses.Length+1),
+      Row {
+        HeaderCell(Empty),
+        HeaderCell(each BacknessNames)
+      },
+      VowelRow(each Opens)
+    },
+    Paragraph {}
+  }
+  //======================================================================
+
   let AlphabetRow(c) = Row {
     Style.RowBar(EachIndex),
     Cell {
@@ -748,50 +882,6 @@ with IPA {
     }
   }
 
-  let NonPulmonicTable = Block {
-    Table {
-      HAlign: HAligns.Center,
-      Style.TableEdge,
-      Columns: [
-        (50 pts),
-        (75 pts) {EdgeR: 0.5 pts}
-      ] +
-      [CellSize.Width*2 {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * NonPulmonicPlaces.Length,
-
-      TitleBar(Lang.NPConsonants, NonPulmonicPlaces.Length+2),
-      Row {
-        TextHeight: 7 pts,
-        HeaderCell(Empty),
-        HeaderCell(Span {Bold, Lang.Place, Space, Alphabet.Becomes}),
-        PlaceHeader(each NonPulmonicPlaces)
-      },
-      NPRow("Ejective", 1, Props.Ejective, each [Manners.Stop, Manners.Fricative, Manners.LateralFricative]),
-      NPRow("Click", 1, Props.Click, each [Manners.Tenuis, Manners.Nasal, Manners.TenuisLateral]),
-      NPRow("Implosive", 0, Props.Implosive, each [Manners.Implosive]),
-    },
-    Paragraph {}
-  }
-
-  let OtherCell(r) = Row {
-    Cell {
-      Paragraph {
-        Span{SoundBox(r), r.Name}
-      }
-    }
-  }
-
-  let OtherTable = Block {
-    Table {
-      HAlign: HAligns.Center,
-      Style.TableEdge,
-      Columns: [(4 inches) {EdgeR: 0.5 pts}],
-
-      TitleBar("Other Symbols", 2),
-      OtherCell(each Alphabet.FindSlice(EqualOther)),
-    },
-    Paragraph {}
-  }
-
   let AlphabetTable = Table {
     Style.TableEdge,
     PaddingL: 2 pts,
@@ -809,10 +899,12 @@ with IPA {
     },
     AlphabetRow(each Alphabet)
   }
+  //======================================================================
 
   let ShowAlphabet = Block {
     PulmonicTable,
     NonPulmonicTable,
+    VowelTable,
     OtherTable,
     AlphabetTable
   }
