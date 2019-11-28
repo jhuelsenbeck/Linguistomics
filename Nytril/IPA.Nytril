@@ -862,42 +862,49 @@ with IPA {
   }
   //======================================================================
 
-  let AlphabetRow(c) = Row {
-    Style.RowBar(EachIndex),
-    Cell {
-      TextHeight: 14 pts,
-      HAlign: HAligns.Center,
-      VAlign: VAligns.Center,
-      ToText(c)
+  let SoundColumns = 3
+  let SoundSize    = 40 pts
+
+  let SoundCell(sound) = Cell {
+    ParAlignment: ParAlignments.Center,
+    Paragraph {
+      ParBackground: 95%,
+      CategoryNames[sound.Category],
     },
-    VarCell(CategoryNames[c.Category]),
-    VarCell(PlaceNames[c.Place]),
-    VarCell(MannerNames[c.Manner]),
-    Cell {
-      VAlign: VAligns.Center,
+    Paragraph {
+      TextHeight: SoundSize,
+      ToText(sound),
+      SpaceBefore: SoundSize * 0.125,
+      SpaceAfter: SoundSize * 0.25
+    },
+    Paragraph {
+      SpaceAfter: 8 pts,
+      sound.Name,
+/*      if (sound.Category == Categories.Vowel)
+        OpenNames[sound.Open],
+        BacknessNames[sound.Backness],
+      else
+        PlaceNames[sound.Place],
+        MannerNames[sound.Manner],
+      end
+*/
       Span {
         Separator: ", ",
-        GetPropNames(c.Prop, each Props)
+        GetPropNames(sound.Prop, each Props)
       }
     }
   }
 
-  let AlphabetTable = Table {
-    Style.TableEdge,
-    PaddingL: 2 pts,
-    PaddingB: 2 pts,
-    Columns: [(30 pts) Style.ColumnEdge, (65 pts) Style.ColumnEdge, (110 pts)Style.ColumnEdge],
+  let SoundRow(sounds) = Row {
+    SoundCell(each sounds)
+  }
 
-    TitleBar(Lang.IPAListing, 5),
-    Row {
-      TextHeight: 12 pts,
-      HeaderCell(Lang.Text),
-      HeaderCell(Lang.Category) {HAlign: HAligns.Left},
-      HeaderCell(Lang.Place) {HAlign: HAligns.Left},
-      HeaderCell(Lang.Manner) {HAlign: HAligns.Left},
-      HeaderCell(Lang.Property) {HAlign: HAligns.Left}
-    },
-    AlphabetRow(each Alphabet)
+  let SoundTable = Table {
+    Style.TableEdge,
+    Columns: [(2 inches) Style.ColumnEdge] * SoundColumns,
+
+    TitleBar(Lang.IPAListing, SoundColumns),
+    SoundRow(each (Alphabet / SoundColumns))
   }
   //======================================================================
 
@@ -906,6 +913,6 @@ with IPA {
     NonPulmonicTable,
     VowelTable,
     OtherTable,
-    AlphabetTable
+    SoundTable
   }
 }
