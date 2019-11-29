@@ -2,8 +2,13 @@ using Format, Units, Math, IO
 //======================================================================
 
 with Metrics {
-  let PaperSize = Type.Size(8.5 inches, 11 inches)
-  let Margins   = {MarginTB: 0.5 inches, MarginLR: 0.75 inches}
+  let MarginL = 0.75 inches
+  let MarginR = MarginL
+  let MarginT = 0.5 inches
+  let MarginB = 0.4 inches
+  let Paper   = Type.Size(8.5 inches, 11 inches)
+  let Content = Type.Size(Paper.Width - MarginL - MarginR, Paper.Height - MarginT - MarginB)
+  let TableSpace = 24 pts
 }
 //======================================================================
 
@@ -23,10 +28,13 @@ with Style {
   }
 
   let WhitePaper = Document {
-    Size: Metrics.PaperSize,
+    Size: Metrics.Paper,
     TextFamily: TextFamilies.TimesNewRoman,
     TextHeight: 11.5 pts,
-    Metrics.Margins
+    MarginL: Metrics.MarginL,
+    MarginR: Metrics.MarginR,
+    MarginT: Metrics.MarginT,
+    MarginB: Metrics.MarginB,
   }
 
   let NormalHeader(text) = Block {

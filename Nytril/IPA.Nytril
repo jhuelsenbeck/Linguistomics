@@ -5,7 +5,6 @@ with IPA {
   flags Props {
     None,
     Voiced,
-    Pulmonic,
     Click,
     Ejective,
     Implosive,
@@ -16,7 +15,6 @@ with IPA {
   let PropNames = [
     Empty,
     "Voiced",
-    "Pulmonic",
     "Click",
     "Ejective",
     "Implosive",
@@ -26,12 +24,14 @@ with IPA {
 
   enum Categories {
     Vowel,
+    PulmonicConsonant,
     Consonant,
     Other
   }
 
   let CategoryNames = [
     "Vowel",
+    "Pulmonic Consonant",
     "Consonant",
     "Other"
   ]
@@ -110,7 +110,7 @@ with IPA {
     "Alveolo-palatal"
   ]
 
-  let FindPulmonic(sound, data) = sound.Place == data.Place and sound.Prop.HasFlag(Props.Pulmonic)
+  let FindPulmonic(sound, data) = sound.Category == Categories.PulmonicConsonant and sound.Place == data.Place
   let FindPulmonicPlace(place)  = Alphabet.Contains(FindPulmonic{Place: place})
   let PulmonicPlaces            = Places.FindSlice(FindPulmonicPlace)
 
@@ -178,8 +178,8 @@ with IPA {
 
   let HasFlag(props, prop) = (props & prop) != 0
 
-  let Set(c, category, place, manner, prop) = {
-    Text: c,
+  let Set(text, category, place, manner, prop) = {
+    Text: text,
     Category: category,
     Place: place,
     Manner: manner,
@@ -187,34 +187,33 @@ with IPA {
     Name: "{0} {1} {2}"(prop.HasFlag(Props.Voiced) ? Lang.Voiced : Lang.Voiceless, PlaceNames[place], MannerNames[manner])
   }
 
-  let VO(c, open, backness, prop) = {
-    Text: c,
+  let VO(text, open, backness, prop) = {
+    Text: text,
     Category: Categories.Vowel,
     Open: open,
     Backness: backness,
     Prop: prop,
-    Name: "{0} {1} {2} vowel"(OpenNames[open], BacknessNames[backness], prop.HasFlag(Props.Rounded) ? Lang.Rounded : Lang.Unrounded)
+    Name: "{0} {1} {2}"(OpenNames[open], BacknessNames[backness], prop.HasFlag(Props.Rounded) ? Lang.Rounded : Lang.Unrounded)
   }
 
-  let PC(c, place, manner, prop)  = Set(c, Categories.Consonant, place, manner, prop | Props.Pulmonic)
-  let NPC(c, place, manner, prop) = Set(c, Categories.Consonant, place, manner, prop)
-  let OT(c, place, manner, prop)  = Set(c, Categories.Other, place, manner, prop)
-  let PCI(place, manner, prop)    = PC(null, place, manner, prop)
-  let NPEjective(sound, manner)   = NPC(sound.Text EjectiveMark, sound.Place, manner, Props.Ejective)
-  let NCI(place, manner, prop)    = NPC(null, place, manner, prop)
+  let PC(text, place, manner, prop)  = Set(text, Categories.PulmonicConsonant, place, manner, prop)
+  let NPC(text, place, manner, prop) = Set(text, Categories.Consonant, place, manner, prop)
+  let OT(text, place, manner, prop)  = Set(text, Categories.Other, place, manner, prop)
+  let PCI(place, manner, prop)       = PC(null, place, manner, prop)
+  let NPEjective(sound, manner)      = NPC(sound.Text EjectiveMark, sound.Place, manner, Props.Ejective)
+  let NCI(place, manner, prop)       = NPC(null, place, manner, prop)
 
-  let EqualOther(r) = r.Category == Categories.Other
+  let EqualOther(sound) = sound.Category == Categories.Other
 
-  let EqualSound(r, data) =
-    r.Category == data.Category and
-    r.Place == data.Place and
-    r.Manner == data.Manner and
-    r.Prop.HasFlag(data.Prop)
+  let EqualSound(sound, data) =
+    sound.Category == data.Category and
+    sound.Place == data.Place and
+    sound.Manner == data.Manner
 
-  let VowelPair(r, data) =
-    r.Category == Categories.Vowel and
-    r.Open == data.Open and
-    r.Backness == data.Backness
+  let VowelPair(sound, data) =
+    sound.Category == Categories.Vowel and
+    sound.Open == data.Open and
+    sound.Backness == data.Backness
 
   let Impossible = [
     PCI(Places.Pharyngeal, Manners.Nasal, Props.None),
@@ -313,20 +312,20 @@ with IPA {
     //==================================
 
     // Nasal					
-    let VlBilabialNasal              = PC("m̥", Places.Bilabial, Manners.Nasal, Props.None)
-    let VdBilabialNasal              = PC("m", Places.Bilabial, Manners.Nasal, Props.Voiced)
-    let VdLabioDentalNasal           = PC("ɱ", Places.LabioDental, Manners.Nasal, Props.Voiced)
-    let VdLinguoLabioNasal           = PC("n̼", Places.LinguoLabial, Manners.Nasal, Props.Voiced)
+    let VlBilabialNasal           = PC("m̥", Places.Bilabial, Manners.Nasal, Props.None)
+    let VdBilabialNasal           = PC("m", Places.Bilabial, Manners.Nasal, Props.Voiced)
+    let VdLabioDentalNasal        = PC("ɱ", Places.LabioDental, Manners.Nasal, Props.Voiced)
+    let VdLinguoLabioNasal        = PC("n̼", Places.LinguoLabial, Manners.Nasal, Props.Voiced)
 
-    let VlAlveolarNasal              = PC("n̥", Places.Alveolar, Manners.Nasal, Props.None)
-    let VdAlveolarNasal              = PC("n", Places.Alveolar, Manners.Nasal, Props.Voiced)
-    let VlRetroFlexNasal             = PC("ɳ̊", Places.Retroflex, Manners.Nasal, Props.None)
-    let VdRetroFlexNasal             = PC("ɳ", Places.Retroflex, Manners.Nasal, Props.Voiced)
-    let VlPalatalNasal               = PC("ɲ̊", Places.Palatal, Manners.Nasal, Props.None)
-    let VdPalatalNasal               = PC("ɲ", Places.Palatal, Manners.Nasal, Props.Voiced)
-    let VlVelarNasal                 = PC("ŋ̊", Places.Velar, Manners.Nasal, Props.None)
-    let VdVelarNasal                 = PC("ŋ", Places.Velar, Manners.Nasal, Props.Voiced)
-    let VdUvularNasal                = PC("ɴ", Places.Uvular, Manners.Nasal, Props.Voiced)
+    let VlAlveolarNasal           = PC("n̥", Places.Alveolar, Manners.Nasal, Props.None)
+    let VdAlveolarNasal           = PC("n", Places.Alveolar, Manners.Nasal, Props.Voiced)
+    let VlRetroFlexNasal          = PC("ɳ̊", Places.Retroflex, Manners.Nasal, Props.None)
+    let VdRetroFlexNasal          = PC("ɳ", Places.Retroflex, Manners.Nasal, Props.Voiced)
+    let VlPalatalNasal            = PC("ɲ̊", Places.Palatal, Manners.Nasal, Props.None)
+    let VdPalatalNasal            = PC("ɲ", Places.Palatal, Manners.Nasal, Props.Voiced)
+    let VlVelarNasal              = PC("ŋ̊", Places.Velar, Manners.Nasal, Props.None)
+    let VdVelarNasal              = PC("ŋ", Places.Velar, Manners.Nasal, Props.Voiced)
+    let VdUvularNasal             = PC("ɴ", Places.Uvular, Manners.Nasal, Props.Voiced)
 														
     // Stop
     let VlBilabialStop            = PC("p", Places.Bilabial, Manners.Stop, Props.None)
@@ -451,13 +450,13 @@ with IPA {
     //==================================
 
     // Stops
-    let VlBilabialStopEjective    = NPEjective(VlBilabialStop, Manners.Stop)
-    let VlAveolarStopEjective     = NPEjective(VlAlveolarStop, Manners.Stop)
-    let VlRetroflexStopEjective   = NPEjective(VlRetroflexStop, Manners.Stop)
-    let VlPalatalStopEjective     = NPEjective(VlPalatalStop, Manners.Stop)
-    let VlVelarStopEjective       = NPEjective(VlVelarStop, Manners.Stop)
-    let VlUvularStopEjective      = NPEjective(VlUvularStop, Manners.Stop)
-    let VlEpiglottalStopEjective  = NPEjective(VdEpiglottalStop, Manners.Stop)
+    let VlBilabialStopEjective       = NPEjective(VlBilabialStop, Manners.Stop)
+    let VlAveolarStopEjective        = NPEjective(VlAlveolarStop, Manners.Stop)
+    let VlRetroflexStopEjective      = NPEjective(VlRetroflexStop, Manners.Stop)
+    let VlPalatalStopEjective        = NPEjective(VlPalatalStop, Manners.Stop)
+    let VlVelarStopEjective          = NPEjective(VlVelarStop, Manners.Stop)
+    let VlUvularStopEjective         = NPEjective(VlUvularStop, Manners.Stop)
+    let VlEpiglottalStopEjective     = NPEjective(VdEpiglottalStop, Manners.Stop)
 
     // Fricatives
     let VlBilabialFricativeEjective     = NPEjective(VlBilabialFricative, Manners.Fricative)
@@ -518,8 +517,6 @@ with IPA {
     let VlEpiglottalFricative        = OT("ʜ", Places.Pharyngeal, Manners.Fricative, Props.None)
     let VdEpiglottalFricative        = OT("ʢ", Places.Pharyngeal, Manners.Fricative, Props.Voiced)
     let VlEpiglottalPlosive          = OT("ʡ", Places.Pharyngeal, Manners.Plosive, Props.None)
-    let VlAffricates                 = {Name: "Affricates and double articulations"} +
-                                       OT("k͡p", Places.Pharyngeal, Manners.Affricate, Props.None)
 
     let CloseFrontUnrounded          = VO("i", Opens.Close, Backnesses.Front, Props.None)
     let CloseFrontRounded            = VO("y", Opens.Close, Backnesses.Front, Props.Rounded)
@@ -626,7 +623,6 @@ with IPA {
   let TieBarAbove                  = '\u0361'
 
   let AllSounds = Alphabet + Impossible
-
   //======================================================================
 
   let TitleBar(name, columns) = Row {
@@ -641,6 +637,20 @@ with IPA {
     }
   }
 
+  let ShowSound(c) = Span {
+    Style.IPAFamily,
+    c.Text
+  }
+
+  let SoundText(c) = ShowSound(c) {
+    Link: c,
+  }
+
+  let TableNotes = Paragraph {
+    SpaceAfter: Metrics.TableSpace,
+  }
+  //======================================================================
+
   let BoxSize  = Type.Size(20 pts, 20 pts)
   let CellSize = Type.Size(BoxSize.Width * 2, BoxSize.Height)
 
@@ -652,13 +662,13 @@ with IPA {
         Style.Extension
       end,
       TextHeight: BoxSize.Height - 4 pts,
-      ToText(r)
+      SoundText(r)
     else
       Style.ImpossibleBackground
     end
   }
 
-  let ShowSound(r) = SoundBox(r) {
+  let ShowBox(r) = SoundBox(r) {
     X: (r.Prop.HasFlag(Props.Voiced) ? BoxSize.Width : 0),
   }
 
@@ -671,7 +681,7 @@ with IPA {
         Span {
           Canvas {
             Size: CellSize,
-            ShowSound(each matches)
+            ShowBox(each matches)
           }
         }
       end
@@ -727,17 +737,13 @@ with IPA {
       },
       PulmonicRow(each PulmonicManners),
     },
-    Paragraph {
-      SpaceAfter: 16 pts,
-      Lang.PulmonicSymbols(ToText(Alphabet.VlMultiplePlaceFricative)),
+    TableNotes {
+      Lang.PulmonicSymbols(SoundText(Alphabet.VlMultiplePlaceFricative)),
+      Space,
+      Lang.Impossible,
       Space,
       Span {Style.Extension Lang.Extensions}
-    }
-  }
-
-  let ToText(c) = Span {
-    Style.IPAFamily,
-    c.Text
+    },
   }
   //======================================================================
 
@@ -788,31 +794,11 @@ with IPA {
       NPRow(Lang.Click, 1, Props.Click, each [Manners.Tenuis, Manners.Nasal, Manners.TenuisLateral]),
       NPRow(Lang.Implosive, 0, Props.Implosive, each [Manners.Implosive]),
     },
-    Paragraph {}
-  }
-  //======================================================================
-
-  let OtherCell(r) = Row {
-    VAlign: VAligns.Center,
-    Cell {
-      TextHeight: 20 pts,
-      ToText(r),
+    TableNotes {
+      Lang.ConsonantSymbols,
+      Space,
+      Lang.Impossible,
     },
-    Cell {
-      r.Name
-    }
-  }
-
-  let OtherTable = Block {
-    Table {
-      HAlign: HAligns.Center,
-      Style.TableEdge,
-      Columns: [28 pts, (3 inches) {EdgeR: 0.5 pts}],
-
-      TitleBar(Lang.OtherSymbols, 2),
-      OtherCell(each Alphabet.FindSlice(EqualOther)),
-    },
-    Paragraph {}
   }
   //======================================================================
 
@@ -825,12 +811,12 @@ with IPA {
     TextHeight: BoxSize.Height,
     if (matches.Length == 2)
       Span {
-        ToText(matches[0]),
+        SoundText(matches[0]),
         " • " {TextColor: Colors.LightGray},
-        ToText(matches[1]),
+        SoundText(matches[1]),
       }
     else
-      ToText(matches[0]),
+      SoundText(matches[0]),
     end
   }
 
@@ -851,21 +837,55 @@ with IPA {
       Style.TableEdge,
       Columns: [(1 inch){EdgeR: 0.5 pts}] + [BoxSize.Width*3 {EdgeR: 0.25 pts}] * Backnesses.Length,
 
-      TitleBar("Vowels", Backnesses.Length+1),
+      TitleBar(Lang.Vowels, Backnesses.Length+1),
       Row {
         HeaderCell(Empty),
         HeaderCell(each BacknessNames)
       },
       VowelRow(each Opens)
     },
-    Paragraph {}
+    TableNotes {
+      Lang.VowelSymbols,
+    },
   }
   //======================================================================
 
-  let SoundColumns = 3
+  let OtherCell(r) = {
+    Cell {
+      VAlign: VAligns.Center,
+      HAlign: HAligns.Center,
+      TextHeight: 20 pts,
+      SoundText(r),
+    },
+    Cell {
+      VAlign: VAligns.Center,
+      r.Name
+    }
+  }
+
+  let OtherRow(sounds) = Row {
+    OtherCell(each sounds)
+  }
+
+  let OtherTable = Block {
+    Table {
+      Style.TableEdge,
+      Columns: [28 pts, 2.8 inches]*2,
+
+      TitleBar(Lang.OtherSymbols, 4),
+      OtherRow(each (Alphabet.FindSlice(EqualOther) / 2)),
+    },
+    TableNotes {
+    }
+  }
+  //======================================================================
+
+  let SoundColumns = 4
   let SoundSize    = 40 pts
 
   let SoundCell(sound) = Cell {
+    Edge: 0.25 pts {Color: Colors.LightGray},
+    Padding: 2 pts,
     ParAlignment: ParAlignments.Center,
     Paragraph {
       ParBackground: 95%,
@@ -873,25 +893,15 @@ with IPA {
     },
     Paragraph {
       TextHeight: SoundSize,
-      ToText(sound),
-      SpaceBefore: SoundSize * 0.125,
-      SpaceAfter: SoundSize * 0.25
+      ShowSound(sound) {
+        LocationMark: sound
+      },
+      SpaceAfter: SoundSize * 0.125
     },
     Paragraph {
-      SpaceAfter: 8 pts,
+      TextHeight: 10 pts,
+      SpaceAfter: 16 pts,
       sound.Name,
-/*      if (sound.Category == Categories.Vowel)
-        OpenNames[sound.Open],
-        BacknessNames[sound.Backness],
-      else
-        PlaceNames[sound.Place],
-        MannerNames[sound.Manner],
-      end
-*/
-      Span {
-        Separator: ", ",
-        GetPropNames(sound.Prop, each Props)
-      }
     }
   }
 
@@ -899,12 +909,14 @@ with IPA {
     SoundCell(each sounds)
   }
 
-  let SoundTable = Table {
-    Style.TableEdge,
-    Columns: [(2 inches) Style.ColumnEdge] * SoundColumns,
-
-    TitleBar(Lang.IPAListing, SoundColumns),
-    SoundRow(each (Alphabet / SoundColumns))
+  let SoundTable = Block {
+    Table {
+      Columns: [Metrics.Content.Width / SoundColumns] * SoundColumns,
+      TitleBar(Lang.IPAListing, SoundColumns),
+      SoundRow(each (Alphabet / SoundColumns))
+    },
+    TableNotes {
+    }
   }
   //======================================================================
 
