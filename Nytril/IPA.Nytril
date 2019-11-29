@@ -100,7 +100,7 @@ with IPA {
     "Linguo-Labial",
     "Dental",
     "Alveolar",
-    "Postalveolar",
+    "Post-alveolar",
     "Retroflex",
     "Palatal",
     "Velar",
@@ -179,6 +179,7 @@ with IPA {
   let HasFlag(props, prop) = (props & prop) != 0
 
   let Set(text, category, place, manner, prop) = {
+    Popup: SoundPopup,
     Text: text,
     Category: category,
     Place: place,
@@ -188,6 +189,7 @@ with IPA {
   }
 
   let VO(text, open, backness, prop) = {
+    Popup: SoundPopup,
     Text: text,
     Category: Categories.Vowel,
     Open: open,
@@ -637,13 +639,14 @@ with IPA {
     }
   }
 
-  let ShowSound(c) = Span {
+  let ShowSound(sound) = Span {
     Style.IPAFamily,
-    c.Text
+    sound.Text
   }
 
-  let SoundText(c) = ShowSound(c) {
-    Link: c,
+  let SoundText(sound) = ShowSound(sound) {
+    Popup: SoundPopup(sound),
+    Link: EachSymbol.SymbolName,
   }
 
   let TableNotes = Paragraph {
@@ -654,22 +657,22 @@ with IPA {
   let BoxSize  = Type.Size(20 pts, 20 pts)
   let CellSize = Type.Size(BoxSize.Width * 2, BoxSize.Height)
 
-  let SoundBox(r) = Canvas {
+  let SoundBox(sound) = Canvas {
     HAlign: HAligns.Center,
     Size: BoxSize,
-    if (r.Text)
-      if (r.Prop.HasFlag(Props.Extension))
+    if (sound.Text)
+      if (sound.Prop.HasFlag(Props.Extension))
         Style.Extension
       end,
       TextHeight: BoxSize.Height - 4 pts,
-      SoundText(r)
+      SoundText(sound)
     else
       Style.ImpossibleBackground
     end
   }
 
-  let ShowBox(r) = SoundBox(r) {
-    X: (r.Prop.HasFlag(Props.Voiced) ? BoxSize.Width : 0),
+  let ShowBox(sound) = SoundBox(sound) {
+    X: (sound.Prop.HasFlag(Props.Voiced) ? BoxSize.Width : 0),
   }
 
   let SoundBlock(matches) = Cell {
@@ -709,7 +712,7 @@ with IPA {
     Style.SansSerif,
     Style.TitleBackground,
     EdgeB: 1 pts,
-    PaddingTB: 2 pts,
+    Padding: 2 pts,
     d
   }
 
@@ -731,8 +734,8 @@ with IPA {
         HeaderCell(Lang.Laryngeal) {ColumnSpan: 2},
       },
       Row {
-        TextHeight: 7 pts,
-        HeaderCell(Span {Bold, Lang.Manner, Space, Alphabet.Downstep}),
+        TextHeight: 6 pts,
+        HeaderCell(Bold Lang.Manner) {HAlign: HAligns.Left},
         PlaceHeader(each PulmonicPlaces)
       },
       PulmonicRow(each PulmonicManners),
@@ -765,17 +768,6 @@ with IPA {
     NonPulmonicCell(each NonPulmonicPlaces, manner, props)
   }
 
-  let VarCell(text) = Cell {
-    VAlign: VAligns.Center,
-    text
-  }
-
-  let GetPropNames(props, prop) = {
-    if (props.HasFlag(prop))
-      PropNames[EachIndex]
-    end
-  }
-
   let NonPulmonicTable = Block {
     Table {
       HAlign: HAligns.Center,
@@ -785,7 +777,7 @@ with IPA {
 
       TitleBar(Lang.NPConsonants, NonPulmonicPlaces.Length+2),
       Row {
-        TextHeight: 7 pts,
+        TextHeight: 6 pts,
         HeaderCell(Empty),
         HeaderCell(Span {Bold, Lang.Place, Space, Alphabet.Becomes}),
         PlaceHeader(each NonPulmonicPlaces)
@@ -839,6 +831,7 @@ with IPA {
 
       TitleBar(Lang.Vowels, Backnesses.Length+1),
       Row {
+        TextHeight: 10 pts,
         HeaderCell(Empty),
         HeaderCell(each BacknessNames)
       },
@@ -888,14 +881,13 @@ with IPA {
     Padding: 2 pts,
     ParAlignment: ParAlignments.Center,
     Paragraph {
+      LocationMark: EachSymbol.SymbolName,
       ParBackground: 95%,
       CategoryNames[sound.Category],
     },
     Paragraph {
       TextHeight: SoundSize,
-      ShowSound(sound) {
-        LocationMark: sound
-      },
+      ShowSound(sound),
       SpaceAfter: SoundSize * 0.125
     },
     Paragraph {
@@ -917,6 +909,13 @@ with IPA {
     },
     TableNotes {
     }
+  }
+
+  let SoundPopup(sound) = Table {
+    Columns: [2 inches],
+    Row {
+      SoundCell(sound)
+    },
   }
   //======================================================================
 
