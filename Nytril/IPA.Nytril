@@ -117,38 +117,6 @@ with IPA {
     "Glottal",
   ]
 
-  let FindPulmonic(sound, data) = sound.Category == Categories.PulmonicConsonant and sound.Place == data.Place
-  let FindPulmonicPlace(place)  = Alphabet.Contains(FindPulmonic{Place: place})
-  let PulmonicPlaces            = Places.FindSlice(FindPulmonicPlace)
-
-  let NonPulmonicPlaces = [
-    Places.Bilabial,
-    Places.LabioDental,
-    Places.Dental,
-    Places.Alveolar,
-    Places.PostAlveolar,
-    Places.Retroflex,
-    Places.Palatal,
-    Places.Velar,
-    Places.Uvular,
-    Places.Pharyngeal,
-  ]
-
-  let AffricatePlaces = [
-    Places.Bilabial,
-    Places.LabioDental,
-    Places.Dental,
-    Places.Alveolar,
-    Places.PalatoAlveolar,
-    Places.Retroflex,
-    Places.AlveoloPalatal,
-    Places.Palatal,
-    Places.Velar,
-    Places.Uvular,
-    Places.Pharyngeal,
-    Places.Glottal,
-  ]
-
   enum Manners {
     Stop,
     Nasal,
@@ -170,19 +138,6 @@ with IPA {
     Central,
     Lateral
   }
-
-  let PulmonicManners = [
-    Manners.Nasal,
-    Manners.Stop,
-    Manners.SibilantFricative,
-    Manners.Fricative,
-    Manners.Approximant,
-    Manners.TapFlap,
-    Manners.Trill,
-    Manners.LateralFricative,
-    Manners.LateralApproximant,
-    Manners.LateralTapFlap
-  ]
 
   let MannerNames = [
     "Stop",
@@ -206,7 +161,11 @@ with IPA {
     "Lateral"
   ]
 
-  let HasFlag(props, prop) = (props & prop) != 0
+  let FindPulmonic(sound, data) = sound.Category == Categories.PulmonicConsonant and sound.Place == data.Place
+  let FindPulmonicPlace(place)  = Alphabet.Contains(FindPulmonic{Place: place})
+  let PulmonicPlaces            = Places.FindSlice(FindPulmonicPlace)
+
+  let HasProp(sound, prop) = sound.Prop and (sound.Prop & prop) != 0
 
   let Set(text, category, place, manner, prop) = {
     Popup: SoundPopup,
@@ -215,7 +174,6 @@ with IPA {
     Place: place,
     Manner: manner,
     Prop: prop,
-    Name: "{0} {1} {2}"(prop.HasFlag(Props.Voiced) ? Lang.Voiced : Lang.Voiceless, PlaceNames[place], MannerNames[manner])
   }
 
   let VO(text, open, backness, prop) = {
@@ -225,7 +183,6 @@ with IPA {
     Open: open,
     Backness: backness,
     Prop: prop,
-    Name: "{0} {1} {2}"(OpenNames[open], BacknessNames[backness], prop.HasFlag(Props.Rounded) ? Lang.Rounded : Lang.Unrounded)
   }
 
   let PC(text, place, manner, prop)  = Set(text, Categories.PulmonicConsonant, place, manner, prop)
@@ -353,7 +310,7 @@ with IPA {
     // Sibilant Fricative										
     let VlAlveolarSibFricative       = PC("s", Places.Alveolar, Manners.SibilantFricative, Props.None)
     let VdAlveolarSibFricative       = PC("z", Places.Alveolar, Manners.SibilantFricative, Props.Voiced)
-    let VlPostalveolarSibFricative   = PC("ʃ", Places.Postalveolar, Manners.SibilantFricative, Props.None)
+    let VlPostalveolarSibFricative   = PC("ʃ", Places.PostAlveolar, Manners.SibilantFricative, Props.None)
     let VdPostalveolarSibFricative   = PC("ʒ", Places.PostAlveolar, Manners.SibilantFricative, Props.Voiced)
     let VlRetroflexSibFricative      = PC("ʂ", Places.Retroflex, Manners.SibilantFricative, Props.None)
     let VdRetroflexSibFricative      = PC("ʐ", Places.Retroflex, Manners.SibilantFricative, Props.Voiced)
@@ -702,6 +659,22 @@ with IPA {
     Link: EachSymbol.SymbolName,
   }
 
+  let SoundName(sound) = Span {
+    if (sound.Category == Categories.Vowel)
+      OpenNames[sound.Open],
+      Space,
+      BacknessNames[sound.Backness],
+      Space,
+      sound.HasProp(Props.Rounded) ? Lang.Rounded : Lang.Unrounded
+    else
+      sound.HasProp(Props.Voiced) ? Lang.Voiced : Lang.Voiceless,
+      Space,
+      PlaceNames[sound.Place],
+      Space,
+      MannerNames[sound.Manner]
+    end
+  }
+
   let TableNotes = Paragraph {
     SpaceAfter: Metrics.TableSpace,
   }
@@ -714,7 +687,7 @@ with IPA {
     HAlign: HAligns.Center,
     Size: BoxSize,
     if (sound.Text)
-      if (sound.Prop.HasFlag(Props.Extension))
+      if (sound.HasProp(Props.Extension))
         Style.Extension
       end,
       TextHeight: BoxSize.Height - 4 pts,
@@ -725,12 +698,13 @@ with IPA {
   }
 
   let ShowBox(sound) = SoundBox(sound) {
-    X: (sound.Prop.HasFlag(Props.Voiced) ? BoxSize.Width : 0),
+    X: (sound.HasProp(Props.Voiced) ? BoxSize.Width : 0),
   }
 
   let SoundBlock(matches) = Cell {
+    Style.SoundBottom,
     if (matches.Length > 0)
-      if (matches.Length == 1 and matches[0].Prop.HasFlag(Props.Impossible))
+      if (matches.Length == 1 and matches[0].HasProp(Props.Impossible))
         Style.ImpossibleBackground
       else
         TextHeight: 1 pts,
@@ -746,8 +720,13 @@ with IPA {
 
   let PulmonicCell(place, manner) = SoundBlock(AllSounds.FindSlice(EqualSound PC(null, place, manner, Props.None)))
 
+  let PlaceHeader(place) = HeaderCell(PlaceNames[place])
+
+  let FindPulmonicManner(sound, data) = sound.Category == Categories.PulmonicConsonant && sound.Manner == data.Manner
+  let FindManner(manner) = Alphabet.Contains(FindPulmonicManner {Manner: manner})
+  let PulmonicManners    = Manners.FindSlice(FindManner)
+
   let PulmonicRow(manner) = Row {
-    EdgeB: 0.5 pts,
     Cell {
       VAlign: VAligns.Center,
       EdgeR: 0.5 pts,
@@ -768,8 +747,6 @@ with IPA {
     Padding: 2 pts,
     d
   }
-
-  let PlaceHeader(place) = HeaderCell(PlaceNames[place])
 
   let PulmonicTable = Block {
     Table {
@@ -805,6 +782,12 @@ with IPA {
 
   let NonPulmonicCell(place, manner, props) = SoundBlock(AllSounds.FindSlice(EqualSound NPC(null, place, manner, props)))
 
+  let FindPlace(sound, data)      = sound.Category == data.Category && sound.Place == data.Place
+  let FindPlaces(place, data)     = Alphabet.Contains(FindPlace {Category: data.Category, Place: place})
+  let FindPlaceCategory(category) = Places.FindSlice(FindPlaces {Category: category})
+
+  let NonPulmonicPlaces = FindPlaceCategory(Categories.Consonant)
+
   let NPRow(name, namerow, props, manner) = Row {
     Cell {
       EdgeR: 0.5 pts,
@@ -815,7 +798,7 @@ with IPA {
     },
     Cell {
       VAlign: VAligns.Center,
-      EdgeB: 0.5 pts,
+      Style.SoundBottom,
       MannerNames[manner]
     },
     NonPulmonicCell(each NonPulmonicPlaces, manner, props)
@@ -845,45 +828,49 @@ with IPA {
       Lang.Impossible,
     },
   }
-//======================================================================
+  //======================================================================
 
   let AffricateCell(category, manner, place) = SoundBlock(AllSounds.FindSlice(EqualSound Set(null, category, place, manner, Props.None)))
 
-  let AffricateRow(category, manner) = Row {
+  let AffricateRow(places, category, manner) = Row {
     Cell {
       VAlign: VAligns.Center,
-      EdgeB: 0.5 pts,
+      Style.SoundBottom,
       MannerNames[manner]
     },
-    AffricateCell(category, manner, each AffricatePlaces)
+    AffricateCell(category, manner, each places)
   }
 
-  let AffricateTable(category, manners) = Block {
-    Table {
-      HAlign: HAligns.Center,
-      Style.TableEdge,
-      Columns: [(40 pts) {EdgeR: 0.5 pts}] +
-               [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * AffricatePlaces.Length,
+  let AffricateTable(category, manners) {
+    var places = FindPlaceCategory(category);
+    return Block {
+      Table {
+        HAlign: HAligns.Center,
+        Style.TableEdge,
+        Columns: [(40 pts) {EdgeR: 0.5 pts}] +
+                 [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * places.Length,
 
-      TitleBar(CategoryNames[category], AffricatePlaces.Length+1),
-      Row {
-        TextHeight: 6 pts,
-        HeaderCell(Empty),
-        PlaceHeader(each AffricatePlaces)
+        TitleBar(CategoryNames[category], places.Length+1),
+        Row {
+          TextHeight: 6 pts,
+          HeaderCell(Empty),
+          PlaceHeader(each places)
+        },
+        AffricateRow(places, category, each manners),
       },
-      AffricateRow(category, each manners),
-    },
-    TableNotes {
-      Lang.Impossible,
-    },
+      TableNotes {
+        Lang.Impossible,
+      },
+    }
   }
   //======================================================================
 
   let ShowVowel(sound) = SoundBox(sound) {
-    X: (sound.Prop.HasFlag(Props.Rounded) ? BoxSize.Width : 0),
+    X: (sound.HasProp(Props.Rounded) ? BoxSize.Width : 0),
   }
 
   let VowelBlock(matches) = Cell {
+    Style.SoundBottom,
     HAlign: HAligns.Center,
     TextHeight: BoxSize.Height,
     if (matches.Length == 2)
@@ -902,7 +889,7 @@ with IPA {
   let VowelRow(open) = Row {
     Cell {
       VAlign: VAligns.Center,
-      EdgeB: 0.5 pts,
+      Style.SoundBottom,
       OpenNames[open]
     },
     VowelCell(open, each Backnesses)
@@ -927,16 +914,16 @@ with IPA {
   }
   //======================================================================
 
-  let OtherCell(r) = {
+  let OtherCell(sound) = {
     Cell {
       VAlign: VAligns.Center,
       HAlign: HAligns.Center,
       TextHeight: 20 pts,
-      SoundText(r),
+      SoundText(sound),
     },
     Cell {
       VAlign: VAligns.Center,
-      r.Name
+      SoundName(sound)
     }
   }
 
@@ -976,7 +963,7 @@ with IPA {
     Paragraph {
       TextHeight: 10 pts,
       SpaceAfter: 16 pts,
-      sound.Name,
+      SoundName(sound),
     }
   }
 
