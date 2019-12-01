@@ -2,13 +2,9 @@ using Format, Units, Math, IO
 //======================================================================
 
 with RevBayes {
-  let FiftyFile   = Info.OutputFolder FileName("ieo_fifty") Extensions.Nexus
-  let ChangA3Tree = Info.OutputFolder FileName("ChangA3.tree")
-  let SourcePath  = Info.OutputFolder FileName("Articles") Extensions.RevBayes
-
-
+  let TreeFile      = Info.OutputFolder FileName("ieo_fifty") Extensions.Nexus
   let Comment(text) = Span {TextColor: Colors.Green, LineBreak, "# " text}
-  let String(text) = Span {TextColor: Colors.Red, text.QuoteString}
+  let String(text)  = Span {TextColor: Colors.Red, text.QuoteString}
 
   let CognateNumber(group) = Span {
     group.Variable,
@@ -22,55 +18,8 @@ with RevBayes {
     Empty,
     "moves = VectorMoves()",
     "monitors = VectorMonitors()",
-    "trees = readTrees({0})"(String(FiftyFile)),
+    "trees = readTrees({0})"(String(TreeFile)),
     "treetrace = treeTrace(trees)",
-
-    Comment("draw a tree from the empirical tree distribution"),
-    "psi ~ dnEmpiricalTree(treetrace)",
-
-
-    Comment("DO NOT FORGET THIS! See Landis response to my question in Revbayes google group"),
-    "moves.append( mvEmpiricalTree(psi, weight = 2) )",
-
-    Comment("We'll also read in a pre-cooked MAP tree to summarize our results."),
-    Comment("This is the Chang A3 tree"),
-
-    "map_tree = readBranchLengthTrees({0})[1]"(String(ChangA3Tree))
-
-    Comment("Set priors according to the resultant state"),
-
-    "treelength := psi.treeLength()",
-
-    Comment("Number of cognates in (0,1) languages"),
-    "rate_pr_00_01 := treelength / 2",
-
-    Comment("Number of cognates in (1,0) languages"),
-    "rate_pr_00_10 := treelength / 8",
-
-    Comment("Number of definite article cognates in (1,1) languages"),
-    "rate_pr_01_11 := treelength / 9",
-
-    Comment("Number of indefinite article cognates in (1,1) languages"),
-    "rate_pr_10_11 := treelength / 10",
-
-    Comment("Gain of indefinite article with no definiteness marker"),
-    "rate_00_01 ~ dnExponential(rate_pr_00_01)",
-
-    Comment("Gain of definiteness marker with no indefinite article"),
-    "rate_00_10 ~ dnExponential(rate_pr_00_10)"
-
-    Comment("Gain of definiteness marker with indefinite article"),
-    "rate_01_11 ~ dnExponential(rate_pr_01_11)",
-
-    Comment("Gain of indefinite article with definiteness marker"),
-    "rate_10_11 ~ dnExponential(rate_pr_10_11)",
-
-    "for (i in 1:numTotal) {",
-    "  for (j in 1:numTotal) {",
-    "    rates[i][j] <- 0.0",
-    "  }",
-    "}",
-
   }
 }
 //======================================================================

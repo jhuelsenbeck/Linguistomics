@@ -52,7 +52,7 @@ let WhitePaper = Style.WhitePaper {
       Paragraph {
         Span {
           Separator: ", ",
-          LastSeparator: " and ",
+          LastSeparator: " {0} "(Lang.And),
           Style.Author(each Authors)
         }
       },
@@ -67,7 +67,7 @@ let WhitePaper = Style.WhitePaper {
 //======================================================================
 
 with Abstract {
-  let Title = "Abstract"
+  let Title = Lang.Abstract
   let Body  = Block {
     Paragraph {
       "It all started in a little town called Madrid..."
@@ -77,7 +77,7 @@ with Abstract {
 //======================================================================
 
 with Content.Introduction {
-  let Title = "Introduction"
+  let Title = Lang.Introduction
   let Body  = Block {
     Paragraph {
       "In this paper, we attempt to do the impossible!"
@@ -87,7 +87,7 @@ with Content.Introduction {
 //======================================================================
 
 with Content.Methods {
-  let Title = "Methods"
+  let Title = Lang.Methods
   let Body  = Block {
     Paragraph {
       "We used any and all means necessary."
@@ -97,7 +97,7 @@ with Content.Methods {
 //======================================================================
 
 with Content.Conclusion {
-  let Title = "Conclusion"
+  let Title = Lang.Conclusion
   let Body  = Block {
     Paragraph {
       "Vene Vidi Vici"
@@ -106,44 +106,19 @@ with Content.Conclusion {
 }
 //======================================================================
 
-with Appendix.SoundGroups {
-  let Title   = "Sound Groups"
-  let Content = IPA.ShowGroups
-}
+let ShowAppendix(title, content) = {Title: title, Content: content}
 
-with Appendix.IPATable {
-  let Title   = "International Phonetic Alphabet"
-  let Content = IPA.SoundTable
-}
+let Appendix = [
+  ShowAppendix(Lang.SoundGroups, IPA.ShowGroups),
+  ShowAppendix(Lang.IPA, IPA.SoundTable),
+  ShowAppendix(Lang.LanguagePhylogeny, Style.ShowTree(LanguageTree)),
+  ShowAppendix(Lang.WordList, AllWords.WordListTable),
+  ShowAppendix(Lang.WordList, DisplayWords.CompleteWordListTable),
+  ShowAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
 
-with Appendix.ChangA3 {
-  let Title   = "Language Phylogeny"
-  let Content = Style.ShowTree(LanguageTree)
-}
-
-with Appendix.WordList {
-  let Title   = Lang.WordList
-  let Content = DisplayWords.WordListTable
-}
-
-
-/*
-with Appendix.Languages {
-  let Title = "List of Languages"
-  let Content = Style.ShowLanguageList(LanguageList)
-}
-
-with Appendix.ChangA3Nexus {
-  let Title = "Change A3 Tree File"
-  let Content = TreeLibrary.NexusFile([LanguageTree]) {
-    TextFamily: TextFamilies.Consolas,
-  }
-}
-*/
-with Appendix.NytrilSource {
-  let Title = "Nytril Source Code"
-  let Content = Style.SourceFile(each System.SourceList)
-}
+//  ShowAppendix("List of Languages", Style.ShowLanguageList(LanguageList)),
+//  ShowAppendix("Change A3 Tree File", TreeLibrary.NexusFile([LanguageTree]) {TextFamily: TextFamilies.Consolas}),
+]
 //======================================================================
 
 

@@ -221,7 +221,7 @@ with Style {
   }
 
   let ShowAppendixTable = Block {
-    HeaderCentered("Appendices"),
+    HeaderCentered(Lang.Appendices),
     Table {
       Columns: [15 pts, 5 inches],
       AppendixRow(each Appendix)
@@ -229,9 +229,9 @@ with Style {
   }
 
   let ShowReferences(references) = Block {
-    HeaderCentered("Authors"),
+    HeaderCentered(Lang.Authors),
     ShowAuthorFull(each Authors),
-    HeaderCentered("References"),
+    HeaderCentered(Lang.References),
     ShowReference(each references)
   }
 
@@ -241,7 +241,7 @@ with Style {
       ParAlignment: ParAlignments.Center,
       TextHeight: 14 pts,
       SpaceAfter: 8 pts,
-      "Appendix {0} - "(EachIndex+1),
+      "{0} {1} - "(Lang.Appendix, EachIndex+1),
       LocationMark: appendix.FullSymbolName,
       appendix.Title,
     },
@@ -261,7 +261,7 @@ with Style {
     Row {
       Background: Colors.DarkGray,
       TextColor: Colors.White,
-      "Name",
+      Lang.Name,
     },
     Edge: 0.25 pts {Color: Colors.DarkGray},
     LanguageRow(each list)
@@ -292,6 +292,55 @@ with Style {
 //======================================================================
 
 with DisplayWords {
+  let WordRow(word) = Row {
+    Cell {
+      WordMeanings.GetReference(word.Meaning).SymbolName
+    },
+    Cell {
+      Italic,
+      word.Text
+    },
+    Cell {
+      Span {
+        Separator: ", ",
+        each word.Text
+      }
+    }
+  }
+
+  let HeaderCell(d) = Cell {
+    Style.SansSerif,
+    Style.TitleBackground,
+    EdgeB: 1 pts,
+    Padding: 2 pts,
+    d
+  }
+
+  let WordTable(language) = Block {
+    Table {
+      Columns: [0.8 inches, 0.7 inches, Metrics.Content.Width - 2 inches],
+      Style.TitleBar(language.Name, 3),
+      Row {
+        HeaderCell("Meaning"),
+        HeaderCell("Text"),
+        HeaderCell("Coding"),
+      },
+      WordRow(each language.Words)
+    },
+    Style.TableNotes {
+    }
+  }
+
+  let LangHasWords(language) = language.Words != null
+  let LanguagesWithWords     = Languages.FindSlice(LangHasWords)
+
+  let WordListTable = Block {
+    WordTable(each LanguagesWithWords),
+  }
+}
+//======================================================================
+
+with AllWords {
   let WordRow(word) = Row {
     Cell {
       WordMeanings.GetReference(word.Meaning).SymbolName
