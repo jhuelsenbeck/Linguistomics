@@ -51,6 +51,10 @@ with Style {
     },
   }
 
+  let TableNotes = Paragraph {
+    SpaceAfter: Metrics.TableSpace,
+  }
+
   let TitleWord(text, height) = Span {
     {TextHeight: height pts} text[0],
     {TextHeight: height * 0.6 pts} text[1..]
@@ -261,6 +265,77 @@ with Style {
     },
     Edge: 0.25 pts {Color: Colors.DarkGray},
     LanguageRow(each list)
+  }
+
+  let HeaderCell(d) = Cell {
+    HAlign: HAligns.Center,
+    VAlign: VAligns.Center,
+    Style.SansSerif,
+    Style.TitleBackground,
+    EdgeB: 1 pts,
+    Padding: 2 pts,
+    d
+  }
+
+  let TitleBar(name, columns) = Row {
+    Cell {
+      Padding: 2 pts,
+      ParAlignment: ParAlignments.Center,
+      Background: 40%,
+      TextHeight: 16 pts,
+      TextColor: Colors.White,
+      ColumnSpan: columns,
+      name
+    }
+  }
+}
+//======================================================================
+
+with DisplayWords {
+  let WordRow(word) = Row {
+    Cell {
+      WordMeanings.GetReference(word.Meaning).SymbolName
+    },
+    Cell {
+      Italic,
+      word.Text
+    },
+    Cell {
+      Span {
+        Separator: ", ",
+        each word.Text
+      }
+    }
+  }
+
+  let HeaderCell(d) = Cell {
+    Style.SansSerif,
+    Style.TitleBackground,
+    EdgeB: 1 pts,
+    Padding: 2 pts,
+    d
+  }
+
+  let WordTable(language) = Block {
+    Table {
+      Columns: [0.8 inches, 0.7 inches, Metrics.Content.Width - 2 inches],
+      Style.TitleBar(language.Name, 3),
+      Row {
+        HeaderCell("Meaning"),
+        HeaderCell("Text"),
+        HeaderCell("Coding"),
+      },
+      WordRow(each language.Words)
+    },
+    Style.TableNotes {
+    }
+  }
+
+  let LangHasWords(language) = language.Words != null
+  let LanguagesWithWords     = Languages.FindSlice(LangHasWords)
+
+  let WordListTable = Block {
+    WordTable(each LanguagesWithWords),
   }
 }
 //======================================================================
