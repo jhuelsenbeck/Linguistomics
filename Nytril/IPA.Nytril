@@ -9,19 +9,8 @@ with IPA {
     Ejective,
     Implosive,
     Rounded,
-    Extension,
     Impossible,
   }
-
-  let PropNames = [
-    Empty,
-    "Voiced",
-    "Click",
-    "Ejective",
-    "Implosive",
-    "Rounded",
-    "Extension",
-  ]
 
   enum Categories {
     Vowel,
@@ -31,15 +20,6 @@ with IPA {
     EjectiveAffricate,
     Other
   }
-
-  let CategoryNames = [
-    "Vowel",
-    "Pulmonic Consonant",
-    "Consonant",
-    "Pulmonic Affricate",
-    "Ejective Affricate",
-    "Other"
-  ]
 
   enum Opens {
     Close,
@@ -51,16 +31,6 @@ with IPA {
     Open
   }
 
-  let OpenNames = [
-    "Close",
-    "Near-close",
-    "Close-mid",
-    "Mid",
-    "Open-mid",
-    "Near-open",
-    "Open"
-  ]
-
   enum Backnesses {
     Front,
     NearFront,
@@ -68,14 +38,6 @@ with IPA {
     NearBack,
     Back,
   }
-
-  let BacknessNames = [
-    "Front",
-    "Near-Front",
-    "Central",
-    "Near-Back",
-    "Back",
-  ]
 
   enum Places {
     Bilabial,
@@ -96,26 +58,6 @@ with IPA {
     Pharyngeal,
     Glottal,
   }
-
-  let PlaceNames = [
-    "Bilabial",
-    "Labial",
-    "Labial-Velar",
-    "Labial-Palatal",
-    "Labio-Dental",
-    "Linguo-Labial",
-    "Dental",
-    "Alveolar",
-    "Alveolo-palatal",
-    "Post-alveolar",
-    "Retroflex",
-    "Palatal",
-    "Palato-alveolar",
-    "Velar",
-    "Uvular",
-    "Pharyngeal-Epiglottal",
-    "Glottal",
-  ]
 
   enum Manners {
     Stop,
@@ -139,33 +81,9 @@ with IPA {
     Lateral
   }
 
-  let MannerNames = [
-    "Stop",
-    "Nasal",
-    "Sibilant Fricative",
-    "Fricative",
-    "Approximant",
-    "Tap/flap",
-    "Trill",
-    "Lateral Fricative",
-    "Lateral Approximant",
-    "Lateral Tap/flap",
-    "Tenuis",
-    "Tenuis Lateral",
-    "Plosive",
-    "Implosive",
-    "Affricate",
-    "Sibilant",
-    "Non-Sibilant",
-    "Central",
-    "Lateral"
-  ]
-
   let FindPulmonic(sound, data) = sound.Category == Categories.PulmonicConsonant and sound.Place == data.Place
-  let FindPulmonicPlace(place)  = Alphabet.Contains(FindPulmonic{Place: place})
+  let FindPulmonicPlace(place)  = Sounds.Contains(FindPulmonic{Place: place})
   let PulmonicPlaces            = Places.FindSlice(FindPulmonicPlace)
-
-  let HasProp(sound, prop) = sound.Prop and (sound.Prop & prop) != 0
 
   let Set(text, category, place, manner, prop) = {
     Popup: SoundPopup,
@@ -266,7 +184,7 @@ with IPA {
     Imp(Categories.EjectiveAffricate, Places.Glottal, Manners.Lateral, Props.Impossible),
   ]                       									
 
-  with Alphabet {
+  with Sounds {
     //==================================
     // Pulmonic Consonants
     //==================================
@@ -381,7 +299,7 @@ with IPA {
     // Lateral Fricative								
     let VlAlveolarLateralFricative   = PC("ɬ", Places.Alveolar, Manners.LateralFricative, Props.None)
     let VdAlveolarLateralFricative   = PC("ɮ", Places.Alveolar, Manners.LateralFricative, Props.Voiced)
-    let VlRetroflexLateralFricative  = PC("ɭ̊˔", Places.Retroflex, Manners.LateralFricative, Props.Extension)
+    let VlRetroflexLateralFricative  = PC("ɭ̊˔", Places.Retroflex, Manners.LateralFricative, Props.None)
     let VdRetroflexLateralFricative  = PC("ɭ˔", Places.Retroflex, Manners.LateralFricative, Props.Voiced)
     let VlAlveolarPalatalFricative   = PC("ʎ̝̊", Places.Palatal, Manners.LateralFricative, Props.None)
     let VdAlveolarPalatalFricative   = PC("ʎ̝", Places.Palatal, Manners.LateralFricative, Props.Voiced)
@@ -401,9 +319,9 @@ with IPA {
 
     // Lateral tap/flap
     let VdAlveolarLateralFlap        = PC("ɺ", Places.Alveolar, Manners.LateralTapFlap, Props.Voiced)
-    let VdRetroflexLateralFlap       = PC("ɭ̆", Places.Retroflex, Manners.LateralTapFlap, Props.Voiced | Props.Extension)
-    let VdPalatalLateralFlap         = PC("ʎ̆", Places.Palatal, Manners.LateralTapFlap, Props.Voiced | Props.Extension)
-    let VdVelarLateralTap            = PC("L̆", Places.Velar, Manners.LateralTapFlap, Props.Voiced | Props.Extension)
+    let VdRetroflexLateralFlap       = PC("ɭ̆", Places.Retroflex, Manners.LateralTapFlap, Props.Voiced)
+    let VdPalatalLateralFlap         = PC("ʎ̆", Places.Palatal, Manners.LateralTapFlap, Props.Voiced)
+    let VdVelarLateralTap            = PC("L̆", Places.Velar, Manners.LateralTapFlap, Props.Voiced)
 
     //==================================
     // Non-Pulmonic Consonants
@@ -580,6 +498,9 @@ with IPA {
     let OpenNearFrontUnrounded       = VO("a", Opens.Open, Backnesses.NearFront, Props.None)
     let OpenNearFrontRounded         = VO("ɶ", Opens.Open, Backnesses.NearFront, Props.Rounded)
   }
+
+  let AllSounds = Sounds + Impossible
+
   let Downstep                     = '↓'
   let Upstep                       = '↑'
   let Becomes                      = '→'
@@ -634,8 +555,9 @@ with IPA {
   let TieBarBelow                  = '\u035C'
   let TieBarAbove                  = '\u0361'
 
-  let AllSounds = Alphabet + Impossible
   //======================================================================
+
+  let HasProp(sound, prop) = sound.Prop and (sound.Prop & prop) != 0
 
   let ShowSound(sound) = Span {
     Style.IPAFamily,
@@ -648,21 +570,23 @@ with IPA {
   }
 
   let SoundName(sound) = Span {
-    if (sound.Category == Categories.Vowel)
-      OpenNames[sound.Open],
+    if (sound.Name)
+      sound.Name
+    elseif (sound.Category == Categories.Vowel)
+      Lang.OpenNames[sound.Open],
       Space,
-      BacknessNames[sound.Backness],
+      Lang.BacknessNames[sound.Backness],
       Space,
       sound.HasProp(Props.Rounded) ? Lang.Rounded : Lang.Unrounded
     else
       sound.HasProp(Props.Voiced) ? Lang.Voiced : Lang.Voiceless,
       Space,
-      PlaceNames[sound.Place],
+      Lang.PlaceNames[sound.Place],
       Space,
-      MannerNames[sound.Manner]
+      Lang.MannerNames[sound.Manner]
     end,
     Space,
-    CategoryNames[sound.Category],
+    Lang.CategoryNames[sound.Category],
   }
 
   let ShowCodePoint(c) = {TextRadix: 16, TextDigits: 4} Type.Integer(c)
@@ -682,9 +606,6 @@ with IPA {
     HAlign: HAligns.Center,
     Size: BoxSize,
     if (sound.Text)
-      if (sound.HasProp(Props.Extension))
-        Style.Extension
-      end,
       TextHeight: BoxSize.Height - 4 pts,
       SoundText(sound)
     else
@@ -715,10 +636,10 @@ with IPA {
 
   let PulmonicCell(place, manner) = SoundBlock(AllSounds.FindSlice(EqualSound PC(null, place, manner, Props.None)))
 
-  let PlaceHeader(place) = Style.HeaderCell(PlaceNames[place])
+  let PlaceHeader(place) = Style.HeaderCell(Lang.PlaceNames[place])
 
   let FindPulmonicManner(sound, data) = sound.Category == Categories.PulmonicConsonant && sound.Manner == data.Manner
-  let FindManner(manner) = Alphabet.Contains(FindPulmonicManner {Manner: manner})
+  let FindManner(manner) = Sounds.Contains(FindPulmonicManner {Manner: manner})
   let PulmonicManners    = Manners.FindSlice(FindManner)
 
   let PulmonicRow(manner) = Row {
@@ -728,7 +649,7 @@ with IPA {
       Style.TitleBackground,
       PaddingLR: 2 pts,
       TextHeight: 7 pts,
-      MannerNames[manner]
+      Lang.MannerNames[manner]
     },
     PulmonicCell(each PulmonicPlaces, manner)
   }
@@ -756,11 +677,9 @@ with IPA {
       PulmonicRow(each PulmonicManners),
     },
     Style.TableNotes {
-      Lang.PulmonicSymbols(SoundText(Alphabet.VlMultiplePlaceFricative)),
+      Lang.PulmonicSymbols(SoundText(Sounds.VlMultiplePlaceFricative)),
       Space,
       Lang.Impossible,
-      Space,
-      Span {Style.Extension Lang.Extensions}
     },
   }
   //======================================================================
@@ -768,7 +687,7 @@ with IPA {
   let NonPulmonicCell(place, manner, props) = SoundBlock(AllSounds.FindSlice(EqualSound NPC(null, place, manner, props)))
 
   let FindPlace(sound, data)      = sound.Category == data.Category && sound.Place == data.Place
-  let FindPlaces(place, data)     = Alphabet.Contains(FindPlace {Category: data.Category, Place: place})
+  let FindPlaces(place, data)     = Sounds.Contains(FindPlace {Category: data.Category, Place: place})
   let FindPlaceCategory(category) = Places.FindSlice(FindPlaces {Category: category})
 
   let NonPulmonicPlaces = FindPlaceCategory(Categories.Consonant)
@@ -784,7 +703,7 @@ with IPA {
     Cell {
       VAlign: VAligns.Center,
       Style.SoundBottom,
-      MannerNames[manner]
+      Lang.MannerNames[manner]
     },
     NonPulmonicCell(each NonPulmonicPlaces, manner, props)
   }
@@ -800,7 +719,7 @@ with IPA {
       Row {
         TextHeight: 6 pts,
         Style.HeaderCell(Empty),
-        Style.HeaderCell(Span {Bold, Lang.Place, Space, Alphabet.Becomes}),
+        Style.HeaderCell(Span {Bold, Lang.Place, " >"}),
         PlaceHeader(each NonPulmonicPlaces)
       },
       NPRow(Lang.Ejective, 1, Props.Ejective, each [Manners.Stop, Manners.Fricative, Manners.LateralFricative]),
@@ -821,12 +740,12 @@ with IPA {
     Cell {
       VAlign: VAligns.Center,
       Style.SoundBottom,
-      MannerNames[manner]
+      Lang.MannerNames[manner]
     },
     AffricateCell(category, manner, each places)
   }
 
-  let AffricateTable(category, manners) {
+  let AffricateTable(category, manners, notes) {
     var places = FindPlaceCategory(category);
     return Block {
       Table {
@@ -835,7 +754,7 @@ with IPA {
         Columns: [(40 pts) {EdgeR: 0.5 pts}] +
                  [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * places.Length,
 
-        Style.TitleBar(CategoryNames[category], places.Length+1),
+        Style.TitleBar(Lang.CategoryNames[category], places.Length+1),
         Row {
           TextHeight: 6 pts,
           Style.HeaderCell(Empty),
@@ -844,7 +763,7 @@ with IPA {
         AffricateRow(places, category, each manners),
       },
       Style.TableNotes {
-        Lang.Impossible,
+        notes,
       },
     }
   }
@@ -869,13 +788,13 @@ with IPA {
     end
   }
 
-  let VowelCell(open, backness) = VowelBlock(Alphabet.FindSlice(VowelPair {Open: open, Backness: backness}))
+  let VowelCell(open, backness) = VowelBlock(Sounds.FindSlice(VowelPair {Open: open, Backness: backness}))
 
   let VowelRow(open) = Row {
     Cell {
       VAlign: VAligns.Center,
       Style.SoundBottom,
-      OpenNames[open]
+      Lang.OpenNames[open]
     },
     VowelCell(open, each Backnesses)
   }
@@ -889,7 +808,7 @@ with IPA {
       Row {
         TextHeight: 10 pts,
         Style.HeaderCell(Empty),
-        Style.HeaderCell(each BacknessNames)
+        Style.HeaderCell(each Lang.BacknessNames)
       },
       VowelRow(each Opens)
     },
@@ -898,6 +817,8 @@ with IPA {
     },
   }
   //======================================================================
+
+  let OtherColumns = 2
 
   let OtherCell(sound) = {
     Cell {
@@ -919,9 +840,9 @@ with IPA {
   let OtherTable = Block {
     Table {
       Style.TableEdge,
-      Columns: [28 pts, 2.8 inches]*2,
-      Style.TitleBar(Lang.OtherSymbols, 4),
-      OtherRow(each (Alphabet.FindSlice(EqualOther) / 2)),
+      Columns: [BoxSize.Width, Metrics.Content.Width * 0.5 - BoxSize.Width] * OtherColumns,
+      Style.TitleBar(Lang.OtherSymbols, OtherColumns*2),
+      OtherRow(each (Sounds.FindSlice(EqualOther) / OtherColumns)),
     },
     Style.TableNotes {
     }
@@ -959,7 +880,7 @@ with IPA {
     Table {
       Columns: [Metrics.Content.Width / SoundColumns] * SoundColumns,
       Style.TitleBar(Lang.IPAListing, SoundColumns),
-      SoundRow(each (Alphabet / SoundColumns))
+      SoundRow(each (Sounds / SoundColumns))
     },
     Style.TableNotes {
     }
@@ -969,16 +890,17 @@ with IPA {
     Columns: [2 inches],
     Row {
       SoundCell(sound)
-    },
+    }
   }
+  //======================================================================
 
-  let ShowAlphabet = Block {
+  let ShowGroups = Block {
     PulmonicTable,
     NonPulmonicTable,
-    AffricateTable(Categories.PulmonicAffricate, [Manners.Sibilant, Manners.NonSibilant, Manners.Lateral]),
-    AffricateTable(Categories.EjectiveAffricate, [Manners.Central, Manners.Lateral]),
+    AffricateTable(Categories.PulmonicAffricate, [Manners.Sibilant, Manners.NonSibilant, Manners.Lateral], Lang.Impossible),
+    AffricateTable(Categories.EjectiveAffricate, [Manners.Central, Manners.Lateral], Empty),
     VowelTable,
     OtherTable,
-    SoundTable
   }
+  //======================================================================
 }
