@@ -204,7 +204,7 @@ with Style {
       Separator: ", ",
       author.Address
     },
-    Span {"E-mail: ", author.EMail},
+    Span {"{0}: "(Lang.EMail), author.EMail},
     Empty
   }
 
@@ -321,9 +321,9 @@ with DisplayWords {
       Columns: [0.8 inches, 0.7 inches, Metrics.Content.Width - 2 inches],
       Style.TitleBar(language.Name, 3),
       Row {
-        HeaderCell("Meaning"),
-        HeaderCell("Text"),
-        HeaderCell("Coding"),
+        HeaderCell(Lang.Meaning),
+        HeaderCell(Lang.Text),
+        HeaderCell(Lang.Encoding),
       },
       WordRow(each language.Words)
     },
@@ -332,29 +332,36 @@ with DisplayWords {
   }
 
   let LangHasWords(language) = language.Words != null
-  let LanguagesWithWords     = Languages.FindSlice(LangHasWords)
+  let LanguageList           = Languages.FindSlice(LangHasWords)
 
   let WordListTable = Block {
-    WordTable(each LanguagesWithWords),
+    WordTable(each LanguageList),
   }
 }
 //======================================================================
 
 with AllWords {
-  let WordRow(word) = Row {
-    Cell {
-      WordMeanings.GetReference(word.Meaning).SymbolName
-    },
+  let LangHasMeaning(word, data) = word.Meaning == data.Meaning
+
+  let MeaningCell(meaning, language) {
+    var list = language.Words.FindSlice(LangHasMeaning {Meaning: meaning});
+    if (list.Length > 0)
+      Cell {
+        (each list).Text
+      }
+    else
+      Cell {}
+    end
+  }
+
+  let WordRow(meaning) = Row {
+    Style.RowBar(EachIndex),
     Cell {
       Italic,
-      word.Text
+      TextColor: Colors.DarkGray,
+      EachSymbol.SymbolName
     },
-    Cell {
-      Span {
-        Separator: ", ",
-        each word.Text
-      }
-    }
+    MeaningCell(meaning, each DisplayWords.LanguageList)
   }
 
   let HeaderCell(d) = Cell {
@@ -365,26 +372,23 @@ with AllWords {
     d
   }
 
-  let WordTable(language) = Block {
+  let LanguageHeader(language) = HeaderCell(language.Name)
+
+  let Column1 = 36 pts
+
+  let WordListTable = Block {
     Table {
-      Columns: [0.8 inches, 0.7 inches, Metrics.Content.Width - 2 inches],
-      Style.TitleBar(language.Name, 3),
+      TextHeight: 7 pts,
+      Columns: [Column1, (Metrics.Content.Width - Column1) / DisplayWords.LanguageList.Length],
+      Style.TitleBar("Words in each language by meaning", DisplayWords.LanguageList.Length+1),
       Row {
-        HeaderCell("Meaning"),
-        HeaderCell("Text"),
-        HeaderCell("Coding"),
+        HeaderCell({TextColor: Colors.DarkGray} Lang.Meaning),
+        LanguageHeader(each DisplayWords.LanguageList),
       },
-      WordRow(each language.Words)
+      WordRow(each WordMeanings)
     },
     Style.TableNotes {
     }
-  }
-
-  let LangHasWords(language) = language.Words != null
-  let LanguagesWithWords     = Languages.FindSlice(LangHasWords)
-
-  let WordListTable = Block {
-    WordTable(each LanguagesWithWords),
   }
 }
 //======================================================================
