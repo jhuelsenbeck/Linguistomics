@@ -3,7 +3,6 @@ using Format, Units, Math, IO
 include "English"
 include "Library"
 include "Languages"
-include "CognateClasses"
 include "LanguageTree"
 include "IPA"
 include "Style"
@@ -59,8 +58,9 @@ let WhitePaper = Style.WhitePaper {
     },
     Style.ShowAbstract(Abstract),
     Style.ShowContent(each Content),
+    Style.ShowAuthors(Authors),
     Style.ShowAppendixTable,
-    Style.ShowReferences(References)
+    Style.ShowReferences(References),
   },
   Style.ShowAppendix(each Appendix)
 }
@@ -114,10 +114,9 @@ let Appendix = [
   ShowAppendix(Lang.LanguagePhylogeny, Style.ShowTree(LanguageTree)),
   ShowAppendix(Lang.WordListComparison, AllWords.WordListTable),
   ShowAppendix(Lang.WordListLanguage, DisplayWords.WordListTable),
+  ShowAppendix(Lang.LanguageList, Style.ShowLanguageList(LanguageList)),
+  ShowAppendix(Lang.LanguageTreeFile, TreeLibrary.NexusFile([LanguageTree]) {TextFamily: TextFamilies.Consolas}),
   ShowAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
-
-//  ShowAppendix("List of Languages", Style.ShowLanguageList(LanguageList)),
-//  ShowAppendix("Change A3 Tree File", TreeLibrary.NexusFile([LanguageTree]) {TextFamily: TextFamilies.Consolas}),
 ]
 //======================================================================
 
