@@ -1,7 +1,7 @@
 using Format, Units, Math, IO
 //======================================================================
 
-with RevBayes {
+with RevBayes
   let TreeFile      = Info.OutputFolder FileName("ieo_fifty") Extensions.Nexus
   let Comment(text) = Span {TextColor: Colors.Green, LineBreak, "# " text}
   let String(text)  = Span {TextColor: Colors.Red, text.QuoteString}
@@ -21,7 +21,7 @@ with RevBayes {
     "trees = readTrees({0})"(String(TreeFile)),
     "treetrace = treeTrace(trees)",
   }
-}
+end
 //======================================================================
 /*
 with Nexus {
@@ -84,19 +84,19 @@ with Nexus {
 */
 //======================================================================
 
-with TreeLibrary {
-  let GetNodeTaxa(dictionary, node) {
+with TreeLibrary
+  let GetNodeTaxa(dictionary, node) begin
     dictionary.AddElement(node.Label, node);
     GetNodeTaxa(dictionary, each node);
-  }
+  end
 
-  let GetLabel(node) = node.Label?.Substitute(node.Label?.FindIndex(' '), '_');
+  let GetLabel(node) = node.Label?.Substitute(node.Label?.FindIndex(' '), '_')
 
-  let GetTaxaLabels(trees) {
+  let GetTaxaLabels(trees) begin
     var d = Type.Dictionary(128);
     GetNodeTaxa(d, each trees);
     return GetLabel(each d);
-  }
+  end
 
   let Newick(tree) = Span {
     if (tree.Length > 0)
@@ -140,6 +140,6 @@ with TreeLibrary {
     ShowTreeLine(each trees),
     "End;"
   }
-}
+end
 //======================================================================
 

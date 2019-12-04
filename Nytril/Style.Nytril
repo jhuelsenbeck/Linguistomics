@@ -1,7 +1,7 @@
 using Format, Units, Math, IO
 //======================================================================
 
-with Metrics {
+with Metrics
   let MarginL = 0.75 inches
   let MarginR = MarginL
   let MarginT = 0.5 inches
@@ -9,10 +9,10 @@ with Metrics {
   let Paper   = Type.Size(8.5 inches, 11 inches)
   let Content = Type.Size(Paper.Width - MarginL - MarginR, Paper.Height - MarginT - MarginB)
   let TableSpace = 24 pts
-}
+end
 //======================================================================
 
-with Style {
+with Style
   let ImpossibleBackground = {Background: 80%}
   let IPAFamily            = {TextFamily: "Arial Unicode MS"}//            = TextFamilies.CambriaMath
   let SansSerif            = {TextFamily: TextFamilies.Arial}
@@ -60,7 +60,7 @@ with Style {
     {TextHeight: height * 0.6 pts} text[1..]
   }
 
-  let TitleCase(text, height) = {
+  let TitleCase(text, height) begin
     if (text)
       return Span {
         TextUppercase: true,
@@ -70,7 +70,7 @@ with Style {
     else
       return null;
     end
-  }
+  end
 
   let Title(text) = Paragraph {
     KeepWithNext: true,
@@ -291,10 +291,10 @@ with Style {
       name
     }
   }
-}
+end
 //======================================================================
 
-with DisplayWords {
+with DisplayWords
   let WordRow(word) = Row {
     Cell {
       Style.SansSerif,
@@ -342,13 +342,13 @@ with DisplayWords {
   let WordListTable = Block {
     WordTable(each LanguageList),
   }
-}
+end
 //======================================================================
 
-with AllWords {
+with AllWords
   let LangHasMeaning(word, data) = word.Meaning == data.Meaning
 
-  let MeaningCell(meaning, language) {
+  let MeaningCell(meaning, language) begin
     var list = language.Words.FindSlice(LangHasMeaning {Meaning: meaning});
     if (list.Length > 0)
       Cell {
@@ -357,7 +357,7 @@ with AllWords {
     else
       Cell {}
     end
-  }
+  end
 
   let WordRow(meaning) = Row {
     Style.RowBar(EachIndex),
@@ -395,7 +395,7 @@ with AllWords {
     Style.TableNotes {
     }
   }
-}
+end
 //======================================================================
 
 let Logo = Frame {
