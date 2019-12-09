@@ -55,22 +55,18 @@ with Style
     SpaceAfter: Metrics.TableSpace,
   }
 
-  let TitleWord(text, height) = Span {
-    {TextHeight: height pts} text[0],
-    {TextHeight: height * 0.6 pts} text[1..]
+  let TitleWord(text) = Span {
+    text[0],
+    {TextHeight: 60%} text[1..]
   }
 
-  let TitleCase(text, height) begin
+  let TitleCase(text) = Span {
     if (text)
-      return Span {
-        TextUppercase: true,
-        Separator: Space,
-        TitleWord(each text.Split(Space), height)
-      }
-    else
-      return null;
+      TextUppercase: true,
+      Separator: Space,
+      TitleWord(each text.Split(Space))
     end
-  end
+  }
 
   let Title(text) = Paragraph {
     KeepWithNext: true,
@@ -86,14 +82,14 @@ with Style
     SpaceBefore: 12 pts,
     SpaceAfter: 6 pts,
     ParAlignment: ParAlignments.Center,
-    TitleCase(text, 14)
+    TitleCase(text)
   }
 
   let Header1(text) = Paragraph {
     KeepWithNext: true,
     SpaceBefore: 18 pts,
     SpaceAfter: 8 pts,
-    TitleCase(text, 14)
+    TitleCase(text)
   }
 
   let Header2(text) = Paragraph {
@@ -161,31 +157,6 @@ with Style
     }
   }
 
-  let ShowReference(r) = Paragraph {
-    LeftIndent: 0.25 inches,
-    FirstIndent: -0.25 inches,
-    if (r.Author)
-      Span {
-        Separator: ", ",
-        TitleCase(r.Author, 12),
-        r.Title,
-        r.Year,
-      }
-    end,
-    if (r.Publisher)
-      Span {
-        ", ",
-        Separator: Space,
-        Italic r.Publisher,
-        r.Page,
-      }
-    end,
-    if (r.Link)
-      ". {0}: "(Lang.AvailableAt),
-      Span {Link: r.Link, TextColor: Colors.DarkBlue, r.Link}
-    end,
-  }
-
   let ShowAuthorFull(author) = Block {
     LeftIndent: 0.25 inches,
     Paragraph {
@@ -201,7 +172,7 @@ with Style
       }
     },
     Span {
-      Separator: ", ",
+      Separator: Lang.Separator,
       author.Address
     },
     Span {"{0}: "(Lang.EMail), author.EMail},
@@ -231,6 +202,33 @@ with Style
   let ShowAuthors(authors) = Block {
     HeaderCentered(Lang.Authors),
     ShowAuthorFull(each authors),
+  }
+
+  let ShowReference(r) = Paragraph {
+    LeftIndent: 0.25 inches,
+    FirstIndent: -0.25 inches,
+    if (r.Author)
+      TitleCase(r.Author),
+      if (r.Title)
+        Lang.Separator,
+        r.Title,
+      end,
+    else
+    r.Title
+    end,
+    if (r.Year)
+      Lang.Separator,
+      r.Year,
+    end,
+    if (r.Publisher)
+      Lang.Separator,
+      Italic r.Publisher,
+      r.Page,
+    end,
+    if (r.Link)
+      ". {0}: "(Lang.AvailableAt),
+      Span {Link: r.Link, TextColor: Colors.DarkBlue, r.Link}
+    end,
   }
 
   let ShowReferences(references) = Block {
@@ -307,7 +305,7 @@ with DisplayWords
     Cell {
       Span {
         TextFamily: TextFamilies.Consolas,
-        Separator: ", ",
+        Separator: Lang.Separator,
         each word.Text
       }
     }

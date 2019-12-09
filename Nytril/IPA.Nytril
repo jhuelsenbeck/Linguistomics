@@ -7,6 +7,7 @@ with IPA
     Voiced,
     Click,
     Ejective,
+    Velarized,
     Implosive,
     Rounded,
     Impossible,
@@ -85,31 +86,33 @@ with IPA
   let FindPulmonicPlace(place)  = Sounds.Contains(FindPulmonic{Place: place})
   let PulmonicPlaces            = Places.FindSlice(FindPulmonicPlace)
 
-  let Set(text, category, place, manner, prop) = {
+  let Set(text, sampa, category, place, manner, prop) = {
     Popup: SoundPopup,
     Text: text,
+    Sampa: sampa,
     Category: category,
     Place: place,
     Manner: manner,
     Prop: prop,
   }
 
-  let VO(text, open, backness, prop=Props.None) = {
+  let VO(text, sampa, open, backness, prop=Props.None) = {
     Popup: SoundPopup,
     Text: text,
+    Sampa: sampa,
     Category: Categories.Vowel,
     Open: open,
     Backness: backness,
     Prop: prop,
   }
 
-  let PC(text, place, manner, prop=Props.None)  = Set(text, Categories.PulmonicConsonant, place, manner, prop)
-  let NPC(text, place, manner, prop=Props.None) = Set(text, Categories.Consonant, place, manner, prop)
-  let PA(text, place, manner, prop=Props.None)  = Set(text, Categories.PulmonicAffricate, place, manner, prop)
-  let EA(text, place, manner, prop=Props.None)  = Set(text, Categories.EjectiveAffricate, place, manner, prop)
-  let OT(text, place, manner, prop=Props.None)  = Set(text, Categories.Other, place, manner, prop)
-  let NPEjective(sound, manner)                 = NPC(sound.Text EjectiveMark, sound.Place, manner, Props.Ejective)
-  let Imp(category, place, manner, prop)        = Set(null, category, place, manner, prop)
+  let PC(text, sampa, place, manner, prop=Props.None)  = Set(text, sampa, Categories.PulmonicConsonant, place, manner, prop)
+  let NPC(text, sampa, place, manner, prop=Props.None) = Set(text, sampa, Categories.Consonant, place, manner, prop)
+  let PA(text, sampa, place, manner, prop=Props.None)  = Set(text, sampa, Categories.PulmonicAffricate, place, manner, prop)
+  let EA(text, sampa, place, manner, prop=Props.None)  = Set(text, sampa, Categories.EjectiveAffricate, place, manner, prop)
+  let OT(text, sampa, place, manner, prop=Props.None)  = Set(text, sampa, Categories.Other, place, manner, prop)
+  let NPEjective(sound, manner)                 = NPC(sound.Text EjectiveMark.Text, sound.Sampa EjectiveMark.Sampa, sound.Place, manner, Props.Ejective)
+  let Imp(category, place, manner, prop)        = Set(null, null, category, place, manner, prop)
 
   let EqualOther(sound) = sound.Category == Categories.Other
 
@@ -129,138 +132,139 @@ with IPA
     //==================================
 
     // Nasal					
-    let VlBilabialNasal           = PC("m̥", Places.Bilabial, Manners.Nasal)
-    let VdBilabialNasal           = PC("m", Places.Bilabial, Manners.Nasal, Props.Voiced)
-    let VdLabioDentalNasal        = PC("ɱ", Places.LabioDental, Manners.Nasal, Props.Voiced)
-    let VdLinguoLabioNasal        = PC("n̼", Places.LinguoLabial, Manners.Nasal, Props.Voiced)
-
-    let VlAlveolarNasal           = PC("n̥", Places.Alveolar, Manners.Nasal)
-    let VdAlveolarNasal           = PC("n", Places.Alveolar, Manners.Nasal, Props.Voiced)
-    let VlRetroFlexNasal          = PC("ɳ̊", Places.Retroflex, Manners.Nasal)
-    let VdRetroFlexNasal          = PC("ɳ", Places.Retroflex, Manners.Nasal, Props.Voiced)
-    let VlPalatalNasal            = PC("ɲ̊", Places.Palatal, Manners.Nasal)
-    let VdPalatalNasal            = PC("ɲ", Places.Palatal, Manners.Nasal, Props.Voiced)
-    let VlVelarNasal              = PC("ŋ̊", Places.Velar, Manners.Nasal)
-    let VdVelarNasal              = PC("ŋ", Places.Velar, Manners.Nasal, Props.Voiced)
-    let VdUvularNasal             = PC("ɴ", Places.Uvular, Manners.Nasal, Props.Voiced)
+    let VlBilabialNasal           = PC("m̥", "", Places.Bilabial, Manners.Nasal)
+    let VdBilabialNasal           = PC("m", "", Places.Bilabial, Manners.Nasal, Props.Voiced)
+    let VdLabioDentalNasal        = PC("ɱ", "", Places.LabioDental, Manners.Nasal, Props.Voiced)
+    let VdLinguoLabioNasal        = PC("n̼", "", Places.LinguoLabial, Manners.Nasal, Props.Voiced)
+    let VlAlveolarNasal           = PC("n̥", "", Places.Alveolar, Manners.Nasal)
+    let VdAlveolarNasal           = PC("n", "", Places.Alveolar, Manners.Nasal, Props.Voiced)
+    let VlRetroFlexNasal          = PC("ɳ̊", "", Places.Retroflex, Manners.Nasal)
+    let VdRetroFlexNasal          = PC("ɳ", "", Places.Retroflex, Manners.Nasal, Props.Voiced)
+    let VlPalatalNasal            = PC("ɲ̊", "", Places.Palatal, Manners.Nasal)
+    let VdPalatalNasal            = PC("ɲ", "", Places.Palatal, Manners.Nasal, Props.Voiced)
+    let VlVelarNasal              = PC("ŋ̊", "", Places.Velar, Manners.Nasal)
+    let VdVelarNasal              = PC("ŋ", "", Places.Velar, Manners.Nasal, Props.Voiced)
+    let VdUvularNasal             = PC("ɴ", "", Places.Uvular, Manners.Nasal, Props.Voiced)
 														
     // Stop
-    let VlBilabialStop            = PC("p", Places.Bilabial, Manners.Stop)
-    let VdBilabialStop            = PC("b", Places.Bilabial, Manners.Stop, Props.Voiced)
-    let VlLabioDentalStop         = PC("p̪", Places.LabioDental, Manners.Stop)
-    let VdLabioDentalStop         = PC("b̪", Places.LabioDental, Manners.Stop, Props.Voiced)
-    let VlLinguoLabialStop        = PC("t̼", Places.LinguoLabial, Manners.Stop)
-    let VdLinguoLabialStop        = PC("d̼", Places.LinguoLabial, Manners.Stop, Props.Voiced)
-    let VlAlveolarStop            = PC("t", Places.Alveolar, Manners.Stop)
-    let VdAlveolarStop            = PC("d", Places.Alveolar, Manners.Stop, Props.Voiced)
-    let VlRetroflexStop           = PC("ʈ", Places.Retroflex, Manners.Stop)
-    let VdRetroflexStop           = PC("ɖ", Places.Retroflex, Manners.Stop, Props.Voiced)
-    let VlPalatalStop             = PC("c", Places.Palatal, Manners.Stop)
-    let VdPalatalStop             = PC("ɟ", Places.Palatal, Manners.Stop, Props.Voiced)
-    let VlVelarStop               = PC("k", Places.Velar, Manners.Stop)
-    let VdVelarStop               = PC("ɡ", Places.Velar, Manners.Stop, Props.Voiced)
-    let VlUvularStop              = PC("q", Places.Uvular, Manners.Stop)
-    let VdUvularStop              = PC("ɢ", Places.Uvular, Manners.Stop, Props.Voiced)
-    let VdEpiglottalStop          = PC("ʡ", Places.Pharyngeal, Manners.Stop)
-    let GlottalStop               = PC("ʔ", Places.Glottal, Manners.Stop)
+    let VlBilabialStop            = PC("p", "", Places.Bilabial, Manners.Stop)
+    let VdBilabialStop            = PC("b", "", Places.Bilabial, Manners.Stop, Props.Voiced)
+    let VlLabioDentalStop         = PC("p̪", "", Places.LabioDental, Manners.Stop)
+    let VdLabioDentalStop         = PC("b̪", "", Places.LabioDental, Manners.Stop, Props.Voiced)
+    let VlLinguoLabialStop        = PC("t̼", "", Places.LinguoLabial, Manners.Stop)
+    let VdLinguoLabialStop        = PC("d̼", "", Places.LinguoLabial, Manners.Stop, Props.Voiced)
+    let VlAlveolarStop            = PC("t", "", Places.Alveolar, Manners.Stop)
+    let VdAlveolarStop            = PC("d", "", Places.Alveolar, Manners.Stop, Props.Voiced)
+    let VlRetroflexStop           = PC("ʈ", "", Places.Retroflex, Manners.Stop)
+    let VdRetroflexStop           = PC("ɖ", "", Places.Retroflex, Manners.Stop, Props.Voiced)
+    let VlPalatalStop             = PC("c", "", Places.Palatal, Manners.Stop)
+    let VdPalatalStop             = PC("ɟ", "", Places.Palatal, Manners.Stop, Props.Voiced)
+    let VlVelarStop               = PC("k", "", Places.Velar, Manners.Stop)
+    let VdVelarStop               = PC("ɡ", "", Places.Velar, Manners.Stop, Props.Voiced)
+    let VlUvularStop              = PC("q", "", Places.Uvular, Manners.Stop)
+    let VdUvularStop              = PC("ɢ", "", Places.Uvular, Manners.Stop, Props.Voiced)
+    let VdEpiglottalStop          = PC("ʡ", "", Places.Pharyngeal, Manners.Stop)
+    let GlottalStop               = PC("ʔ", "?", Places.Glottal, Manners.Stop)
 		
     // Sibilant Fricative										
-    let VlAlveolarSibFricative       = PC("s", Places.Alveolar, Manners.SibilantFricative)
-    let VdAlveolarSibFricative       = PC("z", Places.Alveolar, Manners.SibilantFricative, Props.Voiced)
-    let VlPostalveolarSibFricative   = PC("ʃ", Places.PostAlveolar, Manners.SibilantFricative)
-    let VdPostalveolarSibFricative   = PC("ʒ", Places.PostAlveolar, Manners.SibilantFricative, Props.Voiced)
-    let VlRetroflexSibFricative      = PC("ʂ", Places.Retroflex, Manners.SibilantFricative)
-    let VdRetroflexSibFricative      = PC("ʐ", Places.Retroflex, Manners.SibilantFricative, Props.Voiced)
-    let VlPalatalSibFricative        = PC("ɕ", Places.Palatal, Manners.SibilantFricative)
-    let VdPalatalSibFricative        = PC("ʑ", Places.Palatal, Manners.SibilantFricative, Props.Voiced)
+    let VlAlveolarSibFricative       = PC("s", "", Places.Alveolar, Manners.SibilantFricative)
+    let VdAlveolarSibFricative       = PC("z", "", Places.Alveolar, Manners.SibilantFricative, Props.Voiced)
+    let VlPostalveolarSibFricative   = PC("ʃ", "", Places.PostAlveolar, Manners.SibilantFricative)
+    let VdPostalveolarSibFricative   = PC("ʒ", "", Places.PostAlveolar, Manners.SibilantFricative, Props.Voiced)
+    let VlRetroflexSibFricative      = PC("ʂ", "", Places.Retroflex, Manners.SibilantFricative)
+    let VdRetroflexSibFricative      = PC("ʐ", "", Places.Retroflex, Manners.SibilantFricative, Props.Voiced)
+    let VlPalatalSibFricative        = PC("ɕ", "", Places.Palatal, Manners.SibilantFricative)
+    let VdPalatalSibFricative        = PC("ʑ", "", Places.Palatal, Manners.SibilantFricative, Props.Voiced)
 
     // Fricative										
-    let VlBilabialFricative          = PC("ɸ", Places.Bilabial, Manners.Fricative)
-    let VdBilabialFricative          = PC("β", Places.Bilabial, Manners.Fricative, Props.Voiced)
-    let VlLabiodentalFricative       = PC("f", Places.LabioDental, Manners.Fricative)
-    let VdLabiodentalFricative       = PC("v", Places.LabioDental, Manners.Fricative, Props.Voiced)
-    let VlLinguoLabialFricative      = PC("θ̼", Places.LinguoLabial, Manners.Fricative)
-    let VdLinguoLabialFricative      = PC("ð̼", Places.LinguoLabial, Manners.Fricative, Props.Voiced)
-    let VlDentalFricative            = PC("θ", Places.Dental, Manners.Fricative)
-    let VdDentalFricative            = PC("ð", Places.Dental, Manners.Fricative, Props.Voiced)
-    let VlAlveolarFricative          = PC("θ̠", Places.Alveolar, Manners.Fricative)
-    let VdAlveolarFricative          = PC("ð̠", Places.Alveolar, Manners.Fricative, Props.Voiced)
-    let VlPostaveolarFricative       = PC("ɹ̠̊", Places.PostAlveolar, Manners.Fricative)
-    let VdPostalveolarFricative      = PC("ɹ̝̊", Places.PostAlveolar, Manners.Fricative, Props.Voiced)
-    let VdRetroflexFricative         = PC("ɻ˔", Places.Retroflex, Manners.Fricative, Props.Voiced)
-    let VlPalatalFricative           = PC("ç", Places.Palatal, Manners.Fricative)
-    let VdPalatalFricative           = PC("ʝ", Places.Palatal, Manners.Fricative, Props.Voiced)
-    let VlVelarFricative             = PC("x", Places.Velar, Manners.Fricative)
-    let VdVelarFricative             = PC("ɣ", Places.Velar, Manners.Fricative, Props.Voiced)
-    let VlUvularFricative            = PC("χ", Places.Uvular, Manners.Fricative)
-    let VdUvularFricative            = PC("ʁ", Places.Uvular, Manners.Fricative, Props.Voiced)
-    let VlPharyngealFricative        = PC("ħ", Places.Pharyngeal, Manners.Fricative)
-    let VdPharyngealFricative        = PC("ʕ", Places.Pharyngeal, Manners.Fricative, Props.Voiced)
-    let VlGlottalFricative           = PC("h", Places.Glottal, Manners.Fricative)
-    let VlMultiplePlaceFricative     = PC("ɦ", Places.Glottal, Manners.Fricative, Props.Voiced)
+    let VlBilabialFricative          = PC("ɸ", "", Places.Bilabial, Manners.Fricative)
+    let VdBilabialFricative          = PC("β", "", Places.Bilabial, Manners.Fricative, Props.Voiced)
+    let VlLabiodentalFricative       = PC("f", "", Places.LabioDental, Manners.Fricative)
+    let VdLabiodentalFricative       = PC("v", "", Places.LabioDental, Manners.Fricative, Props.Voiced)
+    let VlLinguoLabialFricative      = PC("θ̼", "", Places.LinguoLabial, Manners.Fricative)
+    let VdLinguoLabialFricative      = PC("ð̼", "", Places.LinguoLabial, Manners.Fricative, Props.Voiced)
+    let VlDentalFricative            = PC("θ", "", Places.Dental, Manners.Fricative)
+    let VdDentalFricative            = PC("ð", "", Places.Dental, Manners.Fricative, Props.Voiced)
+    let VlAlveolarFricative          = PC("θ̠", "", Places.Alveolar, Manners.Fricative)
+    let VdAlveolarFricative          = PC("ð̠", "", Places.Alveolar, Manners.Fricative, Props.Voiced)
+    let VlPostaveolarFricative       = PC("ɹ̠̊", "", Places.PostAlveolar, Manners.Fricative)
+    let VdPostalveolarFricative      = PC("ɹ̝̊", "", Places.PostAlveolar, Manners.Fricative, Props.Voiced)
+    let VdRetroflexFricative         = PC("ɻ˔","", Places.Retroflex, Manners.Fricative, Props.Voiced)
+    let VlPalatalFricative           = PC("ç", "", Places.Palatal, Manners.Fricative)
+    let VdPalatalFricative           = PC("ʝ", "", Places.Palatal, Manners.Fricative, Props.Voiced)
+    let VlVelarFricative             = PC("x", "", Places.Velar, Manners.Fricative)
+    let VdVelarFricative             = PC("ɣ", "", Places.Velar, Manners.Fricative, Props.Voiced)
+    let VlUvularFricative            = PC("χ", "", Places.Uvular, Manners.Fricative)
+    let VdUvularFricative            = PC("ʁ", "", Places.Uvular, Manners.Fricative, Props.Voiced)
+    let VlPharyngealFricative        = PC("ħ", "", Places.Pharyngeal, Manners.Fricative)
+    let VdPharyngealFricative        = PC("ʕ", "?\\", Places.Pharyngeal, Manners.Fricative, Props.Voiced)
+    let VlGlottalFricative           = PC("h", "", Places.Glottal, Manners.Fricative)
+    let VlMultiplePlaceFricative     = PC("ɦ", "", Places.Glottal, Manners.Fricative, Props.Voiced)
 														
     // Approximant										
-    let VlLabioDentalApproximant     = PC("ʋ̥", Places.LabioDental, Manners.Approximant)
-    let VdLabioDentalApproximant     = PC("ʋ", Places.LabioDental, Manners.Approximant, Props.Voiced)
-    let VlPostalveolarApproximant    = PC("ɹ̥", Places.Alveolar, Manners.Approximant)
-    let VdPostalveolarApproximant    = PC("ɹ", Places.Alveolar, Manners.Approximant, Props.Voiced)
-    let VlRetroflexApproximant       = PC("ɻ̊", Places.Retroflex, Manners.Approximant)
-    let VdRetroflexApproximant       = PC("ɻ", Places.Retroflex, Manners.Approximant, Props.Voiced)
-    let VlPalatalApproximant         = PC("j̊", Places.Palatal, Manners.Approximant)
-    let VdPalatalApproximant         = PC("j", Places.Palatal, Manners.Approximant, Props.Voiced)
-    let VlVelarApproximant           = PC("ɰ̊", Places.Velar, Manners.Approximante)
-    let VdVelarApproximant           = PC("ɰ", Places.Velar, Manners.Approximant, Props.Voiced)
-    let VdGlottalApproximant         = PC("ʔ̞", Places.Glottal, Manners.Approximant, Props.Voiced)
+    let VlLabioDentalApproximant     = PC("ʋ̥", "", Places.LabioDental, Manners.Approximant)
+    let VdLabioDentalApproximant     = PC("ʋ", "", Places.LabioDental, Manners.Approximant, Props.Voiced)
+    let VlPostalveolarApproximant    = PC("ɹ̥", "", Places.Alveolar, Manners.Approximant)
+    let VdPostalveolarApproximant    = PC("ɹ", "", Places.Alveolar, Manners.Approximant, Props.Voiced)
+    let VlRetroflexApproximant       = PC("ɻ̊", "", Places.Retroflex, Manners.Approximant)
+    let VdRetroflexApproximant       = PC("ɻ", "", Places.Retroflex, Manners.Approximant, Props.Voiced)
+    let VlPalatalApproximant         = PC("j̊", "", Places.Palatal, Manners.Approximant)
+    let VdPalatalApproximant         = PC("j", "", Places.Palatal, Manners.Approximant, Props.Voiced)
+    let VlVelarApproximant           = PC("ɰ̊", "", Places.Velar, Manners.Approximante)
+    let VdVelarApproximant           = PC("ɰ", "", Places.Velar, Manners.Approximant, Props.Voiced)
+    let VdGlottalApproximant         = PC("ʔ̞", "", Places.Glottal, Manners.Approximant, Props.Voiced)
 														
     // Tap or Flap										
-    let VdBilabialDentalFlap         = PC("ⱱ̟", Places.Bilabial, Manners.TapFlap, Props.Voiced)
-    let VdLabioDentalFlap            = PC("ⱱ", Places.LabioDental, Manners.TapFlap, Props.Voiced)
-    let VdLingualLabialStop          = PC("ɾ̼", Places.LinguoLabial, Manners.TapFlap, Props.Voiced)
-    let VlAlveolarFlap               = PC("ɾ̥", Places.Alveolar, Manners.TapFlap)
-    let VdAlveolarTap                = PC("ɾ", Places.Alveolar, Manners.TapFlap, Props.Voiced)
-    let VlRetroflexFlap              = PC("ɽ̊", Places.Retroflex, Manners.TapFlap)
-    let VdRetroflexFlap              = PC("ɽ", Places.Retroflex, Manners.TapFlap, Props.Voiced)
-    let VdUvularFlap                 = PC("ɢ̆", Places.Uvular, Manners.TapFlap, Props.Voiced)
-    let VdPharyngealFlap             = PC("ʡ̆", Places.Pharyngeal, Manners.TapFlap, Props.Voiced)
+    let VdBilabialDentalFlap         = PC("ⱱ̟", "", Places.Bilabial, Manners.TapFlap, Props.Voiced)
+    let VdLabioDentalFlap            = PC("ⱱ", "", Places.LabioDental, Manners.TapFlap, Props.Voiced)
+    let VdLingualLabialStop          = PC("ɾ̼", "", Places.LinguoLabial, Manners.TapFlap, Props.Voiced)
+    let VlAlveolarFlap               = PC("ɾ̥", "", Places.Alveolar, Manners.TapFlap)
+    let VdAlveolarTap                = PC("ɾ", "4", Places.Alveolar, Manners.TapFlap, Props.Voiced)
+    let VlRetroflexFlap              = PC("ɽ̊", "", Places.Retroflex, Manners.TapFlap)
+    let VdRetroflexFlap              = PC("ɽ", "", Places.Retroflex, Manners.TapFlap, Props.Voiced)
+    let VdUvularFlap                 = PC("ɢ̆", "", Places.Uvular, Manners.TapFlap, Props.Voiced)
+    let VdPharyngealFlap             = PC("ʡ̆", "", Places.Pharyngeal, Manners.TapFlap, Props.Voiced)
 														
     // Trill											
-    let VlBilabialTrill              = PC("ʙ̥", Places.Bilabial, Manners.Trill)
-    let VdBilabialTrill              = PC("ʙ", Places.Bilabial, Manners.Trill, Props.Voiced)
-    let VlAlveolarTrill              = PC("r̥", Places.Alveolar, Manners.Trill)
-    let VdAlveolarTrill              = PC("r", Places.Alveolar, Manners.Trill, Props.Voiced)
-    let VlRetroflexTrill             = PC("ɽ̊r̥", Places.Retroflex, Manners.Trill)
-    let VdRetroflexTrill             = PC("ɽr", Places.Retroflex, Manners.Trill, Props.Voiced)
-    let VlUvularTrill                = PC("ʀ", Places.Uvular, Manners.Trill)
-    let VdUvularTrill                = PC("ʀ", Places.Uvular, Manners.Trill, Props.Voiced)
-    let VlPharyngealTrill            = PC("H", Places.Pharyngeal, Manners.Trill)
-    let VdPharyngealTrill            = PC("ʢ", Places.Pharyngeal, Manners.Trill, Props.Voiced)
+    let VlBilabialTrill              = PC("ʙ̥", "", Places.Bilabial, Manners.Trill)
+    let VdBilabialTrill              = PC("ʙ", "", Places.Bilabial, Manners.Trill, Props.Voiced)
+    let VlAlveolarTrill              = PC("r̥", "", Places.Alveolar, Manners.Trill)
+    let VdAlveolarTrill              = PC("r", "", Places.Alveolar, Manners.Trill, Props.Voiced)
+    let VlRetroflexTrill             = PC("ɽ̊r̥", "", Places.Retroflex, Manners.Trill)
+    let VdRetroflexTrill             = PC("ɽr", "", Places.Retroflex, Manners.Trill, Props.Voiced)
+    let VlUvularTrill                = PC("ʀ", "", Places.Uvular, Manners.Trill)
+    let VdUvularTrill                = PC("ʀ", "", Places.Uvular, Manners.Trill, Props.Voiced)
+    let VlPharyngealTrill            = PC("H", "", Places.Pharyngeal, Manners.Trill)
+    let VdPharyngealTrill            = PC("ʢ", "", Places.Pharyngeal, Manners.Trill, Props.Voiced)
 														
     // Lateral Fricative								
-    let VlAlveolarLateralFricative   = PC("ɬ", Places.Alveolar, Manners.LateralFricative)
-    let VdAlveolarLateralFricative   = PC("ɮ", Places.Alveolar, Manners.LateralFricative, Props.Voiced)
-    let VlRetroflexLateralFricative  = PC("ɭ̊˔", Places.Retroflex, Manners.LateralFricative)
-    let VdRetroflexLateralFricative  = PC("ɭ˔", Places.Retroflex, Manners.LateralFricative, Props.Voiced)
-    let VlAlveolarPalatalFricative   = PC("ʎ̝̊", Places.Palatal, Manners.LateralFricative)
-    let VdAlveolarPalatalFricative   = PC("ʎ̝", Places.Palatal, Manners.LateralFricative, Props.Voiced)
-    let VlVelarPalatalFricative      = PC("ʟ̝̊", Places.Velar, Manners.LateralFricative)
-    let VdVelarPalatalFricative      = PC("ʟ̝", Places.Velar, Manners.LateralFricative, Props.Voiced)
+    let VlAlveolarLateralFricative   = PC("ɬ", "", Places.Alveolar, Manners.LateralFricative)
+    let VdAlveolarLateralFricative   = PC("ɮ", "", Places.Alveolar, Manners.LateralFricative, Props.Voiced)
+    let VlRetroflexLateralFricative  = PC("ɭ̊˔", "", Places.Retroflex, Manners.LateralFricative)
+    let VdRetroflexLateralFricative  = PC("ɭ˔", "", Places.Retroflex, Manners.LateralFricative, Props.Voiced)
+    let VlAlveolarPalatalFricative   = PC("ʎ̝̊", "", Places.Palatal, Manners.LateralFricative)
+    let VdAlveolarPalatalFricative   = PC("ʎ̝", "", Places.Palatal, Manners.LateralFricative, Props.Voiced)
+    let VlVelarPalatalFricative      = PC("ʟ̝̊", "", Places.Velar, Manners.LateralFricative)
+    let VdVelarPalatalFricative      = PC("ʟ̝", "", Places.Velar, Manners.LateralFricative, Props.Voiced)
 														
     // LateralApproximant								
-    let VlAlveolarLateralApproximant = PC("l̥", Places.Alveolar, Manners.LateralApproximant)
-    let VdAlveolarLateralApproximant = PC("l", Places.Alveolar, Manners.LateralApproximant, Props.Voiced)
-    let VlRetroflexLateral           = PC("ɭ̊", Places.Retroflex, Manners.LateralApproximant)
-    let VdRetroflexLateral           = PC("ɭ", Places.Retroflex, Manners.LateralApproximant, Props.Voiced)
-    let VlPalatalLateral             = PC("ʎ̥", Places.Palatal, Manners.LateralApproximant)
-    let VdPalatalLateral             = PC("ʎ", Places.Palatal, Manners.LateralApproximant, Props.Voiced)
-    let VlVelarLateral               = PC("ʟ̥", Places.Velar, Manners.LateralApproximant)
-    let VdVelarLateral               = PC("ʟ", Places.Velar, Manners.LateralApproximant, Props.Voiced)
-    let VdUvularLateral              = PC("ʟ̠", Places.Uvular, Manners.LateralApproximant, Props.Voiced)
+    let VlAlveolarLateralApproximant = PC("l̥", "", Places.Alveolar, Manners.LateralApproximant)
+    let VdAlveolarLateralApproximant = PC("l", "", Places.Alveolar, Manners.LateralApproximant, Props.Voiced)
+    let VdVelarizedAlveolarLateralApproximant = PC("ɫ", "5", Places.Alveolar, Manners.LateralApproximant, Props.Voiced | Props.Velarized)
+    let VlRetroflexLateral           = PC("ɭ̊", "", Places.Retroflex, Manners.LateralApproximant)
+    let VdRetroflexLateral           = PC("ɭ", "", Places.Retroflex, Manners.LateralApproximant, Props.Voiced)
+    let VlPalatalLateral             = PC("ʎ̥", "", Places.Palatal, Manners.LateralApproximant)
+    let VdPalatalLateral             = PC("ʎ", "", Places.Palatal, Manners.LateralApproximant, Props.Voiced)
+    let VlVelarLateral               = PC("ʟ̥", "", Places.Velar, Manners.LateralApproximant)
+    let VdVelarLateral               = PC("ʟ", "", Places.Velar, Manners.LateralApproximant, Props.Voiced)
+    let VdUvularLateral              = PC("ʟ̠", "", Places.Uvular, Manners.LateralApproximant, Props.Voiced)
 
     // Lateral tap/flap
-    let VdAlveolarLateralFlap        = PC("ɺ", Places.Alveolar, Manners.LateralTapFlap, Props.Voiced)
-    let VdRetroflexLateralFlap       = PC("ɭ̆", Places.Retroflex, Manners.LateralTapFlap, Props.Voiced)
-    let VdPalatalLateralFlap         = PC("ʎ̆", Places.Palatal, Manners.LateralTapFlap, Props.Voiced)
-    let VdVelarLateralTap            = PC("L̆", Places.Velar, Manners.LateralTapFlap, Props.Voiced)
+    let VdAlveolarLateralFlap        = PC("ɺ", "", Places.Alveolar, Manners.LateralTapFlap, Props.Voiced)
+    let VdRetroflexLateralFlap       = PC("ɭ̆", "", Places.Retroflex, Manners.LateralTapFlap, Props.Voiced)
+    let VdPalatalLateralFlap         = PC("ʎ̆", "", Places.Palatal, Manners.LateralTapFlap, Props.Voiced)
+    let VdVelarLateralTap            = PC("L̆", "", Places.Velar, Manners.LateralTapFlap, Props.Voiced)
+
 
     //==================================
     // Non-Pulmonic Consonants
@@ -290,152 +294,143 @@ with IPA
     let VlPostalveolarLatFricEjective = NPEjective(VlAlveolarLateralFricative, Manners.LateralFricative)
 
     // Clicks
-    let VlBilabialTenuisClick        = NPC("ʘ", Places.Bilabial, Manners.Tenuis, Props.Click)
-    let VdBilabialTenuisClick        = NPC("ʘ̬", Places.Bilabial, Manners.Tenuis, Props.Click | Props.Voiced)
-    let VlDentalTenuisClick          = NPC("ǀ", Places.Dental, Manners.Tenuis, Props.Click)
-    let VdDentalTenuisClick          = NPC("ǀ̬", Places.Dental, Manners.Tenuis, Props.Click | Props.Voiced)
-    let VlAlveolarTenuisClick        = NPC("ǃ", Places.Alveolar, Manners.Tenuis, Props.Click)
-    let VdAlveolarTenuisClick        = NPC("ǃ̬", Places.Alveolar, Manners.Tenuis, Props.Click | Props.Voiced)
-    let VlPalatalTenuisClick         = NPC("ǂ", Places.Palatal, Manners.Tenuis, Props.Click)
-    let VdPalatalTenuisClick         = NPC("ǂ̬", Places.Palatal, Manners.Tenuis, Props.Click | Props.Voiced)
+    let VlBilabialTenuisClick        = NPC("ʘ", "", Places.Bilabial, Manners.Tenuis, Props.Click)
+    let VdBilabialTenuisClick        = NPC("ʘ̬", "", Places.Bilabial, Manners.Tenuis, Props.Click | Props.Voiced)
+    let VlDentalTenuisClick          = NPC("ǀ", "", Places.Dental, Manners.Tenuis, Props.Click)
+    let VdDentalTenuisClick          = NPC("ǀ̬", "", Places.Dental, Manners.Tenuis, Props.Click | Props.Voiced)
+    let VlAlveolarTenuisClick        = NPC("ǃ", "", Places.Alveolar, Manners.Tenuis, Props.Click)
+    let VdAlveolarTenuisClick        = NPC("ǃ̬", "", Places.Alveolar, Manners.Tenuis, Props.Click | Props.Voiced)
+    let VlPalatalTenuisClick         = NPC("ǂ", "", Places.Palatal, Manners.Tenuis, Props.Click)
+    let VdPalatalTenuisClick         = NPC("ǂ̬", "", Places.Palatal, Manners.Tenuis, Props.Click | Props.Voiced)
 
-    let VlBilabialNasalClick         = NPC("ʘ̃", Places.Bilabial, Manners.Nasal, Props.Click)
-    let VlDentalNasalClick           = NPC("ǀ̃", Places.Dental, Manners.Nasal, Props.Click)
-    let VlAlveolarNasalClick         = NPC("ǃ̃", Places.Alveolar, Manners.Nasal, Props.Click)
-    let VlPalatalNasalClick          = NPC("ǂ̃", Places.Palatal, Manners.Nasal, Props.Click)
+    let VlBilabialNasalClick         = NPC("ʘ̃", "", Places.Bilabial, Manners.Nasal, Props.Click)
+    let VlDentalNasalClick           = NPC("ǀ̃", "", Places.Dental, Manners.Nasal, Props.Click)
+    let VlAlveolarNasalClick         = NPC("ǃ̃", "", Places.Alveolar, Manners.Nasal, Props.Click)
+    let VlPalatalNasalClick          = NPC("ǂ̃", "", Places.Palatal, Manners.Nasal, Props.Click)
 
-    let VlAlveolarTenuisLateralClick = NPC("ǁ", Places.Alveolar, Manners.TenuisLateral, Props.Click)
-    let VdAlveolarTenuisLateralClick = NPC("ǁ̬", Places.Alveolar, Manners.TenuisLateral, Props.Click | Props.Voiced)
+    let VlAlveolarTenuisLateralClick = NPC("ǁ", "", Places.Alveolar, Manners.TenuisLateral, Props.Click)
+    let VdAlveolarTenuisLateralClick = NPC("ǁ̬", "", Places.Alveolar, Manners.TenuisLateral, Props.Click | Props.Voiced)
 
-    let VlBilabialImplosiveClick     = NPC("ɓ̥", Places.Bilabial, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdBilabialImplosiveClick     = NPC("ɓ", Places.Bilabial, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
-    let VlAlveolarImplosiveClick     = NPC("ɗ̥", Places.Alveolar, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdAlveolarImplosiveClick     = NPC("ɗ", Places.Alveolar, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
-    let VlRetroflexImplosiveClick    = NPC("ᶑ̊", Places.Retroflex, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdRetroflexImplosiveClick    = NPC("ᶑ", Places.Retroflex, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
-    let VlPalatalImplosiveClick      = NPC("ʄ̊", Places.Palatal, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdPalatalImplosiveClick      = NPC("ʄ", Places.Palatal, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
-    let VlVelarImplosiveClick        = NPC("ɠ̊", Places.Velar, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdVelarImplosiveClick        = NPC("ɠ", Places.Velar, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
-    let VlUvularImplosiveClick       = NPC("ʛ̥", Places.Uvular, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdUvularImplosiveClick       = NPC("ʛ", Places.Uvular, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlBilabialImplosiveClick     = NPC("ɓ̥", "", Places.Bilabial, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdBilabialImplosiveClick     = NPC("ɓ", "", Places.Bilabial, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlAlveolarImplosiveClick     = NPC("ɗ̥", "", Places.Alveolar, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdAlveolarImplosiveClick     = NPC("ɗ", "", Places.Alveolar, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlRetroflexImplosiveClick    = NPC("ᶑ̊", "", Places.Retroflex, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdRetroflexImplosiveClick    = NPC("ᶑ", "", Places.Retroflex, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlPalatalImplosiveClick      = NPC("ʄ̊", "", Places.Palatal, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdPalatalImplosiveClick      = NPC("ʄ", "", Places.Palatal, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlVelarImplosiveClick        = NPC("ɠ̊", "", Places.Velar, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdVelarImplosiveClick        = NPC("ɠ", "", Places.Velar, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
+    let VlUvularImplosiveClick       = NPC("ʛ̥", "", Places.Uvular, Manners.Implosive, Props.Implosive | Props.Click)
+    let VdUvularImplosiveClick       = NPC("ʛ", "", Places.Uvular, Manners.Implosive, Props.Implosive | Props.Click | Props.Voiced)
 
     //==================================
     // Pulmonic Affricates
     //==================================
 
     // Sibilants
-    let VlAlveolarAffricate          = PA("ts", Places.Alveolar, Manners.Sibilant)
-    let VdAlveolarAffricate          = PA("dz", Places.Alveolar, Manners.Sibilant, Props.Voiced)
-    let VlPostalveolarAffricate      = PA("t̠ʃ", Places.PalatoAlveolar, Manners.Sibilant)
-    let VdPostalveolarAffricate      = PA("d̠ʒ", Places.PalatoAlveolar, Manners.Sibilant, Props.Voiced)
-    let VlRetroflexAffricate         = PA("ʈʂ", Places.Retroflex, Manners.Sibilant)
-    let VdRetroflexAffricate         = PA("ɖʐ", Places.Retroflex, Manners.Sibilant, Props.Voiced)
-    let VlAlveoloPalatalAffricate    = PA("tɕ", Places.AlveoloPalatal, Manners.Sibilant)
-    let VdAlveoloPalatalAffricate    = PA("dʑ", Places.AlveoloPalatal, Manners.Sibilant, Props.Voiced)
+    let VlAlveolarAffricate          = PA("ts", "", Places.Alveolar, Manners.Sibilant)
+    let VdAlveolarAffricate          = PA("dz", "", Places.Alveolar, Manners.Sibilant, Props.Voiced)
+    let VlPostalveolarAffricate      = PA("t̠ʃ", "", Places.PalatoAlveolar, Manners.Sibilant)
+    let VdPostalveolarAffricate      = PA("d̠ʒ", "", Places.PalatoAlveolar, Manners.Sibilant, Props.Voiced)
+    let VlRetroflexAffricate         = PA("ʈʂ", "", Places.Retroflex, Manners.Sibilant)
+    let VdRetroflexAffricate         = PA("ɖʐ", "", Places.Retroflex, Manners.Sibilant, Props.Voiced)
+    let VlAlveoloPalatalAffricate    = PA("tɕ", "", Places.AlveoloPalatal, Manners.Sibilant)
+    let VdAlveoloPalatalAffricate    = PA("dʑ", "", Places.AlveoloPalatal, Manners.Sibilant, Props.Voiced)
 
     // Non-Sibilants
-    let VlBilabialNSAffricate        = PA("pɸ", Places.Bilabial, Manners.NonSibilant)
-    let VdBilabialNSAffricate        = PA("bβ", Places.Bilabial, Manners.NonSibilant, Props.Voiced)
-    let VlLabioDentalNSAffricate     = PA("p̪f", Places.LabioDental, Manners.NonSibilant)
-    let VdLabioDentalNSAffricate     = PA("b̪v", Places.LabioDental, Manners.NonSibilant, Props.Voiced)
-    let VlDentalNSAffricate          = PA("t̪θ", Places.Dental, Manners.NonSibilant)
-    let VdDentalNSAffricate          = PA("d̪ð", Places.Dental, Manners.NonSibilant, Props.Voiced)
-    let VlAlveolarNSAffricate        = PA("tɹ̝̊", Places.Alveolar, Manners.NonSibilant)
-    let VdAlveolarNSAffricate        = PA("dɹ̝", Places.Alveolar, Manners.NonSibilant, Props.Voiced)
-    let VlPalatoAlveolarNSAffricate  = PA("t̠ɹ̠̊˔", Places.PalatoAlveolar, Manners.NonSibilant)
-    let VdPalatoAlveolarNSAffricate  = PA("d̠ɹ̠˔", Places.PalatoAlveolar, Manners.NonSibilant, Props.Voiced)
-    let VlPalatalNSAffricate         = PA("cç", Places.Palatal, Manners.NonSibilant)
-    let VdPalatalNSAffricate         = PA("ɟʝ", Places.Palatal, Manners.NonSibilant, Props.Voiced)
-    let VlVelarNSAffricate           = PA("kx", Places.Velar, Manners.NonSibilant)
-    let VdVelarNSAffricate           = PA("ɡɣ", Places.Velar, Manners.NonSibilant, Props.Voiced)
-    let VlUvularNSAffricate          = PA("qχ", Places.Uvular, Manners.NonSibilant)
-    let VdEpiglottalNSAffricate      = PA("ʡʢ", Places.Pharyngeal, Manners.NonSibilant, Props.Voiced)
-    let VlGlottalNSAffricate         = PA("ʔh", Places.Glottal, Manners.NonSibilant)
+    let VlBilabialNSAffricate        = PA("pɸ", "", Places.Bilabial, Manners.NonSibilant)
+    let VdBilabialNSAffricate        = PA("bβ", "", Places.Bilabial, Manners.NonSibilant, Props.Voiced)
+    let VlLabioDentalNSAffricate     = PA("p̪f", "", Places.LabioDental, Manners.NonSibilant)
+    let VdLabioDentalNSAffricate     = PA("b̪v", "", Places.LabioDental, Manners.NonSibilant, Props.Voiced)
+    let VlDentalNSAffricate          = PA("t̪θ", "", Places.Dental, Manners.NonSibilant)
+    let VdDentalNSAffricate          = PA("d̪ð", "", Places.Dental, Manners.NonSibilant, Props.Voiced)
+    let VlAlveolarNSAffricate        = PA("tɹ̝̊", "", Places.Alveolar, Manners.NonSibilant)
+    let VdAlveolarNSAffricate        = PA("dɹ̝", "", Places.Alveolar, Manners.NonSibilant, Props.Voiced)
+    let VlPalatoAlveolarNSAffricate  = PA("t̠ɹ̠̊˔", "", Places.PalatoAlveolar, Manners.NonSibilant)
+    let VdPalatoAlveolarNSAffricate  = PA("d̠ɹ̠˔", "", Places.PalatoAlveolar, Manners.NonSibilant, Props.Voiced)
+    let VlPalatalNSAffricate         = PA("cç", "", Places.Palatal, Manners.NonSibilant)
+    let VdPalatalNSAffricate         = PA("ɟʝ", "", Places.Palatal, Manners.NonSibilant, Props.Voiced)
+    let VlVelarNSAffricate           = PA("kx", "", Places.Velar, Manners.NonSibilant)
+    let VdVelarNSAffricate           = PA("ɡɣ", "", Places.Velar, Manners.NonSibilant, Props.Voiced)
+    let VlUvularNSAffricate          = PA("qχ", "", Places.Uvular, Manners.NonSibilant)
+    let VdEpiglottalNSAffricate      = PA("ʡʢ", "", Places.Pharyngeal, Manners.NonSibilant, Props.Voiced)
+    let VlGlottalNSAffricate         = PA("ʔh", "", Places.Glottal, Manners.NonSibilant)
 
     // Lateral
-    let VlAlveolarLateralAffricate   = PA("tɬ̝̊", Places.Alveolar, Manners.Lateral)
-    let VdAlveolarLateralAffricate   = PA("dɮ", Places.Alveolar, Manners.Lateral, Props.Voiced)
-    let VlRetroflexLateralAffricate  = PA("ʈɭ̊˔", Places.Retroflex, Manners.Lateral)
-    let VdPalatalLateralAffricate    = PA("cʎ̝̊", Places.Palatal, Manners.Lateral, Props.Voiced)
-    let VlVelarLateralAffricate      = PA("kʟ̝̊", Places.Velar, Manners.Lateral)
-    let VdVelarLateralAffricate      = PA("ɡʟ̝", Places.Velar, Manners.Lateral, Props.Voiced)
+    let VlAlveolarLateralAffricate   = PA("tɬ̝̊", "", Places.Alveolar, Manners.Lateral)
+    let VdAlveolarLateralAffricate   = PA("dɮ", "", Places.Alveolar, Manners.Lateral, Props.Voiced)
+    let VlRetroflexLateralAffricate  = PA("ʈɭ̊˔", "", Places.Retroflex, Manners.Lateral)
+    let VdPalatalLateralAffricate    = PA("cʎ̝̊", "", Places.Palatal, Manners.Lateral, Props.Voiced)
+    let VlVelarLateralAffricate      = PA("kʟ̝̊", "", Places.Velar, Manners.Lateral)
+    let VdVelarLateralAffricate      = PA("ɡʟ̝", "", Places.Velar, Manners.Lateral, Props.Voiced)
 
     //==================================
     // Ejective Affricates
     //==================================
 
     // Central
-    let VlAlveolarEjectiveAffricate       = EA("tsʼ", Places.Alveolar, Manners.Central)
-    let VlPalatoAlveolarEjectiveAffricate = EA("t̠ʃʼ", Places.PalatoAlveolar, Manners.Central)
-    let VlRetroflexEjectiveAffricate      = EA("ʈʂʼ", Places.Retroflex, Manners.Central)
-    let VlVelarEjectiveAffricate          = EA("kxʼ", Places.Velar, Manners.Central)
-    let VlUvularEjectiveAffricate         = EA("qχʼ", Places.Uvular, Manners.Central)
+    let VlAlveolarEjectiveAffricate       = EA("tsʼ", "", Places.Alveolar, Manners.Central)
+    let VlPalatoAlveolarEjectiveAffricate = EA("t̠ʃʼ", "", Places.PalatoAlveolar, Manners.Central)
+    let VlRetroflexEjectiveAffricate      = EA("ʈʂʼ", "", Places.Retroflex, Manners.Central)
+    let VlVelarEjectiveAffricate          = EA("kxʼ", "", Places.Velar, Manners.Central)
+    let VlUvularEjectiveAffricate         = EA("qχʼ", "", Places.Uvular, Manners.Central)
 
     // Lateral
-    let VlAlveolarLateralEjective         = EA("tɬʼ", Places.Alveolar, Manners.Lateral)
-    let VlPalatalLateralEjective          = EA("cʎ̝̊ʼ", Places.Palatal, Manners.Lateral)
-    let VlVelarLateralEjective            = EA("kʟ̝̊ʼ", Places.Velar, Manners.Lateral)
+    let VlAlveolarLateralEjective         = EA("tɬʼ", "", Places.Alveolar, Manners.Lateral)
+    let VlPalatalLateralEjective          = EA("cʎ̝̊ʼ", "", Places.Palatal, Manners.Lateral)
+    let VlVelarLateralEjective            = EA("kʟ̝̊ʼ", "", Places.Velar, Manners.Lateral)
 
-/*
-    let RaisedOpenFrontUnrounded     = Set("æ", Places.None, Manners.None, Props.None)
-    let RhotacizedSchwa              = Set("ɚ", Places.None, Manners.None, Props.None)
-    let RhotacizedOpenMidCentral     = Set("ɝ", Places.None, Manners.None, Props.None)
-    let VelarizedVdAlveolarLateral   = Set("ɫ", Places.None, Manners.None, Props.None)
-*/
-
-    let VlLabialVelarFricative       = OT("ʍ", Places.LabialVelar, Manners.Fricative)
-    let VlAlveoloPalatalFricative1   = OT("ɕ", Places.AlveoloPalatal, Manners.Fricative)
-    let VlAlveoloPalatalFricative2   = OT("ʑ", Places.AlveoloPalatal, Manners.Fricative)
-    let VdLabialVelarApproximant     = OT("w", Places.LabialVelar, Manners.Approximant, Props.Voiced)
-    let VlAlveolarLateralFlap        = OT("ɺ", Places.Alveolar, Manners.LateralTapFlap, Props.Voiced)
-    let VdLabialPalatalApproximant   = OT("ɥ", Places.LabialPalatal, Manners.Approximant, Props.Voiced)
+    let VlLabialVelarFricative       = OT("ʍ", "", Places.LabialVelar, Manners.Fricative)
+    let VlAlveoloPalatalFricative1   = OT("ɕ", "", Places.AlveoloPalatal, Manners.Fricative)
+    let VlAlveoloPalatalFricative2   = OT("ʑ", "", Places.AlveoloPalatal, Manners.Fricative)
+    let VdLabialVelarApproximant     = OT("w", "", Places.LabialVelar, Manners.Approximant, Props.Voiced)
+    let VlAlveolarLateralFlap        = OT("ɺ", "", Places.Alveolar, Manners.LateralTapFlap, Props.Voiced)
+    let VdLabialPalatalApproximant   = OT("ɥ", "", Places.LabialPalatal, Manners.Approximant, Props.Voiced)
 
     let SimultaneousSx               = {Name: "Simultaneous {0} and {1}"(VlPostalveolarSibFricative.Text, VlVelarFricative.Text)} +
-                                       OT("ɧ", Places.PostAlveolar, Manners.SibilantFricative, Props.None)
-    let VlEpiglottalFricative        = OT("ʜ", Places.Pharyngeal, Manners.Fricative)
-    let VdEpiglottalFricative        = OT("ʢ", Places.Pharyngeal, Manners.Fricative, Props.Voiced)
-    let VlEpiglottalPlosive          = OT("ʡ", Places.Pharyngeal, Manners.Plosive)
+                                       OT("ɧ", "", Places.PostAlveolar, Manners.SibilantFricative, Props.None)
+    let VlEpiglottalFricative        = OT("ʜ", "", Places.Pharyngeal, Manners.Fricative)
+    let VdEpiglottalFricative        = OT("ʢ", "?\\", Places.Pharyngeal, Manners.Fricative, Props.Voiced)
+    let VlEpiglottalPlosive          = OT("ʡ", "<\\", Places.Pharyngeal, Manners.Plosive)
 
-    let CloseFrontUnrounded          = VO("i", Opens.Close, Backnesses.Front)
-    let CloseFrontRounded            = VO("y", Opens.Close, Backnesses.Front, Props.Rounded)
-    let CloseCentralUnrounded        = VO("ɨ", Opens.Close, Backnesses.Central)
-    let CloseCentralRounded          = VO("ʉ", Opens.Close, Backnesses.Central, Props.Rounded)
-    let CloseBackUnrounded           = VO("ɯ", Opens.Close, Backnesses.Back)
-    let CloseBackRounded             = VO("u", Opens.Close, Backnesses.Back, Props.Rounded)
+    let CloseFrontUnrounded          = VO("i", "", Opens.Close, Backnesses.Front)
+    let CloseFrontRounded            = VO("y", "", Opens.Close, Backnesses.Front, Props.Rounded)
+    let CloseCentralUnrounded        = VO("ɨ", "1", Opens.Close, Backnesses.Central)
+    let CloseCentralRounded          = VO("ʉ", "}", Opens.Close, Backnesses.Central, Props.Rounded)
+    let CloseBackUnrounded           = VO("ɯ", "", Opens.Close, Backnesses.Back)
+    let CloseBackRounded             = VO("u", "", Opens.Close, Backnesses.Back, Props.Rounded)
 
-    let NearCloseFrontUnrounded      = VO("ɪ", Opens.NearClose, Backnesses.NearFront)
-    let NearCloseFrontRounded        = VO("ʏ", Opens.NearClose, Backnesses.NearFront, Props.Rounded)
-    let NearCloseBackRounded         = VO("ʊ", Opens.NearClose, Backnesses.NearBack, Props.Rounded)
+    let NearCloseFrontUnrounded      = VO("ɪ", "", Opens.NearClose, Backnesses.NearFront)
+    let NearCloseFrontRounded        = VO("ʏ", "", Opens.NearClose, Backnesses.NearFront, Props.Rounded)
+    let NearCloseBackRounded         = VO("ʊ", "", Opens.NearClose, Backnesses.NearBack, Props.Rounded)
 
-    let CloseMidFrontUnrounded       = VO("e", Opens.CloseMid, Backnesses.Front)
-    let CloseMidFrontRounded         = VO("ø", Opens.CloseMid, Backnesses.Front, Props.Rounded)
+    let CloseMidFrontUnrounded       = VO("e", "", Opens.CloseMid, Backnesses.Front)
+    let CloseMidFrontRounded         = VO("ø", "2", Opens.CloseMid, Backnesses.Front, Props.Rounded)
+    let Schwa                        = VO("ə", "@", Opens.CloseMid, Backnesses.Central)
+    let RoundedSchwa                 = VO("ɵ", "8", Opens.CloseMid, Backnesses.Central, Props.Rounded)
+    let CloseMidBackUnrounded        = VO("ɤ", "7", Opens.CloseMid, Backnesses.Back)
+    let CloseMidBackRounded          = VO("o", "", Opens.CloseMid, Backnesses.Back, Props.Rounded)
+    let MidFrontUnrounded            = VO("ø̞", "", Opens.Mid, Backnesses.Front)
+    let MidCentralUnrounded          = VO("ɘ", "@\\", Opens.Mid, Backnesses.Central)
+    let MidBackUnrounded             = VO("o̞", "", Opens.Mid, Backnesses.Back)
+    let OpenMidNearFrontUnrounded    = VO("ɛ", "", Opens.OpenMid, Backnesses.NearFront)
+    let OpenMidNearFrontRounded      = VO("œ", "9", Opens.OpenMid, Backnesses.NearFront, Props.Rounded)
+    let OpenMidCentral               = VO("ɜ", "3", Opens.OpenMid, Backnesses.Central)
+    let OpenMidCentralRounded        = VO("ɞ", "3\\", Opens.OpenMid, Backnesses.Central, Props.Rounded)
+    let OpenMidBackUnrounded         = VO("ʌ", "", Opens.OpenMid, Backnesses.Back)
+    let OpenMidBackRounded           = VO("ɔ", "", Opens.OpenMid, Backnesses.Back, Props.Rounded)
+    let NearFrontUnrounded           = VO("æ", "{", Opens.NearOpen, Backnesses.NearFront)
+    let FrontOpenRounded             = VO("ɶ", "&", Opens.NearOpen, Backnesses.NearFront, Props.Rounded)
+    let OpenMidSchwa                 = VO("ɐ", "6", Opens.NearOpen, Backnesses.Central, Props.Rounded)
+    let OpenBackUnrounded            = VO("ɑ", "", Opens.Open, Backnesses.Back)
+    let OpenBackRounded              = VO("ɒ", "", Opens.Open, Backnesses.Back, Props.Rounded)
+    let OpenCentralUnrounded         = VO("ä", "", Opens.Open, Backnesses.Central)
+    let OpenNearFrontUnrounded       = VO("a", "", Opens.Open, Backnesses.NearFront)
+    let OpenNearFrontRounded         = VO("ɶ", "&", Opens.Open, Backnesses.NearFront, Props.Rounded)
 
-    let Schwa                        = VO("ə", Opens.CloseMid, Backnesses.Central)
-    let RoundedSchwa                 = VO("ɵ", Opens.CloseMid, Backnesses.Central, Props.Rounded)
+//    let RhotacizedSchwa              = VO("ɚ", "@`", Opens.Open, Backnesses.NearFront, Props.Rounded)
 
-    let CloseMidBackUnrounded        = VO("ɤ", Opens.CloseMid, Backnesses.Back)
-    let CloseMidBackRounded          = VO("o", Opens.CloseMid, Backnesses.Back, Props.Rounded)
-
-    let MidFrontUnrounded            = VO("ø̞", Opens.Mid, Backnesses.Front)
-    let MidCentralUnrounded          = VO("ə", Opens.Mid, Backnesses.Central)
-    let MidBackUnrounded             = VO("o̞", Opens.Mid, Backnesses.Back)
-
-    let OpenMidNearFrontUnrounded    = VO("ɛ", Opens.OpenMid, Backnesses.NearFront)
-    let OpenMidNearFrontRounded      = VO("œ", Opens.OpenMid, Backnesses.NearFront, Props.Rounded)
-    let OpenMidCentral               = VO("ɜ", Opens.OpenMid, Backnesses.Central)
-    let OpenMidCentralRounded        = VO("ɞ", Opens.OpenMid, Backnesses.Central, Props.Rounded)
-    let OpenMidBackUnrounded         = VO("ʌ", Opens.OpenMid, Backnesses.Back)
-    let OpenMidBackRounded           = VO("ɔ", Opens.OpenMid, Backnesses.Back, Props.Rounded)
-
-    let FrontOpenRounded             = VO("ɶ", Opens.NearOpen, Backnesses.NearFront, Props.Rounded)
-    let OpenMidSchwa                 = VO("ɐ", Opens.NearOpen, Backnesses.Central, Props.Rounded)
-
-    let OpenBackUnrounded            = VO("ɑ", Opens.Open, Backnesses.Back)
-    let OpenBackRounded              = VO("ɒ", Opens.Open, Backnesses.Back, Props.Rounded)
-    let OpenCentralUnrounded         = VO("ä", Opens.Open, Backnesses.Central)
-    let OpenNearFrontUnrounded       = VO("a", Opens.Open, Backnesses.NearFront)
-    let OpenNearFrontRounded         = VO("ɶ", Opens.Open, Backnesses.NearFront, Props.Rounded)
   end
 
   let Impossible = [
@@ -501,59 +496,95 @@ with IPA
 
   let AllSounds = Sounds + Impossible
 
-  let Downstep                     = '↓'
-  let Upstep                       = '↑'
-  let Becomes                      = '→'
-  let Globalrise                   = '↗'
-  let Globalfall                   = '↘'
-  let ReadyMadeCombination         = '\u026B'
-  let Breve                        = '\u02D8'
-  let PrimaryStress                = '\u02C8'
-  let SecondaryStress              = '\u02CC'
-  let LengthMark                   = '\u02D0'
-  let Halflength                   = '\u02D1'
-  let EjectiveMark                 = '\u02BC'
-  let Rhotacized                   = '\u02B4'
-  let Aspirated                    = '\u02B0'
-  let BreathyVoiceAspirated        = '\u02B1'
-  let Palatalized                  = '\u02B2'
-  let Labialized                   = '\u02B7'
-  let Velarized                    = '\u02E0'
-  let Pharyngealized               = '\u02E4'
-  let RhoticHook                   = '\u02DE'
-  let LowTone                      = '\u0300'
-  let HighTone                     = '\u0301'
-  let MidTone                      = '\u0304'
-  let Extrashort                   = '\u0306'
-  let ExtraHighTone                = '\u030B'
-  let ExtraLowTone                 = '\u030F'
-  let VoicelessDescender           = '\u030A'
-  let BreathyVoiced                = '\u0324'
-  let Voiceless                    = '\u0325'
-  let Dental                       = '\u032A'
-  let Voiced                       = '\u032C'
-  let CreakyVoiced                 = '\u0330'
-  let CombiningMacron              = '\u0331'
-  let Apical                       = '\u033A'
-  let LinguoLabial                 = '\u033C'
-  let Laminal                      = '\u033B'
-  let NotAudiblyReleased           = '\u031A'
-  let MoreRounded                  = '\u0339'
-  let Nasalized                    = '\u0303'
-  let LessRounded                  = '\u031C'
-  let Advanced                     = '\u031F'
-  let Centralized                  = '\u0308'
-  let VelarizedOrPharyngealized    = '\u0334'
-  let Retracted                    = '\u0320'
-  let MidCentralized               = '\u033D'
-  let Raised                       = '\u031D'
-  let Syllabic                     = '\u0329'
-  let Lowered                      = '\u031E'
-  let NonSyllabic                  = '\u032F'
-  let AdvancedTongueRoot           = '\u0318'
-  let RetractedTongueRoot          = '\u0319'
-  let TieBarBelow                  = '\u035C'
-  let TieBarAbove                  = '\u0361'
+  let Dia(text, sampa, alt=null) = {
+    Text: text,
+    Sampa: sampa,
+    Alt: alt
+  }
+
+  let Centralized                  = Dia("\u0308", "_\"")
+  let Advanced                     = Dia("\u031F", "_+")
+  let Retracted                    = Dia("\u0320", "_-")
+  let RisingTone                   = Dia("\u030C", "_R", "_/")
+  let Voiceless                    = Dia("\u0325", "_0")
+  let Implosive                    = Dia(null, "_<")
+  let Syllabic                     = Dia("\u0329", "_=", "=")
+  let EjectiveMark                 = Dia("\u02BC", "_>")
+  let Pharyngealized               = Dia("\u02E4", "_?\\")
+  let FallingTone                  = Dia("\u0302", "_\\", "_F")
+  let NonSyllabic                  = Dia("\u032F", "_^")
+  let NoAudibleRelease             = Dia("\u031A", "_}")
+  let RhoticHook                   = Dia("\u02DE", "`")
+  let Nasalized                    = Dia("\u0303", "_~", "~")
+  let AdvancedTongueRoot           = Dia("\u0318", "_A")
+  let Apical                       = Dia("\u033A", "_a")
+  let ExtraLowTone                 = Dia("\u030F", "_B")
+  let LowRisingTone                = Dia("\u1DC5", "_B_L")
+  let LessRounded                  = Dia("\u031C", "_c")
+  let Dental                       = Dia("\u032A", "_d")
+  let VelarizedOrPharyngealized    = Dia("\u0334", "_e")
+  let GlobalFall                   = Dia("↘", "<F>")
+  let Velarized                    = Dia("\u02E0", "_G")
+  let HighTone                     = Dia("\u0301", "_H")
+  let HighRisingTone               = Dia("\u1DC4", "_H_T")
+  let Aspirated                    = Dia("\u02B0", "_h")
+  let Palatalized                  = Dia("\u02B2", "_j", "'")
+  let CreakyVoiced                 = Dia("\u0330", "_k")
+  let LowTone                      = Dia("\u0300", "_L")
+  let LateralRelease               = Dia("\u02E1", "_l")
+  let MidTone                      = Dia("\u0304", "_M")
+  let Laminal                      = Dia("\u033B", "_m")
+  let LinguoLabial                 = Dia("\u033C", "_N")
+  let NasalRelease                 = Dia("\u207F", "_n")
+  let MoreRounded                  = Dia("\u0339", "_O")
+  let Lowered                      = Dia("\u031E", "_o")
+  let RetractedTongueRoot          = Dia("\u0319", "_q")
+  let GlobalRise                   = Dia("↗", "<R>")
+  let RisingFallingTone            = Dia("\u1DC8", "_R_F")
+  let Raised                       = Dia("\u031D", "_r")
+  let ExtraHighTone                = Dia("\u030B", "_T")
+  let BreathyVoiced                = Dia("\u0324", "_t")
+  let Voiced                       = Dia("\u032C", "_v")
+  let Labialized                   = Dia("\u02B7", "_W")
+  let ExtraShort                   = Dia("\u02D8", "_X")
+  let MidCentralized               = Dia("\u033D", "_x")
+  let Downstep                     = Dia("↓", "!")
+  let Upstep                       = Dia("↑", "^")
+
+  let SylableBreak                 = Dia(".", ".")
+  let PrimaryStress                = Dia("ˈ", "\"")
+  let SecondaryStress              = Dia("ˌ", "%")
+
+  let Long                         = Dia("ː", ":")
+  let HalfLong                     = Dia("ˑ", ":\\")
+  let Separator                    = Dia("", "-")
+
+  let UndefinedEscapeCharacter     = Dia(null, "*")
+  let IndeterminacyinFrenchVowels  = Dia(null, "/")
+  let BeginNonsegmentalNotation    = Dia(null, "<")
+
+  let Voicedepiglottalfricative    = Dia("ʢ", "<\\")
+  let Endnonsegmentalnotation      = Dia("", ">")
+  let Postalveolarclick            = Dia("ǃ", "!\\")
+  let MinorGroup                   = Dia("|", "|")
+  let Dentalclick                  = Dia("ǀ", "|\\")
+  let MajorGroup                   = Dia("‖", "||")
+  let Alveolarlateralclick         = Dia("ǁ", "|\\|\\")
+  let Palatalclick                 = Dia("ǂ", "#NAME?")
+  let Linkingmark                  = Dia("‿", "-\\")
+
+/*
+    let RhotacizedOpenMidCentral     = Set("ɝ", "", Places.None, Manners.None, Props.None)
+    let VelarizedVdAlveolarLateral   = Set("ɫ", "", Places.None, Manners.None, Props.None)
+*/
+
+
+  let VoicelessDescender           = Dia("\u030A", "")
+  let CombiningMacron              = Dia("\u0331", "")
+  let TieBarBelow                  = Dia("\u035C", "")
+  let TieBarAbove                  = Dia("\u0361", "")
+  let ReadyMadeCombination         = Dia("\u026B", "")
+  let Becomes                      = Dia("→", "")
 
   //======================================================================
 
@@ -594,7 +625,7 @@ with IPA
   let ShowCodePoint(c) = {TextRadix: 16, TextDigits: 4} Type.Integer(c)
 
   let CodePoints(text) = Span {
-    Separator: ", ",
+    Separator: Lang.Separator,
     if (text)
       ShowCodePoint(each text)
     end
@@ -636,7 +667,7 @@ with IPA
     end
   }
 
-  let PulmonicCell(place, manner) = SoundBlock(AllSounds.FindSlice(EqualSound PC(null, place, manner, Props.None)))
+  let PulmonicCell(place, manner) = SoundBlock(AllSounds.FindSlice(EqualSound PC(null, null, place, manner, Props.None)))
 
   let PlaceHeader(place) = Style.HeaderCell(Lang.PlaceNames[place])
 
@@ -686,7 +717,7 @@ with IPA
   }
   //======================================================================
 
-  let NPCell(place, manner, props) = SoundBlock(AllSounds.FindSlice(EqualSound NPC(null, place, manner, props)))
+  let NPCell(place, manner, props) = SoundBlock(AllSounds.FindSlice(EqualSound NPC(null, null, place, manner, props)))
 
   let FindPlace(sound, data)      = sound.Category == data.Category && sound.Place == data.Place
   let FindPlaces(place, data)     = Sounds.Contains(FindPlace {Category: data.Category, Place: place})
@@ -736,7 +767,7 @@ with IPA
   }
   //======================================================================
 
-  let AffricateCell(category, manner, place) = SoundBlock(AllSounds.FindSlice(EqualSound Set(null, category, place, manner, Props.None)))
+  let AffricateCell(category, manner, place) = SoundBlock(AllSounds.FindSlice(EqualSound Set(null, null, category, place, manner, Props.None)))
 
   let AffricateRow(places, category, manner) = Row {
     Cell {
