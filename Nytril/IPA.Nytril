@@ -2,12 +2,12 @@
 //======================================================================
 
 with IPA
-  enum flags Props
-    None,
-    Click,
-    Ejective,
-    Implosive,
-  end
+  let Voiced    = {IsVoiced: true}
+  let NonIPA    = {IsNotIPA: true}
+  let Rounded   = {IsRounded: true}
+  let Velarized = {IsVelarized: true}
+  let Click     = {IsClick: true}
+  let Ejective  = {IsEjective: true}
 
   enum Categories
     Vowel,
@@ -82,53 +82,53 @@ with IPA
   let FindPulmonicPlace(place)  = Sounds.Contains(FindPulmonic{Place: place})
   let PulmonicPlaces            = Places.FindSlice(FindPulmonicPlace)
 
-  let Sound(text, sampa, category, place, manner, prop) = {
+  let Sound(text, sampa, category, place, manner) = {
     Popup: SoundPopup,
     Text: text,
     Sampa: sampa,
     Category: category,
     Place: place,
     Manner: manner,
-    Prop: prop,
   }
 
-  let VO(text, sampa, open, backness, prop=Props.None) = {
+  let VO(text, sampa, open, backness) = {
     Popup: SoundPopup,
     Text: text,
     Sampa: sampa,
     Category: Categories.Vowel,
     Open: open,
     Backness: backness,
-    Prop: prop,
   }
 
-  let PC(text, sampa, place, manner, prop=Props.None)  = Sound(text, sampa, Categories.PulmonicConsonant, place, manner, prop)
-  let NPC(text, sampa, place, manner, prop=Props.None) = Sound(text, sampa, Categories.Consonant, place, manner, prop)
-  let PA(text, sampa, place, manner, prop=Props.None)  = Sound(text, sampa, Categories.PulmonicAffricate, place, manner, prop)
-  let EA(text, sampa, place, manner, prop=Props.None)  = Sound(text, sampa, Categories.EjectiveAffricate, place, manner, prop)
-  let OT(text, sampa, place, manner, prop=Props.None)  = Sound(text, sampa, Categories.Other, place, manner, prop)
-  let NPEjective(sound, manner)                        = NPC(sound.Text Diacritics.Ejective.Text, sound.Sampa Diacritics.Ejective.Sampa, sound.Place, manner, Props.Ejective)
-  let Imp(category, place, manner, prop=Props.None)    = Sound(null, "", category, place, manner, prop) {IsImpossible: true}
+  let DC(text, sampa, alt=null) = {
+    Text: text,
+    Sampa: sampa,
+    Alt: alt
+  }
+
+  let PC(text, sampa, place, manner)  = Sound(text, sampa, Categories.PulmonicConsonant, place, manner)
+  let NPC(text, sampa, place, manner) = Sound(text, sampa, Categories.Consonant, place, manner)
+  let PA(text, sampa, place, manner)  = Sound(text, sampa, Categories.PulmonicAffricate, place, manner)
+  let EA(text, sampa, place, manner)  = Sound(text, sampa, Categories.EjectiveAffricate, place, manner)
+  let OT(text, sampa, place, manner)  = Sound(text, sampa, Categories.Other, place, manner)
+  let Imp(category, place, manner)    = Sound(null, "", category, place, manner) {IsImpossible: true}
+  let NPEjective(sound, manner)       = NPC(sound.Text Diacritics.Ejective.Text, sound.Sampa Diacritics.Ejective.Sampa, sound.Place, manner) Ejective
 
   let EqualOther(sound) = sound.Category == Categories.Other
 
-  let EqualSound(sound, data) =
+  let MatchSound(sound, data) =
     sound.Category == data.Category and
     sound.Place == data.Place and
     sound.Manner == data.Manner
 
-  let VowelPair(sound, data) =
-    sound.Category == Categories.Vowel and
-    sound.Open == data.Open and
-    sound.Backness == data.Backness
+  let MatchConsonant(sound, data) = sound.Category == Categories.Consonant and sound.Place == data.Place and sound.Manner == data.Manner
 
-  let Voiced    = {IsVoiced: true}
-  let NonIPA    = {IsNotIPA: true}
-  let Rounded   = {IsRounded: true}
-  let Velarized = {IsVelarized: true}
+  let MatchClick(sound, data)     = sound.IsClick and MatchConsonant(sound, data)
+  let MatchImplosive(sound, data) = sound.Manner == Manners.Implosive and MatchConsonant(sound, data)
+  let MatchEjective(sound, data)  = sound.IsEjective and MatchConsonant(sound, data)
+  let VowelPair(sound, data)      = sound.Category == Categories.Vowel and sound.Open == data.Open and sound.Backness == data.Backness
 
   with Sounds
-
     //==================================
     // Pulmonic Consonants
     //==================================
@@ -297,35 +297,35 @@ with IPA
     let VlPostalveolarLatFricEjective = NPEjective(VlAlveolarLateralFricative, Manners.LateralFricative)
 
     // Clicks
-    let VlBilabialTenuisClick        = NPC("ʘ", "O\\", Places.Bilabial, Manners.Tenuis, Props.Click)
-    let VdBilabialTenuisClick        = NPC("ʘ̬", "", Places.Bilabial, Manners.Tenuis, Props.Click) Voiced
-    let VlDentalTenuisClick          = NPC("ǀ", "|", Places.Dental, Manners.Tenuis, Props.Click)
-    let VdDentalTenuisClick          = NPC("ǀ̬", "", Places.Dental, Manners.Tenuis, Props.Click) Voiced
-    let VlAlveolarTenuisClick        = NPC("ǃ", "!\\", Places.Alveolar, Manners.Tenuis, Props.Click)
-    let VdAlveolarTenuisClick        = NPC("ǃ̬", "", Places.Alveolar, Manners.Tenuis, Props.Click) Voiced
-    let VlPalatalTenuisClick         = NPC("ǂ", "=\\", Places.Palatal, Manners.Tenuis, Props.Click)
-    let VdPalatalTenuisClick         = NPC("ǂ̬", "", Places.Palatal, Manners.Tenuis, Props.Click) Voiced
+    let VlBilabialTenuisClick        = NPC("ʘ", "O\\", Places.Bilabial, Manners.Tenuis) Click
+    let VdBilabialTenuisClick        = NPC("ʘ̬", "", Places.Bilabial, Manners.Tenuis) Voiced Click
+    let VlDentalTenuisClick          = NPC("ǀ", "|", Places.Dental, Manners.Tenuis) Click
+    let VdDentalTenuisClick          = NPC("ǀ̬", "", Places.Dental, Manners.Tenuis) Voiced Click
+    let VlAlveolarTenuisClick        = NPC("ǃ", "!\\", Places.Alveolar, Manners.Tenuis) Click
+    let VdAlveolarTenuisClick        = NPC("ǃ̬", "", Places.Alveolar, Manners.Tenuis) Voiced Click
+    let VlPalatalTenuisClick         = NPC("ǂ", "=\\", Places.Palatal, Manners.Tenuis) Click
+    let VdPalatalTenuisClick         = NPC("ǂ̬", "", Places.Palatal, Manners.Tenuis) Voiced Click
 
-    let VlBilabialNasalClick         = NPC("ʘ̃", "", Places.Bilabial, Manners.Nasal, Props.Click)
-    let VlDentalNasalClick           = NPC("ǀ̃", "", Places.Dental, Manners.Nasal, Props.Click)
-    let VlAlveolarNasalClick         = NPC("ǃ̃", "", Places.Alveolar, Manners.Nasal, Props.Click)
-    let VlPalatalNasalClick          = NPC("ǂ̃", "", Places.Palatal, Manners.Nasal, Props.Click)
+    let VlBilabialNasalClick         = NPC("ʘ̃", "", Places.Bilabial, Manners.Nasal) Click
+    let VlDentalNasalClick           = NPC("ǀ̃", "", Places.Dental, Manners.Nasal) Click
+    let VlAlveolarNasalClick         = NPC("ǃ̃", "", Places.Alveolar, Manners.Nasal) Click
+    let VlPalatalNasalClick          = NPC("ǂ̃", "", Places.Palatal, Manners.Nasal) Click
 
-    let VlAlveolarTenuisLateralClick = NPC("ǁ", "|\\|\\", Places.Alveolar, Manners.TenuisLateral, Props.Click)
-    let VdAlveolarTenuisLateralClick = NPC("ǁ̬", "", Places.Alveolar, Manners.TenuisLateral, Props.Click) Voiced
+    let VlAlveolarTenuisLateralClick = NPC("ǁ", "|\\|\\", Places.Alveolar, Manners.TenuisLateral) Click
+    let VdAlveolarTenuisLateralClick = NPC("ǁ̬", "", Places.Alveolar, Manners.TenuisLateral) Voiced Click
 
-    let VlBilabialImplosiveClick     = NPC("ɓ̥", "", Places.Bilabial, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdBilabialImplosiveClick     = NPC("ɓ", "b_<", Places.Bilabial, Manners.Implosive, Props.Implosive | Props.Click) Voiced
-    let VlAlveolarImplosiveClick     = NPC("ɗ̥", "", Places.Alveolar, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdAlveolarImplosiveClick     = NPC("ɗ", "d_<", Places.Alveolar, Manners.Implosive, Props.Implosive | Props.Click) Voiced
-    let VlRetroflexImplosiveClick    = NPC("ᶑ̊", "", Places.Retroflex, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdRetroflexImplosiveClick    = NPC("ᶑ", "", Places.Retroflex, Manners.Implosive, Props.Implosive | Props.Click) Voiced
-    let VlPalatalImplosiveClick      = NPC("ʄ̊", "", Places.Palatal, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdPalatalImplosiveClick      = NPC("ʄ", "J\\_<", Places.Palatal, Manners.Implosive, Props.Implosive | Props.Click) Voiced
-    let VlVelarImplosiveClick        = NPC("ɠ̊", "", Places.Velar, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdVelarImplosiveClick        = NPC("ɠ", "g_<", Places.Velar, Manners.Implosive, Props.Implosive | Props.Click) Voiced
-    let VlUvularImplosiveClick       = NPC("ʛ̥", "", Places.Uvular, Manners.Implosive, Props.Implosive | Props.Click)
-    let VdUvularImplosiveClick       = NPC("ʛ", "G\\_<", Places.Uvular, Manners.Implosive, Props.Implosive | Props.Click) Voiced
+    let VlBilabialImplosiveClick     = NPC("ɓ̥", "", Places.Bilabial, Manners.Implosive) Click
+    let VdBilabialImplosiveClick     = NPC("ɓ", "b_<", Places.Bilabial, Manners.Implosive) Voiced Click
+    let VlAlveolarImplosiveClick     = NPC("ɗ̥", "", Places.Alveolar, Manners.Implosive) Click
+    let VdAlveolarImplosiveClick     = NPC("ɗ", "d_<", Places.Alveolar, Manners.Implosive) Voiced Click
+    let VlRetroflexImplosiveClick    = NPC("ᶑ̊", "", Places.Retroflex, Manners.Implosive) Click
+    let VdRetroflexImplosiveClick    = NPC("ᶑ", "", Places.Retroflex, Manners.Implosive) Voiced Click
+    let VlPalatalImplosiveClick      = NPC("ʄ̊", "", Places.Palatal, Manners.Implosive) Click
+    let VdPalatalImplosiveClick      = NPC("ʄ", "J\\_<", Places.Palatal, Manners.Implosive) Voiced Click
+    let VlVelarImplosiveClick        = NPC("ɠ̊", "", Places.Velar, Manners.Implosive) Click
+    let VdVelarImplosiveClick        = NPC("ɠ", "g_<", Places.Velar, Manners.Implosive) Voiced Click
+    let VlUvularImplosiveClick       = NPC("ʛ̥", "", Places.Uvular, Manners.Implosive) Click
+    let VdUvularImplosiveClick       = NPC("ʛ", "G\\_<", Places.Uvular, Manners.Implosive) Voiced Click
 
     //==================================
     // Pulmonic Affricates
@@ -393,8 +393,9 @@ with IPA
     let VdLabialVelarApproximant     = OT("w", "w", Places.LabialVelar, Manners.Approximant) Voiced
     let VdLabialPalatalApproximant   = OT("ɥ", "H", Places.LabialPalatal, Manners.Approximant) Voiced
 
-    let SimultaneousSx               = {Name: "Simultaneous {0} and {1}"(VlPostalveolarSibFricative.Text, VlVelarFricative.Text)} +
-                                       OT("ɧ", "x\\", Places.PostAlveolar, Manners.SibilantFricative)
+    let SimultaneousSx               = OT("ɧ", "x\\", Places.PostAlveolar, Manners.SibilantFricative) {
+                                         Name: "Simultaneous {0} and {1}"(VlPostalveolarSibFricative.Text, VlVelarFricative.Text)
+                                       }
     let VlEpiglottalFricative        = OT("ʜ", "H\\", Places.Pharyngeal, Manners.Fricative)
     let VdEpiglottalFricative        = OT("ʢ", "?\\", Places.Pharyngeal, Manners.Fricative) Voiced
     let VlEpiglottalPlosive          = OT("ʡ", "<\\", Places.Pharyngeal, Manners.Plosive)
@@ -475,20 +476,20 @@ with IPA
     Imp(Categories.PulmonicConsonant, Places.LabioDental, Manners.LateralTapFlap),
     Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.LateralTapFlap),
     Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.LateralTapFlap),
-    Imp(Categories.Consonant, Places.Bilabial, Manners.LateralFricative, Props.Ejective),
-    Imp(Categories.Consonant, Places.LabioDental, Manners.LateralFricative, Props.Ejective),
-    Imp(Categories.Consonant, Places.Pharyngeal, Manners.LateralFricative, Props.Ejective),
-    Imp(Categories.Consonant, Places.Velar, Manners.Tenuis, Props.Click),
-    Imp(Categories.Consonant, Places.Uvular, Manners.Tenuis, Props.Click),
-    Imp(Categories.Consonant, Places.Pharyngeal, Manners.Tenuis, Props.Click),
-    Imp(Categories.Consonant, Places.Velar, Manners.Nasal, Props.Click),
-    Imp(Categories.Consonant, Places.Uvular, Manners.Nasal, Props.Click),
-    Imp(Categories.Consonant, Places.Pharyngeal, Manners.Nasal, Props.Click),
-    Imp(Categories.Consonant, Places.Bilabial, Manners.TenuisLateral, Props.Click),
-    Imp(Categories.Consonant, Places.LabioDental, Manners.TenuisLateral, Props.Click),
-    Imp(Categories.Consonant, Places.Velar, Manners.TenuisLateral, Props.Click),
-    Imp(Categories.Consonant, Places.Uvular, Manners.TenuisLateral, Props.Click),
-    Imp(Categories.Consonant, Places.Pharyngeal, Manners.TenuisLateral, Props.Click),
+    Imp(Categories.Consonant, Places.Bilabial, Manners.LateralFricative) Ejective,
+    Imp(Categories.Consonant, Places.LabioDental, Manners.LateralFricative) Ejective,
+    Imp(Categories.Consonant, Places.Pharyngeal, Manners.LateralFricative) Ejective,
+    Imp(Categories.Consonant, Places.Velar, Manners.Tenuis) Click,
+    Imp(Categories.Consonant, Places.Uvular, Manners.Tenuis) Click,
+    Imp(Categories.Consonant, Places.Pharyngeal, Manners.Tenuis) Click,
+    Imp(Categories.Consonant, Places.Velar, Manners.Nasal) Click,
+    Imp(Categories.Consonant, Places.Uvular, Manners.Nasal) Click,
+    Imp(Categories.Consonant, Places.Pharyngeal, Manners.Nasal) Click,
+    Imp(Categories.Consonant, Places.Bilabial, Manners.TenuisLateral) Click,
+    Imp(Categories.Consonant, Places.LabioDental, Manners.TenuisLateral) Click,
+    Imp(Categories.Consonant, Places.Velar, Manners.TenuisLateral) Click,
+    Imp(Categories.Consonant, Places.Uvular, Manners.TenuisLateral) Click,
+    Imp(Categories.Consonant, Places.Pharyngeal, Manners.TenuisLateral) Click,
 
     Imp(Categories.PulmonicAffricate, Places.Bilabial, Manners.Sibilant),
     Imp(Categories.PulmonicAffricate, Places.LabioDental, Manners.Sibilant),
@@ -509,12 +510,6 @@ with IPA
   ]                       									
 
   let AllSounds = Sounds + ImpossibleSounds
-
-  let DC(text, sampa, alt=null) = {
-    Text: text,
-    Sampa: sampa,
-    Alt: alt
-  }
 
   with Diacritics
     let Centralized                  = DC("\u0308", "_\"")
@@ -603,8 +598,6 @@ with IPA
   end
 
   //======================================================================
-
-  let HasProp(sound, prop) = sound.Prop and (sound.Prop & prop) != 0
 
   let ShowSound(sound) = Span {
     Style.IPAFamily,
@@ -702,7 +695,7 @@ with IPA
     end
   }
 
-  let PulmonicCell(place, manner) = SoundBlock(AllSounds.FindSlice(EqualSound PC(null, null, place, manner, Props.None)))
+  let PulmonicCell(place, manner) = SoundBlock(AllSounds.FindSlice(MatchSound PC(null, null, place, manner)))
 
   let PlaceHeader(place) = Style.HeaderCell(Lang.PlaceNames[place])
 
@@ -752,7 +745,7 @@ with IPA
   }
   //======================================================================
 
-  let NPCell(place, manner, props) = SoundBlock(AllSounds.FindSlice(EqualSound NPC(null, null, place, manner, props)))
+  let NPCell(match, manner, place) = SoundBlock(AllSounds.FindSlice(match {Manner: manner, Place: place}))
 
   let FindPlace(sound, data)      = sound.Category == data.Category && sound.Place == data.Place
   let FindPlaces(place, data)     = Sounds.Contains(FindPlace {Category: data.Category, Place: place})
@@ -760,7 +753,7 @@ with IPA
 
   let NonPulmonicPlaces = FindPlaceCategory(Categories.Consonant)
 
-  let NPRow(name, namerow, props, manner) = Row {
+  let NPRow(name, match, manner, namerow) = Row {
     Cell {
       EdgeR: 0.5 pts,
       VAlign: VAligns.Center,
@@ -773,7 +766,7 @@ with IPA
       Style.SoundBottom,
       Lang.MannerNames[manner]
     },
-    NPCell(each NonPulmonicPlaces, manner, props)
+    NPCell(match, manner, each NonPulmonicPlaces)
   }
 
   let NonPulmonicTable = Block {
@@ -790,9 +783,9 @@ with IPA
         Style.HeaderCell(Empty),
         PlaceHeader(each NonPulmonicPlaces)
       },
-      NPRow(Lang.Ejective, 1, Props.Ejective, each [Manners.Stop, Manners.Fricative, Manners.LateralFricative]),
-      NPRow(Lang.Click, 1, Props.Click, each [Manners.Tenuis, Manners.Nasal, Manners.TenuisLateral]),
-      NPRow(Lang.Implosive, 0, Props.Implosive, each [Manners.Implosive]),
+      NPRow(Lang.Ejective, MatchEjective, each [Manners.Stop, Manners.Fricative, Manners.LateralFricative], 1),
+      NPRow(Lang.Click, MatchClick, each [Manners.Tenuis, Manners.Nasal, Manners.TenuisLateral], 1),
+      NPRow(Lang.Implosive, MatchImplosive, each [Manners.Implosive], 0),
     },
     Style.TableNotes {
       Lang.ConsonantSymbols,
@@ -802,7 +795,7 @@ with IPA
   }
   //======================================================================
 
-  let AffricateCell(category, manner, place) = SoundBlock(AllSounds.FindSlice(EqualSound Sound(null, null, category, place, manner, Props.None)))
+  let AffricateCell(category, manner, place) = SoundBlock(AllSounds.FindSlice(MatchSound Sound(null, null, category, place, manner)))
 
   let AffricateRow(places, category, manner) = Row {
     Cell {
@@ -838,7 +831,9 @@ with IPA
   //======================================================================
 
   let ShowVowel(sound) = SoundBox(sound) {
-    X: (sound.HasProp(Props.Rounded) ? BoxSize.Width : 0),
+    if (sound.IsRounded)
+      X: BoxSize.Width
+    end
   }
 
   let VowelBlock(matches) = Cell {
