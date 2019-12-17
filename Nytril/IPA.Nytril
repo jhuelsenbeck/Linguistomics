@@ -6,11 +6,7 @@ with IPA
     None,
     Click,
     Ejective,
-    Velarized,
     Implosive,
-    Rounded,
-    Impossible,
-    NonIPA
   end
 
   enum Categories
@@ -111,8 +107,8 @@ with IPA
   let PA(text, sampa, place, manner, prop=Props.None)  = Sound(text, sampa, Categories.PulmonicAffricate, place, manner, prop)
   let EA(text, sampa, place, manner, prop=Props.None)  = Sound(text, sampa, Categories.EjectiveAffricate, place, manner, prop)
   let OT(text, sampa, place, manner, prop=Props.None)  = Sound(text, sampa, Categories.Other, place, manner, prop)
-  let NPEjective(sound, manner)                 = NPC(sound.Text EjectiveMark.Text, sound.Sampa EjectiveMark.Sampa, sound.Place, manner, Props.Ejective)
-  let Imp(category, place, manner, prop)        = Sound(null, "", category, place, manner, prop)
+  let NPEjective(sound, manner)                        = NPC(sound.Text Diacritics.Ejective.Text, sound.Sampa Diacritics.Ejective.Sampa, sound.Place, manner, Props.Ejective)
+  let Imp(category, place, manner, prop=Props.None)    = Sound(null, "", category, place, manner, prop) {IsImpossible: true}
 
   let EqualOther(sound) = sound.Category == Categories.Other
 
@@ -126,9 +122,13 @@ with IPA
     sound.Open == data.Open and
     sound.Backness == data.Backness
 
-  let Voiced = {IsVoiced: true}
+  let Voiced    = {IsVoiced: true}
+  let NonIPA    = {IsNotIPA: true}
+  let Rounded   = {IsRounded: true}
+  let Velarized = {IsVelarized: true}
 
   with Sounds
+
     //==================================
     // Pulmonic Consonants
     //==================================
@@ -253,7 +253,7 @@ with IPA
     // LateralApproximant								
     let VlAlveolarLateralApproximant = PC("l̥", "", Places.Alveolar, Manners.LateralApproximant)
     let VdAlveolarLateralApproximant = PC("l", "l", Places.Alveolar, Manners.LateralApproximant) Voiced
-    let VdVelarizedAlveolarLateralApproximant = PC("ɫ", "5", Places.Alveolar, Manners.LateralApproximant, Props.Velarized) Voiced
+    let VdVelarizedAlveolarLateralApproximant = PC("ɫ", "5", Places.Alveolar, Manners.LateralApproximant) Voiced Velarized
     let VlRetroflexLateral           = PC("ɭ̊", "", Places.Retroflex, Manners.LateralApproximant)
     let VdRetroflexLateral           = PC("ɭ", "n`", Places.Retroflex, Manners.LateralApproximant) Voiced
     let VlPalatalLateral             = PC("ʎ̥", "", Places.Palatal, Manners.LateralApproximant)
@@ -404,201 +404,203 @@ with IPA
     //==================================
 
     let CloseFrontUnrounded          = VO("i", "i", Opens.Close, Backnesses.Front)
-    let CloseFrontRounded            = VO("y", "y", Opens.Close, Backnesses.Front, Props.Rounded)
+    let CloseFrontRounded            = VO("y", "y", Opens.Close, Backnesses.Front) Rounded
     let CloseCentralUnrounded        = VO("ɨ", "1", Opens.Close, Backnesses.Central)
-    let CloseCentralRounded          = VO("ʉ", "}", Opens.Close, Backnesses.Central, Props.Rounded)
+    let CloseCentralRounded          = VO("ʉ", "}", Opens.Close, Backnesses.Central) Rounded
     let CloseBackUnrounded           = VO("ɯ", "M", Opens.Close, Backnesses.Back)
-    let CloseBackRounded             = VO("u", "u", Opens.Close, Backnesses.Back, Props.Rounded)
+    let CloseBackRounded             = VO("u", "u", Opens.Close, Backnesses.Back) Rounded
 
     let NearCloseFrontUnrounded      = VO("ɪ", "I", Opens.NearClose, Backnesses.NearFront)
-    let NearCloseCentralUnrounded    = VO("ᵻ", "I\\", Opens.NearClose, Backnesses.Central, Props.NonIPA)
+    let NearCloseCentralUnrounded    = VO("ᵻ", "I\\", Opens.NearClose, Backnesses.Central) NonIPA
 
 
-    let NearCloseFrontRounded        = VO("ʏ", "Y", Opens.NearClose, Backnesses.NearFront, Props.Rounded)
-    let NearCloseBackRounded         = VO("ʊ", "U", Opens.NearClose, Backnesses.NearBack, Props.Rounded)
+    let NearCloseFrontRounded        = VO("ʏ", "Y", Opens.NearClose, Backnesses.NearFront) Rounded
+    let NearCloseBackRounded         = VO("ʊ", "U", Opens.NearClose, Backnesses.NearBack) Rounded
 
-    let NearCloseCentralRounded      = VO("ᵿ", "U\\", Opens.NearClose, Backnesses.Central, Props.Rounded | Props.NonIPA)
+    let NearCloseCentralRounded      = VO("ᵿ", "U\\", Opens.NearClose, Backnesses.Central) Rounded NonIPA
 
     let CloseMidFrontUnrounded       = VO("e", "e", Opens.CloseMid, Backnesses.Front)
-    let CloseMidFrontRounded         = VO("ø", "2", Opens.CloseMid, Backnesses.Front, Props.Rounded)
+    let CloseMidFrontRounded         = VO("ø", "2", Opens.CloseMid, Backnesses.Front) Rounded
     let Schwa                        = VO("ə", "@", Opens.CloseMid, Backnesses.Central)
-    let RoundedSchwa                 = VO("ɵ", "8", Opens.CloseMid, Backnesses.Central, Props.Rounded)
+    let RoundedSchwa                 = VO("ɵ", "8", Opens.CloseMid, Backnesses.Central) Rounded
     let CloseMidBackUnrounded        = VO("ɤ", "7", Opens.CloseMid, Backnesses.Back)
-    let CloseMidBackRounded          = VO("o", "o", Opens.CloseMid, Backnesses.Back, Props.Rounded)
+    let CloseMidBackRounded          = VO("o", "o", Opens.CloseMid, Backnesses.Back) Rounded
     let MidFrontUnrounded            = VO("ø̞", "", Opens.Mid, Backnesses.Front)
     let MidCentralUnrounded          = VO("ɘ", "@\\", Opens.Mid, Backnesses.Central)
     let MidBackUnrounded             = VO("o̞", "", Opens.Mid, Backnesses.Back)
     let OpenMidNearFrontUnrounded    = VO("ɛ", "E", Opens.OpenMid, Backnesses.NearFront)
-    let OpenMidNearFrontRounded      = VO("œ", "9", Opens.OpenMid, Backnesses.NearFront, Props.Rounded)
+    let OpenMidNearFrontRounded      = VO("œ", "9", Opens.OpenMid, Backnesses.NearFront) Rounded
     let OpenMidCentral               = VO("ɜ", "3", Opens.OpenMid, Backnesses.Central)
-    let OpenMidCentralRounded        = VO("ɞ", "3\\", Opens.OpenMid, Backnesses.Central, Props.Rounded)
+    let OpenMidCentralRounded        = VO("ɞ", "3\\", Opens.OpenMid, Backnesses.Central) Rounded
     let OpenMidBackUnrounded         = VO("ʌ", "V", Opens.OpenMid, Backnesses.Back)
-    let OpenMidBackRounded           = VO("ɔ", "O", Opens.OpenMid, Backnesses.Back, Props.Rounded)
+    let OpenMidBackRounded           = VO("ɔ", "O", Opens.OpenMid, Backnesses.Back) Rounded
     let NearFrontUnrounded           = VO("æ", "{", Opens.NearOpen, Backnesses.NearFront)
-    let FrontOpenRounded             = VO("ɶ", "&", Opens.NearOpen, Backnesses.NearFront, Props.Rounded)
-    let OpenMidSchwa                 = VO("ɐ", "6", Opens.NearOpen, Backnesses.Central, Props.Rounded)
+    let FrontOpenRounded             = VO("ɶ", "&", Opens.NearOpen, Backnesses.NearFront) Rounded
+    let OpenMidSchwa                 = VO("ɐ", "6", Opens.NearOpen, Backnesses.Central) Rounded
     let OpenBackUnrounded            = VO("ɑ", "A", Opens.Open, Backnesses.Back)
-    let OpenBackRounded              = VO("ɒ", "Q", Opens.Open, Backnesses.Back, Props.Rounded)
+    let OpenBackRounded              = VO("ɒ", "Q", Opens.Open, Backnesses.Back) Rounded
     let OpenCentralUnrounded         = VO("ä", "a_\"", Opens.Open, Backnesses.Central)
     let OpenNearFrontUnrounded       = VO("a", "a", Opens.Open, Backnesses.NearFront)
-    let OpenNearFrontRounded         = VO("ɶ", "&", Opens.Open, Backnesses.NearFront, Props.Rounded)
+    let OpenNearFrontRounded         = VO("ɶ", "&", Opens.Open, Backnesses.NearFront) Rounded
 
-//    let RhotacizedSchwa              = VO("ɚ", "@`", Opens.Open, Backnesses.NearFront, Props.Rounded)
+//    let RhotacizedSchwa              = VO("ɚ", "@`", Opens.Open, Backnesses.NearFront) Rounded
 
   end
 
-  let Impossible = [
-    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.Nasal, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.Nasal, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.Stop, Props.None) Voiced,
-    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.Stop, Props.None) Voiced,
-    Imp(Categories.PulmonicConsonant, Places.Bilabial, Manners.SibilantFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.LabioDental, Manners.SibilantFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.LinguoLabial, Manners.SibilantFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Velar, Manners.SibilantFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Uvular, Manners.SibilantFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.SibilantFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.SibilantFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Velar, Manners.Trill, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.Trill, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Velar, Manners.TapFlap, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.TapFlap, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Bilabial, Manners.LateralFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.LabioDental, Manners.LateralFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.LateralFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.LateralFricative, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Bilabial, Manners.LateralApproximant, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.LabioDental, Manners.LateralApproximant, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.LateralApproximant, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.LateralApproximant, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Bilabial, Manners.LateralTapFlap, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.LabioDental, Manners.LateralTapFlap, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.LateralTapFlap, Props.Impossible),
-    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.LateralTapFlap, Props.Impossible),
-    Imp(Categories.Consonant, Places.Bilabial, Manners.LateralFricative, Props.Ejective | Props.Impossible),
-    Imp(Categories.Consonant, Places.LabioDental, Manners.LateralFricative, Props.Ejective | Props.Impossible),
-    Imp(Categories.Consonant, Places.Pharyngeal, Manners.LateralFricative, Props.Ejective | Props.Impossible),
-    Imp(Categories.Consonant, Places.Velar, Manners.Tenuis, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.Uvular, Manners.Tenuis, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.Pharyngeal, Manners.Tenuis, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.Velar, Manners.Nasal, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.Uvular, Manners.Nasal, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.Pharyngeal, Manners.Nasal, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.Bilabial, Manners.TenuisLateral, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.LabioDental, Manners.TenuisLateral, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.Velar, Manners.TenuisLateral, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.Uvular, Manners.TenuisLateral, Props.Click | Props.Impossible),
-    Imp(Categories.Consonant, Places.Pharyngeal, Manners.TenuisLateral, Props.Click | Props.Impossible),
+  let ImpossibleSounds = [
+    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.Nasal),
+    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.Nasal),
+    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.Stop) Voiced,
+    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.Stop) Voiced,
+    Imp(Categories.PulmonicConsonant, Places.Bilabial, Manners.SibilantFricative),
+    Imp(Categories.PulmonicConsonant, Places.LabioDental, Manners.SibilantFricative),
+    Imp(Categories.PulmonicConsonant, Places.LinguoLabial, Manners.SibilantFricative),
+    Imp(Categories.PulmonicConsonant, Places.Velar, Manners.SibilantFricative),
+    Imp(Categories.PulmonicConsonant, Places.Uvular, Manners.SibilantFricative),
+    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.SibilantFricative),
+    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.SibilantFricative),
+    Imp(Categories.PulmonicConsonant, Places.Velar, Manners.Trill),
+    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.Trill),
+    Imp(Categories.PulmonicConsonant, Places.Velar, Manners.TapFlap),
+    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.TapFlap),
+    Imp(Categories.PulmonicConsonant, Places.Bilabial, Manners.LateralFricative),
+    Imp(Categories.PulmonicConsonant, Places.LabioDental, Manners.LateralFricative),
+    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.LateralFricative),
+    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.LateralFricative),
+    Imp(Categories.PulmonicConsonant, Places.Bilabial, Manners.LateralApproximant),
+    Imp(Categories.PulmonicConsonant, Places.LabioDental, Manners.LateralApproximant),
+    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.LateralApproximant),
+    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.LateralApproximant),
+    Imp(Categories.PulmonicConsonant, Places.Bilabial, Manners.LateralTapFlap),
+    Imp(Categories.PulmonicConsonant, Places.LabioDental, Manners.LateralTapFlap),
+    Imp(Categories.PulmonicConsonant, Places.Pharyngeal, Manners.LateralTapFlap),
+    Imp(Categories.PulmonicConsonant, Places.Glottal, Manners.LateralTapFlap),
+    Imp(Categories.Consonant, Places.Bilabial, Manners.LateralFricative, Props.Ejective),
+    Imp(Categories.Consonant, Places.LabioDental, Manners.LateralFricative, Props.Ejective),
+    Imp(Categories.Consonant, Places.Pharyngeal, Manners.LateralFricative, Props.Ejective),
+    Imp(Categories.Consonant, Places.Velar, Manners.Tenuis, Props.Click),
+    Imp(Categories.Consonant, Places.Uvular, Manners.Tenuis, Props.Click),
+    Imp(Categories.Consonant, Places.Pharyngeal, Manners.Tenuis, Props.Click),
+    Imp(Categories.Consonant, Places.Velar, Manners.Nasal, Props.Click),
+    Imp(Categories.Consonant, Places.Uvular, Manners.Nasal, Props.Click),
+    Imp(Categories.Consonant, Places.Pharyngeal, Manners.Nasal, Props.Click),
+    Imp(Categories.Consonant, Places.Bilabial, Manners.TenuisLateral, Props.Click),
+    Imp(Categories.Consonant, Places.LabioDental, Manners.TenuisLateral, Props.Click),
+    Imp(Categories.Consonant, Places.Velar, Manners.TenuisLateral, Props.Click),
+    Imp(Categories.Consonant, Places.Uvular, Manners.TenuisLateral, Props.Click),
+    Imp(Categories.Consonant, Places.Pharyngeal, Manners.TenuisLateral, Props.Click),
 
-    Imp(Categories.PulmonicAffricate, Places.Bilabial, Manners.Sibilant, Props.Impossible),
-    Imp(Categories.PulmonicAffricate, Places.LabioDental, Manners.Sibilant, Props.Impossible),
-    Imp(Categories.PulmonicAffricate, Places.Velar, Manners.Sibilant, Props.Impossible),
-    Imp(Categories.PulmonicAffricate, Places.Uvular, Manners.Sibilant, Props.Impossible),
-    Imp(Categories.PulmonicAffricate, Places.Pharyngeal, Manners.Sibilant, Props.Impossible),
-    Imp(Categories.PulmonicAffricate, Places.Glottal, Manners.Sibilant, Props.Impossible),
-    Imp(Categories.PulmonicAffricate, Places.Bilabial, Manners.Lateral, Props.Impossible),
-    Imp(Categories.PulmonicAffricate, Places.LabioDental, Manners.Lateral, Props.Impossible),
-    Imp(Categories.PulmonicAffricate, Places.Pharyngeal, Manners.Lateral, Props.Impossible),
-    Imp(Categories.PulmonicAffricate, Places.Glottal, Manners.Lateral, Props.Impossible),
+    Imp(Categories.PulmonicAffricate, Places.Bilabial, Manners.Sibilant),
+    Imp(Categories.PulmonicAffricate, Places.LabioDental, Manners.Sibilant),
+    Imp(Categories.PulmonicAffricate, Places.Velar, Manners.Sibilant),
+    Imp(Categories.PulmonicAffricate, Places.Uvular, Manners.Sibilant),
+    Imp(Categories.PulmonicAffricate, Places.Pharyngeal, Manners.Sibilant),
+    Imp(Categories.PulmonicAffricate, Places.Glottal, Manners.Sibilant),
+    Imp(Categories.PulmonicAffricate, Places.Bilabial, Manners.Lateral),
+    Imp(Categories.PulmonicAffricate, Places.LabioDental, Manners.Lateral),
+    Imp(Categories.PulmonicAffricate, Places.Pharyngeal, Manners.Lateral),
+    Imp(Categories.PulmonicAffricate, Places.Glottal, Manners.Lateral),
 
-    Imp(Categories.EjectiveAffricate, Places.Glottal, Manners.Central, Props.Impossible),
-    Imp(Categories.EjectiveAffricate, Places.Bilabial, Manners.Lateral, Props.Impossible),
-    Imp(Categories.EjectiveAffricate, Places.LabioDental, Manners.Lateral, Props.Impossible),
-    Imp(Categories.EjectiveAffricate, Places.Pharyngeal, Manners.Lateral, Props.Impossible),
-    Imp(Categories.EjectiveAffricate, Places.Glottal, Manners.Lateral, Props.Impossible),
+    Imp(Categories.EjectiveAffricate, Places.Glottal, Manners.Central),
+    Imp(Categories.EjectiveAffricate, Places.Bilabial, Manners.Lateral),
+    Imp(Categories.EjectiveAffricate, Places.LabioDental, Manners.Lateral),
+    Imp(Categories.EjectiveAffricate, Places.Pharyngeal, Manners.Lateral),
+    Imp(Categories.EjectiveAffricate, Places.Glottal, Manners.Lateral),
   ]                       									
 
-  let AllSounds = Sounds + Impossible
+  let AllSounds = Sounds + ImpossibleSounds
 
-  let Diacritic(text, sampa, alt=null) = {
+  let DC(text, sampa, alt=null) = {
     Text: text,
     Sampa: sampa,
     Alt: alt
   }
 
-  let Centralized                  = Diacritic("\u0308", "_\"")
-  let Advanced                     = Diacritic("\u031F", "_+")
-  let Retracted                    = Diacritic("\u0320", "_-")
-  let RisingTone                   = Diacritic("\u030C", "_R", "_/")
-  let Voiceless                    = Diacritic("\u0325", "_0")
-  let Implosive                    = Diacritic(null, "_<")
-  let Syllabic                     = Diacritic("\u0329", "_=", "=")
-  let EjectiveMark                 = Diacritic("\u02BC", "_>")
-  let Pharyngealized               = Diacritic("\u02E4", "_?\\")
-  let FallingTone                  = Diacritic("\u0302", "_\\", "_F")
-  let NonSyllabic                  = Diacritic("\u032F", "_^")
-  let NoAudibleRelease             = Diacritic("\u031A", "_}")
-  let RhoticHook                   = Diacritic("\u02DE", "`")
-  let Nasalized                    = Diacritic("\u0303", "_~", "~")
-  let AdvancedTongueRoot           = Diacritic("\u0318", "_A")
-  let Apical                       = Diacritic("\u033A", "_a")
-  let ExtraLowTone                 = Diacritic("\u030F", "_B")
-  let LowRisingTone                = Diacritic("\u1DC5", "_B_L")
-  let LessRounded                  = Diacritic("\u031C", "_c")
-  let Dental                       = Diacritic("\u032A", "_d")
-  let VelarizedOrPharyngealized    = Diacritic("\u0334", "_e")
-  let GlobalFall                   = Diacritic("↘", "<F>")
-  let Velarized                    = Diacritic("\u02E0", "_G")
-  let HighTone                     = Diacritic("\u0301", "_H")
-  let HighRisingTone               = Diacritic("\u1DC4", "_H_T")
-  let Aspirated                    = Diacritic("\u02B0", "_h")
-  let Palatalized                  = Diacritic("\u02B2", "_j", "'")
-  let CreakyVoiced                 = Diacritic("\u0330", "_k")
-  let LowTone                      = Diacritic("\u0300", "_L")
-  let LateralRelease               = Diacritic("\u02E1", "_l")
-  let MidTone                      = Diacritic("\u0304", "_M")
-  let Laminal                      = Diacritic("\u033B", "_m")
-  let LinguoLabial                 = Diacritic("\u033C", "_N")
-  let NasalRelease                 = Diacritic("\u207F", "_n")
-  let MoreRounded                  = Diacritic("\u0339", "_O")
-  let Lowered                      = Diacritic("\u031E", "_o")
-  let RetractedTongueRoot          = Diacritic("\u0319", "_q")
-  let GlobalRise                   = Diacritic("↗", "<R>")
-  let RisingFallingTone            = Diacritic("\u1DC8", "_R_F")
-  let Raised                       = Diacritic("\u031D", "_r")
-  let ExtraHighTone                = Diacritic("\u030B", "_T")
-  let BreathyVoiced                = Diacritic("\u0324", "_t")
-  let RegularVoiced                = Diacritic("\u032C", "_v")
-  let Labialized                   = Diacritic("\u02B7", "_W")
-  let ExtraShort                   = Diacritic("\u02D8", "_X")
-  let MidCentralized               = Diacritic("\u033D", "_x")
-  let Downstep                     = Diacritic("↓", "!")
-  let Upstep                       = Diacritic("↑", "^")
+  with Diacritics
+    let Centralized                  = DC("\u0308", "_\"")
+    let Advanced                     = DC("\u031F", "_+")
+    let Retracted                    = DC("\u0320", "_-")
+    let RisingTone                   = DC("\u030C", "_R", "_/")
+    let Voiceless                    = DC("\u0325", "_0")
+    let Implosive                    = DC(null, "_<")
+    let Syllabic                     = DC("\u0329", "_=", "=")
+    let Ejective                     = DC("\u02BC", "_>")
+    let Pharyngealized               = DC("\u02E4", "_?\\")
+    let FallingTone                  = DC("\u0302", "_\\", "_F")
+    let NonSyllabic                  = DC("\u032F", "_^")
+    let NoAudibleRelease             = DC("\u031A", "_}")
+    let RhoticHook                   = DC("\u02DE", "`")
+    let Nasalized                    = DC("\u0303", "_~", "~")
+    let AdvancedTongueRoot           = DC("\u0318", "_A")
+    let Apical                       = DC("\u033A", "_a")
+    let ExtraLowTone                 = DC("\u030F", "_B")
+    let LowRisingTone                = DC("\u1DC5", "_B_L")
+    let LessRounded                  = DC("\u031C", "_c")
+    let Dental                       = DC("\u032A", "_d")
+    let VelarizedOrPharyngealized    = DC("\u0334", "_e")
+    let GlobalFall                   = DC("↘", "<F>")
+    let Velarized                    = DC("\u02E0", "_G")
+    let HighTone                     = DC("\u0301", "_H")
+    let HighRisingTone               = DC("\u1DC4", "_H_T")
+    let Aspirated                    = DC("\u02B0", "_h")
+    let Palatalized                  = DC("\u02B2", "_j", "'")
+    let CreakyVoiced                 = DC("\u0330", "_k")
+    let LowTone                      = DC("\u0300", "_L")
+    let LateralRelease               = DC("\u02E1", "_l")
+    let MidTone                      = DC("\u0304", "_M")
+    let Laminal                      = DC("\u033B", "_m")
+    let LinguoLabial                 = DC("\u033C", "_N")
+    let NasalRelease                 = DC("\u207F", "_n")
+    let MoreRounded                  = DC("\u0339", "_O")
+    let Lowered                      = DC("\u031E", "_o")
+    let RetractedTongueRoot          = DC("\u0319", "_q")
+    let GlobalRise                   = DC("↗", "<R>")
+    let RisingFallingTone            = DC("\u1DC8", "_R_F")
+    let Raised                       = DC("\u031D", "_r")
+    let ExtraHighTone                = DC("\u030B", "_T")
+    let BreathyVoiced                = DC("\u0324", "_t")
+    let Voiced                       = DC("\u032C", "_v")
+    let Labialized                   = DC("\u02B7", "_W")
+    let ExtraShort                   = DC("\u02D8", "_X")
+    let MidCentralized               = DC("\u033D", "_x")
+    let Downstep                     = DC("↓", "!")
+    let Upstep                       = DC("↑", "^")
 
-  let SylableBreak                 = Diacritic(".", ".")
-  let PrimaryStress                = Diacritic("ˈ", "\"")
-  let SecondaryStress              = Diacritic("ˌ", "%")
+    let SylableBreak                 = DC(".", ".")
+    let PrimaryStress                = DC("ˈ", "\"")
+    let SecondaryStress              = DC("ˌ", "%")
 
-  let Long                         = Diacritic("ː", ":")
-  let HalfLong                     = Diacritic("ˑ", ":\\")
-  let Separator                    = Diacritic("", "-")
+    let Long                         = DC("ː", ":")
+    let HalfLong                     = DC("ˑ", ":\\")
+    let Separator                    = DC("", "-")
 
-  let UndefinedEscapeCharacter     = Diacritic(null, "*")
-  let IndeterminacyinFrenchVowels  = Diacritic(null, "/")
-  let BeginNonsegmentalNotation    = Diacritic(null, "<")
+    let UndefinedEscapeCharacter     = DC(null, "*")
+    let IndeterminacyinFrenchVowels  = DC(null, "/")
+    let BeginNonsegmentalNotation    = DC(null, "<")
 
-  let Voicedepiglottalfricative    = Diacritic("ʢ", "<\\")
-  let Endnonsegmentalnotation      = Diacritic("", ">")
-  let Postalveolarclick            = Diacritic("ǃ", "!\\")
-  let MinorGroup                   = Diacritic("|", "|")
-  let Dentalclick                  = Diacritic("ǀ", "|\\")
-  let MajorGroup                   = Diacritic("‖", "||")
-  let Alveolarlateralclick         = Diacritic("ǁ", "|\\|\\")
-  let Palatalclick                 = Diacritic("ǂ", "#NAME?")
-  let Linkingmark                  = Diacritic("‿", "-\\")
+    let Voicedepiglottalfricative    = DC("ʢ", "<\\")
+    let Endnonsegmentalnotation      = DC("", ">")
+    let Postalveolarclick            = DC("ǃ", "!\\")
+    let MinorGroup                   = DC("|", "|")
+    let Dentalclick                  = DC("ǀ", "|\\")
+    let MajorGroup                   = DC("‖", "||")
+    let Alveolarlateralclick         = DC("ǁ", "|\\|\\")
+    let Palatalclick                 = DC("ǂ", "#NAME?")
+    let Linkingmark                  = DC("‿", "-\\")
 
-/*
-    let RhotacizedOpenMidCentral     = Set("ɝ", "", Places.None, Manners.None, Props.None)
-    let VelarizedVdAlveolarLateral   = Set("ɫ", "", Places.None, Manners.None, Props.None)
-*/
+  /*
+      let RhotacizedOpenMidCentral     = Set("ɝ", "", Places.None, Manners.None, Props.None)
+      let VelarizedVdAlveolarLateral   = Set("ɫ", "", Places.None, Manners.None, Props.None)
+  */
 
 
-  let VoicelessDescender           = Diacritic("\u030A", "")
-  let CombiningMacron              = Diacritic("\u0331", "")
-  let TieBarBelow                  = Diacritic("\u035C", "")
-  let TieBarAbove                  = Diacritic("\u0361", "")
-  let ReadyMadeCombination         = Diacritic("\u026B", "")
-  let Becomes                      = Diacritic("→", "")
+    let VoicelessDescender           = DC("\u030A", "")
+    let CombiningMacron              = DC("\u0331", "")
+    let TieBarBelow                  = DC("\u035C", "")
+    let TieBarAbove                  = DC("\u0361", "")
+    let ReadyMadeCombination         = DC("\u026B", "")
+    let Becomes                      = DC("→", "")
+  end
 
   //======================================================================
 
@@ -622,9 +624,17 @@ with IPA
       Space,
       Lang.BacknessNames[sound.Backness],
       Space,
-      sound.HasProp(Props.Rounded) ? Lang.Rounded : Lang.Unrounded
+      if (sound.IsRounded)
+        Lang.Rounded
+      else
+        Lang.Unrounded
+      end,
     else
-      sound.IsVoiced ? Lang.Voiced : Lang.Voiceless,
+      if (sound.IsVoiced)
+        Lang.Voiced
+      else
+        Lang.Voiceless
+      end,
       Space,
       Lang.PlaceNames[sound.Place],
       Space,
@@ -670,13 +680,15 @@ with IPA
   }
 
   let ShowBox(sound) = SoundBox(sound) {
-    X: (sound.IsVoiced ? BoxSize.Width : 0),
+    if (sound.IsVoiced)
+      X: BoxSize.Width
+    end
   }
 
   let SoundBlock(matches) = Cell {
     Style.SoundBottom,
     if (matches.Length > 0)
-      if (matches.Length == 1 and matches[0].HasProp(Props.Impossible))
+      if (matches.Length == 1 and matches[0].IsImpossible)
         Style.ImpossibleBackground
       else
         TextHeight: 1 pts,
