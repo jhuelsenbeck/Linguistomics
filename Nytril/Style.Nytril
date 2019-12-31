@@ -179,13 +179,13 @@ with Style
     Empty
   }
 
-  let AppendixRow(appendix) = Row {
+  let AppendixRow(ref appendix) = Row {
     Cell {
       Span {EachIndex + 1, ")"}
     },
     Cell {
       Span {
-        Link: EachSymbol.FullSymbolName,
+        Link: appendix.FullSymbolName,
         appendix.Title
       }
     }
@@ -319,7 +319,7 @@ with DisplayWords
     d
   }
 
-  let WordTable(language) = Block {
+  let LanguageTable(language) = Block {
     Table {
       Columns: [0.8 inches, 0.7 inches, Metrics.Content.Width - 2 inches],
       Style.TitleBar(language.Name, 3),
@@ -332,13 +332,6 @@ with DisplayWords
     },
     Style.TableNotes {
     }
-  }
-
-  let LangHasWords(language) = language.Words != null
-  let LanguageList           = Languages.FindSlice(LangHasWords)
-
-  let WordListTable = Block {
-    WordTable(each LanguageList),
   }
 end
 //======================================================================
@@ -357,14 +350,14 @@ with AllWords
     end
   end
 
-  let WordRow(meaning) = Row {
+  let WordRow(wordlist, meaning) = Row {
     Style.RowBar(EachIndex),
     Cell {
       Style.TitleBackground,
       Style.SansSerif,
       EachSymbol.SymbolName
     },
-    MeaningCell(meaning, each DisplayWords.LanguageList)
+    MeaningCell(meaning, each wordlist)
   }
 
   let HeaderCell(d) = Cell {
@@ -379,16 +372,16 @@ with AllWords
 
   let Column1 = 36 pts
 
-  let WordListTable = Block {
+  let WordTable(wordlist) = Block {
     Table {
       TextHeight: 7 pts,
-      Columns: [Column1, (Metrics.Content.Width - Column1) / DisplayWords.LanguageList.Length],
-      Style.TitleBar("Words in each language by meaning", DisplayWords.LanguageList.Length+1),
+      Columns: [Column1, (Metrics.Content.Width - Column1) / wordlist.Length],
+      Style.TitleBar("Words in each language by meaning", wordlist.Length+1),
       Row {
         HeaderCell({TextColor: Colors.DarkGray} Lang.Meaning),
-        LanguageHeader(each DisplayWords.LanguageList),
+        LanguageHeader(each wordlist),
       },
-      WordRow(each WordMeanings)
+      WordRow(wordlist, each WordMeanings)
     },
     Style.TableNotes {
     }

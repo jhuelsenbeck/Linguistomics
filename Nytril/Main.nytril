@@ -110,12 +110,16 @@ end
 
 let ShowAppendix(title, content) = {Title: title, Content: content}
 
-let Appendix.SoundGroups        = ShowAppendix(Lang.SoundGroups, IPA.ShowGroups)
+let LangHasWords(language) = language.Words != null
+let LanguageList           = Languages.FindSlice(LangHasWords)
+
+
+let Appendix.SoundGrouping      = ShowAppendix(Lang.SoundGroups, IPA.ShowGroups)
 let Appendix.IPA                = ShowAppendix(Lang.IPA, IPA.SoundTable)
 let Appendix.LanguagePhylogeny  = ShowAppendix(Lang.LanguagePhylogeny, Style.ShowTree(Info.LanguageTree))
-let Appendix.WordListComparison = ShowAppendix(Lang.WordListComparison, AllWords.WordListTable)
-let Appendix.WordListLanguage   = ShowAppendix(Lang.WordListLanguage, DisplayWords.WordListTable)
-let Appendix.LanguageTreeFile   = ShowAppendix(Lang.LanguageTreeFile, TreeLibrary.NexusFile([Info.LanguageTree]) {TextFamily: TextFamilies.Consolas})
+let Appendix.WordList           = ShowAppendix(Lang.WordListComparison, AllWords.WordTable(LanguageList))
+let Appendix.WordListLanguage   = ShowAppendix(Lang.WordListLanguage, DisplayWords.LanguageTable(each LanguageList))
+//let Appendix.LanguageTreeFile   = ShowAppendix(Lang.LanguageTreeFile, TreeLibrary.NexusFile([Info.LanguageTree]) {TextFamily: TextFamilies.Consolas})
 let Appendix.NytrilSourceCode   = ShowAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList))
 //======================================================================
 

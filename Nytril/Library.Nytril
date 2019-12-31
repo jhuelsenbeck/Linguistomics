@@ -85,17 +85,17 @@ with Nexus {
 //======================================================================
 
 with TreeLibrary
-  let GetNodeTaxa(dictionary, node) begin
-    dictionary.AddElement(node.Label, node);
-    GetNodeTaxa(dictionary, each node);
-  end
-
   let GetLabel(node) = node.Label?.Substitute(node.Label?.FindIndex(' '), '_')
 
+  let GetNodeTaxa(all, ref node) begin
+    all.AddReference(node);
+    GetNodeTaxa(all, each node);
+  end
+
   let GetTaxaLabels(trees) begin
-    var d = Type.Dictionary(128);
-    GetNodeTaxa(d, each trees);
-    return GetLabel(each d);
+    var all = Type.Dictionary();
+    GetNodeTaxa(all, each trees);
+    return GetLabel(each all);
   end
 
   let Newick(tree) = Span {
@@ -112,9 +112,9 @@ with TreeLibrary
     tree.Branch
   }
 
-  let ShowTreeLine(tree) = Span {
+  let ShowTreeLine(ref tree) = Span {
     "  tree ",
-    EachSymbol.SymbolName,
+    tree.SymbolName,
     " = ",
     Newick(tree),
     ";"
