@@ -5,8 +5,7 @@ with IPA
   enum Categories
     Vowel,
     Consonant,
-    PulmonicAffricate,
-    EjectiveAffricate,
+    Affricate,
     Other
   end
 
@@ -99,8 +98,8 @@ with IPA
   let Impossible = {IsImpossible: true}
 
   let PulmonicConsonant(place, manner) = Pulmonic Consonant(Categories.Consonant, place, manner)
-  let PulmonicAffricate(place, manner) = Consonant(Categories.PulmonicAffricate, place, manner)
-  let EjectiveAffricate(place, manner) = Consonant(Categories.EjectiveAffricate, place, manner)
+  let PulmonicAffricate(place, manner) = Pulmonic Consonant(Categories.Affricate, place, manner)
+  let EjectiveAffricate(place, manner) = Ejective Consonant(Categories.Affricate, place, manner)
   let NPEjective(sound, manner)        = Encode(sound.Text Diacritics.Ejective.Text, sound.Sampa Diacritics.Ejective.Sampa) EjectiveAffricate(sound.Place, manner) Ejective
 
   let MatchPulmonicManner(sound, data) = sound.Manner == data.Manner and MatchPulmonic(sound, data)
@@ -593,34 +592,44 @@ with IPA
   let SoundName(sound) = Span {
     if (sound.Name)
       sound.Name
-    elseif (sound.Category == Categories.Vowel)
-      Lang.OpenNames[sound.Open],
-      Space,
-      Lang.BacknessNames[sound.Backness],
-      Space,
-      if (sound.IsRounded)
-        Lang.Rounded
-      else
-        Lang.Unrounded
-      end,
     else
-      if (sound.IsVoiced)
-        Lang.Voiced
-      else
-        Lang.Voiceless
+      if (sound.Category != Categories.Other)
+        Lang.CategoryNames[sound.Category],
+        ": "
       end,
-      Space,
-      Lang.PlaceNames[sound.Place],
-      Space,
-      Lang.MannerNames[sound.Manner]
-    end,
-    if (sound.IsPulmonic)
-      Space,
-      Lang.Pulmonic,
-    end,
-    Space,
-    if (sound.Category != Categories.Other)
-      Lang.CategoryNames[sound.Category],
+      if (sound.IsPulmonic)
+        Lang.Pulmonic,
+        Space,
+      end,
+      if (sound.Category == Categories.Vowel)
+        Lang.OpenNames[sound.Open],
+        Space,
+        Lang.BacknessNames[sound.Backness],
+        Space,
+        if (sound.IsRounded)
+          Lang.Rounded
+        else
+          Lang.Unrounded
+        end,
+      else
+        if (sound.IsVoiced)
+          Lang.Voiced
+        else
+          Lang.Voiceless
+        end,
+        Space,
+        Lang.PlaceNames[sound.Place],
+        Space,
+        Lang.MannerNames[sound.Manner]
+      end,
+      if (sound.IsEjective)
+        Space,
+        Lang.Ejective,
+      end,
+      if (sound.IsClick)
+        Space,
+        Lang.Click,
+      end,
     end
   }
 
@@ -783,24 +792,24 @@ with IPA
   }
   //======================================================================
 
-  let MatchAffricate(sound, data)            = sound.Category == data.Category and sound.Place == data.Place and sound.Manner == data.Manner
-  let AffricateCell(category, manner, place) = SoundBlock(AllSounds.FindSlice(MatchAffricate {Category: category, Place: place, Manner: manner}))
+  let MatchAffricate(sound, data)         = sound.Category == Categories.Affricate and sound.IsEjective == data.IsEjective and sound.IsPulmonic == data.IsPulmonic and sound.Place == data.Place
+  let MatchAffricateManner(sound, data)   = MatchAffricate(sound, data) and sound.Manner == data.Manner
+  let AffricateCell(match, manner, place) = SoundBlock(AllSounds.FindSlice(MatchAffricateManner match {Place: place, Manner: manner}))
 
-  let AffricateRow(category, places, manner) = Row {
+  let AffricateRow(match, places, manner) = Row {
     Cell {
       VAlign: VAligns.Center,
       Style.SoundBottom,
       Lang.MannerNames[manner]
     },
-    AffricateCell(category, manner, each places)
+    AffricateCell(match, manner, each places)
   }
 
-  let MatchAffricatePlace(sound, data) = sound.Category == data.Category and sound.Place == data.Place and sound.IsPulmonic != true
-  let ContainsPlaces(place, data)      = Sounds.Contains(MatchAffricatePlace {Place: place, Category: data.Category})
-  let FindPlaceCategory(category)      = Places.FindSlice(ContainsPlaces {Category: category})
+  let ContainsPlaces(place, data) = Sounds.Contains(MatchAffricate {IsPulmonic: data.IsPulmonic, IsEjective: data.IsEjective, Place: place})
+  let FindPlaceCategory(data)     = Places.FindSlice(ContainsPlaces data)
 
-  let AffricateTable(category, manners, notes) begin
-    var places = FindPlaceCategory(category);
+  let AffricateTable(title, data, manners) begin
+    var places = FindPlaceCategory(data);
     return Block {
       Table {
         HAlign: HAligns.Center,
@@ -808,16 +817,16 @@ with IPA
         Columns: [(40 pts) {EdgeR: 0.5 pts}] +
                  [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * places.Length,
 
-        Style.TitleBar(Lang.CategoryNames[category], places.Length+1),
+        Style.TitleBar(title, places.Length+1),
         Row {
           TextHeight: 6 pts,
           Style.HeaderCell(Empty),
           PlaceHeader(each places)
         },
-        AffricateRow(category, places, each manners),
+        AffricateRow(data, places, each manners),
       },
       Style.TableNotes {
-        notes,
+        Lang.Impossible,
       },
     }
   end
@@ -968,8 +977,8 @@ with IPA
 
   let ShowGroups = Block {
     PulmonicTable,
-    AffricateTable(Categories.PulmonicAffricate, [Manners.Sibilant, Manners.NonSibilant, Manners.Lateral], Lang.Impossible),
-    AffricateTable(Categories.EjectiveAffricate, [Manners.Central, Manners.Lateral], null),
+    AffricateTable("Pulmonic Affricates", {IsPulmonic: true}, [Manners.Sibilant, Manners.NonSibilant, Manners.Lateral]),
+    AffricateTable("Ejective Affricates", {IsEjective: true}, [Manners.Central, Manners.Lateral]),
     PageBreak,
     NonPulmonicTable,
     OtherTable,
