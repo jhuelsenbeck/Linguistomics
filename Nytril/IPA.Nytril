@@ -63,7 +63,7 @@ with IPA
     Backness: backness,
   }
 
-  let NPEjective(flags, sound) = Encode(sound.Text Diacritics.Ejective.Text, sound.Sampa Diacritics.Ejective.Sampa) Consonant(flags | Ejective | Affricate, sound.Place)
+  let NPEjective(flags, sound) = Encode(sound.Text Diacritics.Ejective.Text, sound.Sampa Diacritics.Ejective.Sampa) Consonant(flags | Ejective, sound.Place)
 
   let None        = 0
   let Unrounded   = 0
@@ -686,7 +686,6 @@ with IPA
   // Pulmonic Consonants Table
   //======================================================================
 
-
   // Find all the places that have pulmonic consonants
   let MatchPulmonic(sound, data) = sound.Place == data.Place and sound.HasMask(Pulmonic | Affricate | IsVowel, Pulmonic)
   let MatchPulmonicPlace(place)  = AllSounds.Contains(MatchPulmonic, {Place: place})
@@ -742,13 +741,11 @@ with IPA
   // Non-Pulmonic Consonants Table
   //======================================================================
 
-  let NPRowMask = Ejective | Click | Implosive
-
-  let MatchNP(sound, data) = sound.Place == data.Place and sound.NotFlag(IsVowel | Pulmonic) and sound.HasFlag(NPRowMask)
+  let MatchNP(sound, data) = sound.Place == data.Place and sound.NotFlag(IsVowel | Pulmonic | Central) and sound.HasFlag(Ejective | Click | Implosive)
   let MatchNPPlace(place)  = Sounds.Contains(MatchNP, {Place: place})
   let NonPulmonicPlaces    = Places.FindSlice(MatchNPPlace)
 
-  let MatchNPRow(sound, data) = MatchNP(sound, data) and sound.HasMask(data.Flags, data.Flags)
+  let MatchNPRow(sound, data) = MatchNP(sound, data) and sound.HasMask(Lateral | data.Flags, data.Flags)
   let NPCell(place, flags)    = SoundBlock(AllSounds.FindSlice(MatchNPRow, {Place: place, Flags: flags}))
 
   let NPRow(flags) = Row {
@@ -782,6 +779,8 @@ with IPA
       Lang.Impossible,
     },
   }
+  //======================================================================
+  // Affricates Table
   //======================================================================
 
   let MatchAffricate(sound, data)        = sound.Place == data.Place and sound.HasMask(IsVowel | Affricate | Ejective | Pulmonic, data.Flags)
