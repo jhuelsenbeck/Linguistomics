@@ -2,13 +2,6 @@
 //======================================================================
 
 with IPA
-  enum Categories
-    Vowel,
-    Con,
-    Affricate,
-    Other
-  end
-
   enum Opens
     Close,
     NearClose,
@@ -47,28 +40,6 @@ with IPA
     Glottal,
   end
 
-  enum Manners
-    Stop,
-    Nasal,
-    SibilantFricative,
-    Fricative,
-    Approximant,
-    TapFlap,
-    Trill,
-    LateralFricative,
-    LateralApproximant,
-    LateralTapFlap,
-    Tenuis,
-    TenuisLateral,
-    Plosive,
-    Implosive,
-    Affricate,
-    Sibilant,
-    NonSibilant,
-    Central,
-    Lateral
-  end
-
   let Encode(text, sampa, alt=null) = {
     Popup: SoundPopup,
     Text: text,
@@ -76,40 +47,75 @@ with IPA
     Alt: alt
   }
 
-  let Consonant(place, manner) = {
-    Category: Categories.Con,
+  let Consonant(flags, place) = {
+    Flags: flags,
     Place: place,
-    Manner: manner,
   }
 
-  let Affricate(place, manner) = {
-    Category: Categories.Affricate,
+  let Imp(flags, place) = {
+    Flags: flags | Impossible,
     Place: place,
-    Manner: manner,
   }
 
-  let Other(place, manner) = {
-    Category: Categories.Other,
-    Place: place,
-    Manner: manner,
-  }
-
-  let Vowel(open, backness) = {
-    Category: Categories.Vowel,
+  let Vowel(flags, open, backness) = {
+    Flags: flags | IsVowel,
     Open: open,
     Backness: backness,
   }
 
-  let Voiced     = {IsVoiced: true}
-  let NonIPA     = {IsNotIPA: true}
-  let Rounded    = {IsRounded: true}
-  let Velarized  = {IsVelarized: true}
-  let Click      = {IsClick: true}
-  let Ejective   = {IsEjective: true}
-  let Pulmonic   = {IsPulmonic: true}
+  let NPEjective(flags, sound) = Encode(sound.Text Diacritics.Ejective.Text, sound.Sampa Diacritics.Ejective.Sampa) Consonant(flags | Ejective | Affricate, sound.Place)
 
-  let NPEjective(sound, manner) = Encode(sound.Text Diacritics.Ejective.Text, sound.Sampa Diacritics.Ejective.Sampa) Ejective Affricate(sound.Place, manner)
+  let None        = 0
+  let Unrounded   = 0
+  let Voiced      = 1 << 0
+  let NonIPA      = 1 << 1
+  let Rounded     = 1 << 2
+  let Velarized   = 1 << 3
+  let Ejective    = 1 << 4
+  let Pulmonic    = 1 << 5
+  let Nasal       = 1 << 6
+  let Tenuis      = 1 << 7
+  let Lateral     = 1 << 8
+  let Sibilant    = 1 << 9
+  let Fricative   = 1 << 10
+  let Approximant = 1 << 11
+  let Plosive     = 1 << 12
+  let Implosive   = 1 << 13
+  let Central     = 1 << 14
+  let TapFlap     = 1 << 15
+  let Trill       = 1 << 16
+  let Stop        = 1 << 17
+  let Click       = 1 << 18
+  let Affricate   = 1 << 19
+  let IsVowel     = 1 << 20
+  let Impossible  = 1 << 21
 
+  let MaxFlags = 21
+
+  let FlagNames = [
+    Lang.Voiced,
+    "NonIPA",
+    Lang.Rounded,
+    "Velarized",
+    Lang.Ejective,
+    Lang.Pulmonic,
+    "Nasal",
+    "Tenuis",
+    "Lateral",
+    "Sibilant",
+    "Fricative",
+    "Approximant",
+    "Plosive",
+    "Implosive",
+    "Central",
+    "Tap/Flap",
+    "Trill",
+    "Stop",
+    Lang.Click,
+    "Affricate",
+    "Vowel",
+    "Impossible"
+  ];
 
   with Sounds
     //==================================
@@ -117,137 +123,137 @@ with IPA
     //==================================
 
     // Nasal					
-    let VlBilabialNasal           = Encode("m̥", "") Pulmonic Consonant(Places.Bilabial, Manners.Nasal)
-    let VdBilabialNasal           = Encode("m", "m") Voiced Pulmonic Consonant(Places.Bilabial, Manners.Nasal)
-    let VdLabioDentalNasal        = Encode("ɱ", "F") Voiced Pulmonic Consonant(Places.LabioDental, Manners.Nasal)
-    let VdLinguoLabioNasal        = Encode("n̼", "") Voiced Pulmonic Consonant(Places.LinguoLabial, Manners.Nasal)
-    let VlAlveolarNasal           = Encode("n̥", "") Pulmonic Consonant(Places.Alveolar, Manners.Nasal)
-    let VdAlveolarNasal           = Encode("n", "n") Voiced Pulmonic Consonant(Places.Alveolar, Manners.Nasal)
-    let VlRetroFlexNasal          = Encode("ɳ̊", "") Pulmonic Consonant(Places.Retroflex, Manners.Nasal)
-    let VdRetroFlexNasal          = Encode("ɳ", "n`") Voiced Pulmonic Consonant(Places.Retroflex, Manners.Nasal)
-    let VlPalatalNasal            = Encode("ɲ̊", "") Pulmonic Consonant(Places.Palatal, Manners.Nasal)
-    let VdPalatalNasal            = Encode("ɲ", "J") Voiced Pulmonic Consonant(Places.Palatal, Manners.Nasal)
-    let VlVelarNasal              = Encode("ŋ̊", "") Pulmonic Consonant(Places.Velar, Manners.Nasal)
-    let VdVelarNasal              = Encode("ŋ", "N") Voiced Pulmonic Consonant(Places.Velar, Manners.Nasal)
-    let VdUvularNasal             = Encode("ɴ", "N\\") Voiced Pulmonic Consonant(Places.Uvular, Manners.Nasal)
+    let VlBilabialNasal           = Encode("m̥", "") Consonant(Pulmonic | Nasal, Places.Bilabial)
+    let VdBilabialNasal           = Encode("m", "m") Consonant(Voiced | Pulmonic | Nasal, Places.Bilabial)
+    let VdLabioDentalNasal        = Encode("ɱ", "F") Consonant(Voiced | Pulmonic | Nasal, Places.LabioDental)
+    let VdLinguoLabioNasal        = Encode("n̼", "") Consonant(Voiced | Pulmonic | Nasal, Places.LinguoLabial)
+    let VlAlveolarNasal           = Encode("n̥", "") Consonant(Pulmonic | Nasal, Places.Alveolar)
+    let VdAlveolarNasal           = Encode("n", "n") Consonant(Voiced | Pulmonic | Nasal, Places.Alveolar)
+    let VlRetroFlexNasal          = Encode("ɳ̊", "") Consonant(Pulmonic | Nasal, Places.Retroflex)
+    let VdRetroFlexNasal          = Encode("ɳ", "n`") Consonant(Voiced | Pulmonic | Nasal, Places.Retroflex)
+    let VlPalatalNasal            = Encode("ɲ̊", "") Consonant(Pulmonic | Nasal, Places.Palatal)
+    let VdPalatalNasal            = Encode("ɲ", "J") Consonant(Voiced | Pulmonic | Nasal, Places.Palatal)
+    let VlVelarNasal              = Encode("ŋ̊", "") Consonant(Pulmonic | Nasal, Places.Velar)
+    let VdVelarNasal              = Encode("ŋ", "N") Consonant(Voiced | Pulmonic | Nasal, Places.Velar)
+    let VdUvularNasal             = Encode("ɴ", "N\\") Consonant(Voiced | Pulmonic | Nasal, Places.Uvular)
 														
     // Stop
-    let VlBilabialStop            = Encode("p", "p") Pulmonic Consonant(Places.Bilabial, Manners.Stop)
-    let VdBilabialStop            = Encode("b", "b") Voiced Pulmonic Consonant(Places.Bilabial, Manners.Stop)
-    let VlLabioDentalStop         = Encode("p̪", "") Pulmonic Consonant(Places.LabioDental, Manners.Stop)
-    let VdLabioDentalStop         = Encode("b̪", "") Voiced Pulmonic Consonant(Places.LabioDental, Manners.Stop)
-    let VlLinguoLabialStop        = Encode("t̼", "") Pulmonic Consonant(Places.LinguoLabial, Manners.Stop)
-    let VdLinguoLabialStop        = Encode("d̼", "") Voiced Pulmonic Consonant(Places.LinguoLabial, Manners.Stop)
-    let VlAlveolarStop            = Encode("t", "t") Pulmonic Consonant(Places.Alveolar, Manners.Stop)
-    let VdAlveolarStop            = Encode("d", "d") Voiced Pulmonic Consonant(Places.Alveolar, Manners.Stop)
-    let VlRetroflexStop           = Encode("ʈ", "t`") Pulmonic Consonant(Places.Retroflex, Manners.Stop)
-    let VdRetroflexStop           = Encode("ɖ", "d`") Voiced Pulmonic Consonant(Places.Retroflex, Manners.Stop)
-    let VlPalatalStop             = Encode("c", "c") Pulmonic Consonant(Places.Palatal, Manners.Stop)
-    let VdPalatalStop             = Encode("ɟ", "J\\") Voiced Pulmonic Consonant(Places.Palatal, Manners.Stop)
-    let VlVelarStop               = Encode("k", "k") Pulmonic Consonant(Places.Velar, Manners.Stop)
-    let VdVelarStop               = Encode("ɡ", "g") Voiced Pulmonic Consonant(Places.Velar, Manners.Stop)
-    let VlUvularStop              = Encode("q", "q") Pulmonic Consonant(Places.Uvular, Manners.Stop)
-    let VdUvularStop              = Encode("ɢ", "G\\") Voiced Pulmonic Consonant(Places.Uvular, Manners.Stop)
-    let VdEpiglottalStop          = Encode("ʡ", ">\\") Pulmonic Consonant(Places.Pharyngeal, Manners.Stop)
-    let GlottalStop               = Encode("ʔ", "?") Pulmonic Consonant(Places.Glottal, Manners.Stop)
+    let VlBilabialStop            = Encode("p", "p") Consonant(Pulmonic | Stop, Places.Bilabial)
+    let VdBilabialStop            = Encode("b", "b") Consonant(Voiced | Pulmonic | Stop, Places.Bilabial)
+    let VlLabioDentalStop         = Encode("p̪", "") Consonant(Pulmonic | Stop, Places.LabioDental)
+    let VdLabioDentalStop         = Encode("b̪", "") Consonant(Voiced | Pulmonic | Stop, Places.LabioDental)
+    let VlLinguoLabialStop        = Encode("t̼", "") Consonant(Pulmonic | Stop, Places.LinguoLabial)
+    let VdLinguoLabialStop        = Encode("d̼", "") Consonant(Voiced | Pulmonic | Stop, Places.LinguoLabial)
+    let VlAlveolarStop            = Encode("t", "t") Consonant(Pulmonic | Stop, Places.Alveolar)
+    let VdAlveolarStop            = Encode("d", "d") Consonant(Voiced | Pulmonic | Stop, Places.Alveolar)
+    let VlRetroflexStop           = Encode("ʈ", "t`") Consonant(Pulmonic | Stop, Places.Retroflex)
+    let VdRetroflexStop           = Encode("ɖ", "d`") Consonant(Voiced | Pulmonic | Stop, Places.Retroflex)
+    let VlPalatalStop             = Encode("c", "c") Consonant(Pulmonic | Stop, Places.Palatal)
+    let VdPalatalStop             = Encode("ɟ", "J\\") Consonant(Voiced | Pulmonic | Stop, Places.Palatal)
+    let VlVelarStop               = Encode("k", "k") Consonant(Pulmonic | Stop, Places.Velar)
+    let VdVelarStop               = Encode("ɡ", "g") Consonant(Voiced | Pulmonic | Stop, Places.Velar)
+    let VlUvularStop              = Encode("q", "q") Consonant(Pulmonic | Stop, Places.Uvular)
+    let VdUvularStop              = Encode("ɢ", "G\\") Consonant(Voiced | Pulmonic | Stop, Places.Uvular)
+    let VdEpiglottalStop          = Encode("ʡ", ">\\") Consonant(Pulmonic | Stop, Places.Pharyngeal)
+    let GlottalStop               = Encode("ʔ", "?") Consonant(Pulmonic | Stop, Places.Glottal)
 		
     // Sibilant Fricative										
-    let VlAlveolarSibFricative       = Encode("s", "s") Pulmonic Consonant(Places.Alveolar, Manners.SibilantFricative)
-    let VdAlveolarSibFricative       = Encode("z", "z") Voiced Pulmonic Consonant(Places.Alveolar, Manners.SibilantFricative)
-    let VlPostalveolarSibFricative   = Encode("ʃ", "S") Pulmonic Consonant(Places.PostAlveolar, Manners.SibilantFricative)
-    let VdPostalveolarSibFricative   = Encode("ʒ", "Z") Voiced Pulmonic Consonant(Places.PostAlveolar, Manners.SibilantFricative)
-    let VlRetroflexSibFricative      = Encode("ʂ", "s`") Pulmonic Consonant(Places.Retroflex, Manners.SibilantFricative)
-    let VdRetroflexSibFricative      = Encode("ʐ", "z`") Voiced Pulmonic Consonant(Places.Retroflex, Manners.SibilantFricative)
-    let VlPalatalSibFricative        = Encode("ɕ", "s\\") Pulmonic Consonant(Places.Palatal, Manners.SibilantFricative)
-    let VdPalatalSibFricative        = Encode("ʑ", "z\\") Voiced Pulmonic Consonant(Places.Palatal, Manners.SibilantFricative)
+    let VlAlveolarSibFricative       = Encode("s", "s") Consonant(Pulmonic | Sibilant | Fricative, Places.Alveolar)
+    let VdAlveolarSibFricative       = Encode("z", "z") Consonant(Voiced | Pulmonic | Sibilant | Fricative, Places.Alveolar)
+    let VlPostalveolarSibFricative   = Encode("ʃ", "S") Consonant(Pulmonic | Sibilant | Fricative, Places.PostAlveolar)
+    let VdPostalveolarSibFricative   = Encode("ʒ", "Z") Consonant(Voiced | Pulmonic | Sibilant | Fricative, Places.PostAlveolar)
+    let VlRetroflexSibFricative      = Encode("ʂ", "s`") Consonant(Pulmonic | Sibilant | Fricative, Places.Retroflex)
+    let VdRetroflexSibFricative      = Encode("ʐ", "z`") Consonant(Voiced | Pulmonic | Sibilant | Fricative, Places.Retroflex)
+    let VlPalatalSibFricative        = Encode("ɕ", "s\\") Consonant(Pulmonic | Sibilant | Fricative, Places.Palatal)
+    let VdPalatalSibFricative        = Encode("ʑ", "z\\") Consonant(Voiced | Pulmonic | Sibilant | Fricative, Places.Palatal)
 
     // Fricative										
-    let VlBilabialFricative          = Encode("ɸ", "p\\") Pulmonic Consonant(Places.Bilabial, Manners.Fricative)
-    let VdBilabialFricative          = Encode("β", "B") Voiced Pulmonic Consonant(Places.Bilabial, Manners.Fricative)
-    let VlLabiodentalFricative       = Encode("f", "f") Pulmonic Consonant(Places.LabioDental, Manners.Fricative)
-    let VdLabiodentalFricative       = Encode("v", "v") Voiced Pulmonic Consonant(Places.LabioDental, Manners.Fricative)
-    let VlLinguoLabialFricative      = Encode("θ̼", "") Pulmonic Consonant(Places.LinguoLabial, Manners.Fricative)
-    let VdLinguoLabialFricative      = Encode("ð̼", "") Voiced Pulmonic Consonant(Places.LinguoLabial, Manners.Fricative)
-    let VlDentalFricative            = Encode("θ", "T") Pulmonic Consonant(Places.Dental, Manners.Fricative)
-    let VdDentalFricative            = Encode("ð", "D") Voiced Pulmonic Consonant(Places.Dental, Manners.Fricative)
-    let VlAlveolarFricative          = Encode("θ̠", "") Pulmonic Consonant(Places.Alveolar, Manners.Fricative)
-    let VdAlveolarFricative          = Encode("ð̠", "") Voiced Pulmonic Consonant(Places.Alveolar, Manners.Fricative)
-    let VlPostaveolarFricative       = Encode("ɹ̠̊", "") Pulmonic Consonant(Places.PostAlveolar, Manners.Fricative)
-    let VdPostalveolarFricative      = Encode("ɹ̝̊", "") Voiced Pulmonic Consonant(Places.PostAlveolar, Manners.Fricative)
-    let VdRetroflexFricative         = Encode("ɻ˔","") Voiced Pulmonic Consonant(Places.Retroflex, Manners.Fricative)
-    let VlPalatalFricative           = Encode("ç", "C") Pulmonic Consonant(Places.Palatal, Manners.Fricative)
-    let VdPalatalFricative           = Encode("ʝ", "j\\") Voiced Pulmonic Consonant(Places.Palatal, Manners.Fricative)
-    let VlVelarFricative             = Encode("x", "x") Pulmonic Consonant(Places.Velar, Manners.Fricative)
-    let VdVelarFricative             = Encode("ɣ", "G") Voiced Pulmonic Consonant(Places.Velar, Manners.Fricative)
-    let VlUvularFricative            = Encode("χ", "X") Pulmonic Consonant(Places.Uvular, Manners.Fricative)
-    let VdUvularFricative            = Encode("ʁ", "R") Voiced Pulmonic Consonant(Places.Uvular, Manners.Fricative)
-    let VlPharyngealFricative        = Encode("ħ", "X\\") Pulmonic Consonant(Places.Pharyngeal, Manners.Fricative)
-    let VdPharyngealFricative        = Encode("ʕ", "?\\") Voiced Pulmonic Consonant(Places.Pharyngeal, Manners.Fricative)
-    let VlGlottalFricative           = Encode("h", "h") Pulmonic Consonant(Places.Glottal, Manners.Fricative)
-    let VdGlottalFricative           = Encode("ɦ", "h\\") Voiced Pulmonic Consonant(Places.Glottal, Manners.Fricative)
+    let VlBilabialFricative          = Encode("ɸ", "p\\") Consonant(Pulmonic | Fricative, Places.Bilabial)
+    let VdBilabialFricative          = Encode("β", "B") Consonant(Voiced | Pulmonic|  Fricative, Places.Bilabial)
+    let VlLabiodentalFricative       = Encode("f", "f") Consonant(Pulmonic | Fricative, Places.LabioDental)
+    let VdLabiodentalFricative       = Encode("v", "v") Consonant(Voiced | Pulmonic | Fricative, Places.LabioDental)
+    let VlLinguoLabialFricative      = Encode("θ̼", "") Consonant(Pulmonic | Fricative, Places.LinguoLabial)
+    let VdLinguoLabialFricative      = Encode("ð̼", "") Consonant(Voiced | Pulmonic | Fricative, Places.LinguoLabial)
+    let VlDentalFricative            = Encode("θ", "T") Consonant(Pulmonic | Fricative, Places.Dental)
+    let VdDentalFricative            = Encode("ð", "D") Consonant(Voiced | Pulmonic | Fricative, Places.Dental)
+    let VlAlveolarFricative          = Encode("θ̠", "") Consonant(Pulmonic | Fricative, Places.Alveolar)
+    let VdAlveolarFricative          = Encode("ð̠", "") Consonant(Voiced | Pulmonic | Fricative, Places.Alveolar)
+    let VlPostaveolarFricative       = Encode("ɹ̠̊", "") Consonant(Pulmonic | Fricative, Places.PostAlveolar)
+    let VdPostalveolarFricative      = Encode("ɹ̝̊", "") Consonant(Voiced | Pulmonic | Fricative, Places.PostAlveolar)
+    let VdRetroflexFricative         = Encode("ɻ˔","") Consonant(Voiced | Pulmonic | Fricative, Places.Retroflex)
+    let VlPalatalFricative           = Encode("ç", "C") Consonant(Pulmonic | Fricative, Places.Palatal)
+    let VdPalatalFricative           = Encode("ʝ", "j\\") Consonant(Voiced | Pulmonic | Fricative, Places.Palatal)
+    let VlVelarFricative             = Encode("x", "x") Consonant(Pulmonic | Fricative, Places.Velar)
+    let VdVelarFricative             = Encode("ɣ", "G") Consonant(Voiced | Pulmonic | Fricative, Places.Velar)
+    let VlUvularFricative            = Encode("χ", "X") Consonant(Pulmonic | Fricative, Places.Uvular)
+    let VdUvularFricative            = Encode("ʁ", "R") Consonant(Voiced | Pulmonic | Fricative, Places.Uvular)
+    let VlPharyngealFricative        = Encode("ħ", "X\\") Consonant(Pulmonic | Fricative, Places.Pharyngeal)
+    let VdPharyngealFricative        = Encode("ʕ", "?\\") Consonant(Voiced | Pulmonic | Fricative, Places.Pharyngeal)
+    let VlGlottalFricative           = Encode("h", "h") Consonant(Pulmonic | Fricative, Places.Glottal)
+    let VdGlottalFricative           = Encode("ɦ", "h\\") Consonant(Voiced | Pulmonic | Fricative, Places.Glottal)
 														
     // Approximant										
-    let VlLabioDentalApproximant     = Encode("ʋ̥", "") Pulmonic Consonant(Places.LabioDental, Manners.Approximant)
-    let VdLabioDentalApproximant     = Encode("ʋ", "v\\", "P") Voiced Pulmonic Consonant(Places.LabioDental, Manners.Approximant)
-    let VlPostalveolarApproximant    = Encode("ɹ̥", "") Pulmonic Consonant(Places.Alveolar, Manners.Approximant)
-    let VdPostalveolarApproximant    = Encode("ɹ", "r\\") Voiced Pulmonic Consonant(Places.Alveolar, Manners.Approximant)
-    let VlRetroflexApproximant       = Encode("ɻ̊", "") Pulmonic Consonant(Places.Retroflex, Manners.Approximant)
-    let VdRetroflexApproximant       = Encode("ɻ", "r\\`") Voiced Pulmonic Consonant(Places.Retroflex, Manners.Approximant)
-    let VlPalatalApproximant         = Encode("j̊", "") Pulmonic Consonant(Places.Palatal, Manners.Approximant)
-    let VdPalatalApproximant         = Encode("j", "j") Voiced Pulmonic Consonant(Places.Palatal, Manners.Approximant)
-    let VlVelarApproximant           = Encode("ɰ̊", "") Pulmonic Consonant(Places.Velar, Manners.Approximante)
-    let VdVelarApproximant           = Encode("ɰ", "M\\") Voiced Pulmonic Consonant(Places.Velar, Manners.Approximant)
-    let VdGlottalApproximant         = Encode("ʔ̞", "") Voiced Pulmonic Consonant(Places.Glottal, Manners.Approximant)
+    let VlLabioDentalApproximant     = Encode("ʋ̥", "") Consonant(Pulmonic | Approximant, Places.LabioDental)
+    let VdLabioDentalApproximant     = Encode("ʋ", "v\\", "P") Consonant(Voiced | Pulmonic | Approximant, Places.LabioDental)
+    let VlPostalveolarApproximant    = Encode("ɹ̥", "") Consonant(Pulmonic | Approximant, Places.Alveolar)
+    let VdPostalveolarApproximant    = Encode("ɹ", "r\\") Consonant(Voiced | Pulmonic | Approximant, Places.Alveolar)
+    let VlRetroflexApproximant       = Encode("ɻ̊", "") Consonant(Pulmonic | Approximant, Places.Retroflex)
+    let VdRetroflexApproximant       = Encode("ɻ", "r\\`") Consonant(Voiced | Pulmonic | Approximant, Places.Retroflex)
+    let VlPalatalApproximant         = Encode("j̊", "") Consonant(Pulmonic | Approximant, Places.Palatal)
+    let VdPalatalApproximant         = Encode("j", "j") Consonant(Voiced | Pulmonic | Approximant, Places.Palatal)
+    let VlVelarApproximant           = Encode("ɰ̊", "") Consonant(Pulmonic | Approximant, Places.Velar)
+    let VdVelarApproximant           = Encode("ɰ", "M\\") Consonant(Voiced | Pulmonic | Approximant, Places.Velar)
+    let VdGlottalApproximant         = Encode("ʔ̞", "") Consonant(Voiced | Pulmonic | Approximant, Places.Glottal)
 														
     // Tap or Flap										
-    let VdBilabialDentalFlap         = Encode("ⱱ̟", "") Voiced Pulmonic Consonant(Places.Bilabial, Manners.TapFlap)
-    let VdLabioDentalFlap            = Encode("ⱱ", "") Voiced Pulmonic Consonant(Places.LabioDental, Manners.TapFlap)
-    let VdLingualLabialStop          = Encode("ɾ̼", "") Voiced Pulmonic Consonant(Places.LinguoLabial, Manners.TapFlap)
-    let VlAlveolarFlap               = Encode("ɾ̥", "") Pulmonic Consonant(Places.Alveolar, Manners.TapFlap)
-    let VdAlveolarTap                = Encode("ɾ", "4") Voiced Pulmonic Consonant(Places.Alveolar, Manners.TapFlap)
-    let VlRetroflexFlap              = Encode("ɽ̊", "") Pulmonic Consonant(Places.Retroflex, Manners.TapFlap)
-    let VdRetroflexFlap              = Encode("ɽ", "r`") Voiced Pulmonic Consonant(Places.Retroflex, Manners.TapFlap)
-    let VdUvularFlap                 = Encode("ɢ̆", "") Voiced Pulmonic Consonant(Places.Uvular, Manners.TapFlap)
-    let VdPharyngealFlap             = Encode("ʡ̆", "") Voiced Pulmonic Consonant(Places.Pharyngeal, Manners.TapFlap)
+    let VdBilabialDentalFlap         = Encode("ⱱ̟", "") Consonant(Voiced | Pulmonic | TapFlap, Places.Bilabial)
+    let VdLabioDentalFlap            = Encode("ⱱ", "") Consonant(Voiced | Pulmonic | TapFlap, Places.LabioDental)
+    let VdLingualLabialStop          = Encode("ɾ̼", "") Consonant(Voiced | Pulmonic | TapFlap, Places.LinguoLabial)
+    let VlAlveolarFlap               = Encode("ɾ̥", "") Consonant(Pulmonic | TapFlap, Places.Alveolar)
+    let VdAlveolarTap                = Encode("ɾ", "4") Consonant(Voiced | Pulmonic | TapFlap, Places.Alveolar)
+    let VlRetroflexFlap              = Encode("ɽ̊", "") Consonant(Pulmonic | TapFlap, Places.Retroflex)
+    let VdRetroflexFlap              = Encode("ɽ", "r`") Consonant(Voiced | Pulmonic | TapFlap, Places.Retroflex)
+    let VdUvularFlap                 = Encode("ɢ̆", "") Consonant(Voiced | Pulmonic | TapFlap, Places.Uvular)
+    let VdPharyngealFlap             = Encode("ʡ̆", "") Consonant(Voiced | Pulmonic | TapFlap, Places.Pharyngeal)
 														
     // Trill											
-    let VlBilabialTrill              = Encode("ʙ̥", "") Pulmonic Consonant(Places.Bilabial, Manners.Trill)
-    let VdBilabialTrill              = Encode("ʙ", "B\\") Voiced Pulmonic Consonant(Places.Bilabial, Manners.Trill)
-    let VlAlveolarTrill              = Encode("r̥", "") Pulmonic Consonant(Places.Alveolar, Manners.Trill)
-    let VdAlveolarTrill              = Encode("r", "r") Voiced Pulmonic Consonant(Places.Alveolar, Manners.Trill)
-    let VlRetroflexTrill             = Encode("ɽ̊r̥", "") Pulmonic Consonant(Places.Retroflex, Manners.Trill)
-    let VdRetroflexTrill             = Encode("ɽr", "") Voiced Pulmonic Consonant(Places.Retroflex, Manners.Trill)
-    let VlUvularTrill                = Encode("ʀ", "R\\") Pulmonic Consonant(Places.Uvular, Manners.Trill)
-    let VlPharyngealTrill            = Encode("H", "") Pulmonic Consonant(Places.Pharyngeal, Manners.Trill)
-    let VdPharyngealTrill            = Encode("ʢ", "<\\") Voiced Pulmonic Consonant(Places.Pharyngeal, Manners.Trill)
+    let VlBilabialTrill              = Encode("ʙ̥", "") Consonant(Pulmonic | Trill, Places.Bilabial)
+    let VdBilabialTrill              = Encode("ʙ", "B\\") Consonant(Voiced | Pulmonic | Trill, Places.Bilabial)
+    let VlAlveolarTrill              = Encode("r̥", "") Consonant(Pulmonic | Trill, Places.Alveolar)
+    let VdAlveolarTrill              = Encode("r", "r") Consonant(Voiced | Pulmonic | Trill, Places.Alveolar)
+    let VlRetroflexTrill             = Encode("ɽ̊r̥", "") Consonant(Pulmonic | Trill, Places.Retroflex)
+    let VdRetroflexTrill             = Encode("ɽr", "") Consonant(Voiced | Pulmonic | Trill, Places.Retroflex)
+    let VlUvularTrill                = Encode("ʀ", "R\\") Consonant(Pulmonic | Trill, Places.Uvular)
+    let VlPharyngealTrill            = Encode("H", "") Consonant(Pulmonic | Trill, Places.Pharyngeal)
+    let VdPharyngealTrill            = Encode("ʢ", "<\\") Consonant(Voiced | Pulmonic | Trill, Places.Pharyngeal)
 														
     // Lateral Fricative								
-    let VlAlveolarLateralFricative   = Encode("ɬ", "K") Pulmonic Consonant(Places.Alveolar, Manners.LateralFricative)
-    let VdAlveolarLateralFricative   = Encode("ɮ", "K\\") Voiced Pulmonic Consonant(Places.Alveolar, Manners.LateralFricative)
-    let VlRetroflexLateralFricative  = Encode("ɭ̊˔", "") Pulmonic Consonant(Places.Retroflex, Manners.LateralFricative)
-    let VdRetroflexLateralFricative  = Encode("ɭ˔", "") Voiced Pulmonic Consonant(Places.Retroflex, Manners.LateralFricative)
-    let VlAlveolarPalatalFricative   = Encode("ʎ̝̊", "") Pulmonic Consonant(Places.Palatal, Manners.LateralFricative)
-    let VdAlveolarPalatalFricative   = Encode("ʎ̝", "") Voiced Pulmonic Consonant(Places.Palatal, Manners.LateralFricative)
-    let VlVelarPalatalFricative      = Encode("ʟ̝̊", "") Pulmonic Consonant(Places.Velar, Manners.LateralFricative)
-    let VdVelarPalatalFricative      = Encode("ʟ̝", "") Voiced Pulmonic Consonant(Places.Velar, Manners.LateralFricative)
+    let VlAlveolarLateralFricative   = Encode("ɬ", "K") Consonant(Pulmonic | Lateral | Fricative, Places.Alveolar)
+    let VdAlveolarLateralFricative   = Encode("ɮ", "K\\") Consonant(Voiced | Pulmonic | Lateral | Fricative, Places.Alveolar)
+    let VlRetroflexLateralFricative  = Encode("ɭ̊˔", "") Consonant(Pulmonic | Lateral | Fricative, Places.Retroflex)
+    let VdRetroflexLateralFricative  = Encode("ɭ˔", "") Consonant(Voiced | Pulmonic | Lateral | Fricative, Places.Retroflex)
+    let VlAlveolarPalatalFricative   = Encode("ʎ̝̊", "") Consonant(Pulmonic | Lateral | Fricative, Places.Palatal)
+    let VdAlveolarPalatalFricative   = Encode("ʎ̝", "") Consonant(Voiced | Pulmonic | Lateral | Fricative, Places.Palatal)
+    let VlVelarPalatalFricative      = Encode("ʟ̝̊", "") Consonant(Pulmonic | Lateral | Fricative, Places.Velar)
+    let VdVelarPalatalFricative      = Encode("ʟ̝", "") Consonant(Voiced | Pulmonic | Lateral | Fricative, Places.Velar)
 														
     // LateralApproximant								
-    let VlAlveolarLateralApproximant = Encode("l̥", "") Pulmonic Consonant(Places.Alveolar, Manners.LateralApproximant)
-    let VdAlveolarLateralApproximant = Encode("l", "l") Voiced Pulmonic Consonant(Places.Alveolar, Manners.LateralApproximant)
-    let VdVelarizedAlveolarLateralApproximant = Encode("ɫ", "5") Voiced Velarized Pulmonic Consonant(Places.Alveolar, Manners.LateralApproximant)
-    let VlRetroflexLateral           = Encode("ɭ̊", "") Pulmonic Consonant(Places.Retroflex, Manners.LateralApproximant)
-    let VdRetroflexLateral           = Encode("ɭ", "n`") Voiced Pulmonic Consonant(Places.Retroflex, Manners.LateralApproximant)
-    let VlPalatalLateral             = Encode("ʎ̥", "") Pulmonic Consonant(Places.Palatal, Manners.LateralApproximant)
-    let VdPalatalLateral             = Encode("ʎ", "L") Voiced Pulmonic Consonant(Places.Palatal, Manners.LateralApproximant)
-    let VlVelarLateral               = Encode("ʟ̥", "") Pulmonic Consonant(Places.Velar, Manners.LateralApproximant)
-    let VdVelarLateral               = Encode("ʟ", "L\\") Voiced Pulmonic Consonant(Places.Velar, Manners.LateralApproximant)
-    let VdUvularLateral              = Encode("ʟ̠", "") Voiced Pulmonic Consonant(Places.Uvular, Manners.LateralApproximant)
+    let VlAlveolarLateralApproximant = Encode("l̥", "") Consonant(Pulmonic | Lateral | Approximant, Places.Alveolar)
+    let VdAlveolarLateralApproximant = Encode("l", "l") Consonant(Voiced | Pulmonic | Lateral | Approximant, Places.Alveolar)
+    let VdVelarizedAlveolarLateralApproximant = Encode("ɫ", "5") Consonant(Voiced | Velarized | Pulmonic | Lateral | Approximant, Places.Alveolar)
+    let VlRetroflexLateral           = Encode("ɭ̊", "") Consonant(Pulmonic | Lateral | Approximant, Places.Retroflex)
+    let VdRetroflexLateral           = Encode("ɭ", "n`") Consonant(Voiced | Pulmonic | Lateral | Approximant, Places.Retroflex)
+    let VlPalatalLateral             = Encode("ʎ̥", "") Consonant(Pulmonic | Lateral | Approximant, Places.Palatal)
+    let VdPalatalLateral             = Encode("ʎ", "L") Consonant(Voiced | Pulmonic | Lateral | Approximant, Places.Palatal)
+    let VlVelarLateral               = Encode("ʟ̥", "") Consonant(Pulmonic | Lateral | Approximant, Places.Velar)
+    let VdVelarLateral               = Encode("ʟ", "L\\") Consonant(Voiced | Pulmonic | Lateral | Approximant, Places.Velar)
+    let VdUvularLateral              = Encode("ʟ̠", "") Consonant(Voiced | Pulmonic | Lateral | Approximant, Places.Uvular)
 
     // Lateral tap/flap
-    let VdAlveolarLateralFlap        = Encode("ɺ", "l\\") Voiced Pulmonic Consonant(Places.Alveolar, Manners.LateralTapFlap)
-    let VdRetroflexLateralFlap       = Encode("ɭ̆", "") Voiced Pulmonic Consonant(Places.Retroflex, Manners.LateralTapFlap)
-    let VdPalatalLateralFlap         = Encode("ʎ̆", "") Voiced Pulmonic Consonant(Places.Palatal, Manners.LateralTapFlap)
-    let VdVelarLateralTap            = Encode("L̆", "") Voiced Pulmonic Consonant(Places.Velar, Manners.LateralTapFlap)
+    let VdAlveolarLateralFlap        = Encode("ɺ", "l\\") Consonant(Voiced | Pulmonic | Lateral | TapFlap, Places.Alveolar)
+    let VdRetroflexLateralFlap       = Encode("ɭ̆", "") Consonant(Voiced | Pulmonic | Lateral | TapFlap, Places.Retroflex)
+    let VdPalatalLateralFlap         = Encode("ʎ̆", "") Consonant(Voiced | Pulmonic | Lateral | TapFlap, Places.Palatal)
+    let VdVelarLateralTap            = Encode("L̆", "") Consonant(Voiced | Pulmonic | Lateral | TapFlap, Places.Velar)
 
 
     //==================================
@@ -255,242 +261,241 @@ with IPA
     //==================================
 
     // Stops
-    let VlBilabialStopEjective       = NPEjective(VlBilabialStop, Manners.Stop)
-    let VlAveolarStopEjective        = NPEjective(VlAlveolarStop, Manners.Stop)
-    let VlRetroflexStopEjective      = NPEjective(VlRetroflexStop, Manners.Stop)
-    let VlPalatalStopEjective        = NPEjective(VlPalatalStop, Manners.Stop)
-    let VlVelarStopEjective          = NPEjective(VlVelarStop, Manners.Stop)
-    let VlUvularStopEjective         = NPEjective(VlUvularStop, Manners.Stop)
-    let VlEpiglottalStopEjective     = NPEjective(VdEpiglottalStop, Manners.Stop)
+    let VlBilabialStopEjective       = NPEjective(Stop, VlBilabialStop)
+    let VlAveolarStopEjective        = NPEjective(Stop, VlAlveolarStop)
+    let VlRetroflexStopEjective      = NPEjective(Stop, VlRetroflexStop)
+    let VlPalatalStopEjective        = NPEjective(Stop, VlPalatalStop)
+    let VlVelarStopEjective          = NPEjective(Stop, VlVelarStop)
+    let VlUvularStopEjective         = NPEjective(Stop, VlUvularStop)
+    let VlEpiglottalStopEjective     = NPEjective(Stop, VdEpiglottalStop)
 
     // Fricatives
-    let VlBilabialFricativeEjective     = NPEjective(VlBilabialFricative, Manners.Fricative)
-    let VlLabiodentalFricativeEjective  = NPEjective(VlLabiodentalFricative, Manners.Fricative)
-    let VlDentalFricativeEjective       = NPEjective(VlDentalFricative, Manners.Fricative)
-    let VlAlveolarFricativeEjective     = NPEjective(VlAlveolarSibFricative, Manners.Fricative)
-    let VlPostalveolarFricativeEjective = NPEjective(VlPostalveolarSibFricative, Manners.Fricative)
-    let VlRetroflexFricativeEjective    = NPEjective(VlRetroflexSibFricative, Manners.Fricative)
-    let VlPalatalFricativeEjective      = NPEjective(VlPalatalSibFricative, Manners.Fricative)
-    let VlVelarFricativeEjective        = NPEjective(VlVelarFricative, Manners.Fricative)
-    let VlUvularFricativeEjective       = NPEjective(VlUvularFricative, Manners.Fricative)
+    let VlBilabialFricativeEjective     = NPEjective(Fricative, VlBilabialFricative)
+    let VlLabiodentalFricativeEjective  = NPEjective(Fricative, VlLabiodentalFricative)
+    let VlDentalFricativeEjective       = NPEjective(Fricative, VlDentalFricative)
+    let VlAlveolarFricativeEjective     = NPEjective(Fricative, VlAlveolarSibFricative)
+    let VlPostalveolarFricativeEjective = NPEjective(Fricative, VlPostalveolarSibFricative)
+    let VlRetroflexFricativeEjective    = NPEjective(Fricative, VlRetroflexSibFricative)
+    let VlPalatalFricativeEjective      = NPEjective(Fricative, VlPalatalSibFricative)
+    let VlVelarFricativeEjective        = NPEjective(Fricative, VlVelarFricative)
+    let VlUvularFricativeEjective       = NPEjective(Fricative, VlUvularFricative)
 
     // Lateral Fricatives
-    let VlPostalveolarLatFricEjective = NPEjective(VlAlveolarLateralFricative, Manners.LateralFricative)
+    let VlPostalveolarLatFricEjective = NPEjective(Lateral | Fricative, VlAlveolarLateralFricative)
 
     // Clicks
-    let VlBilabialTenuisClick        = Encode("ʘ", "O\\") Ejective Click Affricate(Places.Bilabial, Manners.Tenuis)
-    let VdBilabialTenuisClick        = Encode("ʘ̬", "") Voiced Ejective Click Affricate(Places.Bilabial, Manners.Tenuis)
-    let VlDentalTenuisClick          = Encode("ǀ", "|") Ejective Click Affricate(Places.Dental, Manners.Tenuis)
-    let VdDentalTenuisClick          = Encode("ǀ̬", "") Voiced Ejective Click Affricate(Places.Dental, Manners.Tenuis)
-    let VlAlveolarTenuisClick        = Encode("ǃ", "!\\") Ejective Click Affricate(Places.Alveolar, Manners.Tenuis)
-    let VdAlveolarTenuisClick        = Encode("ǃ̬", "") Voiced Ejective Click Affricate(Places.Alveolar, Manners.Tenuis)
-    let VlPalatalTenuisClick         = Encode("ǂ", "=\\") Ejective Click Affricate(Places.Palatal, Manners.Tenuis)
-    let VdPalatalTenuisClick         = Encode("ǂ̬", "") Voiced Ejective Click Affricate(Places.Palatal, Manners.Tenuis)
+    let VlBilabialTenuisClick        = Encode("ʘ", "O\\") Consonant(Ejective | Tenuis | Click | Affricate, Places.Bilabial)
+    let VdBilabialTenuisClick        = Encode("ʘ̬", "") Consonant(Voiced | Ejective | Tenuis | Click | Affricate, Places.Bilabial)
+    let VlDentalTenuisClick          = Encode("ǀ", " | ") Consonant(Ejective | Tenuis | Click | Affricate, Places.Dental)
+    let VdDentalTenuisClick          = Encode("ǀ̬", "") Consonant(Voiced | Ejective Tenuis | Click | Affricate, Places.Dental)
+    let VlAlveolarTenuisClick        = Encode("ǃ", "!\\") Consonant(Ejective | Tenuis | Click | Affricate, Places.Alveolar)
+    let VdAlveolarTenuisClick        = Encode("ǃ̬", "") Consonant(Voiced | Ejective | Tenuis | Click | Affricate, Places.Alveolar)
+    let VlPalatalTenuisClick         = Encode("ǂ", "=\\") Consonant(Ejective | Tenuis | Click | Affricate, Places.Palatal)
+    let VdPalatalTenuisClick         = Encode("ǂ̬", "") Consonant(Voiced | Ejective | Tenuis | Click | Affricate, Places.Palatal)
 
-    let VlBilabialNasalClick         = Encode("ʘ̃", "") Ejective Click Affricate(Places.Bilabial, Manners.Nasal)
-    let VlDentalNasalClick           = Encode("ǀ̃", "") Ejective Click Affricate(Places.Dental, Manners.Nasal)
-    let VlAlveolarNasalClick         = Encode("ǃ̃", "") Ejective Click Affricate(Places.Alveolar, Manners.Nasal)
-    let VlPalatalNasalClick          = Encode("ǂ̃", "") Ejective Click Affricate(Places.Palatal, Manners.Nasal)
+    let VlBilabialNasalClick         = Encode("ʘ̃", "") Consonant(Ejective | Nasal | Click | Affricate, Places.Bilabial)
+    let VlDentalNasalClick           = Encode("ǀ̃", "") Consonant(Ejective | Nasal | Click | Affricate, Places.Dental)
+    let VlAlveolarNasalClick         = Encode("ǃ̃", "") Consonant(Ejective | Nasal | Click | Affricate, Places.Alveolar)
+    let VlPalatalNasalClick          = Encode("ǂ̃", "") Consonant(Ejective | Nasal | Click | Affricate, Places.Palatal)
 
-    let VlAlveolarTenuisLateralClick = Encode("ǁ", "|\\|\\") Ejective Click Affricate(Places.Alveolar, Manners.TenuisLateral)
-    let VdAlveolarTenuisLateralClick = Encode("ǁ̬", "") Voiced Ejective Click Affricate(Places.Alveolar, Manners.TenuisLateral)
+    let VlAlveolarTenuisLateralClick = Encode("ǁ", " | \\ | \\") Consonant(Ejective | Tenuis | Lateral | Click | Affricate, Places.Alveolar)
+    let VdAlveolarTenuisLateralClick = Encode("ǁ̬", "") Consonant(Voiced | Ejective | Tenuis | Lateral | Click | Affricate, Places.Alveolar)
 
-    let VlBilabialImplosiveClick     = Encode("ɓ̥", "") Ejective Click Affricate(Places.Bilabial, Manners.Implosive)
-    let VdBilabialImplosiveClick     = Encode("ɓ", "b_<") Voiced Ejective Click Affricate(Places.Bilabial, Manners.Implosive)
-    let VlAlveolarImplosiveClick     = Encode("ɗ̥", "") Ejective Click Affricate(Places.Alveolar, Manners.Implosive)
-    let VdAlveolarImplosiveClick     = Encode("ɗ", "d_<") Voiced Ejective Click Affricate(Places.Alveolar, Manners.Implosive)
-    let VlRetroflexImplosiveClick    = Encode("ᶑ̊", "") Ejective Click Affricate(Places.Retroflex, Manners.Implosive)
-    let VdRetroflexImplosiveClick    = Encode("ᶑ", "") Voiced Ejective Click Affricate(Places.Retroflex, Manners.Implosive)
-    let VlPalatalImplosiveClick      = Encode("ʄ̊", "") Ejective Click Affricate(Places.Palatal, Manners.Implosive)
-    let VdPalatalImplosiveClick      = Encode("ʄ", "J\\_<") Voiced Ejective Click Affricate(Places.Palatal, Manners.Implosive)
-    let VlVelarImplosiveClick        = Encode("ɠ̊", "") Ejective Click Affricate(Places.Velar, Manners.Implosive)
-    let VdVelarImplosiveClick        = Encode("ɠ", "g_<") Voiced Ejective Click Affricate(Places.Velar, Manners.Implosive)
-    let VlUvularImplosiveClick       = Encode("ʛ̥", "") Ejective Click Affricate(Places.Uvular, Manners.Implosive)
-    let VdUvularImplosiveClick       = Encode("ʛ", "G\\_<") Voiced Ejective Click Affricate(Places.Uvular, Manners.Implosive)
+    let VlBilabialImplosiveClick     = Encode("ɓ̥", "") Consonant(Ejective | Implosive | Click | Affricate, Places.Bilabial)
+    let VdBilabialImplosiveClick     = Encode("ɓ", "b_<") Consonant(Voiced | Ejective | Implosive | Click | Affricate, Places.Bilabial)
+    let VlAlveolarImplosiveClick     = Encode("ɗ̥", "") Consonant(Ejective | Implosive | Click | Affricate, Places.Alveolar)
+    let VdAlveolarImplosiveClick     = Encode("ɗ", "d_<") Consonant(Voiced | Ejective | Implosive | Click | Affricate, Places.Alveolar)
+    let VlRetroflexImplosiveClick    = Encode("ᶑ̊", "") Consonant(Ejective | Implosive | Click | Affricate, Places.Retroflex)
+    let VdRetroflexImplosiveClick    = Encode("ᶑ", "") Consonant(Voiced | Ejective | Implosive | Click | Affricate, Places.Retroflex)
+    let VlPalatalImplosiveClick      = Encode("ʄ̊", "") Consonant(Ejective | Implosive | Click | Affricate, Places.Palatal)
+    let VdPalatalImplosiveClick      = Encode("ʄ", "J\\_<") Consonant(Voiced | Ejective | Implosive | Click | Affricate, Places.Palatal)
+    let VlVelarImplosiveClick        = Encode("ɠ̊", "") Consonant(Ejective | Implosive | Click | Affricate, Places.Velar)
+    let VdVelarImplosiveClick        = Encode("ɠ", "g_<") Consonant(Voiced | Ejective | Implosive | Click | Affricate, Places.Velar)
+    let VlUvularImplosiveClick       = Encode("ʛ̥", "") Consonant(Ejective | Implosive | Click | Affricate, Places.Uvular)
+    let VdUvularImplosiveClick       = Encode("ʛ", "G\\_<") Consonant(Voiced | Ejective | Implosive | Click | Affricate, Places.Uvular)
 
     //==================================
-    // Pulmonic Affricates
+    // Pulmonic | Affricates
     //==================================
 
     // Sibilants
-    let VlAlveolarAffricate          = Encode("ts", "") Pulmonic Affricate(Places.Alveolar, Manners.Sibilant)
-    let VdAlveolarAffricate          = Encode("dz", "") Voiced Pulmonic Affricate(Places.Alveolar, Manners.Sibilant)
-    let VlPostalveolarAffricate      = Encode("t̠ʃ", "") Pulmonic Affricate(Places.PalatoAlveolar, Manners.Sibilant)
-    let VdPostalveolarAffricate      = Encode("d̠ʒ", "") Voiced Pulmonic Affricate(Places.PalatoAlveolar, Manners.Sibilant)
-    let VlRetroflexAffricate         = Encode("ʈʂ", "") Pulmonic Affricate(Places.Retroflex, Manners.Sibilant)
-    let VdRetroflexAffricate         = Encode("ɖʐ", "") Voiced Pulmonic Affricate(Places.Retroflex, Manners.Sibilant)
-    let VlAlveoloPalatalAffricate    = Encode("tɕ", "") Pulmonic Affricate(Places.AlveoloPalatal, Manners.Sibilant)
-    let VdAlveoloPalatalAffricate    = Encode("dʑ", "") Voiced Pulmonic Affricate(Places.AlveoloPalatal, Manners.Sibilant)
+    let VlAlveolarAffricate          = Encode("ts", "") Consonant(Pulmonic | Sibilant | Affricate, Places.Alveolar)
+    let VdAlveolarAffricate          = Encode("dz", "") Consonant(Voiced | Pulmonic | Sibilant | Affricate, Places.Alveolar)
+    let VlPostalveolarAffricate      = Encode("t̠ʃ", "") Consonant(Pulmonic | Sibilant | Affricate, Places.PalatoAlveolar)
+    let VdPostalveolarAffricate      = Encode("d̠ʒ", "") Consonant(Voiced | Pulmonic | Sibilant | Affricate, Places.PalatoAlveolar)
+    let VlRetroflexAffricate         = Encode("ʈʂ", "") Consonant(Pulmonic | Sibilant | Affricate, Places.Retroflex)
+    let VdRetroflexAffricate         = Encode("ɖʐ", "") Consonant(Voiced | Pulmonic | Sibilant | Affricate, Places.Retroflex)
+    let VlAlveoloPalatalAffricate    = Encode("tɕ", "") Consonant(Pulmonic | Sibilant | Affricate, Places.AlveoloPalatal)
+    let VdAlveoloPalatalAffricate    = Encode("dʑ", "") Consonant(Voiced | Pulmonic | Sibilant | Affricate, Places.AlveoloPalatal)
 
     // Non-Sibilants
-    let VlBilabialNSAffricate        = Encode("pɸ", "") Pulmonic Affricate(Places.Bilabial, Manners.NonSibilant)
-    let VdBilabialNSAffricate        = Encode("bβ", "") Voiced Pulmonic Affricate(Places.Bilabial, Manners.NonSibilant)
-    let VlLabioDentalNSAffricate     = Encode("p̪f", "") Pulmonic Affricate(Places.LabioDental, Manners.NonSibilant)
-    let VdLabioDentalNSAffricate     = Encode("b̪v", "") Voiced Pulmonic Affricate(Places.LabioDental, Manners.NonSibilant)
-    let VlDentalNSAffricate          = Encode("t̪θ", "") Pulmonic Affricate(Places.Dental, Manners.NonSibilant)
-    let VdDentalNSAffricate          = Encode("d̪ð", "") Voiced Pulmonic Affricate(Places.Dental, Manners.NonSibilant)
-    let VlAlveolarNSAffricate        = Encode("tɹ̝̊", "") Pulmonic Affricate(Places.Alveolar, Manners.NonSibilant)
-    let VdAlveolarNSAffricate        = Encode("dɹ̝", "") Voiced Pulmonic Affricate(Places.Alveolar, Manners.NonSibilant)
-    let VlPalatoAlveolarNSAffricate  = Encode("t̠ɹ̠̊˔", "") Pulmonic Affricate(Places.PalatoAlveolar, Manners.NonSibilant)
-    let VdPalatoAlveolarNSAffricate  = Encode("d̠ɹ̠˔", "") Voiced Pulmonic Affricate(Places.PalatoAlveolar, Manners.NonSibilant)
-    let VlPalatalNSAffricate         = Encode("cç", "") Pulmonic Affricate(Places.Palatal, Manners.NonSibilant)
-    let VdPalatalNSAffricate         = Encode("ɟʝ", "") Voiced Pulmonic Affricate(Places.Palatal, Manners.NonSibilant)
-    let VlVelarNSAffricate           = Encode("kx", "") Pulmonic Affricate(Places.Velar, Manners.NonSibilant)
-    let VdVelarNSAffricate           = Encode("ɡɣ", "") Voiced Pulmonic Affricate(Places.Velar, Manners.NonSibilant)
-    let VlUvularNSAffricate          = Encode("qχ", "") Pulmonic Affricate(Places.Uvular, Manners.NonSibilant)
-    let VdEpiglottalNSAffricate      = Encode("ʡʢ", "") Voiced Pulmonic Affricate(Places.Pharyngeal, Manners.NonSibilant)
-    let VlGlottalNSAffricate         = Encode("ʔh", "") Pulmonic Affricate(Places.Glottal, Manners.NonSibilant)
+    let VlBilabialNSAffricate        = Encode("pɸ", "") Consonant(Pulmonic | Affricate, Places.Bilabial)
+    let VdBilabialNSAffricate        = Encode("bβ", "") Consonant(Voiced | Pulmonic | Affricate, Places.Bilabial)
+    let VlLabioDentalNSAffricate     = Encode("p̪f", "") Consonant(Pulmonic | Affricate, Places.LabioDental)
+    let VdLabioDentalNSAffricate     = Encode("b̪v", "") Consonant(Voiced | Pulmonic | Affricate, Places.LabioDental)
+    let VlDentalNSAffricate          = Encode("t̪θ", "") Consonant(Pulmonic | Affricate, Places.Dental)
+    let VdDentalNSAffricate          = Encode("d̪ð", "") Consonant(Voiced | Pulmonic | Affricate, Places.Dental)
+    let VlAlveolarNSAffricate        = Encode("tɹ̝̊", "") Consonant(Pulmonic | Affricate, Places.Alveolar)
+    let VdAlveolarNSAffricate        = Encode("dɹ̝", "") Consonant(Voiced | Pulmonic | Affricate, Places.Alveolar)
+    let VlPalatoAlveolarNSAffricate  = Encode("t̠ɹ̠̊˔", "") Consonant(Pulmonic | Affricate, Places.PalatoAlveolar)
+    let VdPalatoAlveolarNSAffricate  = Encode("d̠ɹ̠˔", "") Consonant(Voiced | Pulmonic | Affricate, Places.PalatoAlveolar)
+    let VlPalatalNSAffricate         = Encode("cç", "") Consonant(Pulmonic | Affricate, Places.Palatal)
+    let VdPalatalNSAffricate         = Encode("ɟʝ", "") Consonant(Voiced | Pulmonic | Affricate, Places.Palatal)
+    let VlVelarNSAffricate           = Encode("kx", "") Consonant(Pulmonic | Affricate, Places.Velar)
+    let VdVelarNSAffricate           = Encode("ɡɣ", "") Consonant(Voiced | Pulmonic | Affricate, Places.Velar)
+    let VlUvularNSAffricate          = Encode("qχ", "") Consonant(Pulmonic | Affricate, Places.Uvular)
+    let VdEpiglottalNSAffricate      = Encode("ʡʢ", "") Consonant(Voiced | Pulmonic | Affricate, Places.Pharyngeal)
+    let VlGlottalNSAffricate         = Encode("ʔh", "") Consonant(Pulmonic | Affricate, Places.Glottal)
 
-    // Lateral
-    let VlAlveolarLateralAffricate   = Encode("tɬ̝̊", "") Pulmonic Affricate(Places.Alveolar, Manners.Lateral)
-    let VdAlveolarLateralAffricate   = Encode("dɮ", "") Voiced Pulmonic Affricate(Places.Alveolar, Manners.Lateral)
-    let VlRetroflexLateralAffricate  = Encode("ʈɭ̊˔", "") Pulmonic Affricate(Places.Retroflex, Manners.Lateral)
-    let VdPalatalLateralAffricate    = Encode("cʎ̝̊", "") Voiced Pulmonic Affricate(Places.Palatal, Manners.Lateral)
-    let VlVelarLateralAffricate      = Encode("kʟ̝̊", "") Pulmonic Affricate(Places.Velar, Manners.Lateral)
-    let VdVelarLateralAffricate      = Encode("ɡʟ̝", "") Voiced Pulmonic Affricate(Places.Velar, Manners.Lateral)
+    // | Lateral
+    let VlAlveolarLateralAffricate   = Encode("tɬ̝̊", "") Consonant(Pulmonic | Lateral | Affricate, Places.Alveolar)
+    let VdAlveolarLateralAffricate   = Encode("dɮ", "") Consonant(Voiced | Pulmonic | Lateral | Affricate, Places.Alveolar)
+    let VlRetroflexLateralAffricate  = Encode("ʈɭ̊˔", "") Consonant(Pulmonic | Lateral | Affricate, Places.Retroflex)
+    let VdPalatalLateralAffricate    = Encode("cʎ̝̊", "") Consonant(Voiced | Pulmonic | Lateral | Affricate, Places.Palatal)
+    let VlVelarLateralAffricate      = Encode("kʟ̝̊", "") Consonant(Pulmonic | Lateral | Affricate, Places.Velar)
+    let VdVelarLateralAffricate      = Encode("ɡʟ̝", "") Consonant(Voiced | Pulmonic | Lateral | Affricate, Places.Velar)
 
     //==================================
-    // Ejective Affricates
+    // Ejective | Affricates
     //==================================
 
     // Central
-    let VlAlveolarEjectiveAffricate       = Encode("tsʼ", "") Ejective Affricate(Places.Alveolar, Manners.Central)
-    let VlPalatoAlveolarEjectiveAffricate = Encode("t̠ʃʼ", "") Ejective Affricate(Places.PalatoAlveolar, Manners.Central)
-    let VlRetroflexEjectiveAffricate      = Encode("ʈʂʼ", "") Ejective Affricate(Places.Retroflex, Manners.Central)
-    let VlVelarEjectiveAffricate          = Encode("kxʼ", "") Ejective Affricate(Places.Velar, Manners.Central)
-    let VlUvularEjectiveAffricate         = Encode("qχʼ", "") Ejective Affricate(Places.Uvular, Manners.Central)
+    let VlAlveolarEjectiveAffricate       = Encode("tsʼ", "") Consonant(Ejective | Central | Affricate, Places.Alveolar)
+    let VlPalatoAlveolarEjectiveAffricate = Encode("t̠ʃʼ", "") Consonant(Ejective | Central | Affricate, Places.PalatoAlveolar)
+    let VlRetroflexEjectiveAffricate      = Encode("ʈʂʼ", "") Consonant(Ejective | Central | Affricate, Places.Retroflex)
+    let VlVelarEjectiveAffricate          = Encode("kxʼ", "") Consonant(Ejective | Central | Affricate, Places.Velar)
+    let VlUvularEjectiveAffricate         = Encode("qχʼ", "") Consonant(Ejective | Central | Affricate, Places.Uvular)
 
-    // Lateral
-    let VlAlveolarLateralEjective         = Encode("tɬʼ", "") Ejective Affricate(Places.Alveolar, Manners.Lateral)
-    let VlPalatalLateralEjective          = Encode("cʎ̝̊ʼ", "") Ejective Affricate(Places.Palatal, Manners.Lateral)
-    let VlVelarLateralEjective            = Encode("kʟ̝̊ʼ", "") Ejective Affricate(Places.Velar, Manners.Lateral)
+    // | Lateral
+    let VlAlveolarLateralEjective         = Encode("tɬʼ", "") Consonant(Ejective | Lateral | Affricate, Places.Alveolar)
+    let VlPalatalLateralEjective          = Encode("cʎ̝̊ʼ", "") Consonant(Ejective | Lateral | Affricate, Places.Palatal)
+    let VlVelarLateralEjective            = Encode("kʟ̝̊ʼ", "") Consonant(Ejective | Lateral | Affricate, Places.Velar)
 
-    let VlLabialVelarFricative       = Encode("ʍ", "W") Other(Places.LabialVelar, Manners.Fricative)
+    let VlLabialVelarFricative       = Encode("ʍ", "W") Consonant(Fricative, Places.LabialVelar)
 
 // Pre-existing
-//    let VlAlveoloPalatalFricative1   = Sound("ɕ", "") CPM(Categories.Other, Places.AlveoloPalatal, Manners.Fricative)
-//    let VlAlveoloPalatalFricative    = Sound("ʑ", "") CPM(Categories.Other, Places.AlveoloPalatal, Manners.Fricative)
+//    let VlAlveoloPalatalFricative1   = Sound("ɕ", "") Consonant(CPM(Categories.Other, Places.AlveoloPalatal) Fricative)
+//    let VlAlveoloPalatalFricative    = Sound("ʑ", "") Consonant(CPM(Categories.Other, Places.AlveoloPalatal) Fricative)
 
-    let VdLabialVelarApproximant     = Encode("w", "w") Voiced Other(Places.LabialVelar, Manners.Approximant)
-    let VdLabialPalatalApproximant   = Encode("ɥ", "H") Voiced Other(Places.LabialPalatal, Manners.Approximant)
+    let VdLabialVelarApproximant     = Encode("w", "w") Consonant(Voiced | Approximant, Places.LabialVelar)
+    let VdLabialPalatalApproximant   = Encode("ɥ", "H") Consonant(Voiced | Approximant, Places.LabialPalatal)
 
-    let SimultaneousSx               = Encode("ɧ", "x\\") Other(Places.PostAlveolar, Manners.SibilantFricative) {
+    let SimultaneousSx               = Encode("ɧ", "x\\") Consonant(Sibilant | Fricative, Places.PostAlveolar) {
                                          Name: "Simultaneous {0} and {1}"(VlPostalveolarSibFricative.Text, VlVelarFricative.Text)
                                        }
-    let VlEpiglottalFricative        = Encode("ʜ", "H\\") Other(Places.Pharyngeal, Manners.Fricative)
-    let VdEpiglottalFricative        = Encode("ʢ", "?\\") Voiced Other(Places.Pharyngeal, Manners.Fricative)
-    let VlEpiglottalPlosive          = Encode("ʡ", "<\\") Other(Places.Pharyngeal, Manners.Plosive)
+    let VlEpiglottalFricative        = Encode("ʜ", "H\\") Consonant(Fricative, Places.Pharyngeal)
+    let VdEpiglottalFricative        = Encode("ʢ", "?\\") Consonant(Voiced | Fricative, Places.Pharyngeal)
+    let VlEpiglottalPlosive          = Encode("ʡ", "<\\") Consonant(Plosive, Places.Pharyngeal)
 
     //==================================
     // Vowels
     //==================================
 
-    let CloseFrontUnrounded          = Encode("i", "i") Vowel(Opens.Close, Backnesses.Front)
-    let CloseFrontRounded            = Encode("y", "y") Rounded Vowel(Opens.Close, Backnesses.Front)
-    let CloseCentralUnrounded        = Encode("ɨ", "1") Vowel(Opens.Close, Backnesses.Central)
-    let CloseCentralRounded          = Encode("ʉ", "}") Rounded Vowel(Opens.Close, Backnesses.Central)
-    let CloseBackUnrounded           = Encode("ɯ", "M") Vowel(Opens.Close, Backnesses.Back)
-    let CloseBackRounded             = Encode("u", "u") Rounded Vowel(Opens.Close, Backnesses.Back)
+    let CloseFrontUnrounded          = Encode("i", "i") Vowel(Unrounded, Opens.Close, Backnesses.Front)
+    let CloseFrontRounded            = Encode("y", "y") Vowel(Rounded, Opens.Close, Backnesses.Front)
+    let CloseCentralUnrounded        = Encode("ɨ", "1") Vowel(Unrounded, Opens.Close, Backnesses.Central)
+    let CloseCentralRounded          = Encode("ʉ", "}") Vowel(Rounded, Opens.Close, Backnesses.Central)
+    let CloseBackUnrounded           = Encode("ɯ", "M") Vowel(Unrounded, Opens.Close, Backnesses.Back)
+    let CloseBackRounded             = Encode("u", "u") Vowel(Rounded, Opens.Close, Backnesses.Back)
 
-    let NearCloseFrontUnrounded      = Encode("ɪ", "I") Vowel(Opens.NearClose, Backnesses.NearFront)
-    let NearCloseCentralUnrounded    = Encode("ᵻ", "I\\") Vowel(Opens.NearClose, Backnesses.Central) NonIPA
+    let NearCloseFrontUnrounded      = Encode("ɪ", "I") Vowel(Unrounded, Opens.NearClose, Backnesses.NearFront)
+    let NearCloseCentralUnrounded    = Encode("ᵻ", "I\\") Vowel(Unrounded | NonIPA, Opens.NearClose, Backnesses.Central)
 
 
-    let NearCloseFrontRounded        = Encode("ʏ", "Y") Rounded Vowel(Opens.NearClose, Backnesses.NearFront)
-    let NearCloseBackRounded         = Encode("ʊ", "U") Rounded Vowel(Opens.NearClose, Backnesses.NearBack)
+    let NearCloseFrontRounded        = Encode("ʏ", "Y") Vowel(Rounded, Opens.NearClose, Backnesses.NearFront)
+    let NearCloseBackRounded         = Encode("ʊ", "U") Vowel(Rounded, Opens.NearClose, Backnesses.NearBack)
 
-    let NearCloseCentralRounded      = Encode("ᵿ", "U\\") Rounded Vowel(Opens.NearClose, Backnesses.Central) NonIPA
+    let NearCloseCentralRounded      = Encode("ᵿ", "U\\") Vowel(Rounded |NonIPA, Opens.NearClose, Backnesses.Central)
 
-    let CloseMidFrontUnrounded       = Encode("e", "e") Vowel(Opens.CloseMid, Backnesses.Front)
-    let CloseMidFrontRounded         = Encode("ø", "2") Rounded Vowel(Opens.CloseMid, Backnesses.Front)
-    let Schwa                        = Encode("ə", "@") Vowel(Opens.CloseMid, Backnesses.Central)
-    let RoundedSchwa                 = Encode("ɵ", "8") Rounded Vowel(Opens.CloseMid, Backnesses.Central)
-    let CloseMidBackUnrounded        = Encode("ɤ", "7") Vowel(Opens.CloseMid, Backnesses.Back)
-    let CloseMidBackRounded          = Encode("o", "o") Rounded Vowel(Opens.CloseMid, Backnesses.Back)
-    let MidFrontUnrounded            = Encode("ø̞", "") Vowel(Opens.Mid, Backnesses.Front)
-    let MidCentralUnrounded          = Encode("ɘ", "@\\") Vowel(Opens.Mid, Backnesses.Central)
-    let MidBackUnrounded             = Encode("o̞", "") Vowel(Opens.Mid, Backnesses.Back)
-    let OpenMidNearFrontUnrounded    = Encode("ɛ", "E") Vowel(Opens.OpenMid, Backnesses.NearFront)
-    let OpenMidNearFrontRounded      = Encode("œ", "9") Rounded Vowel(Opens.OpenMid, Backnesses.NearFront)
-    let OpenMidCentral               = Encode("ɜ", "3") Vowel(Opens.OpenMid, Backnesses.Central)
-    let OpenMidCentralRounded        = Encode("ɞ", "3\\") Rounded Vowel(Opens.OpenMid, Backnesses.Central)
-    let OpenMidBackUnrounded         = Encode("ʌ", "V") Vowel(Opens.OpenMid, Backnesses.Back)
-    let OpenMidBackRounded           = Encode("ɔ", "O") Rounded Vowel(Opens.OpenMid, Backnesses.Back)
-    let NearFrontUnrounded           = Encode("æ", "{") Vowel(Opens.NearOpen, Backnesses.NearFront)
-    let FrontOpenRounded             = Encode("ɶ", "&") Rounded Vowel(Opens.NearOpen, Backnesses.NearFront)
-    let OpenMidSchwa                 = Encode("ɐ", "6") Rounded Vowel(Opens.NearOpen, Backnesses.Central)
-    let OpenBackUnrounded            = Encode("ɑ", "A") Vowel(Opens.Open, Backnesses.Back)
-    let OpenBackRounded              = Encode("ɒ", "Q") Rounded Vowel(Opens.Open, Backnesses.Back)
-    let OpenCentralUnrounded         = Encode("ä", "a_\"") Vowel(Opens.Open, Backnesses.Central)
-    let OpenNearFrontUnrounded       = Encode("a", "a") Vowel(Opens.Open, Backnesses.NearFront)
+    let CloseMidFrontUnrounded       = Encode("e", "e") Vowel(Unrounded, Opens.CloseMid, Backnesses.Front)
+    let CloseMidFrontRounded         = Encode("ø", "2") Vowel(Rounded, Opens.CloseMid, Backnesses.Front)
+    let Schwa                        = Encode("ə", "@") Vowel(Unrounded, Opens.CloseMid, Backnesses.Central)
+    let RoundedSchwa                 = Encode("ɵ", "8") Vowel(Rounded, Opens.CloseMid, Backnesses.Central)
+    let CloseMidBackUnrounded        = Encode("ɤ", "7") Vowel(Unrounded, Opens.CloseMid, Backnesses.Back)
+    let CloseMidBackRounded          = Encode("o", "o") Vowel(Rounded, Opens.CloseMid, Backnesses.Back)
+    let MidFrontUnrounded            = Encode("ø̞", "") Vowel(Unrounded, Opens.Mid, Backnesses.Front)
+    let MidCentralUnrounded          = Encode("ɘ", "@\\") Vowel(Unrounded, Opens.Mid, Backnesses.Central)
+    let MidBackUnrounded             = Encode("o̞", "") Vowel(Unrounded, Opens.Mid, Backnesses.Back)
+    let OpenMidNearFrontUnrounded    = Encode("ɛ", "E") Vowel(Unrounded, Opens.OpenMid, Backnesses.NearFront)
+    let OpenMidNearFrontRounded      = Encode("œ", "9") Vowel(Rounded, Opens.OpenMid, Backnesses.NearFront)
+    let OpenMidCentral               = Encode("ɜ", "3") Vowel(Unrounded, Opens.OpenMid, Backnesses.Central)
+    let OpenMidCentralRounded        = Encode("ɞ", "3\\") Vowel(Rounded, Opens.OpenMid, Backnesses.Central)
+    let OpenMidBackUnrounded         = Encode("ʌ", "V") Vowel(Unrounded, Opens.OpenMid, Backnesses.Back)
+    let OpenMidBackRounded           = Encode("ɔ", "O") Vowel(Rounded, Opens.OpenMid, Backnesses.Back)
+    let NearFrontUnrounded           = Encode("æ", "{") Vowel(Unrounded, Opens.NearOpen, Backnesses.NearFront)
+    let FrontOpenRounded             = Encode("ɶ", "&") Vowel(Rounded, Opens.NearOpen, Backnesses.NearFront)
+    let OpenMidSchwa                 = Encode("ɐ", "6") Vowel(Rounded, Opens.NearOpen, Backnesses.Central)
+    let OpenBackUnrounded            = Encode("ɑ", "A") Vowel(Unrounded, Opens.Open, Backnesses.Back)
+    let OpenBackRounded              = Encode("ɒ", "Q") Vowel(Rounded, Opens.Open, Backnesses.Back)
+    let OpenCentralUnrounded         = Encode("ä", "a_\"") Vowel(Unrounded, Opens.Open, Backnesses.Central)
+    let OpenNearFrontUnrounded       = Encode("a", "a") Vowel(Unrounded, Opens.Open, Backnesses.NearFront)
 
 // There seems to be conflicting unicode symbols for the same sound
-    let OpenNearFrontRounded         = Encode("ɶ", "&") Rounded Vowel(Opens.Open, Backnesses.NearFront)
-//    let RhotacizedSchwa              = Sound("ɚ", "@`") Rounded Vowel(Opens.Open, Backnesses.NearFront)
+    let OpenNearFrontRounded         = Encode("ɶ", "&") Vowel(Rounded, Opens.Open, Backnesses.NearFront)
+//    let RhotacizedSchwa            = Encode("ɚ", "@`") Vowel(Rounded, Opens.Open, Backnesses.NearFront)
 
   end
 
   let ImpossibleSounds = [
-    Pulmonic Consonant(Places.Pharyngeal, Manners.Nasal),
-    Pulmonic Consonant(Places.Glottal, Manners.Nasal),
-    Pulmonic Consonant(Places.Pharyngeal, Manners.Stop) Voiced,
-    Pulmonic Consonant(Places.Glottal, Manners.Stop) Voiced,
-    Pulmonic Consonant(Places.Bilabial, Manners.SibilantFricative),
-    Pulmonic Consonant(Places.LabioDental, Manners.SibilantFricative),
-    Pulmonic Consonant(Places.LinguoLabial, Manners.SibilantFricative),
-    Pulmonic Consonant(Places.Velar, Manners.SibilantFricative),
-    Pulmonic Consonant(Places.Uvular, Manners.SibilantFricative),
-    Pulmonic Consonant(Places.Pharyngeal, Manners.SibilantFricative),
-    Pulmonic Consonant(Places.Glottal, Manners.SibilantFricative),
-    Pulmonic Consonant(Places.Velar, Manners.Trill),
-    Pulmonic Consonant(Places.Glottal, Manners.Trill),
-    Pulmonic Consonant(Places.Velar, Manners.TapFlap),
-    Pulmonic Consonant(Places.Glottal, Manners.TapFlap),
-    Pulmonic Consonant(Places.Bilabial, Manners.LateralFricative),
-    Pulmonic Consonant(Places.LabioDental, Manners.LateralFricative),
-    Pulmonic Consonant(Places.Pharyngeal, Manners.LateralFricative),
-    Pulmonic Consonant(Places.Glottal, Manners.LateralFricative),
-    Pulmonic Consonant(Places.Bilabial, Manners.LateralApproximant),
-    Pulmonic Consonant(Places.LabioDental, Manners.LateralApproximant),
-    Pulmonic Consonant(Places.Pharyngeal, Manners.LateralApproximant),
-    Pulmonic Consonant(Places.Glottal, Manners.LateralApproximant),
-    Pulmonic Consonant(Places.Bilabial, Manners.LateralTapFlap),
-    Pulmonic Consonant(Places.LabioDental, Manners.LateralTapFlap),
-    Pulmonic Consonant(Places.Pharyngeal, Manners.LateralTapFlap),
-    Pulmonic Consonant(Places.Glottal, Manners.LateralTapFlap),
-    Pulmonic Affricate(Places.Bilabial, Manners.Sibilant),
-    Pulmonic Affricate(Places.LabioDental, Manners.Sibilant),
-    Pulmonic Affricate(Places.Velar, Manners.Sibilant),
-    Pulmonic Affricate(Places.Uvular, Manners.Sibilant),
-    Pulmonic Affricate(Places.Pharyngeal, Manners.Sibilant),
-    Pulmonic Affricate(Places.Glottal, Manners.Sibilant),
-    Pulmonic Affricate(Places.Bilabial, Manners.Lateral),
-    Pulmonic Affricate(Places.LabioDental, Manners.Lateral),
-    Pulmonic Affricate(Places.Pharyngeal, Manners.Lateral),
-    Pulmonic Affricate(Places.Glottal, Manners.Lateral),
-    Ejective Affricate(Places.Bilabial, Manners.LateralFricative),
-    Ejective Affricate(Places.LabioDental, Manners.LateralFricative),
-    Ejective Affricate(Places.Pharyngeal, Manners.LateralFricative),
-    Ejective Affricate(Places.Glottal, Manners.Central),
-    Ejective Affricate(Places.Bilabial, Manners.Lateral),
-    Ejective Affricate(Places.LabioDental, Manners.Lateral),
-    Ejective Affricate(Places.Pharyngeal, Manners.Lateral),
-    Ejective Affricate(Places.Glottal, Manners.Lateral),
-    Ejective Click Affricate(Places.Velar, Manners.Tenuis),
-    Ejective Click Affricate(Places.Uvular, Manners.Tenuis),
-    Ejective Click Affricate(Places.Pharyngeal, Manners.Tenuis),
-    Ejective Click Affricate(Places.Velar, Manners.Nasal),
-    Ejective Click Affricate(Places.Uvular, Manners.Nasal),
-    Ejective Click Affricate(Places.Pharyngeal, Manners.Nasal),
-    Ejective Click Affricate(Places.Bilabial, Manners.TenuisLateral),
-    Ejective Click Affricate(Places.LabioDental, Manners.TenuisLateral),
-    Ejective Click Affricate(Places.Velar, Manners.TenuisLateral),
-    Ejective Click Affricate(Places.Uvular, Manners.TenuisLateral),
-    Ejective Click Affricate(Places.Pharyngeal, Manners.TenuisLateral),
+    Imp(Pulmonic | Nasal, Places.Pharyngeal),
+    Imp(Pulmonic | Nasal, Places.Glottal),
+    Imp(Pulmonic | Stop | Voiced, Places.Pharyngeal),
+    Imp(Pulmonic | Stop | Voiced, Places.Glottal),
+    Imp(Pulmonic | Sibilant | Fricative, Places.Bilabial),
+    Imp(Pulmonic | Sibilant | Fricative, Places.LabioDental),
+    Imp(Pulmonic | Sibilant | Fricative, Places.LinguoLabial),
+    Imp(Pulmonic | Sibilant | Fricative, Places.Velar),
+    Imp(Pulmonic | Sibilant | Fricative, Places.Uvular),
+    Imp(Pulmonic | Sibilant | Fricative, Places.Pharyngeal),
+    Imp(Pulmonic | Sibilant | Fricative, Places.Glottal),
+    Imp(Pulmonic | Trill, Places.Velar),
+    Imp(Pulmonic | Trill, Places.Glottal),
+    Imp(Pulmonic | TapFlap, Places.Velar),
+    Imp(Pulmonic | TapFlap, Places.Glottal),
+    Imp(Pulmonic | Lateral | Fricative, Places.Bilabial),
+    Imp(Pulmonic | Lateral | Fricative, Places.LabioDental),
+    Imp(Pulmonic | Lateral | Fricative, Places.Pharyngeal),
+    Imp(Pulmonic | Lateral | Fricative, Places.Glottal),
+    Imp(Pulmonic | Lateral | Approximant, Places.Bilabial),
+    Imp(Pulmonic | Lateral | Approximant, Places.LabioDental),
+    Imp(Pulmonic | Lateral | Approximant, Places.Pharyngeal),
+    Imp(Pulmonic | Lateral | Approximant, Places.Glottal),
+    Imp(Pulmonic | Lateral | TapFlap, Places.Bilabial),
+    Imp(Pulmonic | Lateral | TapFlap, Places.LabioDental),
+    Imp(Pulmonic | Lateral | TapFlap, Places.Pharyngeal),
+    Imp(Pulmonic | Lateral | TapFlap, Places.Glottal),
+    Imp(Pulmonic | Sibilant | Affricate, Places.Bilabial),
+    Imp(Pulmonic | Sibilant | Affricate, Places.LabioDental),
+    Imp(Pulmonic | Sibilant | Affricate, Places.Velar),
+    Imp(Pulmonic | Sibilant | Affricate, Places.Uvular),
+    Imp(Pulmonic | Sibilant | Affricate, Places.Pharyngeal),
+    Imp(Pulmonic | Sibilant | Affricate, Places.Glottal),
+    Imp(Pulmonic | Lateral | Affricate, Places.Bilabial),
+    Imp(Pulmonic | Lateral | Affricate, Places.LabioDental),
+    Imp(Pulmonic | Lateral | Affricate, Places.Pharyngeal),
+    Imp(Pulmonic | Lateral | Affricate, Places.Glottal),
+    Imp(Ejective | Lateral | Fricative | Affricate, Places.Bilabial),
+    Imp(Ejective | Lateral | Fricative | Affricate, Places.LabioDental),
+    Imp(Ejective | Lateral | Fricative | Affricate, Places.Pharyngeal),
+    Imp(Ejective | Central | Affricate, Places.Glottal),
+    Imp(Ejective | Lateral | Affricate, Places.Bilabial),
+    Imp(Ejective | Lateral | Affricate, Places.LabioDental),
+    Imp(Ejective | Lateral | Affricate, Places.Pharyngeal),
+    Imp(Ejective | Lateral | Affricate, Places.Glottal),
+    Imp(Ejective | Tenuis | Click | Affricate, Places.Velar),
+    Imp(Ejective | Tenuis | Click | Affricate, Places.Uvular),
+    Imp(Ejective | Tenuis | Click | Affricate, Places.Pharyngeal),
+    Imp(Ejective | Nasal | Click | Affricate, Places.Velar),
+    Imp(Ejective | Nasal | Click | Affricate, Places.Uvular),
+    Imp(Ejective | Nasal | Click | Affricate, Places.Pharyngeal),
+    Imp(Ejective | Tenuis | Lateral | Click | Affricate, Places.Bilabial),
+    Imp(Ejective | Tenuis | Lateral | Click | Affricate, Places.LabioDental),
+    Imp(Ejective | Tenuis | Lateral | Click | Affricate, Places.Velar),
+    Imp(Ejective | Tenuis | Lateral | Click | Affricate, Places.Uvular),
+    Imp(Ejective | Tenuis | Lateral | Click | Affricate, Places.Pharyngeal),
   ]                       									
-  let Impossible(sound) = sound {IsImpossible: true}
 
-  let AllSounds = Sounds + Impossible(each ImpossibleSounds)
+  let AllSounds = Sounds + ImpossibleSounds
 
   with Diacritics
     let Centralized                  = Encode("\u0308", "_\"")
@@ -557,16 +562,16 @@ with IPA
     let Voicedepiglottalfricative    = Encode("ʢ", "<\\")
     let Endnonsegmentalnotation      = Encode("", ">")
     let Postalveolarclick            = Encode("ǃ", "!\\")
-    let MinorGroup                   = Encode("|", "|")
-    let Dentalclick                  = Encode("ǀ", "|\\")
-    let MajorGroup                   = Encode("‖", "||")
-    let Alveolarlateralclick         = Encode("ǁ", "|\\|\\")
+    let MinorGroup                   = Encode(" | ", " | ")
+    let Dentalclick                  = Encode("ǀ", " | \\")
+    let MajorGroup                   = Encode("‖", " |  | ")
+    let Alveolarlateralclick         = Encode("ǁ", " | \\ | \\")
     let Palatalclick                 = Encode("ǂ", "#NAME?")
     let Linkingmark                  = Encode("‿", "-\\")
 
   /*
-      let RhotacizedOpenMidCentral     = Set("ɝ", "", Places.None, Manners.None, Props.None)
-      let VelarizedVdAlveolarLateral   = Set("ɫ", "", Places.None, Manners.None, Props.None)
+      let RhotacizedOpenMidCentral     = Set("ɝ", "", Places.None) None, Props.None)
+      let VelarizedVdAlveolarLateral   = Set("ɫ", "", Places.None) None, Props.None)
   */
 
 
@@ -590,48 +595,35 @@ with IPA
     Link: EachSymbol.FullSymbolName,
   }
 
+  let HasFlag(sound, flag) = (sound.Flags & flag) != 0
+  let NotFlag(sound, flag) = (sound.Flags & flag) == 0
+  let HasMask(sound, mask, flags) = (sound.Flags & mask) == (flags & mask)
+
+  let GetFlagName(flags, index) = Span {
+    if ((flags & (1 << index)) != 0)
+      FlagNames[index],
+    end,
+  }
+
+  let FlagText(flags) = Span {
+    Separator: Space,
+    GetFlagName(flags, each 0..MaxFlags)
+  }
+
   let SoundName(sound) = Span {
     if (sound.Name)
       sound.Name
+    elseif (sound.HasFlag(IsVowel))
+      Lang.OpenNames[sound.Open],
+      Space,
+      Lang.BacknessNames[sound.Backness],
+      Space,
+      FlagText(sound.Flags),
     else
-      if (sound.Category != Categories.Other)
-        Lang.CategoryNames[sound.Category],
-        ": "
-      end,
-      if (sound.IsPulmonic)
-        Lang.Pulmonic,
-        Space,
-      end,
-      if (sound.Category == Categories.Vowel)
-        Lang.OpenNames[sound.Open],
-        Space,
-        Lang.BacknessNames[sound.Backness],
-        Space,
-        if (sound.IsRounded)
-          Lang.Rounded
-        else
-          Lang.Unrounded
-        end,
-      else
-        if (sound.IsVoiced)
-          Lang.Voiced
-        else
-          Lang.Voiceless
-        end,
-        Space,
-        Lang.PlaceNames[sound.Place],
-        Space,
-        Lang.MannerNames[sound.Manner]
-      end,
-      if (sound.IsEjective)
-        Space,
-        Lang.Ejective,
-      end,
-      if (sound.IsClick)
-        Space,
-        Lang.Click,
-      end,
-    end
+      FlagText(sound.Flags),
+      Space,
+      Lang.PlaceNames[sound.Place],
+    end,
   }
 
   let ShowCodePoint(c) = {TextFamily: TextFamilies.Consolas, TextRadix: 16, TextDigits: 4} Type.Integer(c)
@@ -668,7 +660,7 @@ with IPA
   }
 
   let ShowBox(sound) = SoundBox(sound) {
-    if (sound.IsVoiced)
+    if (sound.HasFlag(Voiced))
       X: BoxSize.Width
     end
   }
@@ -676,7 +668,7 @@ with IPA
   let SoundBlock(matches) = Cell {
     Style.SoundBottom,
     if (matches.Length > 0)
-      if (matches.Length == 1 and matches[0].IsImpossible)
+      if (matches.Length == 1 and matches[0].HasFlag(Impossible))
         Style.ImpossibleBackground
       else
         TextHeight: 1 pts,
@@ -690,28 +682,33 @@ with IPA
     end
   }
 
-  let MatchPulmonicManner(sound, data) = sound.Manner == data.Manner and MatchPulmonic(sound, data)
-  let MatchPulmonic(sound, data)       = sound.IsPulmonic and sound.Category == Categories.Con and sound.Place == data.Place
-  let MatchPulmonicPlace(place)        = Sounds.Contains(MatchPulmonic, {Place: place})
-  let PulmonicPlaces                   = Places.FindSlice(MatchPulmonicPlace)
+  //======================================================================
+  // Pulmonic Consonants Table
+  //======================================================================
 
-  let PulmonicCell(place, manner)      = SoundBlock(AllSounds.FindSlice(MatchPulmonicManner, {Place: place, Manner: manner}))
-  let PlaceHeader(place)               = Style.HeaderCell(Lang.PlaceNames[place])
-  let FindPulmonicManner(sound, data)  = sound.IsPulmonic and sound.Category == Categories.Con && sound.Manner == data.Manner
-  let FindManner(manner)               = Sounds.Contains(FindPulmonicManner, {Manner: manner})
-  let PulmonicManners                  = Manners.FindSlice(FindManner)
 
-  let PulmonicRow(manner) = Row {
+  // Find all the places that have pulmonic consonants
+  let MatchPulmonic(sound, data) = sound.Place == data.Place and sound.HasMask(Pulmonic | Affricate | IsVowel, Pulmonic)
+  let MatchPulmonicPlace(place)  = AllSounds.Contains(MatchPulmonic, {Place: place})
+  let PulmonicPlaces             = Places.FindSlice(MatchPulmonicPlace)
+
+  let RowMask                       = Nasal | Stop | Sibilant | Fricative | Approximant | TapFlap | Trill | Lateral
+  let MatchPulmonicRow(sound, data) = sound.HasMask(RowMask, data.Flags) and MatchPulmonic(sound, data)
+  let PulmonicCell(place, flags)    = SoundBlock(AllSounds.FindSlice(MatchPulmonicRow, {Place: place, Flags: flags}))
+
+  let PulmonicRow(flags) = Row {
     Cell {
       VAlign: VAligns.Center,
       EdgeR: 0.5 pts,
       Style.TitleBackground,
       PaddingLR: 2 pts,
       TextHeight: 7 pts,
-      Lang.MannerNames[manner]
+      FlagText(flags)
     },
-    PulmonicCell(each PulmonicPlaces, manner)
+    PulmonicCell(each PulmonicPlaces, flags)
   }
+
+  let PlaceHeader(place) = Style.HeaderCell(Lang.PlaceNames[place])
 
   let PulmonicTable = Block {
     Table {
@@ -733,7 +730,7 @@ with IPA
         Style.HeaderCell(Bold Lang.Manner) {HAlign: HAligns.Left},
         PlaceHeader(each PulmonicPlaces)
       },
-      PulmonicRow(each PulmonicManners),
+      PulmonicRow(each [Nasal, Stop, Sibilant | Fricative, Fricative, Approximant, TapFlap, Trill, Lateral | Fricative, Lateral | Approximant, Lateral | TapFlap]),
     },
     Style.TableNotes {
 //      Lang.PulmonicSymbols(SoundText(Sounds.VdGlottalFricative)),
@@ -742,52 +739,42 @@ with IPA
     },
   }
   //======================================================================
+  // Non-Pulmonic Consonants Table
+  //======================================================================
 
-  let MatchNPC(sound)              = not sound.IsPulmonic// and sound.Category == Categories.Con
-  let MatchNPPlace(sound, data)    = sound.Place == data.Place and MatchNPC(sound)
+  let NPRowMask = Ejective | Click | Implosive
 
-  let ContainsNonPulmonic(place)   = Sounds.Contains(MatchNPPlace, {Place: place})
-  let NonPulmonicPlaces            = Places.FindSlice(ContainsNonPulmonic)
+  let MatchNP(sound, data) = sound.Place == data.Place and sound.NotFlag(IsVowel | Pulmonic) and sound.HasFlag(NPRowMask)
+  let MatchNPPlace(place)  = Sounds.Contains(MatchNP, {Place: place})
+  let NonPulmonicPlaces    = Places.FindSlice(MatchNPPlace)
 
-  let MatchConsonant(sound, data)  = sound.Place == data.Place and sound.Manner == data.Manner and MatchNPC(sound)
-  let MatchClick(sound, data)      = sound.IsClick and MatchConsonant(sound, data)
-  let MatchEjective(sound, data)   = sound.IsEjective and MatchConsonant(sound, data)
-  let MatchImplosive(sound, data)  = sound.Manner == Manners.Implosive and MatchConsonant(sound, data)
-  let NPCell(match, manner, place) = SoundBlock(AllSounds.FindSlice(match, {Manner: manner, Place: place}))
+  let MatchNPRow(sound, data) = MatchNP(sound, data) and sound.HasMask(data.Flags, data.Flags)
+  let NPCell(place, flags)    = SoundBlock(AllSounds.FindSlice(MatchNPRow, {Place: place, Flags: flags}))
 
-  let NPRow(name, match, manner, namerow) = Row {
-    Cell {
-      EdgeR: 0.5 pts,
-      VAlign: VAligns.Center,
-      if (namerow == EachIndex)
-        name
-      end
-    },
+  let NPRow(flags) = Row {
     Cell {
       VAlign: VAligns.Center,
-      Style.SoundBottom,
-      Lang.MannerNames[manner]
+      Style.TitleBackground,
+      TextHeight: 9 pts,
+      FlagText(flags)
     },
-    NPCell(match, manner, each NonPulmonicPlaces)
+    NPCell(each NonPulmonicPlaces, flags)
   }
 
   let NonPulmonicTable = Block {
     Table {
       HAlign: HAligns.Center,
       Style.TableEdge,
-      Columns: [50 pts, (75 pts) {EdgeR: 0.5 pts}] +
+      Columns: [(100 pts) {EdgeR: 0.5 pts}] +
                [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * NonPulmonicPlaces.Length,
 
       Style.TitleBar(Lang.NPConsonants, NonPulmonicPlaces.Length+2),
       Row {
         TextHeight: 6 pts,
         Style.HeaderCell(Empty),
-        Style.HeaderCell(Empty),
         PlaceHeader(each NonPulmonicPlaces)
       },
-      NPRow(Lang.Ejective, MatchEjective, each [Manners.Stop, Manners.Fricative, Manners.LateralFricative], 1),
-      NPRow(Lang.Click, MatchClick, each [Manners.Tenuis, Manners.Nasal, Manners.TenuisLateral], 1),
-      NPRow(Lang.Implosive, MatchImplosive, each [Manners.Implosive], 0),
+      NPRow(each [Ejective | Stop, Ejective | Fricative, Ejective | Lateral | Fricative, Click | Tenuis, Click | Nasal, Click | Tenuis | Lateral, Implosive]),
     },
     Style.TableNotes {
       Lang.ConsonantSymbols,
@@ -797,12 +784,10 @@ with IPA
   }
   //======================================================================
 
-  let MatchAffricate(sound, data)        = sound.Category == Categories.Affricate and
-                                           sound.IsEjective == data.IsEjective and
-                                           sound.IsPulmonic == data.IsPulmonic and
-                                           sound.Place == data.Place
+  let MatchAffricate(sound, data)        = sound.Place == data.Place and sound.HasMask(IsVowel | Affricate | Ejective | Pulmonic, data.Flags)
+
   let MatchAffricatePlace(sound, data)   = MatchAffricate(sound, data) and data.MannerList.Contains(sound.Manner)
-  let ContainsPlaces(place, data)        = AllSounds.Contains(MatchAffricatePlace, data {Place: place})
+  let ContainsPlaces(place, data)        = AllSounds.Contains(MatchAffricatePlace, {Place: place, Flags: data.Flags})
 
   let MatchAffricateManner(sound, data)  = MatchAffricate(sound, data) and sound.Manner == data.Manner
   let AffricateCell(data, manner, place) = SoundBlock(AllSounds.FindSlice(MatchAffricateManner, data {Place: place, Manner: manner}))
@@ -811,13 +796,13 @@ with IPA
     Cell {
       VAlign: VAligns.Center,
       Style.SoundBottom,
-      Lang.MannerNames[manner]
+      manner.Name
     },
     AffricateCell(data, manner, each places)
   }
 
-  let AffricateTable(title, data) begin
-    var places = Places.FindSlice(ContainsPlaces, data);
+  let AffricateTable(title, flags, mannerlist) begin
+    var places = Places.FindSlice(ContainsPlaces, {Flags: flags});
     return Block {
       Table {
         HAlign: HAligns.Center,
@@ -831,7 +816,7 @@ with IPA
           Style.HeaderCell(Empty),
           PlaceHeader(each places)
         },
-        AffricateRow(data, places, each data.MannerList),
+        AffricateRow(flags, places, each mannerlist),
       },
       Style.TableNotes {
         Lang.Impossible,
@@ -839,8 +824,6 @@ with IPA
     }
   end
   //======================================================================
-
-  let MatchVowelPair(sound, data) = sound.Category == Categories.Vowel and sound.Open == data.Open and sound.Backness == data.Backness
 
   let ShowVowel(sound) = SoundBox(sound) {
     if (sound.IsRounded)
@@ -863,7 +846,8 @@ with IPA
     end
   }
 
-  let VowelCell(open, backness) = VowelBlock(Sounds.FindSlice(MatchVowelPair, {Open: open, Backness: backness}))
+  let MatchVowelPair(sound, data) = sound.HasFlag(IsVowel) and sound.Open == data.Open and sound.Backness == data.Backness
+  let VowelCell(open, backness)   = VowelBlock(Sounds.FindSlice(MatchVowelPair, {Open: open, Backness: backness}))
 
   let VowelRow(open) = Row {
     Cell {
@@ -893,7 +877,7 @@ with IPA
   }
   //======================================================================
 
-  let MatchOther(sound) = sound.Category == Categories.Other
+  let MatchOther(sound) = sound.HasMask(IsVowel | Affricate, 0)
 
   let OtherColumns = 2
 
@@ -988,9 +972,9 @@ with IPA
     NonPulmonicTable,
     PageBreak,
     VowelTable,
-    AffricateTable("Pulmonic Affricates", {IsPulmonic: true, MannerList: [Manners.Sibilant, Manners.NonSibilant, Manners.Lateral]}),
-    AffricateTable("Ejective Affricates", {IsEjective: true, MannerList: [Manners.Central, Manners.Lateral]}),
-    OtherTable,
+//    AffricateTable("Pulmonic Affricates", Pulmonic | Affricate, [Sibilant, Fricative, Lateral]),
+//    AffricateTable("Ejective Affricates", Ejective | Affricate, [Central, Lateral]),
+//    OtherTable,
   }
   //======================================================================
 end
