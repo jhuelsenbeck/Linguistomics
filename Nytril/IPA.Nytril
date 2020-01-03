@@ -706,7 +706,7 @@ with IPA
       TextHeight: 7 pts,
       FlagText(flags)
     },
-    AddCell(options, each places, flags)
+    AddCell(options, each places, flags | options.All)
   }
 
   let PlaceHeader(place) = Style.HeaderCell(Lang.PlaceNames[place])
@@ -746,6 +746,7 @@ with IPA
       ColWidth: 45 pts,
       Exclude: IsVowel | Affricate,
       Include: Pulmonic,
+      All: 0,
       Manners: [Nasal, Stop, Sibilant | Fricative, Fricative, Approximant, TapFlap, Trill, Lateral | Fricative, Lateral | Approximant, Lateral | TapFlap],
       RowMask: Nasal | Stop | Sibilant | Fricative | Approximant | TapFlap | Trill | Lateral | Velarized,
       Notes: Lang.PulmonicSymbols
@@ -755,12 +756,25 @@ with IPA
   let NonPulmonicTable = ShowTable(
     {
       Title: Lang.NPConsonants,
-      ColWidth: 100 pts,
+      ColWidth: 80 pts,
       Exclude: IsVowel | Pulmonic | Central,
       Include: Ejective | Click | Implosive,
+      All: 0,
       Manners: [Ejective | Stop, Ejective | Fricative, Ejective | Lateral | Fricative, Click | Tenuis, Click | Nasal, Click | Tenuis | Lateral, Implosive],
       RowMask: Lateral,
       Notes: Lang.ConsonantSymbols
+    }
+  )
+
+  let PulmonicAffricatesTable = ShowTable(
+    {
+      Title: Lang.PulmonicAffricates,
+      ColWidth: 50 pts,
+      Exclude: IsVowel,
+      Include: Affricate | Sibilant | Lateral,
+      All: Pulmonic | Affricate,
+      Manners: [Sibilant, 0, Lateral],
+      RowMask: Pulmonic | Affricate | Sibilant | Fricative | Lateral,
     }
   )
 
@@ -770,63 +784,11 @@ with IPA
       ColWidth: 50 pts,
       Exclude: IsVowel | Click | Implosive | Pulmonic,
       Include: Ejective | Affricate | Central | Lateral,
+      All: Ejective | Affricate,
       Manners: [Central, Lateral],
       RowMask: Pulmonic | Approximant | Central | Lateral,
     }
   )
-
-  let PulmonicAffricatesTable = ShowTable(
-    {
-      Title: Lang.PulmonicAffricates,
-      ColWidth: 50 pts,
-      Exclude: IsVowel,
-      Include: Pulmonic | Affricate | Sibilant | Fricative | Lateral,
-      Manners: [Sibilant, Fricative, Lateral],
-      RowMask: Sibilant | Fricative | Lateral,
-    }
-  )
-
-/*
-  let MatchAffricate(sound, data)    = sound.Place == data.Place and sound.HasFlag(data.Mask)
-  let ContainsPlaces(place, data)    = AllSounds.Contains(MatchAffricate, {Place: place, Mask: data.Mask})
-
-
-  let MatchAffricateRow(sound, data)    = MatchAffricate(sound, data) and sound.HasMask(data.Mask | data.Flags, data.Flags)
-  let AffricateCell(place, mask, flags) = SoundBlock(AllSounds.FindSlice(MatchAffricateRow, {Place: place, Mask: mask, Flags: flags}))
-
-  let AffricateRow(places, mask, flags) = Row {
-    Cell {
-      VAlign: VAligns.Center,
-      Style.SoundBottom,
-      FlagText(flags)
-    },
-    AffricateCell(each places, mask, flags)
-  }
-
-  let AffricateTable(titlemask, flaglist) begin
-    var mask   = Ejective | Sibilant | Fricative | Lateral;
-    var places = Places.FindSlice(ContainsPlaces, {Mask: titlemask | mask});
-    return Block {
-      Table {
-        HAlign: HAligns.Center,
-        Style.TableEdge,
-        Columns: [(50 pts) {EdgeR: 0.5 pts}] +
-                 [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * places.Length,
-
-        Style.TitleBar(FlagText(titlemask), places.Length+1),
-        Row {
-          TextHeight: 6 pts,
-          Style.HeaderCell(Empty),
-          PlaceHeader(each places)
-        },
-        AffricateRow(places, titlemask | mask, each flaglist),
-      },
-      Style.TableNotes {
-        Lang.Impossible,
-      },
-    }
-  end
-*/
   //======================================================================
 
   let ShowVowel(sound) = SoundBox(sound) {
@@ -975,8 +937,8 @@ with IPA
     PulmonicTable,
     NonPulmonicTable,
     PageBreak,
-    EjectiveAffricatesTable,
     PulmonicAffricatesTable,
+    EjectiveAffricatesTable,
     VowelTable,
     OtherTable,
   }
