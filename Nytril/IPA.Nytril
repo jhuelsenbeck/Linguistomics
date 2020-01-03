@@ -645,7 +645,7 @@ with IPA
   }
   //======================================================================
 
-  let BoxSize  = Type.Size(20 pts, 20 pts)
+  let BoxSize  = Type.Size(18 pts, 20 pts)
   let CellSize = Type.Size(BoxSize.Width * 2, BoxSize.Height)
 
   let SoundBox(sound) = Canvas {
@@ -683,19 +683,18 @@ with IPA
   }
 
   //======================================================================
-  // Pulmonic Consonants Table
+  // Matching Options Table
   //======================================================================
 
-  // Find all the places that have pulmonic consonants
-  let MatchPulmonic(sound, data) = sound.Place == data.Place and sound.HasMask(Pulmonic | Affricate | IsVowel, Pulmonic)
-  let MatchPulmonicPlace(place)  = AllSounds.Contains(MatchPulmonic, {Place: place})
-  let PulmonicPlaces             = Places.FindSlice(MatchPulmonicPlace)
+  // Find all the places that have matching options
+  let MatchInclude(sound, data)  = sound.Place == data.Place and sound.NotFlag(data.Options.Exclude) and sound.HasFlag(data.Options.Include)
+  let MatchPlace(place, options) = AllSounds.Contains(MatchInclude, {Place: place, Options: options})
+  let GetPlaces(options)         = Places.FindSlice(MatchPlace, options)
 
-  let RowMask                       = Nasal | Stop | Sibilant | Fricative | Approximant | TapFlap | Trill | Lateral
-  let MatchPulmonicRow(sound, data) = sound.HasMask(RowMask, data.Flags) and MatchPulmonic(sound, data)
-  let PulmonicCell(place, flags)    = SoundBlock(AllSounds.FindSlice(MatchPulmonicRow, {Place: place, Flags: flags}))
+  let MatchRow(sound, data)          = sound.HasMask(data.Options.RowMask | data.Flags, data.Flags) and MatchInclude(sound, data)
+  let AddCell(options, place, flags) = SoundBlock(AllSounds.FindSlice(MatchRow, {Place: place, Flags: flags, Options: options}))
 
-  let PulmonicRow(flags) = Row {
+  let AddRow(options, places, flags) = Row {
     Cell {
       VAlign: VAligns.Center,
       EdgeR: 0.5 pts,
@@ -704,118 +703,100 @@ with IPA
       TextHeight: 7 pts,
       FlagText(flags)
     },
-    PulmonicCell(each PulmonicPlaces, flags)
+    AddCell(options, each places, flags)
   }
 
   let PlaceHeader(place) = Style.HeaderCell(Lang.PlaceNames[place])
 
-  let PulmonicTable = Block {
-    Table {
-      Style.TableEdge,
-      Columns: [(45 pts) {EdgeR: 0.5 pts}] +
-               [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * PulmonicPlaces.Length,
+  let ShowTable(options) begin
+    var places = GetPlaces(options);
 
-      Style.TitleBar(Lang.PConsonants, PulmonicPlaces.Length+1),
-      Row {
-        TextHeight: 10 pts,
-        Style.HeaderCell(Empty),
-        Style.HeaderCell(Lang.Labial) {ColumnSpan: 3},
-        Style.HeaderCell(Lang.Coronal) {ColumnSpan: 4},
-        Style.HeaderCell(Lang.Dorsal) {ColumnSpan: 3},
-        Style.HeaderCell(Lang.Laryngeal) {ColumnSpan: 2},
+    return Block {
+      Table {
+        Style.TableEdge,
+        Columns: [options.ColWidth {EdgeR: 0.5 pts}] +
+                 [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * places.Length,
+
+        Style.TitleBar(Lang.PConsonants, places.Length+1),
+        Row {
+          TextHeight: 6 pts,
+          Style.HeaderCell(Bold Lang.Manner) {HAlign: HAligns.Left},
+          PlaceHeader(each places)
+        },
+        AddRow(options, places, each options.Manners),
       },
-      Row {
-        TextHeight: 6 pts,
-        Style.HeaderCell(Bold Lang.Manner) {HAlign: HAligns.Left},
-        PlaceHeader(each PulmonicPlaces)
+      Style.TableNotes {
+        Lang.Impossible,
+        Space,
+        options.Notes
       },
-      PulmonicRow(each [Nasal, Stop, Sibilant | Fricative, Fricative, Approximant, TapFlap, Trill, Lateral | Fricative, Lateral | Approximant, Lateral | TapFlap]),
-    },
-    Style.TableNotes {
-//      Lang.PulmonicSymbols(SoundText(Sounds.VdGlottalFricative)),
-      Space,
-      Lang.Impossible,
-    },
-  }
+    }
+  end
+
   //======================================================================
-  // Non-Pulmonic Consonants Table
+  // Options for each table type
   //======================================================================
 
-  let MatchNP(sound, data) = sound.Place == data.Place and sound.NotFlag(IsVowel | Pulmonic | Central) and sound.HasFlag(Ejective | Click | Implosive)
-  let MatchNPPlace(place)  = Sounds.Contains(MatchNP, {Place: place})
-  let NonPulmonicPlaces    = Places.FindSlice(MatchNPPlace)
+  let PulmonicTable = ShowTable(
+    {
+      ColWidth: 45 pts,
+      Exclude: Affricate | IsVowel,
+      Include: Pulmonic,
+      Manners: [Nasal, Stop, Sibilant | Fricative, Fricative, Approximant, TapFlap, Trill, Lateral | Fricative, Lateral | Approximant, Lateral | TapFlap],
+      RowMask: Nasal | Stop | Sibilant | Fricative | Approximant | TapFlap | Trill | Lateral,
+      Notes: Lang.PulmonicSymbols
+    }
+  )
 
-  let MatchNPRow(sound, data) = MatchNP(sound, data) and sound.HasMask(Lateral | data.Flags, data.Flags)
-  let NPCell(place, flags)    = SoundBlock(AllSounds.FindSlice(MatchNPRow, {Place: place, Flags: flags}))
+  let NonPulmonicTable = ShowTable(
+    {
+      ColWidth: 100 pts,
+      Exclude: IsVowel | Pulmonic | Central,
+      Include: Ejective | Click | Implosive,
+      Manners: [Ejective | Stop, Ejective | Fricative, Ejective | Lateral | Fricative, Click | Tenuis, Click | Nasal, Click | Tenuis | Lateral, Implosive],
+      RowMask: Lateral,
+      Notes: Lang.ConsonantSymbols
+    }
+  )
 
-  let NPRow(flags) = Row {
-    Cell {
-      VAlign: VAligns.Center,
-      Style.TitleBackground,
-      TextHeight: 9 pts,
-      FlagText(flags)
-    },
-    NPCell(each NonPulmonicPlaces, flags)
-  }
-
-  let NonPulmonicTable = Block {
-    Table {
-      HAlign: HAligns.Center,
-      Style.TableEdge,
-      Columns: [(100 pts) {EdgeR: 0.5 pts}] +
-               [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * NonPulmonicPlaces.Length,
-
-      Style.TitleBar(Lang.NPConsonants, NonPulmonicPlaces.Length+2),
-      Row {
-        TextHeight: 6 pts,
-        Style.HeaderCell(Empty),
-        PlaceHeader(each NonPulmonicPlaces)
-      },
-      NPRow(each [Ejective | Stop, Ejective | Fricative, Ejective | Lateral | Fricative, Click | Tenuis, Click | Nasal, Click | Tenuis | Lateral, Implosive]),
-    },
-    Style.TableNotes {
-      Lang.ConsonantSymbols,
-      Space,
-      Lang.Impossible,
-    },
-  }
   //======================================================================
   // Affricates Table
   //======================================================================
 
-  let MatchAffricate(sound, data)        = sound.Place == data.Place and sound.HasMask(IsVowel | Affricate | Ejective | Pulmonic, data.Flags)
 
-  let MatchAffricatePlace(sound, data)   = MatchAffricate(sound, data) and data.MannerList.Contains(sound.Manner)
-  let ContainsPlaces(place, data)        = AllSounds.Contains(MatchAffricatePlace, {Place: place, Flags: data.Flags})
+  let MatchAffricate(sound, data)    = sound.Place == data.Place and sound.HasFlag(data.Mask)
+  let ContainsPlaces(place, data)    = AllSounds.Contains(MatchAffricate, {Place: place, Mask: data.Mask})
 
-  let MatchAffricateManner(sound, data)  = MatchAffricate(sound, data) and sound.Manner == data.Manner
-  let AffricateCell(data, manner, place) = SoundBlock(AllSounds.FindSlice(MatchAffricateManner, data {Place: place, Manner: manner}))
 
-  let AffricateRow(data, places, manner) = Row {
+  let MatchAffricateRow(sound, data)    = MatchAffricate(sound, data) and sound.HasMask(data.Mask | data.Flags, data.Flags)
+  let AffricateCell(place, mask, flags) = SoundBlock(AllSounds.FindSlice(MatchAffricateRow, {Place: place, Mask: mask, Flags: flags}))
+
+  let AffricateRow(places, mask, flags) = Row {
     Cell {
       VAlign: VAligns.Center,
       Style.SoundBottom,
-      manner.Name
+      FlagText(flags)
     },
-    AffricateCell(data, manner, each places)
+    AffricateCell(each places, mask, flags)
   }
 
-  let AffricateTable(title, flags, mannerlist) begin
-    var places = Places.FindSlice(ContainsPlaces, {Flags: flags});
+  let AffricateTable(titlemask, flaglist) begin
+    var mask   = Ejective | Sibilant | Fricative | Lateral;
+    var places = Places.FindSlice(ContainsPlaces, {Mask: titlemask | mask});
     return Block {
       Table {
         HAlign: HAligns.Center,
         Style.TableEdge,
-        Columns: [(40 pts) {EdgeR: 0.5 pts}] +
+        Columns: [(50 pts) {EdgeR: 0.5 pts}] +
                  [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * places.Length,
 
-        Style.TitleBar(title, places.Length+1),
+        Style.TitleBar(FlagText(titlemask), places.Length+1),
         Row {
           TextHeight: 6 pts,
           Style.HeaderCell(Empty),
           PlaceHeader(each places)
         },
-        AffricateRow(flags, places, each mannerlist),
+        AffricateRow(places, titlemask | mask, each flaglist),
       },
       Style.TableNotes {
         Lang.Impossible,
@@ -971,9 +952,9 @@ with IPA
     NonPulmonicTable,
     PageBreak,
     VowelTable,
-//    AffricateTable("Pulmonic Affricates", Pulmonic | Affricate, [Sibilant, Fricative, Lateral]),
-//    AffricateTable("Ejective Affricates", Ejective | Affricate, [Central, Lateral]),
-//    OtherTable,
+    AffricateTable(Pulmonic | Affricate, [Sibilant, Fricative, Lateral]),
+    AffricateTable(Ejective | Affricate, [Central, Lateral]),
+    OtherTable,
   }
   //======================================================================
 end
