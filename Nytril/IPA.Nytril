@@ -103,7 +103,7 @@ with IPA
     "Nasal",
     "Tenuis",
     "Lateral",
-    "Sibilant",
+    Lang.Sibilant,
     "Fricative",
     "Approximant",
     "Plosive",
@@ -587,9 +587,9 @@ with IPA
 
   //======================================================================
 
-  let HasFlag(sound, flag) = (sound.Flags & flag) != 0
-  let NotFlag(sound, flag) = (sound.Flags & flag) == 0
-  let HasMask(sound, mask, flags) = (sound.Flags & mask) == (flags & mask)
+  let HasFlag(flags, flag) = (flags & flag) != 0
+  let NotFlag(flags, flag) = (flags & flag) == 0
+  let HasMask(flag, mask, flags) = (flag & mask) == (flags & mask)
 
   let GetFlagName(flags, index) = Span {
     if ((flags & (1 << index)) != 0)
@@ -599,13 +599,13 @@ with IPA
 
   let FlagText(flags) = Span {
     Separator: Space,
-    GetFlagName(flags, each 0..MaxFlags)
+    GetFlagName(flags, each 0..MaxFlags),
   }
 
   let SoundName(sound) = Span {
     if (sound.Name)
       sound.Name
-    elseif (sound.HasFlag(IsVowel))
+    elseif (sound.Flags.HasFlag(IsVowel))
       Lang.OpenNames[sound.Open],
       Space,
       Lang.BacknessNames[sound.Backness],
@@ -636,6 +636,16 @@ with IPA
     end
   }
   //======================================================================
+  // Matching Options Table
+  //======================================================================
+
+  // Find all the places that have matching options
+  let MatchInclude(sound, data)  = sound.Place == data.Place and sound.Flags.NotFlag(data.Options.Exclude) and sound.Flags.HasFlag(data.Options.Include)
+  let MatchPlace(place, options) = AllSounds.Contains(MatchInclude, {Place: place, Options: options})
+  let GetPlaces(options)         = Places.FindSlice(MatchPlace, options)
+
+  let MatchRow(sound, data)          = sound.Flags.HasMask(data.Options.RowMask | data.Flags, data.Flags) and MatchInclude(sound, data)
+
 
   let BoxSize  = Type.Size(18 pts, 20 pts)
   let CellSize = Type.Size(BoxSize.Width * 2, BoxSize.Height)
@@ -663,51 +673,50 @@ with IPA
   }
 
   let ShowBox(sound, color) = SoundBox(sound, color) {
-    if (sound.HasFlag(Voiced))
+    if (sound.Flags.HasFlag(Voiced))
       X: BoxSize.Width
     end
   }
 
+  let MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Flags.HasFlag(Voiced) == matches[1].Flags.HasFlag(Voiced))
+
   let SoundBlock(matches) = Cell {
     Style.SoundBottom,
     if (matches.Length > 0)
-      if (matches.Length == 1 and matches[0].HasFlag(Impossible))
+      if (matches.Length == 1 and matches[0].Flags.HasFlag(Impossible))
         Style.ImpossibleBackground
       else
         TextHeight: 1 pts,
         Span {
           Canvas {
             Size: CellSize,
-            ShowBox(each matches, matches.Length > 2 or (matches.Length == 2 and matches[0].HasFlag(Voiced) == matches[1].HasFlag(Voiced) ) ? Colors.Red : Colors.Black)
+            ShowBox(each matches, MatchError(matches) ? Colors.Red : Colors.Black)
           }
         }
       end
     end
   }
 
-  //======================================================================
-  // Matching Options Table
-  //======================================================================
-
-  // Find all the places that have matching options
-  let MatchInclude(sound, data)  = sound.Place == data.Place and sound.NotFlag(data.Options.Exclude) and sound.HasFlag(data.Options.Include)
-  let MatchPlace(place, options) = AllSounds.Contains(MatchInclude, {Place: place, Options: options})
-  let GetPlaces(options)         = Places.FindSlice(MatchPlace, options)
-
-  let MatchRow(sound, data)          = sound.HasMask(data.Options.RowMask | data.Flags, data.Flags) and MatchInclude(sound, data)
   let AddCell(options, place, flags) = SoundBlock(AllSounds.FindSlice(MatchRow, {Place: place, Flags: flags, Options: options}))
 
-  let AddRow(options, places, flags) = Row {
-    Cell {
-      VAlign: VAligns.Center,
-      EdgeR: 0.5 pts,
-      Style.TitleBackground,
-      PaddingLR: 2 pts,
-      TextHeight: 7 pts,
-      FlagText(flags)
-    },
-    AddCell(options, each places, flags | options.All)
-  }
+  let AddRow(options, places, flags) begin
+    var allflags = flags | options.All;
+    return Row {
+      Cell {
+        VAlign: VAligns.Center,
+        EdgeR: 0.5 pts,
+        Style.TitleBackground,
+        PaddingLR: 2 pts,
+        TextHeight: 7 pts,
+        if (allflags.HasMask(Lateral | Pulmonic | Affricate | Sibilant, Pulmonic | Affricate))
+          "Non-", Lang.Sibilant,
+        else
+          FlagText(flags),
+        end,
+      },
+      AddCell(options, each places, allflags)
+    }
+  end
 
   let PlaceHeader(place) = Style.HeaderCell(Lang.PlaceNames[place])
 
@@ -740,55 +749,47 @@ with IPA
   // Options for each table type
   //======================================================================
 
-  let PulmonicTable = ShowTable(
-    {
-      Title: Lang.PConsonants,
-      ColWidth: 45 pts,
-      Exclude: IsVowel | Affricate,
-      Include: Pulmonic,
-      All: 0,
-      Manners: [Nasal, Stop, Sibilant | Fricative, Fricative, Approximant, TapFlap, Trill, Lateral | Fricative, Lateral | Approximant, Lateral | TapFlap],
-      RowMask: Nasal | Stop | Sibilant | Fricative | Approximant | TapFlap | Trill | Lateral | Velarized,
-      Notes: Lang.PulmonicSymbols
-    }
-  )
+  let PulmonicTable = {
+    Title: Lang.PConsonants,
+    ColWidth: 45 pts,
+    Exclude: IsVowel | Affricate,
+    Include: Pulmonic,
+    All: 0,
+    Manners: [Nasal, Stop, Sibilant | Fricative, Fricative, Approximant, TapFlap, Trill, Lateral | Fricative, Lateral | Approximant, Lateral | TapFlap],
+    RowMask: Nasal | Stop | Sibilant | Fricative | Approximant | TapFlap | Trill | Lateral | Velarized,
+    Notes: Lang.PulmonicSymbols
+  }
 
-  let NonPulmonicTable = ShowTable(
-    {
-      Title: Lang.NPConsonants,
-      ColWidth: 80 pts,
-      Exclude: IsVowel | Pulmonic | Central,
-      Include: Ejective | Click | Implosive,
-      All: 0,
-      Manners: [Ejective | Stop, Ejective | Fricative, Ejective | Lateral | Fricative, Click | Tenuis, Click | Nasal, Click | Tenuis | Lateral, Implosive],
-      RowMask: Lateral,
-      Notes: Lang.ConsonantSymbols
-    }
-  )
+  let NonPulmonicTable = {
+    Title: Lang.NPConsonants,
+    ColWidth: 80 pts,
+    Exclude: IsVowel | Pulmonic | Central,
+    Include: Ejective | Click | Implosive,
+    All: 0,
+    Manners: [Ejective | Stop, Ejective | Fricative, Ejective | Lateral | Fricative, Click | Tenuis, Click | Nasal, Click | Tenuis | Lateral, Implosive],
+    RowMask: Lateral,
+    Notes: Lang.ConsonantSymbols
+  }
 
-  let PulmonicAffricatesTable = ShowTable(
-    {
-      Title: Lang.PulmonicAffricates,
-      ColWidth: 50 pts,
-      Exclude: IsVowel,
-      Include: Affricate | Sibilant | Lateral,
-      All: Pulmonic | Affricate,
-      Manners: [Sibilant, 0, Lateral],
-      RowMask: Pulmonic | Affricate | Sibilant | Fricative | Lateral,
-    }
-  )
+  let PulmonicAffricatesTable = {
+    Title: Lang.PulmonicAffricates,
+    ColWidth: 50 pts,
+    Exclude: IsVowel,
+    Include: Affricate | Sibilant | Lateral,
+    All: Pulmonic | Affricate,
+    Manners: [Sibilant, 0, Lateral],
+    RowMask: Pulmonic | Affricate | Sibilant | Fricative | Lateral,
+  }
 
-  let EjectiveAffricatesTable = ShowTable(
-    {
-      Title: Lang.EjectiveAffricates,
-      ColWidth: 50 pts,
-      Exclude: IsVowel | Click | Implosive | Pulmonic,
-      Include: Ejective | Affricate | Central | Lateral,
-      All: Ejective | Affricate,
-      Manners: [Central, Lateral],
-      RowMask: Pulmonic | Approximant | Central | Lateral,
-    }
-  )
+  let EjectiveAffricatesTable = {
+    Title: Lang.EjectiveAffricates,
+    ColWidth: 50 pts,
+    Exclude: IsVowel | Click | Implosive | Pulmonic,
+    Include: Ejective | Affricate | Central | Lateral,
+    All: Ejective | Affricate,
+    Manners: [Central, Lateral],
+    RowMask: Pulmonic | Approximant | Central | Lateral,
+  }
   //======================================================================
 
   let ShowVowel(sound) = SoundBox(sound) {
@@ -812,7 +813,7 @@ with IPA
     end
   }
 
-  let MatchVowelPair(sound, data) = sound.HasFlag(IsVowel) and sound.Open == data.Open and sound.Backness == data.Backness
+  let MatchVowelPair(sound, data) = sound.Flags.HasFlag(IsVowel) and sound.Open == data.Open and sound.Backness == data.Backness
   let VowelCell(open, backness)   = VowelBlock(Sounds.FindSlice(MatchVowelPair, {Open: open, Backness: backness}))
 
   let VowelRow(open) = Row {
@@ -843,7 +844,7 @@ with IPA
   }
   //======================================================================
 
-  let MatchOther(sound) = sound.HasMask(IsVowel | Affricate, 0)
+  let MatchOther(sound) = sound.Flags.HasMask(IsVowel | Affricate, 0)
 
   let OtherColumns = 2
 
@@ -934,11 +935,9 @@ with IPA
   //======================================================================
 
   let ShowGroups = Block {
-    PulmonicTable,
-    NonPulmonicTable,
+    ShowTable(each [PulmonicTable, NonPulmonicTable]),
     PageBreak,
-    PulmonicAffricatesTable,
-    EjectiveAffricatesTable,
+    ShowTable(each [PulmonicAffricatesTable, EjectiveAffricatesTable]),
     VowelTable,
     OtherTable,
   }
