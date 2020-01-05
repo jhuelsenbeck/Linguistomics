@@ -591,12 +591,18 @@ with IPA
   // Matching Options Table
   //======================================================================
 
-  // Find all the places that have matching options
-  let MatchInclude(sound, data)  = sound.Place == data.Place and sound.Flags.NotFlag(data.Options.Exclude) and sound.Flags.HasFlag(data.Options.Include)
-  let MatchPlace(place, options) = AllSounds.Contains(MatchInclude, {Place: place, Options: options})
-  let GetPlaces(options)         = Places.FindSlice(MatchPlace, options)
+  let CheckFlags(sflags, rflags, options) = sflags.NotFlag(options.Exclude) and sflags.HasFlag(options.Include) and sflags.HasMask(options.RowMask | rflags, rflags)
 
-  let MatchRow(sound, data)      = sound.Flags.HasMask(data.Options.RowMask | data.Flags, data.Flags) and MatchInclude(sound, data)
+  let AnyManners(flags, data)             = CheckFlags(data.Flags, flags | data.Options.All, data.Options)
+
+  let MatchRow(sound, data)               = sound.Place == data.Place and CheckFlags(sound.Flags, data.Flags, data.Options)
+
+  let MatchInclude(sound, data)           = sound.Place == data.Place and sound.Flags.NotFlag(data.Options.Exclude) and
+                                            sound.Flags.HasFlag(data.Options.Include) and
+                                            data.Options.Manners.Contains(AnyManners, {Flags: sound.Flags, Options: data.Options})
+
+  let MatchPlace(place, options)          = AllSounds.Contains(MatchInclude, {Place: place, Options: options})
+  let GetPlaces(options)                  = Places.FindSlice(MatchPlace, options)
 
 
   let BoxSize  = Type.Size(18 pts, 20 pts)
@@ -661,7 +667,7 @@ with IPA
         PaddingLR: 2 pts,
         TextHeight: 7 pts,
         if (allflags.HasMask(Lateral Pulmonic Affricate Sibilant, Pulmonic Affricate))
-          "Non-", Lang.Sibilant,
+          Lang.NoSibilant,
         else
           FlagText(flags),
         end,
