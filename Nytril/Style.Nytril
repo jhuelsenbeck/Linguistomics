@@ -339,8 +339,8 @@ end
 with AllWords
   let LangHasMeaning(word, data) = word.Meaning == data.Meaning
 
-  let MeaningCell(meaning, language) begin
-    var list = language.Words.FindSlice(Lang.HasMeaning, {Meaning: meaning});
+  let AddCell(meaning, language) begin
+    var list = language.Words.FindSlice(LangHasMeaning, {Meaning: meaning});
     if (list.Length > 0)
       Cell {
         (each list).Text
@@ -350,14 +350,14 @@ with AllWords
     end
   end
 
-  let WordRow(wordlist, meaning) = Row {
+  let AddRow(wordlist, meaning) = Row {
     Style.RowBar(EachIndex),
     Cell {
       Style.TitleBackground,
       Style.SansSerif,
       EachSymbol.SymbolName
     },
-    MeaningCell(meaning, each wordlist)
+    AddCell(meaning, each wordlist)
   }
 
   let HeaderCell(d) = Cell {
@@ -381,7 +381,7 @@ with AllWords
         HeaderCell({TextColor: Colors.DarkGray} Lang.Meaning),
         LanguageHeader(each wordlist),
       },
-      WordRow(wordlist, each WordMeanings)
+      AddRow(wordlist, each WordMeanings)
     },
     Style.TableNotes {
     }
