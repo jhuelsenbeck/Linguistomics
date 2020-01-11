@@ -109,7 +109,7 @@ with Style
     text
   }
 
-  let SourceFile(source) = Block {
+  let SourceFile(ref source) = Block {
     Style.Header3(source.Path.GetFileName),
     Paragraph {
       LeftIndent: 0.25 inches,
@@ -204,7 +204,7 @@ with Style
     ShowAuthorFull(each authors),
   }
 
-  let ShowReference(r) = Paragraph {
+  let ShowReference(ref r) = Paragraph {
     LeftIndent: 0.25 inches,
     FirstIndent: -0.25 inches,
     if (r.Author)
@@ -236,13 +236,13 @@ with Style
     ShowReference(each references)
   }
 
-  let ShowAppendix(appendix) = PageSection {
+  let ShowAppendix(ref appendix) = PageSection {
     Paragraph {
       BorderB: 1 pts,
       ParAlignment: ParAlignments.Center,
       TextHeight: 14 pts,
       SpaceAfter: 8 pts,
-      LocationMark: EachSymbol.FullSymbolName,
+      LocationMark: appendix.FullSymbolName,
       "{0} {1} - "(Lang.Appendix, EachIndex+1),
       appendix.Title,
     },
@@ -297,7 +297,7 @@ with DisplayWords
     Cell {
       Style.SansSerif,
       Style.TitleBackground,
-      WordMeanings.GetReference(word.Meaning).SymbolName
+      word.Meaning
     },
     Cell {
       word.Text
@@ -355,7 +355,7 @@ with AllWords
     Cell {
       Style.TitleBackground,
       Style.SansSerif,
-      EachSymbol.SymbolName
+      meaning
     },
     AddCell(meaning, each wordlist)
   }
