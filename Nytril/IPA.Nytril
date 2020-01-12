@@ -62,7 +62,7 @@ with IPA
     let Click       = mask {Name: Lang.Click}
     let Affricate   = mask {Name: Lang.Affricate}
     let Vowel       = mask {Name: Lang.Vowel}
-    let Consonant   = mask {Name: Lang.Consonant}
+//    let Consonant   = mask {Name: Lang.Consonant}
     let Rhotic      = mask {Name: Lang.Rhotic}
     let Impossible  = mask {Name: Lang.Impossible}
     let NonIPA      = mask {Name: Lang.NonIPA}
@@ -91,7 +91,7 @@ with IPA
   let NPEjective(flags, sound) = NewConsonant(Ejective | flags, sound.Place, sound.Text Diacritics.Ejective.Text, sound.Sampa Diacritics.Ejective.Sampa)
 
   let Imp(flags, place) = {
-    Flags: flags | Impossible | Consonant,
+    Flags: flags | Impossible,
     Place: place,
   }
 
@@ -568,7 +568,7 @@ with IPA
                                             data.Options.Manners.Contains(AnyManners, {Flags: sound.Flags, Options: data.Options})
 
   let MatchPlace(place, options)          = AllSounds.Contains(MatchInclude, {Place: place, Options: options})
-  let GetPlaces(options)                  = FindSlice(Places, MatchPlace, options)
+  let GetPlaces(options)                  = Places.FindSlice(MatchPlace, options)
 
 
   let BoxSize  = Type.Size(18 pts, 20 pts)
@@ -583,7 +583,10 @@ with IPA
       sound.Place,
     end,
     Space,
-    sound.Flags,
+    Span {
+      Separator: Space,
+      each sound.Flags,
+    }
   }
 
   let ShowCodePoint(c) = {TextFamily: TextFamilies.Consolas, TextRadix: 16, TextDigits: 4} Type.Integer(c)
@@ -604,7 +607,7 @@ with IPA
 
   let SoundText(set, ref sound) begin
     if (sound.Flags.NotFlag(Impossible))
-      AddReference(set, sound);
+      set.AddReference(sound);
     end;
     return ShowSound(sound);
   end
@@ -622,17 +625,17 @@ with IPA
   }
 
   let ShowBox(set, ref sound, color) = SoundBox(set, sound, color) {
-    if (HasFlag(sound.Flags, Voiced))
+    if (sound.Flags.HasFlag(Voiced))
       X: BoxSize.Width
     end
   }
 
-  let MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and HasFlag(matches[0].Flags, Voiced) == HasFlag(matches[1].Flags, Voiced))
+  let MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Flags.HasFlag(Voiced) == matches[1].Flags.HasFlag(Voiced))
 
   let SoundBlock(set, matches) = Cell {
     Style.SoundBottom,
     if (matches.Length > 0)
-      if (matches.Length == 1 and HasFlag(matches[0].Flags, Impossible))
+      if (matches.Length == 1 and matches[0].Flags.HasFlag(Impossible))
         Style.ImpossibleBackground
       else
         TextHeight: 1 pts,
@@ -646,7 +649,7 @@ with IPA
     end
   }
 
-  let AddCell(set, options, place, flags) = SoundBlock(set, FindSlice(AllSounds, MatchRow, {Place: place, Flags: flags, Options: options}))
+  let AddCell(set, options, place, flags) = SoundBlock(set, AllSounds.FindSlice(MatchRow, {Place: place, Flags: flags, Options: options}))
 
   let AddRow(set, options, places, flags) begin
     var allflags = flags | options.All;
@@ -711,7 +714,7 @@ with IPA
   }
 
   let MatchVowelPair(ref sound, data) = sound.Flags.HasFlag(Vowel) and sound.Open == data.Open and sound.Backness == data.Backness
-  let VowelCell(set, open, backness)  = VowelBlock(set, FindSlice(Sounds, MatchVowelPair, {Open: open, Backness: backness}))
+  let VowelCell(set, open, backness)  = VowelBlock(set, Sounds.FindSlice(MatchVowelPair, {Open: open, Backness: backness}))
 
   let VowelRow(set, open) = Row {
     Cell {
@@ -778,32 +781,31 @@ with IPA
 
   let AddNode(name) = Node {
     Bevel: 20%,
+    Curvature: 20%,
     Label: name
   }
 
   let AddSound(set, ref sound) begin
-    if (AddReference(set, sound))
-      return ShowSound(sound)
-    else
-      return null;
+    set.AddReference(sound);
+    return ShowSound(sound)
   end
 
   let AddSounds(set, name, func, data) begin
-    var sounds = FindSlice(Sounds, func, data);
+    var sounds = Sounds.FindSlice(func, data);
     if (sounds.Length > 0)
       return Node {
         Label: Frame {
           Width: 3.5 inches,
-          LeftIndent: 0.9 inches,
-          FirstIndent: -0.9 inches,
-          Span {
+          Paragraph {
+            LeftIndent: 0.9 inches,
+            FirstIndent: -0.9 inches,
             Span {
               TextColor: Colors.DarkGray,
               name,
               ":\t",
             },
             Span {
-              TextHeight: 16 pts,
+              TextHeight: 15 pts,
               Separator: Space,
               AddSound(set, each sounds),
             }
@@ -818,30 +820,22 @@ with IPA
   let MatchVowel(ref sound, data) = sound.Flags.HasFlag(Vowel) and sound.Backness == data.Backness
   let AddVowels(set, backness)    = AddSounds(set, backness.Name, MatchVowel, {Backness: backness})
 
-  let MatchFlags(ref sound, data) = sound.Flags.HasMask(data.Mask, data.Flags)
-  let AddFlag(set, name, m, f)    = AddSounds(set, name, MatchFlags, {Mask: m, Flags: f})
+  let MatchFlags(ref sound, data) = not ContainsReference(data.Set, sound) and sound.Flags.HasMask(data.All, data.Flags) and sound.Flags.HasMask(data.Other, data.Other)
+  let AddFlag(set, all, flags, f) = AddSounds(set, f.Name, MatchFlags, {Set: set, All: all, Flags: flags, Other: f})
 
-  let CMask = Pulmonic Voiced Nasal Lateral Affricate Fricative Sibilant Ejective Stop
-
-  let AddConsonants(set, name, m) = AddNode(name) {
-    AddFlag(set, Lang.Nasal, CMask, m Nasal),
-    AddFlag(set, Lang.Fricative, CMask, m Fricative),
-    AddFlag(set, Lang.Sibilant, CMask, m Sibilant),
-    AddFlag(set, Lang.Lateral, CMask, m Lateral),
-    AddFlag(set, Lang.Affricate, CMask, m Affricate),
-    AddFlag(set, "Sib-Fric", CMask, m Sibilant Fricative),
-    AddFlag(set, Lang.Ejective, CMask, m Ejective),
-    AddFlag(set, Lang.Stop, CMask, m Stop),
+  let AddConsonants(set, name, all, flags) = AddNode(name) {
+    AddFlag(set, all, flags, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, None]),
   }
 
-  let AddVoiced(set, name, m) = AddNode(name) {
-    AddConsonants(set, Lang.Voiced, m Voiced),
-    AddConsonants(set, Lang.Voiceless, m),
+  let AddVoicedPairs(set, name, all, flags) = AddNode(name) {
+    AddConsonants(set, Lang.Voiced, all Voiced, flags Voiced),
+    AddConsonants(set, Lang.Voiceless, all Voiced, flags),
   }
 
   let SoundTree begin
-    var set = Type.Dictionary(256);
+    var set1 = Type.Dictionary(256);
     var set2 = Type.Dictionary(256);
+    var all  = Vowel Pulmonic Affricate;
 
     return Block {
       Tree {
@@ -849,13 +843,17 @@ with IPA
         LabelGap: 3 pts,
         Node {
           AddNode(Lang.Vowels) {
-            AddVowels(set, each Backnesses)
+            AddVowels(set1, each Backnesses)
+          },
+          AddNode(Lang.Affricates) {
+            AddVoicedPairs(set1, Lang.NonPulmonic, all, Affricate),
+            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic Affricate),
           },
           AddNode(Lang.Consonants) {
-            AddVoiced(set, Lang.Pulmonic, Pulmonic),
-            AddVoiced(set, "Non-Pulmonic", None),
+            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic),
+            AddVoicedPairs(set1, Lang.NonPulmonic, all, None),
           },
-          AddSounds(set2, Lang.OtherSounds, MatchOther, set)
+          AddSounds(set2, Lang.OtherSounds, MatchOther, set1)
         }
       }
     }
@@ -935,7 +933,7 @@ with IPA
     Title: Lang.PConsonants,
     ColWidth: 45 pts,
     Exclude: Affricate,
-    Include: Consonant Pulmonic,
+    Include: Pulmonic,
     All: None,
     Manners: [Nasal, Stop, Sibilant Fricative, Fricative, Approximant, TapFlap, Trill, Lateral Fricative, Lateral Approximant, Lateral TapFlap],
     RowMask: Nasal Stop Sibilant Fricative Approximant TapFlap Trill Lateral Velarized,
