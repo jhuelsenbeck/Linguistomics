@@ -766,12 +766,100 @@ with IPA
     Table {
       Style.TableEdge,
       Columns: [BoxSize.Width, Metrics.Content.Width * 0.5 - BoxSize.Width] * OtherColumns,
-      Style.TitleBar(Lang.OtherSymbols, OtherColumns*2),
+      Style.TitleBar(Lang.OtherSounds, OtherColumns*2),
       OtherRow(each (FindSlice(Sounds, MatchOther, set) / OtherColumns)),
     },
     Style.TableNotes {
     }
   }
+  //======================================================================
+  // Sound Tree
+  //======================================================================
+
+  let AddNode(name) = Node {
+    Bevel: 20%,
+    Label: name
+  }
+
+  let AddSound(set, ref sound) begin
+    if (AddReference(set, sound))
+      return ShowSound(sound)
+    else
+      return null;
+  end
+
+  let AddSounds(set, name, func, data) begin
+    var sounds = FindSlice(Sounds, func, data);
+    if (sounds.Length > 0)
+      return Node {
+        Label: Frame {
+          Width: 3.5 inches,
+          LeftIndent: 0.9 inches,
+          FirstIndent: -0.9 inches,
+          Span {
+            Span {
+              TextColor: Colors.DarkGray,
+              name,
+              ":\t",
+            },
+            Span {
+              TextHeight: 16 pts,
+              Separator: Space,
+              AddSound(set, each sounds),
+            }
+          }
+        }
+      }
+    else
+      return null
+    end
+  end
+
+  let MatchVowel(ref sound, data) = sound.Flags.HasFlag(Vowel) and sound.Backness == data.Backness
+  let AddVowels(set, backness)    = AddSounds(set, backness.Name, MatchVowel, {Backness: backness})
+
+  let MatchFlags(ref sound, data) = sound.Flags.HasMask(data.Mask, data.Flags)
+  let AddFlag(set, name, m, f)    = AddSounds(set, name, MatchFlags, {Mask: m, Flags: f})
+
+  let CMask = Pulmonic Voiced Nasal Lateral Affricate Fricative Sibilant Ejective Stop
+
+  let AddConsonants(set, name, m) = AddNode(name) {
+    AddFlag(set, Lang.Nasal, CMask, m Nasal),
+    AddFlag(set, Lang.Fricative, CMask, m Fricative),
+    AddFlag(set, Lang.Sibilant, CMask, m Sibilant),
+    AddFlag(set, Lang.Lateral, CMask, m Lateral),
+    AddFlag(set, Lang.Affricate, CMask, m Affricate),
+    AddFlag(set, "Sib-Fric", CMask, m Sibilant Fricative),
+    AddFlag(set, Lang.Ejective, CMask, m Ejective),
+    AddFlag(set, Lang.Stop, CMask, m Stop),
+  }
+
+  let AddVoiced(set, name, m) = AddNode(name) {
+    AddConsonants(set, Lang.Voiced, m Voiced),
+    AddConsonants(set, Lang.Voiceless, m),
+  }
+
+  let SoundTree begin
+    var set = Type.Dictionary(256);
+    var set2 = Type.Dictionary(256);
+
+    return Block {
+      Tree {
+        Width: 7 inches,
+        LabelGap: 3 pts,
+        Node {
+          AddNode(Lang.Vowels) {
+            AddVowels(set, each Backnesses)
+          },
+          AddNode(Lang.Consonants) {
+            AddVoiced(set, Lang.Pulmonic, Pulmonic),
+            AddVoiced(set, "Non-Pulmonic", None),
+          },
+          AddSounds(set2, Lang.OtherSounds, MatchOther, set)
+        }
+      }
+    }
+  end
   //======================================================================
 
   let SoundColumns = 4
@@ -894,6 +982,8 @@ with IPA
       ShowTable(set, each [PulmonicAffricatesTable, EjectiveAffricatesTable]),
       VowelTable(set),
       OtherTable(set),
+      PageBreak,
+      SoundTree
     }
   end
   //======================================================================
