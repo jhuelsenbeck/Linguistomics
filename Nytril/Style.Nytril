@@ -13,9 +13,12 @@ end
 //======================================================================
 
 with Style
+  let MainFamily           = {TextFamily: "Linux Libertine O"} // "Arial Unicode MS", TextFamilies.CambriaMath
+  let SansSerif            = {TextFamily: "LM Sans 10"} //TextFamilies.Arial}
+  let MonoFamily           = {TextFamily: TextFamilies.Consolas}
+  let IPAFamily            = {TextFamily: "Arial Unicode MS" /*TextFamilies.CambriaMath*/}
+
   let ImpossibleBackground = {Background: 80%}
-  let IPAFamily            = {TextFamily: "Arial Unicode MS"}//            = TextFamilies.CambriaMath
-  let SansSerif            = {TextFamily: TextFamilies.Arial}
   let Used                 = {TextColor: Colors.Red}
   let TitleBackground      = {Background: 90%}
   let TableEdge            = {Edge: 0.3 pts}
@@ -30,7 +33,7 @@ with Style
 
   let WhitePaper = Document {
     Size: Metrics.Paper,
-    TextFamily: TextFamilies.TimesNewRoman,
+    MainFamily,
     TextHeight: 11.5 pts,
     MarginL: Metrics.MarginL,
     MarginR: Metrics.MarginR,
@@ -114,14 +117,14 @@ with Style
     Paragraph {
       LeftIndent: 0.25 inches,
       ParAlignment: ParAlignments.Left,
-      TextFamily: TextFamilies.Consolas,
+      Style.MonoFamily,
       TextHeight: 8 pts,
       SourceSelection(source)
     }
   }
 
   let SourceCodeBlock = TextBlock {
-    TextFamily: TextFamilies.Consolas,
+    Style.MonoFamily,
     TextHeight: 10 pts,
     ParBackground: 97%,
   }
@@ -138,7 +141,7 @@ with Style
     Label: DataLabel,
     Curvature: 30%,
     Bevel: 20%,
-    Marker: {TextFamily: TextFamilies.CambriaMath, TextHeight: 4 pts}Chars.Circle {TextColor: Colors.Gray},
+    Marker: {Style.IPAFamily, TextHeight: 4 pts}Chars.Circle {TextColor: Colors.Gray},
     Width: 6 inches,
     tree
   }
@@ -297,6 +300,7 @@ with DisplayWords
     var sounds = IPA.SAMPAToSounds(word.Text);
 
     return Row {
+      Style.RowBar(EachIndex),
       Cell {
         Style.SansSerif,
         Style.TitleBackground,
@@ -331,8 +335,8 @@ with DisplayWords
 
   let LanguageTable(language) = Block {
     Table {
-      Columns: [0.8 inches, 0.7 inches, 0.7 inches, Metrics.Content.Width - 2.7 inches],
-      Style.TitleBar(language.Name, 3),
+      Columns: [0.8 inches, 0.8 inches, 0.9 inches, Metrics.Content.Width - 2.7 inches],
+      Style.TitleBar(language.Name, 4),
       Row {
         HeaderCell(Lang.Meaning),
         HeaderCell(Lang.SAMPA),
