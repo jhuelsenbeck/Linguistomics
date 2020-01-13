@@ -108,19 +108,20 @@ with Content.Conclusion
 end
 //======================================================================
 
-let ShowAppendix(title, content) = {Title: title, Content: content}
+let LangHasWords(ref language) = language.Words != null
+let LanguageList               = FindSlice(Languages, LangHasWords)
 
-let LangHasWords(language) = language.Words != null
-let LanguageList           = FindSlice(Languages, LangHasWords)
+//======================================================================
 
+let AddAppendix(title, content) = {Title: title, Content: content}
 
-let Appendix.SoundGrouping      = ShowAppendix(Lang.SoundGroups, IPA.ShowGroups)
-let Appendix.IPA                = ShowAppendix(Lang.IPAFull, IPA.SoundTable)
-let Appendix.LanguagePhylogeny  = ShowAppendix(Lang.LanguagePhylogeny, Style.ShowTree(Info.LanguageTree))
-let Appendix.WordList           = ShowAppendix(Lang.WordListComparison, AllWords.WordTable(LanguageList))
-let Appendix.WordListLanguage   = ShowAppendix(Lang.WordListLanguage, DisplayWords.LanguageTable(each LanguageList))
-//let Appendix.LanguageTreeFile   = ShowAppendix(Lang.LanguageTreeFile, TreeLibrary.NexusFile([Info.LanguageTree]) Style.MonoFamily)
-let Appendix.NytrilSourceCode   = ShowAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList))
+let Appendix.LanguagePhylogeny  = AddAppendix(Lang.LanguagePhylogeny, Style.ShowTree(Info.LanguageTree))
+let Appendix.LanguageTreeFile   = AddAppendix(Lang.LanguageTreeFile, TreeLib.NexusFile(Info.LanguageTree) Style.MonoFamily)
+let Appendix.SoundGrouping      = AddAppendix(Lang.SoundGroups, IPA.ShowGroups)
+let Appendix.IPA                = AddAppendix(Lang.IPAFull, IPA.SoundTable)
+let Appendix.WordList           = AddAppendix(Lang.WordListComparison, AllWords.WordTable(LanguageList))
+let Appendix.WordListLanguage   = AddAppendix(Lang.WordListLanguage, DisplayWords.LanguageTable(each LanguageList))
+let Appendix.NytrilSourceCode   = AddAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList))
 //======================================================================
 
 
