@@ -293,23 +293,33 @@ end
 //======================================================================
 
 with DisplayWords
-  let WordRow(word) = Row {
-    Cell {
-      Style.SansSerif,
-      Style.TitleBackground,
-      word.Meaning
-    },
-    Cell {
-      word.Text
-    },
-    Cell {
-      Span {
-        TextFamily: TextFamilies.Consolas,
-        Separator: Lang.Separator,
-        each word.Text
+  let WordRow(word) begin
+    var sounds = IPA.SAMPAToSounds(word.Text);
+
+    return Row {
+      Cell {
+        Style.SansSerif,
+        Style.TitleBackground,
+        word.Meaning
+      },
+      Cell {
+        word.Text
+      },
+      Cell {
+        Span {
+          if (sounds)
+            IPA.ShowSound(each sounds)
+          end
+        },
+      },
+      Cell {
+        Span {
+          Separator: Lang.Separator,
+          (each sounds).SymbolName
+        }
       }
     }
-  }
+  end
 
   let HeaderCell(d) = Cell {
     Style.SansSerif,
@@ -321,17 +331,17 @@ with DisplayWords
 
   let LanguageTable(language) = Block {
     Table {
-      Columns: [0.8 inches, 0.7 inches, Metrics.Content.Width - 2 inches],
+      Columns: [0.8 inches, 0.7 inches, 0.7 inches, Metrics.Content.Width - 2.7 inches],
       Style.TitleBar(language.Name, 3),
       Row {
         HeaderCell(Lang.Meaning),
-        HeaderCell(Lang.Text),
-        HeaderCell(Lang.Encoding),
+        HeaderCell(Lang.SAMPA),
+        HeaderCell(Lang.IPA),
+        HeaderCell(Lang.Sounds),
       },
       WordRow(each language.Words)
     },
-    Style.TableNotes {
-    }
+    Style.TableNotes
   }
 end
 //======================================================================
@@ -341,13 +351,9 @@ with AllWords
 
   let AddCell(meaning, language) begin
     var list = language.Words.FindSlice(LangHasMeaning, {Meaning: meaning});
-    if (list.Length > 0)
-      Cell {
-        (each list).Text
-      }
-    else
-      Cell {}
-    end
+    return Cell {
+      (each list).Text
+    }
   end
 
   let AddRow(wordlist, meaning) = Row {
@@ -383,8 +389,7 @@ with AllWords
       },
       AddRow(wordlist, each WordMeanings)
     },
-    Style.TableNotes {
-    }
+    Style.TableNotes
   }
 end
 //======================================================================

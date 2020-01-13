@@ -471,6 +471,8 @@ with IPA
   end                       									
 
   let AllSounds = Sounds + ImpossibleSounds
+  let NoSound   = Encode("?", "?") Imp(None, Places.Bilabial)
+
 
   with Diacritics
     let Centralized                  = Encode("\u0308", "_\"")
@@ -554,6 +556,23 @@ with IPA
   let HasMask(flag, fmask, flags) = (flag & fmask) == (flags & fmask)
 
   //======================================================================
+  // Convert SAMPA text to sound data
+  //======================================================================
+
+  let MatchChar(ref sound, data) = sound.Sampa.Length <= data.Length and sound.Sampa == data[0..<sound.Sampa.Length]
+
+  let SAMPAToSounds(text) begin
+    var sounds = Sounds.FindSlice(MatchChar, text);
+    if (sounds.Length == 0)
+      return [ref NoSound];
+    elseif (text.Length > sounds[0].Sampa.Length)
+      return sounds[0..0] + SAMPAToSounds(text[(sounds[0].Sampa.Length)..]);
+    else
+      return sounds[0..0];
+    end
+  end
+
+  //======================================================================
   // Matching Options Table
   //======================================================================
 
@@ -602,6 +621,9 @@ with IPA
     Style.IPAFamily,
     Popup: SoundPopup.Call(sound),
     Link: sound.FullSymbolName,
+    if (sound.Flags.HasFlag(Impossible))
+    TextColor: Colors.Red,
+    end
     sound.Text
   }
 
