@@ -328,7 +328,7 @@ with DisplayWords
         word.Meaning
       },
       Cell {
-        word.SAMPA
+        IPA.ShowSampa(word.Sampa)
       },
       Cell {
         Span {
@@ -356,11 +356,11 @@ with DisplayWords
 
   let LanguageTable(language) = Block {
     Table {
-      Columns: [0.8 inches, 0.8 inches, 0.9 inches, Metrics.Content.Width - 2.7 inches],
+      Columns: [0.8 inches, 1 inches, 1 inches, Metrics.Content.Width - 2.5 inches],
       Style.TitleBar(language.Name, 4),
       Row {
         HeaderCell(Lang.Meaning),
-        HeaderCell(Lang.SAMPA),
+        HeaderCell(Lang.Sampa),
         HeaderCell(Lang.IPA),
         HeaderCell(Lang.Sounds),
       },
@@ -377,7 +377,7 @@ with AllWords
   let AddCell(meaning, language) begin
     var words = language.Words.FindSlice(LangHasMeaning, {Meaning: meaning});
     return Cell {
-      (each words).SAMPA
+      IPA.ShowSampa(each ((each words).Sampa))
     }
   end
 

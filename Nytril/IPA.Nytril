@@ -72,19 +72,18 @@ with IPA
 
   let Unrounded = SoundTypes.None
 
-  let Encode(text, sampa, alt=null) = {
+  let Encode(text, sampa) = {
     Popup: SoundPopup,
     Text: text,
     Sampa: sampa,
-    Alt: alt
   }
 
-  let Diac(description, text, sampa, alt=null) = Encode(text, sampa, alt) {
+  let Diac(description, text, sampa) = Encode(text, sampa) {
     Flags: Diacritic,
     Description: description,
   }
 
-  let Con(flags, place, text, sampa, alt=null) = Encode(text, sampa, alt) {
+  let Con(flags, place, text, sampa) = Encode(text, sampa) {
     Flags: flags,
     Place: place,
   }
@@ -102,11 +101,37 @@ with IPA
     Place: place,
   }
 
-  let Dia(text, sampa, alt=null) = Encode(text, sampa, alt) {
+  let Dia(text, sampa) = Encode(text, sampa) {
     Flags: Diacritic
   }
 
   with Sounds
+    //==================================
+    // Extra sounds found in word list
+    //==================================
+
+    let VdNasalizedLabialVelarApproximant = Con(Voiced Approximant Nasal, Places.LabialVelar, "w\u0303", "w_~")
+    let NasalizedCloseFrontRounded        = Vow(Rounded Nasal, Opens.Close, Backnesses.Front, "y\u0303", "y_~")
+    let VdNasalizedUvularFricative        = Con(Voiced Pulmonic Fricative, Places.Uvular, "r\u0303", "r_~")
+
+    let r_twiddle                         = Con(Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "r_~")  // French Cold "Froid"  Same as SAMPA "R"?
+
+    let A_star                            = Vow(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ\u0303", "a*")   // Supposed to be "ɛ̃" as in French Dog "chien"?
+    let O_star                            = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*")             // French Fish "poisson"
+    let OE_star                           = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ\u0303", "oe*") // French One "un"
+
+    let U_star                            = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u\u0303", "u*")         // Portuguese One "um"
+    let e_star                            = Vow(Nasal Unrounded, Opens.CloseMid, Backnesses.Front, "e\u0303", "e*")   // Portuguese Trail "se*da
+    let i_star                            = Vow(Nasal Unrounded, Opens.Close, Backnesses.Front, "i\u0303", "i*")      // Portuguese Tongue
+
+    let e3_star                           = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ\u0303", "3*")   // SAMPA "E"?
+
+    let E_star                            = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ\u0303", "E*")   // Walloon One, Don't know how this is different from above
+
+
+    let Space                             = Diac("Space", " ", " ")
+
+
     //==================================
     // Pulmonic Consonants
     //==================================
@@ -183,7 +208,7 @@ with IPA
 														
     // Approximant										
     let VlLabioDentalApproximant     = Con(Pulmonic Approximant, Places.LabioDental, "ʋ̥", "")
-    let VdLabioDentalApproximant     = Con(Voiced Pulmonic Approximant, Places.LabioDental, "ʋ", "v\\", "P")
+    let VdLabioDentalApproximant     = Con(Voiced Pulmonic Approximant, Places.LabioDental, "ʋ", "v\\")
     let VlPostalveolarApproximant    = Con(Pulmonic Approximant, Places.Alveolar, "ɹ̥", "")
     let VdPostalveolarApproximant    = Con(Voiced Pulmonic Approximant, Places.Alveolar, "ɹ", "r\\")
     let VlRetroflexApproximant       = Con(Pulmonic Approximant, Places.Retroflex, "ɻ̊", "")
@@ -252,7 +277,7 @@ with IPA
     // Clicks
     let VlBilabialTenuisClick        = Con(Ejective Tenuis Click Affricate, Places.Bilabial, "ʘ", "O\\")
     let VdBilabialTenuisClick        = Con(Voiced Ejective Tenuis Click Affricate, Places.Bilabial, "ʘ̬", "")
-    let VlDentalTenuisClick          = Con(Ejective Tenuis Click Affricate, Places.Dental, "ǀ", " | ")
+    let VlDentalTenuisClick          = Con(Ejective Tenuis Click Affricate, Places.Dental, "ǀ", "|")
     let VdDentalTenuisClick          = Con(Voiced Ejective Tenuis Click Affricate, Places.Dental, "ǀ̬", "")
     let VlAlveolarTenuisClick        = Con(Ejective Tenuis Click Affricate, Places.Alveolar, "ǃ", "!\\")
     let VdAlveolarTenuisClick        = Con(Voiced Ejective Tenuis Click Affricate, Places.Alveolar, "ǃ̬", "")
@@ -343,11 +368,15 @@ with IPA
 //    let VlAlveoloPalatalFricative1      = NewConsonant(CPM(Categories.Other, Places.AlveoloPalatal) Fricative, "ɕ", "")
 //    let VlAlveoloPalatalFricative       = NewConsonant(CPM(Categories.Other, Places.AlveoloPalatal) Fricative, "ʑ", "")
 
+
     let VdLabialVelarApproximant          = Con(Voiced Approximant, Places.LabialVelar, "w", "w")
+
+
+
+    let VlEpiglottalFricative             = Con(Fricative, Places.Pharyngeal, "ʜ", "H\\")
     let VdLabialPalatalApproximant        = Con(Voiced Approximant, Places.LabialPalatal, "ɥ", "H")
 
     let SimultaneousSx                    = Con(Sibilant Fricative, Places.PostAlveolar, "ɧ", "x\\")
-    let VlEpiglottalFricative             = Con(Fricative, Places.Pharyngeal, "ʜ", "H\\")
     let VdEpiglottalFricative             = Con(Voiced Fricative, Places.Pharyngeal, "ʢ", "?\\")
     let VlEpiglottalPlosive               = Con(Plosive, Places.Pharyngeal, "ʡ", "<\\")
 
@@ -377,33 +406,37 @@ with IPA
     //==================================
 
     let CloseFrontUnrounded          = Vow(Unrounded, Opens.Close, Backnesses.Front, "i", "i")
+
+
     let CloseFrontRounded            = Vow(Rounded, Opens.Close, Backnesses.Front, "y", "y")
+
+
     let CloseCentralUnrounded        = Vow(Unrounded, Opens.Close, Backnesses.Central, "ɨ", "1")
     let CloseCentralRounded          = Vow(Rounded, Opens.Close, Backnesses.Central, "ʉ", "}")
     let CloseBackUnrounded           = Vow(Unrounded, Opens.Close, Backnesses.Back, "ɯ", "M")
     let CloseBackRounded             = Vow(Rounded, Opens.Close, Backnesses.Back, "u", "u")
 
-    let NearCloseFrontUnrounded      = Vow(Unrounded, Opens.NearClose, Backnesses.NearFront, "ɪ", "I")
     let NearCloseCentralUnrounded    = Vow(Unrounded | NonIPA, Opens.NearClose, Backnesses.Central, "ᵻ", "I\\")
+    let NearCloseFrontUnrounded      = Vow(Unrounded, Opens.NearClose, Backnesses.NearFront, "ɪ", "I")
     let NearCloseFrontRounded        = Vow(Rounded, Opens.NearClose, Backnesses.NearFront, "ʏ", "Y")
-    let NearCloseBackRounded         = Vow(Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U")
     let NearCloseCentralRounded      = Vow(Rounded |NonIPA, Opens.NearClose, Backnesses.Central, "ᵿ", "U\\")
+    let NearCloseBackRounded         = Vow(Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U")
 
     let CloseMidFrontUnrounded       = Vow(Unrounded, Opens.CloseMid, Backnesses.Front, "e", "e")
     let CloseMidFrontRounded         = Vow(Rounded, Opens.CloseMid, Backnesses.Front, "ø", "2")
+    let MidCentralUnrounded          = Vow(Unrounded, Opens.Mid, Backnesses.Central, "ɘ", "@\\")
     let Schwa                        = Vow(Unrounded, Opens.CloseMid, Backnesses.Central, "ə", "@")
     let RoundedSchwa                 = Vow(Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8")
     let CloseMidBackUnrounded        = Vow(Unrounded, Opens.CloseMid, Backnesses.Back, "ɤ", "7")
     let CloseMidBackRounded          = Vow(Rounded, Opens.CloseMid, Backnesses.Back, "o", "o")
 
     let MidFrontUnrounded            = Vow(Unrounded, Opens.Mid, Backnesses.Front, "ø̞", "")
-    let MidCentralUnrounded          = Vow(Unrounded, Opens.Mid, Backnesses.Central, "ɘ", "@\\")
     let MidBackUnrounded             = Vow(Unrounded, Opens.Mid, Backnesses.Back, "o̞", "")
 
     let OpenMidNearFrontUnrounded    = Vow(Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E")
     let OpenMidNearFrontRounded      = Vow(Rounded, Opens.OpenMid, Backnesses.NearFront, "œ", "9")
-    let OpenMidCentral               = Vow(Unrounded, Opens.OpenMid, Backnesses.Central, "ɜ", "3")
     let OpenMidCentralRounded        = Vow(Rounded, Opens.OpenMid, Backnesses.Central, "ɞ", "3\\")
+    let OpenMidCentral               = Vow(Unrounded, Opens.OpenMid, Backnesses.Central, "ɜ", "3")
     let OpenMidBackUnrounded         = Vow(Unrounded, Opens.OpenMid, Backnesses.Back, "ʌ", "V")
     let OpenMidBackRounded           = Vow(Rounded, Opens.OpenMid, Backnesses.Back, "ɔ", "O")
 
@@ -411,9 +444,9 @@ with IPA
     let FrontOpenRounded             = Vow(Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&")
     let OpenMidSchwa                 = Vow(Rounded, Opens.NearOpen, Backnesses.Central, "ɐ", "6")
 
+    let OpenCentralUnrounded         = Vow(Unrounded, Opens.Open, Backnesses.Central, "ä", "a_\"")
     let OpenNearFrontUnrounded       = Vow(Unrounded, Opens.Open, Backnesses.NearFront, "a", "a")
     let OpenNearFrontRounded         = Vow(Rounded, Opens.Open, Backnesses.NearFront, "ɶ", "&")
-    let OpenCentralUnrounded         = Vow(Unrounded, Opens.Open, Backnesses.Central, "ä", "a_\"")
     let OpenBackUnrounded            = Vow(Unrounded, Opens.Open, Backnesses.Back, "ɑ", "A")
     let OpenBackRounded              = Vow(Rounded, Opens.Open, Backnesses.Back, "ɒ", "Q")
 
@@ -485,20 +518,21 @@ with IPA
   let NoSound   = Encode("?", "?") {Flags: Impossible}
 
   with DiacriticSounds
+    let UndefinedEscapeCharacter     = Diac("Undefined escape character", null, "*")
+    let Nasalized                    = Diac("Nasalized", "\u0303", "_~")
     let Centralized                  = Diac("Centralized", "\u0308", "_\"")
     let Advanced                     = Diac("Advanced", "\u031F", "_+")
     let Retracted                    = Diac("Retracted", "\u0320", "_-")
-    let RisingTone                   = Diac("RisingTone ", "\u030C", "_R", "_/")
+    let RisingTone                   = Diac("RisingTone ", "\u030C", "_R")
     let Voiceless                    = Diac("Voiceless", "\u0325", "_0")
     let Implosive                    = Diac("Implosive", null, "_<")
-    let Syllabic                     = Diac("Syllabic", "\u0329", "_=", "=")
+    let Syllabic                     = Diac("Syllabic", "\u0329", "_=")
     let Ejective                     = Diac("Ejective", "\u02BC", "_>")
     let Pharyngealized               = Diac("Pharyngealized ", "\u02E4", "_?\\")
-    let FallingTone                  = Diac("Falling tone", "\u0302", "_\\", "_F")
+    let FallingTone                  = Diac("Falling tone", "\u0302", "_F")
     let NonSyllabic                  = Diac("Non-syllabic", "\u032F", "_^")
     let NoAudibleRelease             = Diac("No audible release", "\u031A", "_}")
     let RhoticHook                   = Diac("Rhotic hook", "\u02DE", "`")
-    let Nasalized                    = Diac("Nasalized", "\u0303", "_~", "~")
     let AdvancedTongueRoot           = Diac("Advanced tongue root ", "\u0318", "_A")
     let Apical                       = Diac("Apical", "\u033A", "_a")
     let ExtraLowTone                 = Diac("Extra low tone", "\u030F", "_B")
@@ -511,7 +545,7 @@ with IPA
     let HighTone                     = Diac("High tone", "\u0301", "_H")
     let HighRisingTone               = Diac("High rising tone", "\u1DC4", "_H_T")
     let Aspirated                    = Diac("Aspirated", "\u02B0", "_h")
-    let Palatalized                  = Diac("Palatalized", "\u02B2", "_j", "'")
+    let Palatalized                  = Diac("Palatalized", "\u02B2", "_j")
     let CreakyVoiced                 = Diac("Creaky voiced", "\u0330", "_k")
     let LowTone                      = Diac("Low tone", "\u0300", "_L")
     let LateralRelease               = Diac("Lateral release", "\u02E1", "_l")
@@ -556,8 +590,6 @@ with IPA
     let ReadyMadeCombination         = Diac("Ready made combination", "\u026B", "")
     let Becomes                      = Diac("Becomes", "→", "")
     let Separator                    = Diac("Separator", "", "-")
-    let Space                        = Diac("Space", " ", " ")
-    let UndefinedEscapeCharacter     = Diac("Undefined escape character", null, "*")
   end
 
   //======================================================================
@@ -570,30 +602,27 @@ with IPA
   // Convert SAMPA text to sound data
   //======================================================================
 
-  let MatchSampa(ref sound, data) = sound.Sampa and sound.Sampa.Length <= data.Length and sound.Sampa == data[0..<sound.Sampa.Length]
-  let MatchAlt(ref sound, data)   = sound.Alt and sound.Alt.Length <= data.Length and sound.Alt == data[0..<sound.Alt.Length]
+  let MatchSampa(ref sound, data) begin
+     return sound.Sampa and sound.Sampa.Length > 0 and data.Index + sound.Sampa.Length <= data.SLength and sound.Sampa == data.Sampa.Slice(data.Index..<(data.Index+sound.Sampa.Length))
+  end
 
-  let SAMPASounds = Sounds + DiacriticSounds
-
-  let SAMPACheck(text) begin
-    var sampa = SAMPASounds.FindSlice(MatchSampa, text);
-    var alt   = SAMPASounds.FindSlice(MatchAlt, text);
-    if (sampa.Length == 0 and alt.Length == 0)
-      return [ref NoSound];
-    elseif (sampa.Length > 0)
-      if (text.Length > sampa[0].Sampa.Length)
-        return sampa[0..0] + SAMPACheck(text[(sampa[0].Sampa.Length)..]);
-      else
-        return sampa[0..0];
-      end;
-    elseif (text.Length > alt[0].Alt.Length)
-      return alt[0..0] + SAMPACheck(text[(alt[0].Alt.Length)..]);
+  let SAMPACheck(list, sampa, index, length) begin
+    var matches = Sounds.FindSlice(MatchSampa, {Sampa: sampa, Index: index, SLength: length}, 1);
+    if (matches.Length == 0)
+      list.AddReference(NoSound);
     else
-      return alt[0..0];
+      list.AddReference(matches[0]);
+    end;
+    if (matches.Length > 0 and (index + matches[0].Sampa.Length) < length)
+      SAMPACheck(list, sampa, index + matches[0].Sampa.Length, length);
     end
   end
 
-  let WordToSounds(word) = SAMPACheck(word.SAMPA)
+  let WordToSounds(word) begin
+    var list = Type.List(16);
+    SAMPACheck(list, word.Sampa, 0, word.Sampa.Length);
+    return list;
+  end
 
   //======================================================================
   // Matching Options Table
@@ -947,6 +976,11 @@ with IPA
   let SoundColumns = 4
   let SoundSize    = 40 pts
 
+  let ShowSampa(sampa) = Span {
+    Style.MonoFamily,
+    sampa,
+  }
+
   let SoundDisplay(sound, location) = Block {
     ParAlignment: ParAlignments.Center,
     Paragraph {
@@ -971,17 +1005,10 @@ with IPA
       TextHeight: 8 pts,
       if (sound.Sampa and sound.Sampa.Length > 0)
         ParBackground: 90%,
-        Span {
-          Style.MonoFamily,
-          sound.Sampa,
-          if (sound.Alt)
-            "Alt: ",
-            sound.Alt
-          end
-        }
+        ShowSampa(sound.Sampa)
       elseif (sound.Text.Length > 0)
         ParBackground: Colors.Red,
-//        Assert(false, "Missing SAMPA definition"),
+//        Assert(false, "Missing Sampa definition"),
       end
     },
   }
@@ -1062,7 +1089,8 @@ with IPA
   let ContainsMeaning(language, data) = language.Words.Contains(ContainsWord, data)
 
   let CollectMeanings(set, languages, ref meaning) begin
-    if (languages.FindSlice(ContainsMeaning, {Meaning: ref meaning}).Length == languages.Length)
+    var list = languages.FindSlice(ContainsMeaning, {Meaning: ref meaning});
+    if (list.Length == languages.Length)
       set.AddReference(meaning)
     end
   end
@@ -1123,20 +1151,25 @@ with IPA
     return set.Slice(0..);
   end
 
-  let ShowWord(word) = word.SAMPA
+  let ShowIPAWord(word) =  Span {
+//    word.Sampa,
+    (each IPA.WordToSounds(word)).Text
+  }
 
-  let CollectLangWord(set, sound, word) begin
+  let SameSound(ref sound, data) = sound == data.Sound
+
+  let CollectLangWord(set, ref sound, word) begin
     var sounds = WordToSounds(word);
-    if (sounds.Contains(sound))
-      set.AddElement(word.SAMPA, word);
+    if (sounds.Contains(SameSound, {Sound: ref sound}))
+      set.AddElement(word.Sampa, word);
     end
   end
 
-  let CollectLanguageWords(set, sound, language) begin
+  let CollectLanguageWords(set, ref sound, language) begin
     CollectLangWord(set, sound, each GetWordList(language));
   end
 
-  let WordsWithSound(sound) begin
+  let WordsWithSound(ref sound) begin
     var set = Type.Dictionary(256);
     CollectLanguageWords(set, sound, each Results.LanguageList);
     return set.Slice(0..);
@@ -1146,11 +1179,6 @@ with IPA
     Cell {
       HAlign: HAligns.Center,
       Style.TitleBackground,
-      Style.SoundBottom,
-      EachIndex+1
-    },
-    Cell {
-      HAlign: HAligns.Center,
       CharacterList[EachIndex]
     },
     Cell {
@@ -1158,9 +1186,10 @@ with IPA
       ShowSound(sound, Diacritic | Impossible),
     },
     Cell {
+      Style.IPAFamily,
       Span {
         Separator: Lang.Separator,
-        ShowWord(each WordsWithSound(sound))
+        ShowIPAWord(each WordsWithSound(sound))
       }
     }
   }
@@ -1168,12 +1197,11 @@ with IPA
   let CharacterTable(sounds) = Block {
     Table {
       Style.TableEdge,
-      Columns: [0.25 inches, 0.5 inches, 0.5 inches, 5 inches],
+      Columns: [0.5 inches, 0.5 inches, 6 inches],
       Row {
-        Style.HeaderCell("#"),
         Style.HeaderCell("Nex"),
         Style.HeaderCell(Lang.IPA),
-        Style.HeaderCell("Words with this sound")
+        Style.HeaderCell("Words containing this sound")
       },
       CharacterRow(each sounds),
     },
