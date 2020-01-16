@@ -41,31 +41,31 @@ with IPA
   end
 
   with SoundTypes
-    let None        = mask
-    let Voiced      = mask {Name: Lang.Voiced}
-    let Rounded     = mask {Name: Lang.Rounded}
-    let Velarized   = mask {Name: Lang.Velarized}
-    let Ejective    = mask {Name: Lang.Ejective}
-    let Pulmonic    = mask {Name: Lang.Pulmonic}
-    let Nasal       = mask {Name: Lang.Nasal}
-    let Tenuis      = mask {Name: Lang.Tenuis}
-    let Lateral     = mask {Name: Lang.Lateral}
-    let Sibilant    = mask {Name: Lang.Sibilant}
-    let Fricative   = mask {Name: Lang.Fricative}
-    let Approximant = mask {Name: Lang.Approximant}
-    let Plosive     = mask {Name: Lang.Plosive}
-    let Implosive   = mask {Name: Lang.Implosive}
-    let Central     = mask {Name: Lang.Central}
-    let TapFlap     = mask {Name: Lang.TapFlap}
-    let Trill       = mask {Name: Lang.Trill}
-    let Stop        = mask {Name: Lang.Stop}
-    let Click       = mask {Name: Lang.Click}
-    let Affricate   = mask {Name: Lang.Affricate}
-    let Vowel       = mask {Name: Lang.Vowel}
-    let Rhotic      = mask {Name: Lang.Rhotic}
-    let Impossible  = mask {Name: Lang.Impossible}
-    let NonIPA      = mask {Name: Lang.NonIPA}
-    let Diacritic   = mask {Name: Lang.Diacritic}
+    let None        = flag
+    let Voiced      = flag {Name: Lang.Voiced}
+    let Rounded     = flag {Name: Lang.Rounded}
+    let Velarized   = flag {Name: Lang.Velarized}
+    let Ejective    = flag {Name: Lang.Ejective}
+    let Pulmonic    = flag {Name: Lang.Pulmonic}
+    let Nasal       = flag {Name: Lang.Nasal}
+    let Tenuis      = flag {Name: Lang.Tenuis}
+    let Lateral     = flag {Name: Lang.Lateral}
+    let Sibilant    = flag {Name: Lang.Sibilant}
+    let Fricative   = flag {Name: Lang.Fricative}
+    let Approximant = flag {Name: Lang.Approximant}
+    let Plosive     = flag {Name: Lang.Plosive}
+    let Implosive   = flag {Name: Lang.Implosive}
+    let Central     = flag {Name: Lang.Central}
+    let TapFlap     = flag {Name: Lang.TapFlap}
+    let Trill       = flag {Name: Lang.Trill}
+    let Stop        = flag {Name: Lang.Stop}
+    let Click       = flag {Name: Lang.Click}
+    let Affricate   = flag {Name: Lang.Affricate}
+    let Vowel       = flag {Name: Lang.Vowel}
+    let Rhotic      = flag {Name: Lang.Rhotic}
+    let Impossible  = flag {Name: Lang.Impossible}
+    let NonIPA      = flag {Name: Lang.NonIPA}
+    let Diacritic   = flag {Name: Lang.Diacritic}
 
 //    let Consonant   = mask {Name: Lang.Consonant}
   end
@@ -411,11 +411,11 @@ with IPA
     let FrontOpenRounded             = Vow(Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&")
     let OpenMidSchwa                 = Vow(Rounded, Opens.NearOpen, Backnesses.Central, "ɐ", "6")
 
-    let OpenBackUnrounded            = Vow(Unrounded, Opens.Open, Backnesses.Back, "ɑ", "A")
-    let OpenBackRounded              = Vow(Rounded, Opens.Open, Backnesses.Back, "ɒ", "Q")
-    let OpenCentralUnrounded         = Vow(Unrounded, Opens.Open, Backnesses.Central, "ä", "a_\"")
     let OpenNearFrontUnrounded       = Vow(Unrounded, Opens.Open, Backnesses.NearFront, "a", "a")
     let OpenNearFrontRounded         = Vow(Rounded, Opens.Open, Backnesses.NearFront, "ɶ", "&")
+    let OpenCentralUnrounded         = Vow(Unrounded, Opens.Open, Backnesses.Central, "ä", "a_\"")
+    let OpenBackUnrounded            = Vow(Unrounded, Opens.Open, Backnesses.Back, "ɑ", "A")
+    let OpenBackRounded              = Vow(Rounded, Opens.Open, Backnesses.Back, "ɒ", "Q")
 
 // How to show rhotic vowels?
 //    let OpenMidCentralRhotic       = Vow(Rhotic, Opens.OpenMid, Backnesses.Central, "ɝ", "")
@@ -562,9 +562,9 @@ with IPA
 
   //======================================================================
 
-  let HasFlag(flags, flag)        = (flags & flag) != None
-  let NotFlag(flags, flag)        = (flags & flag) == None
-  let HasMask(flag, fmask, flags) = (flag & fmask) == (flags & fmask)
+  let HasFlag(flags, f)       = (flags & f) != None
+  let NotFlag(flags, f)       = (flags & f) == None
+  let HasMask(flags, mask, f) = (flags & mask) == (f & mask)
 
   //======================================================================
   // Convert SAMPA text to sound data
@@ -575,23 +575,25 @@ with IPA
 
   let SAMPASounds = Sounds + DiacriticSounds
 
-  let SAMPAToSounds(text) begin
+  let SAMPACheck(text) begin
     var sampa = SAMPASounds.FindSlice(MatchSampa, text);
     var alt   = SAMPASounds.FindSlice(MatchAlt, text);
     if (sampa.Length == 0 and alt.Length == 0)
       return [ref NoSound];
     elseif (sampa.Length > 0)
       if (text.Length > sampa[0].Sampa.Length)
-        return sampa[0..0] + SAMPAToSounds(text[(sampa[0].Sampa.Length)..]);
+        return sampa[0..0] + SAMPACheck(text[(sampa[0].Sampa.Length)..]);
       else
         return sampa[0..0];
       end;
     elseif (text.Length > alt[0].Alt.Length)
-      return alt[0..0] + SAMPAToSounds(text[(alt[0].Alt.Length)..]);
+      return alt[0..0] + SAMPACheck(text[(alt[0].Alt.Length)..]);
     else
       return alt[0..0];
     end
   end
+
+  let WordToSounds(word) = SAMPACheck(word.SAMPA)
 
   //======================================================================
   // Matching Options Table
@@ -642,11 +644,11 @@ with IPA
     end
   }
 
-  let ShowSound(ref sound) = Span {
+  let ShowSound(ref sound, flags=Impossible) = Span {
     Style.IPAFamily,
     Popup: SoundPopup.Call(sound),
     Link: sound.FullSymbolName,
-    if (sound.Flags.HasFlag(Impossible))
+    if (sound.Flags.HasFlag(flags))
       Assert(false, "Impossible sound"),
       TextColor: Colors.Red,
     end,
@@ -770,6 +772,7 @@ with IPA
   let VowelRow(set, open) = Row {
     Cell {
       VAlign: VAligns.Center,
+      Style.TitleBackground,
       Style.SoundBottom,
       open.Name
     },
@@ -993,14 +996,13 @@ with IPA
     SoundCell(each sounds)
   }
 
-  let SoundTable = Block {
+  let SoundTable(sounds) = Block {
     Table {
       Columns: [Metrics.Content.Width / SoundColumns] * SoundColumns,
       Style.TitleBar(Lang.IPAListing, SoundColumns),
-      SoundRow(each (Sounds / SoundColumns))
+      SoundRow(each (sounds / SoundColumns))
     },
-    Style.TableNotes {
-    }
+    Style.TableNotes
   }
 
   let SoundPopup(sound) = Frame {
@@ -1051,6 +1053,131 @@ with IPA
     All: Ejective Affricate,
     Manners: [Central, Lateral],
     RowMask: Pulmonic Approximant Central Lateral,
+  }
+  //======================================================================
+  // Find the list of meanings for which there is a word in every language
+  //======================================================================
+
+  let ContainsWord(word, data)        = word.Meaning == data.Meaning
+  let ContainsMeaning(language, data) = language.Words.Contains(ContainsWord, data)
+
+  let CollectMeanings(set, languages, ref meaning) begin
+    if (languages.FindSlice(ContainsMeaning, {Meaning: ref meaning}).Length == languages.Length)
+      set.AddReference(meaning)
+    end
+  end
+
+  let FindCompleteMeanings(languages) begin
+    var set = Type.Dictionary(128);
+    CollectMeanings(set, languages, each WordMeanings);
+    return set.Slice(0..);
+  end
+
+
+  let MeaningRow(ref meaning) = Row {
+    Cell {
+      HAlign: HAligns.Center,
+      Style.TitleBackground,
+      Style.SoundBottom,
+      EachIndex+1
+    },
+    Cell {
+      meaning.Name
+    }
+  }
+
+  let MeaningTable(meanings) = Block {
+    Table {
+      Style.TableEdge,
+      Columns: [0.5 inches, 4 inches],
+      Style.TitleBar("Meanings", 3),
+      Row {
+        Style.HeaderCell("#") {HAlign: HAligns.Center},
+        Style.HeaderCell("Meaning") {HAlign: HAligns.Left}
+      },
+      MeaningRow(each meanings),
+    },
+    Style.TableNotes
+  }
+  //======================================================================
+
+  let CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1)
+
+  let WordMatch(meaning, def) = meaning == def.Meaning
+  let CompleteWord(def)       = Results.CompleteMeanings.Contains(WordMatch, def)
+  let GetWordList(language)   = language.Words.FindSlice(CompleteWord)
+
+
+  let CollectWord(set, word) begin
+    var sounds = WordToSounds(word);
+    set.AddReference(each sounds);
+  end
+
+  let CollectLanguage(set, language) begin
+    CollectWord(set, each GetWordList(language));
+  end
+
+  let FindUniqueSounds(languagelist) begin
+    var set = Type.Dictionary(256);
+    CollectLanguage(set, each languagelist);
+    return set.Slice(0..);
+  end
+
+  let ShowWord(word) = word.SAMPA
+
+  let CollectLangWord(set, sound, word) begin
+    var sounds = WordToSounds(word);
+    if (sounds.Contains(sound))
+      set.AddElement(word.SAMPA, word);
+    end
+  end
+
+  let CollectLanguageWords(set, sound, language) begin
+    CollectLangWord(set, sound, each GetWordList(language));
+  end
+
+  let WordsWithSound(sound) begin
+    var set = Type.Dictionary(256);
+    CollectLanguageWords(set, sound, each Results.LanguageList);
+    return set.Slice(0..);
+  end
+
+  let CharacterRow(ref sound) = Row {
+    Cell {
+      HAlign: HAligns.Center,
+      Style.TitleBackground,
+      Style.SoundBottom,
+      EachIndex+1
+    },
+    Cell {
+      HAlign: HAligns.Center,
+      CharacterList[EachIndex]
+    },
+    Cell {
+      HAlign: HAligns.Center,
+      ShowSound(sound, Diacritic | Impossible),
+    },
+    Cell {
+      Span {
+        Separator: Lang.Separator,
+        ShowWord(each WordsWithSound(sound))
+      }
+    }
+  }
+
+  let CharacterTable(sounds) = Block {
+    Table {
+      Style.TableEdge,
+      Columns: [0.25 inches, 0.5 inches, 0.5 inches, 5 inches],
+      Row {
+        Style.HeaderCell("#"),
+        Style.HeaderCell("Nex"),
+        Style.HeaderCell(Lang.IPA),
+        Style.HeaderCell("Words with this sound")
+      },
+      CharacterRow(each sounds),
+    },
+    Style.TableNotes
   }
   //======================================================================
 

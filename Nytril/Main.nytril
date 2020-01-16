@@ -13,7 +13,8 @@ include "WordForms"
 let Main.Run = [
 //  Write(Nexus.SourceFile, Nexus.SourcePath),
 //  Write(RevBayes.SourceFile, RevBayes.SourcePath),
-//  Write(WhitePaper, PaperPath Extensions.Word),
+//  Write(WhitePaper, Info.PaperPath Extensions.Word),
+  Write(Results.LanguageTreeFile, Info.TreeFilePath),
   Write(WhitePaper, Info.PaperPath Extensions.PDF),
   IO.OpenDocument(Info.PaperPath Extensions.PDF),
 ]
@@ -24,11 +25,22 @@ with Info
   let OutputFolder = MainFolder Folder("Output")
 
   let PaperPath    = OutputFolder FileName("Paper")
+  let TreeFilePath = OutputFolder FileName("LanguageTree") Extensions.Nexus
   let Journal      = "Transactions of the Beysian Society"
   let Publisher    = "The Baysian Society"
   let Title        = "Simulated Word Sound Evolution using the TKF91 Model"
 
   let LanguageTree = LanguageBranches.Romance
+end
+//======================================================================
+
+with Results
+  let LangHasWords(ref language) = language.Words != null
+  let LanguageList     = FindSlice(Languages, LangHasWords)
+
+  let CompleteMeanings = IPA.FindCompleteMeanings(LanguageList)
+  let LanguageTreeFile = TreeLib.NexusFile(Info.LanguageTree)
+  let UniqueSounds     = IPA.FindUniqueSounds(LanguageList)
 end
 //======================================================================
 
@@ -108,19 +120,16 @@ with Content.Conclusion
 end
 //======================================================================
 
-let LangHasWords(ref language) = language.Words != null
-let LanguageList               = FindSlice(Languages, LangHasWords)
-
-//======================================================================
-
 let AddAppendix(title, content) = {Title: title, Content: content}
 
+let Appendix.MeaningList        = AddAppendix("Meanings with words in Every Language", IPA.MeaningTable(Results.CompleteMeanings))
+let Appendix.UniqueSounds       = AddAppendix("Sounds in the Target Word List", IPA.CharacterTable(Results.UniqueSounds))
 let Appendix.LanguagePhylogeny  = AddAppendix(Lang.LanguagePhylogeny, Style.ShowTree(Info.LanguageTree))
-let Appendix.LanguageTreeFile   = AddAppendix(Lang.LanguageTreeFile, TreeLib.NexusFile(Info.LanguageTree) Style.MonoFamily)
+let Appendix.LanguageTreeFile   = AddAppendix(Lang.LanguageTreeFile, Results.LanguageTreeFile Style.MonoFamily)
+let Appendix.WordList           = AddAppendix(Lang.WordListComparison, AllWords.WordTable(Results.LanguageList))
+let Appendix.WordListLanguage   = AddAppendix(Lang.WordListLanguage, DisplayWords.LanguageTable(each Results.LanguageList))
 let Appendix.SoundGrouping      = AddAppendix(Lang.SoundGroups, IPA.ShowGroups)
-let Appendix.IPA                = AddAppendix(Lang.IPAFull, IPA.SoundTable)
-let Appendix.WordList           = AddAppendix(Lang.WordListComparison, AllWords.WordTable(LanguageList))
-let Appendix.WordListLanguage   = AddAppendix(Lang.WordListLanguage, DisplayWords.LanguageTable(each LanguageList))
+let Appendix.IPA                = AddAppendix(Lang.IPAFull, IPA.SoundTable(IPA.Sounds))
 let Appendix.NytrilSourceCode   = AddAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList))
 //======================================================================
 

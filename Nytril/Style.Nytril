@@ -157,7 +157,7 @@ with Style
         Background: 90%,
         TextHeight: 7 pts,
         Width: TreeWidth - 54 pts,
-        Begin: LanguageBranches.Romance.Branch,
+        Begin: 2000,
         End: 0,
       },
       Span {
@@ -318,7 +318,7 @@ end
 
 with DisplayWords
   let WordRow(word) begin
-    var sounds = IPA.SAMPAToSounds(word.Text);
+    var sounds = IPA.WordToSounds(word);
 
     return Row {
       Style.RowBar(EachIndex),
@@ -328,7 +328,7 @@ with DisplayWords
         word.Meaning
       },
       Cell {
-        word.Text
+        word.SAMPA
       },
       Cell {
         Span {
@@ -375,9 +375,9 @@ with AllWords
   let LangHasMeaning(word, data) = word.Meaning == data.Meaning
 
   let AddCell(meaning, language) begin
-    var list = language.Words.FindSlice(LangHasMeaning, {Meaning: meaning});
+    var words = language.Words.FindSlice(LangHasMeaning, {Meaning: meaning});
     return Cell {
-      (each list).Text
+      (each words).SAMPA
     }
   end
 
@@ -407,7 +407,6 @@ with AllWords
     Table {
       TextHeight: 7 pts,
       Columns: [Column1, (Metrics.Content.Width - Column1) / wordlist.Length],
-      Style.TitleBar("Words in each language by meaning", wordlist.Length+1),
       Row {
         HeaderCell({TextColor: Colors.DarkGray} Lang.Meaning),
         LanguageHeader(each wordlist),
