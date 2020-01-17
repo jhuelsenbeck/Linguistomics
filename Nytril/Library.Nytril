@@ -1,90 +1,6 @@
 using Format, Units, Math, IO
 //======================================================================
 
-with RevBayes
-  let TreeFile      = Info.OutputFolder FileName("ieo_fifty") Extensions.Nexus
-  let Comment(text) = Span {TextColor: Colors.Green, LineBreak, "# " text}
-  let String(text)  = Span {TextColor: Colors.Red, text.QuoteString}
-
-  let CognateNumber(group) = Span {
-    group.Variable,
-    " := ",
-    group.Members.Length
-  }
-
-  let SourceFile = Style.SourceCodeBlock {
-    "clear()",
-//    "morph = readDiscreteCharacterData({0})"(String(Nexus.SourcePath))
-    Empty,
-    "moves = VectorMoves()",
-    "monitors = VectorMonitors()",
-    "trees = readTrees({0})"(String(TreeFile)),
-    "treetrace = treeTrace(trees)",
-  }
-end
-
-
-//======================================================================
-/*
-with Nexus {
-  let SourcePath = Info.OutputFolder FileName("Articles") Extensions.Nexus
-
-  let LanguageLine(lang) = {
-    "    " lang.SymbolName
-  }
-
-  let CharState(lang, group) = AnyContains(lang, group) ? PossibleSymbols[EachIndex+1] : PossibleSymbols[0]
-
-  let CharStates(lang) {
-    CharState(lang, each CognateGroup)
-  }
-
-  let MatrixLine(lang) = Span {
-    "  ",
-    lang.SymbolName,
-    " " * (20 - lang.SymbolName.Length),
-    CharStates(lang)
-  }
-
-  let Comment(text) = Span {TextColor: Colors.Green, "# " text}
-
-
-  let UsedSymbols = Span {
-    Separator: Space,
-    each PossibleSymbols[0..<CognateGroup.Length]
-  }
-
-  let ClassComment(cc) = "  {0} '{1}' / ,"(EachIndex+1, cc.Description)
-
-  let SourceFile = Style.SourceCodeBlock {
-    Comment("This does not include demonstratives with article-like functions but it does code for Baltic definite adjectives and Iraninian specificity DOM"),
-    Comment("NEXUS"),
-    Empty,
-    Comment("I added the taxa information"),
-    "BEGIN TAXA;",
-    "  DIMENSIONS NTAX={0};"(LanguageList.Length),
-    "  TAXLABELS",
-    LanguageLine(each LanguageList),
-    ";",
-    "END;",
-    Empty,
-    Empty,
-    "BEGIN CHARACTERS;",
-    "DIMENSIONS NewTaxa NTAX={0} NCHAR={1};"(LanguageList.Length, CognateGroup.Length),
-    "FORMAT DATATYPE=STANDARD SYMBOLS=\"{0}\" MISSING=? GAP=-;"(UsedSymbols),
-    "CHARSTATELABELS",
-    "  0 'None' / ,",
-    ClassComment(each CognateGroup),
-    "  ;",
-    Empty,
-    "MATRIX"
-    Empty,
-    MatrixLine(each LanguageList),
-  }
-}
-*/
-//======================================================================
-
 with TreeLib
   let GetNodeLabel(node) = node.Data?.SymbolName
 
@@ -100,6 +16,55 @@ with TreeLib
     VisitNodeTaxa(set, tree);
     return (each set).SymbolName;
   end
+end
+//======================================================================
+
+with Nexus
+  let CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1)
+  let EndLine       = ";"
+  let Quote         = "\""
+
+  let Keyword(name) = Span {
+    TextColor: Colors.Blue,
+    name
+  }
+
+  let Comment(text) = Span {
+    TextColor: Colors.Green,
+    "#"
+    text
+  }
+
+  let AddLine(name) = Span {
+    Keyword(name)
+  }
+
+  let AddValue(name, value) = Span {
+    Space,
+    Keyword(name),
+    "=",
+    value,
+  }
+
+  let BeginScope(name) = TextBlock {
+    SpaceIndent: 2,
+    Begin: Span {
+      Keyword("begin"),
+      Space,
+      name,
+      EndLine,
+    },
+    End: Span {
+      Keyword("end"),
+      EndLine,
+    },
+  }
+
+
+  let SourceFile = TextBlock {
+    Comment("NEXUS"),
+    Empty,
+  }
 
   let Newick(node) = Span {
     if (node.Length > 0)
@@ -110,38 +75,67 @@ with TreeLib
       },
       ")",
     end,
-    GetNodeLabel(node),
+    TreeLib.GetNodeLabel(node),
     ":",
     node.Branch
   }
 
   let ShowTreeLine(ref tree) = Span {
-    "  tree ",
+    "tree ",
     tree.SymbolName,
     " = ",
     Newick(tree),
-    ";"
+    EndLine
   }
 
-  let NexusFile(ref tree) = TreeCode(tree, GetTaxaLabels(tree))
-
-  let TreeCode(ref tree, taxa) = TextBlock {
-    "#NEXUS",
-    "BEGIN TAXA;",
-    "  Dimensions ntax={0};"(taxa.Length),
-    Span {
-      "  TAXLABELS ",
-      Span {
-        Separator: Space,
-        taxa,
+  let TreeFormat(taxa) = SourceFile {
+    BeginScope("taxa") {
+      AddLine("dimensions") {
+        AddValue("ntax", taxa.Length),
+        EndLine
       },
-      ";",
+      AddLine("taxlabels") {
+        Space,
+        Span {
+          Separator: Space,
+          taxa,
+        },
+        EndLine,
+      },
+    }
+  }
+
+  let TreeFile(ref tree) = TreeFormat(TreeLib.GetTaxaLabels(tree)) {
+    BeginScope("trees") {
+      ShowTreeLine(ref tree),
+    }
+  }
+
+  let ShowTaxon(taxon) = Span {
+    taxon.Name,
+    Space * (32 - taxon.Name.Length),
+    taxon.Characters
+  }
+
+  let CharacterFile(taxa, charmax) = SourceFile {
+    BeginScope("DATA") {
+      AddLine("dimensions") {
+        AddValue("ntax", taxa.Length),
+        AddValue("nchar", charmax),
+        EndLine
+      },
+      AddLine("format") {
+        AddValue("datatype", "STANDARD"),
+        AddValue("gap", "-"),
+        AddValue("missing", "?"),
+        AddValue("symbols", Span {Quote, CharacterList[0..charmax], Quote}),
+        EndLine
+      },
+      Keyword("matrix"),
+      ShowTaxon(each taxa),
+      Empty,
+      EndLine,
     },
-    "END;",
-    Empty,
-    "BEGIN trees;",
-    ShowTreeLine(tree),
-    "END;"
   }
 end
 //======================================================================

@@ -36,11 +36,14 @@ end
 
 with Results
   let LangHasWords(ref language) = language.Words != null
-  let LanguageList     = FindSlice(Languages, LangHasWords)
+  let LanguageList               = FindSlice(Languages, LangHasWords)
 
   let CompleteMeanings = IPA.FindCompleteMeanings(LanguageList)
-  let LanguageTreeFile = TreeLib.NexusFile(Info.LanguageTree)
   let UniqueSounds     = IPA.FindUniqueSounds(LanguageList)
+
+  let Taxa             = [{Name: "Taxon1", Characters: "ABCDEFG"}]*5
+  let LanguageTreeFile = Nexus.TreeFile(Info.LanguageTree)
+  let CharacterFile    = Nexus.CharacterFile(Taxa, UniqueSounds.Length)
 end
 //======================================================================
 
@@ -122,10 +125,11 @@ end
 
 let AddAppendix(title, content) = {Title: title, Content: content}
 
-let Appendix.MeaningList        = AddAppendix("Meanings with words in Every Language", IPA.MeaningTable(Results.CompleteMeanings))
-let Appendix.UniqueSounds       = AddAppendix("Sounds in the Target Word List", IPA.CharacterTable(Results.UniqueSounds))
+let Appendix.MeaningList        = AddAppendix("Meanings with words in every language", IPA.MeaningTable(Results.CompleteMeanings))
+let Appendix.UniqueSounds       = AddAppendix("Sounds in the target word list", IPA.CharacterTable(Results.UniqueSounds))
 let Appendix.LanguagePhylogeny  = AddAppendix(Lang.LanguagePhylogeny, Style.ShowTree(Info.LanguageTree))
 let Appendix.LanguageTreeFile   = AddAppendix(Lang.LanguageTreeFile, Results.LanguageTreeFile Style.MonoFamily)
+let Appendix.CharacterFile      = AddAppendix("Character file", Results.CharacterFile Style.MonoFamily)
 let Appendix.WordList           = AddAppendix(Lang.WordListComparison, AllWords.WordTable(Results.LanguageList))
 let Appendix.WordListLanguage   = AddAppendix(Lang.WordListLanguage, DisplayWords.LanguageTable(each Results.LanguageList))
 let Appendix.SoundGrouping      = AddAppendix(Lang.SoundGroups, IPA.ShowGroups)

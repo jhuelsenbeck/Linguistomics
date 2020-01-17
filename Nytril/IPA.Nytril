@@ -1129,8 +1129,6 @@ with IPA
   }
   //======================================================================
 
-  let CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1)
-
   let WordMatch(meaning, def) = meaning == def.Meaning
   let CompleteWord(def)       = Results.CompleteMeanings.Contains(WordMatch, def)
   let GetWordList(language)   = language.Words.FindSlice(CompleteWord)
@@ -1151,11 +1149,6 @@ with IPA
     return set.Slice(0..);
   end
 
-  let ShowIPAWord(word) =  Span {
-//    word.Sampa,
-    (each IPA.WordToSounds(word)).Text
-  }
-
   let SameSound(ref sound, data) = sound == data.Sound
 
   let CollectLangWord(set, ref sound, word) begin
@@ -1175,11 +1168,16 @@ with IPA
     return set.Slice(0..);
   end
 
+  let ShowIPA(word) =  Span {
+//    word.Sampa,
+    (each IPA.WordToSounds(word)).Text
+  }
+
   let CharacterRow(ref sound) = Row {
     Cell {
       HAlign: HAligns.Center,
       Style.TitleBackground,
-      CharacterList[EachIndex]
+      Nexus.CharacterList[EachIndex]
     },
     Cell {
       HAlign: HAligns.Center,
@@ -1189,7 +1187,7 @@ with IPA
       Style.IPAFamily,
       Span {
         Separator: Lang.Separator,
-        ShowIPAWord(each WordsWithSound(sound))
+        ShowIPA(each WordsWithSound(sound))
       }
     }
   }
@@ -1199,7 +1197,7 @@ with IPA
       Style.TableEdge,
       Columns: [0.5 inches, 0.5 inches, 6 inches],
       Row {
-        Style.HeaderCell("Nex"),
+        Style.HeaderCell("Code"),
         Style.HeaderCell(Lang.IPA),
         Style.HeaderCell("Words containing this sound")
       },
