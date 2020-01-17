@@ -708,7 +708,7 @@ with IPA
   }
 
   //======================================================================
-  // Convert SAMPA text to sound data
+  // Convert SAMPA text to sound objects
   //======================================================================
 
   let SAMPASounds = Sounds + [ref SpaceSound]
@@ -738,5 +738,17 @@ with IPA
   let ShowIPA(word) =  Span {
     (each WordToSounds(word)).Text
   }
+
+  let GatherText(set, ref sound) begin
+    if (sound.Sampa.Length > 0)
+      set.AddElement(sound.Sampa, ref sound)
+    end
+  end
+
+  let SampaDictionary begin
+    var set = Type.Dictionary(128);
+    GatherText(set, each Sounds);
+    return set;
+  end
 end
 
