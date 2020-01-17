@@ -105,31 +105,33 @@ with IPA
     Flags: Diacritic
   }
 
+  let NasalizedChar = "\u0303"
+
+  let NoSound    = Encode("?", "?") {Flags: Impossible}
+  let SpaceSound = Diac("Space", " ", " ")
+
   with Sounds
     //==================================
     // Extra sounds found in word list
     //==================================
 
-    let VdNasalizedLabialVelarApproximant = Con(Voiced Approximant Nasal, Places.LabialVelar, "w\u0303", "w_~")
-    let NasalizedCloseFrontRounded        = Vow(Rounded Nasal, Opens.Close, Backnesses.Front, "y\u0303", "y_~")
-    let VdNasalizedUvularFricative        = Con(Voiced Pulmonic Fricative, Places.Uvular, "r\u0303", "r_~")
+    let OE_star   = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ" NasalizedChar, "oe*") // French One "un"
 
-    let r_twiddle                         = Con(Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "r_~")  // French Cold "Froid"  Same as SAMPA "R"?
+    let w_nasal = Con(Nasal Voiced Approximant Nasal, Places.LabialVelar, "w" NasalizedChar, "w_~")
+    let r_nasal = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "r" NasalizedChar, "r_~")
+//    let r_nasal = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "r_~")  // French Cold "Froid"  Same as SAMPA "R"?
 
-    let A_star                            = Vow(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ\u0303", "a*")   // Supposed to be "ɛ̃" as in French Dog "chien"?
-    let O_star                            = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*")             // French Fish "poisson"
-    let OE_star                           = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ\u0303", "oe*") // French One "un"
+    let Y_nasal   = Vow(Rounded Nasal, Opens.Close, Backnesses.Front, "y" NasalizedChar, "y_~")
+    let A_star    = Vow(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ" NasalizedChar, "a*")   // Supposed to be "ɛ̃" as in French Dog "chien"?
 
-    let U_star                            = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u\u0303", "u*")         // Portuguese One "um"
-    let e_star                            = Vow(Nasal Unrounded, Opens.CloseMid, Backnesses.Front, "e\u0303", "e*")   // Portuguese Trail "se*da
-    let i_star                            = Vow(Nasal Unrounded, Opens.Close, Backnesses.Front, "i\u0303", "i*")      // Portuguese Tongue
+    let O_star    = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*")             // French Fish "poisson"
+    let e3_star   = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ" NasalizedChar, "3*")   // SAMPA "E"?
+    let E_star    = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ" NasalizedChar, "E*")   // Walloon One, Don't know how this is different from above
 
-    let e3_star                           = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ\u0303", "3*")   // SAMPA "E"?
+    let U_star    = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u" NasalizedChar, "u*")         // Portuguese One "um"
+    let e_star    = Vow(Nasal Unrounded, Opens.CloseMid, Backnesses.Front, "e" NasalizedChar, "e*")   // Portuguese Trail "se*da
+    let i_star    = Vow(Nasal Unrounded, Opens.Close, Backnesses.Front, "i" NasalizedChar, "i*")      // Portuguese Tongue
 
-    let E_star                            = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ\u0303", "E*")   // Walloon One, Don't know how this is different from above
-
-
-    let Space                             = Diac("Space", " ", " ")
 
 
     //==================================
@@ -515,11 +517,10 @@ with IPA
   end                       									
 
   let AllSounds = Sounds + ImpossibleSounds
-  let NoSound   = Encode("?", "?") {Flags: Impossible}
 
   with DiacriticSounds
     let UndefinedEscapeCharacter     = Diac("Undefined escape character", null, "*")
-    let Nasalized                    = Diac("Nasalized", "\u0303", "_~")
+    let Nasalized                    = Diac("Nasalized", NasalizedChar, "_~")
     let Centralized                  = Diac("Centralized", "\u0308", "_\"")
     let Advanced                     = Diac("Advanced", "\u031F", "_+")
     let Retracted                    = Diac("Retracted", "\u0320", "_-")
@@ -602,12 +603,14 @@ with IPA
   // Convert SAMPA text to sound data
   //======================================================================
 
+  let SAMPASounds = Sounds + [ref SpaceSound]
+
   let MatchSampa(ref sound, data) begin
      return sound.Sampa and sound.Sampa.Length > 0 and data.Index + sound.Sampa.Length <= data.SLength and sound.Sampa == data.Sampa.Slice(data.Index..<(data.Index+sound.Sampa.Length))
   end
 
   let SAMPACheck(list, sampa, index, length) begin
-    var matches = Sounds.FindSlice(MatchSampa, {Sampa: sampa, Index: index, SLength: length}, 1);
+    var matches = SAMPASounds.FindSlice(MatchSampa, {Sampa: sampa, Index: index, SLength: length}, 1);
     if (matches.Length == 0)
       list.AddReference(NoSound);
     else
@@ -1205,20 +1208,5 @@ with IPA
     },
     Style.TableNotes
   }
-  //======================================================================
-
-  let ShowGroups begin
-    var set = Type.Dictionary(256);
-    return Block {
-      ShowTable(set, each [PulmonicTable, NonPulmonicTable]),
-      PageBreak,
-      ShowTable(set, each [PulmonicAffricatesTable, EjectiveAffricatesTable]),
-      VowelTable(set),
-      OtherTable(set),
-      DiacriticTable,
-      PageBreak,
-      SoundTree
-    }
-  end
   //======================================================================
 end
