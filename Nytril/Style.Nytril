@@ -2,13 +2,16 @@ using Format, Units, Math, IO
 //======================================================================
 
 with Metrics
-  let MarginL = 0.75 inches
-  let MarginR = MarginL
-  let MarginT = 0.5 inches
-  let MarginB = 0.4 inches
-  let Paper   = Type.Size(8.5 inches, 11 inches)
-  let Content = Type.Size(Paper.Width - MarginL - MarginR, Paper.Height - MarginT - MarginB)
+  let MarginL    = 0.75 inches
+  let MarginR    = MarginL
+  let MarginT    = 0.5 inches
+  let MarginB    = 0.4 inches
+  let Paper      = Type.Size(8.5 inches, 11 inches)
+  let Content    = Type.Size(Paper.Width - MarginL - MarginR, Paper.Height - MarginT - MarginB)
   let TableSpace = 24 pts
+
+  let BoxSize    = Type.Size(18 pts, 20 pts)
+  let CellSize   = Type.Size(BoxSize.Width * 2, BoxSize.Height)
 end
 //======================================================================
 
@@ -26,6 +29,7 @@ with Style
   let TableEdge            = {Edge: 0.3 pts}
   let ColumnEdge           = {EdgeR: 0.3 pts}
   let SoundBottom          = {EdgeB: 0.25 pts {Color: 80%}}
+
 
   let RowBar(i) = {
     if (i mod 2 != 0)
@@ -189,7 +193,6 @@ with Style
       Span {
         Separator: Space,
         if (author.Website)
-          TextColor: Colors.Blue,
           Link: author.Website,
         end,
         author.First, author.Middle, author.Last,
@@ -203,24 +206,21 @@ with Style
     Empty
   }
 
-  let AppendixRow(ref appendix) = Row {
-    Cell {
-      Span {EachIndex + 1, ")"}
-    },
-    Cell {
-      Span {
-        Link: appendix.FullSymbolName,
-        appendix.Title
-      }
+  let AppendixRow(ref appendix) = Paragraph {
+    LeftIndent: 20 pts,
+    FirstIndent: -20 pts,
+    EachIndex + 1,
+    ")",
+    Tab,
+    Span {
+      Link: appendix.FullSymbolName,
+      appendix.Title
     }
   }
 
   let ShowAppendixTable = Block {
     HeaderCentered(Lang.Appendices),
-    Table {
-      Columns: [15 pts, 5 inches],
-      AppendixRow(each Appendix)
-    }
+    AppendixRow(each Appendix)
   }
 
   let ShowAuthors(authors) = Block {

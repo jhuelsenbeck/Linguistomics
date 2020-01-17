@@ -600,53 +600,14 @@ with IPA
   let HasMask(flags, mask, f) = (flags & mask) == (f & mask)
 
   //======================================================================
-  // Convert SAMPA text to sound data
-  //======================================================================
 
-  let SAMPASounds = Sounds + [ref SpaceSound]
+  let SoundColumns = 4
+  let SoundSize    = 40 pts
 
-  let MatchSampa(ref sound, data) begin
-     return sound.Sampa and sound.Sampa.Length > 0 and data.Index + sound.Sampa.Length <= data.SLength and sound.Sampa == data.Sampa.Slice(data.Index..<(data.Index+sound.Sampa.Length))
-  end
-
-  let SAMPACheck(list, sampa, index, length) begin
-    var matches = SAMPASounds.FindSlice(MatchSampa, {Sampa: sampa, Index: index, SLength: length}, 1);
-    if (matches.Length == 0)
-      list.AddReference(NoSound);
-    else
-      list.AddReference(matches[0]);
-    end;
-    if (matches.Length > 0 and (index + matches[0].Sampa.Length) < length)
-      SAMPACheck(list, sampa, index + matches[0].Sampa.Length, length);
-    end
-  end
-
-  let WordToSounds(word) begin
-    var list = Type.List(16);
-    SAMPACheck(list, word.Sampa, 0, word.Sampa.Length);
-    return list;
-  end
-
-  //======================================================================
-  // Matching Options Table
-  //======================================================================
-
-  let CheckFlags(sflags, rflags, options) = sflags.NotFlag(options.Exclude) and sflags.HasFlag(options.Include) and sflags.HasMask(options.RowMask | rflags, rflags)
-
-  let AnyManners(flags, data)             = CheckFlags(data.Flags, flags | data.Options.All, data.Options)
-
-  let MatchRow(sound, data)               = sound.Place == data.Place and CheckFlags(sound.Flags, data.Flags, data.Options)
-
-  let MatchInclude(sound, data)           = sound.Place == data.Place and sound.Flags.NotFlag(data.Options.Exclude) and
-                                            sound.Flags.HasFlag(data.Options.Include) and
-                                            data.Options.Manners.Contains(AnyManners, {Flags: sound.Flags, Options: data.Options})
-
-  let MatchPlace(place, options)          = AllSounds.Contains(MatchInclude, {Place: place, Options: options})
-  let GetPlaces(options)                  = Places.FindSlice(MatchPlace, options)
-
-
-  let BoxSize  = Type.Size(18 pts, 20 pts)
-  let CellSize = Type.Size(BoxSize.Width * 2, BoxSize.Height)
+  let ShowSampa(sampa) = Span {
+    Style.MonoFamily,
+    sampa,
+  }
 
   let SoundName(sound) = Span {
     if (sound.Flags.HasFlag(Vowel))
@@ -674,314 +635,6 @@ with IPA
     if (text)
       ShowCodePoint(each text)
     end
-  }
-
-  let ShowSound(ref sound, flags=Impossible) = Span {
-    Style.IPAFamily,
-    Popup: SoundPopup.Call(sound),
-    Link: sound.FullSymbolName,
-    if (sound.Flags.HasFlag(flags))
-      Assert(false, "Impossible sound"),
-      TextColor: Colors.Red,
-    end,
-    if (sound.Flags.HasFlag(Diacritic))
-      "  ",
-    end,
-    sound.Text
-  }
-
-  let SoundText(set, ref sound) begin
-    if (sound.Flags.NotFlag(Impossible))
-      AddReference(set, sound);
-    end;
-    return ShowSound(sound);
-  end
-
-  let SoundBox(set, ref sound, color) = Canvas {
-    HAlign: HAligns.Center,
-    Size: BoxSize,
-    if (sound.Text)
-      TextHeight: BoxSize.Height - 4 pts,
-      TextColor: color,
-      SoundText(set, sound)
-    else
-      Style.ImpossibleBackground
-    end
-  }
-
-  let ShowBox(set, ref sound, color) = SoundBox(set, sound, color) {
-    if (sound.Flags.HasFlag(Voiced))
-      X: BoxSize.Width
-    end
-  }
-
-  let MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Flags.HasFlag(Voiced) == matches[1].Flags.HasFlag(Voiced))
-
-  let SoundBlock(set, matches) = Cell {
-    Style.SoundBottom,
-    if (matches.Length > 0)
-      if (matches.Length == 1 and matches[0].Flags.HasFlag(Impossible))
-        Style.ImpossibleBackground
-      else
-        TextHeight: 1 pts,
-        Span {
-          Canvas {
-            Size: CellSize,
-            ShowBox(set, each matches, MatchError(matches) ? Colors.Red : Colors.Black)
-          }
-        }
-      end
-    end
-  }
-
-  let AddCell(set, options, place, flags) = SoundBlock(set, AllSounds.FindSlice(MatchRow, {Place: place, Flags: flags, Options: options}))
-
-  let AddRow(set, options, places, flags) begin
-    var allflags = flags | options.All;
-    return Row {
-      Cell {
-        VAlign: VAligns.Center,
-        EdgeR: 0.5 pts,
-        Style.TitleBackground,
-        PaddingLR: 2 pts,
-        TextHeight: 7 pts,
-        if (allflags.HasMask(Lateral Pulmonic Affricate Sibilant, Pulmonic Affricate))
-          Lang.NoSibilant,
-        else
-          flags,
-        end,
-      },
-      AddCell(set, options, each places, allflags)
-    }
-  end
-
-  let PlaceHeader(place) = Style.HeaderCell(place.Name)
-
-  let ShowTable(set, options) begin
-    var places = GetPlaces(options);
-
-    return Block {
-      Table {
-        Style.TableEdge,
-        Columns: [options.ColWidth {EdgeR: 0.5 pts}] +
-                 [CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * places.Length,
-
-        Style.TitleBar(options.Title, places.Length+1),
-        Row {
-          TextHeight: 6 pts,
-          Style.HeaderCell(Bold Lang.Manner) {HAlign: HAligns.Left},
-          PlaceHeader(each places)
-        },
-        AddRow(set, options, places, each options.Manners),
-      },
-      Style.TableNotes {
-        Lang.ShadedImpossible,
-        Space,
-        options.Notes
-      },
-    }
-  end
-  //======================================================================
-
-  let VowelBlock(set, matches) = Cell {
-    Style.SoundBottom,
-    HAlign: HAligns.Center,
-    TextHeight: BoxSize.Height,
-    if (matches.Length == 2)
-      Span {
-        SoundText(set, matches[0]),
-        " • " {TextColor: Colors.LightGray},
-        SoundText(set, matches[1]),
-      }
-    elseif (matches.Length == 1)
-      SoundText(set, matches[0]),
-    end
-  }
-
-  let MatchVowelPair(ref sound, data) = sound.Flags.HasFlag(Vowel) and sound.Open == data.Open and sound.Backness == data.Backness
-  let VowelCell(set, open, backness)  = VowelBlock(set, Sounds.FindSlice(MatchVowelPair, {Open: open, Backness: backness}))
-
-  let VowelRow(set, open) = Row {
-    Cell {
-      VAlign: VAligns.Center,
-      Style.TitleBackground,
-      Style.SoundBottom,
-      open.Name
-    },
-    VowelCell(set, open, each Backnesses)
-  }
-
-  let VowelTable(set) = Block {
-    Table {
-      HAlign: HAligns.Center,
-      Style.TableEdge,
-      Columns: [(1 inch){EdgeR: 0.5 pts}] + [BoxSize.Width*3 {EdgeR: 0.25 pts}] * Backnesses.Length,
-      Style.TitleBar(Lang.Vowels, Backnesses.Length+1),
-      Row {
-        TextHeight: 10 pts,
-        Style.HeaderCell(Empty),
-        Style.HeaderCell(each Backnesses)
-      },
-      VowelRow(set, each Opens)
-    },
-    Style.TableNotes {
-      Lang.VowelSymbols,
-    },
-  }
-  //======================================================================
-
-  let MatchOther(ref sound, set) = not set.ContainsReference(sound)
-
-  let OtherColumns = 2
-
-  let OtherCell(ref sound) = {
-    Cell {
-      VAlign: VAligns.Center,
-      HAlign: HAligns.Center,
-      TextHeight: 20 pts,
-      LocationMark: sound.FullSymbolName,
-      ShowSound(sound),
-    },
-    Cell {
-      VAlign: VAligns.Center,
-      SoundName(sound)
-    }
-  }
-
-  let OtherRow(sounds) = Row {
-    OtherCell(each sounds)
-  }
-
-  let OtherTable(set) = Block {
-    Table {
-      Style.TableEdge,
-      Columns: [BoxSize.Width, Metrics.Content.Width * 0.5 - BoxSize.Width] * OtherColumns,
-      Style.TitleBar(Lang.OtherSounds, OtherColumns*2),
-      OtherRow(each (FindSlice(Sounds, MatchOther, set) / OtherColumns)),
-    },
-    Style.TableNotes
-  }
-  //======================================================================
-
-  let DiacriticColumns = 3
-
-  let DiacriticCell(ref sound) = Cell {
-    Paragraph {
-      LeftIndent: 0.5 inches,
-      FirstIndent: -0.5 inches,
-      LocationMark: sound.FullSymbolName,
-      ShowSound(sound) {
-        TextHeight: 18 pts,
-        Tab,
-      },
-      sound.Description
-    }
-  }
-
-  let DiacriticRow(sounds) = Row {
-    DiacriticCell(each sounds)
-  }
-
-  let DiacriticTable = Block {
-    Table {
-      Style.TableEdge,
-      Columns: [Metrics.Content.Width / DiacriticColumns] * DiacriticColumns,
-      Style.TitleBar(Lang.Diacritics, DiacriticColumns),
-      DiacriticRow(each DiacriticSounds / DiacriticColumns),
-    },
-    Style.TableNotes
-  }
-  //======================================================================
-  // Sound Tree
-  //======================================================================
-
-  let AddNode(name) = Node {
-    Bevel: 20%,
-    Curvature: 20%,
-    Label: name
-  }
-
-  let AddSound(set, ref sound) begin
-    set.AddReference(sound);
-    return ShowSound(sound)
-  end
-
-  let AddSounds(set, name, func, data) begin
-    var sounds = Sounds.FindSlice(func, data);
-    if (sounds.Length > 0)
-      return Node {
-        Label: Frame {
-          Width: 3.5 inches,
-          Paragraph {
-            LeftIndent: 1 inches,
-            FirstIndent: -1 inches,
-            Span {
-              TextColor: Colors.DarkGray,
-              name,
-              ":\t",
-            },
-            Span {
-              TextHeight: 15 pts,
-              Separator: Space,
-              AddSound(set, each sounds),
-            }
-          }
-        }
-      }
-    else
-      return null
-    end
-  end
-
-  let MatchVowel(ref sound, data) = sound.Flags.HasFlag(Vowel) and sound.Backness == data.Backness
-  let AddVowels(set, backness)    = AddSounds(set, backness.Name, MatchVowel, {Backness: backness})
-
-  let MatchFlags(ref sound, data) = not data.Set.ContainsReference(sound) and sound.Flags.HasMask(data.All, data.Flags) and sound.Flags.HasMask(data.Other, data.Other)
-  let AddFlag(set, all, flags, f) = AddSounds(set, f.Name, MatchFlags, {Set: set, All: all, Flags: flags, Other: f})
-
-  let AddConsonants(set, name, all, flags) = AddNode(name) {
-    AddFlag(set, all, flags, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, None]),
-  }
-
-  let AddVoicedPairs(set, name, all, flags) = AddNode(name) {
-    AddConsonants(set, Lang.Voiced, all Voiced, flags Voiced),
-    AddConsonants(set, Lang.Voiceless, all Voiced, flags),
-  }
-
-  let SoundTree begin
-    var set1 = Type.Dictionary(256);
-    var set2 = Type.Dictionary(256);
-    var all  = Vowel Pulmonic Affricate;
-
-    return Block {
-      Tree {
-        Width: 7 inches,
-        LabelGap: 3 pts,
-        Node {
-          AddNode(Lang.Vowels) {
-            AddVowels(set1, each Backnesses)
-          },
-          AddNode(Lang.Affricates) {
-            AddVoicedPairs(set1, Lang.NonPulmonic, all, Affricate),
-            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic Affricate),
-          },
-          AddNode(Lang.Consonants) {
-            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic),
-            AddVoicedPairs(set1, Lang.NonPulmonic, all, None),
-          },
-          AddSounds(set2, Lang.OtherSounds, MatchOther, set1)
-        }
-      }
-    }
-  end
-  //======================================================================
-
-  let SoundColumns = 4
-  let SoundSize    = 40 pts
-
-  let ShowSampa(sampa) = Span {
-    Style.MonoFamily,
-    sampa,
   }
 
   let SoundDisplay(sound, location) = Block {
@@ -1039,174 +692,51 @@ with IPA
     Width: 2 inches,
     SoundDisplay(sound, null)
   }
-  //======================================================================
-  // Options for each table type
-  //======================================================================
 
-  let PulmonicTable = {
-    Title: Lang.PConsonants,
-    ColWidth: 45 pts,
-    Exclude: Affricate,
-    Include: Pulmonic,
-    All: None,
-    Manners: [Nasal, Stop, Sibilant Fricative, Fricative, Approximant, TapFlap, Trill, Lateral Fricative, Lateral Approximant, Lateral TapFlap],
-    RowMask: Nasal Stop Sibilant Fricative Approximant TapFlap Trill Lateral Velarized,
-    Notes: Lang.PulmonicSymbols
+  let ShowSound(ref sound, flags=Impossible) = Span {
+    Style.IPAFamily,
+    Popup: SoundPopup.Call(sound),
+    Link: sound.FullSymbolName,
+    if (sound.Flags.HasFlag(flags))
+      Assert(false, "Impossible sound"),
+      TextColor: Colors.Red,
+    end,
+    if (sound.Flags.HasFlag(Diacritic))
+      "  ",
+    end,
+    sound.Text
   }
 
-  let NonPulmonicTable = {
-    Title: Lang.NPConsonants,
-    ColWidth: 80 pts,
-    Exclude: Vowel Pulmonic Central,
-    Include: Ejective Click Implosive,
-    All: None,
-    Manners: [Ejective Stop, Ejective Fricative, Ejective Lateral Fricative, Click Tenuis, Click Nasal, Click Tenuis Lateral, Implosive],
-    RowMask: Lateral,
-    Notes: Lang.ConsonantSymbols
-  }
-
-  let PulmonicAffricatesTable = {
-    Title: Lang.PulmonicAffricates,
-    ColWidth: 50 pts,
-    Exclude: Vowel,
-    Include: Affricate Sibilant Lateral,
-    All: Pulmonic Affricate,
-    Manners: [Sibilant, None, Lateral],
-    RowMask: Pulmonic Affricate Sibilant Fricative Lateral,
-  }
-
-  let EjectiveAffricatesTable = {
-    Title: Lang.EjectiveAffricates,
-    ColWidth: 50 pts,
-    Exclude: Vowel Click Implosive Pulmonic,
-    Include: Ejective Affricate Central Lateral,
-    All: Ejective Affricate,
-    Manners: [Central, Lateral],
-    RowMask: Pulmonic Approximant Central Lateral,
-  }
   //======================================================================
-  // Find the list of meanings for which there is a word in every language
+  // Convert SAMPA text to sound data
   //======================================================================
 
-  let ContainsWord(word, data)        = word.Meaning == data.Meaning
-  let ContainsMeaning(language, data) = language.Words.Contains(ContainsWord, data)
+  let SAMPASounds = Sounds + [ref SpaceSound]
 
-  let CollectMeanings(set, languages, ref meaning) begin
-    var list = languages.FindSlice(ContainsMeaning, {Meaning: ref meaning});
-    if (list.Length == languages.Length)
-      set.AddReference(meaning)
+  let MatchSampa(ref sound, data) begin
+     return sound.Sampa and sound.Sampa.Length > 0 and data.Index + sound.Sampa.Length <= data.SLength and sound.Sampa == data.Sampa.Slice(data.Index..<(data.Index+sound.Sampa.Length))
+  end
+
+  let SAMPACheck(list, sampa, index, length) begin
+    var matches = SAMPASounds.FindSlice(MatchSampa, {Sampa: sampa, Index: index, SLength: length}, 1);
+    if (matches.Length == 0)
+      list.AddReference(NoSound);
+    else
+      list.AddReference(matches[0]);
+    end;
+    if (matches.Length > 0 and (index + matches[0].Sampa.Length) < length)
+      SAMPACheck(list, sampa, index + matches[0].Sampa.Length, length);
     end
   end
 
-  let FindCompleteMeanings(languages) begin
-    var set = Type.Dictionary(128);
-    CollectMeanings(set, languages, each WordMeanings);
-    return set.Slice(0..);
-  end
-
-
-  let MeaningRow(ref meaning) = Row {
-    Cell {
-      HAlign: HAligns.Center,
-      Style.TitleBackground,
-      Style.SoundBottom,
-      EachIndex+1
-    },
-    Cell {
-      meaning.Name
-    }
-  }
-
-  let MeaningTable(meanings) = Block {
-    Table {
-      Style.TableEdge,
-      Columns: [0.5 inches, 4 inches],
-      Style.TitleBar("Meanings", 3),
-      Row {
-        Style.HeaderCell("#") {HAlign: HAligns.Center},
-        Style.HeaderCell("Meaning") {HAlign: HAligns.Left}
-      },
-      MeaningRow(each meanings),
-    },
-    Style.TableNotes
-  }
-  //======================================================================
-
-  let WordMatch(meaning, def) = meaning == def.Meaning
-  let CompleteWord(def)       = Results.CompleteMeanings.Contains(WordMatch, def)
-  let GetWordList(language)   = language.Words.FindSlice(CompleteWord)
-
-
-  let CollectWord(set, word) begin
-    var sounds = WordToSounds(word);
-    set.AddReference(each sounds);
-  end
-
-  let CollectLanguage(set, language) begin
-    CollectWord(set, each GetWordList(language));
-  end
-
-  let FindUniqueSounds(languagelist) begin
-    var set = Type.Dictionary(256);
-    CollectLanguage(set, each languagelist);
-    return set.Slice(0..);
-  end
-
-  let SameSound(ref sound, data) = sound == data.Sound
-
-  let CollectLangWord(set, ref sound, word) begin
-    var sounds = WordToSounds(word);
-    if (sounds.Contains(SameSound, {Sound: ref sound}))
-      set.AddElement(word.Sampa, word);
-    end
-  end
-
-  let CollectLanguageWords(set, ref sound, language) begin
-    CollectLangWord(set, sound, each GetWordList(language));
-  end
-
-  let WordsWithSound(ref sound) begin
-    var set = Type.Dictionary(256);
-    CollectLanguageWords(set, sound, each Results.LanguageList);
-    return set.Slice(0..);
+  let WordToSounds(word) begin
+    var list = Type.List(16);
+    SAMPACheck(list, word.Sampa, 0, word.Sampa.Length);
+    return list;
   end
 
   let ShowIPA(word) =  Span {
-//    word.Sampa,
-    (each IPA.WordToSounds(word)).Text
+    (each WordToSounds(word)).Text
   }
-
-  let CharacterRow(ref sound) = Row {
-    Cell {
-      HAlign: HAligns.Center,
-      Style.TitleBackground,
-      Nexus.CharacterList[EachIndex]
-    },
-    Cell {
-      HAlign: HAligns.Center,
-      ShowSound(sound, Diacritic | Impossible),
-    },
-    Cell {
-      Style.IPAFamily,
-      Span {
-        Separator: Lang.Separator,
-        ShowIPA(each WordsWithSound(sound))
-      }
-    }
-  }
-
-  let CharacterTable(sounds) = Block {
-    Table {
-      Style.TableEdge,
-      Columns: [0.5 inches, 0.5 inches, 6 inches],
-      Row {
-        Style.HeaderCell("Code"),
-        Style.HeaderCell(Lang.IPA),
-        Style.HeaderCell("Words containing this sound")
-      },
-      CharacterRow(each sounds),
-    },
-    Style.TableNotes
-  }
-  //======================================================================
 end
+
