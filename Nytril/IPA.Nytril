@@ -662,9 +662,11 @@ with IPA
       if (sound.Sampa and sound.Sampa.Length > 0)
         ParBackground: 90%,
         ShowSampa(sound.Sampa)
-      elseif (sound.Text.Length > 0)
-        ParBackground: Colors.Red,
+      else
+        if (sound.Text.Length > 0)
+          ParBackground: Colors.Red,
 //        Assert(false, "Missing Sampa definition"),
+        end
       end
     },
   }
@@ -693,6 +695,10 @@ with IPA
     SoundDisplay(sound, null)
   }
 
+  let ShowIPA(word) =  Span {
+    (each WordToSounds(word)).Text
+  }
+
   let ShowSound(ref sound, flags=Impossible) = Span {
     Style.IPAFamily,
     Popup: SoundPopup.Call(sound),
@@ -706,38 +712,9 @@ with IPA
     end,
     sound.Text
   }
-
   //======================================================================
-  // Convert SAMPA text to sound objects
+  // Build a dictionary with SAMPA text as the key
   //======================================================================
-
-  let SAMPASounds = Sounds + [ref SpaceSound]
-
-  let MatchSampa(ref sound, data) begin
-     return sound.Sampa and sound.Sampa.Length > 0 and data.Index + sound.Sampa.Length <= data.SLength and sound.Sampa == data.Sampa.Slice(data.Index..<(data.Index+sound.Sampa.Length))
-  end
-
-  let SAMPACheck(list, sampa, index, length) begin
-    var matches = SAMPASounds.FindSlice(MatchSampa, {Sampa: sampa, Index: index, SLength: length}, 1);
-    if (matches.Length == 0)
-      list.AddReference(NoSound);
-    else
-      list.AddReference(matches[0]);
-    end;
-    if (matches.Length > 0 and (index + matches[0].Sampa.Length) < length)
-      SAMPACheck(list, sampa, index + matches[0].Sampa.Length, length);
-    end
-  end
-
-  let WordToSounds(word) begin
-    var list = Type.List(16);
-    SAMPACheck(list, word.Sampa, 0, word.Sampa.Length);
-    return list;
-  end
-
-  let ShowIPA(word) =  Span {
-    (each WordToSounds(word)).Text
-  }
 
   let GatherText(set, ref sound) begin
     if (sound.Sampa.Length > 0)
@@ -748,7 +725,14 @@ with IPA
   let SampaDictionary begin
     var set = Type.Dictionary(128);
     GatherText(set, each Sounds);
+    set.AddElement(" ", ref SpaceSound);
     return set;
   end
+
+  //======================================================================
+  // Convert SAMPA text to sound objects
+  //======================================================================
+
+  let WordToSounds(word) = SampaDictionary.FindTokens(word.Sampa, ref NoSound)
 end
 

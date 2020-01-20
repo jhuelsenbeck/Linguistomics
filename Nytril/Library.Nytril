@@ -5,16 +5,14 @@ with TreeLib
   let GetNodeLabel(node) = node.Data?.SymbolName
 
   let VisitNodeTaxa(set, node) begin
-    if (node.Data)
-      set.AddReference(node.Data);
-    end;
+    set.AddReference(node.Data);
     VisitNodeTaxa(set, each node);
   end
 
   let GetTaxaLabels(tree) begin
     var set = Type.Dictionary(256);
     VisitNodeTaxa(set, tree);
-    return (each set).SymbolName;
+    return (each set.ValueList).SymbolName;
   end
 end
 //======================================================================
