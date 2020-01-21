@@ -20,6 +20,8 @@ end
 with Nexus
   let CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1)
   let EndLine       = ";"
+  let Missing       = "?"
+  let Gap           = '-'
   let Quote         = "\""
 
   let Keyword(name) = Span {
@@ -109,34 +111,57 @@ with Nexus
     }
   }
 
-  let GetMaxLength(taxa) =
+/*
+  let GetGene(langindex, meaning) begin
+    var ma   = WordMeaningArray[EachIndex];
+    var cell = ma.Cells[langindex];
+    return Span {
+      if (EachIndex mod 2 == 0)
+        TextBackground: 90%
+      else
+        TextColor: Colors.White,
+        TextBackground: 50%
+      end,
+      Popup: CharacterPopup(cell.Word),
+      cell.Characters,
+      "-" * (ma.MaxLength - cell.Count),
+    };
+  end
+*/
 
-  let ShowTaxon(maxlength, taxon) = Span {
+  let ShowTaxon(maxlength, taxon, range) = Span {
     taxon.Name,
     Space * (maxlength - taxon.Name.Length),
-    taxon.Characters
+    taxon.Characters[range]
   }
 
-  let CharacterFile(taxa, charmax) = SourceFile {
-    BeginScope("DATA") {
-      AddLine("dimensions") {
-        AddValue("ntax", taxa.Length),
-        AddValue("nchar", charmax),
-        EndLine
-      },
-      AddLine("format") {
-        AddValue("datatype", "STANDARD"),
-        AddValue("gap", "-"),
-        AddValue("missing", "?"),
-        AddValue("symbols", Span {Quote, CharacterList[0..charmax], Quote}),
-        EndLine
-      },
-      Keyword("matrix"),
-      ShowTaxon(Math.Max((each taxa).Name.Length)+1, each taxa),
-      Empty,
-      EndLine,
-    },
+  let ShowTaxonSet(maxlength, taxa, range) = {
+    ShowTaxon(maxlength, each taxa, range),
+    Empty,
   }
+
+  let CharacterFile(taxa, charmax) begin
+    var maxlength = Math.Max((each taxa).Name.Length)+1;
+    return SourceFile {
+      BeginScope("DATA") {
+        AddLine("dimensions") {
+          AddValue("ntax", taxa.Length),
+          AddValue("nchar", charmax),
+          EndLine
+        },
+        AddLine("format") {
+          AddValue("datatype", "STANDARD"),
+          AddValue("gap", Gap),
+          AddValue("missing", Missing),
+          AddValue("symbols", Span {Quote, CharacterList[0..<charmax], Quote}),
+          EndLine
+        },
+        Keyword("matrix"),
+        ShowTaxonSet(maxlength, taxa, each ((0..<(taxa[0].Characters.Length)) / (70 - maxlength))),
+        EndLine,
+      }
+    }
+  end
 end
 //======================================================================
 

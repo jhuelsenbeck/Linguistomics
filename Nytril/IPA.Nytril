@@ -95,8 +95,6 @@ with IPA
     Backness: backness,
   }
 
-  let NPEjective(flags, sound) = Con(Ejective | flags, sound.Place, sound.Text DiacriticSounds.Ejective.Text, sound.Sampa DiacriticSounds.Ejective.Sampa)
-
   let Imp(flags, place) = {
     Flags: flags | Impossible,
     Place: place,
@@ -107,8 +105,11 @@ with IPA
   }
 
   let NasalizedChar = "\u0303"
+  let EjectiveIPA  = "\u02BC"
+  let EjectiveSampa = "_>"
 
-  let NoSound    = Encode("?", "?") {Flags: Impossible}
+  let NoSound    = Encode("?", "!?") {Flags: Impossible}
+  let GapSound   = Encode("-", "-") {Flags: Punctuation}
   let SpaceSound = {Text: "Space", Sampa: " ", Flags: Punctuation}
 
   with Sounds
@@ -132,8 +133,6 @@ with IPA
     let U_star    = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u" NasalizedChar, "u*")         // Portuguese One "um"
     let e_star    = Vow(Nasal Unrounded, Opens.CloseMid, Backnesses.Front, "e" NasalizedChar, "e*")   // Portuguese Trail "se*da
     let i_star    = Vow(Nasal Unrounded, Opens.Close, Backnesses.Front, "i" NasalizedChar, "i*")      // Portuguese Tongue
-
-
 
     //==================================
     // Pulmonic Consonants
@@ -384,25 +383,23 @@ with IPA
     let VlEpiglottalPlosive               = Con(Plosive, Places.Pharyngeal, "ʡ", "<\\")
 
     // Ejectives
-    let VlBilabialStopEjective            = NPEjective(Stop, VlBilabialStop)
-    let VlAveolarStopEjective             = NPEjective(Stop, VlAlveolarStop)
-    let VlRetroflexStopEjective           = NPEjective(Stop, VlRetroflexStop)
-    let VlPalatalStopEjective             = NPEjective(Stop, VlPalatalStop)
-    let VlVelarStopEjective               = NPEjective(Stop, VlVelarStop)
-    let VlUvularStopEjective              = NPEjective(Stop, VlUvularStop)
-    let VlEpiglottalStopEjective          = NPEjective(Stop, VdEpiglottalStop)
-    let VlBilabialFricativeEjective       = NPEjective(Fricative, VlBilabialFricative)
-    let VlLabiodentalFricativeEjective    = NPEjective(Fricative, VlLabiodentalFricative)
-    let VlDentalFricativeEjective         = NPEjective(Fricative, VlDentalFricative)
-    let VlAlveolarFricativeEjective       = NPEjective(Fricative, VlAlveolarSibFricative)
-    let VlPostalveolarFricativeEjective   = NPEjective(Fricative, VlPostalveolarSibFricative)
-    let VlRetroflexFricativeEjective      = NPEjective(Fricative, VlRetroflexSibFricative)
-    let VlPalatalFricativeEjective        = NPEjective(Fricative, VlPalatalSibFricative)
-    let VlVelarFricativeEjective          = NPEjective(Fricative, VlVelarFricative)
-    let VlUvularFricativeEjective         = NPEjective(Fricative, VlUvularFricative)
-
-    // Lateral Fricatives
-    let VlPostalveolarLatFricEjective    = NPEjective(Lateral | Fricative, VlAlveolarLateralFricative)
+    let VlBilabialStopEjective            = Con(Ejective Pulmonic Stop, Places.Bilabial, "p" EjectiveIPA, "p" EjectiveSampa)
+    let VlAveolarStopEjective             = Con(Ejective Stop, Places.Alveolar, "t" EjectiveIPA, "t" EjectiveSampa)
+    let VlRetroflexStopEjective           = Con(Ejective Stop, Places.Retroflex, "ʈ" EjectiveIPA, "t`" EjectiveSampa)
+    let VlPalatalStopEjective             = Con(Ejective Stop, Places.Palatal, "c" EjectiveIPA, "c" EjectiveSampa)
+    let VlVelarStopEjective               = Con(Ejective Stop, Places.Velar, "k" EjectiveIPA, "k" EjectiveSampa)
+    let VlUvularStopEjective              = Con(Ejective Stop, Places.Uvular, "q" EjectiveIPA, "q" EjectiveSampa)
+    let VlEpiglottalStopEjective          = Con(Ejective Stop, Places.Pharyngeal, "ʡ" EjectiveIPA, ">\\" EjectiveSampa)
+    let VlBilabialFricativeEjective       = Con(Ejective Fricative, Places.Bilabial, "ɸ" EjectiveIPA, "p\\" EjectiveSampa)
+    let VlLabiodentalFricativeEjective    = Con(Ejective Fricative, Places.LabioDental, "f" EjectiveIPA, "f" EjectiveSampa)
+    let VlDentalFricativeEjective         = Con(Ejective Fricative, Places.Dental, "θ" EjectiveIPA, "T" EjectiveSampa)
+    let VlAlveolarFricativeEjective       = Con(Ejective Fricative, Places.Alveolar, "s" EjectiveIPA, "s" EjectiveSampa)
+    let VlPostalveolarFricativeEjective   = Con(Ejective Fricative, Places.PostAlveolar, "ʃ" EjectiveIPA, "S" EjectiveSampa)
+    let VlRetroflexFricativeEjective      = Con(Ejective Fricative, Places.Retroflex, "ʂ" EjectiveIPA, "s`" EjectiveSampa)
+    let VlPalatalFricativeEjective        = Con(Ejective Fricative, Places.Palatal, "ɕ" EjectiveIPA, "s\\" EjectiveSampa)
+    let VlVelarFricativeEjective          = Con(Ejective Fricative, Places.Velar, "x" EjectiveIPA, "x" EjectiveSampa)
+    let VlUvularFricativeEjective         = Con(Ejective Fricative, Places.Uvular, "χ" EjectiveIPA, "X" EjectiveSampa)
+    let VlPostalveolarLatFricEjective     = Con(Ejective Lateral Fricative, Places.Alveolar, "ɬ" EjectiveIPA, "K" EjectiveSampa)
 
     //==================================
     // Vowels
@@ -529,7 +526,7 @@ with IPA
     let Voiceless                    = Diac("Voiceless", "\u0325", "_0")
     let Implosive                    = Diac("Implosive", null, "_<")
     let Syllabic                     = Diac("Syllabic", "\u0329", "_=")
-    let Ejective                     = Diac("Ejective", "\u02BC", "_>")
+    let Ejective                     = Diac("Ejective", EjectiveIPA, EjectiveSampa)
     let Pharyngealized               = Diac("Pharyngealized ", "\u02E4", "_?\\")
     let FallingTone                  = Diac("Falling tone", "\u0302", "_F")
     let NonSyllabic                  = Diac("Non-syllabic", "\u032F", "_^")
@@ -751,14 +748,17 @@ with IPA
   // Convert SAMPA text to an array of sound references
   let WordToSounds(word) = SampaDictionary.FindTokens(word.Sampa, ref NoSound)
 
-  let SoundToCharacter(soundlist, ref sound) begin
-    var f = soundlist.FindIndex(DisplayCharacters.SameSound, {Sound: ref sound});
-    return Nexus.CharacterList[f[0]];
-  end
+  let SoundToCharacter(ref sound) begin
+    if (sound == GapSound)
+      return Nexus.Gap;
+    end
 
-  let WordToCharacters(soundlist, word) begin
-    var sounds = WordToSounds(word);
-    return SoundToCharacter(soundlist, each sounds);
+    var f = Results.UniqueSounds.FindIndex(DisplayCharacters.SameSound, {Sound: ref sound});
+    if (f.Length == 1)
+      return Nexus.CharacterList[f[0]];
+    else
+      return f.Length;
+    end
   end
 
 end
