@@ -66,6 +66,7 @@ with IPA
     let Impossible  = flag {Name: Lang.Impossible}
     let NonIPA      = flag {Name: Lang.NonIPA}
     let Diacritic   = flag {Name: Lang.Diacritic}
+    let Punctuation = flag {Name: "Puncuation"}
 
 //    let Consonant   = mask {Name: Lang.Consonant}
   end
@@ -108,7 +109,7 @@ with IPA
   let NasalizedChar = "\u0303"
 
   let NoSound    = Encode("?", "?") {Flags: Impossible}
-  let SpaceSound = Diac("Space", " ", " ")
+  let SpaceSound = {Text: "Space", Sampa: " ", Flags: Punctuation}
 
   with Sounds
     //==================================
@@ -695,14 +696,16 @@ with IPA
     SoundDisplay(sound, null)
   }
 
-  let ShowIPA(word) =  Span {
+  let ShowIPA(word) = Span {
     (each WordToSounds(word)).Text
   }
 
   let ShowSound(ref sound, flags=Impossible) = Span {
     Style.IPAFamily,
-    Popup: SoundPopup.Call(sound),
-    Link: sound.FullSymbolName,
+    if (sound.Flags.NotFlag(Punctuation))
+      Popup: SoundPopup.Call(sound),
+      Link: sound.FullSymbolName,
+    end,
     if (sound.Flags.HasFlag(flags))
       Assert(false, "Impossible sound"),
       TextColor: Colors.Red,
@@ -729,10 +732,18 @@ with IPA
     return set;
   end
 
-  //======================================================================
-  // Convert SAMPA text to sound objects
-  //======================================================================
-
+  // Convert SAMPA text to an array of sound references
   let WordToSounds(word) = SampaDictionary.FindTokens(word.Sampa, ref NoSound)
+
+  let SoundToCharacter(soundlist, ref sound) begin
+    var f = soundlist.FindIndex(DisplayCharacters.SameSound, {Sound: ref sound});
+    return Nexus.CharacterList[f[0]];
+  end
+
+  let WordToCharacters(soundlist, word) begin
+    var sounds = WordToSounds(word);
+    return SoundToCharacter(soundlist, each sounds);
+  end
+
 end
 

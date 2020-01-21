@@ -109,9 +109,11 @@ with Nexus
     }
   }
 
-  let ShowTaxon(taxon) = Span {
+  let GetMaxLength(taxa) =
+
+  let ShowTaxon(maxlength, taxon) = Span {
     taxon.Name,
-    Space * (32 - taxon.Name.Length),
+    Space * (maxlength - taxon.Name.Length),
     taxon.Characters
   }
 
@@ -130,7 +132,7 @@ with Nexus
         EndLine
       },
       Keyword("matrix"),
-      ShowTaxon(each taxa),
+      ShowTaxon(Math.Max((each taxa).Name.Length)+1, each taxa),
       Empty,
       EndLine,
     },
