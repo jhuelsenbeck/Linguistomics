@@ -67,8 +67,6 @@ with IPA
     let NonIPA      = flag {Name: Lang.NonIPA}
     let Diacritic   = flag {Name: Lang.Diacritic}
     let Punctuation = flag {Name: "Puncuation"}
-
-//    let Consonant   = mask {Name: Lang.Consonant}
   end
 
   let Unrounded = SoundTypes.None
@@ -105,34 +103,34 @@ with IPA
   }
 
   let NasalizedChar = "\u0303"
-  let EjectiveIPA  = "\u02BC"
+  let EjectiveIPA   = "\u02BC"
   let EjectiveSampa = "_>"
 
-  let NoSound    = Encode("?", "!?") {Flags: Impossible}
-  let GapSound   = Encode("-", "-") {Flags: Punctuation}
-  let SpaceSound = {Text: "Space", Sampa: " ", Flags: Punctuation}
+  let NoSound       = Encode("?", "!?") {Flags: Impossible}
+  let GapSound      = Encode("-", "-") {Flags: Punctuation}
+  let SpaceSound    = {Text: " ", Sampa: " ", Flags: Punctuation}
 
   with Sounds
     //==================================
     // Extra sounds found in word list
     //==================================
 
-    let OE_star   = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ" NasalizedChar, "oe*") // French One "un"
+    let uuh       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ" NasalizedChar, "oe*") // French One "un"
 
-    let w_nasal = Con(Nasal Voiced Approximant Nasal, Places.LabialVelar, "w" NasalizedChar, "w_~")
-    let r_nasal = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "r" NasalizedChar, "r_~")
-//    let r_nasal = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "r_~")  // French Cold "Froid"  Same as SAMPA "R"?
+    let wuh       = Con(Nasal Voiced Approximant Nasal, Places.LabialVelar, "w" NasalizedChar, "w_~")
+    let rn        = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "r" NasalizedChar, "r_~")
+//    let r_nasal = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "r_~")                    // French Cold "Froid"  Same as SAMPA "R"?
 
-    let Y_nasal   = Vow(Rounded Nasal, Opens.Close, Backnesses.Front, "y" NasalizedChar, "y_~")
-    let A_star    = Vow(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ" NasalizedChar, "a*")   // Supposed to be "ɛ̃" as in French Dog "chien"?
+    let ey        = Vow(Rounded Nasal, Opens.Close, Backnesses.Front, "y" NasalizedChar, "y_~")
+    let ahn       = Vow(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ" NasalizedChar, "a*")    // Supposed to be "ɛ̃" as in French Dog "chien"?
 
-    let O_star    = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*")             // French Fish "poisson"
-    let e3_star   = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ" NasalizedChar, "3*")   // SAMPA "E"?
-    let E_star    = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ" NasalizedChar, "E*")   // Walloon One, Don't know how this is different from above
+    let oon       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*")                      // French Fish "poisson"
+    let aehn      = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɜ" NasalizedChar, "3*")
+    let ehnn      = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ" NasalizedChar, "E*")
 
-    let U_star    = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u" NasalizedChar, "u*")         // Portuguese One "um"
-    let e_star    = Vow(Nasal Unrounded, Opens.CloseMid, Backnesses.Front, "e" NasalizedChar, "e*")   // Portuguese Trail "se*da
-    let i_star    = Vow(Nasal Unrounded, Opens.Close, Backnesses.Front, "i" NasalizedChar, "i*")      // Portuguese Tongue
+    let uh        = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u" NasalizedChar, "u*")         // Portuguese One "um"
+    let en        = Vow(Nasal Unrounded, Opens.CloseMid, Backnesses.Front, "e" NasalizedChar, "e*")   // Portuguese Trail "se*da
+    let een       = Vow(Nasal Unrounded, Opens.Close, Backnesses.Front, "i" NasalizedChar, "i*")      // Portuguese Tongue
 
     //==================================
     // Pulmonic Consonants
@@ -140,44 +138,44 @@ with IPA
 
     // Nasal					
     let VlBilabialNasal              = Con(Pulmonic Nasal, Places.Bilabial, "m̥", "m_0")
-    let VdBilabialNasal              = Con(Voiced Pulmonic Nasal, Places.Bilabial, "m", "m")
+    let mm                           = Con(Voiced Pulmonic Nasal, Places.Bilabial, "m", "m")
     let VdLabioDentalNasal           = Con(Voiced Pulmonic Nasal, Places.LabioDental, "ɱ", "F")
     let VdLinguoLabioNasal           = Con(Voiced Pulmonic Nasal, Places.LinguoLabial, "n̼", "m_d")
     let VlAlveolarNasal              = Con(Pulmonic Nasal, Places.Alveolar, "n̥", "n_0")
-    let VdAlveolarNasal              = Con(Voiced Pulmonic Nasal, Places.Alveolar, "n", "n")
+    let n                            = Con(Voiced Pulmonic Nasal, Places.Alveolar, "n", "n")
     let VlRetroFlexNasal             = Con(Pulmonic Nasal, Places.Retroflex, "ɳ̊", "n`_0")
     let VdRetroFlexNasal             = Con(Voiced Pulmonic Nasal, Places.Retroflex, "ɳ", "n`")
     let VlPalatalNasal               = Con(Pulmonic Nasal, Places.Palatal, "ɲ̊", "J_0")
     let VdPalatalNasal               = Con(Voiced Pulmonic Nasal, Places.Palatal, "ɲ", "J")
     let VlVelarNasal                 = Con(Pulmonic Nasal, Places.Velar, "ŋ̊", "N_0")
-    let VdVelarNasal                 = Con(Voiced Pulmonic Nasal, Places.Velar, "ŋ", "N")
+    let nya                          = Con(Voiced Pulmonic Nasal, Places.Velar, "ŋ", "N")
     let VdUvularNasal                = Con(Voiced Pulmonic Nasal, Places.Uvular, "ɴ", "N\\")
 														
     // Stop
-    let VlBilabialStop               = Con(Pulmonic Stop, Places.Bilabial, "p", "p")
-    let VdBilabialStop               = Con(Voiced Pulmonic Stop, Places.Bilabial, "b", "b")
+    let p                            = Con(Pulmonic Stop, Places.Bilabial, "p", "p")
+    let b                            = Con(Voiced Pulmonic Stop, Places.Bilabial, "b", "b")
     let VlLabioDentalStop            = Con(Pulmonic Stop, Places.LabioDental, "p̪", "p_d")
     let VdLabioDentalStop            = Con(Voiced Pulmonic Stop, Places.LabioDental, "b̪", "b_d")
     let VlLinguoLabialStop           = Con(Pulmonic Stop, Places.LinguoLabial, "t̼", "")
     let VdLinguoLabialStop           = Con(Voiced Pulmonic Stop, Places.LinguoLabial, "d̼", "")
-    let VlAlveolarStop               = Con(Pulmonic Stop, Places.Alveolar, "t", "t")
-    let VdAlveolarStop               = Con(Voiced Pulmonic Stop, Places.Alveolar, "d", "d")
+    let t                            = Con(Pulmonic Stop, Places.Alveolar, "t", "t")
+    let d                            = Con(Voiced Pulmonic Stop, Places.Alveolar, "d", "d")
     let VlRetroflexStop              = Con(Pulmonic Stop, Places.Retroflex, "ʈ", "t`")
     let VdRetroflexStop              = Con(Voiced Pulmonic Stop, Places.Retroflex, "ɖ", "d`")
-    let VlPalatalStop                = Con(Pulmonic Stop, Places.Palatal, "c", "c")
+    let tya                          = Con(Pulmonic Stop, Places.Palatal, "c", "c")
     let VdPalatalStop                = Con(Voiced Pulmonic Stop, Places.Palatal, "ɟ", "J\\")
-    let VlVelarStop                  = Con(Pulmonic Stop, Places.Velar, "k", "k")
-    let VdVelarStop                  = Con(Voiced Pulmonic Stop, Places.Velar, "ɡ", "g")
+    let k                            = Con(Pulmonic Stop, Places.Velar, "k", "k")
+    let g                            = Con(Voiced Pulmonic Stop, Places.Velar, "ɡ", "g")
     let VlUvularStop                 = Con(Pulmonic Stop, Places.Uvular, "q", "q")
     let VdUvularStop                 = Con(Voiced Pulmonic Stop, Places.Uvular, "ɢ", "G\\")
     let VdEpiglottalStop             = Con(Pulmonic Stop, Places.Pharyngeal, "ʡ", ">\\")
     let GlottalStop                  = Con(Pulmonic Stop, Places.Glottal, "ʔ", "?")
 		
     // Sibilant Fricative										
-    let VlAlveolarSibFricative       = Con(Pulmonic Sibilant Fricative, Places.Alveolar, "s", "s")
-    let VdAlveolarSibFricative       = Con(Voiced Pulmonic Sibilant Fricative, Places.Alveolar, "z", "z")
-    let VlPostalveolarSibFricative   = Con(Pulmonic Sibilant Fricative, Places.PostAlveolar, "ʃ", "S")
-    let VdPostalveolarSibFricative   = Con(Voiced Pulmonic Sibilant Fricative, Places.PostAlveolar, "ʒ", "Z")
+    let ss                           = Con(Pulmonic Sibilant Fricative, Places.Alveolar, "s", "s")
+    let zz                           = Con(Voiced Pulmonic Sibilant Fricative, Places.Alveolar, "z", "z")
+    let shh                          = Con(Pulmonic Sibilant Fricative, Places.PostAlveolar, "ʃ", "S")
+    let gzah                         = Con(Voiced Pulmonic Sibilant Fricative, Places.PostAlveolar, "ʒ", "Z")
     let VlRetroflexSibFricative      = Con(Pulmonic Sibilant Fricative, Places.Retroflex, "ʂ", "s`")
     let VdRetroflexSibFricative      = Con(Voiced Pulmonic Sibilant Fricative, Places.Retroflex, "ʐ", "z`")
     let VlPalatalSibFricative        = Con(Pulmonic Sibilant Fricative, Places.Palatal, "ɕ", "s\\")
@@ -186,26 +184,26 @@ with IPA
     // Fricative										
     let VlBilabialFricative          = Con(Pulmonic Fricative, Places.Bilabial, "ɸ", "p\\")
     let VdBilabialFricative          = Con(Voiced Pulmonic|  Fricative, Places.Bilabial, "β", "B")
-    let VlLabiodentalFricative       = Con(Pulmonic Fricative, Places.LabioDental, "f", "f")
-    let VdLabiodentalFricative       = Con(Voiced Pulmonic Fricative, Places.LabioDental, "v", "v")
+    let f                            = Con(Pulmonic Fricative, Places.LabioDental, "f", "f")
+    let v                            = Con(Voiced Pulmonic Fricative, Places.LabioDental, "v", "v")
     let VlLinguoLabialFricative      = Con(Pulmonic Fricative, Places.LinguoLabial, "θ̼", "")
     let VdLinguoLabialFricative      = Con(Voiced Pulmonic Fricative, Places.LinguoLabial, "ð̼", "")
-    let VlDentalFricative            = Con(Pulmonic Fricative, Places.Dental, "θ", "T")
+    let th                           = Con(Pulmonic Fricative, Places.Dental, "θ", "T")
     let VdDentalFricative            = Con(Voiced Pulmonic Fricative, Places.Dental, "ð", "D")
     let VlAlveolarFricative          = Con(Pulmonic Fricative, Places.Alveolar, "θ̠", "")
     let VdAlveolarFricative          = Con(Voiced Pulmonic Fricative, Places.Alveolar, "ð̠", "")
     let VlPostaveolarFricative       = Con(Pulmonic Fricative, Places.PostAlveolar, "ɹ̠̊", "")
     let VdPostalveolarFricative      = Con(Voiced Pulmonic Fricative, Places.PostAlveolar, "ɹ̝̊", "")
     let VdRetroflexFricative         = Con(Voiced Pulmonic Fricative, Places.Retroflex, "ɻ˔","")
-    let VlPalatalFricative           = Con(Pulmonic Fricative, Places.Palatal, "ç", "C")
+    let sh                           = Con(Pulmonic Fricative, Places.Palatal, "ç", "C")
     let VdPalatalFricative           = Con(Voiced Pulmonic Fricative, Places.Palatal, "ʝ", "j\\")
-    let VlVelarFricative             = Con(Pulmonic Fricative, Places.Velar, "x", "x")
+    let xha                          = Con(Pulmonic Fricative, Places.Velar, "x", "x")
     let VdVelarFricative             = Con(Voiced Pulmonic Fricative, Places.Velar, "ɣ", "G")
     let VlUvularFricative            = Con(Pulmonic Fricative, Places.Uvular, "χ", "X")
     let VdUvularFricative            = Con(Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "R")
     let VlPharyngealFricative        = Con(Pulmonic Fricative, Places.Pharyngeal, "ħ", "X\\")
     let VdPharyngealFricative        = Con(Voiced Pulmonic Fricative, Places.Pharyngeal, "ʕ", "?\\")
-    let VlGlottalFricative           = Con(Pulmonic Fricative, Places.Glottal, "h", "h")
+    let h                            = Con(Pulmonic Fricative, Places.Glottal, "h", "h")
     let VdGlottalFricative           = Con(Voiced Pulmonic Fricative, Places.Glottal, "ɦ", "h\\")
 														
     // Approximant										
@@ -216,7 +214,7 @@ with IPA
     let VlRetroflexApproximant       = Con(Pulmonic Approximant, Places.Retroflex, "ɻ̊", "")
     let VdRetroflexApproximant       = Con(Voiced Pulmonic Approximant, Places.Retroflex, "ɻ", "r\\`")
     let VlPalatalApproximant         = Con(Pulmonic Approximant, Places.Palatal, "j̊", "")
-    let VdPalatalApproximant         = Con(Voiced Pulmonic Approximant, Places.Palatal, "j", "j")
+    let jg                          = Con(Voiced Pulmonic Approximant, Places.Palatal, "j", "j")
     let VlVelarApproximant           = Con(Pulmonic Approximant, Places.Velar, "ɰ̊", "")
     let VdVelarApproximant           = Con(Voiced Pulmonic Approximant, Places.Velar, "ɰ", "M\\")
     let VdGlottalApproximant         = Con(Voiced Pulmonic Approximant, Places.Glottal, "ʔ̞", "")
@@ -236,7 +234,7 @@ with IPA
     let VlBilabialTrill              = Con(Pulmonic Trill, Places.Bilabial, "ʙ̥", "")
     let VdBilabialTrill              = Con(Voiced Pulmonic Trill, Places.Bilabial, "ʙ", "B\\")
     let VlAlveolarTrill              = Con(Pulmonic Trill, Places.Alveolar, "r̥", "")
-    let VdAlveolarTrill              = Con(Voiced Pulmonic Trill, Places.Alveolar, "r", "r")
+    let r                            = Con(Voiced Pulmonic Trill, Places.Alveolar, "r", "r")
     let VlRetroflexTrill             = Con(Pulmonic Trill, Places.Retroflex, "ɽ̊r̥", "")
     let VdRetroflexTrill             = Con(Voiced Pulmonic Trill, Places.Retroflex, "ɽr", "")
     let VlUvularTrill                = Con(Pulmonic Trill, Places.Uvular, "ʀ", "R\\")
@@ -255,12 +253,12 @@ with IPA
 														
     // LateralApproximant								
     let VlAlveolarLateralApproximant = Con(Pulmonic Lateral Approximant, Places.Alveolar, "l̥", "")
-    let VdAlveolarLateralApproximant = Con(Voiced Pulmonic Lateral Approximant, Places.Alveolar, "l", "l")
-    let VdVelarizedAlvLatApproximant = Con(Voiced Velarized Pulmonic Lateral Approximant, Places.Alveolar, "ɫ", "5")
+    let l                            = Con(Voiced Pulmonic Lateral Approximant, Places.Alveolar, "l", "l")
+    let ssha                         = Con(Voiced Velarized Pulmonic Lateral Approximant, Places.Alveolar, "ɫ", "5")
     let VlRetroflexLateral           = Con(Pulmonic Lateral Approximant, Places.Retroflex, "ɭ̊", "")
     let VdRetroflexLateral           = Con(Voiced Pulmonic Lateral Approximant, Places.Retroflex, "ɭ", "n`")
     let VlPalatalLateral             = Con(Pulmonic Lateral Approximant, Places.Palatal, "ʎ̥", "")
-    let VdPalatalLateral             = Con(Voiced Pulmonic Lateral Approximant, Places.Palatal, "ʎ", "L")
+    let yuh                          = Con(Voiced Pulmonic Lateral Approximant, Places.Palatal, "ʎ", "L")
     let VlVelarLateral               = Con(Pulmonic Lateral Approximant, Places.Velar, "ʟ̥", "")
     let VdVelarLateral               = Con(Voiced Pulmonic Lateral Approximant, Places.Velar, "ʟ", "L\\")
     let VdUvularLateral              = Con(Voiced Pulmonic Lateral Approximant, Places.Uvular, "ʟ̠", "")
@@ -371,7 +369,7 @@ with IPA
 //    let VlAlveoloPalatalFricative       = NewConsonant(CPM(Categories.Other, Places.AlveoloPalatal) Fricative, "ʑ", "")
 
 
-    let VdLabialVelarApproximant          = Con(Voiced Approximant, Places.LabialVelar, "w", "w")
+    let wah                               = Con(Voiced Approximant, Places.LabialVelar, "w", "w")
 
 
 
@@ -405,16 +403,16 @@ with IPA
     // Vowels
     //==================================
 
-    let CloseFrontUnrounded          = Vow(Unrounded, Opens.Close, Backnesses.Front, "i", "i")
+    let ee                           = Vow(Unrounded, Opens.Close, Backnesses.Front, "i", "i")
 
 
-    let CloseFrontRounded            = Vow(Rounded, Opens.Close, Backnesses.Front, "y", "y")
+    let eeh                          = Vow(Rounded, Opens.Close, Backnesses.Front, "y", "y")
 
 
     let CloseCentralUnrounded        = Vow(Unrounded, Opens.Close, Backnesses.Central, "ɨ", "1")
     let CloseCentralRounded          = Vow(Rounded, Opens.Close, Backnesses.Central, "ʉ", "}")
     let CloseBackUnrounded           = Vow(Unrounded, Opens.Close, Backnesses.Back, "ɯ", "M")
-    let CloseBackRounded             = Vow(Rounded, Opens.Close, Backnesses.Back, "u", "u")
+    let u                            = Vow(Rounded, Opens.Close, Backnesses.Back, "u", "u")
 
     let NearCloseCentralUnrounded    = Vow(Unrounded | NonIPA, Opens.NearClose, Backnesses.Central, "ᵻ", "I\\")
     let NearCloseFrontUnrounded      = Vow(Unrounded, Opens.NearClose, Backnesses.NearFront, "ɪ", "I")
@@ -422,21 +420,21 @@ with IPA
     let NearCloseCentralRounded      = Vow(Rounded |NonIPA, Opens.NearClose, Backnesses.Central, "ᵿ", "U\\")
     let NearCloseBackRounded         = Vow(Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U")
 
-    let CloseMidFrontUnrounded       = Vow(Unrounded, Opens.CloseMid, Backnesses.Front, "e", "e")
+    let ay                           = Vow(Unrounded, Opens.CloseMid, Backnesses.Front, "e", "e")
     let CloseMidFrontRounded         = Vow(Rounded, Opens.CloseMid, Backnesses.Front, "ø", "2")
     let MidCentralUnrounded          = Vow(Unrounded, Opens.Mid, Backnesses.Central, "ɘ", "@\\")
     let Schwa                        = Vow(Unrounded, Opens.CloseMid, Backnesses.Central, "ə", "@")
-    let RoundedSchwa                 = Vow(Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8")
+    let ooh                           = Vow(Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8")
     let CloseMidBackUnrounded        = Vow(Unrounded, Opens.CloseMid, Backnesses.Back, "ɤ", "7")
-    let CloseMidBackRounded          = Vow(Rounded, Opens.CloseMid, Backnesses.Back, "o", "o")
+    let oh                           = Vow(Rounded, Opens.CloseMid, Backnesses.Back, "o", "o")
 
     let MidFrontUnrounded            = Vow(Unrounded, Opens.Mid, Backnesses.Front, "ø̞", "")
     let MidBackUnrounded             = Vow(Unrounded, Opens.Mid, Backnesses.Back, "o̞", "")
 
-    let OpenMidNearFrontUnrounded    = Vow(Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E")
+    let eh                           = Vow(Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E")
     let OpenMidNearFrontRounded      = Vow(Rounded, Opens.OpenMid, Backnesses.NearFront, "œ", "9")
     let OpenMidCentralRounded        = Vow(Rounded, Opens.OpenMid, Backnesses.Central, "ɞ", "3\\")
-    let OpenMidCentral               = Vow(Unrounded, Opens.OpenMid, Backnesses.Central, "ɜ", "3")
+    let aeh                          = Vow(Unrounded, Opens.OpenMid, Backnesses.Central, "ɜ", "3")
     let OpenMidBackUnrounded         = Vow(Unrounded, Opens.OpenMid, Backnesses.Back, "ʌ", "V")
     let OpenMidBackRounded           = Vow(Rounded, Opens.OpenMid, Backnesses.Back, "ɔ", "O")
 
@@ -445,7 +443,7 @@ with IPA
     let OpenMidSchwa                 = Vow(Rounded, Opens.NearOpen, Backnesses.Central, "ɐ", "6")
 
     let OpenCentralUnrounded         = Vow(Unrounded, Opens.Open, Backnesses.Central, "ä", "a_\"")
-    let OpenNearFrontUnrounded       = Vow(Unrounded, Opens.Open, Backnesses.NearFront, "a", "a")
+    let ah                           = Vow(Unrounded, Opens.Open, Backnesses.NearFront, "a", "a")
     let OpenNearFrontRounded         = Vow(Rounded, Opens.Open, Backnesses.NearFront, "ɶ", "&")
     let OpenBackUnrounded            = Vow(Unrounded, Opens.Open, Backnesses.Back, "ɑ", "A")
     let OpenBackRounded              = Vow(Rounded, Opens.Open, Backnesses.Back, "ɒ", "Q")
@@ -728,6 +726,14 @@ with IPA
     end,
     sound.Text
   }
+
+  let SoundSound(ref sound) begin
+    if (sound == SpaceSound)
+      return Space;
+    end
+    return sound.SymbolName
+  end
+
   //======================================================================
   // Build a dictionary with SAMPA text as the key
   //======================================================================
