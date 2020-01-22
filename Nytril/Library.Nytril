@@ -19,7 +19,7 @@ end
 
 with Nexus
   let CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1)
-  let EndLine       = ";"
+  let EndMarker     = ";"
   let Missing       = "?"
   let Gap           = '-'
   let Quote         = "\""
@@ -36,7 +36,8 @@ with Nexus
   }
 
   let AddLine(name) = Span {
-    Keyword(name)
+    Keyword(name),
+    End: EndMarker,
   }
 
   let AddValue(name, value) = Span {
@@ -46,24 +47,22 @@ with Nexus
     value,
   }
 
-  let BeginScope(name) = TextBlock {
+  let Scope(name) = TextBlock {
     IndentSpace: 2,
     Begin: Span {
       Keyword("begin"),
       Space,
       name,
-      EndLine,
+      EndMarker,
     },
     End: Span {
       Keyword("end"),
-      EndLine,
+      EndMarker,
     },
   }
 
-
-  let SourceFile = TextBlock {
+  let NexusFile = TextBlock {
     Comment("NEXUS"),
-    Empty,
   }
 
   let Newick(node) = Span {
@@ -85,14 +84,13 @@ with Nexus
     tree.SymbolName,
     " = ",
     Newick(tree),
-    EndLine
+    EndMarker
   }
 
-  let TreeFormat(taxa) = SourceFile {
-    BeginScope("taxa") {
+  let TreeFormat(taxa) = NexusFile {
+    Scope("taxa") {
       AddLine("dimensions") {
         AddValue("ntax", taxa.Length),
-        EndLine
       },
       AddLine("taxlabels") {
         Space,
@@ -100,13 +98,12 @@ with Nexus
           Separator: Space,
           taxa,
         },
-        EndLine,
       },
     }
   }
 
   let TreeFile(ref tree) = TreeFormat(TreeLib.GetTaxaLabels(tree)) {
-    BeginScope("trees") {
+    Scope("trees") {
       ShowTreeLine(ref tree),
     }
   }
@@ -140,25 +137,24 @@ with Nexus
     Empty,
   }
 
-  let CharacterFile(taxa, charmax) begin
+  let CharacterFile(taxa) begin
     var maxlength = Math.Max((each taxa).Name.Length)+1;
-    return SourceFile {
-      BeginScope("DATA") {
+    return NexusFile {
+      Scope("DATA") {
         AddLine("dimensions") {
           AddValue("ntax", taxa.Length),
-          AddValue("nchar", charmax),
-          EndLine
+          AddValue("nchar", Results.UniqueSounds.Length),
         },
         AddLine("format") {
           AddValue("datatype", "STANDARD"),
           AddValue("gap", Gap),
           AddValue("missing", Missing),
-          AddValue("symbols", Span {Quote, CharacterList[0..<charmax], Quote}),
-          EndLine
+          AddValue("symbols", Span {Quote, CharacterList[Results.UniqueSounds.IndexRange], Quote}),
         },
+        Empty,
         Keyword("matrix"),
         ShowTaxonSet(maxlength, taxa, each ((0..<(taxa[0].Characters.Length)) / (70 - maxlength))),
-        EndLine,
+        EndMarker,
       }
     }
   end
