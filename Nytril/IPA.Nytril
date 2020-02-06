@@ -756,14 +756,23 @@ with IPA
 
   let SoundToCharacter(ref sound) begin
     if (sound == GapSound)
-      return Nexus.Gap;
+      return {
+        Character: Nexus.Gap,
+        Sound: ref NoSound
+      }
     end
 
     var f = Results.UniqueSounds.FindIndex(DisplayCharacters.SameSound, {Sound: ref sound});
     if (f.Length == 1)
-      return Nexus.CharacterList[f[0]];
+      return {
+        Character: Nexus.CharacterList[f[0]],
+        Sound: ref sound
+      }
     else
-      return f.Length;
+      return {
+        Character: '?',
+        Sound: ref NoSound
+      }
     end
   end
 
