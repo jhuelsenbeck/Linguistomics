@@ -9,6 +9,7 @@ with Metrics
   let Paper      = Type.Size(8.5 inches, 11 inches)
   let Content    = Type.Size(Paper.Width - MarginL - MarginR, Paper.Height - MarginT - MarginB)
   let TableSpace = 24 pts
+  let TreeWidth  = Content.Width
 
   let BoxSize    = Type.Size(18 pts, 20 pts)
   let CellSize   = Type.Size(BoxSize.Width * 2, BoxSize.Height)
@@ -16,12 +17,10 @@ end
 //======================================================================
 
 with Style
-  let Arial = "Arial Unicode MS"
-
   let MainFamily           = {TextFamily: TextFamilies.TimesNewRoman}
-  let SansSerif            = {TextFamily: Arial}
+  let SansSerif            = {TextFamily: TextFamilies.Calibri}
   let MonoFamily           = {TextFamily: TextFamilies.Consolas}
-  let IPAFamily            = {TextFamily: Arial} // Also can be TextFamilies.CambriaMath
+  let IPAFamily            = {TextFamily: TextFamilies.CambriaMath} // Also can be "Linux Libertine O"
 
   let ImpossibleBackground = {Background: 80%}
   let Used                 = {TextColor: Colors.Red}
@@ -140,35 +139,75 @@ with Style
     author.Title,
   }
 
-  let DataLabel(node) = node.Data.Name
+  let Collect(list, node) begin
+    if (node.Label)
+      list.AddElement(node.Label, node)
+    end
+    Collect(list, each node);
+  end
 
-  let TreeWidth = 6 inches
+  let GetTimes(node) begin
+    var list = Type.List(100);
+    Collect(list, node);
+    return list[1..];
+  end
+
+  let ByYear(x, y) = x.Branch.Compare(y.Branch)
+
+  let TimelineNodes = GetTimes(Info.LanguageTree).Sort(true, ByYear)
+
+  let TimelineRow(options, node) = Group {
+    X: options.Width - options.Width * node.Branch / options.MaxYear,
+    Figure {
+      Fill: Colors.Green,
+      Rectangle(Type.Rect(Type.Point(0), Type.Size(5, options.TextHeight)))
+    },
+    Paragraph {
+      Space,
+      node.Label,
+    }
+  }
+
+  let ShowTimeline(options) = Group {
+    Vertical: true,
+    TextHeight: options.TextHeight,
+    TimelineRow(options, each TimelineNodes),
+    Group {
+      Vertical: true,
+      Background: 90%,
+      ChartAxis {
+        Width: options.Width,
+        Start: options.MaxYear,
+        Stop: 0,
+      },
+      Frame {
+        HAlignment: HAligns.Center,
+        "Years"
+      }
+    }
+  }
+
+  let ShowLanguageTree = Block {
+    ShowTree(Info.LanguageTree),
+    Header2("Last Branch"),
+    ShowTimeline({
+      Width: Metrics.TreeWidth,
+      TextHeight: 10 pts,
+      MaxYear: Math.Max((each TimelineNodes).Branch)
+    })
+  }
 
   let ShowTree(tree) = Group {
     Vertical: true,
     Tree {
-  //    TextHeight: 5.5 pts,
-      Label: DataLabel,
       Curvature: 30%,
       Bevel: 20%,
       Marker: {Style.IPAFamily, TextHeight: 4 pts}Chars.Circle {TextColor: Colors.Gray},
-      Width: TreeWidth,
+      Width: Metrics.TreeWidth,
+      ValueLabel: Lang.Years,
+      ValueAxis: ChartAxis,
       tree
     },
-    Group {
-      Vertical: true,
-      Axis {
-        Background: 90%,
-        TextHeight: 7 pts,
-        Width: TreeWidth - 54 pts,
-        2000,
-        0,
-      },
-      Span {
-        HAlignment: HAligns.Center,
-        Lang.Years
-      }
-    }
   }
 
   let ShowAbstract(content) = Block {

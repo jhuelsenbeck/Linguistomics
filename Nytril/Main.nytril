@@ -31,8 +31,13 @@ with Info
   let Journal          = "Transactions of the Beysian Society"
   let Publisher        = "The Baysian Society"
   let Title            = "Simulated Word Sound Evolution using the TKF91 Model"
-
   let LanguageTree     = LanguageBranches.Romance
+
+  let AuthorList = Span {
+    Separator: Lang.Separator,
+    LastSeparator: " {0} "(Lang.And),
+    Style.Author(each Authors)
+  }
 end
 //======================================================================
 
@@ -40,6 +45,12 @@ let Watch = WhitePaper
 
 let WhitePaper = Style.WhitePaper {
   Title: Info.Title,
+  Author: Info.AuthorList,
+//  Description: "Test Description",
+//  Comment: "Test Comment",
+//  Subject: "Test Subject",
+//  Keywords: "Test Keywords",
+
   Style.PageSection {
     Header: Style.NormalHeader(Info.Journal) {
       Distance: 0.125 inches,
@@ -55,11 +66,7 @@ let WhitePaper = Style.WhitePaper {
       ParAlignment: ParAlignments.Center,
       Style.Title(Info.Title),
       Paragraph {
-        Span {
-          Separator: Lang.Separator,
-          LastSeparator: " {0} "(Lang.And),
-          Style.Author(each Authors)
-        }
+        Info.AuthorList
       },
     },
     Style.ShowAbstract(Abstract),
