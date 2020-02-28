@@ -41,7 +41,7 @@ with IPA
   end
 
   with Features
-    let None        = flag
+    let NoFeature   = flag {Name: Lang.NoFeatures}
     let Voiced      = flag {Name: Lang.Voiced}
     let Rounded     = flag {Name: Lang.Rounded}
     let Velarized   = flag {Name: Lang.Velarized}
@@ -69,8 +69,6 @@ with IPA
     let Punctuation = flag {Name: Lang.Puncuation}
   end
 
-  let Unrounded = Features.None
-
   let Encode(text, sampa) = {
     Popup: SegmentPopup,
     Text: text,
@@ -78,37 +76,37 @@ with IPA
   }
 
   let Diac(description, text, sampa) = Encode(text, sampa) {
-    Flags: Diacritic,
+    Features: Diacritic,
     Description: description,
   }
 
-  let Con(flags, place, text, sampa) = Encode(text, sampa) {
-    Flags: flags,
+  let Con(features, place, text, sampa) = Encode(text, sampa) {
+    Features: features,
     Place: place,
   }
 
-  let Vow(flags, open, backness, text, sampa) = Encode(text, sampa) {
-    Flags: flags | Vowel,
+  let Vow(features, open, backness, text, sampa) = Encode(text, sampa) {
+    Features: features | Vowel,
     Open: open,
     Backness: backness,
   }
 
-  let Imp(flags, place) = {
-    Flags: flags | Impossible,
+  let Imp(features, place) = {
+    Features: features | Impossible,
     Place: place,
   }
 
   let Dia(text, sampa) = Encode(text, sampa) {
-    Flags: Diacritic
+    Features: Diacritic
   }
 
-  let NasalizedChar = "\u0303"
+  let NasalizedDiacritic = "\u0303"
   let EjectiveIPA   = "\u02BC"
   let EjectiveSampa = "_>"
 
-  let NoSegment     = Encode("?", "!?") {Flags: Impossible}
-  let GapSegment    = Encode("-", "-") {Flags: Punctuation}
-  let SpaceSegment  = {Text: " ", Sampa: " ", Flags: Punctuation}
+  let NoSegment     = Encode("?", "!?") {Features: Impossible}
+  let GapSegment    = Encode("-", "-") {Features: Punctuation}
+  let SpaceSegment  = {Text: " ", Sampa: " ", Features: Punctuation}
 
   with Segments
     //==================================
@@ -116,21 +114,10 @@ with IPA
     //==================================
 
 
-    let wh        = Con(Nasal Voiced Approximant Nasal, Places.LabialVelar, "w" NasalizedChar, "w~")
-    let rn        = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "r" NasalizedChar, "r~")
+    let wh        = Con(Nasal Voiced Approximant Nasal, Places.LabialVelar, "w" NasalizedDiacritic, "w~")
+    let rn        = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "r" NasalizedDiacritic, "r~")
 
 //    let r_nasal = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "r~")                    // French Cold "Froid"  Same as SAMPA "R"?
-
-    let uuh       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ" NasalizedChar, "oe*") // French One "un"
-    let ey        = Vow(Rounded Nasal, Opens.Close, Backnesses.Front, "y" NasalizedChar, "y~")
-    let aa        = Vow(Unrounded Nasal, Opens.Open, Backnesses.NearFront, "a" NasalizedChar, "~a")
-    let ahn       = Vow(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ" NasalizedChar, "a*")    // Supposed to be "ɛ̃" as in French Dog "chien"?
-    let oon       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*")                      // French Fish "poisson"
-    let aehn      = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɜ" NasalizedChar, "3*")
-    let ehnn      = Vow(Nasal Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ" NasalizedChar, "E*")
-    let uh        = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u" NasalizedChar, "u*")         // Portuguese One "um"
-    let en        = Vow(Nasal Unrounded, Opens.CloseMid, Backnesses.Front, "e" NasalizedChar, "e*")   // Portuguese Trail "se*da
-    let een       = Vow(Nasal Unrounded, Opens.Close, Backnesses.Front, "i" NasalizedChar, "i*")      // Portuguese Tongue
 
     //==================================
     // Pulmonic Consonants
@@ -403,50 +390,63 @@ with IPA
     // Vowels
     //==================================
 
-    let ee                           = Vow(Unrounded, Opens.Close, Backnesses.Front, "i", "i")
+    let ee                           = Vow(NoFeature, Opens.Close, Backnesses.Front, "i", "i")
 
 
     let eeh                          = Vow(Rounded, Opens.Close, Backnesses.Front, "y", "y")
 
 
-    let CloseCentralUnrounded        = Vow(Unrounded, Opens.Close, Backnesses.Central, "ɨ", "1")
+    let CloseCentralUnrounded        = Vow(NoFeature, Opens.Close, Backnesses.Central, "ɨ", "1")
     let CloseCentralRounded          = Vow(Rounded, Opens.Close, Backnesses.Central, "ʉ", "}")
-    let CloseBackUnrounded           = Vow(Unrounded, Opens.Close, Backnesses.Back, "ɯ", "M")
+    let CloseBackUnrounded           = Vow(NoFeature, Opens.Close, Backnesses.Back, "ɯ", "M")
     let u                            = Vow(Rounded, Opens.Close, Backnesses.Back, "u", "u")
 
-    let NearCloseCentralUnrounded    = Vow(Unrounded | NonIPA, Opens.NearClose, Backnesses.Central, "ᵻ", "I\\")
-    let NearCloseFrontUnrounded      = Vow(Unrounded, Opens.NearClose, Backnesses.NearFront, "ɪ", "I")
+    let NearCloseCentralUnrounded    = Vow(NoFeature | NonIPA, Opens.NearClose, Backnesses.Central, "ᵻ", "I\\")
+    let NearCloseFrontUnrounded      = Vow(NoFeature, Opens.NearClose, Backnesses.NearFront, "ɪ", "I")
     let NearCloseFrontRounded        = Vow(Rounded, Opens.NearClose, Backnesses.NearFront, "ʏ", "Y")
     let NearCloseCentralRounded      = Vow(Rounded |NonIPA, Opens.NearClose, Backnesses.Central, "ᵿ", "U\\")
     let NearCloseBackRounded         = Vow(Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U")
 
-    let ay                           = Vow(Unrounded, Opens.CloseMid, Backnesses.Front, "e", "e")
+    let ay                           = Vow(NoFeature, Opens.CloseMid, Backnesses.Front, "e", "e")
     let CloseMidFrontRounded         = Vow(Rounded, Opens.CloseMid, Backnesses.Front, "ø", "2")
-    let MidCentralUnrounded          = Vow(Unrounded, Opens.Mid, Backnesses.Central, "ɘ", "@\\")
-    let Schwa                        = Vow(Unrounded, Opens.CloseMid, Backnesses.Central, "ə", "@")
-    let ooh                           = Vow(Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8")
-    let CloseMidBackUnrounded        = Vow(Unrounded, Opens.CloseMid, Backnesses.Back, "ɤ", "7")
+    let MidCentralUnrounded          = Vow(NoFeature, Opens.Mid, Backnesses.Central, "ɘ", "@\\")
+    let Schwa                        = Vow(NoFeature, Opens.CloseMid, Backnesses.Central, "ə", "@")
+    let ooh                          = Vow(Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8")
+    let CloseMidBackUnrounded        = Vow(NoFeature, Opens.CloseMid, Backnesses.Back, "ɤ", "7")
     let oh                           = Vow(Rounded, Opens.CloseMid, Backnesses.Back, "o", "o")
 
-    let MidFrontUnrounded            = Vow(Unrounded, Opens.Mid, Backnesses.Front, "ø̞", "")
-    let MidBackUnrounded             = Vow(Unrounded, Opens.Mid, Backnesses.Back, "o̞", "")
+    let MidFrontUnrounded            = Vow(NoFeature, Opens.Mid, Backnesses.Front, "ø̞", "")
+    let MidBackUnrounded             = Vow(NoFeature, Opens.Mid, Backnesses.Back, "o̞", "")
 
-    let eh                           = Vow(Unrounded, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E")
+    let eh                           = Vow(NoFeature, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E")
     let OpenMidNearFrontRounded      = Vow(Rounded, Opens.OpenMid, Backnesses.NearFront, "œ", "9")
     let OpenMidCentralRounded        = Vow(Rounded, Opens.OpenMid, Backnesses.Central, "ɞ", "3\\")
-    let aeh                          = Vow(Unrounded, Opens.OpenMid, Backnesses.Central, "ɜ", "3")
-    let OpenMidBackUnrounded         = Vow(Unrounded, Opens.OpenMid, Backnesses.Back, "ʌ", "V")
+    let aeh                          = Vow(NoFeature, Opens.OpenMid, Backnesses.Central, "ɜ", "3")
+    let OpenMidBackUnrounded         = Vow(NoFeature, Opens.OpenMid, Backnesses.Back, "ʌ", "V")
     let OpenMidBackRounded           = Vow(Rounded, Opens.OpenMid, Backnesses.Back, "ɔ", "O")
 
-    let NearFrontUnrounded           = Vow(Unrounded, Opens.NearOpen, Backnesses.NearFront, "æ", "{")
+    let NearFrontUnrounded           = Vow(NoFeature, Opens.NearOpen, Backnesses.NearFront, "æ", "{")
     let FrontOpenRounded             = Vow(Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&")
     let OpenMidSchwa                 = Vow(Rounded, Opens.NearOpen, Backnesses.Central, "ɐ", "6")
 
-    let OpenCentralUnrounded         = Vow(Unrounded, Opens.Open, Backnesses.Central, "ä", "a_\"")
-    let ah                           = Vow(Unrounded, Opens.Open, Backnesses.NearFront, "a", "a")
+    let OpenCentralUnrounded         = Vow(NoFeature, Opens.Open, Backnesses.Central, "ä", "a_\"")
+    let ah                           = Vow(NoFeature, Opens.Open, Backnesses.NearFront, "a", "a")
     let OpenNearFrontRounded         = Vow(Rounded, Opens.Open, Backnesses.NearFront, "ɶ", "&")
-    let OpenBackUnrounded            = Vow(Unrounded, Opens.Open, Backnesses.Back, "ɑ", "A")
+    let OpenBackUnrounded            = Vow(NoFeature, Opens.Open, Backnesses.Back, "ɑ", "A")
     let OpenBackRounded              = Vow(Rounded, Opens.Open, Backnesses.Back, "ɒ", "Q")
+
+    let uuh       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ" NasalizedDiacritic, "oe*") // French One "un"
+    let ey        = Vow(Rounded Nasal, Opens.Close, Backnesses.Front, "y" NasalizedDiacritic, "y~")
+    let aa        = Vow(Nasal, Opens.Open, Backnesses.NearFront, "a" NasalizedDiacritic, "~a")
+    let ahn       = Vow(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ" NasalizedDiacritic, "a*")    // Supposed to be "ɛ̃" as in French Dog "chien"?
+    let oon       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*")                      // French Fish "poisson"
+    let aehn      = Vow(Nasal, Opens.OpenMid, Backnesses.NearFront, "ɜ" NasalizedDiacritic, "3*")
+    let ehnn      = Vow(Nasal, Opens.OpenMid, Backnesses.NearFront, "ɛ" NasalizedDiacritic, "E*")
+    let uh        = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u" NasalizedDiacritic, "u*")         // Portuguese One "um"
+    let en        = Vow(Nasal, Opens.CloseMid, Backnesses.Front, "e" NasalizedDiacritic, "e*")   // Portuguese Trail "se*da
+    let een       = Vow(Nasal, Opens.Close, Backnesses.Front, "i" NasalizedDiacritic, "i*")      // Portuguese Tongue
+
+
 
 // How to show rhotic vowels?
 //    let OpenMidCentralRhotic       = Vow(Rhotic, Opens.OpenMid, Backnesses.Central, "ɝ", "")
@@ -516,7 +516,7 @@ with IPA
 
   with DiacriticModifiers
     let UndefinedEscapeCharacter     = Diac("Undefined escape character", null, "*")
-    let Nasalized                    = Diac("Nasalized", NasalizedChar, "_~")
+    let Nasalized                    = Diac("Nasalized", NasalizedDiacritic, "_~")
     let Centralized                  = Diac("Centralized", "\u0308", "_\"")
     let Advanced                     = Diac("Advanced", "\u031F", "_+")
     let Retracted                    = Diac("Retracted", "\u0320", "_-")
@@ -591,9 +591,9 @@ with IPA
 
   //======================================================================
 
-  let HasFlag(flags, f)       = (flags & f) != None
-  let NotFlag(flags, f)       = (flags & f) == None
-  let HasMask(flags, mask, f) = (flags & mask) == (f & mask)
+  let HasFeature(feature, f)    = (feature & f) != NoFeature
+  let NotFeature(feature, f)    = (feature & f) == NoFeature
+  let HasMask(feature, mask, f) = (feature & mask) == (f & mask)
 
   //======================================================================
 
@@ -606,7 +606,7 @@ with IPA
   }
 
   let SegmentName(segment) = Span {
-    if (segment.Flags.HasFlag(Vowel))
+    if (segment.Features.HasFeature(Vowel))
       segment.Open,
       Space,
       segment.Backness,
@@ -616,10 +616,10 @@ with IPA
     Space,
     Span {
       Separator: Space,
-      if (segment.Flags.HasFlag(Diacritic))
+      if (segment.Features.HasFeature(Diacritic))
         segment.Description
       else
-        each segment.Flags,
+        each segment.Features,
       end
     }
   }
@@ -713,15 +713,15 @@ with IPA
 
   let ShowSegment(ref segment, flags=Impossible) = Span {
     Style.IPAFamily,
-    if (segment.Flags.NotFlag(Punctuation))
+    if (segment.Features.NotFeature(Punctuation))
       Popup: SegmentPopup.Call(segment),
       Link: segment.FullSymbolName,
     end,
-    if (segment.Flags.HasFlag(flags))
+    if (segment.Features.HasFeature(flags))
       Assert(false, Lang.Impossible),
       TextColor: Colors.Red,
     end,
-    if (segment.Flags.HasFlag(Diacritic))
+    if (segment.Features.HasFeature(Diacritic))
       "  ",
     end,
     segment.Text
@@ -776,5 +776,57 @@ with IPA
     end
   end
 
+  let MatchFeature(segment, data)     = IPA.HasMask(segment.Features, data.Mask, data.Features)
+  let FeatureSegments(mask, features) = IPA.Segments.FindSlice(MatchFeature, {Mask: mask, Features: features})
+
+  let Enclosure(size, color) = Canvas {
+    Padding: 4 pts,
+    Size: size,
+    Figure {
+      Stroke: 1 pts,
+      Fill: color,
+      Rectangle(Rect(0, size), Size(6 pts))
+    },
+  }
+
+  let FeatureBox(name, mask, features, size, color) = Enclosure(size, color) {
+    Group {
+      HAlign: HAligns.Center,
+      Vertical: true,
+      TextHeight: 14 pts,
+      Frame {
+        ParAlignment: ParAlignments.Center,
+        Width: size.Width,
+        Paragraph {
+          Bold,
+          name,
+        },
+        Paragraph {
+          Separator: Space*2,
+          IPA.ShowSegment(each FeatureSegments(mask, features))
+        }
+      }
+    }
+  }
+
+  let FeatureChart = Group {
+    Enclosure(Size(5.5 inches, 2.2 inches), Color(255, 238, 238)) {
+      Group {
+        Group {
+          Vertical: true,
+          FeatureBox(Lang.Nasals, Nasal | Vowel | Pulmonic, Nasal, Size(5 inches, 40 pts), Color(255, 246, 246)),
+          Group {
+            FeatureBox(Lang.Plosives, Nasal | Vowel, Nasal, Size(1.5 inches, 80 pts), Color(246, 243, 250)),
+            FeatureBox(Lang.Affricates, Voiced | Sibilant | Ejective | Affricate | Vowel, Affricate, Size(1.5 inches, 80 pts), Color(246, 242, 250)),
+          }
+        },
+        Paragraph {
+          Transform: Rotate(90 degrees),
+          Bold,
+          "Occlusives",
+        }
+      }
+    }
+  }
 end
 
