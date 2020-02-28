@@ -1,4 +1,4 @@
-﻿using Format, Units, Type, IPA.SoundTypes
+﻿using Format, Units, Type, IPA.Features
 //======================================================================
 
 with IPA
@@ -40,7 +40,7 @@ with IPA
     let Glottal        = enum {Name: Lang.Glottal}
   end
 
-  with SoundTypes
+  with Features
     let None        = flag
     let Voiced      = flag {Name: Lang.Voiced}
     let Rounded     = flag {Name: Lang.Rounded}
@@ -66,13 +66,13 @@ with IPA
     let Impossible  = flag {Name: Lang.Impossible}
     let NonIPA      = flag {Name: Lang.NonIPA}
     let Diacritic   = flag {Name: Lang.Diacritic}
-    let Punctuation = flag {Name: "Puncuation"}
+    let Punctuation = flag {Name: Lang.Puncuation}
   end
 
-  let Unrounded = SoundTypes.None
+  let Unrounded = Features.None
 
   let Encode(text, sampa) = {
-    Popup: SoundPopup,
+    Popup: SegmentPopup,
     Text: text,
     Sampa: sampa,
   }
@@ -106,13 +106,13 @@ with IPA
   let EjectiveIPA   = "\u02BC"
   let EjectiveSampa = "_>"
 
-  let NoSound       = Encode("?", "!?") {Flags: Impossible}
-  let GapSound      = Encode("-", "-") {Flags: Punctuation}
-  let SpaceSound    = {Text: " ", Sampa: " ", Flags: Punctuation}
+  let NoSegment     = Encode("?", "!?") {Flags: Impossible}
+  let GapSegment    = Encode("-", "-") {Flags: Punctuation}
+  let SpaceSegment  = {Text: " ", Sampa: " ", Flags: Punctuation}
 
-  with Sounds
+  with Segments
     //==================================
-    // Extra sounds found in word list
+    // Extra segments found in word list
     //==================================
 
 
@@ -214,7 +214,7 @@ with IPA
     let VlRetroflexApproximant       = Con(Pulmonic Approximant, Places.Retroflex, "ɻ̊", "")
     let VdRetroflexApproximant       = Con(Voiced Pulmonic Approximant, Places.Retroflex, "ɻ", "r\\`")
     let VlPalatalApproximant         = Con(Pulmonic Approximant, Places.Palatal, "j̊", "")
-    let jg                          = Con(Voiced Pulmonic Approximant, Places.Palatal, "j", "j")
+    let jg                           = Con(Voiced Pulmonic Approximant, Places.Palatal, "j", "j")
     let VlVelarApproximant           = Con(Pulmonic Approximant, Places.Velar, "ɰ̊", "")
     let VdVelarApproximant           = Con(Voiced Pulmonic Approximant, Places.Velar, "ɰ", "M\\")
     let VdGlottalApproximant         = Con(Voiced Pulmonic Approximant, Places.Glottal, "ʔ̞", "")
@@ -453,7 +453,7 @@ with IPA
 //    let RhoticSchwa                = Vow(Rhotic, Opens.Open, Backnesses.NearFront, "ɚ", "@`")
   end
 
-  with ImpossibleSounds
+  with ImpossibleSegments
     let I10 = Imp(Pulmonic Nasal, Places.Pharyngeal)
     let I11 = Imp(Pulmonic Nasal, Places.Glottal)
     let I12 = Imp(Pulmonic Stop Voiced, Places.Pharyngeal)
@@ -512,9 +512,9 @@ with IPA
     let I65 = Imp(Ejective Tenuis Lateral Click Affricate, Places.Pharyngeal)
   end                       									
 
-  let AllSounds = Sounds + ImpossibleSounds
+  let AllSegments = Segments + ImpossibleSegments
 
-  with DiacriticSounds
+  with DiacriticModifiers
     let UndefinedEscapeCharacter     = Diac("Undefined escape character", null, "*")
     let Nasalized                    = Diac("Nasalized", NasalizedChar, "_~")
     let Centralized                  = Diac("Centralized", "\u0308", "_\"")
@@ -597,29 +597,29 @@ with IPA
 
   //======================================================================
 
-  let SoundColumns = 4
-  let SoundSize    = 40 pts
+  let SegmentColumns = 4
+  let SegmentSize    = 40 pts
 
   let ShowSampa(sampa) = Span {
     Style.MonoFamily,
     sampa,
   }
 
-  let SoundName(sound) = Span {
-    if (sound.Flags.HasFlag(Vowel))
-      sound.Open,
+  let SegmentName(segment) = Span {
+    if (segment.Flags.HasFlag(Vowel))
+      segment.Open,
       Space,
-      sound.Backness,
+      segment.Backness,
     else
-      sound.Place,
+      segment.Place,
     end,
     Space,
     Span {
       Separator: Space,
-      if (sound.Flags.HasFlag(Diacritic))
-        sound.Description
+      if (segment.Flags.HasFlag(Diacritic))
+        segment.Description
       else
-        each sound.Flags,
+        each segment.Flags,
       end
     }
   }
@@ -633,33 +633,33 @@ with IPA
     end
   }
 
-  let SoundDisplay(sound, location) = Block {
+  let SegmentDisplay(segment, location) = Block {
     ParAlignment: ParAlignments.Center,
     Paragraph {
       LocationMark: location,
       SpaceBefore: 8 pts,
       SpaceAfter: 8 pts,
-      TextHeight: SoundSize,
+      TextHeight: SegmentSize,
       Style.IPAFamily,
-      SpaceAfter: SoundSize * 0.125,
-      sound.Text,
+      SpaceAfter: SegmentSize * 0.125,
+      segment.Text,
     },
     Paragraph {
       TextHeight: 10 pts,
-      SoundName(sound),
+      SegmentName(segment),
     },
     Paragraph {
       TextHeight: 8 pts,
       ParBackground: 95%,
-      CodePoints(sound.Text),
+      CodePoints(segment.Text),
     },
     Paragraph {
       TextHeight: 8 pts,
-      if (sound.Sampa and sound.Sampa.Length > 0)
+      if (segment.Sampa and segment.Sampa.Length > 0)
         ParBackground: 90%,
-        ShowSampa(sound.Sampa)
+        ShowSampa(segment.Sampa)
       else
-        if (sound.Text.Length > 0)
+        if (segment.Text.Length > 0)
           ParBackground: Colors.Red,
 //        Assert(false, "Missing Sampa definition"),
         end
@@ -667,28 +667,28 @@ with IPA
     },
   }
 
-  let SoundCell(ref sound) = Cell {
+  let SegmentCell(ref segment) = Cell {
     Edge: 0.25 pts {Color: Colors.LightGray},
     Padding: 2 pts,
-    SoundDisplay(sound, sound.FullSymbolName)
+    SegmentDisplay(segment, segment.FullSymbolName)
   }
 
-  let SoundRow(sounds) = Row {
-    SoundCell(each sounds)
+  let SegmentRow(segments) = Row {
+    SegmentCell(each segments)
   }
 
-  let SoundTable(sounds) = Block {
+  let SegmentTable(segments) = Block {
     Table {
-      Columns: [Metrics.Content.Width / SoundColumns] * SoundColumns,
-      Style.TitleBar(Lang.IPAListing, SoundColumns),
-      SoundRow(each (sounds / SoundColumns))
+      Columns: [Metrics.Content.Width / SegmentColumns] * SegmentColumns,
+      Style.TitleBar(Lang.IPAListing, SegmentColumns),
+      SegmentRow(each (segments / SegmentColumns))
     },
     Style.TableNotes
   }
 
-  let SoundPopup(sound) = Frame {
+  let SegmentPopup(segment) = Frame {
     Width: 2 inches,
-    SoundDisplay(sound, null)
+    SegmentDisplay(segment, null)
   }
 
   let CharacterPopup(word) = Frame {
@@ -708,70 +708,70 @@ with IPA
   }
 
   let ShowIPA(word) = Span {
-    (each WordToSounds(word)).Text
+    (each WordToSegments(word)).Text
   }
 
-  let ShowSound(ref sound, flags=Impossible) = Span {
+  let ShowSegment(ref segment, flags=Impossible) = Span {
     Style.IPAFamily,
-    if (sound.Flags.NotFlag(Punctuation))
-      Popup: SoundPopup.Call(sound),
-      Link: sound.FullSymbolName,
+    if (segment.Flags.NotFlag(Punctuation))
+      Popup: SegmentPopup.Call(segment),
+      Link: segment.FullSymbolName,
     end,
-    if (sound.Flags.HasFlag(flags))
-      Assert(false, Lang.ImpossibleSound),
+    if (segment.Flags.HasFlag(flags))
+      Assert(false, Lang.Impossible),
       TextColor: Colors.Red,
     end,
-    if (sound.Flags.HasFlag(Diacritic))
+    if (segment.Flags.HasFlag(Diacritic))
       "  ",
     end,
-    sound.Text
+    segment.Text
   }
 
-  let SoundSound(ref sound) begin
-    if (sound == SpaceSound)
+  let SegmentSound(ref segment) begin
+    if (segment == SpaceSegment)
       return Space;
     end
-    return sound.SymbolName
+    return segment.SymbolName
   end
 
   //======================================================================
   // Build a dictionary with SAMPA text as the key
   //======================================================================
 
-  let GatherText(set, ref sound) begin
-    if (sound.Sampa.Length > 0)
-      set.AddElement(sound.Sampa, ref sound)
+  let GatherText(set, ref segment) begin
+    if (segment.Sampa.Length > 0)
+      set.AddElement(segment.Sampa, ref segment)
     end
   end
 
   let SampaDictionary begin
     var set = Type.Dictionary(128);
-    GatherText(set, each Sounds);
-    set.AddElement(" ", ref SpaceSound);
+    GatherText(set, each Segments);
+    set.AddElement(" ", ref SpaceSegment);
     return set;
   end
 
-  // Convert SAMPA text to an array of sound references
-  let WordToSounds(word) = SampaDictionary.FindTokens(word.Sampa, ref NoSound)
+  // Convert SAMPA text to an array of segment references
+  let WordToSegments(word) = SampaDictionary.FindTokens(word.Sampa, ref NoSegment)
 
-  let SoundToCharacter(ref sound) begin
-    if (sound == GapSound)
+  let SegmentToCharacter(ref segment) begin
+    if (segment == GapSegment)
       return {
         Character: Nexus.Gap,
-        Sound: ref NoSound
+        Segment: ref NoSegment
       }
     end
 
-    var f = Results.UniqueSounds.FindIndex(DisplayCharacters.SameSound, {Sound: ref sound});
+    var f = Results.UniqueSegments.FindIndex(DisplayCharacters.SameSegment, {Segment: ref segment});
     if (f.Length == 1)
       return {
         Character: Nexus.CharacterList[f[0]],
-        Sound: ref sound
+        Segment: ref segment
       }
     else
       return {
         Character: '?',
-        Sound: ref NoSound
+        Segment: ref NoSegment
       }
     end
   end
