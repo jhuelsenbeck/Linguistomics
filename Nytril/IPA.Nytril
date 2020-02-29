@@ -783,77 +783,73 @@ with IPA
   let FeatureSegments(features)   = IPA.Segments.FindSlice(MatchFeature, features)
 
   let ChartSize   = Size(6 inches, 7 inches)
-  let ESize(w, h) = Size(ChartSize.Width  *(w%), ChartSize.Height * (h%))
+  let EX(x)       = ChartSize.Width * (x%)
+  let EY(y)       = ChartSize.Height * (y%)
 
-  let Enclosure(size, color) = Canvas {
-    Padding: 4 pts,
-    Size: size,
-    Figure {
-      Stroke: 1 pts,
-      Fill: color,
-      Rectangle(Rect(0, size), Size(6 pts))
-    },
-  }
+  let Enclosure(x, y, w, h, color) begin
+    var size = Size(EX(w), EY(h));
+    return Canvas {
+      X: EX(x),
+      Y: EY(y),
+      Size: size,
+      Figure {
+        Stroke: 1 pts,
+        Fill: color,
+        Rectangle(Rect(0, size), Size(6 pts))
+      }
+    }
+  end
 
   let NameBox(name, angle=0) = Paragraph {
-    Bold,
+    Padding: 2 pts,
     Transform: Rotate(angle),
+    Bold,
     name,
   }
 
-  let FeatureFrame(name, features, width) = Group {
-    Vertical: true,
-    Frame {
-      Padding: 2 pts,
-      ParAlignment: ParAlignments.Center,
-      Width: ChartSize.Width * (width%),
-      if (name)
-        NameBox(name),
-      end,
+  let FeatureFrame(x, y, width, name, features) = Frame {
+    X: EX(x),
+    Y: EY(y),
+    Width: EX(width),
+    ParAlignment: ParAlignments.Center,
+    if (name)
       Paragraph {
-        Separator: Space,
-        IPA.ShowSegment(each FeatureSegments(features))
+        SpaceAfter: 2 pts,
+        Bold, name,
       }
+    end,
+    Paragraph {
+      Separator: Space,
+      IPA.ShowSegment(each FeatureSegments(features))
     }
   }
 
-  let FeatureChart = Group {
+  let FeatureChart = Canvas {
     TextHeight: 16 pts,
-    Enclosure(ESize(86, 34), Color(255, 238, 238)) {
-      Group {
-        Group {
-          Vertical: true,
-          Enclosure(ESize(80, 9), Color(255, 246, 246)) {
-            FeatureFrame(Lang.Nasals, Nasal Pulmonic Occlusive, 80),
-          },
-          Group {
-            Enclosure(ESize(18, 15), Color(246, 243, 250)) {
-              FeatureFrame(Lang.Plosives, Pulmonic Stop Occlusive, 18)
-            },
-            Enclosure(ESize(58, 21), Color(246, 242, 250)) {
-              Group {
-                FeatureFrame(Lang.Affricates, Pulmonic Affricate Occlusive, 20),
-                Enclosure(ESize(35, 19), Color(233, 248, 235)) {
-                  Group {
-                    Vertical: true,
-                    HAlign: HAligns.Center,
-                    NameBox(Lang.Stridents),
-                    Group {
-                      VAlign: VAligns.Top,
-                      FeatureFrame(null, Pulmonic Affricate Occlusive Strident, 8),
-                      Enclosure(ESize(20, 13), Color(244, 251, 220)) {
-                        FeatureFrame(Lang.Sibilants, Pulmonic Affricate Occlusive Strident Sibilant, 20)
-                      },
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        NameBox(Lang.Occlusives, 90 degrees)
-      }
-    }
+
+    Enclosure(10, 0, 86, 34, Color(255, 238, 238)) {
+      HAlign: HAligns.Right,
+      VAlign: VAligns.Center,
+      NameBox(Lang.Occlusives, 90 degrees)
+    },
+    Enclosure(0, 11, 90, 40, Color(238, 238, 255, 50%)) {
+      VAlign: VAligns.Center,
+      NameBox(Lang.Obstruents, 90 degrees)
+    },
+    Enclosure(11, 1, 80, 9, Color(255, 246, 246)),
+    Enclosure(31, 12, 58, 21, Color(246, 242, 250)),
+    Enclosure(11, 12, 19, 21, Color(246, 243, 250)),
+    Enclosure(53, 13, 35, 19, Color(233, 248, 235)) {
+      HAlign: HAligns.Center,
+      NameBox(Lang.Stridents),
+    },
+    Enclosure(62, 18, 25, 13, Color(244, 251, 220)),
+
+    FeatureFrame(11, 1, 80, Lang.Nasals, Nasal Pulmonic Occlusive),
+    FeatureFrame(12, 7, 17, Lang.Plosives, Pulmonic Stop Occlusive),
+    FeatureFrame(32, 7, 20, Lang.Affricates, Pulmonic Affricate Occlusive),
+    FeatureFrame(54, 10, 7, null, Pulmonic Affricate Occlusive Strident),
+    FeatureFrame(65, 9, 18, Lang.Sibilants, Pulmonic Affricate Occlusive Strident Sibilant),
   }
 end
 
