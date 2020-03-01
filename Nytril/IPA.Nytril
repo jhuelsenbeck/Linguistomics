@@ -42,6 +42,7 @@ with IPA
 
   with Features
     let NoFeature   = flag {Name: Lang.NoFeatures}
+    let Impossible  = flag {Name: Lang.Impossible}
     let Voiced      = flag {Name: Lang.Voiced}
     let Rounded     = flag {Name: Lang.Rounded}
     let Velarized   = flag {Name: Lang.Velarized}
@@ -62,7 +63,6 @@ with IPA
     let Affricate   = flag {Name: Lang.Affricate}
     let Vowel       = flag {Name: Lang.Vowel}
     let Rhotic      = flag {Name: Lang.Rhotic}
-    let Impossible  = flag {Name: Lang.Impossible}
     let NonIPA      = flag {Name: Lang.NonIPA}
     let Diacritic   = flag {Name: Lang.Diacritic}
     let Punctuation = flag {Name: Lang.Puncuation}
@@ -72,6 +72,8 @@ with IPA
     let Continuant  = flag {Name: Lang.Continuant}
     let Vibrant     = flag {Name: Lang.Vibrant}
     let Vocoid      = flag {Name: Lang.Vocoid}
+    let Liquid      = flag {Name: Lang.Liquid}
+    let Semivowel   = flag {Name: Lang.Semivowel}
   end
 
   let Encode(text, sampa) = {
@@ -105,10 +107,6 @@ with IPA
     Features: Diacritic
   }
 
-  let NasalizedDiacritic = "\u0303"
-  let EjectiveIPA   = "\u02BC"
-  let EjectiveSampa = "_>"
-
   let NoSegment     = Encode("?", "!?") {Features: Impossible}
   let GapSegment    = Encode("-", "-") {Features: Punctuation}
   let SpaceSegment  = {Text: " ", Sampa: " ", Features: Punctuation}
@@ -119,8 +117,7 @@ with IPA
     //==================================
 
 
-    let wh        = Con(Nasal Voiced Approximant Nasal, Places.LabialVelar, "w" NasalizedDiacritic, "w~")
-    let rn        = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "r" NasalizedDiacritic, "r~")
+    let rn        = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "r\u0303", "r~")
 
 //    let r_nasal = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "r~")                    // French Cold "Froid"  Same as SAMPA "R"?
 
@@ -192,7 +189,7 @@ with IPA
     let xha                          = Con(Pulmonic Fricative Obstruent Continuant, Places.Velar, "x", "x")
     let VdVelarFricative             = Con(Voiced Pulmonic Fricative Obstruent Continuant, Places.Velar, "ɣ", "G")
     let VlUvularFricative            = Con(Pulmonic Fricative Obstruent Continuant Strident, Places.Uvular, "χ", "X")
-    let VdUvularFricative            = Con(Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "R")
+    let VdUvularFricative            = Con(Voiced Pulmonic Fricative Obstruent Continuant Strident Rhotic Liquid, Places.Uvular, "ʁ", "R")
     let VlPharyngealFricative        = Con(Pulmonic Fricative, Places.Pharyngeal, "ħ", "X\\")
     let VdPharyngealFricative        = Con(Voiced Pulmonic Fricative, Places.Pharyngeal, "ʕ", "?\\")
     let h                            = Con(Pulmonic Fricative, Places.Glottal, "h", "h")
@@ -206,9 +203,9 @@ with IPA
     let VlRetroflexApproximant       = Con(Pulmonic Approximant, Places.Retroflex, "ɻ̊", "")
     let VdRetroflexApproximant       = Con(Voiced Pulmonic Approximant, Places.Retroflex, "ɻ", "r\\`")
     let VlPalatalApproximant         = Con(Pulmonic Approximant, Places.Palatal, "j̊", "")
-    let jg                           = Con(Voiced Pulmonic Approximant, Places.Palatal, "j", "j")
+    let jg                           = Con(Voiced Pulmonic Approximant Vocoid Semivowel, Places.Palatal, "j", "j")
     let VlVelarApproximant           = Con(Pulmonic Approximant, Places.Velar, "ɰ̊", "")
-    let VdVelarApproximant           = Con(Voiced Pulmonic Approximant, Places.Velar, "ɰ", "M\\")
+    let VdVelarApproximant           = Con(Voiced Pulmonic Approximant Vocoid Semivowel, Places.Velar, "ɰ", "M\\")
     let VdGlottalApproximant         = Con(Voiced Pulmonic Approximant, Places.Glottal, "ʔ̞", "")
 														
     // Tap or Flap										
@@ -234,8 +231,8 @@ with IPA
     let VdPharyngealTrill            = Con(Voiced Pulmonic Trill, Places.Pharyngeal, "ʢ", "<\\")
 														
     // Lateral Fricative								
-    let VlAlveolarLateralFricative   = Con(Pulmonic Lateral Fricative, Places.Alveolar, "ɬ", "K")
-    let VdAlveolarLateralFricative   = Con(Voiced Pulmonic Lateral Fricative, Places.Alveolar, "ɮ", "K\\")
+    let VlAlveolarLateralFricative   = Con(Pulmonic Lateral Fricative Obstruent Continuant Strident Lateral Liquid, Places.Alveolar, "ɬ", "K")
+    let VdAlveolarLateralFricative   = Con(Voiced Pulmonic Lateral Fricative Obstruent Continuant Strident Lateral Liquid, Places.Alveolar, "ɮ", "K\\")
     let VlRetroflexLateralFricative  = Con(Pulmonic Lateral Fricative, Places.Retroflex, "ɭ̊˔", "")
     let VdRetroflexLateralFricative  = Con(Voiced Pulmonic Lateral Fricative, Places.Retroflex, "ɭ˔", "")
     let VlAlveolarPalatalFricative   = Con(Pulmonic Lateral Fricative, Places.Palatal, "ʎ̝̊", "")
@@ -361,96 +358,92 @@ with IPA
 //    let VlAlveoloPalatalFricative       = NewConsonant(CPM(Categories.Other, Places.AlveoloPalatal) Fricative, "ʑ", "")
 
 
-    let w                                 = Con(Voiced Approximant, Places.LabialVelar, "w", "w")
-
-
+    let wh                                = Con(Nasal Voiced Approximant Nasal, Places.LabialVelar, "w\u0303", "w~")
+    let w                                 = Con(Voiced Approximant Vocoid Semivowel, Places.LabialVelar, "w", "w")
 
     let VlEpiglottalFricative             = Con(Fricative, Places.Pharyngeal, "ʜ", "H\\")
-    let VdLabialPalatalApproximant        = Con(Voiced Approximant, Places.LabialPalatal, "ɥ", "H")
+    let VdLabialPalatalApproximant        = Con(Voiced Approximant Vocoid Semivowel, Places.LabialPalatal, "ɥ", "H")
 
     let SimultaneousSx                    = Con(Sibilant Fricative, Places.PostAlveolar, "ɧ", "x\\")
     let VdEpiglottalFricative             = Con(Voiced Fricative, Places.Pharyngeal, "ʢ", "?\\")
     let VlEpiglottalPlosive               = Con(Ejective, Places.Pharyngeal, "ʡ", "<\\")
 
     // Ejectives
-    let VlBilabialStopEjective            = Con(Ejective Pulmonic Stop, Places.Bilabial, "p" EjectiveIPA, "p" EjectiveSampa)
-    let VlAveolarStopEjective             = Con(Ejective Stop, Places.Alveolar, "t" EjectiveIPA, "t" EjectiveSampa)
-    let VlRetroflexStopEjective           = Con(Ejective Stop, Places.Retroflex, "ʈ" EjectiveIPA, "t`" EjectiveSampa)
-    let VlPalatalStopEjective             = Con(Ejective Stop, Places.Palatal, "c" EjectiveIPA, "c" EjectiveSampa)
-    let VlVelarStopEjective               = Con(Ejective Stop, Places.Velar, "k" EjectiveIPA, "k" EjectiveSampa)
-    let VlUvularStopEjective              = Con(Ejective Stop, Places.Uvular, "q" EjectiveIPA, "q" EjectiveSampa)
-    let VlEpiglottalStopEjective          = Con(Ejective Stop, Places.Pharyngeal, "ʡ" EjectiveIPA, ">\\" EjectiveSampa)
-    let VlBilabialFricativeEjective       = Con(Ejective Fricative, Places.Bilabial, "ɸ" EjectiveIPA, "p\\" EjectiveSampa)
-    let VlLabiodentalFricativeEjective    = Con(Ejective Fricative, Places.LabioDental, "f" EjectiveIPA, "f" EjectiveSampa)
-    let VlDentalFricativeEjective         = Con(Ejective Fricative, Places.Dental, "θ" EjectiveIPA, "T" EjectiveSampa)
-    let VlAlveolarFricativeEjective       = Con(Ejective Fricative, Places.Alveolar, "s" EjectiveIPA, "s" EjectiveSampa)
-    let VlPostalveolarFricativeEjective   = Con(Ejective Fricative, Places.PostAlveolar, "ʃ" EjectiveIPA, "S" EjectiveSampa)
-    let VlRetroflexFricativeEjective      = Con(Ejective Fricative, Places.Retroflex, "ʂ" EjectiveIPA, "s`" EjectiveSampa)
-    let VlPalatalFricativeEjective        = Con(Ejective Fricative, Places.Palatal, "ɕ" EjectiveIPA, "s\\" EjectiveSampa)
-    let VlVelarFricativeEjective          = Con(Ejective Fricative, Places.Velar, "x" EjectiveIPA, "x" EjectiveSampa)
-    let VlUvularFricativeEjective         = Con(Ejective Fricative, Places.Uvular, "χ" EjectiveIPA, "X" EjectiveSampa)
-    let VlPostalveolarLatFricEjective     = Con(Ejective Lateral Fricative, Places.Alveolar, "ɬ" EjectiveIPA, "K" EjectiveSampa)
+    let VlBilabialStopEjective            = Con(Ejective Pulmonic Stop, Places.Bilabial, "p\u02BC", "p_>")
+    let VlAveolarStopEjective             = Con(Ejective Stop, Places.Alveolar, "t\u02BC", "t_>")
+    let VlRetroflexStopEjective           = Con(Ejective Stop, Places.Retroflex, "ʈ\u02BC", "t`_>")
+    let VlPalatalStopEjective             = Con(Ejective Stop, Places.Palatal, "c\u02BC", "c_>")
+    let VlVelarStopEjective               = Con(Ejective Stop, Places.Velar, "k\u02BC", "k_>")
+    let VlUvularStopEjective              = Con(Ejective Stop, Places.Uvular, "q\u02BC", "q_>")
+    let VlEpiglottalStopEjective          = Con(Ejective Stop, Places.Pharyngeal, "ʡ\u02BC", ">\\_>")
+    let VlBilabialFricativeEjective       = Con(Ejective Fricative, Places.Bilabial, "ɸ\u02BC", "p\\_>")
+    let VlLabiodentalFricativeEjective    = Con(Ejective Fricative, Places.LabioDental, "f\u02BC", "f_>")
+    let VlDentalFricativeEjective         = Con(Ejective Fricative, Places.Dental, "θ\u02BC", "T_>")
+    let VlAlveolarFricativeEjective       = Con(Ejective Fricative, Places.Alveolar, "s\u02BC", "s_>")
+    let VlPostalveolarFricativeEjective   = Con(Ejective Fricative, Places.PostAlveolar, "ʃ\u02BC", "S_>")
+    let VlRetroflexFricativeEjective      = Con(Ejective Fricative, Places.Retroflex, "ʂ\u02BC", "s`_>")
+    let VlPalatalFricativeEjective        = Con(Ejective Fricative, Places.Palatal, "ɕ\u02BC", "s\\_>")
+    let VlVelarFricativeEjective          = Con(Ejective Fricative, Places.Velar, "x\u02BC" , "x_>")
+    let VlUvularFricativeEjective         = Con(Ejective Fricative, Places.Uvular, "χ\u02BC", "X_>")
+    let VlPostalveolarLatFricEjective     = Con(Ejective Lateral Fricative, Places.Alveolar, "ɬ\u02BC", "K_>")
 
     //==================================
     // Vowels
     //==================================
 
-    let ee                           = Vow(NoFeature, Opens.Close, Backnesses.Front, "i", "i")
+    let ee                        = Vow(Vocoid Continuant, Opens.Close, Backnesses.Front, "i", "i")
+    let eeh                       = Vow(Rounded Vocoid Continuant, Opens.Close, Backnesses.Front, "y", "y")
 
 
-    let eeh                          = Vow(Rounded, Opens.Close, Backnesses.Front, "y", "y")
+    let CloseCentralUnrounded     = Vow(NoFeature, Opens.Close, Backnesses.Central, "ɨ", "1")
+    let CloseCentralRounded       = Vow(Rounded, Opens.Close, Backnesses.Central, "ʉ", "}")
+    let CloseBackUnrounded        = Vow(Vocoid Continuant, Opens.Close, Backnesses.Back, "ɯ", "M")
+    let u                         = Vow(Rounded Vocoid Continuant, Opens.Close, Backnesses.Back, "u", "u")
 
+    let NearCloseCentralUnrounded = Vow(NoFeature NonIPA, Opens.NearClose, Backnesses.Central, "ᵻ", "I\\")
+    let NearCloseFrontUnrounded   = Vow(NoFeature, Opens.NearClose, Backnesses.NearFront, "ɪ", "I")
+    let NearCloseFrontRounded     = Vow(Rounded, Opens.NearClose, Backnesses.NearFront, "ʏ", "Y")
+    let NearCloseCentralRounded   = Vow(Rounded NonIPA, Opens.NearClose, Backnesses.Central, "ᵿ", "U\\")
+    let NearCloseBackRounded      = Vow(Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U")
 
-    let CloseCentralUnrounded        = Vow(NoFeature, Opens.Close, Backnesses.Central, "ɨ", "1")
-    let CloseCentralRounded          = Vow(Rounded, Opens.Close, Backnesses.Central, "ʉ", "}")
-    let CloseBackUnrounded           = Vow(NoFeature, Opens.Close, Backnesses.Back, "ɯ", "M")
-    let u                            = Vow(Rounded, Opens.Close, Backnesses.Back, "u", "u")
+    let ay                        = Vow(Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "e", "e")
+    let CloseMidFrontRounded      = Vow(Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "ø", "2")
+    let MidCentralUnrounded       = Vow(NoFeature, Opens.Mid, Backnesses.Central, "ɘ", "@\\")
+    let Schwa                     = Vow(NoFeature, Opens.CloseMid, Backnesses.Central, "ə", "@")
+    let ooh                       = Vow(Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8")
+    let CloseMidBackUnrounded     = Vow(Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "ɤ", "7")
+    let oh                        = Vow(Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "o", "o")
 
-    let NearCloseCentralUnrounded    = Vow(NoFeature | NonIPA, Opens.NearClose, Backnesses.Central, "ᵻ", "I\\")
-    let NearCloseFrontUnrounded      = Vow(NoFeature, Opens.NearClose, Backnesses.NearFront, "ɪ", "I")
-    let NearCloseFrontRounded        = Vow(Rounded, Opens.NearClose, Backnesses.NearFront, "ʏ", "Y")
-    let NearCloseCentralRounded      = Vow(Rounded |NonIPA, Opens.NearClose, Backnesses.Central, "ᵿ", "U\\")
-    let NearCloseBackRounded         = Vow(Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U")
+    let MidFrontUnrounded         = Vow(NoFeature, Opens.Mid, Backnesses.Front, "ø̞", "")
+    let MidBackUnrounded          = Vow(NoFeature, Opens.Mid, Backnesses.Back, "o̞", "")
 
-    let ay                           = Vow(NoFeature, Opens.CloseMid, Backnesses.Front, "e", "e")
-    let CloseMidFrontRounded         = Vow(Rounded, Opens.CloseMid, Backnesses.Front, "ø", "2")
-    let MidCentralUnrounded          = Vow(NoFeature, Opens.Mid, Backnesses.Central, "ɘ", "@\\")
-    let Schwa                        = Vow(NoFeature, Opens.CloseMid, Backnesses.Central, "ə", "@")
-    let ooh                          = Vow(Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8")
-    let CloseMidBackUnrounded        = Vow(NoFeature, Opens.CloseMid, Backnesses.Back, "ɤ", "7")
-    let oh                           = Vow(Rounded, Opens.CloseMid, Backnesses.Back, "o", "o")
+    let eh                        = Vow(Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E")
+    let OpenMidNearFrontRounded   = Vow(Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "œ", "9")
+    let OpenMidCentralRounded     = Vow(Rounded, Opens.OpenMid, Backnesses.Central, "ɞ", "3\\")
+    let aeh                       = Vow(NoFeature, Opens.OpenMid, Backnesses.Central, "ɜ", "3")
+    let OpenMidBackUnrounded      = Vow(Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ʌ", "V")
+    let OpenMidBackRounded        = Vow(Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ɔ", "O")
 
-    let MidFrontUnrounded            = Vow(NoFeature, Opens.Mid, Backnesses.Front, "ø̞", "")
-    let MidBackUnrounded             = Vow(NoFeature, Opens.Mid, Backnesses.Back, "o̞", "")
+    let NearFrontUnrounded        = Vow(NoFeature, Opens.NearOpen, Backnesses.NearFront, "æ", "{")
+    let FrontOpenRounded          = Vow(Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&")
+    let OpenMidSchwa              = Vow(Rounded, Opens.NearOpen, Backnesses.Central, "ɐ", "6")
 
-    let eh                           = Vow(NoFeature, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E")
-    let OpenMidNearFrontRounded      = Vow(Rounded, Opens.OpenMid, Backnesses.NearFront, "œ", "9")
-    let OpenMidCentralRounded        = Vow(Rounded, Opens.OpenMid, Backnesses.Central, "ɞ", "3\\")
-    let aeh                          = Vow(NoFeature, Opens.OpenMid, Backnesses.Central, "ɜ", "3")
-    let OpenMidBackUnrounded         = Vow(NoFeature, Opens.OpenMid, Backnesses.Back, "ʌ", "V")
-    let OpenMidBackRounded           = Vow(Rounded, Opens.OpenMid, Backnesses.Back, "ɔ", "O")
+    let OpenCentralUnrounded      = Vow(NoFeature, Opens.Open, Backnesses.Central, "ä", "a_\"")
+    let ah                        = Vow(Vocoid Continuant, Opens.Open, Backnesses.NearFront, "a", "a")
+    let OpenNearFrontRounded      = Vow(Rounded Vocoid Continuant, Opens.Open, Backnesses.NearFront, "ɶ", "&")
+    let OpenBackUnrounded         = Vow(Vocoid Continuant, Opens.Open, Backnesses.Back, "ɑ", "A")
+    let OpenBackRounded           = Vow(Rounded Vocoid Continuant, Opens.Open, Backnesses.Back, "ɒ", "Q")
 
-    let NearFrontUnrounded           = Vow(NoFeature, Opens.NearOpen, Backnesses.NearFront, "æ", "{")
-    let FrontOpenRounded             = Vow(Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&")
-    let OpenMidSchwa                 = Vow(Rounded, Opens.NearOpen, Backnesses.Central, "ɐ", "6")
-
-    let OpenCentralUnrounded         = Vow(NoFeature, Opens.Open, Backnesses.Central, "ä", "a_\"")
-    let ah                           = Vow(NoFeature, Opens.Open, Backnesses.NearFront, "a", "a")
-    let OpenNearFrontRounded         = Vow(Rounded, Opens.Open, Backnesses.NearFront, "ɶ", "&")
-    let OpenBackUnrounded            = Vow(NoFeature, Opens.Open, Backnesses.Back, "ɑ", "A")
-    let OpenBackRounded              = Vow(Rounded, Opens.Open, Backnesses.Back, "ɒ", "Q")
-
-    let uuh       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ" NasalizedDiacritic, "oe*") // French One "un"
-    let ey        = Vow(Rounded Nasal, Opens.Close, Backnesses.Front, "y" NasalizedDiacritic, "y~")
-    let aa        = Vow(Nasal, Opens.Open, Backnesses.NearFront, "a" NasalizedDiacritic, "~a")
-    let ahn       = Vow(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ" NasalizedDiacritic, "a*")    // Supposed to be "ɛ̃" as in French Dog "chien"?
-    let oon       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*")                      // French Fish "poisson"
-    let aehn      = Vow(Nasal, Opens.OpenMid, Backnesses.NearFront, "ɜ" NasalizedDiacritic, "3*")
-    let ehnn      = Vow(Nasal, Opens.OpenMid, Backnesses.NearFront, "ɛ" NasalizedDiacritic, "E*")
-    let uh        = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u" NasalizedDiacritic, "u*")         // Portuguese One "um"
-    let en        = Vow(Nasal, Opens.CloseMid, Backnesses.Front, "e" NasalizedDiacritic, "e*")   // Portuguese Trail "se*da
-    let een       = Vow(Nasal, Opens.Close, Backnesses.Front, "i" NasalizedDiacritic, "i*")      // Portuguese Tongue
-
+    let uuh                       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ\u0303", "oe*") // French One "un"
+    let ey                        = Vow(Rounded Nasal, Opens.Close, Backnesses.Front, "y\u0303", "y~")
+    let aa                        = Vow(Nasal, Opens.Open, Backnesses.NearFront, "a\u0303", "~a")
+    let ahn                       = Vow(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ\u0303", "a*")   // Supposed to be "ɛ̃" as in French Dog "chien"?
+    let oon                       = Vow(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ\u0303̃", "o*")       // French Fish "poisson"
+    let aehn                      = Vow(Nasal, Opens.OpenMid, Backnesses.NearFront, "ɜ\u0303", "3*")
+    let ehnn                      = Vow(Nasal, Opens.OpenMid, Backnesses.NearFront, "ɛ\u0303", "E*")
+    let uh                        = Vow(Nasal Rounded, Opens.Close, Backnesses.Back, "u\u0303", "u*")         // Portuguese One "um"
+    let en                        = Vow(Nasal, Opens.CloseMid, Backnesses.Front, "e\u0303", "e*")             // Portuguese Trail "se*da
+    let een                       = Vow(Nasal, Opens.Close, Backnesses.Front, "i\u0303", "i*")                // Portuguese Tongue
 
 
 // How to show rhotic vowels?
@@ -521,7 +514,7 @@ with IPA
 
   with DiacriticModifiers
     let UndefinedEscapeCharacter     = Diac("Undefined escape character", null, "*")
-    let Nasalized                    = Diac("Nasalized", NasalizedDiacritic, "_~")
+    let Nasalized                    = Diac("Nasalized", "\u0303", "_~")
     let Centralized                  = Diac("Centralized", "\u0308", "_\"")
     let Advanced                     = Diac("Advanced", "\u031F", "_+")
     let Retracted                    = Diac("Retracted", "\u0320", "_-")
@@ -529,7 +522,7 @@ with IPA
     let Voiceless                    = Diac("Voiceless", "\u0325", "_0")
     let Implosive                    = Diac("Implosive", null, "_<")
     let Syllabic                     = Diac("Syllabic", "\u0329", "_=")
-    let Ejective                     = Diac("Ejective", EjectiveIPA, EjectiveSampa)
+    let Ejective                     = Diac("Ejective", "\u02BC", "_>")
     let Pharyngealized               = Diac("Pharyngealized ", "\u02E4", "_?\\")
     let FallingTone                  = Diac("Falling tone", "\u0302", "_F")
     let NonSyllabic                  = Diac("Non-syllabic", "\u032F", "_^")
@@ -781,15 +774,15 @@ with IPA
     end
   end
 
-  let FeatureMask = Vowel Nasal Pulmonic Stop Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Ejective
+  let FeatureMask = Vowel Nasal Vocoid Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid
 
 
   let MatchFeature(segment, data) = IPA.HasMask(segment.Features, FeatureMask, data)
   let FeatureSegments(features)   = IPA.Segments.FindSlice(MatchFeature, features)
 
-  let ChartSize   = Size(6 inches, 7 inches)
-  let EX(x)       = ChartSize.Width * (x%)
-  let EY(y)       = ChartSize.Height * (y%)
+  let ChartSize = 6 inches
+  let EX(x)     = ChartSize * x * 0.01
+  let EY(y)     = ChartSize * y * 0.01
 
   let Enclosure(x, y, w, h, color) begin
     var size = Size(EX(w), EY(h));
@@ -806,26 +799,23 @@ with IPA
   end
 
   let NameBox(name, angle=0) = Paragraph {
-    Padding: 2 pts,
     Transform: Rotate(angle),
-    Bold,
-    name,
+    name Bold,
   }
 
-  let FeatureFrame(x, y, width, name, features) = Frame {
+  let FeatureFrame(x, y, width, name, features) = Canvas {
     X: EX(x),
     Y: EY(y),
-    Width: EX(width),
-    ParAlignment: ParAlignments.Center,
-    if (name)
+    Frame {
+      Width: EX(width),
+      ParAlignment: ParAlignments.Center,
+      if (name)
+        name Bold,
+      end,
       Paragraph {
-        SpaceAfter: 2 pts,
-        Bold, name,
+        Separator: Space,
+        IPA.ShowSegment(each FeatureSegments(features))
       }
-    end,
-    Paragraph {
-      Separator: Space,
-      IPA.ShowSegment(each FeatureSegments(features))
     }
   }
 
@@ -837,37 +827,62 @@ with IPA
   let FeatureChart = Canvas {
     TextHeight: 16 pts,
 
-    VNameFrame(Lang.Occlusives, 10, 0, 86, 34, Color(255, 238, 238)) {
+    VNameFrame(Lang.Occlusives, 10, 0, 90, 34, Color(255, 238, 238)) {
       HAlign: HAligns.Right,
     },
-    VNameFrame(Lang.Continuants, 10, 35, 86, 34, Color(229, 255, 255)) {
+    VNameFrame(Lang.Continuants, 10, 35, 90, 37, Color(229, 255, 255)) {
       HAlign: HAligns.Right,
     },
-    VNameFrame(Lang.Obstruents, 0, 11, 90, 40, Color(238, 238, 255, 50%)),
-    VNameFrame(Lang.Vocoids, 0, 52, 70, 18, Color(238, 255, 238, 50%)),
-    VNameFrame(Lang.Vibrants, 20, 71, 60, 18, Color(238, 238, 255)),
+    VNameFrame(Lang.Obstruents, 0, 11, 94, 40, Color(238, 238, 255, 50%)),
+    VNameFrame(Lang.Vocoids, 0, 52, 73, 21, Color(238, 255, 238, 50%)),
+    VNameFrame(Lang.Vibrants, 20, 74, 60, 18, Color(238, 238, 255)),
 
-    Enclosure(11, 1, 80, 9, Color(255, 246, 246)),
-    Enclosure(31, 12, 58, 21, Color(246, 242, 250)),
-    Enclosure(11, 12, 19, 21, Color(246, 243, 250)),
-    Enclosure(11, 36, 78, 14, Color(240, 247, 255)),
+    Enclosure(11, 1, 83, 9, Color(255, 246, 246)),    // Nasals
+    Enclosure(31, 12, 62, 21, Color(246, 242, 250)),  // Affricates
+    Enclosure(11, 12, 19, 21, Color(246, 243, 250)),  // Plosives
+    Enclosure(11, 36, 79, 14, Color(240, 247, 255)),  // Fricatives
 
-    Enclosure(53, 13, 35, 36, Color(233, 248, 235, 50%)) {
+    Enclosure(53, 13, 39, 36, Color(233, 248, 235, 50%)) {
       HAlign: HAligns.Center,
       NameBox(Lang.Stridents),
     },
 
-    Enclosure(62, 18, 25, 24, Color(245, 252, 220, 50%)),
+    Enclosure(62, 18, 25, 24, Color(245, 252, 220, 50%)), // Sibilants
+    Enclosure(11, 53, 21, 18, Color(240, 255, 247)),      // Vowels
+    Enclosure(37, 53, 57, 18, Color(240, 255, 247, 50%)) {
+      HAlign: HAligns.Left,
+      NameBox(Lang.Approximants),
+    },
 
+    Enclosure(38, 58, 21, 12, Color(248, 255, 225)) {
+      HAlign: HAligns.Center,
+      NameBox(Lang.Semivowels),
+    },
 
-    FeatureFrame(11, 1, 80, Lang.Nasals, Nasal Pulmonic Occlusive),
-    FeatureFrame(12, 7, 17, Lang.Plosives, Pulmonic Stop Occlusive),
-    FeatureFrame(32, 7, 20, Lang.Affricates, Pulmonic Affricate Occlusive),
-    FeatureFrame(54, 10, 7, null, Pulmonic Affricate Occlusive Strident),
-    FeatureFrame(65, 9, 18, Lang.Sibilants, Pulmonic Affricate Occlusive Strident Sibilant),
-    FeatureFrame(12, 19, 20, Lang.Fricatives, Pulmonic Fricative Obstruent Continuant),
-    FeatureFrame(54, 19, 6, null, Pulmonic Fricative Obstruent Continuant Strident),
-    FeatureFrame(64, 19, 20, null, Pulmonic Fricative Obstruent Continuant Strident Sibilant),
+    Enclosure(65, 43, 24, 59, Color(255, 238, 238, 50%)) {
+      HAlign: HAligns.Center,
+      VAlign: VAligns.Bottom,
+      NameBox(Lang.Liquids),
+    },
+
+    Enclosure(66, 44, 14, 53, Color(255, 247, 221, 50%)) {
+      HAlign: HAligns.Center,
+      VAlign: VAligns.Bottom,
+      NameBox(Lang.Rhotics),
+    },
+
+    FeatureFrame(11, 1, 84, Lang.Nasals, Nasal Pulmonic Occlusive),
+    FeatureFrame(12, 14, 17, Lang.Plosives, Pulmonic Stop Occlusive),
+    FeatureFrame(32, 14, 20, Lang.Affricates, Pulmonic Affricate Occlusive),
+    FeatureFrame(54, 20, 7, null, Pulmonic Affricate Occlusive Strident),
+    FeatureFrame(65, 18, 18, Lang.Sibilants, Pulmonic Affricate Occlusive Strident Sibilant),
+    FeatureFrame(14, 38, 22, Lang.Fricatives, Pulmonic Fricative Obstruent Continuant),
+    FeatureFrame(54, 36, 6, null, Pulmonic Fricative Obstruent Continuant Strident),
+    FeatureFrame(64, 36, 20, null, Pulmonic Fricative Obstruent Continuant Strident Sibilant),
+    FeatureFrame(67, 44, 5, null, Fricative Obstruent Continuant Strident Rhotic Liquid),
+    FeatureFrame(79, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid),
+    FeatureFrame(12, 53, 19, Lang.Vowels, Vowel Vocoid Continuant),
+    FeatureFrame(12, 53, 19, Lang.Vowels, Vocoid Semivowel Approximant),
   }
 end
 
