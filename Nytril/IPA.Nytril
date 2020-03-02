@@ -76,6 +76,8 @@ with IPA
     let Semivowel   = flag {Name: Lang.Semivowel}
   end
 
+  let FeatureMask = Vowel Nasal Vocoid Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap
+
   let Encode(text, sampa) = {
     Popup: SegmentPopup,
     Text: text,
@@ -510,7 +512,7 @@ with IPA
     let I65 = Imp(Ejective Tenuis Lateral Click Affricate, Places.Pharyngeal)
   end                       									
 
-  let AllSegments = Segments + ImpossibleSegments
+  let AllSegments = Results.UsedSegments + ImpossibleSegments
 
   with DiacriticModifiers
     let UndefinedEscapeCharacter     = Diac("Undefined escape character", null, "*")
@@ -688,8 +690,7 @@ with IPA
     return cl;
   end
 
-  let SortedSegments = Segments.Sort(false, AlphaOrder)
-
+  let SortedSegments = Results.UsedSegments.Sort(false, AlphaOrder)
 
   let SegmentTable = Block {
     Table {
@@ -763,33 +764,9 @@ with IPA
   // Convert SAMPA text to an array of segment references
   let WordToSegments(word) = SampaSet.FindTokens(word.Sampa, ref NoSegment)
 
-  let SegmentToCharacter(ref segment) begin
-    if (segment == GapSegment)
-      return {
-        Character: Nexus.Gap,
-        Segment: ref NoSegment
-      }
-    end
-
-    var f = Results.UniqueSegments.FindIndex(DisplayCharacters.SameSegment, {Segment: ref segment});
-    if (f.Length == 1)
-      return {
-        Character: Nexus.CharacterList[f[0]],
-        Segment: ref segment
-      }
-    else
-      return {
-        Character: '?',
-        Segment: ref NoSegment
-      }
-    end
-  end
-
-  let FeatureMask = Vowel Nasal Vocoid Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap
-
-
-  let MatchFeature(segment, data) = IPA.HasMask(segment.Features, FeatureMask, data)
-  let FeatureSegments(features)   = IPA.Segments.FindSlice(MatchFeature, features)
+  //======================================================================
+  // Code for Euler segment diagram
+  //======================================================================
 
   let ChartSize = 6 inches
   let EX(x)     = ChartSize * x * 0.01
@@ -815,6 +792,9 @@ with IPA
     name Bold,
     Space,
   }
+
+  let MatchFeature(segment, data) = HasMask(segment.Features, FeatureMask, data)
+  let FeatureSegments(features)   = Results.UsedSegments.FindSlice(MatchFeature, features)
 
   let FeatureFrame(x, y, width, name, features) = Canvas {
     X: EX(x),
@@ -866,7 +846,6 @@ with IPA
       NameBox(Lang.Trills),
     },
 
-
     Enclosure(53, 13, 39, 36, Color(233, 248, 235, 50%)) {
       HAlign: HAligns.Center,
       NameBox(Lang.Stridents),
@@ -917,7 +896,6 @@ with IPA
     FeatureFrame(54, 76, 10, null, Vibrant TapFlap),
     FeatureFrame(66, 76, 10, null, Vibrant TapFlap Rhotic Liquid),
     FeatureFrame(77, 77, 10, null, Vibrant TapFlap Rhotic Liquid Lateral),
-
     FeatureFrame(54, 84, 10, null, Vibrant Trill),
     FeatureFrame(66, 84, 10, null, Vibrant Trill Rhotic Liquid),
   }
