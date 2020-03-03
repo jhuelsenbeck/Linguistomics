@@ -12,12 +12,11 @@ include "Tables"
 //======================================================================
 
 let Main.Run = [
-//  Write(Nexus.SourceFile, Nexus.SourcePath),
-//  Write(RevBayes.SourceFile, RevBayes.SourcePath),
-//  Write(WhitePaper, Info.PaperPath Extensions.Word),
+//  Write(RevBayes.SourceFile, Info.RevSourcePath),
   Write(Results.LanguageTreeFile, Info.LanguageTreePath),
   Write(Results.CharacterFile, Info.CharacterPath),
   Write(WhitePaper, Info.PaperPath Extensions.PDF),
+//  Write(WhitePaper, Info.PaperPath Extensions.Word),
   IO.OpenDocument(Info.PaperPath Extensions.PDF),
 ]
 //======================================================================
@@ -27,6 +26,8 @@ with Info
   let OutputFolder     = MainFolder Folder("Output")
   let PaperPath        = OutputFolder FileName("Paper")
   let LanguageTreePath = OutputFolder FileName("LanguageTree") Extensions.Nexus
+  let RevSourcePath    = OutputFolder FileName("Analysis") Extensions.RevBayes
+
   let CharacterPath    = OutputFolder FileName("Characters") Extensions.Nexus
   let Journal          = "Transactions of the Beysian Society"
   let Publisher        = "The Baysian Society"
@@ -84,12 +85,13 @@ let AddAppendix(title, content) = {Title: title, Content: content}
 let Appendix = [
   AddAppendix(Lang.LanguagePhylogeny, Style.ShowLanguageTree),
 //  AddAppendix("Meanings with words in every language", CompleteMeanings.ShowTable),
-  AddAppendix("Words in each language by meaning", AllWords.ShowTable(Results.LanguageList, Results.FullMeanings)),
+  AddAppendix("Words in each language by meaning", AllWords.ShowTable(Results.LanguageList, Results.UsedMeanings)),
   AddAppendix("Character file", Results.CharacterFile Style.MonoFamily),
   AddAppendix("Segments in the target word list", DisplayCharacters.ShowTable),
   AddAppendix("Segment Groups", MatchingConsonants.ShowTables),
   AddAppendix(Lang.Diacritics, MatchingDiacritics.ShowTable),
-  AddAppendix("Euler Feature Diagram", Style.ShowEulerDiagram),
+  AddAppendix("Euler Feature Diagram", IPA.FeatureChart),
+  AddAppendix("Feature Drift", IPA.DriftSection),
   AddAppendix(Lang.IPAFullName, IPA.SegmentTable),
   AddAppendix("Feature Tree", SegmentTree.ShowTree),
   AddAppendix("SAMPAConversion", SAMPAConversion.ShowTable),
