@@ -121,7 +121,8 @@ with IPA
 
     let rn        = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "r\u0303", "r~")
 
-//    let r_nasal = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "r~")                    // French Cold "Froid"  Same as SAMPA "R"?
+// French Cold "Froid"  Same as SAMPA "R"?
+//    let r_nasal = Con(Nasal Voiced Pulmonic Fricative, Places.Uvular, "ʁ", "r~")
 
     //==================================
     // Pulmonic Consonants
@@ -205,9 +206,9 @@ with IPA
     let VlRetroflexApproximant       = Con(Pulmonic Approximant, Places.Retroflex, "ɻ̊", "")
     let VdRetroflexApproximant       = Con(Voiced Pulmonic Approximant Vocoid Rhotic Liquid, Places.Retroflex, "ɻ", "r\\`")
     let VlPalatalApproximant         = Con(Pulmonic Approximant, Places.Palatal, "j̊", "")
-    let jg                           = Con(Voiced Pulmonic Approximant Vocoid Semivowel, Places.Palatal, "j", "j")
+    let jg                           = Con(Voiced Pulmonic Approximant Vocoid Semivowel Continuant, Places.Palatal, "j", "j")
     let VlVelarApproximant           = Con(Pulmonic Approximant, Places.Velar, "ɰ̊", "")
-    let VdVelarApproximant           = Con(Voiced Pulmonic Approximant Vocoid Semivowel, Places.Velar, "ɰ", "M\\")
+    let VdVelarApproximant           = Con(Voiced Pulmonic Approximant Vocoid Semivowel Continuant, Places.Velar, "ɰ", "M\\")
     let VdGlottalApproximant         = Con(Voiced Pulmonic Approximant, Places.Glottal, "ʔ̞", "")
 														
     // Tap or Flap										
@@ -353,7 +354,7 @@ with IPA
     let VlPalatalLateralEjective          = Con(Ejective Lateral Affricate, Places.Palatal, "cʎ̝̊ʼ", "")
     let VlVelarLateralEjective            = Con(Ejective Lateral Affricate, Places.Velar, "kʟ̝̊ʼ", "")
 
-    let VlLabialVelarFricative            = Con(Fricative Approximant Vocoid Semivowel, Places.LabialVelar, "ʍ", "W")
+    let VlLabialVelarApproximant          = Con(Approximant Vocoid Semivowel Continuant, Places.LabialVelar, "ʍ", "W")
 
 // Pre-existing
 //    let VlAlveoloPalatalFricative1      = NewConsonant(CPM(Categories.Other, Places.AlveoloPalatal) Fricative, "ɕ", "")
@@ -361,14 +362,14 @@ with IPA
 
 
     let wh                                = Con(Nasal Voiced Approximant Nasal, Places.LabialVelar, "w\u0303", "w~")
-    let w                                 = Con(Voiced Approximant Vocoid Semivowel, Places.LabialVelar, "w", "w")
+    let w                                 = Con(Voiced Approximant Vocoid Semivowel Continuant, Places.LabialVelar, "w", "w")
 
 // This conflicts with another segment (VlPharyngealTrill)
 
 //    let VlEpiglottalFricative             = Con(Fricative, Places.Pharyngeal, "ʜ", "H\\")
 
 
-    let VdLabialPalatalApproximant        = Con(Voiced Approximant Vocoid Semivowel, Places.LabialPalatal, "ɥ", "H")
+    let VdLabialPalatalApproximant        = Con(Voiced Approximant Vocoid Semivowel Continuant, Places.LabialPalatal, "ɥ", "H")
 
     let SimultaneousSx                    = Con(Sibilant Fricative, Places.PostAlveolar, "ɧ", "x\\")
     let VdEpiglottalFricative             = Con(Voiced Fricative, Places.Pharyngeal, "ʢ", "?\\")
@@ -893,7 +894,7 @@ with IPA
     FeatureFrame(66, 44, 10, null, Fricative Obstruent Continuant Strident Rhotic Liquid),
     FeatureFrame(80, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid),
     FeatureFrame(12, 53, 19, Lang.Vowels, Vowel Vocoid Continuant),
-    FeatureFrame(36, 60, 19, Lang.Semivowels, Vocoid Semivowel Approximant),
+    FeatureFrame(36, 60, 19, Lang.Semivowels, Vocoid Semivowel Approximant Continuant),
     FeatureFrame(57, 62, 5, null, Vocoid Approximant),
     FeatureFrame(66, 60, 10, null, Vocoid Approximant Rhotic Liquid),
     FeatureFrame(82, 58, 5, null, Vocoid Approximant Rhotic Liquid Lateral),
@@ -908,19 +909,68 @@ with IPA
   //======================================================================
 
   let DriftWidth = 6 inches
+  let RowHeight  = 10 pts
 
-  let DriftChart(meaning) = Canvas {
-    Border: 1,
-    Width: DriftWidth,
-    Height: 1 inch,
+//  let FeatureSet = Vowel Nasal Vocoid Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap
+
+  let FeatureSet = Vowel Nasal Vocoid Approximant
+
+  let FeatureBox(feature, features) = Canvas {
+    TextHeight: RowHeight,
+    Height: RowHeight,
+    Width: RowHeight,
+    if (features.HasFeature(feature))
+      feature.Name[0],
+    else
+      Background: 90%,
+    end
   }
 
-  let DriftMeaning(meaning) = Block {
-    meaning Bold,
-    Paragraph {
-      SpaceAfter: 8 pts,
-      DriftChart(meaning),
+  let FeatureSegment(ref segment) = Canvas {
+    Background: 90%,
+    TextHeight: RowHeight,
+    Height: RowHeight,
+    FeatureBox(each FeatureSet, segment.Features)
+  }
+
+  let DriftWord(ref language, meaning) = Group {
+    Width: DriftWidth,
+    Group {
+      FeatureSegment(each Results.GetGeneText(meaning, language).Segments)
+//      Background: 50%,
     }
+  }
+
+  let DriftLang(ref language) = Canvas {
+    PaddingLR: 3 pts,
+    VAlign: VAligns.Center,
+    Height: RowHeight,
+    Paragraph {
+      TextHeight: RowHeight,
+      language.Name
+    },
+  }
+
+  let DriftChart(meaning) = Group {
+    Border: 1,
+    Group {
+      Vertical: true,
+      DriftLang(each Results.UsedLanguages),
+    },
+    Group {
+      Vertical: true,
+      DriftWord(each Results.UsedLanguages, meaning)
+    }
+  }
+
+  let DriftMeaning(meaning) = Group {
+    MarginB: 8 pts,
+    Vertical: true,
+    Paragraph {
+      Lang.Meaning, ": ",
+      meaning Bold,
+    },
+    DriftChart(meaning),
   }
 
   let DriftSection = Block {
