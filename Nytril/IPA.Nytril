@@ -41,40 +41,40 @@ with IPA
   end
 
   with Features
-    let NoFeature   = flag {Name: Lang.NoFeatures}
-    let Impossible  = flag {Name: Lang.Impossible}
-    let Punctuation = flag {Name: Lang.Puncuation}
-    let NonIPA      = flag {Name: Lang.NonIPA}
-    let Voiced      = flag {Name: Lang.Voiced}
-    let Rounded     = flag {Name: Lang.Rounded}
-    let Velarized   = flag {Name: Lang.Velarized}
-    let Ejective    = flag {Name: Lang.Ejective}
-    let Pulmonic    = flag {Name: Lang.Pulmonic}
-    let Nasal       = flag {Name: Lang.Nasal}
-    let Tenuis      = flag {Name: Lang.Tenuis}
-    let Lateral     = flag {Name: Lang.Lateral}
-    let Sibilant    = flag {Name: Lang.Sibilant}
-    let Fricative   = flag {Name: Lang.Fricative}
-    let Approximant = flag {Name: Lang.Approximant}
-    let Implosive   = flag {Name: Lang.Implosive}
-    let Central     = flag {Name: Lang.Central}
-    let TapFlap     = flag {Name: Lang.TapFlap}
-    let Trill       = flag {Name: Lang.Trill}
-    let Stop        = flag {Name: Lang.Stop}
-    let Click       = flag {Name: Lang.Click}
-    let Affricate   = flag {Name: Lang.Affricate}
-    let Vowel       = flag {Name: Lang.Vowel}
-    let Rhotic      = flag {Name: Lang.Rhotic}
-    let Diacritic   = flag {Name: Lang.Diacritic}
-    let Occlusive   = flag {Name: Lang.Occlusive}
-    let Strident    = flag {Name: Lang.Strident}
-    let Obstruent   = flag {Name: Lang.Obstruent}
-    let Continuant  = flag {Name: Lang.Continuant}
-    let Vibrant     = flag {Name: Lang.Vibrant}
-    let Vocoid      = flag {Name: Lang.Vocoid}
-    let Liquid      = flag {Name: Lang.Liquid}
-    let Semivowel   = flag {Name: Lang.SemiVowel}
-    let LongVowel   = flag {Name: Lang.LongVowel}
+    let NoFeature   = flag {Name: Lang.NoFeatures, Abreviation: Empty}
+    let Impossible  = flag {Name: Lang.Impossible, Abreviation: Empty}
+    let Punctuation = flag {Name: Lang.Puncuation, Abreviation: Empty}
+    let NonIPA      = flag {Name: Lang.NonIPA, Abreviation: Empty}
+    let Diacritic   = flag {Name: Lang.Diacritic, Abreviation: Empty}
+    let Voiced      = flag {Name: Lang.Voiced, Abreviation: "v"}
+    let Rounded     = flag {Name: Lang.Rounded, Abreviation: "r"}
+    let Velarized   = flag {Name: Lang.Velarized, Abreviation: "v"}
+    let Ejective    = flag {Name: Lang.Ejective, Abreviation: "e"}
+    let Pulmonic    = flag {Name: Lang.Pulmonic, Abreviation: "p"}
+    let Nasal       = flag {Name: Lang.Nasal, Abreviation: "n"}
+    let Tenuis      = flag {Name: Lang.Tenuis, Abreviation: "t"}
+    let Lateral     = flag {Name: Lang.Lateral, Abreviation: "l"}
+    let Sibilant    = flag {Name: Lang.Sibilant, Abreviation: "s"}
+    let Fricative   = flag {Name: Lang.Fricative, Abreviation: "f"}
+    let Approximant = flag {Name: Lang.Approximant, Abreviation: "a"}
+    let Implosive   = flag {Name: Lang.Implosive, Abreviation: "i"}
+    let Central     = flag {Name: Lang.Central, Abreviation: "c"}
+    let TapFlap     = flag {Name: Lang.TapFlap, Abreviation: "F"}
+    let Trill       = flag {Name: Lang.Trill, Abreviation: "T"}
+    let Stop        = flag {Name: Lang.Stop, Abreviation: "|"}
+    let Click       = flag {Name: Lang.Click, Abreviation: "K"}
+    let Affricate   = flag {Name: Lang.Affricate, Abreviation: "a"}
+    let Vowel       = flag {Name: Lang.Vowel, Abreviation: "V"}
+    let Rhotic      = flag {Name: Lang.Rhotic, Abreviation: "R"}
+    let Occlusive   = flag {Name: Lang.Occlusive, Abreviation: "O"}
+    let Strident    = flag {Name: Lang.Strident, Abreviation: "S"}
+    let Obstruent   = flag {Name: Lang.Obstruent, Abreviation: "o"}
+    let Continuant  = flag {Name: Lang.Continuant, Abreviation: "c"}
+    let Vibrant     = flag {Name: Lang.Vibrant, Abreviation: "V"}
+    let Vocoid      = flag {Name: Lang.Vocoid, Abreviation: "D"}
+    let Liquid      = flag {Name: Lang.Liquid, Abreviation: "l"}
+    let Semivowel   = flag {Name: Lang.SemiVowel, Abreviation: "m"}
+    let LongVowel   = flag {Name: Lang.LongVowel, Abreviation: "L"}
   end
 
   let FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap
@@ -767,6 +767,9 @@ with IPA
     return segment.SymbolName
   end
 
+  let LangHasMeaning(word, meaning) = word.Meaning == meaning
+  let FindWordsWithMeaning(ref language, meaning) = language.Words.FindSlice(LangHasMeaning, meaning)
+
   //======================================================================
   // Build a dictionary with SAMPA text as the key
   //======================================================================
@@ -926,70 +929,117 @@ with IPA
   // Code for drift diagram
   //======================================================================
 
-  let DriftWidth = 6 inches
-  let RowHeight  = 10 pts
+  let RowHeight  = 8 pts
+  let BoxWidth   = 5 pts
+  let BorderSize = 0.33 pts
 
-//  let FeatureSet = Vowel Nasal Vocoid Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap
+  let FeatureSet = [
+    Voiced, Rounded, Velarized, Ejective,
+    Pulmonic, Nasal, Tenuis, Lateral, Sibilant,
+    Fricative, Approximant, Implosive, Central, TapFlap,
+    Trill,
+    Stop,
+    Click,
+    Affricate,
+    Vowel,
+    Rhotic,
+    Occlusive,
+    Strident,
+    Obstruent,
+    Continuant,
+    Vibrant,
+    Vocoid,
+    Liquid,
+    Semivowel,
+    LongVowel,
+  ]
 
-  let FeatureSet = Vowel Nasal Vocoid Approximant
+  let FeaturePopup(feature) = Frame {
+    Width: 2 inches,
+    Paragraph {
+      feature.Name
+    }
+  }
 
-  let FeatureBox(feature, features) = Canvas {
-    TextHeight: RowHeight,
+  let FeatureHeader(feature) = Canvas {
     Height: RowHeight,
-    Width: RowHeight,
-    if (features.HasFeature(feature))
-      feature.Name[0],
+    Width: BoxWidth,
+    Span {
+      Popup: FeaturePopup.Call(feature),
+      feature.Abreviation,
+    },
+  }
+
+  let FeatureBox(feature, features0, features1) = Canvas {
+    Height: RowHeight,
+    Width: BoxWidth,
+    if (features0.HasFeature(feature))
+      if (not features1.HasFeature(feature))
+        Background: Colors.Red,
+      end
     else
-      Background: 90%,
+      if (features1.HasFeature(feature))
+        Background: Colors.Green,
+      end
     end
   }
 
-  let FeatureSegment(ref segment) = Canvas {
-    Background: 90%,
-    TextHeight: RowHeight,
+  let FeatureSegment(ref segment0, ref segment1) = Group {
     Height: RowHeight,
-    FeatureBox(each FeatureSet, segment.Features)
+    BorderL: BorderSize,
+    FeatureBox(each FeatureSet, segment0.Features, segment1.Features),
   }
 
-  let DriftWord(ref language, meaning) = Group {
-    Width: DriftWidth,
-    Group {
-      FeatureSegment(each Results.GetGeneText(meaning, language).Segments)
-//      Background: 50%,
-    }
+  let DriftWords(line0, line, index) = Group {
+    Vertical: true,
+    FeatureSegment(line0.Segments[index], line.Segments[index]),
   }
 
-  let DriftLang(ref language) = Canvas {
+  let DriftLang(line) = Canvas {
     PaddingLR: 3 pts,
     VAlign: VAligns.Center,
+    Width: 1 inch,
     Height: RowHeight,
     Paragraph {
-      TextHeight: RowHeight,
-      language.Name
+      ShowSegment(each line.Segments)
     },
   }
 
-  let DriftChart(meaning) = Group {
-    Border: 1,
-    Group {
-      Vertical: true,
-      DriftLang(each Results.UsedLanguages),
-    },
-    Group {
-      Vertical: true,
-      DriftWord(each Results.UsedLanguages, meaning)
-    }
-  }
-
-  let DriftMeaning(meaning) = Group {
-    MarginB: 8 pts,
+  let DriftWord(lines, index) = Group {
     Vertical: true,
-    Paragraph {
-      Lang.Meaning, ": ",
-      meaning Bold,
+    Group {
+      FeatureHeader(each FeatureSet),
+      BorderB: BorderSize,
     },
-    DriftChart(meaning),
+    DriftWords(lines[0], each lines, index)
   }
+
+  let SegmentLength(line) = line.Segments.Length
+  let MinLength(lines)    = Math.Min([3] + SegmentLength(each lines))
+
+  let DriftChart(lines) = Group {
+    TextHeight: RowHeight,
+    Border: BorderSize,
+    Group {
+      Vertical: true,
+      DriftLang(each lines),
+    },
+    DriftWord(lines, each 0..<MinLength(lines))
+  }
+
+  let DriftMeaning(meaning) begin
+    var lines = Results.GetGeneText(meaning, each Results.UsedLanguages);
+
+    return Group {
+      MarginB: 8 pts,
+      Vertical: true,
+      Paragraph {
+        Lang.Meaning, ": ",
+        meaning Bold,
+      },
+      DriftChart(lines),
+    }
+  end
 
   let DriftSection = Block {
     DriftMeaning(each Results.UsedMeanings)
