@@ -73,10 +73,11 @@ with IPA
     let Vibrant     = flag {Name: Lang.Vibrant}
     let Vocoid      = flag {Name: Lang.Vocoid}
     let Liquid      = flag {Name: Lang.Liquid}
-    let Semivowel   = flag {Name: Lang.Semivowel}
+    let Semivowel   = flag {Name: Lang.SemiVowel}
+    let LongVowel   = flag {Name: Lang.LongVowel}
   end
 
-  let FeatureMask = Vowel Nasal Vocoid Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap
+  let FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap
 
   let Encode(text, sampa) = {
     Popup: SegmentPopup,
@@ -404,9 +405,9 @@ with IPA
     // Vowels
     //==================================
 
-    let ee                        = Vow(Vocoid Continuant, Opens.Close, Backnesses.Front, "i", "i")
+    let e                         = Vow(Vocoid Continuant, Opens.Close, Backnesses.Front, "i", "i")
+    let ee                        = Vow(LongVowel Vocoid Continuant, Opens.Close, Backnesses.Front, "iː", "i:")
     let eeh                       = Vow(Rounded Vocoid Continuant, Opens.Close, Backnesses.Front, "y", "y")
-
 
     let CloseCentralUnrounded     = Vow(NoFeature, Opens.Close, Backnesses.Central, "ɨ", "1")
     let CloseCentralRounded       = Vow(Rounded, Opens.Close, Backnesses.Central, "ʉ", "}")
@@ -417,7 +418,9 @@ with IPA
     let NearCloseFrontUnrounded   = Vow(NoFeature, Opens.NearClose, Backnesses.NearFront, "ɪ", "I")
     let NearCloseFrontRounded     = Vow(Rounded, Opens.NearClose, Backnesses.NearFront, "ʏ", "Y")
     let NearCloseCentralRounded   = Vow(Rounded NonIPA, Opens.NearClose, Backnesses.Central, "ᵿ", "U\\")
+
     let NearCloseBackRounded      = Vow(Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U")
+    let uu                        = Vow(LongVowel Rounded, Opens.Close, Backnesses.Back, "uː", "u:")
 
     let ay                        = Vow(Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "e", "e")
     let CloseMidFrontRounded      = Vow(Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "ø", "2")
@@ -431,11 +434,14 @@ with IPA
     let MidBackUnrounded          = Vow(NoFeature, Opens.Mid, Backnesses.Back, "o̞", "")
 
     let eh                        = Vow(Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E")
+    let ai                        = Vow(LongVowel Vocoid Continuant, Opens.Mid, Backnesses.Front, "eː", "E:")
+
     let OpenMidNearFrontRounded   = Vow(Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "œ", "9")
     let OpenMidCentralRounded     = Vow(Rounded, Opens.OpenMid, Backnesses.Central, "ɞ", "3\\")
     let aeh                       = Vow(NoFeature, Opens.OpenMid, Backnesses.Central, "ɜ", "3")
     let OpenMidBackUnrounded      = Vow(Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ʌ", "V")
     let OpenMidBackRounded        = Vow(Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ɔ", "O")
+    let LongO                     = Vow(LongVowel Rounded Vocoid Continuant, Opens.Mid, Backnesses.Back, "oː", "O:")
 
     let NearFrontUnrounded        = Vow(NoFeature, Opens.NearOpen, Backnesses.NearFront, "æ", "{")
     let FrontOpenRounded          = Vow(Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&")
@@ -443,6 +449,8 @@ with IPA
 
     let OpenCentralUnrounded      = Vow(NoFeature, Opens.Open, Backnesses.Central, "ä", "a_\"")
     let ah                        = Vow(Vocoid Continuant, Opens.Open, Backnesses.NearFront, "a", "a")
+    let aye                       = Vow(LongVowel Vocoid Continuant, Opens.Open, Backnesses.Central, "aː", "a:")
+
     let OpenNearFrontRounded      = Vow(Rounded Vocoid Continuant, Opens.Open, Backnesses.NearFront, "ɶ", "&")
     let OpenBackUnrounded         = Vow(Vocoid Continuant, Opens.Open, Backnesses.Back, "ɑ", "A")
     let OpenBackRounded           = Vow(Rounded Vocoid Continuant, Opens.Open, Backnesses.Back, "ɒ", "Q")
@@ -904,7 +912,7 @@ with IPA
     FeatureFrame(66, 44, 10, null, Fricative Obstruent Continuant Strident Rhotic Liquid),
     FeatureFrame(80, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid),
     FeatureFrame(12, 53, 19, Lang.Vowels, Vowel Vocoid Continuant),
-    FeatureFrame(36, 60, 19, Lang.Semivowels, Vocoid Semivowel Approximant Continuant),
+    FeatureFrame(36, 60, 19, Lang.SemiVowels, Vocoid Semivowel Approximant Continuant),
     FeatureFrame(57, 62, 5, null, Vocoid Approximant),
     FeatureFrame(66, 60, 10, null, Vocoid Approximant Rhotic Liquid),
     FeatureFrame(82, 58, 5, null, Vocoid Approximant Rhotic Liquid Lateral),
