@@ -21,7 +21,6 @@ with Nexus
   let CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1)
   let EndMarker     = ";"
   let Missing       = "?"
-  let Gap           = '-'
   let Quote         = "\""
 
   let Keyword(name) = Span {
@@ -108,15 +107,10 @@ with Nexus
     }
   }
 
-  let ShowCharacter(c) = Span {
-    Popup: IPA.SegmentPopup.Call(c.Segment),
-    c.Character
-  }
-
   let ShowTaxon(maxlength, taxon, range) = Span {
     taxon.Name,
     Space * (maxlength - taxon.Name.Length),
-    ShowCharacter(each taxon.Characters[range])
+    IPA.ShowCharacter(each taxon.Characters[range])
   }
 
   let ShowTaxonSet(maxlength, taxa, range) = {
@@ -135,7 +129,7 @@ with Nexus
         },
         AddLine("format") {
           AddValue("datatype", "STANDARD"),
-          AddValue("gap", Gap),
+          AddValue("gap", IPA.GapSegment.Text),
           AddValue("missing", Missing),
           AddValue("symbols", Span {Quote, CharacterList[Results.UniqueSegments.IndexRange], Quote}),
         },

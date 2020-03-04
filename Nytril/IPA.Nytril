@@ -43,6 +43,8 @@ with IPA
   with Features
     let NoFeature   = flag {Name: Lang.NoFeatures}
     let Impossible  = flag {Name: Lang.Impossible}
+    let Punctuation = flag {Name: Lang.Puncuation}
+    let NonIPA      = flag {Name: Lang.NonIPA}
     let Voiced      = flag {Name: Lang.Voiced}
     let Rounded     = flag {Name: Lang.Rounded}
     let Velarized   = flag {Name: Lang.Velarized}
@@ -63,9 +65,7 @@ with IPA
     let Affricate   = flag {Name: Lang.Affricate}
     let Vowel       = flag {Name: Lang.Vowel}
     let Rhotic      = flag {Name: Lang.Rhotic}
-    let NonIPA      = flag {Name: Lang.NonIPA}
     let Diacritic   = flag {Name: Lang.Diacritic}
-    let Punctuation = flag {Name: Lang.Puncuation}
     let Occlusive   = flag {Name: Lang.Occlusive}
     let Strident    = flag {Name: Lang.Strident}
     let Obstruent   = flag {Name: Lang.Obstruent}
@@ -109,9 +109,15 @@ with IPA
     Features: Diacritic
   }
 
+  let Punct(text) = Encode(text, text) {
+    Features: Punctuation,
+  }
+
   let NoSegment     = Encode("?", "!?") {Features: Impossible}
-  let GapSegment    = Encode("-", "-") {Features: Punctuation}
-  let SpaceSegment  = {Text: " ", Sampa: " ", Features: Punctuation}
+  let GapSegment    = Punct("-")
+  let LeftSegment   = Punct("(")
+  let RightSegment  = Punct(")")
+  let SpaceSegment  = Punct(" ")
 
   with Segments
     //==================================
@@ -726,12 +732,16 @@ with IPA
     (each WordToSegments(word)).Text
   }
 
+  let ShowCharacter(c) = Span {
+    Popup: SegmentPopup.Call(c.Segment),
+//    Link: c.Segment.FullSymbolName,
+    c.Character
+  }
+
   let ShowSegment(ref segment, flags=Impossible) = Span {
     Style.IPAFamily,
-    if (segment.Features.NotFeature(Punctuation))
-      Popup: SegmentPopup.Call(segment),
-      Link: segment.FullSymbolName,
-    end,
+    Popup: SegmentPopup.Call(segment),
+//    Link: segment.FullSymbolName,
     if (segment.Features.HasFeature(flags))
       Assert(false, Lang.Impossible),
       TextColor: Colors.Red,
