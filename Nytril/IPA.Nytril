@@ -79,23 +79,23 @@ with IPA
 
   let FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap
 
-  let Encode(text, sampa) = {
+  let Encode(ipa, sampa) = {
     Popup: SegmentPopup,
-    Text: text,
+    Ipa: ipa,
     Sampa: sampa,
   }
 
-  let Diac(description, text, sampa) = Encode(text, sampa) {
+  let Diac(description, ipa, sampa) = Encode(ipa, sampa) {
     Features: Diacritic,
     Description: description,
   }
 
-  let Con(features, place, text, sampa) = Encode(text, sampa) {
+  let Con(features, place, ipa, sampa) = Encode(ipa, sampa) {
     Features: features,
     Place: place,
   }
 
-  let Vow(features, open, backness, text, sampa) = Encode(text, sampa) {
+  let Vow(features, open, backness, ipa, sampa) = Encode(ipa, sampa) {
     Features: features | Vowel,
     Open: open,
     Backness: backness,
@@ -106,11 +106,11 @@ with IPA
     Place: place,
   }
 
-  let Dia(text, sampa) = Encode(text, sampa) {
+  let Dia(ipa, sampa) = Encode(ipa, sampa) {
     Features: Diacritic
   }
 
-  let Punct(text) = Encode(text, text) {
+  let Punct(ipa) = Encode(ipa, ipa) {
     Features: Punctuation,
   }
 
@@ -647,15 +647,6 @@ with IPA
     }
   }
 
-  let ShowCodePoint(c) = {Style.MonoFamily, TextRadix: 16, TextDigits: 4} Type.Integer(c)
-
-  let CodePoints(text) = Span {
-    Separator: Lang.Separator,
-    if (text)
-      ShowCodePoint(each text)
-    end
-  }
-
   let SegmentDisplay(segment, location) = Block {
     ParAlignment: ParAlignments.Center,
     Paragraph {
@@ -665,7 +656,7 @@ with IPA
       TextHeight: SegmentSize,
       Style.IPAFamily,
       SpaceAfter: SegmentSize * 0.125,
-      segment.Text,
+      segment.Ipa,
     },
     Paragraph {
       TextHeight: 10 pts,
@@ -674,7 +665,15 @@ with IPA
     Paragraph {
       TextHeight: 8 pts,
       ParBackground: 95%,
-      CodePoints(segment.Text),
+      Style.MonoFamily,
+      TextRadix: 16,
+      TextDigits: 4,
+      Span {
+        Separator: Lang.Separator,
+        if (segment.Ipa)
+          Type.Integer(each segment.Ipa)
+        end
+      }
     },
     Paragraph {
       TextHeight: 8 pts,
@@ -682,9 +681,9 @@ with IPA
         ParBackground: 90%,
         ShowSampa(segment.Sampa)
       else
-        if (segment.Text.Length > 0)
+        if (segment.Ipa.Length > 0)
+          "No Sampa" {TextColor: Colors.White},
           ParBackground: Colors.Red,
-//        Assert(false, "Missing Sampa definition"),
         end
       end
     },
@@ -706,9 +705,9 @@ with IPA
   }
 
   let AlphaOrder(x, y) begin
-    var cl = Math.Compare(x.Text.Length, y.Text.Length);
+    var cl = Math.Compare(x.Ipa.Length, y.Ipa.Length);
     if (cl == 0)
-      cl = -Math.Compare(x.Text, y.Text)
+      cl = -Math.Compare(x.Ipa, y.Ipa)
     end
     return cl;
   end
@@ -741,7 +740,7 @@ with IPA
   }
 
   let ShowIPA(word) = Span {
-    (each WordToSegments(word)).Text
+    (each WordToSegments(word)).Ipa
   }
 
   let ShowCharacter(c) = Span {
@@ -761,7 +760,7 @@ with IPA
     if (segment.Features.HasFeature(Diacritic))
       "  ",
     end,
-    segment.Text
+    segment.Ipa
   }
 
   let SegmentSound(ref segment) begin
