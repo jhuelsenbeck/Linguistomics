@@ -1,4 +1,4 @@
-﻿using Format, Units, Type, IPA.Features
+﻿using Format, Units, Type, IPA.FeatureSet
 //======================================================================
 
 with IPA
@@ -40,7 +40,7 @@ with IPA
     let Glottal        = enum {Name: Lang.Glottal}
   end
 
-  with Features
+  with FeatureSet
     let NoFeature   = flag {Name: Lang.NoFeatures}
     let Rounded     = flag {Name: Lang.Rounded}
     let Vocoid      = flag {Name: Lang.Vocoid}
@@ -914,31 +914,11 @@ with IPA
   // Code for drift diagram
   //======================================================================
 
-  let RowText    = 8 pts
-  let RowHeight  = 9 pts
-  let BoxWidth   = 6 pts
-  let BorderSize = 0.33 pts
-
-  let FeatureSet = [
-    Voiced, Rounded, Velarized, Ejective,
-    Pulmonic, Nasal, Tenuis, Lateral, Sibilant,
-    Fricative, Approximant, Implosive, Central, TapFlap,
-    Trill,
-    Stop,
-    Click,
-    Affricate,
-    Vowel,
-    Rhotic,
-    Occlusive,
-    Strident,
-    Obstruent,
-    Continuant,
-    Vibrant,
-    Vocoid,
-    Liquid,
-    Semivowel,
-    LongVowel,
-  ]
+  let RowText     = 8 pts
+  let RowHeight   = 9 pts
+  let BoxWidth    = 6 pts
+  let BorderSize  = 0.33 pts
+  let FeatureList = FeatureSet[1..]
 
   let FeaturePopup(feature) = Frame {
     Width: 2 inches,
@@ -975,7 +955,7 @@ with IPA
   let FeatureSegment(ref segment0, ref segment1) = Group {
     Vertical: true,
     VAlign: VAligns.Center,
-    FeatureBox(each FeatureSet, segment0.Features, segment1.Features),
+    FeatureBox(each FeatureList, segment0.Features, segment1.Features),
   }
 
   let DriftFeatures(line0, line, index) = Group {
@@ -1024,7 +1004,7 @@ with IPA
         Vertical: true,
         PaddingR: 3 pts,
         BorderT: BorderSize,
-        ShowFeature(each FeatureSet)
+        ShowFeature(each FeatureList)
       },
     },
     DriftMatrix(lines, each 0..<MinLength(lines))
