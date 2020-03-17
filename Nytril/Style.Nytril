@@ -39,7 +39,7 @@ with Style
   let WhitePaper = Document {
     Size: Metrics.Paper,
     MainFamily,
-    TextHeight: 11.5 pts,
+    TextHeight: 11 pts,
     MarginL: Metrics.MarginL,
     MarginR: Metrics.MarginR,
     MarginT: Metrics.MarginT,
@@ -117,7 +117,7 @@ with Style
     text
   }
 
-  let SourceFile(ref source) = Block {
+  let SourceFile(source) = Block {
     Style.Header3(source.Path.GetFileName),
     Paragraph {
       LeftIndent: 0.25 inches,
@@ -135,13 +135,13 @@ with Style
   }
 
   let Author(author) = Span {
-    Link: author.FullSymbolName,
+    Link: author.Key,
     author.Title,
   }
 
   let Collect(list, node) begin
     if (node.Label)
-      list.AddElement(node.Label, node)
+      list.AddElement(node, node.Label)
     end
     Collect(list, each node);
   end
@@ -168,33 +168,8 @@ with Style
     }
   }
 
-  let ShowTimeline(options) = Group {
-    Vertical: true,
-    TextHeight: options.TextHeight,
-    TimelineRow(options, each TimelineNodes),
-    Group {
-      Vertical: true,
-      Background: 90%,
-      ChartAxis {
-        Width: options.Width,
-        Start: options.MaxYear,
-        Stop: 0,
-      },
-      Frame {
-        HAlignment: HAligns.Center,
-        "Years"
-      }
-    }
-  }
-
   let ShowLanguageTree = Block {
     ShowTree(Info.LanguageTree),
-    Header2("Last Branch"),
-    ShowTimeline({
-      Width: Metrics.TreeWidth,
-      TextHeight: 10 pts,
-      MaxYear: Math.Max((each TimelineNodes).Branch)
-    })
   }
 
   let ShowTree(tree) = Group {
@@ -227,7 +202,7 @@ with Style
   let ShowAuthorFull(author) = Block {
     LeftIndent: 0.25 inches,
     Paragraph {
-      LocationMark: author.FullSymbolName,
+      LocationMark: author.Key,
       FirstIndent: -0.25 inches,
       Span {
         Separator: Space,
@@ -267,7 +242,7 @@ with Style
     ShowAuthorFull(each authors),
   }
 
-  let ShowReference(ref r) = Paragraph {
+  let ShowReference(r) = Paragraph {
     LeftIndent: 0.25 inches,
     FirstIndent: -0.25 inches,
     if (r.Author)
@@ -286,9 +261,9 @@ with Style
     if (r.Publisher)
       Lang.Separator,
       Italic r.Publisher,
-      r.Page,
+      r.?Page,
     end,
-    if (r.Link)
+    if (r.?Link)
       ". : ",
        Span {
          Link: r.Link,
@@ -368,8 +343,18 @@ let Logo = Frame {
     Columns: [4.3 inches, 0.6 inches],
     Row {
       Block {
-        "Transactions of the" {TextColor: Type.Color(129, 166, 207), Bold, TextHeight: 12 pts},
-        "Bayesian Society" {Bold, TextHeight: 20 pts, TextColor: Colors.White}
+        Span {
+          TextColor: Type.Color(129, 166, 207),
+          Bold,
+          TextHeight: 12 pts,
+          "Transactions of the",
+        },
+        Span {
+          Bold,
+          TextHeight: 20 pts,
+          TextColor: Colors.White,
+          "Bayesian Society"
+        }
       },
       Read(Folders.Source FileName("bayes") Extensions.PNG) {Width: 0.5 inches}
     }

@@ -694,10 +694,10 @@ with IPA
     SegmentDisplay(segment, null)
   }
 
-  let SegmentCell(ref segment) = Cell {
+  let SegmentCell(segment) = Cell {
     Edge: 0.25 pts {Color: Colors.LightGray},
     Padding: 2 pts,
-    SegmentDisplay(segment, segment.FullSymbolName)
+    SegmentDisplay(segment, segment.Key)
   }
 
   let SegmentRow(segments) = Row {
@@ -729,14 +729,14 @@ with IPA
 
   let ShowCharacter(c) = Span {
     Popup: SegmentPopup.Call(c.Segment),
-//    Link: c.Segment.FullSymbolName,
+//    Link: c.Segment.Key,
     c.Character
   }
 
-  let ShowSegment(ref segment) = Span {
+  let ShowSegment(segment) = Span {
     Style.IPAFamily,
     Popup: SegmentPopup.Call(segment),
-//    Link: segment.FullSymbolName,
+//    Link: segment.Key,
     if (segment.Impossible)
       Assert(false, Lang.Impossible),
       TextColor: Colors.Red,
@@ -747,30 +747,30 @@ with IPA
     segment.Ipa
   }
 
-  let SegmentSound(ref segment) begin
+  let SegmentSound(segment) begin
     if (segment == SpaceSegment)
       return Space;
     end
-    return segment.SymbolName
+    return segment.Name
   end
 
   let LangHasMeaning(word, meaning) = word.Meaning == meaning
-  let FindWordsWithMeaning(ref language, meaning) = language.Words.FindSlice(LangHasMeaning, meaning)
+  let FindWordsWithMeaning(language, meaning) = language.Words.FindSlice(LangHasMeaning, meaning)
 
   //======================================================================
   // Build a dictionary with SAMPA text as the key
   //======================================================================
 
-  let GatherText(set, ref segment) begin
+  let GatherText(set, segment) begin
     if (segment.Sampa.Length > 0)
-      set.AddElement(segment.Sampa, ref segment)
+      set.AddElement(segment, segment.Sampa)
     end
   end
 
   let SampaSet begin
     var set = Type.Dictionary(128);
     GatherText(set, each Segments);
-    set.AddElement(" ", ref SpaceSegment);
+    set.AddElement(SpaceSegment, " ");
     return set;
   end
 
@@ -952,7 +952,7 @@ with IPA
     end
   }
 
-  let FeatureSegment(ref segment0, ref segment1) = Group {
+  let FeatureSegment(segment0, segment1) = Group {
     Vertical: true,
     VAlign: VAligns.Center,
     FeatureBox(each FeatureList, segment0.Features, segment1.Features),
