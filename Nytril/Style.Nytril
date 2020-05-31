@@ -2,14 +2,11 @@ using Type, Format, Units, Math, IO
 //======================================================================
 
 with Metrics
-  let MarginL    = 0.75 inches
-  let MarginR    = MarginL
-  let MarginT    = 0.5 inches
-  let MarginB    = 0.4 inches
-  let Paper      = Type.Size(8.5 inches, 11 inches)
-  let Content    = Type.Size(Paper.Width - MarginL - MarginR, Paper.Height - MarginT - MarginB)
-  let TableSpace = 24 pts
-  let TreeWidth  = Content.Width
+  let PaperMargin = Margin(0.75 inches, 0.5 inches, 0.75 inches, 0.4 inches)
+  let Paper       = Type.Size(8.5 inches, 11 inches)
+  let Content     = Paper - PaperMargin
+  let TableSpace  = 24 pts
+  let TreeWidth   = Content.Width
 
   let BoxSize    = Type.Size(18 pts, 20 pts)
   let CellSize   = Type.Size(BoxSize.Width * 2, BoxSize.Height)
@@ -40,10 +37,7 @@ with Style
     Size: Metrics.Paper,
     MainFamily,
     TextHeight: 11 pts,
-    MarginL: Metrics.MarginL,
-    MarginR: Metrics.MarginR,
-    MarginT: Metrics.MarginT,
-    MarginB: Metrics.MarginB,
+    Margin: Metrics.PaperMargin,
   }
 
   let NormalHeader(text) = Block {
