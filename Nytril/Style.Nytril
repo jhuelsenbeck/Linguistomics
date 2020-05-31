@@ -2,47 +2,47 @@ using Type, Format, Units, Math, IO;
 //======================================================================
 
 with Metrics
-  let PaperMargin = Margin(0.75 inches, 0.5 inches, 0.75 inches, 0.4 inches)
-  let Paper       = Type.Size(8.5 inches, 11 inches)
-  let Content     = Paper - PaperMargin
-  let TableSpace  = 24 pts
-  let TreeWidth   = Content.Width
+  let PaperMargin = Margin(0.75 inches, 0.5 inches, 0.75 inches, 0.4 inches);
+  let Paper       = Type.Size(8.5 inches, 11 inches);
+  let Content     = Paper - PaperMargin;
+  let TableSpace  = 24 pts;
+  let TreeWidth   = Content.Width;
 
-  let BoxSize    = Type.Size(18 pts, 20 pts)
-  let CellSize   = Type.Size(BoxSize.Width * 2, BoxSize.Height)
+  let BoxSize    = Type.Size(18 pts, 20 pts);
+  let CellSize   = Type.Size(BoxSize.Width * 2, BoxSize.Height);
 end
 //======================================================================
 
 with Style
-  let MainFamily           = {TextFamily: TextFamilies.TimesNewRoman}
-  let SansSerif            = {TextFamily: TextFamilies.Calibri}
-  let MonoFamily           = {TextFamily: TextFamilies.Consolas}
-  let IPAFamily            = {TextFamily: TextFamilies.CambriaMath} // Also can be "Linux Libertine O"
+  let MainFamily           = {TextFamily: TextFamilies.TimesNewRoman};
+  let SansSerif            = {TextFamily: TextFamilies.Calibri};
+  let MonoFamily           = {TextFamily: TextFamilies.Consolas};
+  let IPAFamily            = {TextFamily: TextFamilies.CambriaMath}; // Also can be "Linux Libertine O"
 
-  let ImpossibleBackground = {Background: 80%}
-  let Used                 = {TextColor: Colors.Red}
-  let TitleBackground      = {Background: 90%}
-  let TableEdge            = {Edge: 0.3 pts}
-  let ColumnEdge           = {EdgeR: 0.3 pts}
-  let SegmentBottom        = {EdgeB: 0.25 pts {Color: 80%}}
+  let ImpossibleBackground = {Background: 80%};
+  let Used                 = {TextColor: Colors.Red};
+  let TitleBackground      = {Background: 90%};
+  let TableEdge            = {Edge: 0.3 pts};
+  let ColumnEdge           = {EdgeR: 0.3 pts};
+  let SegmentBottom        = {EdgeB: 0.25 pts {Color: 80%}};
 
 
   let RowBar(i) = {
     if (i mod 2 != 0)
       Background: 95%
     end
-  }
+  };
 
   let WhitePaper = Document {
     Size: Metrics.Paper,
     MainFamily,
     TextHeight: 11 pts,
     Margin: Metrics.PaperMargin,
-  }
+  };
 
   let NormalHeader(text) = Block {
     Span {{TextUppercase: true} text}
-  }
+  };
 
   let PageSection = Section {
     SectionBreak: SectionBreaks.NextPage,
@@ -51,16 +51,16 @@ with Style
       ParAlignment: ParAlignments.Center,
       PageNumber
     },
-  }
+  };
 
   let TableNotes = Paragraph {
     SpaceAfter: Metrics.TableSpace,
-  }
+  };
 
   let TitleWord(text) = Span {
     text[0],
     {TextHeight: 60%} text[1..]
-  }
+  };
 
   let TitleCase(text) = Span {
     if (text)
@@ -68,7 +68,7 @@ with Style
       Separator: Space,
       TitleWord(each text.Split(Space))
     end
-  }
+  };
 
   let Title(text) = Paragraph {
     KeepWithNext: true,
@@ -77,7 +77,7 @@ with Style
     ParAlignment: ParAlignments.Center,
     TextHeight: 18 pts,
     text
-  }
+  };
 
   let HeaderCentered(text) = Paragraph {
     KeepWithNext: true,
@@ -85,14 +85,14 @@ with Style
     SpaceAfter: 6 pts,
     ParAlignment: ParAlignments.Center,
     TitleCase(text)
-  }
+  };
 
   let Header1(text) = Paragraph {
     KeepWithNext: true,
     SpaceBefore: 18 pts,
     SpaceAfter: 8 pts,
     TitleCase(text)
-  }
+  };
 
   let Header2(text) = Paragraph {
     KeepWithNext: true,
@@ -100,7 +100,7 @@ with Style
     SpaceAfter: 6 pts,
     TextHeight: 14 pts,
     text
-  }
+  };
 
   let Header3(text) = Paragraph {
     KeepWithNext: true,
@@ -109,7 +109,7 @@ with Style
     SpaceAfter: 12 pts,
     TextHeight: 14 pts,
     text
-  }
+  };
 
   let SourceFile(source) = Block {
     Style.Header3(source.Path.GetFileName),
@@ -120,18 +120,18 @@ with Style
       TextHeight: 8 pts,
       SourceSelection(source)
     }
-  }
+  };
 
   let SourceCodeBlock = TextBlock {
     Style.MonoFamily,
     TextHeight: 10 pts,
     ParBackground: 97%,
-  }
+  };
 
   let Author(author) = Span {
     Link: author.Key,
     author.Title,
-  }
+  };
 
   let Collect(list, node) begin
     if (node.Label)
@@ -146,9 +146,9 @@ with Style
     return list[1..];
   end
 
-  let ByYear(x, y) = x.Branch.Compare(y.Branch)
+  let ByYear(x, y) = x.Branch.Compare(y.Branch);
 
-  let TimelineNodes = GetTimes(Info.LanguageTree).Sort(true, ByYear)
+  let TimelineNodes = GetTimes(Info.LanguageTree).Sort(true, ByYear);
 
   let TimelineRow(options, node) = Group {
     X: options.Width - options.Width * node.Branch / options.MaxYear,
@@ -160,11 +160,11 @@ with Style
       Space,
       node.Label,
     }
-  }
+  };
 
   let ShowLanguageTree = Block {
     ShowTree(Info.LanguageTree),
-  }
+  };
 
   let ShowTree(tree) = Group {
     Vertical: true,
@@ -177,21 +177,21 @@ with Style
       ValueAxis: ChartAxis,
       tree
     },
-  }
+  };
 
   let ShowAbstract(content) = Block {
     HeaderCentered(content.Title),
     Block {
       content.Body
     }
-  }
+  };
 
   let ShowContent(content) = Block {
     Header1(content.Title),
     Block {
       content.Body
     }
-  }
+  };
 
   let ShowAuthorFull(author) = Block {
     LeftIndent: 0.25 inches,
@@ -212,7 +212,7 @@ with Style
     },
     Span {"{0}: "(Lang.EMail), author.EMail},
     Empty
-  }
+  };
 
   let AppendixRow(appendix) = Paragraph {
     LeftIndent: 20 pts,
@@ -224,17 +224,17 @@ with Style
       Link: Lang.Appendix + EachIndex,
       appendix.Title
     }
-  }
+  };
 
   let ShowAppendixTable = Block {
     HeaderCentered(Lang.Appendices),
     AppendixRow(each Appendix)
-  }
+  };
 
   let ShowAuthors(authors) = Block {
     HeaderCentered(Lang.Authors),
     ShowAuthorFull(each authors),
-  }
+  };
 
   let ShowReference(r) = Paragraph {
     LeftIndent: 0.25 inches,
@@ -265,12 +265,12 @@ with Style
          r.Link
         }
     end,
-  }
+  };
 
   let ShowReferences(references) = Block {
     HeaderCentered(Lang.References),
     ShowReference(each references)
-  }
+  };
 
   let ShowAppendix(appendix) = PageSection {
     Paragraph {
@@ -285,12 +285,12 @@ with Style
     Block {
       appendix.Content
     }
-  }
+  };
 
   let LanguageRow(lang) = Row {
     Background: ((EachIndex mod 2) == 0 ? Colors.White : 97%),
     lang.Name,
-  }
+  };
 
   let ShowLanguageList(list) = Table {
     PaddingLR: 2,
@@ -302,7 +302,7 @@ with Style
     },
     Edge: 0.25 pts {Color: Colors.DarkGray},
     LanguageRow(each list)
-  }
+  };
 
   let HeaderCell(d, halign=HAligns.Left) = Cell {
     HAlign: halign,
@@ -312,7 +312,7 @@ with Style
     EdgeB: 1 pts,
     Padding: 2 pts,
     d
-  }
+  };
 
   let TitleBar(name, columns) = Row {
     Cell {
@@ -324,7 +324,7 @@ with Style
       ColumnSpan: columns,
       name
     }
-  }
+  };
 end
 //======================================================================
 
@@ -353,6 +353,6 @@ let Logo = Frame {
       Read(Folders.Source FileName("bayes") Extensions.PNG) {Width: 0.5 inches}
     }
   }
-}
+};
 //======================================================================
 
