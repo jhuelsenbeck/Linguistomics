@@ -614,12 +614,6 @@ with IPA
 
   //======================================================================
 
-  HasFeature(feature, f)    = (feature & f) != NoFeature;
-  NotFeature(feature, f)    = (feature & f) == NoFeature;
-  HasMask(feature, mask, f) = (feature & mask) == (f & mask);
-
-  //======================================================================
-
   SegmentColumns = 4;
   SegmentSize    = 40 pts;
 
@@ -629,7 +623,7 @@ with IPA
   };
 
   SegmentName(segment) = Span {
-    if (segment.Features.HasFeature(Vowel))
+    if (segment.Features.HasFlag(Vowel))
       segment.Open,
       Space,
       segment.Backness,
@@ -728,23 +722,23 @@ with IPA
   };
 
   ShowCharacter(c) = Span {
-    Popup: SegmentPopup.Call(c.Segment),
+    Popup: Call(SegmentPopup, c.Segment),
 //    Link: c.Segment.Key,
     c.Character
   };
 
   ShowSegment(segment) = Span {
     Style.IPAFamily,
-    Popup: SegmentPopup.Call(segment),
+    Popup: Call(SegmentPopup, segment),
 //    Link: segment.Key,
-    if (segment.Impossible)
+    if (segment.?Impossible)
       Assert(false, Lang.Impossible),
       TextColor: Colors.Red,
     end,
-    if (segment.Diacritic)
+    if (segment.?Diacritic)
       "  ",
     end,
-    segment.Ipa
+    segment.?Ipa
   };
 
   SegmentSound(segment) begin
@@ -805,7 +799,7 @@ with IPA
   };
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
-  MatchFeature(segment, data) = HasMask(segment.Features, FeatureMask, data);
+  MatchFeature(segment, data) = segment.Features.HasFlagMask(FeatureMask, data);
   FeatureSegments(features)   = Results.UsedSegments.FindSlice(MatchFeature, features);
 
   FeatureFrame(x, y, width, name, features) = Canvas {
@@ -942,12 +936,12 @@ with IPA
   };
 
   FeatureBox(feature, features0, features1) = RowBox {
-    if (features0.HasFeature(feature))
-      if (not features1.HasFeature(feature))
+    if (features0.HasFlag(feature))
+      if (not features1.HasFlag(feature))
         Background: Colors.Red,
       end
     else
-      if (features1.HasFeature(feature))
+      if (features1.HasFlag(feature))
         Background: Colors.Green,
       end
     end
@@ -979,7 +973,7 @@ with IPA
   };
 
   SegmentLength(line) = line.Segments.Length;
-  MinLength(lines)    = Math.Min(SegmentLength(each lines));
+  MinLength(lines)    = SegmentLength(each lines).Min;
 
   DriftMatrix(lines, index) = Group {
     if (index != 0)
