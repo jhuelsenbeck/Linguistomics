@@ -4,18 +4,18 @@ using Format, Units, Math, IO;
 with TreeLib {
   GetNodeLabel(node) = node.?Data?.Name;
 
-  VisitNodeTaxa(set, node) begin
+  VisitNodeTaxa(set, node) {
     if (node.?Data)
       set.AddElement(node.Data);
     end
     VisitNodeTaxa(set, each node);
-  end
+  }
 
-  GetTaxaLabels(tree) begin
+  GetTaxaLabels(tree) {
     var set = Type.Dictionary(256);
     VisitNodeTaxa(set, tree);
     return (each set.ValueList).Name;
-  end
+  }
 }
 //======================================================================
 
@@ -51,7 +51,7 @@ with Nexus {
   Scope(name) = TextBlock {
     IndentSpace: 2,
     Begin: Span {
-      Keyword("begin"),
+      Keyword("{"),
       Space,
       name,
       EndMarker,
@@ -120,7 +120,7 @@ with Nexus {
     Empty,
   };
 
-  CharacterFile(taxa) begin
+  CharacterFile(taxa) {
     var maxlength = ((each taxa).TaxonName.Length).Max + 1;
     var total     = taxa[0].Characters.Length;
     return NexusFile {

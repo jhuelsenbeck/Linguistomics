@@ -698,13 +698,13 @@ with IPA {
     SegmentCell(each segments)
   };
 
-  AlphaOrder(x, y) begin
+  AlphaOrder(x, y) {
     var cl = Math.Compare(x.Ipa.Length, y.Ipa.Length);
     if (cl == 0)
       cl = -Math.Compare(x.Ipa, y.Ipa)
     end
     return cl;
-  end
+  }
 
   SortedSegments = Results.UsedSegments.Sort(false, AlphaOrder);
 
@@ -741,12 +741,12 @@ with IPA {
     segment.?Ipa
   };
 
-  SegmentSound(segment) begin
+  SegmentSound(segment) {
     if (segment == SpaceSegment)
       return Space;
     end
     return segment.Name
-  end
+  }
 
   LangHasMeaning(word, meaning) = word.Meaning == meaning;
   FindWordsWithMeaning(language, meaning) = language.Words.FindSlice(LangHasMeaning, meaning);
@@ -755,18 +755,18 @@ with IPA {
   // Build a dictionary with SAMPA text as the key
   //======================================================================
 
-  GatherText(set, segment) begin
+  GatherText(set, segment) {
     if (segment.Sampa.Length > 0)
       set.AddElement(segment, segment.Sampa)
     end
-  end
+  }
 
-  SampaSet begin
+  SampaSet {
     var set = Type.Dictionary(128);
     GatherText(set, each Segments);
     set.AddElement(SpaceSegment, " ");
     return set;
-  end
+  }
 
   //======================================================================
   // Code for Euler segment diagram
@@ -776,7 +776,7 @@ with IPA {
   EX(x)     = ChartSize * x * 0.01;
   EY(y)     = ChartSize * y * 0.01;
 
-  Enclosure(x, y, w, h, color) begin
+  Enclosure(x, y, w, h, color) {
     var size = Size(EX(w), EY(h));
     return Canvas {
       X: EX(x),
@@ -788,7 +788,7 @@ with IPA {
         Rectangle(Rect(0, size), Size(6 pts))
       }
     };
-  end
+  }
 
   NameBox(name, angle=0) = Paragraph {
     Transform: Rotate(angle),
