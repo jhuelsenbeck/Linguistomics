@@ -36,7 +36,6 @@ with Results {
     list.AddElement(each cell.Segments);
     if (pad > 0)
       AddBlank(list, each 1..pad);
-    end
     list.AddElement(IPA.RightSegment);
   }
 
@@ -47,25 +46,26 @@ with Results {
   }
 
   SegmentToCharacter(segment) {
-    if (segment.Punctuation)
+    if (segment.Punctuation) {
       return {
         Character: segment.Ipa,
         Segment: segment
-      }
-    end
+      };
+    }
 
     var f = UniqueSegments.FindIndex(DisplayCharacters.SameSegment, {Segment: segment});
-    if (f.Length == 1)
+    if (f.Length == 1) {
       return {
         Character: Nexus.CharacterList[f[0]],
         Segment: segment
-      }
-    else
+      };
+    }
+    else {
       return {
         Character: '?',
         Segment: IPA.NoSegment
-      }
-    end
+      };
+    }
   }
 
   GetTaxaArray(lang) {
@@ -261,7 +261,6 @@ with DisplayCharacters {
   CollectLangWord(set, segment, word) {
     if (word.Segments.Contains(SameSegment, {Segment: segment}))
       set.AddElement(word, word.Sampa);
-    end
   }
 
   CollectLanguageWords(set, segment, language) {
@@ -329,37 +328,35 @@ with MatchingOptions {
 
   SegmentText(segments, segment) {
     if (not segment.Impossible)
-      segments.AddElement(segment)
-    end
+      segments.AddElement(segment);
     return ShowSegment(segment);
   }
 
   SegmentBox(segments, segment, color) = Canvas {
     HAlign: HAligns.Center,
     Size: Metrics.BoxSize,
-    if (segment.?Ipa)
+    if (segment.?Ipa) {
       TextHeight: Metrics.BoxSize.Height - 4 pts,
       TextColor: color,
       SegmentText(segments, segment)
+    }
     else
-      Style.ImpossibleBackground
-    end
+      Style.ImpossibleBackground;
   };
 
   ShowBox(segments, segment, color) = SegmentBox(segments, segment, color) {
     if (segment.Features.HasFlag(Voiced))
-      X: Metrics.BoxSize.Width
-    end
+      X: Metrics.BoxSize.Width;
   };
 
   MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Features.HasFlag(Voiced) == matches[1].Features.HasFlag(Voiced));
 
   SegmentBlock(segments, matches) = Cell {
     Style.SegmentBottom,
-    if (matches.Length > 0)
+    if (matches.Length > 0) {
       if (matches.Length == 1 and matches[0].Impossible)
-        Style.ImpossibleBackground
-      else
+        Style.ImpossibleBackground;
+      else {
         TextHeight: 1 pts,
         Span {
           Canvas {
@@ -367,8 +364,8 @@ with MatchingOptions {
             ShowBox(segments, each matches, MatchError(matches) ? Colors.Red : Colors.Black)
           }
         }
-      end
-    end
+      }
+    }
   };
 
   AddCell(segments, options, place, f) = SegmentBlock(segments, AllSegments.FindSlice(MatchRow, {Place: place, Features: f, Options: options}));
@@ -384,10 +381,9 @@ with MatchingOptions {
         TextHeight: 7 pts,
 
         if (options.?RowLabels)
-          options.RowLabels[EachIndex],
+          options.RowLabels[EachIndex];
         else
-          f,
-        end,
+          f;
       },
       AddCell(segments, options, each places, allflags)
     }
@@ -429,17 +425,15 @@ with MatchingVowels {
     Style.SegmentBottom,
     HAlign: HAligns.Center,
     TextHeight: Metrics.BoxSize.Height,
-    if (matches.Length == 2)
+    if (matches.Length == 2) {
       Span {
         MatchingOptions.SegmentText(set, matches[0]),
         " • " {TextColor: Colors.LightGray},
         MatchingOptions.SegmentText(set, matches[1]),
       }
-    else
-      if (matches.Length == 1)
-        MatchingOptions.SegmentText(set, matches[0]),
-      end
-    end
+    }
+    else if (matches.Length == 1)
+      MatchingOptions.SegmentText(set, matches[0]);
   };
 
   MatchVowelAny(segment, data)          = segment.Features.HasFlagMask(Vowel LongVowel Nasal, data.Feature | Vowel) and segment.Open == data.Open;
@@ -448,7 +442,7 @@ with MatchingVowels {
   AddCell(set, feature, open, backness) = AddBlock(set, Results.UsedSegments.FindSlice(MatchVowelPair, {Open: open, Feature: feature, Backness: backness}));
 
   AddRow(set, feature, open) {
-    if (FindAnyOpen(set, feature, open))
+    if (FindAnyOpen(set, feature, open)) {
       return Row {
         Cell {
           VAlign: VAligns.Center,
@@ -457,9 +451,9 @@ with MatchingVowels {
         },
         AddCell(set, feature, open, each Backnesses)
       };
+    }
     else
-      return null
-    end
+      return null;
   }
 
   ShowVowelTable(set, feature, title) = Table {
@@ -565,8 +559,7 @@ with CompleteMeanings {
 
   CollectMeanings(set, meaning) {
     if (not Results.UsedLanguages.Contains(WithoutMeaning, {Meaning: meaning}))
-      set.AddElement(meaning)
-    end
+      set.AddElement(meaning);
   }
 
   Find {
@@ -618,7 +611,7 @@ with SegmentTree {
 
   AddSegments(set, name, func, data) {
     var segments = Results.UsedSegments.FindSlice(func, data);
-    if (segments.Length > 0)
+    if (segments.Length > 0) {
       return Node {
         Label: Frame {
           Width: 3.5 inches,
@@ -638,9 +631,9 @@ with SegmentTree {
           }
         }
       };
+    }
     else
       return null;
-    end
   }
 
   MatchVowel(segment, data) = segment.Features.HasFlag(Vowel) and segment.Backness == data.Backness;
@@ -711,8 +704,7 @@ with SAMPAConversion {
   AlphaOrder(x, y) {
     var cl = Math.Compare(x.Sampa.Length, y.Sampa.Length);
     if (cl == 0)
-      cl = -Math.Compare(x.Sampa, y.Sampa)
-    end
+      cl = -Math.Compare(x.Sampa, y.Sampa);
     return cl;
   }
 

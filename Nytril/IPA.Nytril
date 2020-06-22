@@ -623,21 +623,20 @@ with IPA {
   };
 
   SegmentName(segment) = Span {
-    if (segment.Features.HasFlag(Vowel))
+    if (segment.Features.HasFlag(Vowel)) {
       segment.Open,
       Space,
       segment.Backness,
+    }
     else
-      segment.Place,
-    end,
+      segment.Place;
     Space,
     Span {
       Separator: Space,
       if (segment.Diacritic)
-        segment.Description
+        segment.Description;
       else
-        each segment.Features,
-      end
+        each segment.Features;
     }
   };
 
@@ -665,21 +664,19 @@ with IPA {
       Span {
         Separator: Lang.Separator,
         if (segment.Ipa)
-          Type.Integer(each segment.Ipa)
-        end
+          Type.Integer(each segment.Ipa);
       }
     },
     Paragraph {
       TextHeight: 8 pts,
-      if (segment.Sampa and segment.Sampa.Length > 0)
+      if (segment.Sampa and segment.Sampa.Length > 0) {
         ParBackground: 90%,
         ShowSampa(segment.Sampa)
-      else
-        if (segment.Ipa.Length > 0)
-          "No Sampa" {TextColor: Colors.White},
-          ParBackground: Colors.Red,
-        end
-      end
+      }
+      else if (segment.Ipa.Length > 0) {
+        "No Sampa" {TextColor: Colors.White},
+        ParBackground: Colors.Red,
+      }
     },
   };
 
@@ -701,8 +698,7 @@ with IPA {
   AlphaOrder(x, y) {
     var cl = Math.Compare(x.Ipa.Length, y.Ipa.Length);
     if (cl == 0)
-      cl = -Math.Compare(x.Ipa, y.Ipa)
-    end
+      cl = -Math.Compare(x.Ipa, y.Ipa);
     return cl;
   }
 
@@ -731,20 +727,18 @@ with IPA {
     Style.IPAFamily,
     Popup: Call(SegmentPopup, segment),
 //    Link: segment.Key,
-    if (segment.?Impossible)
+    if (segment.?Impossible) {
       Assert(false, Lang.Impossible),
       TextColor: Colors.Red,
-    end,
+    }
     if (segment.?Diacritic)
-      "  ",
-    end,
+      "  ";
     segment.?Ipa
   };
 
   SegmentSound(segment) {
     if (segment == SpaceSegment)
       return Space;
-    end
     return segment.Name
   }
 
@@ -757,8 +751,7 @@ with IPA {
 
   GatherText(set, segment) {
     if (segment.Sampa.Length > 0)
-      set.AddElement(segment, segment.Sampa)
-    end
+      set.AddElement(segment, segment.Sampa);
   }
 
   SampaSet {
@@ -809,8 +802,7 @@ with IPA {
       Width: EX(width),
       ParAlignment: ParAlignments.Center,
       if (name)
-        name Bold,
-      end,
+        Span {Bold, name};
       Paragraph {
         Separator: Space,
         IPA.ShowSegment(each FeatureSegments(features))
@@ -936,15 +928,12 @@ with IPA {
   };
 
   FeatureBox(feature, features0, features1) = RowBox {
-    if (features0.HasFlag(feature))
+    if (features0.HasFlag(feature)) {
       if (not features1.HasFlag(feature))
-        Background: Colors.Red,
-      end
-    else
-      if (features1.HasFlag(feature))
-        Background: Colors.Green,
-      end
-    end
+        Background: Colors.Red;
+    }
+    else if (features1.HasFlag(feature))
+      Background: Colors.Green;
   };
 
   FeatureSegment(segment0, segment1) = Group {
@@ -959,8 +948,7 @@ with IPA {
       Vertical: true,
       RowBox {
         if (EachIndex == 0)
-          ShowSegment(line0.Segments[index]),
-        end,
+          ShowSegment(line0.Segments[index]);
       },
       RowBox {
         ShowSegment(line.Segments[index]),
@@ -977,8 +965,7 @@ with IPA {
 
   DriftMatrix(lines, index) = Group {
     if (index != 0)
-      BorderL: BorderSize,
-    end,
+      BorderL: BorderSize;
     DriftFeatures(lines[0], each lines[1..], index)
   };
 

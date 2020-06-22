@@ -29,8 +29,7 @@ with Style {
 
   RowBar(i) = {
     if (i mod 2 != 0)
-      Background: 95%
-    end
+      Background: 95%;
   };
 
   WhitePaper = Document {
@@ -63,11 +62,11 @@ with Style {
   };
 
   TitleCase(text) = Span {
-    if (text)
+    if (text) {
       TextUppercase: true,
       Separator: Space,
       TitleWord(each text.Split(Space))
-    end
+    }
   };
 
   Title(text) = Paragraph {
@@ -135,8 +134,7 @@ with Style {
 
   Collect(list, node) {
     if (node.Label)
-      list.AddElement(node, node.Label)
-    end
+      list.AddElement(node, node.Label);
     Collect(list, each node);
   }
 
@@ -201,8 +199,7 @@ with Style {
       Span {
         Separator: Space,
         if (author.Website)
-          Link: author.Website,
-        end,
+          Link: author.Website;
         author.First, author.Middle, author.Last,
       }
     },
@@ -239,32 +236,33 @@ with Style {
   ShowReference(r) = Paragraph {
     LeftIndent: 0.25 inches,
     FirstIndent: -0.25 inches,
-    if (r.Author)
+    if (r.Author) {
       TitleCase(r.Author),
-      if (r.Title)
+      if (r.Title) {
         Lang.Separator,
         r.Title,
-      end,
+      },
+    }
     else
-      r.Title
-    end,
-    if (r.Year)
+      r.Title;
+
+    if (r.Year) {
       Lang.Separator,
       r.Year,
-    end,
-    if (r.Publisher)
+    }
+    if (r.Publisher) {
       Lang.Separator,
       Italic r.Publisher,
       r.?Page,
-    end,
-    if (r.?Link)
+    }
+    if (r.?Link) {
       ". : ",
        Span {
          Link: r.Link,
          TextColor: Colors.DarkBlue,
          r.Link
-        }
-    end,
+       }
+    }
   };
 
   ShowReferences(references) = Block {
