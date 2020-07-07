@@ -25,22 +25,22 @@ with Results {
   }
 
   AddBlank(list, index) {
-    list.AddElement(IPA.GapSegment);
+    list.Add(IPA.GapSegment);
   }
 
   AddWord(list, langindex, meaning) {
     var ma   = WordMeaningArray[EachIndex];
     var cell = ma.Cells[langindex];
     var pad  = ma.MaxLength - cell.Count;
-    list.AddElement(IPA.LeftSegment);
-    list.AddElement(each cell.Segments);
+    list.Add(IPA.LeftSegment);
+    list.Add(each cell.Segments);
     if (pad > 0)
       AddBlank(list, each 1..pad);
-    list.AddElement(IPA.RightSegment);
+    list.Add(IPA.RightSegment);
   }
 
   GetSegments(langindex) {
-    var list = Type.List(150);
+    var list = new ListClass(150);
     AddWord(list, langindex, each UsedMeanings);
     return list;
   }
@@ -139,7 +139,7 @@ with MatchingConsonants {
   };
 
   ShowTables {
-    var segments = Type.Dictionary(256);
+    var segments = new DictionaryClass(256);
     return Block {
       MatchingOptions.ShowTable(segments, each [PulmonicTable, NonPulmonicTable]),
       PageBreak,
@@ -243,7 +243,7 @@ with DisplayCharacters {
 
 
   CollectWord(set, word) {
-    set.AddElement(each word.Segments);
+    set.Add(each word.Segments);
   }
 
   CollectLanguage(set, language) {
@@ -251,7 +251,7 @@ with DisplayCharacters {
   }
 
   FindUniqueSegments(languagelist) {
-    var set = Type.Dictionary(256);
+    var set = new DictionaryClass(256);
     CollectLanguage(set, each languagelist);
     return set.ValueList;
   }
@@ -260,7 +260,7 @@ with DisplayCharacters {
 
   CollectLangWord(set, segment, word) {
     if (word.Segments.Contains(SameSegment, {Segment: segment}))
-      set.AddElement(word, word.Sampa);
+      set.Add(word, word.Sampa);
   }
 
   CollectLanguageWords(set, segment, language) {
@@ -268,7 +268,7 @@ with DisplayCharacters {
   }
 
   WordsWithSegment(segment) {
-    var set = Type.Dictionary(256);
+    var set = new DictionaryClass(256);
     CollectLanguageWords(set, segment, each Results.UsedLanguages);
     return set.ValueList;
   }
@@ -328,7 +328,7 @@ with MatchingOptions {
 
   SegmentText(segments, segment) {
     if (not segment.Impossible)
-      segments.AddElement(segment);
+      segments.Add(segment);
     return ShowSegment(segment);
   }
 
@@ -559,11 +559,11 @@ with CompleteMeanings {
 
   CollectMeanings(set, meaning) {
     if (not Results.UsedLanguages.Contains(WithoutMeaning, {Meaning: meaning}))
-      set.AddElement(meaning);
+      set.Add(meaning);
   }
 
   Find {
-    var set = Type.Dictionary(128);
+    var set = new DictionaryClass(128);
     CollectMeanings(set, each WordMeanings);
     return set.ValueList;
   }
@@ -605,7 +605,7 @@ with SegmentTree {
   };
 
   AddSegment(set, segment) {
-    set.AddElement(segment);
+    set.Add(segment);
     return ShowSegment(segment)
   }
 
@@ -654,8 +654,8 @@ with SegmentTree {
   };
 
   ShowTree {
-    var set1 = Type.Dictionary(256);
-    var set2 = Type.Dictionary(256);
+    var set1 = new DictionaryClass(256);
+    var set2 = new DictionaryClass(256);
     var all  = Vowel Pulmonic Affricate;
 
     return Block {

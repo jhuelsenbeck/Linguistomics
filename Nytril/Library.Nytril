@@ -6,12 +6,12 @@ with TreeLib {
 
   VisitNodeTaxa(set, node) {
     if (node.?Data)
-      set.AddElement(node.Data);
+      set.Add(node.Data);
     VisitNodeTaxa(set, each node);
   }
 
   GetTaxaLabels(tree) {
-    var set = Type.Dictionary(256);
+    var set = new DictionaryClass(256);
     VisitNodeTaxa(set, tree);
     return (each set.ValueList).Name;
   }
@@ -120,7 +120,7 @@ with Nexus {
   };
 
   CharacterFile(taxa) {
-    var maxlength = ((each taxa).TaxonName.Length).Max + 1;
+    var maxlength = ((each ((each taxa).TaxonName)).Length).Max + 1;
     var total     = taxa[0].Characters.Length;
     return NexusFile {
       Scope("DATA") {
