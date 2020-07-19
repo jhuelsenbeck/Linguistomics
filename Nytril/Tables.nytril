@@ -2,10 +2,8 @@
 //======================================================================
 
 with Results {
-  FindMeaning(word, data) = word.Meaning == data;
-
   GetGeneText(meaning, language) {
-    var words    = language.Words.FindSlice(FindMeaning, meaning, 1);
+    var words    = language.Words.FindSlice(word => word.Meaning == meaning, 1);
     var segments = words.Length == 1 ? words[0].Segments : [IPA.NoSegment];
     return {
       Language: language,
@@ -53,7 +51,7 @@ with Results {
       };
     }
 
-    var f = UniqueSegments.FindIndex(DisplayCharacters.SameSegment, {Segment: segment});
+    var f = UniqueSegments.FindIndex(s => s == segment);
     if (f.Length >= 1) {
       return {
         Character: Nexus.CharacterList[f[0]],
@@ -77,14 +75,13 @@ with Results {
     }
   }
 
-  LangHasWords(language) = language.Words != null;
-  UsedLanguages          = Languages.FindSlice(LangHasWords);
-  UsedMeanings           = CompleteMeanings.Find;
-  WordMeaningArray       = GetMeaningRecord(each UsedMeanings);
-  UniqueSegments         = DisplayCharacters.FindUniqueSegments(UsedLanguages);
-  TaxaArray              = GetTaxaArray(each UsedLanguages);
-  LanguageTreeFile       = Nexus.TreeFile(Info.LanguageTree);
-  CharacterFile          = Nexus.CharacterFile(TaxaArray);
+  UsedLanguages    = Languages.FindSlice(lang => lang.Words != null);
+  UsedMeanings     = CompleteMeanings.Find;
+  WordMeaningArray = GetMeaningRecord(each UsedMeanings);
+  UniqueSegments   = DisplayCharacters.FindUniqueSegments(UsedLanguages);
+  TaxaArray        = GetTaxaArray(each UsedLanguages);
+  LanguageTreeFile = Nexus.TreeFile(Info.LanguageTree);
+  CharacterFile    = Nexus.CharacterFile(TaxaArray);
 
 //  UsedSegments = UniqueSegments;
   UsedSegments = IPA.Segments;
@@ -237,10 +234,8 @@ with AllWords {
 //======================================================================
 
 with DisplayCharacters {
-  WordMatch(meaning, def) = meaning == def.Meaning;
-  CompleteWord(def)       = Results.UsedMeanings.Contains(WordMatch, def);
-  GetWordList(language)   = language.Words.FindSlice(CompleteWord);
-
+  CompleteWord(def)     = Results.UsedMeanings.Contains(meaning => meaning == def.Meaning);
+  GetWordList(language) = language.Words.FindSlice(def => CompleteWord(def));
 
   CollectWord(set, word) {
     set.Add(each word.Segments);
@@ -256,10 +251,8 @@ with DisplayCharacters {
     return set.ValueList;
   }
 
-  SameSegment(segment, data) = segment == data.Segment;
-
   CollectLangWord(set, segment, word) {
-    if (word.Segments.Contains(SameSegment, {Segment: segment}))
+    if (word.Segments.Contains(s => s == segment))
       set.Add(word, word.Sampa);
   }
 
@@ -313,17 +306,18 @@ with DisplayCharacters {
 with MatchingOptions {
   CheckFlags(sflags, rflags, options) = sflags.NotFlag(options.Exclude) and sflags.HasFlag(options.Include) and sflags.HasFlagMask(options.RowMask | rflags, rflags);
 
-  AnyManners(f, data)                 = CheckFlags(data.Features, f | data.Options.All, data.Options);
+  AnyManners(manner, features, options) = CheckFlags(features, manner | options.All, options);
 
-  SamePlace(segment, data)            = segment.?Place && data.?Place && segment.Place == data.Place;
+  SamePlace(segment, data)            = segment.?Place and data.?Place and segment.Place == data.Place;
   MatchRow(segment, data)             = SamePlace(segment, data) and CheckFlags(segment.Features, data.Features, data.Options);
 
-  MatchInclude(segment, data)         = SamePlace(segment, data) and segment.Features.NotFlag(data.Options.Exclude) and
+  MatchInclude(segment, data)         = SamePlace(segment, data) and
+                                        segment.Features.NotFlag(data.Options.Exclude) and
                                         segment.Features.HasFlag(data.Options.Include) and
-                                        data.Options.Manners.Contains(AnyManners, {Features: segment.Features, Options: data.Options});
+                                        data.Options.Manners.Contains(manner => AnyManners(manner, segment.Features, data.Options));
 
-  MatchPlace(place, options)          = AllSegments.Contains(MatchInclude, {Place: place, Options: options});
-  GetPlaces(options)                  = Places.FindSlice(MatchPlace, options);
+  MatchPlace(place, options)          = AllSegments.Contains(segment => MatchInclude(segment, {Place: place, Options: options}));
+  GetPlaces(options)                  = Places.FindSlice(place => MatchPlace(place, options));
 
 
   SegmentText(segments, segment) {
@@ -368,7 +362,7 @@ with MatchingOptions {
     }
   };
 
-  AddCell(segments, options, place, f) = SegmentBlock(segments, AllSegments.FindSlice(MatchRow, {Place: place, Features: f, Options: options}));
+  AddCell(segments, options, place, f) = SegmentBlock(segments, AllSegments.FindSlice(segment => MatchRow(segment, {Place: place, Features: f, Options: options})));
 
   AddRow(segments, options, places, f) {
     var allflags = f | options.All;
@@ -438,8 +432,8 @@ with MatchingVowels {
 
   MatchVowelAny(segment, data)          = segment.Features.HasFlagMask(Vowel LongVowel Nasal, data.Feature | Vowel) and segment.Open == data.Open;
   MatchVowelPair(segment, data)         = segment.?Backness and data?.Backness and segment.Backness == data.Backness and MatchVowelAny(segment, data);
-  FindAnyOpen(set, feature, open)       = Results.UsedSegments.Contains(MatchVowelAny, {Open: open, Feature: feature});
-  AddCell(set, feature, open, backness) = AddBlock(set, Results.UsedSegments.FindSlice(MatchVowelPair, {Open: open, Feature: feature, Backness: backness}));
+  FindAnyOpen(set, feature, open)       = Results.UsedSegments.Contains(segment => MatchVowelAny(segment, {Open: open, Feature: feature}));
+  AddCell(set, feature, open, backness) = AddBlock(set, Results.UsedSegments.FindSlice(segment => MatchVowelPair(segment, {Open: open, Feature: feature, Backness: backness})));
 
   AddRow(set, feature, open) {
     if (FindAnyOpen(set, feature, open)) {
@@ -517,8 +511,6 @@ with MatchingDiacritics {
 //======================================================================
 
 with MatchingOther {
-  MatchOther(segment, set) = not set.Contains(segment);
-
   ColumnDiv = 2;
 
   AddCell(segment) = {
@@ -544,7 +536,7 @@ with MatchingOther {
       Style.TableEdge,
       Columns: [Metrics.BoxSize.Width, Metrics.Content.Width * 0.5 - Metrics.BoxSize.Width] * ColumnDiv,
       Style.TitleBar(Lang.OtherSegments, ColumnDiv*2),
-      AddRow(each (Results.UsedSegments.FindSlice(MatchOther, set) / ColumnDiv)),
+      AddRow(each (Results.UsedSegments.FindSlice(segment => not set.Contains(segment)) / ColumnDiv)),
     },
     Style.TableNotes
   };
@@ -554,11 +546,11 @@ with MatchingOther {
 //======================================================================
 
 with CompleteMeanings {
-  ContainsMeaning(word, data)    = word.Meaning == data.Meaning;
-  WithoutMeaning(language, data) = not language.Words.Contains(ContainsMeaning, data);
+  ContainsMeaning(word, meaning)    = word.Meaning == meaning;
+  WithoutMeaning(language, meaning) = not language.Words.Contains(word => ContainsMeaning(word, meaning));
 
   CollectMeanings(set, meaning) {
-    if (not Results.UsedLanguages.Contains(WithoutMeaning, {Meaning: meaning}))
+    if (not Results.UsedLanguages.Contains(language => WithoutMeaning(language, meaning)))
       set.Add(meaning);
   }
 
@@ -609,8 +601,8 @@ with SegmentTree {
     return ShowSegment(segment)
   }
 
-  AddSegments(set, name, func, data) {
-    var segments = Results.UsedSegments.FindSlice(func, data);
+  AddSegments(set, name, predicate) {
+    var segments = Results.UsedSegments.FindSlice(predicate);
     if (segments.Length > 0) {
       return Node {
         Label: Frame {
@@ -636,17 +628,18 @@ with SegmentTree {
       return null;
   }
 
-  MatchVowel(segment, data) = segment.Features.HasFlag(Vowel) and segment.Backness == data.Backness;
-  AddVowels(set, backness)  = AddSegments(set, backness.Name, MatchVowel, {Backness: backness});
+  MatchVowel(segment, backness)  = segment.Features.HasFlag(Vowel) and segment.Backness == backness;
+  AddVowels(set, backness)       = AddSegments(set, backness.Name, segment => MatchVowel(segment, backness));
 
-  MatchFlags(segment, data) = not data.Set.Contains(segment) and segment.Features.HasFlagMask(data.All, data.Features) and segment.Features.HasFlagMask(data.Other, data.Other);
-  AddFlag(set, all, features, f)   = AddSegments(set, f.Name, MatchFlags, {Set: set, All: all, Features: features, Other: f});
+  MatchFlags(segment, data)      = not data.Set.Contains(segment) and
+                                   segment.Features.HasFlagMask(data.All, data.Features) and
+                                   segment.Features.HasFlagMask(data.Other, data.Other);
+
+  AddFlag(set, all, features, f) = AddSegments(set, f.Name, segment => MatchFlags(segment, {Set: set, All: all, Features: features, Other: f}));
 
   AddConsonants(set, name, all, features) = AddNode(name) {
     AddFlag(set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]),
   };
-
-  MatchAny(segment, data) = true;
 
   AddVoicedPairs(set, name, all, features) = AddNode(name) {
     AddConsonants(set, Lang.Voiced, all Voiced, features Voiced),
@@ -674,7 +667,7 @@ with SegmentTree {
             AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic),
             AddVoicedPairs(set1, Lang.NonPulmonic, all, NoFeature),
           },
-          AddSegments(set2, Lang.OtherSegments, MatchAny, set1)
+          AddSegments(set2, Lang.OtherSegments, segment => true)
         }
       }
     }
@@ -702,9 +695,9 @@ with SAMPAConversion {
   };
 
   AlphaOrder(x, y) {
-    var cl = Math.Compare(x.Sampa.Length, y.Sampa.Length);
+    var cl = x.Sampa.Length.Compare(y.Sampa.Length);
     if (cl == 0)
-      cl = -Math.Compare(x.Sampa, y.Sampa);
+      cl = -x.Sampa.Compare(y.Sampa);
     return cl;
   }
 

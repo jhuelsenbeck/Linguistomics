@@ -680,11 +680,6 @@ with IPA {
     },
   };
 
-  SegmentPopup(segment) = Frame {
-    Width: 2 inches,
-    SegmentDisplay(segment, null)
-  };
-
   SegmentCell(segment) = Cell {
     Edge: 0.25 pts {Color: Colors.LightGray},
     Padding: 2 pts,
@@ -696,9 +691,9 @@ with IPA {
   };
 
   AlphaOrder(x, y) {
-    var cl = Math.Compare(x.Ipa.Length, y.Ipa.Length);
+    var cl = x.Ipa.Length.Compare(y.Ipa.Length);
     if (cl == 0)
-      cl = -Math.Compare(x.Ipa, y.Ipa);
+      cl = -x.Ipa.Compare(y.Ipa);
     return cl;
   }
 
@@ -717,18 +712,27 @@ with IPA {
     (each word.Segments).Ipa
   };
 
+  SegmentPopup(segment) = Frame {
+    if (segment.?Features) {
+      Width: 2 inches,
+      SegmentDisplay(segment, null)
+    }
+    else
+      "Separator";
+  };
+
   ShowCharacter(c) = Span {
-    Popup: Call(SegmentPopup, c.Segment),
-//    Link: c.Segment.Key,
+    Popup: Delegate(SegmentPopup, c.Segment),
+    Link: c.Segment.Key,
     c.Character
   };
 
   ShowSegment(segment) = Span {
     Style.IPAFamily,
-    Popup: Call(SegmentPopup, segment),
-//    Link: segment.Key,
+    Popup: Delegate(SegmentPopup, segment),
+    Link: segment.Key,
     if (segment.?Impossible) {
-      Assert(false, Lang.Impossible),
+      System.Assert(false, Lang.Impossible),
       TextColor: Colors.Red,
     }
     if (segment.?Diacritic)
@@ -742,8 +746,7 @@ with IPA {
     return segment.Name
   }
 
-  LangHasMeaning(word, meaning) = word.Meaning == meaning;
-  FindWordsWithMeaning(language, meaning) = language.Words.FindSlice(LangHasMeaning, meaning);
+  FindWordsWithMeaning(language, meaning) = language.Words.FindSlice(word => word.Meaning == meaning);
 
   //======================================================================
   // Build a dictionary with SAMPA text as the key
@@ -792,8 +795,8 @@ with IPA {
   };
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
-  MatchFeature(segment, data) = segment.Features.HasFlagMask(FeatureMask, data);
-  FeatureSegments(features)   = Results.UsedSegments.FindSlice(MatchFeature, features);
+
+  FeatureSegments(features) = Results.UsedSegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
 
   FeatureFrame(x, y, width, name, features) = Canvas {
     X: EX(x),
@@ -906,13 +909,6 @@ with IPA {
   BoxWidth    = 6 pts;
   BorderSize  = 0.33 pts;
   FeatureList = FeatureSet[1..];
-
-  FeaturePopup(feature) = Frame {
-    Width: 2 inches,
-    Paragraph {
-      feature.Name
-    }
-  };
 
   RowBox = Canvas {
     Height: RowHeight,
