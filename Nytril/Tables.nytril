@@ -304,26 +304,30 @@ with DisplayCharacters {
 //======================================================================
 
 with MatchingOptions {
-  CheckFlags(sflags, rflags, options) = sflags.NotFlag(options.Exclude) and sflags.HasFlag(options.Include) and sflags.HasFlagMask(options.RowMask | rflags, rflags);
+  CheckFlags(sflags, rflags, options)   = sflags.NotFlag(options.Exclude)
+                                          and sflags.HasFlag(options.Include)
+                                          and sflags.HasFlagMask(options.RowMask | rflags, rflags);
 
   AnyManners(manner, features, options) = CheckFlags(features, manner | options.All, options);
 
-  SamePlace(segment, data)            = segment.?Place and data.?Place and segment.Place == data.Place;
-  MatchRow(segment, data)             = SamePlace(segment, data) and CheckFlags(segment.Features, data.Features, data.Options);
+  SamePlace(segment, place)             = segment.?Place and place and
+                                          segment.Place == place;
 
-  MatchInclude(segment, data)         = SamePlace(segment, data) and
-                                        segment.Features.NotFlag(data.Options.Exclude) and
-                                        segment.Features.HasFlag(data.Options.Include) and
-                                        data.Options.Manners.Contains(manner => AnyManners(manner, segment.Features, data.Options));
+  MatchInclude(segment, place, options) = SamePlace(segment, place) and
+                                        segment.Features.NotFlag(options.Exclude) and
+                                        segment.Features.HasFlag(options.Include) and
+                                        options.Manners.Contains(manner => AnyManners(manner, segment.Features, options));
 
-  MatchPlace(place, options)          = AllSegments.Contains(segment => MatchInclude(segment, {Place: place, Options: options}));
+  MatchPlace(place, options)          = AllSegments.Contains(segment => MatchInclude(segment, place, options));
   GetPlaces(options)                  = Places.FindSlice(place => MatchPlace(place, options));
 
 
   SegmentText(segments, segment) {
-    if (not segment.Impossible)
+    if (not segment.Impossible) {
       segments.Add(segment);
-    return ShowSegment(segment);
+      return ShowSegment(segment);
+    }
+    return null;
   }
 
   SegmentBox(segments, segment, color) = Canvas {
@@ -362,7 +366,9 @@ with MatchingOptions {
     }
   };
 
-  AddCell(segments, options, place, f) = SegmentBlock(segments, AllSegments.FindSlice(segment => MatchRow(segment, {Place: place, Features: f, Options: options})));
+  AddCell(segments, options, place, features) {
+    return SegmentBlock(segments, AllSegments.FindSlice(s => SamePlace(s, place) and CheckFlags(s.Features, features, options)));
+  }
 
   AddRow(segments, options, places, f) {
     var allflags = f | options.All;
