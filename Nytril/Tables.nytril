@@ -6,10 +6,10 @@ with Results {
     var words    = language.Words.FindSlice(word => word.Meaning == meaning, 1);
     var segments = words.Length == 1 ? words[0].Segments : [IPA.NoSegment];
     return {
-      Language: language,
-      Meaning: meaning,
-      Word: words[0],
-      Segments: segments,
+      Language: language;
+      Meaning: meaning;
+      Word: words[0];
+      Segments: segments;
       Count: segments.Length
     }
   }
@@ -17,7 +17,7 @@ with Results {
   GetMeaningRecord(meaning) {
     var cells = GetGeneText(meaning, each UsedLanguages);
     return {
-       Cells: cells,
+       Cells: cells;
        MaxLength: ((each cells).Count).Max
     };
   }
@@ -46,7 +46,7 @@ with Results {
   SegmentToCharacter(segment) {
     if (segment.Punctuation) {
       return {
-        Character: segment.Ipa,
+        Character: segment.Ipa;
         Segment: segment
       };
     }
@@ -54,13 +54,13 @@ with Results {
     var f = UniqueSegments.FindIndex(s => s == segment);
     if (f.Length >= 1) {
       return {
-        Character: Nexus.CharacterList[f[0]],
+        Character: Nexus.CharacterList[f[0]];
         Segment: segment
       };
     }
     else {
       return {
-        Character: '?',
+        Character: '?';
         Segment: IPA.NoSegment
       };
     }
@@ -69,8 +69,8 @@ with Results {
   GetTaxaArray(lang) {
     var segments = GetSegments(EachIndex);
     return {
-      TaxonName: lang.Name,
-      Segments: segments,
+      TaxonName: lang.Name;
+      Segments: segments;
       Characters: SegmentToCharacter(each segments)
     }
   }
@@ -93,56 +93,56 @@ with Results {
 
 with MatchingConsonants {
   PulmonicTable = {
-    Title: Lang.PConsonants,
-    ColWidth: 45 pts,
-    Exclude: Affricate Ejective,
-    Include: Pulmonic,
-    All: NoFeature,
-    Manners: [Nasal, Stop, Sibilant Fricative, Fricative, Approximant, TapFlap, Trill, Lateral Fricative, Lateral Approximant, Lateral TapFlap],
-    RowMask: Nasal Stop Sibilant Fricative Approximant TapFlap Trill Lateral Velarized,
+    Title: Lang.PConsonants;
+    ColWidth: 45 pts;
+    Exclude: Affricate Ejective;
+    Include: Pulmonic;
+    All: NoFeature;
+    Manners: [Nasal, Stop, Sibilant Fricative, Fricative, Approximant, TapFlap, Trill, Lateral Fricative, Lateral Approximant, Lateral TapFlap];
+    RowMask: Nasal Stop Sibilant Fricative Approximant TapFlap Trill Lateral Velarized;
     Notes: Lang.SymbolPairVoiced
   };
 
   NonPulmonicTable = {
-    Title: Lang.NPConsonants,
-    ColWidth: 80 pts,
-    Exclude: Vowel Pulmonic Central,
-    Include: Ejective Click Implosive,
-    All: NoFeature,
-    Manners: [Ejective Stop, Ejective Fricative, Ejective Lateral Fricative, Click Tenuis, Click Nasal, Click Tenuis Lateral, Implosive],
-    RowMask: Lateral,
+    Title: Lang.NPConsonants;
+    ColWidth: 80 pts;
+    Exclude: Vowel Pulmonic Central;
+    Include: Ejective Click Implosive;
+    All: NoFeature;
+    Manners: [Ejective Stop, Ejective Fricative, Ejective Lateral Fricative, Click Tenuis, Click Nasal, Click Tenuis Lateral, Implosive];
+    RowMask: Lateral;
     Notes: Lang.SymbolPairVoiced
   };
 
   PulmonicAffricatesTable = {
-    Title: Lang.PulmonicAffricates,
-    ColWidth: 50 pts,
-    Exclude: Vowel,
-    Include: Affricate Sibilant Lateral,
-    All: Pulmonic Affricate,
-    RowLabels: [Lang.Sibilant, Lang.NonSibilant, Lang.Lateral],
-    Manners: [Sibilant, NoFeature, Lateral],
-    RowMask: Pulmonic Affricate Sibilant Fricative Lateral,
+    Title: Lang.PulmonicAffricates;
+    ColWidth: 50 pts;
+    Exclude: Vowel;
+    Include: Affricate Sibilant Lateral;
+    All: Pulmonic Affricate;
+    RowLabels: [Lang.Sibilant, Lang.NonSibilant, Lang.Lateral];
+    Manners: [Sibilant, NoFeature, Lateral];
+    RowMask: Pulmonic Affricate Sibilant Fricative Lateral;
   };
 
   EjectiveAffricatesTable = {
-    Title: Lang.EjectiveAffricates,
-    ColWidth: 50 pts,
-    Exclude: Vowel Click Implosive Pulmonic,
-    Include: Ejective Affricate Central Lateral,
-    All: Ejective Affricate,
-    Manners: [Central, Lateral],
-    RowMask: Pulmonic Approximant Central Lateral,
+    Title: Lang.EjectiveAffricates;
+    ColWidth: 50 pts;
+    Exclude: Vowel Click Implosive Pulmonic;
+    Include: Ejective Affricate Central Lateral;
+    All: Ejective Affricate;
+    Manners: [Central, Lateral];
+    RowMask: Pulmonic Approximant Central Lateral;
   };
 
   ShowTables {
     var segments = new DictionaryClass(256);
     return Block {
-      MatchingOptions.ShowTable(segments, each [PulmonicTable, NonPulmonicTable]),
-      PageBreak,
-      MatchingVowels.ShowTable(segments),
-      MatchingOptions.ShowTable(segments, each [PulmonicAffricatesTable, EjectiveAffricatesTable]),
-      MatchingOther.ShowTable(segments),
+      MatchingOptions.ShowTable(segments, each [PulmonicTable, NonPulmonicTable]);
+      PageBreak;
+      MatchingVowels.ShowTable(segments);
+      MatchingOptions.ShowTable(segments, each [PulmonicAffricatesTable, EjectiveAffricatesTable]);
+      MatchingOther.ShowTable(segments);
     }
   }
 }
@@ -150,48 +150,48 @@ with MatchingConsonants {
 
 with DisplayWords {
   WordRow(word) = Row {
-    Style.RowBar(EachIndex),
+    Style.RowBar(EachIndex);
     Cell {
-      Style.SansSerif,
-      Style.TitleBackground,
+      Style.SansSerif;
+      Style.TitleBackground;
       word.Meaning
-    },
+    };
     Cell {
       ShowSampa(word.Sampa)
-    },
+    };
     Cell {
       Span {
         ShowSegment(each word.Segments)
-      },
-    },
+      };
+    };
     Cell {
       Span {
-        Separator: "-",
+        Separator: "-";
         SegmentSound(each word.Segments)
       }
     }
   };
 
   HeaderCell(d) = Cell {
-    Style.SansSerif,
-    Style.TitleBackground,
-    EdgeB: 1 pts,
-    Padding: 2 pts,
+    Style.SansSerif;
+    Style.TitleBackground;
+    EdgeB: 1 pts;
+    Padding: 2 pts;
     d
   };
 
   ShowTable(language) = Block {
     Table {
-      Columns: [0.8 inches, 1 inches, 1 inches, Metrics.Content.Width - 2.5 inches],
-      Style.TitleBar(language.Name, 4),
+      Columns: [0.8 inches, 1 inches, 1 inches, Metrics.Content.Width - 2.5 inches];
+      Style.TitleBar(language.Name, 4);
       Row {
-        HeaderCell(Lang.Meaning),
-        HeaderCell(Lang.Sampa),
-        HeaderCell(Lang.IPA),
-        HeaderCell(Lang.Sounds),
-      },
+        HeaderCell(Lang.Meaning);
+        HeaderCell(Lang.Sampa);
+        HeaderCell(Lang.IPA);
+        HeaderCell(Lang.Sounds);
+      };
       WordRow(each language.Words)
-    },
+    };
     Style.TableNotes
   };
 }
@@ -204,30 +204,30 @@ with AllWords {
 
   AddRow(language, meanings) = Row {
     Cell {
-      Style.SansSerif,
-      TextColor: Colors.DarkGray,
+      Style.SansSerif;
+      TextColor: Colors.DarkGray;
       language.Name
-    },
+    };
     AddCell(each meanings, language)
   };
 
   MeaningTable(languages, meanings) = Block {
     Table {
-      Edge: 0.5,
-      Columns: [70 pts] + [54 pts] * meanings.Length,
+      Edge: 0.5;
+      Columns: [70 pts] + [54 pts] * meanings.Length;
       Row {
-        Style.TitleBackground,
-        Style.SansSerif,
-        Empty,
-        each meanings,
-      },
+        Style.TitleBackground;
+        Style.SansSerif;
+        Empty;
+        each meanings;
+      };
       AddRow(each languages, meanings)
-    },
-    Paragraph,
+    };
+    Paragraph;
   };
 
   ShowTable(languages, meanings) = Block {
-    TextHeight: 12 pts,
+    TextHeight: 12 pts;
     MeaningTable(languages, each (meanings / 8))
   };
 }
@@ -268,18 +268,18 @@ with DisplayCharacters {
 
   CharacterRow(segment) = Row {
     Cell {
-      HAlign: HAligns.Center,
-      Style.TitleBackground,
+      HAlign: HAligns.Center;
+      Style.TitleBackground;
       Nexus.CharacterList[EachIndex]
-    },
+    };
     Cell {
-      HAlign: HAligns.Center,
-      ShowSegment(segment),
-    },
+      HAlign: HAligns.Center;
+      ShowSegment(segment);
+    };
     Cell {
-      Style.IPAFamily,
+      Style.IPAFamily;
       Span {
-        Separator: Lang.Separator,
+        Separator: Lang.Separator;
         ShowIPA(each WordsWithSegment(segment))
       }
     }
@@ -287,15 +287,15 @@ with DisplayCharacters {
 
   ShowTable = Block {
     Table {
-      Style.TableEdge,
-      Columns: [0.5 inches, 0.7 inches, 6 inches],
+      Style.TableEdge;
+      Columns: [0.5 inches, 0.7 inches, 6 inches];
       Row {
-        Style.HeaderCell("Char.", HAligns.Center),
-        Style.HeaderCell(Lang.Segment, HAligns.Center),
+        Style.HeaderCell("Char.", HAligns.Center);
+        Style.HeaderCell(Lang.Segment, HAligns.Center);
         Style.HeaderCell("Words containing this segment")
-      },
-      CharacterRow(each Results.UniqueSegments),
-    },
+      };
+      CharacterRow(each Results.UniqueSegments);
+    };
     Style.TableNotes
   };
 }
@@ -331,11 +331,11 @@ with MatchingOptions {
   }
 
   SegmentBox(segments, segment, color) = Canvas {
-    HAlign: HAligns.Center,
-    Size: Metrics.BoxSize,
+    HAlign: HAligns.Center;
+    Size: Metrics.BoxSize;
     if (segment.?Ipa) {
-      TextHeight: Metrics.BoxSize.Height - 4 pts,
-      TextColor: color,
+      TextHeight: Metrics.BoxSize.Height - 4 pts;
+      TextColor: color;
       SegmentText(segments, segment)
     }
     else
@@ -350,15 +350,15 @@ with MatchingOptions {
   MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Features.HasFlag(Voiced) == matches[1].Features.HasFlag(Voiced));
 
   SegmentBlock(segments, matches) = Cell {
-    Style.SegmentBottom,
+    Style.SegmentBottom;
     if (matches.Length > 0) {
       if (matches.Length == 1 and matches[0].Impossible)
         Style.ImpossibleBackground;
       else {
-        TextHeight: 1 pts,
+        TextHeight: 1 pts;
         Span {
           Canvas {
-            Size: Metrics.CellSize,
+            Size: Metrics.CellSize;
             ShowBox(segments, each matches, MatchError(matches) ? Colors.Red : Colors.Black)
           }
         }
@@ -374,17 +374,17 @@ with MatchingOptions {
     var allflags = f | options.All;
     return Row {
       Cell {
-        VAlign: VAligns.Center,
-        EdgeR: 0.5 pts,
-        Style.TitleBackground,
-        PaddingLR: 2 pts,
-        TextHeight: 7 pts,
+        VAlign: VAligns.Center;
+        EdgeR: 0.5 pts;
+        Style.TitleBackground;
+        PaddingLR: 2 pts;
+        TextHeight: 7 pts;
 
         if (options.?RowLabels)
           options.RowLabels[EachIndex];
         else
           f;
-      },
+      };
       AddCell(segments, options, each places, allflags)
     }
   }
@@ -396,23 +396,23 @@ with MatchingOptions {
 
     return Block {
       Table {
-        Style.TableEdge,
+        Style.TableEdge;
         Columns: [options.ColWidth {EdgeR: 0.5 pts}] +
-                 [Metrics.CellSize.Width {HAlign: HAligns.Center, EdgeR: 0.25 pts}] * places.Length,
+                 [Metrics.CellSize.Width {HAlign: HAligns.Center; EdgeR: 0.25 pts}] * places.Length;
 
-        Style.TitleBar(options.Title, places.Length+1),
+        Style.TitleBar(options.Title, places.Length+1);
         Row {
-          TextHeight: 6 pts,
-          Style.HeaderCell(Bold Lang.Manner),
+          TextHeight: 6 pts;
+          Style.HeaderCell(Bold Lang.Manner);
           PlaceHeader(each places)
-        },
-        AddRow(segments, options, places, each options.Manners),
-      },
+        };
+        AddRow(segments, options, places, each options.Manners);
+      };
       Style.TableNotes {
-        Lang.ImpossibleShaded,
-        Space,
+        Lang.ImpossibleShaded;
+        Space;
         options.?Notes
-      },
+      };
     };
   }
 }
@@ -422,14 +422,14 @@ with MatchingOptions {
 
 with MatchingVowels {
   AddBlock(set, matches) = Cell {
-    Style.SegmentBottom,
-    HAlign: HAligns.Center,
-    TextHeight: Metrics.BoxSize.Height,
+    Style.SegmentBottom;
+    HAlign: HAligns.Center;
+    TextHeight: Metrics.BoxSize.Height;
     if (matches.Length == 2) {
       Span {
-        MatchingOptions.SegmentText(set, matches[0]),
-        " • " {TextColor: Colors.LightGray},
-        MatchingOptions.SegmentText(set, matches[1]),
+        MatchingOptions.SegmentText(set, matches[0]);
+        " • " {TextColor: Colors.LightGray};
+        MatchingOptions.SegmentText(set, matches[1]);
       }
     }
     else if (matches.Length == 1)
@@ -438,17 +438,17 @@ with MatchingVowels {
 
   MatchVowelAny(segment, data)          = segment.Features.HasFlagMask(Vowel LongVowel Nasal, data.Feature | Vowel) and segment.Open == data.Open;
   MatchVowelPair(segment, data)         = segment.?Backness and data?.Backness and segment.Backness == data.Backness and MatchVowelAny(segment, data);
-  FindAnyOpen(set, feature, open)       = Results.UsedSegments.Contains(segment => MatchVowelAny(segment, {Open: open, Feature: feature}));
-  AddCell(set, feature, open, backness) = AddBlock(set, Results.UsedSegments.FindSlice(segment => MatchVowelPair(segment, {Open: open, Feature: feature, Backness: backness})));
+  FindAnyOpen(set, feature, open)       = Results.UsedSegments.Contains(segment => MatchVowelAny(segment, {Open: open; Feature: feature}));
+  AddCell(set, feature, open, backness) = AddBlock(set, Results.UsedSegments.FindSlice(segment => MatchVowelPair(segment, {Open: open; Feature: feature; Backness: backness})));
 
   AddRow(set, feature, open) {
     if (FindAnyOpen(set, feature, open)) {
       return Row {
         Cell {
-          VAlign: VAligns.Center,
-          Style.TitleBackground,
+          VAlign: VAligns.Center;
+          Style.TitleBackground;
           open.Name
-        },
+        };
         AddCell(set, feature, open, each Backnesses)
       };
     }
@@ -457,25 +457,25 @@ with MatchingVowels {
   }
 
   ShowVowelTable(set, feature, title) = Table {
-    HAlign: HAligns.Center,
-    Style.TableEdge,
-    Columns: [(1 inch){EdgeR: 0.5 pts}] + [Metrics.BoxSize.Width*3 {EdgeR: 0.25 pts}] * Backnesses.Length,
-    Style.TitleBar(title, Backnesses.Length+1),
+    HAlign: HAligns.Center;
+    Style.TableEdge;
+    Columns: [(1 inch){EdgeR: 0.5 pts}] + [Metrics.BoxSize.Width*3 {EdgeR: 0.25 pts}] * Backnesses.Length;
+    Style.TitleBar(title, Backnesses.Length+1);
     Row {
-      TextHeight: 10 pts,
-      Style.HeaderCell(Empty),
+      TextHeight: 10 pts;
+      Style.HeaderCell(Empty);
       Style.HeaderCell(each Backnesses, HAligns.Center)
-    },
+    };
     AddRow(set, feature, each Opens)
   };
 
   ShowTable(set) = Block {
-    ShowVowelTable(set, NoFeature, Lang.Vowels),
+    ShowVowelTable(set, NoFeature, Lang.Vowels);
     Style.TableNotes {
-      Lang.SymbolPairRounded,
-    },
-    ShowVowelTable(set, LongVowel, Lang.LongVowels),
-    Paragraph,
+      Lang.SymbolPairRounded;
+    };
+    ShowVowelTable(set, LongVowel, Lang.LongVowels);
+    Paragraph;
   };
 }
 //======================================================================
@@ -487,13 +487,13 @@ with MatchingDiacritics {
 
   AddCell(segment) = Cell {
     Paragraph {
-      LeftIndent: 0.5 inches,
-      FirstIndent: -0.5 inches,
-      LocationMark: segment.Key,
+      LeftIndent: 0.5 inches;
+      FirstIndent: -0.5 inches;
+      LocationMark: segment.Key;
       ShowSegment(segment) {
-        TextHeight: 18 pts,
-        Tab,
-      },
+        TextHeight: 18 pts;
+        Tab;
+      };
       segment.Description
     }
   };
@@ -504,11 +504,11 @@ with MatchingDiacritics {
 
   ShowTable = Block {
     Table {
-      Style.TableEdge,
-      Columns: [Metrics.Content.Width / ColumnDiv] * ColumnDiv,
-      Style.TitleBar(Lang.Diacritics, ColumnDiv),
-      AddRow(each DiacriticModifiers / ColumnDiv),
-    },
+      Style.TableEdge;
+      Columns: [Metrics.Content.Width / ColumnDiv] * ColumnDiv;
+      Style.TitleBar(Lang.Diacritics, ColumnDiv);
+      AddRow(each DiacriticModifiers / ColumnDiv);
+    };
     Style.TableNotes
   };
 }
@@ -521,14 +521,14 @@ with MatchingOther {
 
   AddCell(segment) = {
     Cell {
-      VAlign: VAligns.Center,
-      HAlign: HAligns.Center,
-      TextHeight: 20 pts,
-      LocationMark: segment.Key,
-      ShowSegment(segment),
-    },
+      VAlign: VAligns.Center;
+      HAlign: HAligns.Center;
+      TextHeight: 20 pts;
+      LocationMark: segment.Key;
+      ShowSegment(segment);
+    };
     Cell {
-      VAlign: VAligns.Center,
+      VAlign: VAligns.Center;
       SegmentName(segment)
     }
   };
@@ -539,11 +539,11 @@ with MatchingOther {
 
   ShowTable(set) = Block {
     Table {
-      Style.TableEdge,
-      Columns: [Metrics.BoxSize.Width, Metrics.Content.Width * 0.5 - Metrics.BoxSize.Width] * ColumnDiv,
-      Style.TitleBar(Lang.OtherSegments, ColumnDiv*2),
-      AddRow(each (Results.UsedSegments.FindSlice(segment => not set.Contains(segment)) / ColumnDiv)),
-    },
+      Style.TableEdge;
+      Columns: [Metrics.BoxSize.Width, Metrics.Content.Width * 0.5 - Metrics.BoxSize.Width] * ColumnDiv;
+      Style.TitleBar(Lang.OtherSegments, ColumnDiv*2);
+      AddRow(each (Results.UsedSegments.FindSlice(segment => not set.Contains(segment)) / ColumnDiv));
+    };
     Style.TableNotes
   };
 }
@@ -568,10 +568,10 @@ with CompleteMeanings {
 
   AddRow(meaning) = Row {
     Cell {
-      HAlign: HAligns.Center,
-      Style.TitleBackground,
+      HAlign: HAligns.Center;
+      Style.TitleBackground;
       EachIndex+1
-    },
+    };
     Cell {
       meaning.Name
     }
@@ -579,15 +579,15 @@ with CompleteMeanings {
 
   ShowTable = Block {
     Table {
-      Style.TableEdge,
-      Columns: [0.5 inches, 4 inches],
-      Style.TitleBar(Lang.Meanings, 3),
+      Style.TableEdge;
+      Columns: [0.5 inches, 4 inches];
+      Style.TitleBar(Lang.Meanings, 3);
       Row {
-        Style.HeaderCell(Empty),
+        Style.HeaderCell(Empty);
         Style.HeaderCell(Lang.Meaning)
-      },
-      AddRow(each Results.UsedMeanings),
-    },
+      };
+      AddRow(each Results.UsedMeanings);
+    };
     Style.TableNotes
   };
 }
@@ -597,8 +597,8 @@ with CompleteMeanings {
 
 with SegmentTree {
   AddNode(name) = Node {
-    Bevel: 20%,
-    Curvature: 20%,
+    Bevel: 20%;
+    Curvature: 20%;
     Label: name
   };
 
@@ -612,19 +612,19 @@ with SegmentTree {
     if (segments.Length > 0) {
       return Node {
         Label: Frame {
-          Width: 3.5 inches,
+          Width: 3.5 inches;
           Paragraph {
-            LeftIndent: 1 inches,
-            FirstIndent: -1 inches,
+            LeftIndent: 1 inches;
+            FirstIndent: -1 inches;
             Span {
-              TextColor: Colors.DarkGray,
-              name,
-              ":\t",
-            },
+              TextColor: Colors.DarkGray;
+              name;
+              ":\t";
+            };
             Span {
-              TextHeight: 12 pts,
-              Separator: Space,
-              AddSegment(set, each segments),
+              TextHeight: 12 pts;
+              Separator: Space;
+              AddSegment(set, each segments);
             }
           }
         }
@@ -641,15 +641,15 @@ with SegmentTree {
                                    segment.Features.HasFlagMask(data.All, data.Features) and
                                    segment.Features.HasFlagMask(data.Other, data.Other);
 
-  AddFlag(set, all, features, f) = AddSegments(set, f.Name, segment => MatchFlags(segment, {Set: set, All: all, Features: features, Other: f}));
+  AddFlag(set, all, features, f) = AddSegments(set, f.Name, segment => MatchFlags(segment, {Set: set; All: all; Features: features; Other: f}));
 
   AddConsonants(set, name, all, features) = AddNode(name) {
-    AddFlag(set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]),
+    AddFlag(set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]);
   };
 
   AddVoicedPairs(set, name, all, features) = AddNode(name) {
-    AddConsonants(set, Lang.Voiced, all Voiced, features Voiced),
-    AddConsonants(set, Lang.Voiceless, all Voiced, features),
+    AddConsonants(set, Lang.Voiced, all Voiced, features Voiced);
+    AddConsonants(set, Lang.Voiceless, all Voiced, features);
   };
 
   ShowTree {
@@ -659,20 +659,20 @@ with SegmentTree {
 
     return Block {
       Tree {
-        Width: 7 inches,
-        LabelGap: 3 pts,
+        Width: 7 inches;
+        LabelGap: 3 pts;
         Node {
           AddNode(Lang.Vowels) {
             AddVowels(set1, each Backnesses)
-          },
+          };
           AddNode(Lang.Affricates) {
-            AddVoicedPairs(set1, Lang.NonPulmonic, all, Affricate),
-            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic Affricate),
-          },
+            AddVoicedPairs(set1, Lang.NonPulmonic, all, Affricate);
+            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic Affricate);
+          };
           AddNode(Lang.Consonants) {
-            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic),
-            AddVoicedPairs(set1, Lang.NonPulmonic, all, NoFeature),
-          },
+            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic);
+            AddVoicedPairs(set1, Lang.NonPulmonic, all, NoFeature);
+          };
           AddSegments(set2, Lang.OtherSegments, segment => true)
         }
       }
@@ -691,10 +691,10 @@ with SAMPAConversion {
   AddRow(segment) = Row {
     Cell {
       ShowSampa(segment.Sampa)
-    },
+    };
     Cell {
       ShowSegment(segment)
-    },
+    };
     Cell {
       segment.Name
     }
@@ -711,15 +711,15 @@ with SAMPAConversion {
 
   ShowTable = Block {
     Table {
-      Style.TableEdge,
-      Columns: [0.75 inches, 0.75 inches, 4 inches],
+      Style.TableEdge;
+      Columns: [0.75 inches, 0.75 inches, 4 inches];
       Row {
-        Style.HeaderCell(Lang.Sampa),
-        Style.HeaderCell(Lang.IPA),
+        Style.HeaderCell(Lang.Sampa);
+        Style.HeaderCell(Lang.IPA);
         Style.HeaderCell(Lang.Segment)
-      },
-      AddRow(each SortedSampa),
-    },
+      };
+      AddRow(each SortedSampa);
+    };
     Style.TableNotes
   };
 }

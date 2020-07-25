@@ -33,10 +33,10 @@ with Style {
   };
 
   WhitePaper = Document {
-    Size: Metrics.Paper,
-    MainFamily,
-    TextHeight: 11 pts,
-    Margin: Metrics.PaperMargin,
+    Size: Metrics.Paper;
+    MainFamily;
+    TextHeight: 11 pts;
+    Margin: Metrics.PaperMargin;
   };
 
   NormalHeader(text) = Block {
@@ -44,92 +44,92 @@ with Style {
   };
 
   PageSection = Section {
-    SectionBreak: SectionBreaks.NextPage,
+    SectionBreak: SectionBreaks.NextPage;
     Footer: Block {
-      Distance: 0.5 inches,
-      ParAlignment: ParAlignments.Center,
+      Distance: 0.5 inches;
+      ParAlignment: ParAlignments.Center;
       PageNumber
-    },
+    };
   };
 
   TableNotes = Paragraph {
-    SpaceAfter: Metrics.TableSpace,
+    SpaceAfter: Metrics.TableSpace;
   };
 
   TitleWord(text) = Span {
-    text[0],
+    text[0];
     {TextHeight: 60%} text[1..]
   };
 
   TitleCase(text) = Span {
     if (text) {
-      TextUppercase: true,
-      Separator: Space,
+      TextUppercase: true;
+      Separator: Space;
       TitleWord(each text.Split(Space))
     }
   };
 
   Title(text) = Paragraph {
-    KeepWithNext: true,
-    SpaceBefore: 12 pts,
-    SpaceAfter: 6 pts,
-    ParAlignment: ParAlignments.Center,
-    TextHeight: 18 pts,
+    KeepWithNext: true;
+    SpaceBefore: 12 pts;
+    SpaceAfter: 6 pts;
+    ParAlignment: ParAlignments.Center;
+    TextHeight: 18 pts;
     text
   };
 
   HeaderCentered(text) = Paragraph {
-    KeepWithNext: true,
-    SpaceBefore: 12 pts,
-    SpaceAfter: 6 pts,
-    ParAlignment: ParAlignments.Center,
+    KeepWithNext: true;
+    SpaceBefore: 12 pts;
+    SpaceAfter: 6 pts;
+    ParAlignment: ParAlignments.Center;
     TitleCase(text)
   };
 
   Header1(text) = Paragraph {
-    KeepWithNext: true,
-    SpaceBefore: 18 pts,
-    SpaceAfter: 8 pts,
+    KeepWithNext: true;
+    SpaceBefore: 18 pts;
+    SpaceAfter: 8 pts;
     TitleCase(text)
   };
 
   Header2(text) = Paragraph {
-    KeepWithNext: true,
-    SpaceBefore: 12 pts,
-    SpaceAfter: 6 pts,
-    TextHeight: 14 pts,
+    KeepWithNext: true;
+    SpaceBefore: 12 pts;
+    SpaceAfter: 6 pts;
+    TextHeight: 14 pts;
     text
   };
 
   Header3(text) = Paragraph {
-    KeepWithNext: true,
-    Border: 0.25 pts,
-    ParBackground: 97%,
-    SpaceAfter: 12 pts,
-    TextHeight: 14 pts,
+    KeepWithNext: true;
+    Border: 0.25 pts;
+    ParBackground: 97%;
+    SpaceAfter: 12 pts;
+    TextHeight: 14 pts;
     text
   };
 
   SourceFile(source) = Block {
-    Style.Header3(GetFileName(source.Path)),
+    Style.Header3(GetFileName(source.Path));
     Paragraph {
-      LeftIndent: 0.25 inches,
-      ParAlignment: ParAlignments.Left,
-      Style.MonoFamily,
-      TextHeight: 8 pts,
+      LeftIndent: 0.25 inches;
+      ParAlignment: ParAlignments.Left;
+      Style.MonoFamily;
+      TextHeight: 8 pts;
       SourceSelection(source)
     }
   };
 
   SourceCodeBlock = TextBlock {
-    Style.MonoFamily,
-    TextHeight: 10 pts,
-    ParBackground: 97%,
+    Style.MonoFamily;
+    TextHeight: 10 pts;
+    ParBackground: 97%;
   };
 
   Author(author) = Span {
-    Link: author.Key,
-    author.Title,
+    Link: author.Key;
+    author.Title;
   };
 
   Collect(list, node) {
@@ -149,177 +149,182 @@ with Style {
   TimelineNodes = GetTimes(Info.LanguageTree).Sort(true, ByYear);
 
   TimelineRow(options, node) = Group {
-    X: options.Width - options.Width * node.Branch / options.MaxYear,
+    X: options.Width - options.Width * node.Branch / options.MaxYear;
     Figure {
-      Fill: Colors.Green,
+      Fill: Colors.Green;
       Rectangle(Type.Rect(Type.Point(0), Type.Size(5, options.TextHeight)))
-    },
+    };
     Paragraph {
-      Space,
-      node.Label,
+      Space;
+      node.Label;
     }
   };
 
   ShowLanguageTree = Block {
-    ShowTree(Info.LanguageTree),
+    ShowTree(Info.LanguageTree);
   };
 
   ShowTree(tree) = Group {
-    Vertical: true,
+    Vertical: true;
     Tree {
-      Curvature: 30%,
-      Bevel: 20%,
-      Marker: {Style.IPAFamily, TextHeight: 4 pts}Chars.Circle {TextColor: Colors.Gray},
-      Width: Metrics.TreeWidth,
-      ValueLabel: Lang.Years,
-      ValueAxis: ChartAxis,
-      tree
-    },
+      Curvature: 30%;
+      Bevel: 20%;
+      Marker: {Style.IPAFamily; TextHeight: 4 pts; TextColor: Colors.Gray} Chars.Circle;
+      Width: Metrics.TreeWidth;
+      ValueLabel: Lang.Years;
+      ValueAxis: ChartAxis;
+      tree;
+    };
   };
 
   ShowAbstract(content) = Block {
-    HeaderCentered(content.Title),
+    HeaderCentered(content.Title);
     Block {
-      content.Body
+      content.Body;
     }
   };
 
   ShowContent(content) = Block {
-    Header1(content.Title),
+    Header1(content.Title);
     Block {
-      content.Body
+      content.Body;
     }
   };
 
   ShowAuthorFull(author) = Block {
-    LeftIndent: 0.25 inches,
+    LeftIndent: 0.25 inches;
     Paragraph {
-      LocationMark: author.Key,
-      FirstIndent: -0.25 inches,
+      LocationMark: author.Key;
+      FirstIndent: -0.25 inches;
       Span {
-        Separator: Space,
+        Separator: Space;
         if (author.Website)
           Link: author.Website;
-        author.First, author.Middle, author.Last,
-      }
-    },
+        author.First;
+        author.Middle;
+        author.Last;
+      };
+    };
     Span {
-      Separator: Lang.Separator,
+      Separator: Lang.Separator;
       author.Address
-    },
-    Span {"{0}: "(Lang.EMail), author.EMail},
-    Empty
+    };
+    Span {
+      "{0}: "(Lang.EMail);
+      author.EMail;
+    };
+    Empty;
   };
 
   AppendixRow(appendix) = Paragraph {
-    LeftIndent: 20 pts,
-    FirstIndent: -20 pts,
-    EachIndex + 1,
-    ")",
-    Tab,
+    LeftIndent: 20 pts;
+    FirstIndent: -20 pts;
+    EachIndex + 1;
+    ")";
+    Tab;
     Span {
-      Link: Lang.Appendix + EachIndex,
+      Link: Lang.Appendix + EachIndex;
       appendix.Title
-    }
+    };
   };
 
   ShowAppendixTable = Block {
-    HeaderCentered(Lang.Appendices),
-    AppendixRow(each Appendix)
+    HeaderCentered(Lang.Appendices);
+    AppendixRow(each Appendix);
   };
 
   ShowAuthors(authors) = Block {
-    HeaderCentered(Lang.Authors),
-    ShowAuthorFull(each authors),
+    HeaderCentered(Lang.Authors);
+    ShowAuthorFull(each authors);
   };
 
   ShowReference(r) = Paragraph {
-    LeftIndent: 0.25 inches,
-    FirstIndent: -0.25 inches,
+    LeftIndent: 0.25 inches;
+    FirstIndent: -0.25 inches;
     if (r.Author) {
-      TitleCase(r.Author),
+      TitleCase(r.Author);
       if (r.Title) {
-        Lang.Separator,
-        r.Title,
+        Lang.Separator;
+        r.Title;
       }
     }
     else
       r.Title;
 
     if (r.Year) {
-      Lang.Separator,
-      r.Year,
+      Lang.Separator;
+      r.Year;
     }
     if (r.Publisher) {
-      Lang.Separator,
-      Italic r.Publisher,
-      r.?Page,
+      Lang.Separator;
+      Italic r.Publisher;
+      r.?Page;
     }
     if (r.?Link) {
-      ". : ",
-       Span {
-         Link: r.Link,
-         TextColor: Colors.DarkBlue,
-         r.Link
-       }
+      ". : ";
+      Span {
+        Link: r.Link;
+        TextColor: Colors.DarkBlue;
+        r.Link;
+      };
     }
   };
 
   ShowReferences(references) = Block {
-    HeaderCentered(Lang.References),
+    HeaderCentered(Lang.References);
     ShowReference(each references)
   };
 
   ShowAppendix(appendix) = PageSection {
     Paragraph {
-      BorderB: 1 pts,
-      ParAlignment: ParAlignments.Center,
-      TextHeight: 14 pts,
-      SpaceAfter: 8 pts,
-      LocationMark: Lang.Appendix + EachIndex,
-      "{0} {1} - "(Lang.Appendix, EachIndex+1),
-      appendix.Title,
-    },
+      BorderB: 1 pts;
+      ParAlignment: ParAlignments.Center;
+      TextHeight: 14 pts;
+      SpaceAfter: 8 pts;
+      LocationMark: Lang.Appendix + EachIndex;
+      "{0} {1} - "(Lang.Appendix, EachIndex+1);
+      appendix.Title;
+    };
     Block {
       appendix.Content
     }
   };
 
   LanguageRow(lang) = Row {
-    Background: ((EachIndex mod 2) == 0 ? Colors.White : 97%),
-    lang.Name,
+    Background: ((EachIndex mod 2) == 0 ? Colors.White : 97%);
+    lang.Name;
   };
 
   ShowLanguageList(list) = Table {
-    PaddingLR: 2,
-    Columns: [1.5 inch],
+    PaddingLR: 2;
+    Columns: [1.5 inch];
     Row {
-      Background: Colors.DarkGray,
-      TextColor: Colors.White,
-      Lang.Name,
-    },
-    Edge: 0.25 pts {Color: Colors.DarkGray},
+      Background: Colors.DarkGray;
+      TextColor: Colors.White;
+      Lang.Name;
+    };
+    Edge: 0.25 pts {Color: Colors.DarkGray};
     LanguageRow(each list)
   };
 
   HeaderCell(d, halign=HAligns.Left) = Cell {
-    HAlign: halign,
-    VAlign: VAligns.Center,
-    Style.SansSerif,
-    Style.TitleBackground,
-    EdgeB: 1 pts,
-    Padding: 2 pts,
+    HAlign: halign;
+    VAlign: VAligns.Center;
+    Style.SansSerif;
+    Style.TitleBackground;
+    EdgeB: 1 pts;
+    Padding: 2 pts;
     d
   };
 
   TitleBar(name, columns) = Row {
     Cell {
-      Padding: 2 pts,
-      ParAlignment: ParAlignments.Center,
-      Background: 40%,
-      TextHeight: 16 pts,
-      TextColor: Colors.White,
-      ColumnSpan: columns,
+      Padding: 2 pts;
+      ParAlignment: ParAlignments.Center;
+      Background: 40%;
+      TextHeight: 16 pts;
+      TextColor: Colors.White;
+      ColumnSpan: columns;
       name
     }
   };
@@ -327,27 +332,27 @@ with Style {
 //======================================================================
 
 Logo = Frame {
-  Width: 5 inches,
-  Height: 0.5 inches,
-  Padding: 4 pts,
-  Background: Type.Color(51, 66, 81),
+  Width: 5 inches;
+  Height: 0.5 inches;
+  Padding: 4 pts;
+  Background: Type.Color(51, 66, 81);
   Table {
-    Columns: [4.3 inches, 0.6 inches],
+    Columns: [4.3 inches, 0.6 inches];
     Row {
       Block {
         Span {
-          TextColor: Type.Color(129, 166, 207),
-          Bold,
-          TextHeight: 12 pts,
-          "Transactions of the",
-        },
+          TextColor: Type.Color(129, 166, 207);
+          Bold;
+          TextHeight: 12 pts;
+          "Transactions of the";
+        };
         Span {
-          Bold,
-          TextHeight: 20 pts,
-          TextColor: Colors.White,
+          Bold;
+          TextHeight: 20 pts;
+          TextColor: Colors.White;
           "Bayesian Society"
         }
-      },
+      };
       Read(Folders.Source FileName("bayes") Extensions.PNG) {Width: 0.5 inches}
     }
   }

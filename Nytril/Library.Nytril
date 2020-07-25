@@ -25,98 +25,98 @@ with Nexus {
   Quote         = "\"";
 
   Keyword(name) = Span {
-    TextColor: Colors.Blue,
+    TextColor: Colors.Blue;
     name
   };
 
   Comment(text) = Span {
-    TextColor: Colors.Green,
+    TextColor: Colors.Green;
     "#"
     text
   };
 
   AddLine(name) = Span {
-    Keyword(name),
-    End: EndMarker,
+    Keyword(name);
+    End: EndMarker;
   };
 
   AddValue(name, value) = Span {
-    Space,
-    Keyword(name),
-    "=",
-    value,
+    Space;
+    Keyword(name);
+    "=";
+    value;
   };
 
   Scope(name) = TextBlock {
-    IndentSpace: 2,
+    IndentSpace: 2;
     Begin: Span {
-      Keyword("begin"),
-      Space,
-      name,
-      EndMarker,
-    },
+      Keyword("begin");
+      Space;
+      name;
+      EndMarker;
+    };
     End: Span {
-      Keyword("end"),
-      EndMarker,
-    },
+      Keyword("end");
+      EndMarker;
+    };
   };
 
   NexusFile = TextBlock {
-    Comment("NEXUS"),
+    Comment("NEXUS");
   };
 
   Newick(node) = Span {
     if (node.Length > 0) {
-      "(",
+      "(";
       Span {
-        Separator: ",",
+        Separator: ",";
         Newick(each node)
-      },
-      ")",
+      };
+      ")";
     }
-    TreeLib.GetNodeLabel(node),
-    ":",
+    TreeLib.GetNodeLabel(node);
+    ":";
     node.Branch
   };
 
   ShowTreeLine(tree) = Span {
-    "tree ",
-    tree.Name,
-    " = ",
-    Newick(tree),
+    "tree ";
+    tree.Name;
+    " = ";
+    Newick(tree);
     EndMarker
   };
 
   TreeFormat(taxa) = NexusFile {
     Scope("taxa") {
       AddLine("dimensions") {
-        AddValue("ntax", taxa.Length),
-      },
+        AddValue("ntax", taxa.Length);
+      };
       AddLine("taxlabels") {
-        Space,
+        Space;
         Span {
-          Separator: Space,
-          taxa,
-        },
-      },
+          Separator: Space;
+          taxa;
+        };
+      };
     }
   };
 
   TreeFile(tree) = TreeFormat(TreeLib.GetTaxaLabels(tree)) {
     Scope("trees") {
-      ShowTreeLine(tree),
+      ShowTreeLine(tree);
     }
   };
 
   ShowTaxon(maxlength, taxon, range) = Span {
-    taxon.TaxonName,
-    Space * (maxlength - taxon.TaxonName.Length),
+    taxon.TaxonName;
+    Space * (maxlength - taxon.TaxonName.Length);
     IPA.ShowCharacter(each taxon.Characters[range])
   };
 
   ShowTaxonSet(maxlength, taxa, range) = {
-    ShowTaxon(maxlength, each taxa, range),
-    Empty,
+    ShowTaxon(maxlength, each taxa, range);
+    Empty;
   };
 
   CharacterFile(taxa) {
@@ -125,19 +125,19 @@ with Nexus {
     return NexusFile {
       Scope("DATA") {
         AddLine("dimensions") {
-          AddValue("ntax", taxa.Length),
-          AddValue("nchar", total),
-        },
+          AddValue("ntax", taxa.Length);
+          AddValue("nchar", total);
+        };
         AddLine("format") {
-          AddValue("datatype", "STANDARD"),
-          AddValue("gap", IPA.GapSegment.Ipa),
-          AddValue("missing", Missing),
-          AddValue("symbols", Span {Quote, CharacterList[Results.UniqueSegments.IndexRange], Quote}),
-        },
-        Empty,
-        Keyword("matrix"),
-        ShowTaxonSet(maxlength, taxa, each ((0..<total) / (70 - maxlength))),
-        EndMarker,
+          AddValue("datatype", "STANDARD");
+          AddValue("gap", IPA.GapSegment.Ipa);
+          AddValue("missing", Missing);
+          AddValue("symbols", Span {Quote; CharacterList[Results.UniqueSegments.IndexRange]; Quote});
+        };
+        Empty;
+        Keyword("matrix");
+        ShowTaxonSet(maxlength, taxa, each ((0..<total) / (70 - maxlength)));
+        EndMarker;
       }
     };
   }

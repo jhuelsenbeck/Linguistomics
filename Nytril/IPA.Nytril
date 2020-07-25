@@ -74,28 +74,28 @@ with IPA {
   }
 
   Encode(ipa, sampa) = {
-    Popup: SegmentPopup,
-    Ipa: ipa,
-    Sampa: sampa,
-    Impossible: false,
-    Punctuation: false,
-    Diacritic: false,
+    Popup: SegmentPopup;
+    Ipa: ipa;
+    Sampa: sampa;
+    Impossible: false;
+    Punctuation: false;
+    Diacritic: false;
   };
 
   Diac(description, ipa, sampa) = Encode(ipa, sampa) {
-    Diacritic: true,
-    Description: description,
+    Diacritic: true;
+    Description: description;
   };
 
   Con(features, place, ipa, sampa) = Encode(ipa, sampa) {
-    Features: features,
-    Place: place,
+    Features: features;
+    Place: place;
   };
 
   Vow(features, open, backness, ipa, sampa) = Encode(ipa, sampa) {
-    Features: features | Vowel,
-    Open: open,
-    Backness: backness,
+    Features: features | Vowel;
+    Open: open;
+    Backness: backness;
   };
 
   Dia(ipa, sampa) = Encode(ipa, sampa) {
@@ -103,15 +103,15 @@ with IPA {
   };
 
   Punct(ipa) = Encode(ipa, ipa) {
-    Punctuation: true,
+    Punctuation: true;
   };
 
   Imp(features, place) = {
-    Features: features,
-    Place: place,
-    Diacritic: false,
-    Punctuation: false,
-    Impossible: true,
+    Features: features;
+    Place: place;
+    Diacritic: false;
+    Punctuation: false;
+    Impossible: true;
   };
 
   NoSegment     = Encode("?", "!?") {Impossible: true};
@@ -618,21 +618,21 @@ with IPA {
   SegmentSize    = 40 pts;
 
   ShowSampa(sampa) = Span {
-    Style.MonoFamily,
-    sampa,
+    Style.MonoFamily;
+    sampa;
   };
 
   SegmentName(segment) = Span {
     if (segment.Features.HasFlag(Vowel)) {
-      segment.Open,
-      Space,
-      segment.Backness,
+      segment.Open;
+      Space;
+      segment.Backness;
     }
     else
       segment.Place;
-    Space,
+    Space;
     Span {
-      Separator: Space,
+      Separator: Space;
       if (segment.Diacritic)
         segment.Description;
       else
@@ -641,48 +641,48 @@ with IPA {
   };
 
   SegmentDisplay(segment, location) = Block {
-    ParAlignment: ParAlignments.Center,
+    ParAlignment: ParAlignments.Center;
     Paragraph {
-      LocationMark: location,
-      SpaceBefore: 8 pts,
-      SpaceAfter: 8 pts,
-      TextHeight: SegmentSize,
-      Style.IPAFamily,
-      SpaceAfter: SegmentSize * 0.125,
-      segment.Ipa,
-    },
+      LocationMark: location;
+      SpaceBefore: 8 pts;
+      SpaceAfter: 8 pts;
+      TextHeight: SegmentSize;
+      Style.IPAFamily;
+      SpaceAfter: SegmentSize * 0.125;
+      segment.Ipa;
+    };
     Paragraph {
-      TextHeight: 10 pts,
-      SegmentName(segment),
-    },
+      TextHeight: 10 pts;
+      SegmentName(segment);
+    };
     Paragraph {
-      TextHeight: 8 pts,
-      ParBackground: 95%,
-      Style.MonoFamily,
-      TextRadix: 16,
-      TextDigits: 4,
+      TextHeight: 8 pts;
+      ParBackground: 95%;
+      Style.MonoFamily;
+      TextRadix: 16;
+      TextDigits: 4;
       Span {
-        Separator: Lang.Separator,
+        Separator: Lang.Separator;
         if (segment.Ipa)
           Type.Integer(each segment.Ipa);
       }
-    },
+    };
     Paragraph {
-      TextHeight: 8 pts,
+      TextHeight: 8 pts;
       if (segment.Sampa and segment.Sampa.Length > 0) {
-        ParBackground: 90%,
+        ParBackground: 90%;
         ShowSampa(segment.Sampa)
       }
       else if (segment.Ipa.Length > 0) {
-        "No Sampa" {TextColor: Colors.White},
-        ParBackground: Colors.Red,
+        "No Sampa" {TextColor: Colors.White};
+        ParBackground: Colors.Red;
       }
-    },
+    };
   };
 
   SegmentCell(segment) = Cell {
-    Edge: 0.25 pts {Color: Colors.LightGray},
-    Padding: 2 pts,
+    Edge: 0.25 pts {Color: Colors.LightGray};
+    Padding: 2 pts;
     SegmentDisplay(segment, segment.Key)
   };
 
@@ -701,10 +701,10 @@ with IPA {
 
   SegmentTable = Block {
     Table {
-      Columns: [Metrics.Content.Width / SegmentColumns] * SegmentColumns,
-      Style.TitleBar(Lang.IPAListing, SegmentColumns),
+      Columns: [Metrics.Content.Width / SegmentColumns] * SegmentColumns;
+      Style.TitleBar(Lang.IPAListing, SegmentColumns);
       SegmentRow(each (SortedSegments / SegmentColumns))
-    },
+    };
     Style.TableNotes
   };
 
@@ -714,7 +714,7 @@ with IPA {
 
   SegmentPopup(segment) = Frame {
     if (segment.?Features) {
-      Width: 2 inches,
+      Width: 2 inches;
       SegmentDisplay(segment, null)
     }
     else
@@ -722,18 +722,18 @@ with IPA {
   };
 
   ShowCharacter(c) = Span {
-    Popup: Delegate(SegmentPopup, c.Segment),
-    Link: c.Segment.Key,
+    Popup: Delegate(SegmentPopup, c.Segment);
+    Link: c.Segment.Key;
     c.Character
   };
 
   ShowSegment(segment) = Span {
-    Style.IPAFamily,
-    Popup: Delegate(SegmentPopup, segment),
-    Link: segment.Key,
+    Style.IPAFamily;
+    Popup: Delegate(SegmentPopup, segment);
+    Link: segment.Key;
     if (segment.Impossible) {
-      System.Assert(false, Lang.Impossible),
-      TextColor: Colors.Red,
+      System.Assert(false, Lang.Impossible);
+      TextColor: Colors.Red;
     }
     if (segment.?Diacritic)
       "  ";
@@ -775,23 +775,23 @@ with IPA {
   Enclosure(x, y, w, h, color) {
     var size = Size(EX(w), EY(h));
     return Canvas {
-      X: EX(x),
-      Y: EY(y),
-      Size: size,
+      X: EX(x);
+      Y: EY(y);
+      Size: size;
       Figure {
-        Stroke: 1 pts,
-        Fill: color,
+        Stroke: 1 pts;
+        Fill: color;
         Rectangle(Rect(0, size), Size(6 pts))
       }
     };
   }
 
   NameBox(name, angle=0) = Paragraph {
-    Transform: Rotate(angle),
-    TransformFit: true,
-    Space,
-    name Bold,
-    Space,
+    Transform: Rotate(angle);
+    TransformFit: true;
+    Space;
+    name Bold;
+    Space;
   };
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
@@ -799,106 +799,106 @@ with IPA {
   FeatureSegments(features) = Results.UsedSegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
 
   FeatureFrame(x, y, width, name, features) = Canvas {
-    X: EX(x),
-    Y: EY(y),
+    X: EX(x);
+    Y: EY(y);
     Frame {
-      Width: EX(width),
-      ParAlignment: ParAlignments.Center,
+      Width: EX(width);
+      ParAlignment: ParAlignments.Center;
       if (name)
-        Span {Bold, name};
+        Span {Bold; name};
       Paragraph {
-        Separator: Space,
+        Separator: Space;
         IPA.ShowSegment(each FeatureSegments(features))
       }
     }
   };
 
   VNameFrame(name, x, y, width, height, color) = Enclosure(x, y, width, height, color) {
-    VAlign: VAligns.Center,
+    VAlign: VAligns.Center;
     NameBox(name, 90 degrees)
   };
 
   FeatureChart = Canvas {
-    TextHeight: 16 pts,
+    TextHeight: 16 pts;
 
     VNameFrame(Lang.Occlusive, 10, 0, 90, 34, Color(255, 238, 238)) {
-      HAlign: HAligns.Right,
-    },
+      HAlign: HAligns.Right;
+    };
     VNameFrame(Lang.Continuant, 10, 35, 90, 37, Color(229, 255, 255)) {
-      HAlign: HAligns.Right,
-    },
-    VNameFrame(Lang.Obstruent, 0, 11, 94, 40, Color(238, 238, 255, 50%)),
-    VNameFrame(Lang.Vocoid, 0, 52, 78, 21, Color(238, 255, 238, 50%)),
-    VNameFrame(Lang.Vibrant, 20, 74, 65, 17, Color(238, 238, 255)),
+      HAlign: HAligns.Right;
+    };
+    VNameFrame(Lang.Obstruent, 0, 11, 94, 40, Color(238, 238, 255, 50%));
+    VNameFrame(Lang.Vocoid, 0, 52, 78, 21, Color(238, 255, 238, 50%));
+    VNameFrame(Lang.Vibrant, 20, 74, 65, 17, Color(238, 238, 255));
 
-    Enclosure(11, 1, 83, 9, Color(255, 246, 246)),    // Nasals
-    Enclosure(31, 12, 62, 21, Color(246, 242, 250)),  // Affricates
-    Enclosure(11, 12, 19, 21, Color(246, 243, 250)),  // Plosives
-    Enclosure(11, 36, 80, 14, Color(240, 247, 255)),  // Fricatives
+    Enclosure(11, 1, 83, 9, Color(255, 246, 246));   // Nasals
+    Enclosure(31, 12, 62, 21, Color(246, 242, 250));  // Affricates
+    Enclosure(11, 12, 19, 21, Color(246, 243, 250));  // Plosives
+    Enclosure(11, 36, 80, 14, Color(240, 247, 255));  // Fricatives
 
     Enclosure(25, 75, 59, 7, Color(247, 247, 255)) {
-      HAlign: HAligns.Left,
-      VAlign: VAligns.Center,
-      NameBox(Lang.TapFlap),
-    },
+      HAlign: HAligns.Left;
+      VAlign: VAligns.Center;
+      NameBox(Lang.TapFlap);
+    };
     Enclosure(25, 83, 53, 7, Color(247, 247, 255)) {
-      HAlign: HAligns.Left,
-      VAlign: VAligns.Center,
-      NameBox(Lang.Trill),
-    },
+      HAlign: HAligns.Left;
+      VAlign: VAligns.Center;
+      NameBox(Lang.Trill);
+    };
 
     Enclosure(53, 13, 39, 36, Color(233, 248, 235, 50%)) {
-      HAlign: HAligns.Center,
-      NameBox(Lang.Strident),
-    },
+      HAlign: HAligns.Center;
+      NameBox(Lang.Strident);
+    };
 
-    Enclosure(62, 18, 25, 24, Color(245, 252, 220, 50%)), // Sibilants
-    Enclosure(11, 53, 21, 18, Color(240, 255, 247)),      // Vowels
+    Enclosure(62, 18, 25, 24, Color(245, 252, 220, 50%)); // Sibilants
+    Enclosure(11, 53, 21, 18, Color(240, 255, 247));      // Vowels
     Enclosure(33, 53, 61, 18, Color(240, 255, 247, 50%)) {
-      HAlign: HAligns.Left,
-      NameBox(Lang.Approximant),
-    },
+      HAlign: HAligns.Left;
+      NameBox(Lang.Approximant);
+    };
 
-    Enclosure(35, 59, 21, 11, Color(248, 255, 225)), // Semivowels
+    Enclosure(35, 59, 21, 11, Color(248, 255, 225)); // Semivowels
 
     Enclosure(64, 43, 26, 59, Color(255, 238, 238, 50%)) {
-      HAlign: HAligns.Center,
-      VAlign: VAligns.Bottom,
-      NameBox(Lang.Liquid),
-    },
+      HAlign: HAligns.Center;
+      VAlign: VAligns.Bottom;
+      NameBox(Lang.Liquid);
+    };
 
     Enclosure(65, 44, 14, 52, Color(255, 247, 221, 50%)) {
-      HAlign: HAligns.Center,
-      VAlign: VAligns.Bottom,
-      NameBox(Lang.Rhotic),
-    },
+      HAlign: HAligns.Center;
+      VAlign: VAligns.Bottom;
+      NameBox(Lang.Rhotic);
+    };
 
     Enclosure(80, 44, 9, 44, Color(238, 247, 230, 70%)) {
-      HAlign: HAligns.Right,
-      VAlign: VAligns.Bottom,
-      NameBox(Lang.Lateral, 90 degrees),
-    },
+      HAlign: HAligns.Right;
+      VAlign: VAligns.Bottom;
+      NameBox(Lang.Lateral, 90 degrees);
+    };
 
-    FeatureFrame(11, 1, 84, Lang.Nasal, Nasal Occlusive),
-    FeatureFrame(12, 14, 17, Lang.Plosive, Stop Occlusive),
-    FeatureFrame(32, 14, 20, Lang.Affricate, Affricate Occlusive),
-    FeatureFrame(54, 20, 7, null, Affricate Occlusive Strident),
-    FeatureFrame(65, 18, 18, Lang.Sibilant, Affricate Occlusive Strident Sibilant),
-    FeatureFrame(14, 38, 22, Lang.Fricative, Fricative Obstruent Continuant),
-    FeatureFrame(54, 38, 6, null, Fricative Obstruent Continuant Strident),
-    FeatureFrame(64, 36, 20, null, Fricative Obstruent Continuant Strident Sibilant),
-    FeatureFrame(66, 44, 10, null, Fricative Obstruent Continuant Strident Rhotic Liquid),
-    FeatureFrame(80, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid),
-    FeatureFrame(12, 53, 19, Lang.Vowel, Vowel Vocoid Continuant),
-    FeatureFrame(36, 60, 19, Lang.SemiVowel, Vocoid Semivowel Approximant Continuant),
-    FeatureFrame(57, 62, 5, null, Vocoid Approximant),
-    FeatureFrame(66, 60, 10, null, Vocoid Approximant Rhotic Liquid),
-    FeatureFrame(82, 58, 5, null, Vocoid Approximant Rhotic Liquid Lateral),
-    FeatureFrame(54, 76, 10, null, Vibrant TapFlap),
-    FeatureFrame(66, 76, 10, null, Vibrant TapFlap Rhotic Liquid),
-    FeatureFrame(77, 77, 10, null, Vibrant TapFlap Rhotic Liquid Lateral),
-    FeatureFrame(54, 84, 10, null, Vibrant Trill),
-    FeatureFrame(66, 84, 10, null, Vibrant Trill Rhotic Liquid),
+    FeatureFrame(11, 1, 84, Lang.Nasal, Nasal Occlusive);
+    FeatureFrame(12, 14, 17, Lang.Plosive, Stop Occlusive);
+    FeatureFrame(32, 14, 20, Lang.Affricate, Affricate Occlusive);
+    FeatureFrame(54, 20, 7, null, Affricate Occlusive Strident);
+    FeatureFrame(65, 18, 18, Lang.Sibilant, Affricate Occlusive Strident Sibilant);
+    FeatureFrame(14, 38, 22, Lang.Fricative, Fricative Obstruent Continuant);
+    FeatureFrame(54, 38, 6, null, Fricative Obstruent Continuant Strident);
+    FeatureFrame(64, 36, 20, null, Fricative Obstruent Continuant Strident Sibilant);
+    FeatureFrame(66, 44, 10, null, Fricative Obstruent Continuant Strident Rhotic Liquid);
+    FeatureFrame(80, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid);
+    FeatureFrame(12, 53, 19, Lang.Vowel, Vowel Vocoid Continuant);
+    FeatureFrame(36, 60, 19, Lang.SemiVowel, Vocoid Semivowel Approximant Continuant);
+    FeatureFrame(57, 62, 5, null, Vocoid Approximant);
+    FeatureFrame(66, 60, 10, null, Vocoid Approximant Rhotic Liquid);
+    FeatureFrame(82, 58, 5, null, Vocoid Approximant Rhotic Liquid Lateral);
+    FeatureFrame(54, 76, 10, null, Vibrant TapFlap);
+    FeatureFrame(66, 76, 10, null, Vibrant TapFlap Rhotic Liquid);
+    FeatureFrame(77, 77, 10, null, Vibrant TapFlap Rhotic Liquid Lateral);
+    FeatureFrame(54, 84, 10, null, Vibrant Trill);
+    FeatureFrame(66, 84, 10, null, Vibrant Trill Rhotic Liquid);
   };
   //======================================================================
   // Code for drift diagram
@@ -911,15 +911,15 @@ with IPA {
   FeatureList = FeatureSet[1..];
 
   RowBox = Canvas {
-    Height: RowHeight,
-    Width: BoxWidth,
-    HAlign: HAligns.Center,
-    VAlign: VAligns.Center,
+    Height: RowHeight;
+    Width: BoxWidth;
+    HAlign: HAligns.Center;
+    VAlign: VAligns.Center;
   };
 
   ShowFeature(feature) = Canvas {
-    Height: RowHeight,
-    VAlign: VAligns.Center,
+    Height: RowHeight;
+    VAlign: VAligns.Center;
     feature.Name
   };
 
@@ -933,26 +933,26 @@ with IPA {
   };
 
   FeatureSegment(segment0, segment1) = Group {
-    Vertical: true,
-    VAlign: VAligns.Center,
-    FeatureBox(each FeatureList, segment0.Features, segment1.Features),
+    Vertical: true;
+    VAlign: VAligns.Center;
+    FeatureBox(each FeatureList, segment0.Features, segment1.Features);
   };
 
   DriftFeatures(line0, line, index) = Group {
-    Vertical: true,
+    Vertical: true;
     Group {
-      Vertical: true,
+      Vertical: true;
       RowBox {
         if (EachIndex == 0)
           ShowSegment(line0.Segments[index]);
-      },
+      };
       RowBox {
-        ShowSegment(line.Segments[index]),
-      },
-      BorderB: BorderSize,
-    },
+        ShowSegment(line.Segments[index]);
+      };
+      BorderB: BorderSize;
+    };
     Group {
-      FeatureSegment(line0.Segments[index], line.Segments[index]),
+      FeatureSegment(line0.Segments[index], line.Segments[index]);
     }
   };
 
@@ -966,36 +966,36 @@ with IPA {
   };
 
   DriftChart(lines) = Group {
-    TextHeight: RowText,
-    VAlign: VAligns.Top,
-    Border: BorderSize,
+    TextHeight: RowText;
+    VAlign: VAligns.Top;
+    Border: BorderSize;
     Group {
-      Vertical: true,
-      BorderR: BorderSize,
+      Vertical: true;
+      BorderR: BorderSize;
       Group {
-        Vertical: true,
-        VAlign: VAligns.Center,
-        RowBox,
-        RowBox,
-      },
+        Vertical: true;
+        VAlign: VAligns.Center;
+        RowBox;
+        RowBox;
+      };
       Group {
-        Vertical: true,
-        PaddingR: 3 pts,
-        BorderT: BorderSize,
+        Vertical: true;
+        PaddingR: 3 pts;
+        BorderT: BorderSize;
         ShowFeature(each FeatureList)
-      },
-    },
+      };
+    };
     DriftMatrix(lines, each 0..<MinLength(lines))
   };
 
   DriftMeaning(meaning) = Group {
-    MarginB: 8 pts,
-    Vertical: true,
+    MarginB: 8 pts;
+    Vertical: true;
     Paragraph {
-      Lang.Meaning, ": ",
-      meaning Bold,
-    },
-    DriftChart(Results.GetGeneText(meaning, each Results.UsedLanguages)),
+      Lang.Meaning; ": ";
+      meaning Bold;
+    };
+    DriftChart(Results.GetGeneText(meaning, each Results.UsedLanguages));
   };
 
   DriftGroup(meanings) = Group {
@@ -1004,7 +1004,7 @@ with IPA {
 
   DriftSection = Block {
     Paragraph {
-      Separator: "  ",
+      Separator: "  ";
       DriftGroup(each Results.UsedMeanings)
     }
   };
