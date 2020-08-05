@@ -683,7 +683,7 @@ with IPA {
   SegmentCell(segment) = Cell {
     Edge: 0.25 pts {Color: Colors.LightGray};
     Padding: 2 pts;
-    SegmentDisplay(segment, segment.Key)
+    SegmentDisplay(segment, segment.GlobalVariablePath)
   };
 
   SegmentRow(segments) = Row {
@@ -723,14 +723,14 @@ with IPA {
 
   ShowCharacter(c) = Span {
     Popup: Delegate(SegmentPopup, c.Segment);
-    Link: c.Segment.Key;
+    Link: c.Segment.GlobalVariablePath;
     c.Character
   };
 
   ShowSegment(segment) = Span {
     Style.IPAFamily;
     Popup: Delegate(SegmentPopup, segment);
-    Link: segment.Key;
+    Link: segment.GlobalVariablePath;
     if (segment.Impossible) {
       System.Assert(false, Lang.Impossible);
       TextColor: Colors.Red;
@@ -743,7 +743,7 @@ with IPA {
   SegmentSound(segment) {
     if (segment == SpaceSegment)
       return Space;
-    return segment.Name
+    return segment.GlobalVariableName
   }
 
   FindWordsWithMeaning(language, meaning) = language.Words.FindSlice(word => word.Meaning == meaning);
