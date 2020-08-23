@@ -723,14 +723,16 @@ with IPA {
 
   ShowCharacter(c) = Span {
     Popup: Delegate(SegmentPopup, c.Segment);
-    Link: c.Segment.GlobalVariablePath;
+    if (!c.Segment.Punctuation)
+      Link: c.Segment.GlobalVariablePath;
     c.Character
   };
 
   ShowSegment(segment) = Span {
     Style.IPAFamily;
     Popup: Delegate(SegmentPopup, segment);
-    Link: segment.GlobalVariablePath;
+    if (!segment.Punctuation)
+      Link: segment.GlobalVariablePath;
     if (segment.Impossible) {
       System.Assert(false, Lang.Impossible);
       TextColor: Colors.Red;
