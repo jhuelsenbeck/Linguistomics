@@ -1,4 +1,10 @@
-﻿using Format, Units, IPA, IPA.FeatureSet;
+﻿using Format, Units, IPA, FeatureSet;
+//======================================================================
+
+with Metrics {
+  SegmentColumns = 4;
+  SegmentSize    = 40 pts;
+}
 //======================================================================
 
 with Results {
@@ -43,35 +49,12 @@ with Results {
     return list;
   }
 
-  SegmentToCharacter(segment) {
-    if (segment.Punctuation) {
-      return {
-        Character: segment.Ipa;
-        Segment: segment
-      };
-    }
-
-    var f = UniqueSegments.FindIndex(s => s == segment);
-    if (f.Length >= 1) {
-      return {
-        Character: Nexus.CharacterList[f[0]];
-        Segment: segment
-      };
-    }
-    else {
-      return {
-        Character: '?';
-        Segment: IPA.NoSegment
-      };
-    }
-  }
-
   GetTaxaArray(lang) {
     var segments = GetSegments(EachIndex);
     return {
       TaxonName: lang.GlobalVariableName;
       Segments: segments;
-      Characters: SegmentToCharacter(each segments)
+      Characters: (each segments).SegmentToCharacter;
     }
   }
 
@@ -82,10 +65,7 @@ with Results {
   TaxaArray        = GetTaxaArray(each UsedLanguages);
   LanguageTreeFile = Nexus.TreeFile(Info.LanguageTree);
   CharacterFile    = Nexus.CharacterFile(TaxaArray);
-
-//  UsedSegments = UniqueSegments;
-  UsedSegments = IPA.Segments;
-
+  UsedSegments     = IPA.Segments;
 }
 //======================================================================
 // Consonants
@@ -152,8 +132,7 @@ with DisplayWords {
   WordRow(word) = Row {
     Style.RowBar(EachIndex);
     Cell {
-      Style.SansSerif;
-      word.Meaning
+      word.ShowMeaning;
     };
     Cell {
       var text = word.SegmentText;
@@ -161,7 +140,7 @@ with DisplayWords {
         System.Assert(false, "IPA round-trip error");
         TextColor: Colors.Red;
       }
-      text;
+      word.Text;
     };
     Cell {
       Span {
@@ -201,7 +180,7 @@ with DisplayWords {
 
 with AllWords {
   AddCell(meaning, language) = Cell {
-    ShowIPA(each IPA.FindWordsWithMeaning(language, meaning))
+    (each IPA.FindWordsWithMeaning(language, meaning)).ShowIPA
   };
 
   AddRow(language, meanings) = Row {
@@ -228,7 +207,11 @@ with AllWords {
     Paragraph;
   };
 
-  ShowTable(languages, meanings) = Block {
+  ShowMeaningTable(meaning) = MeaningTable(Results.UsedLanguages, [meaning]);
+
+  ShowTable = ShowLangMeaning(Results.UsedLanguages, Results.UsedMeanings);
+
+  ShowLangMeaning(languages, meanings) = Block {
     TextHeight: 12 pts;
     MeaningTable(languages, each (meanings / 8))
   };
@@ -272,13 +255,13 @@ with DisplayCharacters {
     };
     Cell {
       HAlign: HAligns.Center;
-      ShowSegment(segment);
+      segment.ShowSegment;
     };
     Cell {
       Style.IPAFamily;
       Span {
         Separator: ", ";
-        ShowIPA(each WordsWithSegment(segment))
+        (each WordsWithSegment(segment)).ShowIPA
       }
     }
   };
@@ -323,7 +306,7 @@ with MatchingOptions {
   SegmentText(segments, segment) {
     if (not segment.Impossible) {
       segments.Add(segment);
-      return ShowSegment(segment);
+      return segment.ShowSegment;
     }
     return null;
   }
@@ -488,7 +471,7 @@ with MatchingDiacritics {
       LeftIndent: 0.5 inches;
       FirstIndent: -0.5 inches;
       LocationMark: segment.GlobalVariablePath;
-      ShowSegment(segment) {
+      segment.ShowSegment {
         TextHeight: 18 pts;
         Tab;
       };
@@ -523,11 +506,11 @@ with MatchingOther {
       HAlign: HAligns.Center;
       TextHeight: 20 pts;
       LocationMark: segment.GlobalVariablePath;
-      ShowSegment(segment);
+      segment.ShowSegment;
     };
     Cell {
       VAlign: VAligns.Center;
-      SegmentName(segment)
+      segment.SegmentName;
     }
   };
 
@@ -608,11 +591,6 @@ with SegmentTree {
     Label: name
   };
 
-  AddSegment(set, segment) {
-    set.Add(segment);
-    return ShowSegment(segment)
-  }
-
   AddSegments(set, name, predicate) {
     var segments = Results.UsedSegments.FindSlice(predicate);
     if (segments.Length > 0) {
@@ -630,7 +608,10 @@ with SegmentTree {
             Span {
               TextHeight: 12 pts;
               Separator: Space;
-              AddSegment(set, each segments);
+              foreach (var segment in segments) {
+                set.Add(segment);
+                segment.ShowSegment;
+              }
             }
           }
         }
