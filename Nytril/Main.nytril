@@ -15,9 +15,9 @@ Main.Run = [
 //  Write(RevBayes.SourceFile, Info.RevSourcePath),
   Write(Results.LanguageTreeFile, Info.LanguageTreePath),
   Write(Results.CharacterFile, Info.CharacterPath),
-  Write(Watch, Info.PaperPath Extensions.PDF),
-  Write(Watch, Info.PaperPath Extensions.Word),
-  IO.OpenDocument(Info.PaperPath Extensions.Word),
+//  Write(Watch, Info.PaperPath Extensions.PDF),
+//  Write(Watch, Info.PaperPath Extensions.Word),
+//  IO.OpenDocument(Info.PaperPath Extensions.Word),
 ];
 //======================================================================
 
@@ -35,7 +35,7 @@ with Info {
   LanguageTree     = LanguageBranches.Romance;
 
   AuthorList = Span {
-    Separator: Lang.Separator;
+    Separator: ", ";
     LastSeparator: " {0} "(Lang.And);
     Style.Author(each Authors)
   };
@@ -84,21 +84,20 @@ AddAppendix(title, content) = {
 };
 
 Appendix = [
-  AddAppendix(Lang.LanguagePhylogeny, Style.ShowLanguageTree),
-//  AddAppendix("Meanings with words in every language", CompleteMeanings.ShowTable),
   AddAppendix("Words in each language by meaning", AllWords.ShowTable(Results.UsedLanguages, Results.UsedMeanings)),
-  AddAppendix("Feature Change", IPA.DriftSection),
   AddAppendix("Character file", Results.CharacterFile Style.MonoFamily),
+  AddAppendix("Language Tree File", Results.LanguageTreeFile Style.MonoFamily),
   AddAppendix("Segments in the target word list", DisplayCharacters.ShowTable),
   AddAppendix("Segment Groups", MatchingConsonants.ShowTables),
+  AddAppendix("Word Lists by Language", DisplayWords.ShowTable),
   AddAppendix(Lang.Diacritics, MatchingDiacritics.ShowTable),
   AddAppendix("Euler Feature Diagram", IPA.FeatureChart),
   AddAppendix(Lang.IPAFullName, IPA.SegmentTable),
-  AddAppendix("Feature Tree", SegmentTree.ShowTree),
-  AddAppendix("SAMPAConversion", SAMPAConversion.ShowTable),
-  AddAppendix("Word Lists by Language", DisplayWords.ShowTable(each Results.UsedLanguages)),
-  AddAppendix("Language Tree File", Results.LanguageTreeFile Style.MonoFamily),
-  AddAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
+  AddAppendix(Lang.LanguagePhylogeny, Style.ShowLanguageTree),
+//  AddAppendix("Feature Tree", SegmentTree.ShowTree),
+//  AddAppendix("Meanings with words in every language", CompleteMeanings.ShowTable),
+//  AddAppendix("Feature Change", IPA.DriftSection),
+//  AddAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
 ];
 //======================================================================
 

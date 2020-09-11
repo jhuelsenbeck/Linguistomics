@@ -153,16 +153,15 @@ with DisplayWords {
     Style.RowBar(EachIndex);
     Cell {
       Style.SansSerif;
-      Style.TitleBackground;
       word.Meaning
     };
     Cell {
-      ShowSampa(word.Sampa)
-    };
-    Cell {
-      Span {
-        ShowSegment(each word.Segments)
-      };
+      var text = word.SegmentText;
+      if (text != word.Text) {
+        System.Assert(false, "IPA round-trip error");
+        TextColor: Colors.Red;
+      }
+      text;
     };
     Cell {
       Span {
@@ -180,19 +179,22 @@ with DisplayWords {
     d
   };
 
-  ShowTable(language) = Block {
+  ShowTable {
+    ShowLanguage(each Results.UsedLanguages);
+  }
+
+  ShowLanguage(language) = Block {
     Table {
-      Columns: [0.8 inches, 1 inches, 1 inches, Metrics.Content.Width - 2.5 inches];
+      Columns: [0.8 inches, 1.5 inches, Metrics.Content.Width - 2.3 inches];
       Style.TitleBar(language.GlobalVariableName, 4);
       Row {
         HeaderCell(Lang.Meaning);
-        HeaderCell(Lang.Sampa);
         HeaderCell(Lang.IPA);
         HeaderCell(Lang.Sounds);
       };
       WordRow(each language.Words)
     };
-    Style.TableNotes
+    Paragraph;
   };
 }
 //======================================================================
@@ -251,18 +253,14 @@ with DisplayCharacters {
     return set.Values;
   }
 
-  CollectLangWord(set, segment, word) {
-    if (word.Segments.Contains(s => s == segment))
-      set.Add(word, word.Sampa);
-  }
-
-  CollectLanguageWords(set, segment, language) {
-    CollectLangWord(set, segment, each GetWordList(language));
-  }
-
   WordsWithSegment(segment) {
     var set = new DictionaryClass(256);
-    CollectLanguageWords(set, segment, each Results.UsedLanguages);
+    foreach (var language in Results.UsedLanguages) {
+      foreach (var word in GetWordList(language)) {
+        if (word.Segments.Contains(s => s == segment))
+          set.Add(word, word.Text);
+      }
+    }
     return set.Values;
   }
 
@@ -279,7 +277,7 @@ with DisplayCharacters {
     Cell {
       Style.IPAFamily;
       Span {
-        Separator: Lang.Separator;
+        Separator: ", ";
         ShowIPA(each WordsWithSegment(segment))
       }
     }
@@ -555,15 +553,23 @@ with CompleteMeanings {
   ContainsMeaning(word, meaning)    = word.Meaning == meaning;
   WithoutMeaning(language, meaning) = not language.Words.Contains(word => ContainsMeaning(word, meaning));
 
-  CollectMeanings(set, meaning) {
-    if (not Results.UsedLanguages.Contains(language => WithoutMeaning(language, meaning)))
-      set.Add(meaning);
+  WordMeanings {
+    var set = new DictionaryClass(128);
+    foreach (var language in Languages) {
+      foreach (var word in language.Words)
+        set.Add(null, word.Meaning);
+    }
+    System.Trace("", set.Keys);
+    return set.Keys;
   }
 
   Find {
     var set = new DictionaryClass(128);
-    CollectMeanings(set, each WordMeanings);
-    return set.Values;
+    foreach (var meaning in WordMeanings) {
+      if (not Results.UsedLanguages.Contains(language => WithoutMeaning(language, meaning)))
+        set.Add(null, meaning);
+    }
+    return set.Keys;
   }
 
   AddRow(meaning) = Row {
@@ -678,50 +684,6 @@ with SegmentTree {
       }
     }
   }
-}
-//======================================================================
-// SAMPA table
-//======================================================================
-
-with SAMPAConversion {
-  ShowSampaLine(segment) = Span {
-    segment.Sampa
-  };
-
-  AddRow(segment) = Row {
-    Cell {
-      ShowSampa(segment.Sampa)
-    };
-    Cell {
-      ShowSegment(segment)
-    };
-    Cell {
-      segment.GlobalVariableName
-    }
-  };
-
-  AlphaOrder(x, y) {
-    var cl = x.Sampa.Length.Compare(y.Sampa.Length);
-    if (cl == 0)
-      cl = -x.Sampa.Compare(y.Sampa);
-    return cl;
-  }
-
-  SortedSampa = IPA.SampaSet.Sort(false, AlphaOrder);
-
-  ShowTable = Block {
-    Table {
-      Style.TableEdge;
-      Columns: [0.75 inches, 0.75 inches, 4 inches];
-      Row {
-        Style.HeaderCell(Lang.Sampa);
-        Style.HeaderCell(Lang.IPA);
-        Style.HeaderCell(Lang.Segment)
-      };
-      AddRow(each SortedSampa);
-    };
-    Style.TableNotes
-  };
 }
 //======================================================================
 

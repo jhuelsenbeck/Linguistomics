@@ -1,104 +1,133 @@
-AddLanguage(name, cases=0, words=null) = {
-  Name: name;
-  Cases: cases;
-  Words: words;
-};
+using Format;
+
+//======================================================================
+
+class WordClass {
+  var Meaning,
+      Text,
+      Segments;
+
+  init(meaning, text) {
+    Meaning  = meaning;
+    Text     = text;
+    Segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
+  }
+
+  SegmentText = Type.String(Span {(each Segments).Ipa});
+}
+//======================================================================
+
+class LanguageClass {
+  var Name,
+      Cases,
+      Words;
+
+  init(name, cases=0, words=null) {
+    Name  = name;
+    Cases = cases;
+    if (words)
+      Words = AddWord(each words);
+  }
+
+  AddWord(word) = new WordClass(word.GlobalVariableName, word[0]);
+}
+//======================================================================
 
 with Languages {
-  Old_Irish          = AddLanguage("Old Irish", 5);
-  Irish              = AddLanguage("Irish", 4);
-  Scots_Gaelic       = AddLanguage("Scots Gaelic", 4);
-  Welsh              = AddLanguage("Welsh");
-  Breton             = AddLanguage("Breton");
-  Cornish            = AddLanguage("Cornish");
-  Latin              = AddLanguage("Latin", 6, WordList.Latin);
-  Nuorese            = AddLanguage("Nuorese");
-  Cagliari           = AddLanguage("Cagliari");
-  Romanian           = AddLanguage("Romanian", 3, WordList.Romanian);
-  Arumanian          = AddLanguage("Arumanian", 3);
-  Catalan            = AddLanguage("Catalan", 0, WordList.Catalan);
-  Portuguese         = AddLanguage("Portuguese", 0, WordList.Portuguese);
-  Spanish            = AddLanguage("Spanish", 0, WordList.Spanish);
-  French             = AddLanguage("French", 0, WordList.French);
-  Provencal          = AddLanguage("Provencal");
-  Walloon            = AddLanguage("Walloon", 0, WordList.Walloon);
-  Ladin              = AddLanguage("Ladin");
-  Romansh            = AddLanguage("Romansh", 0, WordList.Romansh);
-  Friulian           = AddLanguage("Friulian", 0, WordList.Friulian);
-  Italian            = AddLanguage("Italian", 0, WordList.Italian);
-  Gothic             = AddLanguage("Gothic", 5);
-  Old_West_Norse     = AddLanguage("Old West Norse", 4);
-  Icelandic          = AddLanguage("Icelandic", 4);
-  Faroese            = AddLanguage("Faroese", 4);
-  Norwegian          = AddLanguage("Norwegian", 2);
-  Swedish            = AddLanguage("Swedish", 2);
-  Danish             = AddLanguage("Danish", 2);
-  Old_English        = AddLanguage("Old English", 4);
-  English            = AddLanguage("English");
-  Frisian            = AddLanguage("Frisian", 2);
-  Old_High_German    = AddLanguage("Old High German", 5);
-  German             = AddLanguage("German", 4);
-  Luxembourgish      = AddLanguage("Luxembourgish", 3);
-  Swiss_German       = AddLanguage("Swiss German", 3);
-  Dutch              = AddLanguage("Dutch", 2);
-  Flemish            = AddLanguage("Flemish", 2);
-  Afrikaans          = AddLanguage("Afrikaans");
-  Tosk               = AddLanguage("Tosk", 4);
-  Arvanitika         = AddLanguage("Arvanitika", 4);
-  Ancient_Greek      = AddLanguage("Ancient Greek", 5);
-  Modern_Greek       = AddLanguage("Modern Greek", 4);
-  Classical_Armenian = AddLanguage("Classical Armenian", 7);
-  Eastern_Armenian   = AddLanguage("Eastern Armenian", 7);
-  Adapazar           = AddLanguage("Adapazar");
-  Old_Prussian       = AddLanguage("Old Prussian", 5);
-  Lithuanian         = AddLanguage("Lithuanian", 7);
-  Latvian            = AddLanguage("Latvian", 7);
-  Czech              = AddLanguage("Czech", 7);
-  Slovak             = AddLanguage("Slovak", 6);
-  Polish             = AddLanguage("Polish", 7);
-  Lower_Sorbian      = AddLanguage("Lower Sorbian", 6);
-  Upper_Sorbian      = AddLanguage("Upper Sorbian", 6);
-  Ukrainian          = AddLanguage("Ukrainian", 7);
-  Belarusian         = AddLanguage("Belarusian", 6);
-  Russian            = AddLanguage("Russian", 6);
-  Slovenian          = AddLanguage("Slovenian", 6);
-  Macedonian         = AddLanguage("Macedonian");
-  Bulgarian          = AddLanguage("Bulgarian", 2);
-  Serbian            = AddLanguage("Serbian", 7);
-  Old_Church_Slavic  = AddLanguage("Old Church Slavic", 7);
-  Avestan            = AddLanguage("Avestan", 8);
-  Pashto             = AddLanguage("Pashto", 4);
-  Waziri             = AddLanguage("Waziri");
-  Tajik              = AddLanguage("Tajik");
-  Persian            = AddLanguage("Persian");
-  Sogdian            = AddLanguage("Sogdian", 6);
-  Wakhi              = AddLanguage("Wakhi", 4 /* ? */);
-  Baluchi            = AddLanguage("Baluchi", 3);
-  Kurdish            = AddLanguage("Kurdish", 4);
-  Zazaki             = AddLanguage("Zazaki", 2);
-  Shughni            = AddLanguage("Shughni", 5);
-  Sariqoli           = AddLanguage("Sariqoli", 2);
-  Digor_Ossetic      = AddLanguage("Digor Ossetic", 9);
-  Vedic_Sanskrit     = AddLanguage("Vedic Sanskrit", 8);
-  Nepali             = AddLanguage("Nepali");
-  Assamese           = AddLanguage("Assamese", 6);
-  Oriya              = AddLanguage("Oriya", 3);
-  Bengali            = AddLanguage("Bengali", 4);
-  Bihari             = AddLanguage("Bihari", 5);
-  Marwari            = AddLanguage("Marwari");
-  Hindi              = AddLanguage("Hindi", 3);
-  Urdu               = AddLanguage("Urdu", 3);
-  Sindhi             = AddLanguage("Sindhi", 5);
-  Lahnda             = AddLanguage("Lahnda");
-  Panjabi            = AddLanguage("Panjabi", 5);
-  Gujarati           = AddLanguage("Gujarati", 3);
-  Marathi            = AddLanguage("Marathi", 8);
-  Kashmiri           = AddLanguage("Kashmiri", 5);
-  Singhalese         = AddLanguage("Singhalese", 8);
-  Romani             = AddLanguage("Romani", 3);
-  Tocharian_A        = AddLanguage("Tocharian A", 3);
-  Tocharian_B        = AddLanguage("Tocharian B", 3);
-  Hittite            = AddLanguage("Hittite", 8);
+  Old_Irish          = new LanguageClass("Old Irish", 5);
+  Irish              = new LanguageClass("Irish", 4);
+  Scots_Gaelic       = new LanguageClass("Scots Gaelic", 4);
+  Welsh              = new LanguageClass("Welsh");
+  Breton             = new LanguageClass("Breton");
+  Cornish            = new LanguageClass("Cornish");
+  Latin              = new LanguageClass("Latin", 6, WordList.Latin);
+  Nuorese            = new LanguageClass("Nuorese");
+  Cagliari           = new LanguageClass("Cagliari");
+  Romanian           = new LanguageClass("Romanian", 3, WordList.Romanian);
+  Arumanian          = new LanguageClass("Arumanian", 3);
+  Catalan            = new LanguageClass("Catalan", 0, WordList.Catalan);
+  Portuguese         = new LanguageClass("Portuguese", 0, WordList.Portuguese);
+  Spanish            = new LanguageClass("Spanish", 0, WordList.Spanish);
+  French             = new LanguageClass("French", 0, WordList.French);
+  Provencal          = new LanguageClass("Provencal");
+  Walloon            = new LanguageClass("Walloon", 0, WordList.Walloon);
+  Ladin              = new LanguageClass("Ladin");
+  Romansh            = new LanguageClass("Romansh", 0, WordList.Romansh);
+  Friulian           = new LanguageClass("Friulian", 0, WordList.Friulian);
+  Italian            = new LanguageClass("Italian", 0, WordList.Italian);
+  Gothic             = new LanguageClass("Gothic", 5);
+  Old_West_Norse     = new LanguageClass("Old West Norse", 4);
+  Icelandic          = new LanguageClass("Icelandic", 4);
+  Faroese            = new LanguageClass("Faroese", 4);
+  Norwegian          = new LanguageClass("Norwegian", 2);
+  Swedish            = new LanguageClass("Swedish", 2);
+  Danish             = new LanguageClass("Danish", 2);
+  Old_English        = new LanguageClass("Old English", 4);
+  English            = new LanguageClass("English");
+  Frisian            = new LanguageClass("Frisian", 2);
+  Old_High_German    = new LanguageClass("Old High German", 5);
+  German             = new LanguageClass("German", 4);
+  Luxembourgish      = new LanguageClass("Luxembourgish", 3);
+  Swiss_German       = new LanguageClass("Swiss German", 3);
+  Dutch              = new LanguageClass("Dutch", 2);
+  Flemish            = new LanguageClass("Flemish", 2);
+  Afrikaans          = new LanguageClass("Afrikaans");
+  Tosk               = new LanguageClass("Tosk", 4);
+  Arvanitika         = new LanguageClass("Arvanitika", 4);
+  Ancient_Greek      = new LanguageClass("Ancient Greek", 5);
+  Modern_Greek       = new LanguageClass("Modern Greek", 4);
+  Classical_Armenian = new LanguageClass("Classical Armenian", 7);
+  Eastern_Armenian   = new LanguageClass("Eastern Armenian", 7);
+  Adapazar           = new LanguageClass("Adapazar");
+  Old_Prussian       = new LanguageClass("Old Prussian", 5);
+  Lithuanian         = new LanguageClass("Lithuanian", 7);
+  Latvian            = new LanguageClass("Latvian", 7);
+  Czech              = new LanguageClass("Czech", 7);
+  Slovak             = new LanguageClass("Slovak", 6);
+  Polish             = new LanguageClass("Polish", 7);
+  Lower_Sorbian      = new LanguageClass("Lower Sorbian", 6);
+  Upper_Sorbian      = new LanguageClass("Upper Sorbian", 6);
+  Ukrainian          = new LanguageClass("Ukrainian", 7);
+  Belarusian         = new LanguageClass("Belarusian", 6);
+  Russian            = new LanguageClass("Russian", 6);
+  Slovenian          = new LanguageClass("Slovenian", 6);
+  Macedonian         = new LanguageClass("Macedonian");
+  Bulgarian          = new LanguageClass("Bulgarian", 2);
+  Serbian            = new LanguageClass("Serbian", 7);
+  Old_Church_Slavic  = new LanguageClass("Old Church Slavic", 7);
+  Avestan            = new LanguageClass("Avestan", 8);
+  Pashto             = new LanguageClass("Pashto", 4);
+  Waziri             = new LanguageClass("Waziri");
+  Tajik              = new LanguageClass("Tajik");
+  Persian            = new LanguageClass("Persian");
+  Sogdian            = new LanguageClass("Sogdian", 6);
+  Wakhi              = new LanguageClass("Wakhi", 4 /* ? */);
+  Baluchi            = new LanguageClass("Baluchi", 3);
+  Kurdish            = new LanguageClass("Kurdish", 4);
+  Zazaki             = new LanguageClass("Zazaki", 2);
+  Shughni            = new LanguageClass("Shughni", 5);
+  Sariqoli           = new LanguageClass("Sariqoli", 2);
+  Digor_Ossetic      = new LanguageClass("Digor Ossetic", 9);
+  Vedic_Sanskrit     = new LanguageClass("Vedic Sanskrit", 8);
+  Nepali             = new LanguageClass("Nepali");
+  Assamese           = new LanguageClass("Assamese", 6);
+  Oriya              = new LanguageClass("Oriya", 3);
+  Bengali            = new LanguageClass("Bengali", 4);
+  Bihari             = new LanguageClass("Bihari", 5);
+  Marwari            = new LanguageClass("Marwari");
+  Hindi              = new LanguageClass("Hindi", 3);
+  Urdu               = new LanguageClass("Urdu", 3);
+  Sindhi             = new LanguageClass("Sindhi", 5);
+  Lahnda             = new LanguageClass("Lahnda");
+  Panjabi            = new LanguageClass("Panjabi", 5);
+  Gujarati           = new LanguageClass("Gujarati", 3);
+  Marathi            = new LanguageClass("Marathi", 8);
+  Kashmiri           = new LanguageClass("Kashmiri", 5);
+  Singhalese         = new LanguageClass("Singhalese", 8);
+  Romani             = new LanguageClass("Romani", 3);
+  Tocharian_A        = new LanguageClass("Tocharian A", 3);
+  Tocharian_B        = new LanguageClass("Tocharian B", 3);
+  Hittite            = new LanguageClass("Hittite", 8);
 }
 //======================================================================
 

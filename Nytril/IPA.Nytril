@@ -617,11 +617,6 @@ with IPA {
   SegmentColumns = 4;
   SegmentSize    = 40 pts;
 
-  ShowSampa(sampa) = Span {
-    Style.MonoFamily;
-    sampa;
-  };
-
   SegmentName(segment) = Span {
     if (segment.Features.HasFlag(Vowel)) {
       segment.Open;
@@ -662,20 +657,9 @@ with IPA {
       TextRadix: 16;
       TextDigits: 4;
       Span {
-        Separator: Lang.Separator;
+        Separator: ", ";
         if (segment.Ipa)
           Type.Integer(each segment.Ipa);
-      }
-    };
-    Paragraph {
-      TextHeight: 8 pts;
-      if (segment.Sampa and segment.Sampa.Length > 0) {
-        ParBackground: 90%;
-        ShowSampa(segment.Sampa)
-      }
-      else if (segment.Ipa.Length > 0) {
-        "No Sampa" {TextColor: Colors.White};
-        ParBackground: Colors.Red;
       }
     };
   };
@@ -754,14 +738,12 @@ with IPA {
   // Build a dictionary with SAMPA text as the key
   //======================================================================
 
-  GatherText(set, segment) {
-    if (segment.Sampa.Length > 0)
-      set.Add(segment, segment.Sampa);
-  }
-
-  SampaSet {
+  SegmentDictionary {
     var set = new DictionaryClass(128);
-    GatherText(set, each Segments);
+    foreach (var segment in Segments) {
+      if (segment.Ipa.Length > 0)
+        set.Add(segment, segment.Ipa);
+    }
     set.Add(SpaceSegment, " ");
     return set;
   }
