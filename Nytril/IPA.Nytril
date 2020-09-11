@@ -774,19 +774,14 @@ with IPA {
   EX(x)     = ChartSize * x * 0.01;
   EY(y)     = ChartSize * y * 0.01;
 
-  Enclosure(x, y, w, h, color) {
-    var size = Size(EX(w), EY(h));
-    return Canvas {
-      X: EX(x);
-      Y: EY(y);
-      Size: size;
-      Figure {
-        Stroke: 1 pts;
-        Fill: color;
-        Rectangle(Rect(0, size), Size(6 pts))
-      }
-    };
-  }
+  Enclosure(x, y, w, h, color) = Canvas {
+    BorderStroke: 1 pts;
+    Corner: 6 pts;
+    Background: color;
+    X: EX(x);
+    Y: EY(y);
+    Size: Size(EX(w), EY(h));
+  };
 
   NameBox(name, angle=0) = Paragraph {
     Transform: Rotate(angle);
@@ -794,6 +789,11 @@ with IPA {
     Space;
     name Bold;
     Space;
+  };
+
+  VNameFrame(name, x, y, width, height, color) = Enclosure(x, y, width, height, color) {
+    VAlign: VAligns.Center;
+    NameBox(name, 90 degrees)
   };
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
@@ -813,11 +813,6 @@ with IPA {
         IPA.ShowSegment(each FeatureSegments(features))
       }
     }
-  };
-
-  VNameFrame(name, x, y, width, height, color) = Enclosure(x, y, width, height, color) {
-    VAlign: VAligns.Center;
-    NameBox(name, 90 degrees)
   };
 
   FeatureChart = Canvas {
@@ -1000,14 +995,10 @@ with IPA {
     DriftChart(Results.GetGeneText(meaning, each Results.UsedLanguages));
   };
 
-  DriftGroup(meanings) = Group {
-    DriftMeaning(each meanings)
-  };
-
   DriftSection = Block {
     Paragraph {
       Separator: "  ";
-      DriftGroup(each Results.UsedMeanings)
+      DriftMeaning(each Results.UsedMeanings);
     }
   };
 }
