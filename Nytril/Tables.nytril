@@ -1,4 +1,4 @@
-﻿using Format, Units, IPA, FeatureSet;
+﻿using Format, Type, Units, IPA, FeatureSet;
 //======================================================================
 
 with Metrics {
@@ -7,23 +7,82 @@ with Metrics {
 }
 //======================================================================
 
+class WordClass {
+  var Language,
+      Concept,
+      Text,
+      Segments;
+
+  init(language, concept, text) {
+    Language = language;
+    Concept  = ConceptsList.GetField(concept);
+    Text     = text;
+    if (text.Length > 0) {
+      Segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
+      // Test that the word's text is the same as the segments converted back into text
+      System.Assert(text == String(Span {(each Segments).Ipa}), "Round-trip error with text " text);
+    }
+    else
+      Segments = [];
+  }
+
+  ShowConcept = Span {
+    Style.SansSerif;
+    Popup: ref PopupConcept;
+    Concept;
+  };
+
+  PopupConcept = Frame {
+    AllWords.ShowConceptTable(Concept);
+  };
+}
+//======================================================================
+
+class LanguageClass {
+  var Name,
+      Cases,
+      Words;
+
+  init(name, cases=0, words=null) {
+    Name  = name;
+    Cases = cases;
+    if (words)
+      Words = AddWord(each words);
+  }
+
+  AddWord(word) = new WordClass(this, word.GlobalVariableName, word);
+}
+//======================================================================
+
+class ConceptRecord {
+  var Cells,
+      MaxLength;
+
+  init(concept) {
+    Cells     = new ListClass(128);
+    MaxLength = 0;
+
+    foreach (var language in Results.UsedLanguages) {
+      var found = false;
+      foreach (var word in language.Words) {
+        if (word.Concept == concept) {
+          Cells.Add(word);
+          var l = word.Segments.Length;
+          if (l > MaxLength)
+            MaxLength = l;
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        Cells.Add(new WordClass(language, concept, Empty));
+    }
+  }
+
+  GetGeneText(concept, language) = language.Words.FindSlice(word => word.Concept == concept);
+}
+
 with Results {
-  GetGeneText(concept, language) = {
-    var words    = language.Words.FindSlice(word => word.Concept == concept, 1);
-    var segments = words.Length == 1 ? words[0].Segments : [IPA.NoSegment];
-
-    Language: language;
-    Concept: concept;
-    Word: words[0];
-    Segments: segments;
-    Count: segments.Length;
-  };
-
-  GetConceptRecord(concept) = {
-    var cells = GetGeneText(concept, each UsedLanguages);
-    Cells: cells;
-    MaxLength: ((each cells).Count).Max;
-  };
 
   AddBlank(list, index) {
     list.Add(IPA.GapSegment);
@@ -33,10 +92,10 @@ with Results {
     var list = new ListClass(150);
     foreach (var concept in ConceptsList) {
       var ma   = WordConceptArray[EachIndex];
-      var cell = ma.Cells[langindex];
-      var pad  = ma.MaxLength - cell.Count;
+      var word = ma.Cells[langindex];
+      var pad  = ma.MaxLength - word.Segments.Length;
       list.Add(IPA.LeftSegment);
-      list.Add(each cell.Segments);
+      list.Add(each word.Segments);
       if (pad > 0)
         AddBlank(list, each 1..pad);
       list.Add(IPA.RightSegment);
@@ -51,8 +110,10 @@ with Results {
     Characters: (each segments).SegmentToCharacter;
   };
 
+  AddConceptRecord(concept) = new ConceptRecord(concept);
+
   UsedLanguages    = Languages.FindSlice(lang => lang.Words != null);
-  WordConceptArray = GetConceptRecord(each ConceptsList);
+  WordConceptArray = AddConceptRecord(each ConceptsList);
   UniqueSegments   = DisplayCharacters.FindUniqueSegments;
   TaxaArray        = GetTaxaArray(each UsedLanguages);
   LanguageTreeFile = Nexus.TreeFile(Info.LanguageTree);
@@ -127,11 +188,6 @@ with DisplayWords {
       word.ShowConcept;
     };
     Cell {
-      var text = word.SegmentText;
-      if (text != word.Text) {
-        System.Assert(false, "IPA round-trip error");
-        TextColor: Colors.Red;
-      }
       word.Text;
     };
     Cell {
@@ -250,7 +306,7 @@ with DisplayCharacters {
       Style.IPAFamily;
       Span {
         Separator: ", ";
-        (each words).ShowIPA
+        (each words).Text
       }
     }
   };

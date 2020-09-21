@@ -963,34 +963,27 @@ with IPA {
     FeatureBox(each FeatureList, segment0.Features, segment1.Features);
   };
 
-  DriftFeatures(line0, line, index) = Group {
+  DriftFeatures(word0, word) = Group {
     Vertical: true;
-    Group {
-      Vertical: true;
-      RowBox {
-        if (EachIndex == 0)
-          line0.Segments[index].ShowSegment;
+    if (word0.Segments.Length > 0 and word.Segments.Length > 0) {
+      Group {
+        Vertical: true;
+        RowBox {
+          if (EachIndex == 0)
+            word0.Segments[0].ShowSegment;
+        };
+        RowBox {
+          word.Segments[0].ShowSegment;
+        };
+        BorderB: BorderSize;
       };
-      RowBox {
-        line.Segments[index].ShowSegment;
-      };
-      BorderB: BorderSize;
-    };
-    Group {
-      FeatureSegment(line0.Segments[index], line.Segments[index]);
+      Group {
+        FeatureSegment(word0.Segments[0], word.Segments[0]);
+      }
     }
   };
 
-  SegmentLength(line) = line.Segments.Length;
-  MinLength(lines)    = SegmentLength(each lines).Min;
-
-  DriftMatrix(lines, index) = Group {
-    if (index != 0)
-      BorderL: BorderSize;
-    DriftFeatures(lines[0], each lines[1..], index)
-  };
-
-  DriftChart(lines) = Group {
+  DriftChart(cells) = Group {
     TextHeight: RowText;
     VAlign: VAligns.Top;
     Border: BorderSize;
@@ -1010,7 +1003,9 @@ with IPA {
         ShowFeature(each FeatureList)
       };
     };
-    DriftMatrix(lines, each 0..<MinLength(lines))
+    Group {
+      DriftFeatures(cells[0], each cells[1..])
+    };
   };
 
   ConceptDrift(concept) = Group {
@@ -1020,7 +1015,8 @@ with IPA {
       Lang.Concept; ": ";
       concept Bold;
     };
-    DriftChart(Results.GetGeneText(concept, each Results.UsedLanguages));
+    var record = new ConceptRecord(concept);
+    DriftChart(record.Cells);
   };
 
   DriftSection = Block {
