@@ -8,25 +8,22 @@ with Metrics {
 //======================================================================
 
 with Results {
-  GetGeneText(meaning, language) {
+  GetGeneText(meaning, language) = {
     var words    = language.Words.FindSlice(word => word.Meaning == meaning, 1);
     var segments = words.Length == 1 ? words[0].Segments : [IPA.NoSegment];
-    return {
-      Language: language;
-      Meaning: meaning;
-      Word: words[0];
-      Segments: segments;
-      Count: segments.Length
-    }
-  }
 
-  GetMeaningRecord(meaning) {
+    Language: language;
+    Meaning: meaning;
+    Word: words[0];
+    Segments: segments;
+    Count: segments.Length;
+  };
+
+  GetMeaningRecord(meaning) = {
     var cells = GetGeneText(meaning, each UsedLanguages);
-    return {
-       Cells: cells;
-       MaxLength: ((each cells).Count).Max
-    };
-  }
+    Cells: cells;
+    MaxLength: ((each cells).Count).Max;
+  };
 
   AddBlank(list, index) {
     list.Add(IPA.GapSegment);
@@ -49,14 +46,12 @@ with Results {
     return list;
   }
 
-  GetTaxaArray(lang) {
+  GetTaxaArray(lang) = {
     var segments = GetSegments(EachIndex);
-    return {
-      TaxonName: lang.GlobalVariableName;
-      Segments: segments;
-      Characters: (each segments).SegmentToCharacter;
-    }
-  }
+    TaxonName: lang.GlobalVariableName;
+    Segments: segments;
+    Characters: (each segments).SegmentToCharacter;
+  };
 
   UsedLanguages    = Languages.FindSlice(lang => lang.Words != null);
   UsedMeanings     = CompleteMeanings.Find;
@@ -165,7 +160,7 @@ with DisplayWords {
   ShowLanguage(language) = Block {
     Table {
       Columns: [0.8 inches, 1.5 inches, Metrics.Content.Width - 2.3 inches];
-      Style.TitleBar(language.GlobalVariableName, 4);
+      Style.TitleBar(language.GlobalVariableName, 3);
       Row {
         HeaderCell(Lang.Meaning);
         HeaderCell(Lang.IPA);
@@ -180,7 +175,7 @@ with DisplayWords {
 
 with AllWords {
   AddCell(meaning, language) = Cell {
-    (each IPA.FindWordsWithMeaning(language, meaning)).ShowIPA
+    (each IPA.FindWordsWithMeaning(language, meaning)).Text
   };
 
   AddRow(language, meanings) = Row {
@@ -562,7 +557,7 @@ with CompleteMeanings {
       EachIndex+1
     };
     Cell {
-      meaning.Name
+      meaning
     }
   };
 
@@ -570,7 +565,7 @@ with CompleteMeanings {
     Table {
       Style.TableEdge;
       Columns: [0.5 inches, 4 inches];
-      Style.TitleBar(Lang.Meanings, 3);
+      Style.TitleBar(Lang.Meanings, 2);
       Row {
         Style.HeaderCell(Empty);
         Style.HeaderCell(Lang.Meaning)
@@ -591,25 +586,25 @@ with SegmentTree {
     Label: name
   };
 
-  AddSegments(set, name, predicate) {
+  AddSegments(set, name, predicate, width=3 inches) {
     var segments = Results.UsedSegments.FindSlice(predicate);
     if (segments.Length > 0) {
       return Node {
         Label: Frame {
-          Width: 4 inches;
+          Width: width;
           Paragraph {
-            LeftIndent: 1 inches;
-            FirstIndent: -1 inches;
+            LeftIndent: 0.95 inches;
+            FirstIndent: -0.95 inches;
             Span {
-              TextColor: Colors.DarkGray;
+              TextBackground: 95%;
               name;
-              ":\t";
+              Tab;
             };
             Span {
-              TextHeight: 12 pts;
+              TextHeight: 10 pts;
               Separator: Space;
               foreach (var segment in segments) {
-                set.Add(segment);
+                var good = set.Add(segment);
                 segment.ShowSegment;
               }
             }
@@ -621,14 +616,8 @@ with SegmentTree {
       return null;
   }
 
-  MatchVowel(segment, backness)  = segment.Features.HasFlag(Vowel) and segment.Backness == backness;
-  AddVowels(set, backness)       = AddSegments(set, backness.Name, segment => MatchVowel(segment, backness));
-
-  MatchFlags(segment, data)      = not data.Set.Contains(segment) and
-                                   segment.Features.HasFlagMask(data.All, data.Features) and
-                                   segment.Features.HasFlagMask(data.Other, data.Other);
-
-  AddFlag(set, all, features, f) = AddSegments(set, f.Name, segment => MatchFlags(segment, {Set: set; All: all; Features: features; Other: f}));
+  AddVowels(set, backness)           = AddSegments(set, backness.Name, s => s.Features.HasFlag(Vowel) and s.Backness == backness);
+  AddFlag(set, all, features, other) = AddSegments(set, other.Name, s => not set.Contains(s) and s.Features.HasFlagMask(all, features) and s.Features.HasFlagMask(other, other));
 
   AddConsonants(set, name, all, features) = AddNode(name) {
     AddFlag(set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]);
@@ -639,32 +628,32 @@ with SegmentTree {
     AddConsonants(set, Lang.Voiceless, all Voiced, features);
   };
 
-  ShowTree {
+  GetNodes = Node {
     var set1 = new DictionaryClass(256);
     var set2 = new DictionaryClass(256);
     var all  = Vowel Pulmonic Affricate;
 
-    return Block {
-      Tree {
-        Width: 7 inches;
-        LabelGap: 3 pts;
-        Node {
-          AddNode(Lang.Vowels) {
-            AddVowels(set1, each Backnesses)
-          };
-          AddNode(Lang.Affricates) {
-            AddVoicedPairs(set1, Lang.NonPulmonic, all, Affricate);
-            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic Affricate);
-          };
-          AddNode(Lang.Consonants) {
-            AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic);
-            AddVoicedPairs(set1, Lang.NonPulmonic, all, NoFeature);
-          };
-          AddSegments(set2, Lang.OtherSegments, segment => true)
-        }
-      }
+    AddNode(Lang.Vowels) {
+      AddVowels(set1, each Backnesses)
+    };
+    AddNode(Lang.Affricates) {
+      AddVoicedPairs(set1, Lang.NonPulmonic, all, Affricate);
+      AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic Affricate);
+    };
+    AddNode(Lang.Consonants) {
+      AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic);
+      AddVoicedPairs(set1, Lang.NonPulmonic, all, NoFeature);
+    };
+    AddSegments(set2, "Other", segment => true, 4 inches)
+  };
+
+  ShowTree = Paragraph {
+    Tree {
+      Width: 7 inches;
+      LabelGap: 2 pts;
+      GetNodes;
     }
-  }
+  };
 }
 //======================================================================
 
