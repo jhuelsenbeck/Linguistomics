@@ -778,7 +778,7 @@ with IPA {
     return segment.GlobalVariableName
   }
 
-  FindWordsWithMeaning(language, meaning) = language.Words.FindSlice(word => word.Meaning == meaning);
+  FindWordsWithConcept(language, concept) = language.Words.FindSlice(word => word.Concept == concept);
 
   //======================================================================
   // Build a dictionary with SAMPA text as the key
@@ -1013,20 +1013,20 @@ with IPA {
     DriftMatrix(lines, each 0..<MinLength(lines))
   };
 
-  DriftMeaning(meaning) = Group {
+  ConceptDrift(concept) = Group {
     MarginB: 8 pts;
     Vertical: true;
     Paragraph {
-      Lang.Meaning; ": ";
-      meaning Bold;
+      Lang.Concept; ": ";
+      concept Bold;
     };
-    DriftChart(Results.GetGeneText(meaning, each Results.UsedLanguages));
+    DriftChart(Results.GetGeneText(concept, each Results.UsedLanguages));
   };
 
   DriftSection = Block {
     Paragraph {
       Separator: "  ";
-      DriftMeaning(each Results.UsedMeanings);
+      ConceptDrift(each ConceptsList);
     }
   };
 }

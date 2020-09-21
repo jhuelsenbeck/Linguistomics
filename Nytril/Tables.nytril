@@ -8,19 +8,19 @@ with Metrics {
 //======================================================================
 
 with Results {
-  GetGeneText(meaning, language) = {
-    var words    = language.Words.FindSlice(word => word.Meaning == meaning, 1);
+  GetGeneText(concept, language) = {
+    var words    = language.Words.FindSlice(word => word.Concept == concept, 1);
     var segments = words.Length == 1 ? words[0].Segments : [IPA.NoSegment];
 
     Language: language;
-    Meaning: meaning;
+    Concept: concept;
     Word: words[0];
     Segments: segments;
     Count: segments.Length;
   };
 
-  GetMeaningRecord(meaning) = {
-    var cells = GetGeneText(meaning, each UsedLanguages);
+  GetConceptRecord(concept) = {
+    var cells = GetGeneText(concept, each UsedLanguages);
     Cells: cells;
     MaxLength: ((each cells).Count).Max;
   };
@@ -29,20 +29,18 @@ with Results {
     list.Add(IPA.GapSegment);
   }
 
-  AddWord(list, langindex, meaning) {
-    var ma   = WordMeaningArray[EachIndex];
-    var cell = ma.Cells[langindex];
-    var pad  = ma.MaxLength - cell.Count;
-    list.Add(IPA.LeftSegment);
-    list.Add(each cell.Segments);
-    if (pad > 0)
-      AddBlank(list, each 1..pad);
-    list.Add(IPA.RightSegment);
-  }
-
   GetSegments(langindex) {
     var list = new ListClass(150);
-    AddWord(list, langindex, each UsedMeanings);
+    foreach (var concept in ConceptsList) {
+      var ma   = WordConceptArray[EachIndex];
+      var cell = ma.Cells[langindex];
+      var pad  = ma.MaxLength - cell.Count;
+      list.Add(IPA.LeftSegment);
+      list.Add(each cell.Segments);
+      if (pad > 0)
+        AddBlank(list, each 1..pad);
+      list.Add(IPA.RightSegment);
+    }
     return list;
   }
 
@@ -54,9 +52,8 @@ with Results {
   };
 
   UsedLanguages    = Languages.FindSlice(lang => lang.Words != null);
-  UsedMeanings     = CompleteMeanings.Find;
-  WordMeaningArray = GetMeaningRecord(each UsedMeanings);
-  UniqueSegments   = DisplayCharacters.FindUniqueSegments(UsedLanguages);
+  WordConceptArray = GetConceptRecord(each ConceptsList);
+  UniqueSegments   = DisplayCharacters.FindUniqueSegments;
   TaxaArray        = GetTaxaArray(each UsedLanguages);
   LanguageTreeFile = Nexus.TreeFile(Info.LanguageTree);
   CharacterFile    = Nexus.CharacterFile(TaxaArray);
@@ -127,7 +124,7 @@ with DisplayWords {
   WordRow(word) = Row {
     Style.RowBar(EachIndex);
     Cell {
-      word.ShowMeaning;
+      word.ShowConcept;
     };
     Cell {
       var text = word.SegmentText;
@@ -162,7 +159,7 @@ with DisplayWords {
       Columns: [0.8 inches, 1.5 inches, Metrics.Content.Width - 2.3 inches];
       Style.TitleBar(language.GlobalVariableName, 3);
       Row {
-        HeaderCell(Lang.Meaning);
+        HeaderCell(Lang.Concept);
         HeaderCell(Lang.IPA);
         HeaderCell(Lang.Sounds);
       };
@@ -174,60 +171,55 @@ with DisplayWords {
 //======================================================================
 
 with AllWords {
-  AddCell(meaning, language) = Cell {
-    (each IPA.FindWordsWithMeaning(language, meaning)).Text
+  AddCell(concept, language) = Cell {
+    (each IPA.FindWordsWithConcept(language, concept)).Text
   };
 
-  AddRow(language, meanings) = Row {
+  AddRow(language, concepts) = Row {
     Cell {
       Style.SansSerif;
       TextColor: Colors.DarkGray;
       language.GlobalVariableName
     };
-    AddCell(each meanings, language)
+    AddCell(each concepts, language)
   };
 
-  MeaningTable(languages, meanings) = Block {
+  ConceptTable(languages, concepts) = Block {
     Table {
       Edge: 0.5;
-      Columns: [70 pts] + [54 pts] * meanings.Length;
+      Columns: [70 pts] + [54 pts] * concepts.Length;
       Row {
         Style.TitleBackground;
         Style.SansSerif;
         Empty;
-        each meanings;
+        each concepts;
       };
-      AddRow(each languages, meanings)
+      AddRow(each languages, concepts)
     };
     Paragraph;
   };
 
-  ShowMeaningTable(meaning) = MeaningTable(Results.UsedLanguages, [meaning]);
+  ShowConceptTable(concepts) = ConceptTable(Results.UsedLanguages, [concepts]);
 
-  ShowTable = ShowLangMeaning(Results.UsedLanguages, Results.UsedMeanings);
+  ShowTable = ShowLangConcept(Results.UsedLanguages, ConceptsList);
 
-  ShowLangMeaning(languages, meanings) = Block {
+  ShowLangConcept(languages, concepts) = Block {
     TextHeight: 12 pts;
-    MeaningTable(languages, each (meanings / 8))
+    ConceptTable(languages, each (concepts / 8))
   };
 }
 //======================================================================
 
 with DisplayCharacters {
-  CompleteWord(def)     = Results.UsedMeanings.Contains(meaning => meaning == def.Meaning);
+  CompleteWord(def)     = ConceptsList.Contains(concept => concept == def.Concept);
   GetWordList(language) = language.Words.FindSlice(def => CompleteWord(def));
 
-  CollectWord(set, word) {
-    set.Add(each word.Segments);
-  }
-
-  CollectLanguage(set, language) {
-    CollectWord(set, each GetWordList(language));
-  }
-
-  FindUniqueSegments(languagelist) {
+  FindUniqueSegments {
     var set = new DictionaryClass(256);
-    CollectLanguage(set, each languagelist);
+    foreach (var language in each Results.UsedLanguages) {
+      foreach (var word in GetWordList(language))
+        set.Add(each word.Segments);
+    }
     return set.Values;
   }
 
@@ -253,10 +245,12 @@ with DisplayCharacters {
       segment.ShowSegment;
     };
     Cell {
+      var words = WordsWithSegment(segment);
+
       Style.IPAFamily;
       Span {
         Separator: ", ";
-        (each WordsWithSegment(segment)).ShowIPA
+        (each words).ShowIPA
       }
     }
   };
@@ -519,58 +513,6 @@ with MatchingOther {
       Columns: [Metrics.BoxSize.Width, Metrics.Content.Width * 0.5 - Metrics.BoxSize.Width] * ColumnDiv;
       Style.TitleBar(Lang.OtherSegments, ColumnDiv*2);
       AddRow(each (Results.UsedSegments.FindSlice(segment => not set.Contains(segment)) / ColumnDiv));
-    };
-    Style.TableNotes
-  };
-}
-//======================================================================
-// Find the list of meanings for which there is a word in every language
-//======================================================================
-
-with CompleteMeanings {
-  ContainsMeaning(word, meaning)    = word.Meaning == meaning;
-  WithoutMeaning(language, meaning) = not language.Words.Contains(word => ContainsMeaning(word, meaning));
-
-  WordMeanings {
-    var set = new DictionaryClass(128);
-    foreach (var language in Languages) {
-      foreach (var word in language.Words)
-        set.Add(null, word.Meaning);
-    }
-    System.Trace("", set.Keys);
-    return set.Keys;
-  }
-
-  Find {
-    var set = new DictionaryClass(128);
-    foreach (var meaning in WordMeanings) {
-      if (not Results.UsedLanguages.Contains(language => WithoutMeaning(language, meaning)))
-        set.Add(null, meaning);
-    }
-    return set.Keys;
-  }
-
-  AddRow(meaning) = Row {
-    Cell {
-      HAlign: HAligns.Center;
-      Style.TitleBackground;
-      EachIndex+1
-    };
-    Cell {
-      meaning
-    }
-  };
-
-  ShowTable = Block {
-    Table {
-      Style.TableEdge;
-      Columns: [0.5 inches, 4 inches];
-      Style.TitleBar(Lang.Meanings, 2);
-      Row {
-        Style.HeaderCell(Empty);
-        Style.HeaderCell(Lang.Meaning)
-      };
-      AddRow(each Results.UsedMeanings);
     };
     Style.TableNotes
   };
