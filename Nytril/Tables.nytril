@@ -28,7 +28,7 @@ class WordClass {
 
   ShowConcept = Span {
     Style.SansSerif;
-    Popup: ref PopupConcept;
+    Popup: Delegate(ref PopupConcept, this);
     Concept;
   };
 
@@ -81,9 +81,9 @@ class ConceptRecord {
 
   GetGeneText(concept, language) = language.Words.FindSlice(word => word.Concept == concept);
 }
+//======================================================================
 
 with Results {
-
   AddBlank(list, index) {
     list.Add(IPA.GapSegment);
   }
@@ -182,8 +182,8 @@ with MatchingConsonants {
 //======================================================================
 
 with DisplayWords {
-  WordRow(word) = Row {
-    Style.RowBar(EachIndex);
+  WordRow(word, index) = Row {
+    Style.RowBar(index);
     Cell {
       word.ShowConcept;
     };
@@ -219,7 +219,12 @@ with DisplayWords {
         HeaderCell(Lang.IPA);
         HeaderCell(Lang.Sounds);
       };
-      WordRow(each language.Words)
+
+      var i = 0;
+      foreach (var word in language.Words) {
+        if (word.Concept)
+          WordRow(word, i++);
+      }
     };
     Paragraph;
   };
