@@ -46,7 +46,7 @@ class LanguageClass {
   Constructor(name, cases=0, words=null) {
     Name  = name;
     Cases = cases;
-    if (words)
+    if (valid words)
       Words = AddWord(each words);
   }
 
@@ -84,39 +84,16 @@ class ConceptRecord {
 //======================================================================
 
 with Results {
-  AddBlank(list, index) {
-    list.Add(IPA.GapSegment);
-  }
-
-  GetSegments(langindex) {
-    var list = new ListClass(150);
-    foreach (var concept in ConceptsList) {
-      var ma   = WordConceptArray[EachIndex];
-      var word = ma.Cells[langindex];
-      var pad  = ma.MaxLength - word.Segments.Length;
-      list.Add(IPA.LeftSegment);
-      list.Add(each word.Segments);
-      if (pad > 0)
-        AddBlank(list, each 1..pad);
-      list.Add(IPA.RightSegment);
-    }
-    return list;
-  }
-
-  GetTaxaArray(lang) = {
-    var segments = GetSegments(EachIndex);
-    TaxonName: lang.GlobalVariableName;
-    Segments: segments;
-    Characters: (each segments).SegmentToCharacter;
-  };
-
   AddConceptRecord(concept) = new ConceptRecord(concept);
+
+  GetTaxaArray(lang) = new TaxonClass(lang, EachIndex);
 
   UsedLanguages    = Languages.FindSlice(lang => lang.Words != null);
   WordConceptArray = AddConceptRecord(each ConceptsList);
   UniqueSegments   = DisplayCharacters.FindUniqueSegments;
-  TaxaArray        = GetTaxaArray(each UsedLanguages);
   LanguageTreeFile = Nexus.TreeFile(Info.LanguageTree);
+  RevBayesFile     = RevBayes.SourceFile;
+  TaxaArray        = GetTaxaArray(each UsedLanguages);
   CharacterFile    = Nexus.CharacterFile(TaxaArray);
   UsedSegments     = IPA.Segments;
 }
@@ -222,7 +199,7 @@ with DisplayWords {
 
       var i = 0;
       foreach (var word in language.Words) {
-        if (word.Concept)
+        if (valid word.Concept)
           WordRow(word, i++);
       }
     };
@@ -364,7 +341,7 @@ with MatchingOptions {
   SegmentBox(segments, segment, color) = Canvas {
     HAlign: HAligns.Center;
     Size: Metrics.BoxSize;
-    if (segment.?Ipa) {
+    if (valid segment.?Ipa) {
       TextHeight: Metrics.BoxSize.Height - 4 pts;
       TextColor: color;
       SegmentText(segments, segment)
@@ -411,7 +388,7 @@ with MatchingOptions {
         PaddingLR: 2 pts;
         TextHeight: 7 pts;
 
-        if (options.?RowLabels)
+        if (valid options.?RowLabels)
           options.RowLabels[EachIndex];
         else
           f;

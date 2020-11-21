@@ -5,7 +5,7 @@ with TreeLib {
   GetNodeLabel(node) = node.?Data?.Name;
 
   VisitNodeTaxa(set, node) {
-    if (node.?Data)
+    if (valid node.?Data)
       set.Add(node.Data);
     VisitNodeTaxa(set, each node);
   }
@@ -18,7 +18,51 @@ with TreeLib {
 }
 //======================================================================
 
+class TaxonClass {
+  var Name,
+      Characters,
+      Segments,
+      NChar;
+
+  Constructor(lang, index) {
+    NChar      = 0;
+    Name       = lang.GlobalVariableName;
+    Segments   = GetSegments(index);
+    Characters = (each Segments).SegmentToCharacter;
+  }
+
+  Show(maxlength, range) = Span {
+    Span {
+      Nexus.TaxonFormat;
+      Name;
+    };
+    Space * (maxlength - Name.Length);
+    (each Characters[range]).ShowCharacter;
+  };
+
+  GetSegments(index) {
+    var list = new ListClass(256);
+    foreach (var concept in ConceptsList) {
+      var ma   = Results.WordConceptArray[EachIndex];
+      var word = ma.Cells[index];
+      var pad  = ma.MaxLength - word.Segments.Length;
+      list.Add(IPA.LeftSegment);
+      list.Add(each word.Segments);
+      NChar += word.Segments.Length + pad;
+      if (pad > 0) {
+        foreach (var i in 1..pad)
+          list.Add(IPA.GapSegment);
+      }
+      list.Add(IPA.RightSegment);
+    }
+    return list;
+  }
+}
+//======================================================================
+
 with Nexus {
+  TaxonFormat = {TextColor: Colors.DarkGreen};
+
   CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1);
   EndMarker     = ";";
   Missing       = "?";
@@ -47,6 +91,12 @@ with Nexus {
     value;
   };
 
+  AddTaxon(taxon) = Span {
+    TaxonFormat;
+    Space;
+    taxon.Name;
+  };
+
   Scope(name) = TextBlock {
     IndentSpace: 2;
     Begin: Span {
@@ -58,6 +108,7 @@ with Nexus {
     End: Span {
       Keyword("end");
       EndMarker;
+      LineBreak;
     };
   };
 
@@ -109,26 +160,27 @@ with Nexus {
     }
   };
 
-  ShowTaxon(maxlength, taxon, range) = Span {
-    taxon.TaxonName;
-    Space * (maxlength - taxon.TaxonName.Length);
-    (each taxon.Characters[range]).ShowCharacter
-  };
-
-  ShowTaxonSet(maxlength, taxa, range) = {
-    ShowTaxon(maxlength, each taxa, range);
-    Empty;
-  };
-
   CharacterFile(taxa) = NexusFile {
-    var maxlength = ((each ((each taxa).TaxonName)).Length).Max + 1;
-    var total     = taxa[0].Characters.Length;
-
-    Scope("DATA") {
+    var maxlength = ((each ((each taxa).Name)).Length).Max + 1;
+    var range     = ((0..<taxa[0].Characters.Length) / (70 - maxlength));
+/*
+    Scope("taxa") {
       AddLine("dimensions") {
         AddValue("ntax", taxa.Length);
-        AddValue("nchar", total);
       };
+//      AddLine("taxlabels") {
+        AddTaxon(each taxa);
+      };
+    };
+*/
+    Scope("data") {
+      AddLine("dimensions") {
+        AddValue("ntax", taxa.Length);
+        AddValue("nchar", taxa[0].NChar);
+      };
+//      AddLine("taxlabels") {
+//        AddTaxon(each taxa);
+//      };
       AddLine("format") {
         AddValue("datatype", "STANDARD");
         AddValue("gap", IPA.GapSegment.Ipa);
@@ -137,7 +189,7 @@ with Nexus {
       };
       Empty;
       Keyword("matrix");
-      ShowTaxonSet(maxlength, taxa, each ((0..<total) / (70 - maxlength)));
+      (each taxa).Show(maxlength, each range);
       EndMarker;
     }
   };

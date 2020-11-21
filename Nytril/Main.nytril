@@ -9,15 +9,17 @@ include "Style";
 include "References";
 include "WordForms";
 include "Tables";
+include "RevBayes";
 //======================================================================
+
+Main.Documents = ref Watch;
 
 Main.Run = [
 //  Write(RevBayes.SourceFile, Info.RevSourcePath),
   Write(Results.LanguageTreeFile, Info.LanguageTreePath),
-  Write(Results.CharacterFile, Info.CharacterPath),
-  Write(Watch, Info.PaperPath Extensions.PDF),
-//  Write(Watch, Info.PaperPath Extensions.Word),
-//  IO.OpenDocument(Info.PaperPath Extensions.Word),
+  Write(Results.CharacterFile, Info.InputFolder Info.CharacterFile),
+  Write(Results.RevBayesFile, Info.InputFolder Info.RevSourceFile),
+  Write(Watch, Info.OutputFolder FileName("White Paper") Extensions.PDF),
 ];
 //======================================================================
 
@@ -31,17 +33,23 @@ enum ConceptsList {
 
 
 with Info {
+  OutGroup         = Languages.Latin;
   MainFolder       = Folders.Source;
+  InputFolder      = MainFolder Folder("Input");
   OutputFolder     = MainFolder Folder("Output");
-  PaperPath        = OutputFolder FileName("Paper");
-  LanguageTreePath = OutputFolder FileName("LanguageTree") Extensions.Nexus;
-  RevSourcePath    = OutputFolder FileName("Analysis") Extensions.RevBayes;
-
-  CharacterPath    = OutputFolder FileName("Characters") Extensions.Nexus;
+  LanguageTreePath = InputFolder FileName("LanguageTree") Extensions.Nexus;
+  RevSourceFile    = FileName("Analysis") Extensions.RevBayes;
+  GammaFile        = "Gamma.trees";
+  GammaLogFile     = "Gamma.log";
+  GammaMAPFile     = "Gamma_MAP.tree";
+  GammaMCCFile     = "Gamma_MCC.tree";
+  GammaConsensus   = "Gamma_Consensus.tree";
+  CharacterFile    = FileName("Characters") Extensions.Nexus;
   Journal          = "Transactions of the Beysian Society";
   Publisher        = "The Baysian Society";
   Title            = "Simulated Segment Evolution using the TKF91 Model";
   LanguageTree     = LanguageBranches.Romance;
+  Generations      = 1000;
 
   AuthorList = Span {
     Separator: ", ";
@@ -93,9 +101,10 @@ AddAppendix(title, content) = {
 };
 
 Appendix = [
-  AddAppendix(Lang.ConceptsUsed, AllWords.ShowTable),
+  AddAppendix("RevBayes Source File", Results.RevBayesFile),
   AddAppendix("Character file", Results.CharacterFile),
   AddAppendix("Language Tree File", Results.LanguageTreeFile),
+  AddAppendix(Lang.ConceptsUsed, AllWords.ShowTable),
   AddAppendix("Segments used in the word list", DisplayCharacters.ShowTable),
   AddAppendix("Feature change in first segment", IPA.DriftSection),
   AddAppendix("Word Lists by Language", DisplayWords.ShowTable),
