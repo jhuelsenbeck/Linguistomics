@@ -560,37 +560,35 @@ with MatchingOther {
 //======================================================================
 
 with SegmentTree {
-  AddNode(name) = Node {
+  AddNode(name) = new NodeClass(name) {
     Bevel: 20%;
     Curvature: 20%;
-    Label: name
   };
 
   AddSegments(set, name, predicate, width=3 inches) {
     var segments = Results.UsedSegments.FindSlice(predicate);
     if (segments.Length > 0) {
-      return Node {
-        Label: Frame {
-          Width: width;
-          Paragraph {
-            LeftIndent: 0.95 inches;
-            FirstIndent: -0.95 inches;
-            Span {
-              TextBackground: 95%;
-              name;
-              Tab;
-            };
-            Span {
-              TextHeight: 10 pts;
-              Separator: Space;
-              foreach (var segment in segments) {
-                var good = set.Add(segment);
-                segment.ShowSegment;
-              }
+      var label = Frame {
+        Width: width;
+        Paragraph {
+          LeftIndent: 0.95 inches;
+          FirstIndent: -0.95 inches;
+          Span {
+            TextBackground: 95%;
+            name;
+            Tab;
+          };
+          Span {
+            TextHeight: 10 pts;
+            Separator: Space;
+            foreach (var segment in segments) {
+              var good = set.Add(segment);
+              segment.ShowSegment;
             }
           }
         }
       };
+      return new NodeClass(label);
     }
     else
       return null;
@@ -608,7 +606,7 @@ with SegmentTree {
     AddConsonants(set, Lang.Voiceless, all Voiced, features);
   };
 
-  GetNodes = Node {
+  GetNodes = new NodeClass() {
     var set1 = new DictionaryClass(256);
     var set2 = new DictionaryClass(256);
     var all  = Vowel Pulmonic Affricate;

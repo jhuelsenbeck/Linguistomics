@@ -1,16 +1,20 @@
 using Format, Languages;
 //======================================================================
 
-with LanguageBranches {
-  Branch(branch) = Node {
-    BranchLength: branch
-  };
+class LanguageNodeClass: NodeClass {
+  var Language;
 
-  Leaf(language, branch) = Node {
-    Data: language;
-    BranchLength: branch;
-    Label: language.GlobalVariableName
-  };
+  Constructor(language, branch) {
+    super.Constructor(language?.GlobalVariableName, branch);
+    Language = language;
+  }
+}
+//======================================================================
+
+with LanguageBranches {
+  Branch(branch) = new LanguageNodeClass(null, branch);
+
+  Leaf(language, branch) = new LanguageNodeClass(language, branch);
 
   Romance = Branch(1324.32) {
     Leaf(Latin, 0.81);
@@ -103,7 +107,7 @@ with LanguageBranches {
     }
   };
 
-  ChangA3 = Node {
+  ChangA3 = Branch(0) {
     Branch(665.23) {
       Branch(503.96) {
         Branch(256.63) {

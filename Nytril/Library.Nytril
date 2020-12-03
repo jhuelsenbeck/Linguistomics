@@ -1,23 +1,6 @@
 using Format, Units, Math, IO;
 //======================================================================
 
-with TreeLib {
-  GetNodeLabel(node) = node.?Data?.Name;
-
-  VisitNodeTaxa(set, node) {
-    if (exists node.?Data)
-      set.Add(node.Data);
-    VisitNodeTaxa(set, each node);
-  }
-
-  GetTaxaLabels(tree) {
-    var set = new DictionaryClass(256);
-    VisitNodeTaxa(set, tree);
-    return (each set).Name;
-  }
-}
-//======================================================================
-
 class TaxonClass {
   var Name,
       Characters,
@@ -126,7 +109,7 @@ with Nexus {
       };
       ")";
     }
-    TreeLib.GetNodeLabel(node);
+    node.Label;
     ":";
     node.BranchLength
   };
@@ -154,7 +137,20 @@ with Nexus {
     }
   };
 
-  TreeFile(tree) = TreeFormat(TreeLib.GetTaxaLabels(tree)) {
+  VisitNodeTaxa(set, node) {
+    var name = exists node.Language ? node.Name : null;
+    if (valid name)
+      set.Add(node, name);
+    VisitNodeTaxa(set, each node);
+  }
+
+  GetTaxaLabels(tree) {
+    var set = new DictionaryClass(256);
+    VisitNodeTaxa(set, tree);
+    return (each set).Name;
+  }
+
+  TreeFile(tree) = TreeFormat(GetTaxaLabels(tree)) {
     Scope("trees") {
       ShowTreeLine(tree);
     }
