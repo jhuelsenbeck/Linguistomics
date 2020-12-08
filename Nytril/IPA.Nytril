@@ -798,9 +798,10 @@ with IPA {
   // Code for Euler segment diagram
   //======================================================================
 
-  ChartSize = 6 inches;
-  EX(x)     = ChartSize * x * 0.01;
-  EY(y)     = ChartSize * y * 0.01;
+  TitleStyle = {TextColor: 70%};
+  ChartSize  = 6 inches;
+  EX(x)      = ChartSize * x * 0.01;
+  EY(y)      = ChartSize * y * 0.01;
 
   Enclosure(x, y, w, h, color) = Canvas {
     BorderStroke: 1 pts;
@@ -812,10 +813,11 @@ with IPA {
   };
 
   NameBox(name, angle=0) = Paragraph {
+    TitleStyle;
     Transform: Rotate(angle);
     TransformFit: true;
     Space;
-    name Bold;
+    name;
     Space;
   };
 
@@ -835,8 +837,9 @@ with IPA {
       Width: EX(width);
       ParAlignment: ParAlignments.Center;
       if (exists name)
-        Span {Bold; name};
+        Span {TitleStyle; name};
       Paragraph {
+        Bold;
         Separator: Space;
         (each FeatureSegments(features)).ShowSegment;
       }
