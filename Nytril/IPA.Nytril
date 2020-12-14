@@ -83,7 +83,7 @@ class CharacterClass {
   }
 
   ShowCharacter = Span {
-    Popup: Delegate(ref Popup, this);
+    Popup: Delegate(ref Popup);
     if (not Segment.Punctuation)
       Link: Segment.GlobalVariablePath;
     Character
@@ -165,7 +165,7 @@ class SegmentClass {
     if (Punctuation)
       return new CharacterClass(Ipa, this);
 
-    var f = Results.UniqueSegments.FindIndex(s => s == this);
+    var f = Math.FindIndex(Results.UniqueSegments, s => s == this);
     if (f.Length >= 1)
       return new CharacterClass(Nexus.CharacterList[f[0]], this);
     else
@@ -174,7 +174,7 @@ class SegmentClass {
 
   ShowSegment = Span {
     Style.IPAFamily;
-    Popup: Delegate(ref Popup, this);
+    Popup: Delegate(ref Popup);
     if (not Punctuation)
       Link: GlobalVariablePath;
     if (Impossible) {
@@ -758,7 +758,7 @@ with IPA {
 
   SegmentTable = Block {
     var c      = Metrics.SegmentColumns;
-    var sorted = Results.UsedSegments.Sort(false, ref AlphaOrder);
+    var sorted = Math.Sort(Results.UsedSegments, false, ref AlphaOrder);
 
     Table {
       Columns: [Metrics.Content.Width / c] * c;
@@ -778,7 +778,7 @@ with IPA {
     return segment.GlobalVariableName
   }
 
-  FindWordsWithConcept(language, concept) = language.Words.FindSlice(word => word.Concept == concept);
+  FindWordsWithConcept(language, concept) = Math.FindSlice(language.Words, word => word.Concept == concept);
 
   //======================================================================
   // Build a dictionary with SAMPA text as the key
@@ -828,7 +828,7 @@ with IPA {
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
 
-  FeatureSegments(features) = Results.UsedSegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
+  FeatureSegments(features) = Math.FindSlice(Results.UsedSegments, segment => segment.Features.HasFlagMask(FeatureMask, features));
 
   FeatureFrame(x, y, width, name, features) = Canvas {
     X: EX(x);

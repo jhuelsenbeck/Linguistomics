@@ -28,7 +28,7 @@ class WordClass {
 
   ShowConcept = Span {
     Style.SansSerif;
-    Popup: Delegate(ref PopupConcept, this);
+    Popup: Delegate(ref PopupConcept);
     Concept;
   };
 
@@ -88,7 +88,7 @@ with Results {
 
   GetTaxaArray(lang) = new TaxonClass(lang, EachIndex);
 
-  UsedLanguages    = Languages.FindSlice(lang => lang.Words != null);
+  UsedLanguages    = Math.FindSlice(Languages, lang => lang.Words != null);
   WordConceptArray = AddConceptRecord(each ConceptsList);
   UniqueSegments   = DisplayCharacters.FindUniqueSegments;
   LanguageTreeFile = Nexus.TreeFile(Info.LanguageTree);
@@ -249,8 +249,8 @@ with AllWords {
 //======================================================================
 
 with DisplayCharacters {
-  CompleteWord(def)     = ConceptsList.Contains(concept => concept == def.Concept);
-  GetWordList(language) = language.Words.FindSlice(def => CompleteWord(def));
+  CompleteWord(def)     = Math.FindAny(ConceptsList, concept => concept == def.Concept);
+  GetWordList(language) = Math.FindSlice(language.Words, def => CompleteWord(def));
 
   FindUniqueSegments {
     var set = new DictionaryClass(256);
@@ -265,7 +265,7 @@ with DisplayCharacters {
     var set = new DictionaryClass(256);
     foreach (var language in Results.UsedLanguages) {
       foreach (var word in GetWordList(language)) {
-        if (word.Segments.Contains(s => s == segment))
+        if (Math.FindAny(word.Segments, s => s == segment))
           set.Add(word, word.Text);
       }
     }
@@ -324,10 +324,10 @@ with MatchingOptions {
   MatchInclude(segment, place, options) = SamePlace(segment, place) and
                                         segment.Features.NotFlag(options.Exclude) and
                                         segment.Features.HasFlag(options.Include) and
-                                        options.Manners.Contains(manner => AnyManners(manner, segment.Features, options));
+                                        Math.FindAny(options.Manners, manner => AnyManners(manner, segment.Features, options));
 
-  MatchPlace(place, options)          = AllSegments.Contains(segment => MatchInclude(segment, place, options));
-  GetPlaces(options)                  = Places.FindSlice(place => MatchPlace(place, options));
+  MatchPlace(place, options)          = Math.FindAny(AllSegments, segment => MatchInclude(segment, place, options));
+  GetPlaces(options)                  = Math.FindSlice(Places, place => MatchPlace(place, options));
 
 
   SegmentText(segments, segment) {
@@ -375,7 +375,7 @@ with MatchingOptions {
   };
 
   AddCell(segments, options, place, features) {
-    return SegmentBlock(segments, AllSegments.FindSlice(s => SamePlace(s, place) and CheckFlags(s.Features, features, options)));
+    return SegmentBlock(segments, Math.FindSlice(AllSegments, s => SamePlace(s, place) and CheckFlags(s.Features, features, options)));
   }
 
   AddRow(segments, options, places, f) {
@@ -446,8 +446,8 @@ with MatchingVowels {
 
   MatchVowelAny(segment, data)          = segment.Features.HasFlagMask(Vowel LongVowel Nasal, data.Feature | Vowel) and segment.Open == data.Open;
   MatchVowelPair(segment, data)         = segment.?Backness and data?.Backness and segment.Backness == data.Backness and MatchVowelAny(segment, data);
-  FindAnyOpen(set, feature, open)       = Results.UsedSegments.Contains(segment => MatchVowelAny(segment, {Open: open; Feature: feature}));
-  AddCell(set, feature, open, backness) = AddBlock(set, Results.UsedSegments.FindSlice(segment => MatchVowelPair(segment, {Open: open; Feature: feature; Backness: backness})));
+  FindAnyOpen(set, feature, open)       = Math.FindAny(Results.UsedSegments, segment => MatchVowelAny(segment, {Open: open; Feature: feature}));
+  AddCell(set, feature, open, backness) = AddBlock(set, Math.FindSlice(Results.UsedSegments, segment => MatchVowelPair(segment, {Open: open; Feature: feature; Backness: backness})));
 
   AddRow(set, feature, open) {
     if (FindAnyOpen(set, feature, open)) {
@@ -550,7 +550,7 @@ with MatchingOther {
       Style.TableEdge;
       Columns: [Metrics.BoxSize.Width, Metrics.Content.Width * 0.5 - Metrics.BoxSize.Width] * ColumnDiv;
       Style.TitleBar(Lang.OtherSegments, ColumnDiv*2);
-      AddRow(each (Results.UsedSegments.FindSlice(segment => not set.Contains(segment)) / ColumnDiv));
+      AddRow(each (Math.FindSlice(Results.UsedSegments, segment => not Math.FindAny(set, segment)) / ColumnDiv));
     };
     Style.TableNotes
   };
@@ -566,7 +566,7 @@ with SegmentTree {
   };
 
   AddSegments(set, name, predicate, width=3 inches) {
-    var segments = Results.UsedSegments.FindSlice(predicate);
+    var segments = Math.FindSlice(Results.UsedSegments, predicate);
     if (segments.Length > 0) {
       var label = Frame {
         Width: width;
@@ -595,7 +595,7 @@ with SegmentTree {
   }
 
   AddVowels(set, backness)           = AddSegments(set, backness.Name, s => s.Features.HasFlag(Vowel) and s.Backness == backness);
-  AddFlag(set, all, features, other) = AddSegments(set, other.Name, s => not set.Contains(s) and s.Features.HasFlagMask(all, features) and s.Features.HasFlagMask(other, other));
+  AddFlag(set, all, features, other) = AddSegments(set, other.Name, s => not Math.FindAny(set, s) and s.Features.HasFlagMask(all, features) and s.Features.HasFlagMask(other, other));
 
   AddConsonants(set, name, all, features) = AddNode(name) {
     AddFlag(set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]);
