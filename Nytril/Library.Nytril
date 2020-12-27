@@ -29,14 +29,14 @@ class TaxonClass {
       var ma   = Results.WordConceptArray[EachIndex];
       var word = ma.Cells[index];
       var pad  = ma.MaxLength - word.Segments.Length;
-      list.Add(IPA.LeftSegment);
+//      list.Add(IPA.LeftSegment);
       list.Add(each word.Segments);
       NChar += word.Segments.Length + pad;
       if (pad > 0) {
         foreach (var i in 1..pad)
           list.Add(IPA.GapSegment);
       }
-      list.Add(IPA.RightSegment);
+//      list.Add(IPA.RightSegment);
     }
     return list;
   }
@@ -159,24 +159,21 @@ with Nexus {
   CharacterFile(taxa) = NexusFile {
     var maxlength = Math.Max((each ((each taxa).Name)).Length) + 1;
     var range     = ((0..<taxa[0].Characters.Length) / (70 - maxlength));
-/*
+
     Scope("taxa") {
       AddLine("dimensions") {
         AddValue("ntax", taxa.Length);
       };
-//      AddLine("taxlabels") {
+        AddLine("taxlabels") {
         AddTaxon(each taxa);
       };
     };
-*/
+
     Scope("data") {
       AddLine("dimensions") {
         AddValue("ntax", taxa.Length);
         AddValue("nchar", taxa[0].NChar);
       };
-//      AddLine("taxlabels") {
-//        AddTaxon(each taxa);
-//      };
       AddLine("format") {
         AddValue("datatype", "STANDARD");
         AddValue("gap", IPA.GapSegment.Ipa);

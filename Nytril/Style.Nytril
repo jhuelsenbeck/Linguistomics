@@ -155,12 +155,22 @@ with Style {
     }
   };
 
-  ShowLanguageTree = Block {
-    ShowTree(Info.LanguageTree);
-  };
+  ReadTree(title, path) {
+    var data =  IO.Read(path, FileFormats.Nexus);
+    Style.ShowTree(title, data.trees.TREE1);
+  }
 
-  ShowTree(root) = Group {
+  ShowTree(title, root) = Group {
     Vertical: true;
+    MarginB: 20 pts;
+    PaddingLR: 10 pts;
+    Border: 0.5 pts {Color: 90%};
+    Paragraph {
+      HAlignment: HAligns.Center;
+      TextHeight: 14 pts;
+      Bold;
+      title;
+    };
     Tree {
       Curvature: 30%;
       Bevel: 20%;
@@ -170,6 +180,13 @@ with Style {
       ValueAxis: ChartAxis;
       Root: root;
     };
+  };
+
+  ShowLanguageTrees = Block {
+    ShowTree("Cheng et al", Info.LanguageTree);
+    ReadTree("Consensus", Info.OutputFolder Info.GammaConsensus);
+    ReadTree("Gamma MAP", Info.OutputFolder Info.GammaMAPFile);
+    ReadTree("Gamma MCC", Info.OutputFolder Info.GammaMCCFile);
   };
 
   ShowAbstract(content) = Block {
