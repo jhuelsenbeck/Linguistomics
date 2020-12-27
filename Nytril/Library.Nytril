@@ -122,7 +122,21 @@ with Nexus {
     EndMarker
   };
 
-  TreeFormat(taxa) = NexusFile {
+  GetTaxaLabels(tree) {
+    var set = new DictionaryClass(256);
+    VisitNodeTaxa(set, tree);
+    return (each set).Name;
+  }
+
+  VisitNodeTaxa(set, node) {
+    var name = exists node.Language ? node.Name : null;
+    if (valid name)
+      set.Add(node, name);
+    VisitNodeTaxa(set, each node);
+  }
+
+  TreeFormat(tree) = NexusFile {
+    var taxa = GetTaxaLabels(tree);
     Scope("taxa") {
       AddLine("dimensions") {
         AddValue("ntax", taxa.Length);
@@ -134,29 +148,19 @@ with Nexus {
           taxa;
         };
       };
-    }
-  };
-
-  VisitNodeTaxa(set, node) {
-    var name = exists node.Language ? node.Name : null;
-    if (valid name)
-      set.Add(node, name);
-    VisitNodeTaxa(set, each node);
-  }
-
-  GetTaxaLabels(tree) {
-    var set = new DictionaryClass(256);
-    VisitNodeTaxa(set, tree);
-    return (each set).Name;
-  }
-
-  TreeFile(tree) = TreeFormat(GetTaxaLabels(tree)) {
+    };
     Scope("trees") {
       ShowTreeLine(tree);
-    }
+    };
   };
 
-  CharacterFile(taxa) = NexusFile {
+  TreeFile(tree, path) {
+    var text = TreeFormat(tree);
+    IO.Write(text, path);
+    return text;
+  }
+
+  GenerateFile(taxa) = NexusFile {
     var maxlength = Math.Max((each ((each taxa).Name)).Length) + 1;
     var range     = ((0..<taxa[0].Characters.Length) / (70 - maxlength));
 
@@ -164,7 +168,7 @@ with Nexus {
       AddLine("dimensions") {
         AddValue("ntax", taxa.Length);
       };
-        AddLine("taxlabels") {
+      AddLine("taxlabels") {
         AddTaxon(each taxa);
       };
     };
@@ -186,6 +190,13 @@ with Nexus {
       EndMarker;
     }
   };
+
+
+  CharacterFile(taxa, path) {
+    var text = GenerateFile(taxa);
+    IO.Write(text, path);
+    return text;
+  }
 }
 //======================================================================
 

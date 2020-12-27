@@ -157,14 +157,16 @@ with Style {
 
   ReadTree(title, path) {
     var data =  IO.Read(path, FileFormats.Nexus);
-    Style.ShowTree(title, data.trees.TREE1);
+    Style.ShowTree(title, data.trees.TREE1, Info.TreeScale);
   }
 
-  ShowTree(title, root) = Group {
+  ShowTree(title, root, scale) = Group {
     Vertical: true;
+    Corner: 4 pts;
     MarginB: 20 pts;
-    PaddingLR: 10 pts;
+    PaddingLR: 15 pts;
     Border: 0.5 pts {Color: 90%};
+    Background: 98%;
     Paragraph {
       HAlignment: HAligns.Center;
       TextHeight: 14 pts;
@@ -172,6 +174,7 @@ with Style {
       title;
     };
     Tree {
+      Scale: scale;
       Curvature: 30%;
       Bevel: 20%;
       Marker: {Style.IPAFamily; TextHeight: 4 pts; TextColor: Colors.Gray} Chars.Circle;
@@ -183,7 +186,7 @@ with Style {
   };
 
   ShowLanguageTrees = Block {
-    ShowTree("Cheng et al", Info.LanguageTree);
+    ShowTree("Priors", Info.LanguageTree, 1.0);
     ReadTree("Consensus", Info.OutputFolder Info.GammaConsensus);
     ReadTree("Gamma MAP", Info.OutputFolder Info.GammaMAPFile);
     ReadTree("Gamma MCC", Info.OutputFolder Info.GammaMCCFile);
