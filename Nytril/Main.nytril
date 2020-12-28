@@ -17,8 +17,7 @@ Main.Documents = [
 ];
 
 Main.Run = [
-  Write(Watch, Info.OutputFolder FileName("White Paper") Extensions.PDF),
-//  OpenExplorer(Info.InputFolder Info.CharacterFile),
+  OpenExplorer(FilePath.InputFolder FilePath.Characters),
 ];
 //======================================================================
 
@@ -34,27 +33,30 @@ enum ConceptsList {
 //  Tree
 }
 
+with FilePath {
+  MainFolder     = Folders.Source;
+  InputFolder    = MainFolder Folder("Input");
+  OutputFolder   = MainFolder Folder("Output");
+  PriorTree      = FileName("PriorTree") Extensions.Nexus;
+  RevSource      = FileName("Program") Extensions.RevBayes;
+  Gamma          = "Gamma.trees";
+  GammaLog       = "Gamma.log";
+  GammaMAP       = FileName("Gamma_MAP") Extensions.Tree;
+  GammaMCC       = FileName("Gamma_MCC") Extensions.Tree;
+  GammaConsensus = FileName("Gamma_Consensus") Extensions.Tree;
+  Characters     = FileName("Characters") Extensions.Nexus;
+}
+
 
 with Info {
-  OutGroup         = Languages.Latin;
-  MainFolder       = Folders.Source;
-  InputFolder      = MainFolder Folder("Input");
-  OutputFolder     = MainFolder Folder("Output");
-  LanguageTreePath = InputFolder FileName("LanguageTree") Extensions.Nexus;
-  RevSourceFile    = FileName("Program") Extensions.RevBayes;
-  GammaFile        = "Gamma.trees";
-  GammaLogFile     = "Gamma.log";
-  GammaMAPFile     = FileName("Gamma_MAP") Extensions.Tree;
-  GammaMCCFile     = FileName("Gamma_MCC") Extensions.Tree;
-  GammaConsensus   = FileName("Gamma_Consensus") Extensions.Tree;
-  CharacterFile    = FileName("Characters") Extensions.Nexus;
-  Journal          = "Transactions of the Beysian Society";
-  Publisher        = "The Baysian Society";
-  Title            = "Simulated Segment Evolution using the TKF91 Model";
-  LanguageTree     = GetTreeNodes(LanguageBranches.Romance);
-  Generations      = 2000;
-  MonitorUpdate    = 50;
-  TreeScale        = 1750;
+  OutGroup          = Languages.Latin;
+  Journal           = "Transactions of the Beysian Society";
+  Publisher         = "The Baysian Society";
+  Title             = "Simulated Segment Evolution using the TKF91 Model";
+  PriorTree         = GetTreeNodes(LanguageBranches.Romance);
+  Generations       = 2000;
+  MonitorUpdate     = 50;
+  TreeScale         = 1750;
 
   AuthorList = Span {
     Separator: ", ";
@@ -100,29 +102,6 @@ Watch = Style.WhitePaper {
 };
 //======================================================================
 
-AddAppendix(title, content) = {
-  Title: title;
-  Content: content;
-};
-
-Appendix = [
-  AddAppendix("RevBayes Source File", Results.RevBayesFile),
-  AddAppendix(Lang.LanguagePhylogeny, Style.ShowLanguageTrees),
-  AddAppendix("Character file", Results.CharacterFile),
-  AddAppendix("Language Tree File", Results.LanguageTreeFile),
-  AddAppendix(Lang.ConceptsUsed, AllWords.ShowTable),
-  AddAppendix("Segments used in the word list", DisplayCharacters.ShowTable),
-  AddAppendix("Feature change in first segment", IPA.DriftSection),
-  AddAppendix("Word Lists by Language", DisplayWords.ShowTable),
-  AddAppendix("Segment Groups", MatchingConsonants.ShowTables),
-//  AddAppendix(Lang.Diacritics, MatchingDiacritics.ShowTable),
-  AddAppendix("Euler Feature Diagram", IPA.FeatureChart),
-  AddAppendix(Lang.IPAFullName, IPA.SegmentTable),
-  AddAppendix("Feature Tree", SegmentTree.ShowTree),
-//  AddAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
-];
-//======================================================================
-
 with Abstract {
   Title = Lang.Abstract;
   Body  = Block {
@@ -161,6 +140,30 @@ with Content.Conclusion {
     };
   };
 }
+//======================================================================
+
+AddAppendix(title, content) = {
+  Title: title;
+  Content: content;
+};
+
+Appendix = [
+  AddAppendix("RevBayes Source File", Results.Compute.RevBayesSource),
+  AddAppendix("Character File", Results.Compute.Characters),
+  AddAppendix("Prior Tree File", Results.Compute.PriorTree),
+  AddAppendix(Lang.LanguagePhylogeny, Results.Compute.ShowLanguageTrees),
+  AddAppendix(Lang.ConceptsUsed, AllWords.ShowTable),
+  AddAppendix("Segments used in the word list", DisplayCharacters.ShowTable),
+  AddAppendix("Feature change in first segment", IPA.DriftSection),
+  AddAppendix("Word Lists by Language", DisplayWords.ShowTable),
+  AddAppendix("Segment Groups", MatchingConsonants.ShowTables),
+  AddAppendix("Euler Feature Diagram", IPA.FeatureChart),
+  AddAppendix(Lang.IPAFullName, IPA.SegmentTable),
+  AddAppendix("Feature Tree", SegmentTree.ShowTree),
+
+//  AddAppendix(Lang.Diacritics, MatchingDiacritics.ShowTable),
+//  AddAppendix(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
+];
 //======================================================================
 
 

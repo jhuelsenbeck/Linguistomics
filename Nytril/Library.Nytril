@@ -14,13 +14,14 @@ class TaxonClass {
     Characters = (each Segments).SegmentToCharacter;
   }
 
-  Show(maxlength, range) = Span {
+  ShowLetters(maxlength, range) = Span {
     Span {
       Nexus.TaxonFormat;
       Name;
     };
     Space * (maxlength - Name.Length);
-    (each Characters[range]).ShowCharacter;
+    foreach (var c in Characters[range])
+      c.ShowLetter;
   };
 
   GetSegments(index) {
@@ -135,7 +136,7 @@ with Nexus {
     VisitNodeTaxa(set, each node);
   }
 
-  TreeFormat(tree) = NexusFile {
+  TreeFile(tree) = NexusFile {
     var taxa = GetTaxaLabels(tree);
     Scope("taxa") {
       AddLine("dimensions") {
@@ -154,13 +155,7 @@ with Nexus {
     };
   };
 
-  TreeFile(tree, path) {
-    var text = TreeFormat(tree);
-    IO.Write(text, path);
-    return text;
-  }
-
-  GenerateFile(taxa) = NexusFile {
+  CharacterFile(taxa) = NexusFile {
     var maxlength = Math.Max((each ((each taxa).Name)).Length) + 1;
     var range     = ((0..<taxa[0].Characters.Length) / (70 - maxlength));
 
@@ -186,17 +181,10 @@ with Nexus {
       };
       Empty;
       Keyword("matrix");
-      (each taxa).Show(maxlength, each range);
+      (each taxa).ShowLetters(maxlength, each range);
       EndMarker;
     }
   };
-
-
-  CharacterFile(taxa, path) {
-    var text = GenerateFile(taxa);
-    IO.Write(text, path);
-    return text;
-  }
 }
 //======================================================================
 
