@@ -17,6 +17,8 @@ Main.Documents = [
 ];
 
 Main.Run = [
+//  Results.Compute.Calculate,
+  Write(Watch, FilePath.OutputFolder FileName("White Paper") Extensions.PDF),
   OpenExplorer(FilePath.InputFolder FilePath.Characters),
 ];
 //======================================================================
@@ -27,36 +29,20 @@ enum ConceptsList {
   Water,
   Ear,
   New,
-  Hand,
-//  Eye,
-//  Foot,
-//  Tree
+  We,
+  Eye,
+  One,
+  Star
 }
-
-with FilePath {
-  MainFolder     = Folders.Source;
-  InputFolder    = MainFolder Folder("Input");
-  OutputFolder   = MainFolder Folder("Output");
-  PriorTree      = FileName("PriorTree") Extensions.Nexus;
-  RevSource      = FileName("Program") Extensions.RevBayes;
-  Gamma          = "Gamma.trees";
-  GammaLog       = "Gamma.log";
-  GammaMAP       = FileName("Gamma_MAP") Extensions.Tree;
-  GammaMCC       = FileName("Gamma_MCC") Extensions.Tree;
-  GammaConsensus = FileName("Gamma_Consensus") Extensions.Tree;
-  Characters     = FileName("Characters") Extensions.Nexus;
-}
-
 
 with Info {
-  OutGroup          = Languages.Latin;
-  Journal           = "Transactions of the Beysian Society";
-  Publisher         = "The Baysian Society";
-  Title             = "Simulated Segment Evolution using the TKF91 Model";
-  PriorTree         = GetTreeNodes(LanguageBranches.Romance);
-  Generations       = 2000;
-  MonitorUpdate     = 50;
-  TreeScale         = 1750;
+  OutGroup      = Languages.Latin;
+  Journal       = "Transactions of the Beysian Society";
+  Publisher     = "The Baysian Society";
+  Title         = "Simulated Segment Evolution using the TKF91 Model";
+  PriorTree     = GetTreeNodes(LanguageBranches.Romance);
+  Generations   = 10000;
+  MonitorUpdate = 50;
 
   AuthorList = Span {
     Separator: ", ";
@@ -150,8 +136,7 @@ AddAppendix(title, content) = {
 Appendix = [
   AddAppendix("RevBayes Source File", Results.Compute.RevBayesSource),
   AddAppendix("Character File", Results.Compute.Characters),
-  AddAppendix("Prior Tree File", Results.Compute.PriorTree),
-  AddAppendix(Lang.LanguagePhylogeny, Results.Compute.ShowLanguageTrees),
+  AddAppendix("Program Output", Results.Compute.ShowLanguageTrees),
   AddAppendix(Lang.ConceptsUsed, AllWords.ShowTable),
   AddAppendix("Segments used in the word list", DisplayCharacters.ShowTable),
   AddAppendix("Feature change in first segment", IPA.DriftSection),

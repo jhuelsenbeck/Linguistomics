@@ -30,14 +30,12 @@ class TaxonClass {
       var ma   = Results.WordConceptArray[EachIndex];
       var word = ma.Cells[index];
       var pad  = ma.MaxLength - word.Segments.Length;
-//      list.Add(IPA.LeftSegment);
       list.Add(each word.Segments);
       NChar += word.Segments.Length + pad;
       if (pad > 0) {
         foreach (var i in 1..pad)
           list.Add(IPA.GapSegment);
       }
-//      list.Add(IPA.RightSegment);
     }
     return list;
   }
@@ -136,25 +134,6 @@ with Nexus {
     VisitNodeTaxa(set, each node);
   }
 
-  TreeFile(tree) = NexusFile {
-    var taxa = GetTaxaLabels(tree);
-    Scope("taxa") {
-      AddLine("dimensions") {
-        AddValue("ntax", taxa.Length);
-      };
-      AddLine("taxlabels") {
-        Space;
-        Span {
-          Separator: Space;
-          taxa;
-        };
-      };
-    };
-    Scope("trees") {
-      ShowTreeLine(tree);
-    };
-  };
-
   CharacterFile(taxa) = NexusFile {
     var maxlength = Math.Max((each ((each taxa).Name)).Length) + 1;
     var range     = ((0..<taxa[0].Characters.Length) / (70 - maxlength));
@@ -183,7 +162,11 @@ with Nexus {
       Keyword("matrix");
       (each taxa).ShowLetters(maxlength, each range);
       EndMarker;
-    }
+    };
+
+//    Scope("trees") {
+//      ShowTreeLine(tree);
+//    };
   };
 }
 //======================================================================
