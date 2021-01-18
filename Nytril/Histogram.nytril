@@ -1,0 +1,72 @@
+using DB, Format, Units, Math, IO;
+
+//======================================================================
+
+Main.Documents = [
+  new DocumentViewClass("Histogram", ref Watch)
+];
+
+//======================================================================
+
+class LogSchemaClass: SchemaClass {
+  var Iteration,
+      Alpha;
+
+  Constructor {
+    super.Constructor("log");
+    Iteration = new FieldClass("Iteration", ValueTypes.Int64);
+    Alpha     = new FieldClass("alpha", ValueTypes.Double);
+    AddField(Alpha);
+  }
+
+  GetAlphaTable(view) = Block {
+    Paragraph {
+      Bold;
+      Alpha.Name;
+    };
+    foreach (var row in view)
+      row.FindValue(Alpha.Name);
+  };
+
+  GetAlphaChart(view) = Chart {
+    Size: Size(6 inches, 4 inches);
+    Type: ChartTypes.Column;
+
+    var alist = new ListClass(view.Length);
+    foreach (var row in view)
+      alist.Add(row.FindValue(Alpha.Name));
+    var list = alist.ToArray();
+    var bins = Min([3, list.Length, Max([20, list.Length / 20])]);
+    var bx   = new ListClass(bins);
+    var by   = new ListClass(bins);
+    var min  = Min(list);
+    var max  = Max(list);
+    var d    = (max - min) / bins;
+
+    var x    = min;
+    foreach (var i in 0..<bins) {
+      var xd = x + d;
+      bx.Add(Span {x; "-"; xd; TextDigits: 1});
+
+      by.Add(FindSlice(list, v => v >= x and v < xd).Length);
+      x = xd;
+    }
+
+    XAxis: ChartAxis {
+      Label: Alpha.Name;
+      bx;
+    };
+    ChartSeries {
+      by;
+    };
+  };
+}
+
+Watch = Document {
+  var schema = new LogSchemaClass();
+  var view  = schema.Read(Folders.Source Folder("output") FileName("gamma.log"), FileFormats.Text);
+  schema.GetAlphaTable(view);
+  schema.GetAlphaChart(view);
+};
+
+

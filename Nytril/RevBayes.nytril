@@ -1,0 +1,320 @@
+using Format, Units, Math, IO, DB;
+//======================================================================
+
+with RevBayes {
+  CommentChar  = "#";
+  CommentSpace = "  ";
+
+  CommentBlock = TextBlock {
+    Empty;
+    TextColor: Color(0, 0x64, 0);
+  };
+
+  BlockComment(text) = CommentBlock {
+    var bar = CommentChar * (text.Length + (1 + CommentSpace.Length)*2);
+    bar;
+    Span {
+      CommentChar CommentSpace;
+      text;
+      CommentSpace CommentChar;
+    };
+    bar;
+  };
+
+  LineComment(text) = CommentBlock {
+    CommentChar CommentSpace text;
+  };
+
+  ShowString(text) = Span {
+    TextColor: Color(168, 21, 53);
+    "\"";
+    text;
+    "\"";
+  };
+
+  ShowPath(text) = Span {
+    ShowString(GetUnixPath(text))
+  };
+
+  SourceFile = TextBlock {
+    Style.MonoFamily;
+    BlockComment("RevBayes Source File for Linguistomics Project");
+
+    "clear()";
+//    "setwd({0})"(ShowPath(FilePath.InputFolder));
+    "outpath   = " ShowPath(FilePath.OutputFolder Folder("\\"));
+    "inpath    = " ShowPath(FilePath.InputFolder Folder("\\"));
+    "gammapath = outpath + {0}"(ShowString(FilePath.Gamma));
+
+
+    LineComment("Read in discrete character data");
+    "data = readDiscreteCharacterData(inpath + {0})"(ShowString(FilePath.Characters));
+
+    LineComment("Get some useful variables from the data. We need these later on");
+    "num_taxa <- data.ntaxa()";
+
+    LineComment("Number of branches in an rooted tree");
+    "num_branches <- 2 * num_taxa - 2";
+
+    "taxa <- data.taxa()";
+
+    LineComment("Create helper variables");
+    "moves    = VectorMoves()";
+    "monitors = VectorMonitors()";
+
+    BlockComment("Substitution Model");
+    LineComment("Create a rate matrix using {0} unique segments"(Results.UniqueSegments.Length));
+    "Q <- fnJC({0})"(Results.UniqueSegments.Length);
+
+    BlockComment("Tree Model");
+
+    LineComment("Outgroup is a clade consisting of one language");
+    "out_group = clade({0})"(ShowString(Info.OutGroup.Name));
+
+    LineComment("Prior distribution on the tree topology");
+    "topology ~ dnUniformTopology(taxa, outgroup=out_group, rooted=TRUE)";
+
+    LineComment("These are moves that change the tree topology");
+
+    "moves.append(mvNNI(topology, weight=num_taxa/2.0))";
+    "moves.append(mvSPR(topology, weight=num_taxa/10.0))";
+
+    LineComment("Branch length prior");
+
+    "for (i in 1:num_branches) {";
+    "  bl[i] ~ dnExponential(10.0)";
+    "  moves.append(mvScale(bl[i]))";
+    "}";
+
+    "TL  := sum(bl)";
+    "psi := treeAssembly(topology, bl)";
+
+    BlockComment("Gamma model for among-site variation");
+
+    "alpha ~ dnUniform(0, 10.0)";
+    "moves.append(mvScale(alpha, weight=1))";
+
+    LineComment(Results.WordConceptArray.Length " word concepts in the experiment" );
+    "site_rates := fnDiscretizeGamma(alpha, alpha, {0})"(Results.WordConceptArray.Length);
+
+    BlockComment("PhyloCTMC Model");
+    "seq ~ dnPhyloCTMC(tree=psi, Q=Q, type={0}, siteRates=site_rates)"(ShowString("Standard"));
+    "seq.clamp(data)";
+
+    BlockComment("Analysis");
+
+    LineComment("You can use any node as the argument of model()");
+    "mymodel = model(psi)";
+    "n_gen   = {0}"(Info.Generations div Info.Divisions);
+
+    LineComment("This prints monitors to the screen");
+    "monitors.append(mnScreen(TL, printgen=n_gen) )";
+
+    LineComment("This monitors the trees and puts them in a file");
+    "monitors.append(mnFile(psi, filename=gammapath, printgen=n_gen))";
+
+    LineComment("Model monitor");
+    "monitors.append( mnModel(filename=outpath+{0}, printgen=n_gen))"(ShowString(FilePath.GammaLog));
+
+    "mymcmc = mcmc(mymodel, moves, monitors, nruns=1, combine={0})"(ShowString("mixed"));
+
+
+//   "mymcmc.burnin(generations={0}, tuningInterval=200)"(Info.Generations);
+    "mymcmc.run(generations={0})"(Info.Generations);
+
+    LineComment("Summarizes the MCMC runs");
+    "mymcmc.operatorSummary()";
+
+    BlockComment("Post processing");
+    "treetrace      = readTreeTrace(gammapath, outgroup=out_group)";
+    "map_tree       = mapTree(treetrace, outpath+{0})"(ShowString(FilePath.GammaMAP));
+    "mcc_tree       = mccTree(treetrace, outpath+{0})"(ShowString(FilePath.GammaMCC));
+    "consensus_tree = consensusTree(treetrace, outpath+{0})"(ShowString(FilePath.GammaConsensus));
+
+    LineComment("Exit the program");
+    "q()";
+  };
+}
+//======================================================================
+
+with FilePath {
+  RevBayesEXE    = Folders.ProgramFiles Folder("RevBayes") FileName("rb") Extensions.EXE;
+  MainFolder     = Folders.Source;
+  InputFolder    = MainFolder Folder("Input");
+  OutputFolder   = MainFolder Folder("Output");
+  RevSource      = FileName("Program") Extensions.RevBayes;
+  Gamma          = FileName("Gamma.trees");
+  GammaLog       = FileName("Gamma.log");
+  GammaMAP       = FileName("Gamma_MAP") Extensions.Tree;
+  GammaMCC       = FileName("Gamma_MCC") Extensions.Tree;
+  GammaConsensus = FileName("Gamma_Consensus") Extensions.Tree;
+  Characters     = FileName("Characters") Extensions.Nexus;
+}
+//======================================================================
+
+class RevBayesClass: ProcessClass {
+  Constructor() {
+    super.Constructor(FilePath.RevBayesEXE, GetUnixPath(FilePath.InputFolder FilePath.RevSource));
+  }
+
+  override OutputLine(line) {
+    var l = FindSlice(line[..5], c => c >= '0' and c <= '9');
+    if (l.Length > 1) {
+      System.Trace(line);
+      var i = Integer(l);
+      if (not i.IsError())
+        System.ProgressPercent(i, Info.Generations);
+    }
+    else if (line.IndexOf("Error:") >= 0)
+      System.ProgressCancel(line);
+  }
+}
+//======================================================================
+
+class ComputeClass {
+  var Characters,
+      RevBayesSource;
+
+  Constructor() {
+    Characters     = Nexus.CharacterFile(Results.TaxaArray);
+    RevBayesSource = RevBayes.SourceFile;
+
+    IO.Write(Characters, FilePath.InputFolder FilePath.Characters);
+    IO.Write(RevBayesSource, FilePath.InputFolder FilePath.RevSource);
+  }
+
+  Calculate {
+    var p = new RevBayesClass() {
+      CacheName: "RevBayes";
+      CacheInput: [
+        FilePath.InputFolder FilePath.Characters,
+        FilePath.InputFolder FilePath.RevSource,
+      ];
+      CacheOutput: [
+        FilePath.OutputFolder FilePath.GammaConsensus,
+        FilePath.OutputFolder FilePath.GammaMAP,
+        FilePath.OutputFolder FilePath.GammaMCC,
+        FilePath.OutputFolder FilePath.GammaLog,
+      ];
+      Directory: FilePath.InputFolder;
+    };
+
+    if (p.Run.ExitCode != 0)
+      System.Assert(p.Run.StandardOutput);
+  }
+
+  ShowLanguageTrees = Block {
+    Style.ShowTree("Priors", Lang.Years, Info.PriorTree);
+    Style.ReadTree("Consensus", FilePath.OutputFolder FilePath.GammaConsensus);
+    Style.ReadTree("MAP", FilePath.OutputFolder FilePath.GammaMAP);
+    Style.ReadTree("MCC", FilePath.OutputFolder FilePath.GammaMCC);
+
+    var schema = new LogSchemaClass();
+    var view  = schema.ReadTextFile(Folders.Source Folder("output") FileName("gamma.log"), true, ValueTypes.Double);
+    schema.GetHistogram(view, "alpha");
+
+    schema.LineChart(view, "Prior");
+    schema.LineChart(view, "Likelihood");
+    schema.LineChart(view, "Posterior");
+    schema.LineChart(view, "Tree Length", "TL");
+
+    schema.LineChart(view, null, each "bl[{0}]"(each 1..Results.WordConceptArray.Length*2));
+    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Results.WordConceptArray.Length));
+  };
+}
+//======================================================================
+
+class HistClass {
+  var Variable,
+      Value,
+      Name;
+
+  Constructor(variable, value, name) {
+    Variable = variable;
+    Value    = value;
+    Name     = name;
+  }
+}
+//======================================================================
+
+
+class LogSchemaClass: SchemaClass {
+  Constructor {
+    super.Constructor("log");
+  }
+
+  GetFieldList(view, field) {
+    var list = new ListClass(view.Length);
+    foreach (var row in view)
+      list.Add(row.FindValue(field));
+    return list.ToArray();
+  }
+
+  ReadHistogramData(view, field) {
+    var list = GetFieldList(view, field);
+    var min  = Floor(Min(list));
+    var max  = Ceiling(Max(list));
+    var d    = 0.5;
+    var bins = Round((max - min) / d);
+
+    var data = new ListClass(bins);
+    var x    = min;
+    foreach (var i in 0..<bins) {
+      var xd = x + d;
+      data.Add(new HistClass(xd, FindCount(list, v => v >= x and v < xd), Span {xd; TextDigits: 1}));
+      x = xd;
+    }
+    return data.ToArray();
+  }
+
+  TitleBox(name) = Paragraph {
+    HAlignment: HAligns.Center;
+    TextHeight: 14 pts;
+    name;
+  };
+
+  GetHistogram(view, field) = Group {
+    Vertical: true;
+    TitleBox(field " Histogram");
+    Chart {
+      Size: Size(Metrics.TreeWidth, 3.5 inches);
+      Type: ChartTypes.Column;
+
+      var data = ReadHistogramData(view, field);
+
+      XAxis: ChartAxis {
+//        Rotation: -60 degrees;
+        (each data).Name;
+      };
+      ChartSeries {
+        (each data).Value;
+      };
+    };
+  };
+
+  AddPoint(d) = new DataPointClass(null, d);
+
+  LineChart(view, name, field=null) = Paragraph {
+    SpaceBefore: 20 pts;
+    Group {
+      Vertical: true;
+      TitleBox(name ?? field);
+      Chart {
+        Size: Size(Metrics.TreeWidth, 2.5 inches);
+        Type: ChartTypes.Line;
+
+        var list = GetFieldList(view, field ?? name);
+        XAxis: ChartAxis {
+          each 0..<list.Length;
+        };
+        ChartSeries {
+//          Marker: Chars.bullet {TextHeight: 3 pts; TextColor: Colors.Red};
+          Stroke: 0.5 pts {MiterLimit: 2 pts};
+          AddPoint(each list);
+        };
+      };
+    };
+  };
+}
+//======================================================================
+
