@@ -1,9 +1,36 @@
 using Format, Units, Math, IO, DB;
 //======================================================================
 
-with RevBayes {
-  CommentChar  = "#";
-  CommentSpace = "  ";
+class RevProcessClass: ProcessClass {
+  var Compute;
+
+  Constructor(compute) {
+    Compute = compute;
+    super.Constructor(compute.EXEName, compute.OutFolder compute.RevSourceName);
+  }
+
+  override OutputLine(line) {
+    var l = FindSlice(line[..5], c => c >= '0' and c <= '9');
+    if (l.Length > 1) {
+      System.Trace(line);
+      var i = Integer(l);
+      if (not i.IsError())
+        System.ProgressPercent(i, Compute.Generations);
+    }
+    else if (line.IndexOf("Error:") >= 0)
+      System.ProgressCancel(line);
+  }
+}
+//======================================================================
+
+class RevProgramClass {
+  var CommentChar,
+      CommentSpace;
+
+  Constructor {
+    CommentChar  = "#";
+    CommentSpace = "  ";
+  }
 
   CommentBlock = TextBlock {
     Empty;
@@ -31,24 +58,98 @@ with RevBayes {
     text;
     "\"";
   };
+}
+//======================================================================
 
-  ShowPath(text) = Span {
-    ShowString(GetUnixPath(text))
+class ComputeClass: RevProgramClass {
+  var Generations,
+      OutFolder,
+      Divisions,
+      EXEName,
+      RevSourceName,
+      GammaTrees,
+      GammaLog,
+      GammaMAP,
+      GammaMCC,
+      GammaConsensus,
+      CharacterName,
+      RevBayesSource,
+      CharacterSource;
+
+  Constructor(generations) {
+    super.Constructor;
+
+    Divisions       = 500;
+    Generations     = generations;
+    OutFolder       = Folders.Source Folder("Output");
+    EXEName         = Folders.ProgramFiles Folder("RevBayes") FileName("rb") Extensions.EXE;
+    RevSourceName   = FileName("Program") Extensions.RevBayes;
+    CharacterName   = FileName("Characters") Extensions.Nexus;
+    GammaTrees      = FileName("Gamma.trees");
+    GammaLog        = FileName("Gamma.log");
+    GammaMAP        = FileName("Gamma_MAP") Extensions.Tree;
+    GammaMCC        = FileName("Gamma_MCC") Extensions.Tree;
+    GammaConsensus  = FileName("Gamma_Consensus") Extensions.Tree;
+    RevBayesSource  = GetRevSourceCode;
+    CharacterSource = Nexus.CharacterFile(Results.TaxaArray);
+  }
+
+  Calculate {
+    IO.Write(CharacterSource, OutFolder CharacterName);
+    IO.Write(RevBayesSource, OutFolder RevSourceName);
+
+    var p = new RevProcessClass(this) {
+      CacheName: "RevBayes";
+      CacheInput: [
+        OutFolder CharacterName,
+        OutFolder RevSourceName,
+      ];
+      CacheOutput: [
+        OutFolder GammaTrees,
+        OutFolder GammaConsensus,
+        OutFolder GammaMAP,
+        OutFolder GammaMCC,
+        OutFolder GammaLog,
+      ];
+      Directory: OutFolder;
+    };
+
+    var results = p.Run;
+    if (results.ExitCode != 0)
+      System.Assert(false, results.StandardOutput, p);
+  }
+
+  ShowLanguageTrees = Block {
+    Style.ShowTree("Priors", Lang.Years, Info.PriorTree);
+    Style.ReadTree("Consensus", OutFolder GammaConsensus);
+    Style.ReadTree("MAP", OutFolder GammaMAP);
+    Style.ReadTree("MCC", OutFolder GammaMCC);
+
+    var schema = new LogSchemaClass();
+    var view   = schema.ReadTextFile(OutFolder GammaLog, true, ValueTypes.Double);
+    schema.GetHistogram(view, "alpha");
+
+    schema.LineChart(view, "Prior");
+    schema.LineChart(view, "Likelihood");
+    schema.LineChart(view, "Posterior");
+    schema.LineChart(view, "Tree Length", "TL");
+
+    schema.LineChart(view, null, each "bl[{0}]"(each 1..Results.WordConceptArray.Length*2));
+    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Results.WordConceptArray.Length));
   };
 
-  SourceFile = TextBlock {
+  GetRevSourceCode = TextBlock {
     Style.MonoFamily;
     BlockComment("RevBayes Source File for Linguistomics Project");
 
     "clear()";
-//    "setwd({0})"(ShowPath(FilePath.InputFolder));
-    "outpath   = " ShowPath(FilePath.OutputFolder Folder("\\"));
-    "inpath    = " ShowPath(FilePath.InputFolder Folder("\\"));
-    "gammapath = outpath + {0}"(ShowString(FilePath.Gamma));
+//    "setwd({0})"(ShowString(folder));
+    "path = " ShowString(OutFolder Folder("/"));
+    "gammapath = path + {0}"(ShowString(GammaTrees));
 
 
     LineComment("Read in discrete character data");
-    "data = readDiscreteCharacterData(inpath + {0})"(ShowString(FilePath.Characters));
+    "data = readDiscreteCharacterData(path + {0})"(ShowString(CharacterName));
 
     LineComment("Get some useful variables from the data. We need these later on");
     "num_taxa <- data.ntaxa()";
@@ -105,7 +206,7 @@ with RevBayes {
 
     LineComment("You can use any node as the argument of model()");
     "mymodel = model(psi)";
-    "n_gen   = {0}"(Info.Generations div Info.Divisions);
+    "n_gen   = {0}"(Generations div Divisions);
 
     LineComment("This prints monitors to the screen");
     "monitors.append(mnScreen(TL, printgen=n_gen) )";
@@ -114,112 +215,25 @@ with RevBayes {
     "monitors.append(mnFile(psi, filename=gammapath, printgen=n_gen))";
 
     LineComment("Model monitor");
-    "monitors.append( mnModel(filename=outpath+{0}, printgen=n_gen))"(ShowString(FilePath.GammaLog));
+    "monitors.append( mnModel(filename=path+{0}, printgen=n_gen))"(ShowString(GammaLog));
 
     "mymcmc = mcmc(mymodel, moves, monitors, nruns=1, combine={0})"(ShowString("mixed"));
 
 
 //   "mymcmc.burnin(generations={0}, tuningInterval=200)"(Info.Generations);
-    "mymcmc.run(generations={0})"(Info.Generations);
+    "mymcmc.run(generations={0})"(Generations);
 
     LineComment("Summarizes the MCMC runs");
     "mymcmc.operatorSummary()";
 
     BlockComment("Post processing");
     "treetrace      = readTreeTrace(gammapath, outgroup=out_group)";
-    "map_tree       = mapTree(treetrace, outpath+{0})"(ShowString(FilePath.GammaMAP));
-    "mcc_tree       = mccTree(treetrace, outpath+{0})"(ShowString(FilePath.GammaMCC));
-    "consensus_tree = consensusTree(treetrace, outpath+{0})"(ShowString(FilePath.GammaConsensus));
+    "map_tree       = mapTree(treetrace, path+{0})"(ShowString(GammaMAP));
+    "mcc_tree       = mccTree(treetrace, path+{0})"(ShowString(GammaMCC));
+    "consensus_tree = consensusTree(treetrace, path+{0})"(ShowString(GammaConsensus));
 
     LineComment("Exit the program");
     "q()";
-  };
-}
-//======================================================================
-
-with FilePath {
-  RevBayesEXE    = Folders.ProgramFiles Folder("RevBayes") FileName("rb") Extensions.EXE;
-  MainFolder     = Folders.Source;
-  InputFolder    = MainFolder Folder("Input");
-  OutputFolder   = MainFolder Folder("Output");
-  RevSource      = FileName("Program") Extensions.RevBayes;
-  Gamma          = FileName("Gamma.trees");
-  GammaLog       = FileName("Gamma.log");
-  GammaMAP       = FileName("Gamma_MAP") Extensions.Tree;
-  GammaMCC       = FileName("Gamma_MCC") Extensions.Tree;
-  GammaConsensus = FileName("Gamma_Consensus") Extensions.Tree;
-  Characters     = FileName("Characters") Extensions.Nexus;
-}
-//======================================================================
-
-class RevBayesClass: ProcessClass {
-  Constructor() {
-    super.Constructor(FilePath.RevBayesEXE, GetUnixPath(FilePath.InputFolder FilePath.RevSource));
-  }
-
-  override OutputLine(line) {
-    var l = FindSlice(line[..5], c => c >= '0' and c <= '9');
-    if (l.Length > 1) {
-      System.Trace(line);
-      var i = Integer(l);
-      if (not i.IsError())
-        System.ProgressPercent(i, Info.Generations);
-    }
-    else if (line.IndexOf("Error:") >= 0)
-      System.ProgressCancel(line);
-  }
-}
-//======================================================================
-
-class ComputeClass {
-  var Characters,
-      RevBayesSource;
-
-  Constructor() {
-    Characters     = Nexus.CharacterFile(Results.TaxaArray);
-    RevBayesSource = RevBayes.SourceFile;
-
-    IO.Write(Characters, FilePath.InputFolder FilePath.Characters);
-    IO.Write(RevBayesSource, FilePath.InputFolder FilePath.RevSource);
-  }
-
-  Calculate {
-    var p = new RevBayesClass() {
-      CacheName: "RevBayes";
-      CacheInput: [
-        FilePath.InputFolder FilePath.Characters,
-        FilePath.InputFolder FilePath.RevSource,
-      ];
-      CacheOutput: [
-        FilePath.OutputFolder FilePath.GammaConsensus,
-        FilePath.OutputFolder FilePath.GammaMAP,
-        FilePath.OutputFolder FilePath.GammaMCC,
-        FilePath.OutputFolder FilePath.GammaLog,
-      ];
-      Directory: FilePath.InputFolder;
-    };
-
-    if (p.Run.ExitCode != 0)
-      System.Assert(p.Run.StandardOutput);
-  }
-
-  ShowLanguageTrees = Block {
-    Style.ShowTree("Priors", Lang.Years, Info.PriorTree);
-    Style.ReadTree("Consensus", FilePath.OutputFolder FilePath.GammaConsensus);
-    Style.ReadTree("MAP", FilePath.OutputFolder FilePath.GammaMAP);
-    Style.ReadTree("MCC", FilePath.OutputFolder FilePath.GammaMCC);
-
-    var schema = new LogSchemaClass();
-    var view  = schema.ReadTextFile(Folders.Source Folder("output") FileName("gamma.log"), true, ValueTypes.Double);
-    schema.GetHistogram(view, "alpha");
-
-    schema.LineChart(view, "Prior");
-    schema.LineChart(view, "Likelihood");
-    schema.LineChart(view, "Posterior");
-    schema.LineChart(view, "Tree Length", "TL");
-
-    schema.LineChart(view, null, each "bl[{0}]"(each 1..Results.WordConceptArray.Length*2));
-    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Results.WordConceptArray.Length));
   };
 }
 //======================================================================
