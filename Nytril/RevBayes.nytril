@@ -1,28 +1,6 @@
 using Format, Units, Math, IO, DB;
 //======================================================================
 
-class RevProcessClass: ProcessClass {
-  var Compute;
-
-  Constructor(compute) {
-    Compute = compute;
-    super.Constructor(compute.EXEName, compute.OutFolder compute.RevSourceName);
-  }
-
-  override OutputLine(line) {
-    var l = FindSlice(line[..5], c => c >= '0' and c <= '9');
-    if (l.Length > 1) {
-      System.Trace(line);
-      var i = Integer(l);
-      if (not i.IsError())
-        System.ProgressPercent(i, Compute.Generations);
-    }
-    else if (line.IndexOf("Error:") >= 0)
-      System.ProgressCancel(line);
-  }
-}
-//======================================================================
-
 class RevProgramClass {
   var CommentChar,
       CommentSpace;
@@ -58,6 +36,33 @@ class RevProgramClass {
     text;
     "\"";
   };
+
+  PathPlus(name) = Span {
+    "path+";
+    ShowString(name);
+  };
+}
+//======================================================================
+
+class RevProcessClass: ProcessClass {
+  var Compute;
+
+  Constructor(compute) {
+    Compute = compute;
+    super.Constructor(compute.EXEName, compute.OutFolder compute.RevSourceName);
+  }
+
+  override OutputLine(line) {
+    var l = FindSlice(line[..5], c => c >= '0' and c <= '9');
+    if (l.Length > 1) {
+      System.Trace(line);
+      var i = Integer(l);
+      if (not i.IsError())
+        System.ProgressPercent(i, Compute.Generations);
+    }
+    else if (line.IndexOf("Error:") >= 0)
+      System.ProgressCancel(line);
+  }
 }
 //======================================================================
 
@@ -76,12 +81,12 @@ class ComputeClass: RevProgramClass {
       RevBayesSource,
       CharacterSource;
 
-  Constructor(generations) {
+  Constructor(outname) {
     super.Constructor;
 
     Divisions       = 500;
-    Generations     = generations;
-    OutFolder       = Folders.Source Folder("Output");
+    Generations     = 1000;
+    OutFolder       = Folders.Source Folder(outname);
     EXEName         = Folders.ProgramFiles Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName   = FileName("Program") Extensions.RevBayes;
     CharacterName   = FileName("Characters") Extensions.Nexus;
@@ -95,6 +100,7 @@ class ComputeClass: RevProgramClass {
   }
 
   Calculate {
+    CreateFolder(OutFolder);
     IO.Write(CharacterSource, OutFolder CharacterName);
     IO.Write(RevBayesSource, OutFolder RevSourceName);
 
@@ -145,11 +151,11 @@ class ComputeClass: RevProgramClass {
     "clear()";
 //    "setwd({0})"(ShowString(folder));
     "path = " ShowString(OutFolder Folder("/"));
-    "gammapath = path + {0}"(ShowString(GammaTrees));
+    "gammapath = {0}"(PathPlus(GammaTrees));
 
 
     LineComment("Read in discrete character data");
-    "data = readDiscreteCharacterData(path + {0})"(ShowString(CharacterName));
+    "data = readDiscreteCharacterData({0})"(PathPlus(CharacterName));
 
     LineComment("Get some useful variables from the data. We need these later on");
     "num_taxa <- data.ntaxa()";
@@ -170,7 +176,7 @@ class ComputeClass: RevProgramClass {
     BlockComment("Tree Model");
 
     LineComment("Outgroup is a clade consisting of one language");
-    "out_group = clade({0})"(ShowString(Info.OutGroup.Name));
+    "out_group = clade({0})"(ShowString(Languages.Latin.Name));
 
     LineComment("Prior distribution on the tree topology");
     "topology ~ dnUniformTopology(taxa, outgroup=out_group, rooted=TRUE)";
@@ -215,12 +221,12 @@ class ComputeClass: RevProgramClass {
     "monitors.append(mnFile(psi, filename=gammapath, printgen=n_gen))";
 
     LineComment("Model monitor");
-    "monitors.append( mnModel(filename=path+{0}, printgen=n_gen))"(ShowString(GammaLog));
+    "monitors.append( mnModel(filename={0}, printgen=n_gen))"(PathPlus(GammaLog));
 
     "mymcmc = mcmc(mymodel, moves, monitors, nruns=1, combine={0})"(ShowString("mixed"));
 
 
-//   "mymcmc.burnin(generations={0}, tuningInterval=200)"(Info.Generations);
+//   "mymcmc.burnin(generations={0}, tuningInterval=200)"(Generations);
     "mymcmc.run(generations={0})"(Generations);
 
     LineComment("Summarizes the MCMC runs");
@@ -228,9 +234,9 @@ class ComputeClass: RevProgramClass {
 
     BlockComment("Post processing");
     "treetrace      = readTreeTrace(gammapath, outgroup=out_group)";
-    "map_tree       = mapTree(treetrace, path+{0})"(ShowString(GammaMAP));
-    "mcc_tree       = mccTree(treetrace, path+{0})"(ShowString(GammaMCC));
-    "consensus_tree = consensusTree(treetrace, path+{0})"(ShowString(GammaConsensus));
+    "map_tree       = mapTree(treetrace, {0})"(PathPlus(GammaMAP));
+    "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(GammaMCC));
+    "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(GammaConsensus));
 
     LineComment("Exit the program");
     "q()";
