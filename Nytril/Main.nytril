@@ -29,12 +29,11 @@ class AnalysisViewClass: DocumentViewClass {
 // No spaces in the names below!
 // RevBayes has a problem with folder names that contain spaces...
 
-Main.Documents = new DocumentViewClass(null) {
-  new AnalysisViewClass("Output2");
-  new AnalysisViewClass("Output3");
-};
+PreviousRuns = ["Output1"];
 
-RunAnalysis(outname) {
+Main.Documents = new AnalysisViewClass(each PreviousRuns);
+
+void RunAnalysis(outname) {
   var compute = new ComputeClass(outname);
   compute.Calculate;
 
@@ -42,8 +41,8 @@ RunAnalysis(outname) {
   Write(paper, compute.OutFolder FileName(Info.PaperTitle) Extensions.PDF);
 }
 
-Main.Run {
-  RunAnalysis("Output4");
+void Main.Run {
+  RunAnalysis("Output1");
 }
 //======================================================================
 
@@ -162,6 +161,7 @@ AddAppendix(list, name, content) = list.Add(new AppendixClass(name, content));
 GetAppendices(compute) {
   var list = new ListClass(16);
 
+  AddAppendix(list, "Options File", compute.OptionsSource);
   AddAppendix(list, "RevBayes Source File", compute.RevBayesSource);
   AddAppendix(list, "Character File", compute.CharacterSource);
   AddAppendix(list, "Program Output", compute.ShowLanguageTrees);

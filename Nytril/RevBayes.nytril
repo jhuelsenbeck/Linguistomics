@@ -12,7 +12,7 @@ class RevProgramClass {
 
   CommentBlock = TextBlock {
     Empty;
-    TextColor: Color(0, 0x64, 0);
+    TextColor: Style.CommentColor;
   };
 
   BlockComment(text) = CommentBlock {
@@ -31,7 +31,7 @@ class RevProgramClass {
   };
 
   ShowString(text) = Span {
-    TextColor: Color(168, 21, 53);
+    TextColor: Style.StringColor;
     "\"";
     text;
     "\"";
@@ -52,10 +52,10 @@ class RevProcessClass: ProcessClass {
     super.Constructor(compute.EXEName, compute.OutFolder compute.RevSourceName);
   }
 
-  override OutputLine(line) {
+  override void OutputLine(line) {
+    System.WriteLine(line);
     var l = FindSlice(line[..5], c => c >= '0' and c <= '9');
     if (l.Length > 1) {
-      System.Trace(line);
       var i = Integer(l);
       if (not i.IsError())
         System.ProgressPercent(i, Compute.Generations);
@@ -77,30 +77,38 @@ class ComputeClass: RevProgramClass {
       GammaMAP,
       GammaMCC,
       GammaConsensus,
+      OptionsName,
       CharacterName,
+      OptionsSource,
       RevBayesSource,
-      CharacterSource;
+      CharacterSource,
+      Concepts;
 
   Constructor(outname) {
     super.Constructor;
 
     Divisions       = 500;
     Generations     = 1000;
-    OutFolder       = Folders.Source Folder(outname);
+    Concepts        = Results.WordConceptArray.Length;
+
+    OutFolder       = Folders.Repository Folder("Output") Folder(outname);
     EXEName         = Folders.ProgramFiles Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName   = FileName("Program") Extensions.RevBayes;
     CharacterName   = FileName("Characters") Extensions.Nexus;
+    OptionsName     = FileName("Options") Extensions.Nytril;
     GammaTrees      = FileName("Gamma.trees");
     GammaLog        = FileName("Gamma.log");
     GammaMAP        = FileName("Gamma_MAP") Extensions.Tree;
     GammaMCC        = FileName("Gamma_MCC") Extensions.Tree;
     GammaConsensus  = FileName("Gamma_Consensus") Extensions.Tree;
+    OptionsSource   = GetOptionsSource;
     RevBayesSource  = GetRevSourceCode;
     CharacterSource = Nexus.CharacterFile(Results.TaxaArray);
   }
 
-  Calculate {
+  void Calculate {
     CreateFolder(OutFolder);
+    IO.Write(OptionsSource, OutFolder OptionsName);
     IO.Write(CharacterSource, OutFolder CharacterName);
     IO.Write(RevBayesSource, OutFolder RevSourceName);
 
@@ -140,8 +148,30 @@ class ComputeClass: RevProgramClass {
     schema.LineChart(view, "Posterior");
     schema.LineChart(view, "Tree Length", "TL");
 
-    schema.LineChart(view, null, each "bl[{0}]"(each 1..Results.WordConceptArray.Length*2));
-    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Results.WordConceptArray.Length));
+    schema.LineChart(view, null, each "bl[{0}]"(each 1..Concepts*2));
+    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
+  };
+
+  AddVariable(name, value) = Span {
+    name;
+    " = ";
+    value;
+    ";";
+  };
+
+  GetOptionsSource = TextBlock {
+    Style.MonoFamily;
+    Span {
+      TextColor: Style.CommentColor;
+      "// Run options";
+    };
+    Empty;
+
+    AddVariable("Divisions", Divisions);
+    AddVariable("Generations", Generations);
+    AddVariable("Languages", Results.TaxaArray.Length);
+    AddVariable("Concepts", Concepts);
+    AddVariable("Segments", Results.UniqueSegments.Length);
   };
 
   GetRevSourceCode = TextBlock {
@@ -201,8 +231,8 @@ class ComputeClass: RevProgramClass {
     "alpha ~ dnUniform(0, 10.0)";
     "moves.append(mvScale(alpha, weight=1))";
 
-    LineComment(Results.WordConceptArray.Length " word concepts in the experiment" );
-    "site_rates := fnDiscretizeGamma(alpha, alpha, {0})"(Results.WordConceptArray.Length);
+    LineComment(Concepts " concepts in the experiment" );
+    "site_rates := fnDiscretizeGamma(alpha, alpha, {0})"(Concepts);
 
     BlockComment("PhyloCTMC Model");
     "seq ~ dnPhyloCTMC(tree=psi, Q=Q, type={0}, siteRates=site_rates)"(ShowString("Standard"));
@@ -274,14 +304,14 @@ class LogSchemaClass: SchemaClass {
     var list = GetFieldList(view, field);
     var min  = Floor(Min(list));
     var max  = Ceiling(Max(list));
-    var d    = 0.5;
+    var d    = 0.125;
     var bins = Round((max - min) / d);
 
     var data = new ListClass(bins);
     var x    = min;
     foreach (var i in 0..<bins) {
       var xd = x + d;
-      data.Add(new HistClass(xd, FindCount(list, v => v >= x and v < xd), Span {xd; TextDigits: 1}));
+      data.Add(new HistClass(xd, FindCount(list, v => v >= x and v < xd), Span {x; TextDigits: 1}));
       x = xd;
     }
     return data.ToArray();
