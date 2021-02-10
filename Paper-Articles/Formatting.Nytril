@@ -1,0 +1,188 @@
+using Format, Units, Math, IO;
+
+include "..\\nexus\\tree functions";
+//======================================================================
+
+MainFolder = Folders.Source
+PaperPath  = MainFolder FileName("Articles")
+Journal    = "Transactions of the Philological Society"
+Publisher  = "The Philological Society"
+Title      = "Articles: Whoda guessed how complex they can be?"
+Author     = "D. M. Goldstein"
+//======================================================================
+
+TitleSection = Block {
+  ParAlignment: ParAlignments.Center;
+  Style.Title(Title {TextCase: TextCases.AllUpper});
+  Paragraph {
+    "By ", Author
+  };
+  Paragraph {
+    SpaceAfter: 6 pts;
+    "University of California, Los Angeles"
+  };
+  Paragraph {
+    TextHeight: 8 pts;
+    "(To be completed)"
+  };
+}
+
+SourceCodeBlock = TextBlock {
+  TextFamily: TextFamilies.Consolas;
+  TextHeight: 10 pts;
+  ParBackground: 97%;
+}
+//======================================================================
+
+NormalHeader = Block {
+  Span {TextCase: TextCases.AllUpper, Journal}
+}
+
+PageSection = Section {
+  SectionBreak: SectionBreaks.NextPage;
+  Footer: Block {
+    Distance: 0.5 inches;
+    ParAlignment: ParAlignments.Center;
+    PageNumber
+  };
+}
+
+DataLabel(node) = node.Data.Name
+
+LanguageTree = Block {
+  Paragraph {
+    PageBreakBefore: true;
+    ParAlignment: ParAlignments.Center;
+    TextHeight: 14 pts;
+    SpaceAfter: 8 pts;
+    BorderB: 0.5;
+    "Chang A3";
+  };
+  Paragraph {
+    TextHeight: 5.5 pts;
+    Tree {
+      Label: DataLabel;
+      Curvature: 30%;
+      Bevel: 20%;
+      Marker: {TextFamily: TextFamilies.CambriaMath, TextHeight: 4 pts}Chars.Circ {TextColor: Colors.Red};
+      Width: 6 inches;
+      Root: ChangA3Tree;
+    };
+  }
+}
+
+WhitePaper = Document {
+  Width: 8.5 inches;
+  Height: 11 inches;
+  Title: Title;
+  Creator: Author;
+  TextFamily: "Linux Libertine O";
+  TextHeight: 11.5 pts;
+  PageSection {
+    Header: NormalHeader {
+      Distance: 0.125 inches;
+      Even: NormalHeader;
+      First: Block {
+        Paragraph {
+          ParAlignment: ParAlignments.Center;
+          Logo;
+        };
+      }
+    };
+    TitleSection;
+    LanguageSection;
+    LanguageTree;
+  };
+  PageSection {
+    Style.Header1("Appendix 1 - RevBayes Source File");
+    RevBayes.SourceFile
+  };
+  PageSection {
+    Style.Header1("Appendix 2 - Change A3 Tree File");
+    TreeLibrary.NexusFile([ChangA3Tree]) {
+      TextFamily: TextFamilies.Consolas;
+    }
+  };
+  PageSection {
+    Style.Header1("Appendix 3 - Nexus Input File");
+    Nexus.SourceFile
+  };
+  PageSection {
+    Style.Header1("Appendix 3 - Nytril Source Code");
+    Style.SourceFile(each System.SourceList)
+  };
+}
+//======================================================================
+
+with Style {
+  Title(text) = Paragraph {
+    KeepWithNext: true;
+    SpaceBefore: 12 pts;
+    SpaceAfter: 6 pts;
+    ParAlignment: ParAlignments.Center;
+    TextHeight: 14 pts;
+    text
+  }
+
+  Header1(text) = Paragraph {
+    KeepWithNext: true;
+    SpaceBefore: 12 pts;
+    SpaceAfter: 6 pts;
+    ParAlignment: ParAlignments.Center;
+    TextHeight: 24 pts;
+    text
+  }
+
+  Header2(text) = Paragraph {
+    KeepWithNext: true;
+    SpaceBefore: 12 pts;
+    SpaceAfter: 6 pts;
+    TextHeight: 14 pts;
+    text
+  }
+
+  Header3(text) = Paragraph {
+    KeepWithNext: true;
+    Border: 0.25 pts;
+    ParBackground: 97%;
+    SpaceAfter: 12 pts;
+    TextHeight: 14 pts;
+    text
+  }
+
+  SourceFile(source) = Block {
+    Style.Header3(source.Path.GetFileName);
+    Paragraph {
+      LeftIndent: 0.25 inches;
+      ParAlignment: ParAlignments.Left;
+      TextFamily: TextFamilies.Consolas;
+      TextHeight: 8 pts;
+      SourceSelection(source)
+    }
+  }
+}
+//======================================================================
+
+Logo = Frame {
+  Width: 5 inches;
+  Height: 0.5 inches;
+  Padding: 4 pts;
+  Background: Color(51, 66, 81);
+  Table {
+    Columns: [3.9 inches, 1.5 inches];
+    Row {
+      Block {
+        TextFamily: "Arial";
+        Journal[0..19] {TextColor: Color(129, 166, 207), Bold, TextHeight: 12 pts};
+        Journal[20..] {Bold, TextHeight: 20 pts, TextColor: Colors.White}
+      };
+      Block {
+        TextFamily: TextFamilies.TimesNewRoman;
+        "PhilSoc"{TextHeight: 24 pts, TextColor: Colors.White};
+        Publisher{TextHeight: 8 pts, TextColor: Colors.White}
+      }
+    }
+  }
+}
+//======================================================================
+

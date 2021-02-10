@@ -27,7 +27,7 @@ class RevProgramClass {
   };
 
   LineComment(text) = CommentBlock {
-    CommentChar CommentSpace text;
+    CommentChar Space text;
   };
 
   ShowString(text) = Span {
@@ -92,7 +92,7 @@ class ComputeClass: RevProgramClass {
     Concepts        = Results.WordConceptArray.Length;
 
     OutFolder       = Folders.Repository Folder("Output") Folder(outname);
-    EXEName         = Folders.ProgramFiles Folder("RevBayes") FileName("rb") Extensions.EXE;
+    EXEName         = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName   = FileName("Program") Extensions.RevBayes;
     CharacterName   = FileName("Characters") Extensions.Nexus;
     OptionsName     = FileName("Options") Extensions.Nytril;
@@ -274,7 +274,7 @@ class ComputeClass: RevProgramClass {
 }
 //======================================================================
 
-class HistClass {
+class BinClass {
   var Variable,
       Value,
       Name;
@@ -311,7 +311,7 @@ class LogSchemaClass: SchemaClass {
     var x    = min;
     foreach (var i in 0..<bins) {
       var xd = x + d;
-      data.Add(new HistClass(xd, FindCount(list, v => v >= x and v < xd), Span {x; TextDigits: 1}));
+      data.Add(new BinClass(xd, FindCount(list, v => v >= x and v < xd), Span {x; TextDigits: 1}));
       x = xd;
     }
     return data.ToArray();
@@ -337,7 +337,8 @@ class LogSchemaClass: SchemaClass {
         (each data).Name;
       };
       ChartSeries {
-        (each data).Value;
+        foreach (var d in data)
+          new DataPointClass(EachIndex, d.Value) {Reference: d.Variable};
       };
     };
   };

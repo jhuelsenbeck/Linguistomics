@@ -1,0 +1,52 @@
+clear()
+morph = readDiscreteCharacterData("C:\\Users\\shawn\\Documents\\Code\\Nytril\\Deploy\\Paper-Articles\\Articles.nex")
+moves = VectorMoves()
+monitors = VectorMonitors()
+trees = readTrees("C:\\Users\\shawn\\Documents\\Code\\Nytril\\Deploy\\Paper-Articles\\ieo_fifty.nex")
+treetrace = treeTrace(trees)
+
+# draw a tree from the empirical tree distribution
+psi ~ dnEmpiricalTree(treetrace)
+
+# DO NOT FORGET THIS! See Landis response to my question in Revbayes google group
+moves.append( mvEmpiricalTree(psi, weight = 2) )
+
+# We'll also read in a pre-cooked MAP tree to summarize our results.
+
+# This is the Chang A3 tree
+map_tree = readBranchLengthTrees("C:\\Users\\shawn\\Documents\\Code\\Nytril\\Deploy\\Paper-Articles\\ChangA3.tree")[1]
+# Set priors according to the resultant state
+treelength := psi.treeLength()
+
+# Number of cognates in (0,1) languages
+rate_pr_00_01 := treelength / 2
+
+# Number of cognates in (1,0) languages
+rate_pr_00_10 := treelength / 8
+
+# Number of definite article cognates in (1,1) languages
+rate_pr_01_11 := treelength / 9
+
+# Number of indefinite article cognates in (1,1) languages
+rate_pr_10_11 := treelength / 10
+
+# Gain of indefinite article with no definiteness marker
+rate_00_01 ~ dnExponential(rate_pr_00_01)
+
+# Gain of definiteness marker with no indefinite article
+rate_00_10 ~ dnExponential(rate_pr_00_10)
+# Gain of definiteness marker with indefinite article
+rate_01_11 ~ dnExponential(rate_pr_01_11)
+
+# Gain of indefinite article with definiteness marker
+rate_10_11 ~ dnExponential(rate_pr_10_11)
+
+# Make variables for cognate group counts
+numDef := 15
+numIndef := 17
+numTotal := numDef * numIndef
+for (i in 1:numTotal) {
+  for (j in 1:numTotal) {
+    rates[i][j] <- 0.0
+  }
+}

@@ -1,0 +1,659 @@
+clear()
+morph = readDiscreteCharacterData("/Users/davidgoldstein/Documents/LaTeX/ArticlesPhylogenetics/ArticleDependentGrammaticalization/Data/IE_Narrow_Definite_Indefinite_Multistate.nex")
+
+#morph = readDiscreteCharacterData("/u/home/d/dmgoldst/projects/dependentgrammaticalization/data/IE_Narrow_Definite_Indefinite_Multistate.nex")
+
+
+
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+
+#https://github.com/revbayes/revbayes_tutorial/blob/master/RB_AncestralStates_Tutorial/Tutorial_2_Part_1.Rev
+
+
+#treetrace = readTrees("/Users/davidgoldstein/Documents/LaTeX/ArticlesPhylogenetics/ArticleDependentGrammaticalization/Data/ieo.trees")
+
+trees = readTrees("/Users/davidgoldstein/Documents/LaTeX/ArticlesPhylogenetics/ArticleDependentGrammaticalization/Data/ieo_fifty.nex")
+
+#trees = readTrees("/u/home/d/dmgoldst/projects/dependentgrammaticalization/data/ieo_fifty.nex")
+
+
+treetrace = treeTrace(trees)
+
+# draw a tree from the empirical tree distribution
+psi ~ dnEmpiricalTree(treetrace)
+
+
+#DO NOT FORGET THIS! See Landis response to my question in Revbayes google group
+moves.append( mvEmpiricalTree(psi, weight = 2) )
+
+# We'll also read in a pre-cooked MAP tree to summarize our results.
+#This is the Chang A3 tree
+
+map_tree = readBranchLengthTrees("/Users/davidgoldstein/Documents/LaTeX/ArticlesPhylogenetics/ArticleDependentGrammaticalization/Data/ChangA3.tree")[1]
+
+#map_tree = readBranchLengthTrees("/u/home/d/dmgoldst/projects/dependentgrammaticalization/data/ChangA3.tree")[1]
+
+
+#treetrace.summarize()
+#There's also mapTree!
+#map_tree = mapTree(treetrace,"output/PS_uniform_map.tre")
+
+
+#This parameters specifies all the rates of morphological evolution
+
+#YOU NEED TO CHECK THAT THE MATRIX LOOKS AS IT SHOULD
+
+#Number of changes on the tree
+#With / 10, got lnlikelihood of -80
+#This is the number of events on the tree. I simply tallied the number of innovations for definite and indefinite determiners.
+
+
+
+
+#When you read in a set of trees, you have to include an index for .treeLength to work! That's only if you read in a set of trees with readTree. If you use readTreeTrace as I did above and then draw a random tree with dnEmpiricalTree, then you don't need to use an index!
+
+
+######RATE PRIORS###########
+
+#BY SETTING THE PRIOR IDENTICALLY for rate_00_10 and rate_01_11, I have caused these rates to come out the same!!!!
+#JUST USE A COMMON RATE PRIOR!!!!
+#rate_pr_def := psi.treeLength() / 13
+#rate_pr_indef := psi.treeLength() / 12
+
+#Or should I have a prior for each type of change???
+
+
+
+#############################
+
+#22 Aug 2019: I CHANGED THE ORDER OF CHARCTERS. FIRST COLUMN IS NOW DEF!!!!
+
+#Set priors according to the resultant state
+#Number of cognates in (0,1) languages
+rate_pr_00_01 := psi.treeLength() / 2
+#Number of cognates in (1,0) languages
+rate_pr_00_10 := psi.treeLength() / 8
+#Number of definite article cognates in (1,1) languages
+rate_pr_01_11 := psi.treeLength() / 9
+#Number of indefinite article cognates in (1,1) languages
+rate_pr_10_11 := psi.treeLength() / 10
+
+#Gain of indefinite article with no definiteness marker
+rate_00_01 ~ dnExponential(rate_pr_00_01)
+#Gain of definiteness marker with no indefinite article
+rate_00_10 ~ dnExponential(rate_pr_00_10)
+#Gain of definiteness marker with indefinite article
+rate_01_11 ~ dnExponential(rate_pr_01_11)
+#Gain of indefinite article with definiteness marker
+rate_10_11 ~ dnExponential(rate_pr_10_11)
+
+
+moves.append( mvScale( rate_00_01, lambda=1, weight=2 ) )
+moves.append( mvScale( rate_00_10, lambda=1,weight=2 ) )
+moves.append( mvScale( rate_01_11, lambda=1, weight=2 ) )
+moves.append( mvScale( rate_10_11,lambda=1, weight=2 ) )
+
+
+#Multiply the total number of states for characters 1 and 2 (including zero)
+#13 definite cognate classes plus zero = 14
+#12 indefinite cognate classes plus zero = 13
+#14 x 13 = 182
+for (i in 1:182) {
+    for (j in 1:182) {
+        rates[i][j] <- 0.0
+    }
+}
+
+
+
+
+#########################################################################################################
+##Rate 1: Development of definiteness marking [1][18] to [1][37] (0,0) > (1,0) [13 ID cognate classes]##
+#########################################################################################################
+
+
+rates[1][2] := rate_00_10 #(0,0) > (1,0)
+rates[1][3] := rate_00_10 #(0,0) > (2,0)
+rates[1][4] := rate_00_10 #(0,0) > (3,0)
+rates[1][5] := rate_00_10 #(0,0) > (4,0)
+rates[1][6] := rate_00_10 #(0,0) > (5,0)
+rates[1][7] := rate_00_10 #(0,0) > (6,0)
+rates[1][8] := rate_00_10 #(0,0) > (7,0)
+rates[1][9] := rate_00_10 #(0,0) > (8,0)
+rates[1][10] := rate_00_10 #(0,0) > (9,0)
+rates[1][11] := rate_00_10 #(0,0) > (10,0)
+rates[1][12] := rate_00_10 #(0,0) > (11,0)
+rates[1][13] := rate_00_10 #(0,0) > (12,0)
+rates[1][14] := rate_00_10 #(0,0) > (13,0)
+
+
+
+################################################################################################################
+##Rate 2: Development of indefinite determiner [1][2] to [1][13] (0,0) > (0,1) [12 indefinite cognate classes]##
+################################################################################################################
+
+
+rates[1][15] := rate_00_01 #(0,0) > (0,1)
+rates[1][16] := rate_00_01 #(0,0) > (0,2)
+rates[1][17] := rate_00_01 #(0,0) > (0,3)
+rates[1][18] := rate_00_01 #(0,0) > (0,4)
+rates[1][19] := rate_00_01 #(0,0) > (0,5)
+rates[1][20] := rate_00_01 #(0,0) > (0,6)
+rates[1][21] := rate_00_01 #(0,0) > (0,7)
+rates[1][22] := rate_00_01 #(0,0) > (0,8)
+rates[1][23] := rate_00_01 #(0,0) > (0,9)
+rates[1][24] := rate_00_01 #(0,0) > (0,10)
+rates[1][25] := rate_00_01 #(0,0) > (0,11)
+rates[1][26] := rate_00_01 #(0,0) > (0,12)
+
+
+############################################################################################
+##Rate 3: Gain of indefinite determiner with background definiteness marking (1,0) > (1,1)##
+############################################################################################
+
+
+rates[2][27] := rate_10_11 #(1,0) > (1,1)
+rates[2][28] := rate_10_11 #(1,0) > (1,2)
+rates[2][29] := rate_10_11 #(1,0) > (1,3)
+rates[2][30] := rate_10_11 #(1,0) > (1,4)
+rates[2][31] := rate_10_11 #(1,0) > (1,5)
+rates[2][32] := rate_10_11 #(1,0) > (1,6)
+rates[2][33] := rate_10_11 #(1,0) > (1,7)
+rates[2][34] := rate_10_11 #(1,0) > (1,8)
+rates[2][35] := rate_10_11 #(1,0) > (1,9)
+rates[2][36] := rate_10_11 #(1,0) > (1,10)
+rates[2][37] := rate_10_11 #(1,0) > (1,11)
+rates[2][38] := rate_10_11 #(1,0) > (1,12)
+
+
+rates[3][39] := rate_10_11 #(2,0) > (2,1)
+rates[3][40] := rate_10_11 #(2,0) > (2,2)
+rates[3][41] := rate_10_11 #(2,0) > (2,3)
+rates[3][42] := rate_10_11 #(2,0) > (2,4)
+rates[3][43] := rate_10_11 #(2,0) > (2,5)
+rates[3][44] := rate_10_11 #(2,0) > (2,6)
+rates[3][45] := rate_10_11 #(2,0) > (2,7)
+rates[3][46] := rate_10_11 #(2,0) > (2,8)
+rates[3][47] := rate_10_11 #(2,0) > (2,9)
+rates[3][48] := rate_10_11 #(2,0) > (2,10)
+rates[3][49] := rate_10_11 #(2,0) > (2,11)
+rates[3][50] := rate_10_11 #(2,0) > (2,12)
+
+
+rates[4][51] := rate_10_11 #(3,0) > (3,1)
+rates[4][52] := rate_10_11 #(3,0) > (3,2)
+rates[4][53] := rate_10_11 #(3,0) > (3,3)
+rates[4][54] := rate_10_11 #(3,0) > (3,4)
+rates[4][55] := rate_10_11 #(3,0) > (3,5)
+rates[4][56] := rate_10_11 #(3,0) > (3,6)
+rates[4][57] := rate_10_11 #(3,0) > (3,7)
+rates[4][58] := rate_10_11 #(3,0) > (3,8)
+rates[4][59] := rate_10_11 #(3,0) > (3,9)
+rates[4][60] := rate_10_11 #(3,0) > (3,10)
+rates[4][61] := rate_10_11 #(3,0) > (3,11)
+rates[4][62] := rate_10_11 #(3,0) > (3,12)
+
+
+rates[5][63] := rate_10_11 #(4,0) > (4,1)
+rates[5][64] := rate_10_11 #(4,0) > (4,2)
+rates[5][65] := rate_10_11 #(4,0) > (4,3)
+rates[5][66] := rate_10_11 #(4,0) > (4,4)
+rates[5][67] := rate_10_11 #(4,0) > (4,5)
+rates[5][68] := rate_10_11 #(4,0) > (4,6)
+rates[5][69] := rate_10_11 #(4,0) > (4,7)
+rates[5][70] := rate_10_11 #(4,0) > (4,8)
+rates[5][71] := rate_10_11 #(4,0) > (4,9)
+rates[5][72] := rate_10_11 #(4,0) > (4,10)
+rates[5][73] := rate_10_11 #(4,0) > (4,11)
+rates[5][74] := rate_10_11 #(4,0) > (4,12)
+
+rates[6][75] := rate_10_11 #(5,0) > (5,0)
+rates[6][76] := rate_10_11 #(5,0) > (5,2)
+rates[6][77] := rate_10_11 #(5,0) > (5,3)
+rates[6][78] := rate_10_11 #(5,0) > (5,4)
+rates[6][79] := rate_10_11 #(5,0) > (5,5)
+rates[6][80] := rate_10_11 #(5,0) > (5,6)
+rates[6][81] := rate_10_11 #(5,0) > (5,7)
+rates[6][82] := rate_10_11 #(5,0) > (5,8)
+rates[6][83] := rate_10_11 #(5,0) > (5,9)
+rates[6][84] := rate_10_11 #(5,0) > (5,10)
+rates[6][85] := rate_10_11 #(5,0) > (5,11)
+rates[6][86] := rate_10_11 #(5,0) > (5,12)
+
+
+rates[7][87] := rate_10_11 #(6,0) > (6,1)
+rates[7][88] := rate_10_11 #(6,0) > (6,2)
+rates[7][89] := rate_10_11 #(6,0) > (6,3)
+rates[7][90] := rate_10_11 #(6,0) > (6,4)
+rates[7][91] := rate_10_11 #(6,0) > (6,5)
+rates[7][92] := rate_10_11 #(6,0) > (6,6)
+rates[7][93] := rate_10_11 #(6,0) > (6,7)
+rates[7][94] := rate_10_11 #(6,0) > (6,8)
+rates[7][95] := rate_10_11 #(6,0) > (6,9)
+rates[7][96] := rate_10_11 #(6,0) > (6,10)
+rates[7][97] := rate_10_11 #(6,0) > (6,11)
+rates[7][98] := rate_10_11 #(6,0) > (6,12)
+
+rates[8][99] := rate_10_11 #(7,0) > (7,1)
+rates[8][100] := rate_10_11 #(7,0) > (7,2)
+rates[8][101] := rate_10_11 #(7,0) > (7,3)
+rates[8][102] := rate_10_11 #(7,0) > (7,4)
+rates[8][103] := rate_10_11 #(7,0) > (7,5)
+rates[8][104] := rate_10_11 #(7,0) > (7,6)
+rates[8][105] := rate_10_11 #(7,0) > (7,7)
+rates[8][106] := rate_10_11 #(7,0) > (7,8)
+rates[8][107] := rate_10_11 #(7,0) > (7,9)
+rates[8][108] := rate_10_11 #(7,0) > (7,10)
+rates[8][109] := rate_10_11 #(7,0) > (7,11)
+rates[8][110] := rate_10_11 #(7,0) > (7,12)
+
+
+
+rates[9][111] := rate_10_11 #(8,0) > (8,1)
+rates[9][112] := rate_10_11 #(8,0) > (8,2)
+rates[9][113] := rate_10_11 #(8,0) > (8,3)
+rates[9][114] := rate_10_11 #(8,0) > (8,4)
+rates[9][115] := rate_10_11 #(8,0) > (8,5)
+rates[9][116] := rate_10_11 #(8,0) > (8,6)
+rates[9][117] := rate_10_11 #(8,0) > (8,7)
+rates[9][118] := rate_10_11 #(8,0) > (8,8)
+rates[9][119] := rate_10_11 #(8,0) > (8,9)
+rates[9][120] := rate_10_11 #(8,0) > (8,10)
+rates[9][121] := rate_10_11 #(8,0) > (8,11)
+rates[9][122] := rate_10_11 #(8,0) > (8,12)
+
+
+rates[10][123] := rate_10_11 #(9,0) > (9,1)
+rates[10][124] := rate_10_11 #(9,0) > (9,2)
+rates[10][125] := rate_10_11 #(9,0) > (9,3)
+rates[10][126] := rate_10_11 #(9,0) > (9,4)
+rates[10][127] := rate_10_11 #(9,0) > (9,5)
+rates[10][128] := rate_10_11 #(9,0) > (9,6)
+rates[10][129] := rate_10_11 #(9,0) > (9,7)
+rates[10][130] := rate_10_11 #(9,0) > (9,8)
+rates[10][131] := rate_10_11 #(9,0) > (9,9)
+rates[10][132] := rate_10_11 #(9,0) > (9,10)
+rates[10][133] := rate_10_11 #(9,0) > (9,11)
+rates[10][134] := rate_10_11 #(9,0) > (9,12)
+
+
+
+
+rates[11][135] := rate_10_11 #(10,0) > (10,1)
+rates[11][136] := rate_10_11 #(10,0) > (10,2)
+rates[11][137] := rate_10_11 #(10,0) > (10,3)
+rates[11][138] := rate_10_11 #(10,0) > (10,4)
+rates[11][139] := rate_10_11 #(10,0) > (10,5)
+rates[11][140] := rate_10_11 #(10,0) > (10,6)
+rates[11][141] := rate_10_11 #(10,0) > (10,7)
+rates[11][142] := rate_10_11 #(10,0) > (10,8)
+rates[11][143] := rate_10_11 #(10,0) > (10,9)
+rates[11][144] := rate_10_11 #(10,0) > (10,10)
+rates[11][145] := rate_10_11 #(10,0) > (10,11)
+rates[11][146] := rate_10_11 #(10,0) > (10,12)
+
+
+
+
+rates[12][147] := rate_10_11 #(11,0) > (11,1)
+rates[12][148] := rate_10_11 #(11,0) > (11,2)
+rates[12][149] := rate_10_11 #(11,0) > (11,3)
+rates[12][150] := rate_10_11 #(11,0) > (11,4)
+rates[12][151] := rate_10_11 #(11,0) > (11,5)
+rates[12][152] := rate_10_11 #(11,0) > (11,6)
+rates[12][153] := rate_10_11 #(11,0) > (11,7)
+rates[12][154] := rate_10_11 #(11,0) > (11,8)
+rates[12][155] := rate_10_11 #(11,0) > (11,9)
+rates[12][156] := rate_10_11 #(11,0) > (11,10)
+rates[12][157] := rate_10_11 #(11,0) > (11,11)
+rates[12][158] := rate_10_11 #(11,0) > (11,12)
+
+
+
+
+rates[13][159] := rate_10_11 #(12,0) > (12,1)
+rates[13][160] := rate_10_11 #(12,0) > (12,2)
+rates[13][161] := rate_10_11 #(12,0) > (12,3)
+rates[13][162] := rate_10_11 #(12,0) > (12,4)
+rates[13][163] := rate_10_11 #(12,0) > (12,5)
+rates[13][164] := rate_10_11 #(12,0) > (12,6)
+rates[13][165] := rate_10_11 #(12,0) > (12,7)
+rates[13][166] := rate_10_11 #(12,0) > (12,8)
+rates[13][167] := rate_10_11 #(12,0) > (12,9)
+rates[13][168] := rate_10_11 #(12,0) > (12,10)
+rates[13][169] := rate_10_11 #(12,0) > (12,11)
+rates[13][170] := rate_10_11 #(12,0) > (12,12)
+
+
+
+rates[14][171] := rate_10_11 #(13,0) > (13,1)
+rates[14][172] := rate_10_11 #(13,0) > (13,2)
+rates[14][173] := rate_10_11 #(13,0) > (13,3)
+rates[14][174] := rate_10_11 #(13,0) > (13,4)
+rates[14][175] := rate_10_11 #(13,0) > (13,5)
+rates[14][176] := rate_10_11 #(13,0) > (13,6)
+rates[14][177] := rate_10_11 #(13,0) > (13,7)
+rates[14][178] := rate_10_11 #(13,0) > (13,8)
+rates[14][179] := rate_10_11 #(13,0) > (13,9)
+rates[14][180] := rate_10_11 #(13,0) > (13,10)
+rates[14][181] := rate_10_11 #(13,0) > (13,11)
+rates[14][182] := rate_10_11 #(13,0) > (13,12)
+
+
+
+
+###########################################################################################
+##Rate 4: Gain of definiteness marking with background indefinite determiner (0,1) > (1,1)##
+###########################################################################################
+
+
+rates[15][27] := rate_01_11 #(0,1) > (1,1)
+rates[15][39] := rate_01_11 #(0,1) > (2,1)
+rates[15][51] := rate_01_11 #(0,1) > (3,1)
+rates[15][63] := rate_01_11 #(0,1) > (4,1)
+rates[15][75] := rate_01_11 #(0,1) > (5,1)
+rates[15][87] := rate_01_11 #(0,1) > (6,1)
+rates[15][99] := rate_01_11 #(0,1) > (7,1)
+rates[15][111] := rate_01_11 #(0,1) > (8,1)
+rates[15][123] := rate_01_11 #(0,1) > (9,1)
+rates[15][135] := rate_01_11 #(0,1) > (10,1)
+rates[15][147] := rate_01_11 #(0,1) > (11,1)
+rates[15][159] := rate_01_11 #(0,1) > (12,1)
+rates[15][171] := rate_01_11 #(0,1) > (13,1)
+
+
+rates[16][28] := rate_01_11 #(0,2) > (1,2)
+rates[16][40] := rate_01_11 #(0,2) > (2,2)
+rates[16][52] := rate_01_11 #(0,2) > (3,2)
+rates[16][64] := rate_01_11 #(0,2) > (4,2)
+rates[16][76] := rate_01_11 #(0,2) > (5,2)
+rates[16][88] := rate_01_11 #(0,2) > (6,2)
+rates[16][100] := rate_01_11 #(0,2) > (7,2)
+rates[16][112] := rate_01_11 #(0,2) > (8,2)
+rates[16][124] := rate_01_11 #(0,2) > (9,2)
+rates[16][136] := rate_01_11 #(0,2) > (10,2)
+rates[16][148] := rate_01_11 #(0,2) > (11,2)
+rates[16][160] := rate_01_11 #(0,2) > (12,2)
+rates[16][172] := rate_01_11 #(0,2) > (13,2)
+
+rates[17][29] := rate_01_11 #(0,3) > (1,3)
+rates[17][41] := rate_01_11 #(0,3) > (2,3)
+rates[17][53] := rate_01_11 #(0,3) > (3,3)
+rates[17][65] := rate_01_11 #(0,3) > (4,3)
+rates[17][77] := rate_01_11 #(0,3) > (5,3)
+rates[17][89] := rate_01_11 #(0,3) > (6,3)
+rates[17][101] := rate_01_11 #(0,3) > (7,3)
+rates[17][113] := rate_01_11 #(0,3) > (8,3)
+rates[17][125] := rate_01_11 #(0,3) > (9,3)
+rates[17][137] := rate_01_11 #(0,3) > (10,3)
+rates[17][149] := rate_01_11 #(0,3) > (11,3)
+rates[17][161] := rate_01_11 #(0,3) > (12,3)
+rates[17][173] := rate_01_11 #(0,3) > (13,3)
+
+
+rates[18][30] := rate_01_11 #(0,4) > (1,4)
+rates[18][42] := rate_01_11 #(0,4) > (2,4)
+rates[18][54] := rate_01_11 #(0,4) > (3,4)
+rates[18][66] := rate_01_11 #(0,4) > (4,4)
+rates[18][78] := rate_01_11 #(0,4) > (5,4)
+rates[18][90] := rate_01_11 #(0,4) > (6,4)
+rates[18][102] := rate_01_11 #(0,4) > (7,4)
+rates[18][114] := rate_01_11 #(0,4) > (8,4)
+rates[18][126] := rate_01_11 #(0,4) > (9,4)
+rates[18][138] := rate_01_11 #(0,4) > (10,4)
+rates[18][150] := rate_01_11 #(0,4) > (11,4)
+rates[18][162] := rate_01_11 #(0,4) > (12,4)
+rates[18][174] := rate_01_11 #(0,4) > (13,4)
+
+
+rates[19][31] := rate_01_11 #(0,5) > (1,5)
+rates[19][43] := rate_01_11 #(0,5) > (2,5)
+rates[19][55] := rate_01_11 #(0,5) > (3,5)
+rates[19][67] := rate_01_11 #(0,5) > (4,5)
+rates[19][79] := rate_01_11 #(0,5) > (5,5)
+rates[19][91] := rate_01_11 #(0,5) > (6,5)
+rates[19][103] := rate_01_11 #(0,5) > (7,5)
+rates[19][115] := rate_01_11 #(0,5) > (8,5)
+rates[19][127] := rate_01_11 #(0,5) > (9,5)
+rates[19][139] := rate_01_11 #(0,5) > (10,5)
+rates[19][151] := rate_01_11 #(0,5) > (11,5)
+rates[19][163] := rate_01_11 #(0,5) > (12,5)
+rates[19][175] := rate_01_11 #(0,5) > (13,5)
+
+
+rates[20][32] := rate_01_11 #(0,6) > (1,6)
+rates[20][44] := rate_01_11 #(0,6) > (2,6)
+rates[20][56] := rate_01_11 #(0,6) > (3,6)
+rates[20][68] := rate_01_11 #(0,6) > (4,6)
+rates[20][80] := rate_01_11 #(0,6) > (5,6)
+rates[20][92] := rate_01_11 #(0,6) > (6,6)
+rates[20][104] := rate_01_11 #(0,6) > (7,6)
+rates[20][116] := rate_01_11 #(0,6) > (8,6)
+rates[20][128] := rate_01_11 #(0,6) > (9,6)
+rates[20][140] := rate_01_11 #(0,6) > (10,6)
+rates[20][152] := rate_01_11 #(0,6) > (11,6)
+rates[20][164] := rate_01_11 #(0,6) > (12,6)
+rates[20][176] := rate_01_11 #(0,6) > (13,6)
+
+
+rates[21][33] := rate_01_11 #(0,7) > (1,7)
+rates[21][45] := rate_01_11 #(0,7) > (2,7)
+rates[21][57] := rate_01_11 #(0,7) > (3,7)
+rates[21][69] := rate_01_11 #(0,7) > (4,7)
+rates[21][81] := rate_01_11 #(0,7) > (5,7)
+rates[21][93] := rate_01_11 #(0,7) > (6,7)
+rates[21][105] := rate_01_11 #(0,7) > (7,7)
+rates[21][117] := rate_01_11 #(0,7) > (8,7)
+rates[21][129] := rate_01_11 #(0,7) > (9,7)
+rates[21][141] := rate_01_11 #(0,7) > (10,7)
+rates[21][153] := rate_01_11 #(0,7) > (11,7)
+rates[21][165] := rate_01_11 #(0,7) > (12,7)
+rates[21][177] := rate_01_11 #(0,7) > (13,7)
+
+
+
+rates[22][34] := rate_01_11 #(0,8) > (1,8)
+rates[22][46] := rate_01_11 #(0,8) > (2,8)
+rates[22][58] := rate_01_11 #(0,8) > (3,8)
+rates[22][70] := rate_01_11 #(0,8) > (4,8)
+rates[22][82] := rate_01_11 #(0,8) > (5,8)
+rates[22][94] := rate_01_11 #(0,8) > (6,8)
+rates[22][106] := rate_01_11 #(0,8) > (7,8)
+rates[22][118] := rate_01_11 #(0,8) > (8,8)
+rates[22][130] := rate_01_11 #(0,8) > (9,8)
+rates[22][142] := rate_01_11 #(0,8) > (10,8)
+rates[22][154] := rate_01_11 #(0,8) > (11,8)
+rates[22][166] := rate_01_11 #(0,8) > (12,8)
+rates[22][178] := rate_01_11 #(0,8) > (13,8)
+
+
+rates[23][35] := rate_01_11 #(0,9) > (1,9)
+rates[23][47] := rate_01_11 #(0,9) > (2,9)
+rates[23][59] := rate_01_11 #(0,9) > (3,9)
+rates[23][71] := rate_01_11 #(0,9) > (4,9)
+rates[23][83] := rate_01_11 #(0,9) > (5,9)
+rates[23][95] := rate_01_11 #(0,9) > (6,9)
+rates[23][107] := rate_01_11 #(0,9) > (7,9)
+rates[23][119] := rate_01_11 #(0,9) > (8,9)
+rates[23][131] := rate_01_11 #(0,9) > (9,9)
+rates[23][143] := rate_01_11 #(0,9) > (10,9)
+rates[23][155] := rate_01_11 #(0,9) > (11,9)
+rates[23][167] := rate_01_11 #(0,9) > (12,9)
+rates[23][179] := rate_01_11 #(0,9) > (13,9)
+
+
+rates[24][36] := rate_01_11 #(0,10) > (1,10)
+rates[24][48] := rate_01_11 #(0,10) > (2,10)
+rates[24][60] := rate_01_11 #(0,10) > (3,10)
+rates[24][72] := rate_01_11 #(0,10) > (4,10)
+rates[24][84] := rate_01_11 #(0,10) > (5,10)
+rates[24][96] := rate_01_11 #(0,10) > (6,10)
+rates[24][108] := rate_01_11 #(0,10) > (7,10)
+rates[24][120] := rate_01_11 #(0,10) > (8,10)
+rates[24][132] := rate_01_11 #(0,10) > (9,10)
+rates[24][144] := rate_01_11 #(0,10) > (10,10)
+rates[24][156] := rate_01_11 #(0,10) > (11,10)
+rates[24][168] := rate_01_11 #(0,10) > (12,10)
+rates[24][180] := rate_01_11 #(0,10) > (13,10)
+
+
+rates[25][37] := rate_01_11 #(0,11) > (1,11)
+rates[25][49] := rate_01_11 #(0,11) > (2,11)
+rates[25][61] := rate_01_11 #(0,11) > (3,11)
+rates[25][73] := rate_01_11 #(0,11) > (4,11)
+rates[25][85] := rate_01_11 #(0,11) > (5,11)
+rates[25][97] := rate_01_11 #(0,11) > (6,11)
+rates[25][109] := rate_01_11 #(0,11) > (7,11)
+rates[25][121] := rate_01_11 #(0,11) > (8,11)
+rates[25][133] := rate_01_11 #(0,11) > (9,11)
+rates[25][145] := rate_01_11 #(0,11) > (10,11)
+rates[25][157] := rate_01_11 #(0,11) > (11,11)
+rates[25][169] := rate_01_11 #(0,11) > (12,11)
+rates[25][181] := rate_01_11 #(0,11) > (13,11)
+
+
+rates[26][38] := rate_01_11 #(0,12) > (1,12)
+rates[26][50] := rate_01_11 #(0,12) > (2,12)
+rates[26][62] := rate_01_11 #(0,12) > (3,12)
+rates[26][74] := rate_01_11 #(0,12) > (4,12)
+rates[26][86] := rate_01_11 #(0,12) > (5,12)
+rates[26][98] := rate_01_11 #(0,12) > (6,12)
+rates[26][110] := rate_01_11 #(0,12) > (7,12)
+rates[26][122] := rate_01_11 #(0,12) > (8,12)
+rates[26][134] := rate_01_11 #(0,12) > (9,12)
+rates[26][146] := rate_01_11 #(0,12) > (10,12)
+rates[26][158] := rate_01_11 #(0,12) > (11,12)
+rates[26][170] := rate_01_11 #(0,12) > (12,12)
+rates[26][182] := rate_01_11 #(0,12) > (13,12)
+
+
+Q := fnFreeK( rates, rescale = FALSE )
+#Q
+
+
+#Why are there three parameters? Setting the first one to 0 will cause an error!
+#this does not assume stationarity
+#[1,1,1,1] would be a flat Dirichlet prior density on the base frequencies
+rf_prior <- [50, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1]
+rf ~ dnDirichlet( rf_prior )
+moves.append( mvBetaSimplex( rf, weight=2 ) )
+moves.append( mvDirichletSimplex( rf, weight=2 ) )
+
+#NEEDS 13x14=182 values! There are 182 possible starting values
+#rf <- [0.8, ... ]
+
+
+phyMorph ~ dnPhyloCTMC(tree=psi, Q=Q, rootFrequencies=rf, type="Standard") #, coding="variable"
+
+#You can add siteRates
+
+#I forgot to clamp the data and got a segmentation fault 11!
+phyMorph.clamp(morph)
+
+
+
+#How many transitions do you expect? Maybe 10? Divide this number by the total tree length and that gives you a sense of what you expect
+#This prior says that fewer transitions are more likely than more transitions; this puts more probability on lower rates
+
+
+
+mymodel = model ( Q )
+
+monitors.append( mnModel(filename="output/Corr_Narrow_Multi_4Param_RF_TreeSet.log", printgen=1) )
+
+monitors.append( mnScreen(printgen=1) )
+
+#This estimates ancestral state estimation! how to do stochastic mapping in RevBayes?
+
+#Standard can also be used for multistate characters
+
+
+#MAKE SURE THAT printgen=n is identical across the monitors. This gave me enormous problems with the ancestral state estimation tree below
+monitors.append( mnFile( filename="output/Corr_Narrow_Multi_4Param_RF_TreeSet.trees", printgen=1, psi ) ) 
+
+
+#WHAT CAUSED THE PROBLEM WITH ancestralStateTree() below? withTips=FALSE triggers Segmentation fault:11
+monitors.append( mnJointConditionalAncestralState(tree=psi, ctmc=phyMorph, filename="output/Corr_Narrow_Multi_4Param_RF_TreeSet_states.log", type="Standard", printgen=1, withStartStates=TRUE) ) # withTips=FALSE
+
+
+#withStartStates=false??? This has to do with cladogenetic vs anagenetic change?
+
+monitors.append( mnStochasticCharacterMap(ctmc=phyMorph, filename="output/Corr_Narrow_Multi_4Param_RF_TreeSet_maps.log", printgen=1) )
+
+#mymcmc = mcmc(mymodel, monitors, moves)
+
+#Takes forever!
+mymcmc = mcmc(mymodel, monitors, moves, nruns=1, combine="mixed")
+
+mymcmc.run(generations=2000, tuningInterval=200)
+
+#This shows you acceptance ratio
+mymcmc.operatorSummary()
+
+####################################
+######Stochastic Character Map######
+####################################
+
+
+anc_states_maps = readAncestralStateTrace("output/Corr_Narrow_Multi_4Param_RF_TreeSet_maps.log")
+
+
+#Add this?
+ancestral_state_tree_trace = readAncestralStateTreeTrace("output/Corr_Narrow_Multi_4Param_RF_TreeSet.trees", treetype="non-clock") 
+
+
+anc_tree = ancestralStateTree(tree = map_tree, include_start_states = TRUE, file = "output/ASE_Corr_Narrow_Multi_4Param_RF.tree", tree_trace=ancestral_state_tree_trace, ancestral_state_trace_vector = anc_states_maps, summary_statistic = "MAP", site = 1)
+
+
+
+characterMapTree(anc_tree, anc_states_maps, character_file="output/Corr_Narrow_Multi_4Param_RF_TreeSet_SIMMAP_char.tree", posterior_file="output/Corr_Narrow_Multi_4Param_RF_TreeSet_SIMMAP_posterior.tree", reconstruction="marginal")
+
+
+writeNexus(anc_tree, filename = "output/ASE_Corr_Narrow_Multi_4Param_RF_TreeSet.tree")
+
+####################################
+######Ancestral State Tree##########
+####################################
+
+#From mnJointConditionalAncestralState
+ancestral_state_trace = readAncestralStateTrace("output/Corr_Narrow_Multi_4Param_RF_TreeSet_states.log") 
+#From MnFile
+#This object was already created above
+#ancestral_state_tree_trace = readAncestralStateTreeTrace("output/Corr_Narrow_Multi_4Param_RF_TreeSet.trees", treetype="non-clock") 
+
+
+#With ancestralStateTree, can you only do include_start_states=TRUE when the input is character maps?
+#DID ONE OF THE OPTIONS BELOW CAUSE LAST NIGHT'S HEADACHE?
+#Is include_start_states = TRUE fucking up the file for the function plot_ancestral_states?
+ancestral_state_tree = ancestralStateTree(tree=map_tree, include_start_states = FALSE, tree_trace=ancestral_state_tree_trace, ancestral_state_trace_vector = ancestral_state_trace, file="output/ASE_Corr_Narrow_Multi_4Param_RF_TreeSet_final.tree",  summary_statistic = "MAP", site = 1)  
+
+#In the help file it says that "include_start_states = TRUE" is "Only applicable for cladogenetic processes." What does this mean?
+
+writeNexus(ancestral_state_tree, filename = "output/ASE_Corr_Narrow_Multi_4Param_RF_TreeSet_final.tree")
+
+
+
+####################################
+# Run the power-posterior analysis #
+####################################
+pow_p = powerPosterior(mymodel, moves, monitors, "output/Corr_Narrow_Multi_4Param_RF_TreeSet_powp.out", cats=127, sampleFreq=10)
+pow_p.burnin(generations=1000,tuningInterval=200)
+pow_p.run(generations=2000)
+###################################
+# Run the stepping-stone analysis #
+###################################
+ss = steppingStoneSampler(file="output/Corr_Narrow_Multi_4Param_RF_TreeSet_powp.out", powerColumnName="power", likelihoodColumnName="likelihood")
+write("Stepping stone marginal likelihood:\t", ss.marginal() )
+ps = pathSampler(file="output/Corr_Narrow_Multi_4Param_RF_TreeSet_powp.out", powerColumnName="power", likelihoodColumnName="likelihood")
+write("Path-sampling marginal likelihood:\t", ps.marginal() )

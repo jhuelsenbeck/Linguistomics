@@ -1,0 +1,45 @@
+using IO, Format, Units;
+
+include "changa3.tree";
+
+Functions = TextBlock {
+  "using Format";
+  Empty;
+  "Branch(branch) = new TreeNodeClass(null, branch)";
+  Empty;
+  "Leaf(data, branch) = new TreeNodeClass(data.Name, branch) {";
+  "  Data: data,";
+  "}";
+  Empty;
+  "ChangA3Tree = "
+};
+
+CreateChildren(node) = TextBlock {
+  "Branch({0}) {"({TextDigits: 2}node.BranchLength);
+  TextBlock {
+    IndentSpace: 2;
+    CreateTree(each node);
+  };
+  node.Next ? "}," : "}";
+};
+
+CreateTree(node) = TextBlock {
+  if (node.Length > 0)
+    CreateChildren(node);
+  else 
+    "Leaf(Languages.{0}, {1}),"(node.Label, {TextDigits: 2}node.BranchLength);
+};
+
+Output = TextBlock {
+  Functions;
+  CreateTree(trees.TREE1)
+};
+
+Watch = Document {
+  Tree {
+    TextHeight: 6 pts;
+    Width: 6 inches;
+    Root: trees.TREE1;
+  };
+  Output;
+};

@@ -284,18 +284,20 @@ with Style {
   };
 
   ShowAppendix(appendix) = PageSection {
-    Paragraph {
-      BorderB: 1 pts;
-      ParAlignment: ParAlignments.Center;
-      TextHeight: 14 pts;
-      SpaceAfter: 8 pts;
-      LocationMark: Lang.Appendix + EachIndex;
-      "{0} {1} - "(Lang.Appendix, EachIndex+1);
-      appendix.Title;
+    Header: Block {
+      Paragraph {
+        BorderB: 1 pts;
+        ParAlignment: ParAlignments.Center;
+        TextHeight: 14 pts;
+        SpaceAfter: 8 pts;
+        LocationMark: Lang.Appendix + EachIndex;
+        "{0} {1} - "(Lang.Appendix, EachIndex+1);
+        appendix.Title;
+      };
     };
     Block {
-      appendix.Content
-    }
+      appendix.Content;
+    };
   };
 
   LanguageRow(lang) = Row {
@@ -340,8 +342,7 @@ with Style {
 //======================================================================
 
 Logo = Frame {
-  Width: 5 inches;
-  Height: 0.5 inches;
+  Size: Size(5 inches, 0.5 inches);
   Padding: 4 pts;
   Background: Color(51, 66, 81);
   Table {
@@ -361,7 +362,9 @@ Logo = Frame {
           "Bayesian Society"
         };
       };
-      Read(Folders.Source FileName("bayes") Extensions.PNG) {Width: 0.5 inches}
+      Cell {
+        Read(Folders.Source FileName("bayes") Extensions.PNG) {Width: 0.5 inches}
+      };
     }
   }
 };

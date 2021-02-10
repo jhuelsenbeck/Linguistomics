@@ -1,0 +1,126 @@
+clear()
+
+path = "/Users/davidgoldstein/Documents/LaTeX/ArticlesPhylogenetics/ArticleDependentGrammaticalization/RomanceTest/data/"
+
+# Read in discrete character data 
+data = readDiscreteCharacterData(path + "Romance_segmental_data.nex")
+
+
+
+
+# Get some useful variables from the data. We need these later on.
+num_taxa <- data.ntaxa()
+
+
+#Number of branches in an unrooted tree
+#num_branches <- 2 * num_taxa - 3
+#Number of branches in a rooted tree
+num_branches <- 2 * num_taxa - 2
+
+
+taxa <- data.taxa()
+
+#Create helper variables
+moves    = VectorMoves()
+monitors = VectorMonitors()
+
+
+######################
+# Substitution Model #
+######################
+
+# create a constant variable for the rate matrix
+Q <- fnJC(32) 
+
+
+##############
+# Tree model #
+##############
+
+#Outgroup is a clade consisting of one species
+out_group = clade("Latin") 
+
+# Prior distribution on the tree topology  
+topology ~ dnUniformTopology(taxa, outgroup=out_group, rooted=TRUE)
+
+#These are moves that change the tree topology
+
+moves.append( mvNNI(topology, weight=num_taxa/2.0) )
+moves.append( mvSPR(topology, weight=num_taxa/10.0) )
+
+# Branch length prior
+
+for (i in 1:num_branches) {
+    bl[i] ~ dnExponential(10.0)
+    moves.append( mvScale(bl[i]) )
+}
+
+TL := sum(bl)
+    
+psi := treeAssembly(topology, bl)
+
+
+########################################
+# Gamma model for among-site variation #
+########################################
+
+alpha ~ dnUniform(0, 10.0)
+moves.append ( mvScale(alpha, weight=1) )
+
+site_rates :=  fnDiscretizeGamma( alpha, alpha, 4 )
+
+
+
+###################
+# PhyloCTMC Model #
+###################
+
+seq ~ dnPhyloCTMC(tree=psi, Q=Q, type="Standard", siteRates=site_rates)
+
+seq.clamp(data)
+
+
+############
+# Analysis #
+############
+
+#You can use any node as the argument of model()
+mymodel = model(psi)
+
+n_gen = 10
+
+# add monitors
+#This prints monitors to the screen. This was printing the treelength every 1000 generations
+monitors.append( mnScreen(TL, printgen=n_gen) )
+#This monitors the trees and puts them in a file
+monitors.append( mnFile(psi, filename="output/Romance_Segments_JC_Gamma.trees", printgen=n_gen) )
+#Model monitor
+monitors.append( mnModel(filename="output/Romance_Segments_JC_Gamma.log", printgen=n_gen) )
+
+
+
+mymcmc = mcmc(mymodel, moves, monitors, nruns=1, combine="mixed")
+
+
+#mymcmc.burnin(generations=1000, tuningInterval=200)
+mymcmc.run(generations=1000)
+
+#Summarizes the MCMC runs
+mymcmc.operatorSummary()
+
+
+###################
+# Post processing #
+###################
+
+
+treetrace = readTreeTrace("output/Romance_Segments_JC_Gamma.trees", outgroup=out_group)
+
+map_tree = mapTree(treetrace,"output/Romance_Segments_JC_Gamma_MAP.tree")
+
+mcc_tree = mccTree(treetrace,"output/Romance_Segments_JC_Gamma_MCC.tree")
+
+consensus_tree = consensusTree(treetrace,"output/Romance_Segments_JC_Gamma_consensus.tree")
+
+
+

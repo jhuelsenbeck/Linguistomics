@@ -1,0 +1,212 @@
+using Format, Units, Math, IO;
+
+//include "ChangA3.tree";
+include "Languages";
+include "CognateClasses";
+include "ChangTree";
+include "Formatting";
+include "..\\Nexus\\tree functions";
+
+//======================================================================
+// These variables determine which languages and cognate categories get used
+//======================================================================
+
+LanguageCriteria(lang) = true
+
+LanguageList    = Languages.FindSlice(LanguageCriteria)
+CognateCategory = CognateCategories.Broad
+
+CognateGroup = [
+  DefiniteDeterminer;
+  IndefiniteDeterminer;
+]
+//======================================================================
+
+Watch = WhitePaper
+//======================================================================
+
+MatchingCognate(cogdata) = (cogdata.Category & CognateCategory) > 0
+
+GetCog(cogdata) = cogdata.Cog
+
+CogList(lang) = GetCog(each lang.CognateList.FindSlice(MatchingCognate))
+
+AnyContains(lang, group) = FindAny(group.Members, each CogList(lang)).Contains(true)
+
+GroupIncluded(lang, group) = AnyContains(lang, group) ? group.ShortName : null
+
+ShowDefForm(cognate) = Span {cognate.Name}
+
+CognateDescriptor(cognate) = ShowDefForm(cognate)
+
+LanguageRow(lang) = Row {
+  Background: ((EachIndex mod 2) == 0 ? Colors.White : 97%);
+  lang.Name;
+  Span {
+    Separator: ", ";
+    CognateDescriptor(each CogList(lang))
+  };
+  Span {
+    Separator: "-";
+    GroupIncluded(lang, each CognateGroup);
+  };
+}
+
+LanguageSection = Block {
+  Style.Header2("Data used for the {0} cognate classification"(Bold CognateCategory.Name));
+  Table {
+    PaddingLR: 2;
+    Columns: [1.5 inch, 2 inches, 1.5 inches];
+    Row {
+      Background: Colors.DarkGray;
+      TextColor: Colors.White;
+      "Name";
+      "Cognates";
+      "Cognate Categories";
+    };
+    Edge: 0.25 pts {Color: Colors.DarkGray};
+    LanguageRow(each LanguageList)
+  }
+}
+//======================================================================
+
+with RevBayes {
+  FiftyFile   = MainFolder FileName("ieo_fifty") Extensions.Nexus
+  ChangA3Tree = MainFolder FileName("ChangA3.tree")
+  SourcePath  = MainFolder FileName("Articles") Extensions.RevBayes
+
+
+  Comment(text) = Span {TextColor: Colors.Green, LineBreak, "# " text}
+  String(text) = Span {TextColor: Colors.Red, text.QuoteString}
+
+  CognateNumber(group) = Span {
+    group.Variable;
+    " := ";
+    group.Members.Length
+  }
+
+  SourceFile = SourceCodeBlock {
+    "clear()";
+    "morph = readDiscreteCharacterData({0})"(String(Nexus.SourcePath))
+    Empty;
+    "moves = VectorMoves()";
+    "monitors = VectorMonitors()";
+    "trees = readTrees({0})"(String(FiftyFile));
+    "treetrace = treeTrace(trees)";
+
+    Comment("draw a tree from the empirical tree distribution");
+    "psi ~ dnEmpiricalTree(treetrace)";
+
+
+    Comment("DO NOT FORGET THIS! See Landis response to my question in Revbayes google group");
+    "moves.append( mvEmpiricalTree(psi, weight = 2) )";
+
+    Comment("We'll also read in a pre-cooked MAP tree to summarize our results.");
+    Comment("This is the Chang A3 tree");
+
+    "map_tree = readBranchLengthTrees({0})[1]"(String(ChangA3Tree))
+
+    Comment("Set priors according to the resultant state");
+
+    "treelength := psi.treeLength()";
+
+    Comment("Number of cognates in (0,1) languages");
+    "rate_pr_00_01 := treelength / 2";
+
+    Comment("Number of cognates in (1,0) languages");
+    "rate_pr_00_10 := treelength / 8";
+
+    Comment("Number of definite article cognates in (1,1) languages");
+    "rate_pr_01_11 := treelength / 9";
+
+    Comment("Number of indefinite article cognates in (1,1) languages");
+    "rate_pr_10_11 := treelength / 10";
+
+    Comment("Gain of indefinite article with no definiteness marker");
+    "rate_00_01 ~ dnExponential(rate_pr_00_01)";
+
+    Comment("Gain of definiteness marker with no indefinite article");
+    "rate_00_10 ~ dnExponential(rate_pr_00_10)"
+
+    Comment("Gain of definiteness marker with indefinite article");
+    "rate_01_11 ~ dnExponential(rate_pr_01_11)";
+
+    Comment("Gain of indefinite article with definiteness marker");
+    "rate_10_11 ~ dnExponential(rate_pr_10_11)";
+
+    Comment("Make variables for cognate group counts");
+    CognateNumber(each CognateGroup);
+
+    "numTotal := {0}"(Span {Separator: " * ", (each CognateGroup).Variable});
+
+    "for (i in 1:numTotal) {";
+    "  for (j in 1:numTotal) {";
+    "    rates[i][j] <- 0.0";
+    "  }";
+    "}";
+
+  }
+}
+//======================================================================
+
+with Nexus {
+  SourcePath = MainFolder FileName("Articles") Extensions.Nexus
+
+  LanguageLine(lang) = {
+    "    " lang.Name
+  }
+
+  CharState(lang, group) = AnyContains(lang, group) ? PossibleSymbols[EachIndex+1] : PossibleSymbols[0]
+
+  CharStates(lang) {
+    CharState(lang, each CognateGroup)
+  }
+
+  MatrixLine(lang) = Span {
+    "  ";
+    lang.Name;
+    " " * (20 - lang.Name.Length);
+    CharStates(lang)
+  }
+
+  Comment(text) = Span {TextColor: Colors.Green, "# " text}
+
+  PossibleSymbols = ('0'..'9' step 1) + ('A'..'Z' step 1) + ('a'..'z' step 1)
+
+  UsedSymbols = Span {
+    Separator: Space;
+    each PossibleSymbols[0..<CognateGroup.Length]
+  }
+
+  ClassComment(cc) = "  {0} '{1}' / ,"(EachIndex+1, cc.Description)
+
+  SourceFile = SourceCodeBlock {
+    Comment("This does not include demonstratives with article-like functions but it does code for Baltic definite adjectives and Iraninian specificity DOM");
+    Comment("NEXUS");
+    Empty;
+    Comment("I added the taxa information");
+    "BEGIN TAXA;";
+    "  DIMENSIONS NTAX={0};"(LanguageList.Length);
+    "  TAXLABELS";
+    LanguageLine(each LanguageList);
+    ";";
+    "END;";
+    Empty;
+    Empty;
+    "BEGIN CHARACTERS;";
+    "DIMENSIONS NewTaxa NTAX={0} NCHAR={1};"(LanguageList.Length, CognateGroup.Length);
+    "FORMAT DATATYPE=STANDARD SYMBOLS=\"{0}\" MISSING=? GAP=-;"(UsedSymbols);
+    "CHARSTATELABELS";
+    "  0 'None' / ,";
+    ClassComment(each CognateGroup);
+    "  ;";
+    Empty;
+    "MATRIX"
+    Empty;
+    MatrixLine(each LanguageList);
+  }
+}
+//======================================================================
+
+
+
