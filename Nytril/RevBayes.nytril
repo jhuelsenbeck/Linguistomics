@@ -45,11 +45,11 @@ class RevProgramClass {
 //======================================================================
 
 class RevProcessClass: ProcessClass {
-  var Compute;
+  var Generations;
 
-  Constructor(compute) {
-    Compute = compute;
-    super.Constructor(compute.EXEName, compute.OutFolder compute.RevSourceName);
+  Constructor(exe, args, generations) {
+    Generations = generations;
+    super.Constructor(exe, args);
   }
 
   override void OutputLine(line) {
@@ -58,7 +58,7 @@ class RevProcessClass: ProcessClass {
     if (l.Length > 1) {
       var i = Integer(l);
       if (not i.IsError())
-        System.ProgressPercent(i, Compute.Generations);
+        System.ProgressPercent(i, Generations);
     }
     else if (line.IndexOf("Error:") >= 0)
       System.ProgressCancel(line);
@@ -79,16 +79,13 @@ class ComputeClass: RevProgramClass {
       GammaConsensus,
       OptionsName,
       CharacterName,
-      OptionsSource,
-      RevBayesSource,
-      CharacterSource,
       Concepts;
 
   Constructor(outname) {
     super.Constructor;
 
-    Divisions       = 500;
-    Generations     = 1000;
+    Divisions       = 50;
+    Generations     = 500;
     Concepts        = Results.WordConceptArray.Length;
 
     OutFolder       = Folders.Repository Folder("Output") Folder(outname);
@@ -101,19 +98,16 @@ class ComputeClass: RevProgramClass {
     GammaMAP        = FileName("Gamma_MAP") Extensions.Tree;
     GammaMCC        = FileName("Gamma_MCC") Extensions.Tree;
     GammaConsensus  = FileName("Gamma_Consensus") Extensions.Tree;
-    OptionsSource   = GetOptionsSource;
-    RevBayesSource  = GetRevSourceCode;
-    CharacterSource = Nexus.CharacterFile(Results.TaxaArray);
   }
 
   void Calculate {
     CreateFolder(OutFolder);
-    IO.Write(OptionsSource, OutFolder OptionsName);
+    IO.Write(GetOptionsSource, OutFolder OptionsName);
     IO.Write(CharacterSource, OutFolder CharacterName);
     IO.Write(RevBayesSource, OutFolder RevSourceName);
 
-    var p = new RevProcessClass(this) {
-      CacheName: "RevBayes";
+    var p = new RevProcessClass(EXEName, OutFolder RevSourceName, Generations) {
+/*      CacheName: "RevBayes";
       CacheInput: [
         OutFolder CharacterName,
         OutFolder RevSourceName,
@@ -125,6 +119,7 @@ class ComputeClass: RevProgramClass {
         OutFolder GammaMCC,
         OutFolder GammaLog,
       ];
+*/
       Directory: OutFolder;
     };
 
@@ -159,6 +154,8 @@ class ComputeClass: RevProgramClass {
     ";";
   };
 
+  CharacterSource = Nexus.CharacterFile(Results.TaxaArray);
+
   GetOptionsSource = TextBlock {
     Style.MonoFamily;
     Span {
@@ -174,7 +171,7 @@ class ComputeClass: RevProgramClass {
     AddVariable("Segments", Results.UniqueSegments.Length);
   };
 
-  GetRevSourceCode = TextBlock {
+  RevBayesSource = TextBlock {
     Style.MonoFamily;
     BlockComment("RevBayes Source File for Linguistomics Project");
 
@@ -245,7 +242,7 @@ class ComputeClass: RevProgramClass {
     "n_gen   = {0}"(Generations div Divisions);
 
     LineComment("This prints monitors to the screen");
-    "monitors.append(mnScreen(TL, printgen=n_gen) )";
+    "monitors.append(mnScreen(TL, printgen=50) )";
 
     LineComment("This monitors the trees and puts them in a file");
     "monitors.append(mnFile(psi, filename=gammapath, printgen=n_gen))";
@@ -327,7 +324,7 @@ class LogSchemaClass: SchemaClass {
     Vertical: true;
     TitleBox(field " Histogram");
     Chart {
-      Size: Size(Metrics.TreeWidth, 3.5 inches);
+      Size: Size(DocMetrics.TreeWidth, 3.5 inches);
       Type: ChartTypes.Column;
 
       var data = ReadHistogramData(view, field);
@@ -343,15 +340,13 @@ class LogSchemaClass: SchemaClass {
     };
   };
 
-  AddPoint(d) = new DataPointClass(null, d);
-
   LineChart(view, name, field=null) = Paragraph {
     SpaceBefore: 20 pts;
     Group {
       Vertical: true;
       TitleBox(name ?? field);
       Chart {
-        Size: Size(Metrics.TreeWidth, 2.5 inches);
+        Size: Size(DocMetrics.TreeWidth, 2.5 inches);
         Type: ChartTypes.Line;
 
         var list = GetFieldList(view, field ?? name);
@@ -361,7 +356,7 @@ class LogSchemaClass: SchemaClass {
         ChartSeries {
 //          Marker: Chars.bullet {TextHeight: 3 pts; TextColor: Colors.Red};
           Stroke: 0.5 pts {MiterLimit: 2 pts};
-          AddPoint(each list);
+          new DataPointClass(null, each list);
         };
       };
     };

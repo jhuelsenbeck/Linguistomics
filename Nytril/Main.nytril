@@ -1,6 +1,7 @@
 using Format, Units, Math, IO;
 
 include "English";
+include "Spanish";
 include "Library";
 include "Languages";
 include "LanguageTree";
@@ -10,6 +11,21 @@ include "References";
 include "WordForms";
 include "Tables";
 include "RevBayes";
+//======================================================================
+
+Main.Configurations = [
+  new ConfigurationClass("United States") {
+    Language: "en";
+    PaperSystem: ConfigurationClass.PaperSystems.US;
+    UnitSystem: ConfigurationClass.UnitSystems.Imperial;
+  },
+
+  new ConfigurationClass("Spain") {
+    Language: "es";
+    PaperSystem: ConfigurationClass.PaperSystems.A;
+    UnitSystem: ConfigurationClass.UnitSystems.Metric;
+  },
+];
 //======================================================================
 
 class AnalysisViewClass: DocumentViewClass {
@@ -26,23 +42,17 @@ class AnalysisViewClass: DocumentViewClass {
 }
 //======================================================================
 
-// No spaces in the names below!
+// No spaces in the name below!
 // RevBayes has a problem with folder names that contain spaces...
 
-PreviousRuns = ["Output1"];
-
-Main.Documents = new AnalysisViewClass(each PreviousRuns);
-
-void RunAnalysis(outname) {
-  var compute = new ComputeClass(outname);
-  compute.Calculate;
-
-  var paper = GetWatch(compute);
-  Write(paper, compute.OutFolder FileName(Info.PaperTitle) Extensions.Word);
-}
+Main.Documents = new DocumentViewClass(null) {
+  new DocumentViewClass("Diagnostics", ref Diagnostics);
+  new AnalysisViewClass("Output1");
+  new AnalysisViewClass("Output2");
+};
 
 void Main.Run {
-  RunAnalysis("Output1");
+  new ComputeClass("Output2").Calculate;
 }
 //======================================================================
 
@@ -54,21 +64,21 @@ enum ConceptsList {
   New,
   We,
   Eye,
-  One,
-  Star
+//  One,
+//  Star
 }
 
 with Info {
   PaperTitle  = "White Paper";
   Journal     = "Transactions of the Beysian Society";
   Publisher   = "The Baysian Society";
-  Title       = "Simulated Segment Evolution using the TKF91 Model";
+  Title       = Lang.SimulatedSegments;
   PriorTree   = GetTreeNodes(LanguageBranches.Romance);
 
   AuthorList = Span {
     Separator: ", ";
     LastSeparator: " {0} "(Lang.And);
-    Style.Author(each Authors)
+    Style.Author(each Authors);
   };
 }
 //======================================================================
@@ -82,7 +92,7 @@ GetWatch(compute) = Style.WhitePaper {
 //  Keywords: "Test Keywords";
 
 
-  var appendices = GetAppendices(compute);
+  var appendices = PaperAppendices(compute);
   Style.PageSection {
     Header: Style.NormalHeader(Info.Journal) {
       Distance: 0.125 inches;
@@ -112,6 +122,23 @@ GetWatch(compute) = Style.WhitePaper {
 
     Style.ShowReferences(References);
   };
+  Style.ShowAppendix(each appendices);
+};
+//======================================================================
+
+Diagnostics = Style.WhitePaper {
+  var appendices = [
+    new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
+    new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),
+    new AppendixClass("Feature change in first segment", IPA.DriftSection),
+    new AppendixClass("Word Lists by Language", DisplayWords.ShowTable),
+    new AppendixClass("Segment Groups", MatchingConsonants.ShowTables),
+    new AppendixClass("Euler Feature Diagram", IPA.FeatureChart),
+    new AppendixClass(Lang.IPAFullName, IPA.SegmentTable),
+    new AppendixClass("Feature Tree", SegmentTree.ShowTree),
+    new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
+  //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
+  ];
   Style.ShowAppendix(each appendices);
 };
 //======================================================================
@@ -156,28 +183,12 @@ with Content.Conclusion {
 }
 //======================================================================
 
-AddAppendix(list, name, content) = list.Add(new AppendixClass(name, content));
-
-GetAppendices(compute) {
-  var list = new ListClass(16);
-
-  AddAppendix(list, "Options File", compute.OptionsSource);
-  AddAppendix(list, "RevBayes Source File", compute.RevBayesSource);
-  AddAppendix(list, "Character File", compute.CharacterSource);
-  AddAppendix(list, "Program Output", compute.ShowLanguageTrees);
-  AddAppendix(list, Lang.ConceptsUsed, AllWords.ShowTable);
-  AddAppendix(list, "Segments used in the word list", DisplayCharacters.ShowTable);
-  AddAppendix(list, "Feature change in first segment", IPA.DriftSection);
-  AddAppendix(list, "Word Lists by Language", DisplayWords.ShowTable);
-  AddAppendix(list, "Segment Groups", MatchingConsonants.ShowTables);
-  AddAppendix(list, "Euler Feature Diagram", IPA.FeatureChart);
-  AddAppendix(list, Lang.IPAFullName, IPA.SegmentTable);
-  AddAppendix(list, "Feature Tree", SegmentTree.ShowTree);
-
-//  AddAppendix(list, Lang.Diacritics, MatchingDiacritics.ShowTable);
-//  AddAppendix(list, Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList));
-  return list;
-}
+PaperAppendices(compute) = [
+  new AppendixClass("Options File", compute.GetOptionsSource),
+  new AppendixClass("RevBayes Source File", compute.RevBayesSource),
+  new AppendixClass("Character File", compute.CharacterSource),
+  new AppendixClass("Program Output", compute.ShowLanguageTrees),
+];
 //======================================================================
 
 

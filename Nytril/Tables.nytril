@@ -1,12 +1,6 @@
 ﻿using Format, Units, IPA, FeatureSet;
 //======================================================================
 
-with Metrics {
-  SegmentColumns = 4;
-  SegmentSize    = 40 pts;
-}
-//======================================================================
-
 class WordClass {
   var Language,
       Concept,
@@ -56,9 +50,11 @@ class LanguageClass {
 
 class ConceptRecord {
   var Cells,
-      MaxLength;
+      MaxLength,
+      Concept;
 
   Constructor(concept) {
+    Concept   = concept;
     Cells     = new ListClass(128);
     MaxLength = 0;
 
@@ -85,14 +81,14 @@ class ConceptRecord {
 
 with Results {
   AddConceptRecord(concept) = new ConceptRecord(concept);
+  WordConceptArray = AddConceptRecord(each ConceptsList);
 
   GetTaxaArray(lang) = new TaxonClass(lang, EachIndex);
+  TaxaArray = GetTaxaArray(each UsedLanguages);
 
-  UsedLanguages    = Math.FindSlice(Languages, lang => lang.Words != null);
-  WordConceptArray = AddConceptRecord(each ConceptsList);
-  UniqueSegments   = DisplayCharacters.FindUniqueSegments;
-  TaxaArray        = GetTaxaArray(each UsedLanguages);
-  UsedSegments     = UniqueSegments;//IPA.Segments;
+  UsedLanguages  = Math.FindSlice(Languages, lang => lang.Words != null);
+  UniqueSegments = DisplayCharacters.FindUniqueSegments;
+  UsedSegments   = UniqueSegments;//IPA.Segments;
 }
 //======================================================================
 // Consonants
@@ -186,7 +182,7 @@ with DisplayWords {
 
   ShowLanguage(language) = Block {
     Table {
-      Columns: [0.8 inches, 1.5 inches, Metrics.Content.Width - 2.3 inches];
+      Columns: [0.8 inches, 1.5 inches, DocMetrics.PageContent.Width - 2.3 inches];
       Style.TitleBar(language.GlobalVariableName, 3);
       Row {
         HeaderCell(Lang.Concept);
@@ -293,7 +289,7 @@ with DisplayCharacters {
   ShowTable = Block {
     Table {
       Style.TableEdge;
-      Columns: [0.5 inches, 0.7 inches, 6 inches];
+      Columns: [0.5 inches, 0.7 inches, DocMetrics.PageContent.Width - 1.2 inches];
       Row {
         Style.HeaderCell("Char.", HAligns.Center);
         Style.HeaderCell(Lang.Segment, HAligns.Center);
@@ -337,9 +333,9 @@ with MatchingOptions {
 
   SegmentBox(segments, segment, color) = Canvas {
     HAlign: HAligns.Center;
-    Size: Metrics.BoxSize;
+    Size: DocMetrics.BoxSize;
     if (exists segment.?Ipa) {
-      TextHeight: Metrics.BoxSize.Height - 4 pts;
+      TextHeight: DocMetrics.BoxSize.Height - 4 pts;
       TextColor: color;
       SegmentText(segments, segment)
     }
@@ -349,7 +345,7 @@ with MatchingOptions {
 
   ShowBox(segments, segment, color) = SegmentBox(segments, segment, color) {
     if (segment.Features.HasFlag(Voiced))
-      X: Metrics.BoxSize.Width;
+      X: DocMetrics.BoxSize.Width;
   };
 
   MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Features.HasFlag(Voiced) == matches[1].Features.HasFlag(Voiced));
@@ -363,7 +359,7 @@ with MatchingOptions {
         TextHeight: 1 pts;
         Span {
           Canvas {
-            Size: Metrics.CellSize;
+            Size: DocMetrics.CellSize;
             ShowBox(segments, each matches, MatchError(matches) ? Colors.Red : Colors.Black)
           }
         }
@@ -403,7 +399,7 @@ with MatchingOptions {
       Table {
         Style.TableEdge;
         Columns: [options.ColWidth {EdgeR: 0.5 pts}] +
-                 [Metrics.CellSize.Width {HAlign: HAligns.Center; EdgeR: 0.25 pts}] * places.Length;
+                 [DocMetrics.CellSize.Width {HAlign: HAligns.Center; EdgeR: 0.25 pts}] * places.Length;
 
         Style.TitleBar(options.Title, places.Length+1);
         Row {
@@ -429,7 +425,7 @@ with MatchingVowels {
   AddBlock(set, matches) = Cell {
     Style.SegmentBottom;
     HAlign: HAligns.Center;
-    TextHeight: Metrics.BoxSize.Height;
+    TextHeight: DocMetrics.BoxSize.Height;
     if (matches.Length == 2) {
       Span {
         MatchingOptions.SegmentText(set, matches[0]);
@@ -464,7 +460,7 @@ with MatchingVowels {
   ShowVowelTable(set, feature, title) = Table {
     HAlign: HAligns.Center;
     Style.TableEdge;
-    Columns: [(1 inch){EdgeR: 0.5 pts}] + [Metrics.BoxSize.Width*3 {EdgeR: 0.25 pts}] * Backnesses.Length;
+    Columns: [(1 inch){EdgeR: 0.5 pts}] + [DocMetrics.BoxSize.Width*3 {EdgeR: 0.25 pts}] * Backnesses.Length;
     Style.TitleBar(title, Backnesses.Length+1);
     Row {
       TextHeight: 10 pts;
@@ -510,7 +506,7 @@ with MatchingDiacritics {
   ShowTable = Block {
     Table {
       Style.TableEdge;
-      Columns: [Metrics.Content.Width / ColumnDiv] * ColumnDiv;
+      Columns: [DocMetrics.PageContent.Width / ColumnDiv] * ColumnDiv;
       Style.TitleBar(Lang.Diacritics, ColumnDiv);
       AddRow(each DiacriticModifiers / ColumnDiv);
     };
@@ -545,7 +541,7 @@ with MatchingOther {
   ShowTable(set) = Block {
     Table {
       Style.TableEdge;
-      Columns: [Metrics.BoxSize.Width, Metrics.Content.Width * 0.5 - Metrics.BoxSize.Width] * ColumnDiv;
+      Columns: [DocMetrics.BoxSize.Width, DocMetrics.PageContent.Width * 0.5 - DocMetrics.BoxSize.Width] * ColumnDiv;
       Style.TitleBar(Lang.OtherSegments, ColumnDiv*2);
       AddRow(each (Math.FindSlice(Results.UsedSegments, segment => not Math.FindAny(set, segment)) / ColumnDiv));
     };

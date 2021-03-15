@@ -1,15 +1,34 @@
 using Format, Units, Math, IO;
 //======================================================================
 
-with Metrics {
-  Paper       = Size(8.5 inches, 11 inches);
-  PaperMargin = Margin(0.75 inches, 0.5 inches, 0.75 inches, 0.4 inches);
-  Content     = Paper - PaperMargin;
-  TableSpace  = 24 pts;
-  TreeWidth   = Content.Width;
+with PaperSizes {
+  Letter = Size(8.5 inches, 11 inches);
+  A4     = Size(210 millimeters, 297 millimeters);
+}
+//======================================================================
 
-  BoxSize    = Size(18 pts, 20 pts);
-  CellSize   = Size(BoxSize.Width * 2, BoxSize.Height);
+with DocMetrics if (PaperSystem == PaperSystems.US) {
+  DocumentSize = PaperSizes.Letter;
+  Gutter       = 0;
+  PageMargin   = Margin(0.75 inches);
+}
+//======================================================================
+
+with DocMetrics if (PaperSystem == PaperSystems.A) {
+  DocumentSize = PaperSizes.A4;
+  Gutter       = 0;
+  PageMargin   = Margin(20 millimeters);
+}
+//======================================================================
+
+with DocMetrics {
+  PageContent    = DocumentSize - PageMargin - Size(Gutter, 0);
+  TableSpace     = 24 pts;
+  TreeWidth      = PageContent.Width;
+  BoxSize        = Size(18 pts, 20 pts);
+  CellSize       = Size(BoxSize.Width * 2, BoxSize.Height);
+  SegmentColumns = 4;
+  SegmentSize    = 40 pts;
 }
 //======================================================================
 
@@ -46,10 +65,10 @@ with Style {
   };
 
   WhitePaper = Document {
-    Size: Metrics.Paper;
+    Size: DocMetrics.DocumentSize;
+    Margin: DocMetrics.PageMargin;
     MainFamily;
     TextHeight: 11 pts;
-    Margin: Metrics.PaperMargin;
   };
 
   NormalHeader(text) = Block {
@@ -66,7 +85,7 @@ with Style {
   };
 
   TableNotes = Paragraph {
-    SpaceAfter: Metrics.TableSpace;
+    SpaceAfter: DocMetrics.TableSpace;
   };
 
   TitleCase(text) = Span {
@@ -190,7 +209,7 @@ with Style {
       Curvature: 30%;
       Bevel: 20%;
       Marker: {Style.IPAFamily; TextHeight: 4 pts; TextColor: Colors.Gray} Chars.blackcirc;
-      Width: Metrics.TreeWidth - 30 pts;
+      Width: DocMetrics.TreeWidth - 30 pts;
       ValueLabel: axis;
       ValueAxis: ChartAxis;
       Root: root;

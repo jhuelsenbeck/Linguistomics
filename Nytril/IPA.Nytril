@@ -138,9 +138,9 @@ class SegmentClass {
       LocationMark: location;
       SpaceBefore: 8 pts;
       SpaceAfter: 8 pts;
-      TextHeight: Metrics.SegmentSize;
+      TextHeight: DocMetrics.SegmentSize;
       Style.IPAFamily;
-      SpaceAfter: Metrics.SegmentSize * 0.125;
+      SpaceAfter: DocMetrics.SegmentSize * 0.125;
       Ipa;
     };
     Paragraph {
@@ -755,11 +755,11 @@ with IPA {
   };
 
   SegmentTable = Block {
-    var c      = Metrics.SegmentColumns;
+    var c      = DocMetrics.SegmentColumns;
     var sorted = Math.Sort(Results.UsedSegments, false, ref AlphaOrder);
 
     Table {
-      Columns: [Metrics.Content.Width / c] * c;
+      Columns: [DocMetrics.PageContent.Width / c] * c;
       Style.TitleBar(Lang.IPAListing, c);
       foreach (var segments in (sorted / c)) {
         Row {
@@ -1014,16 +1014,15 @@ with IPA {
     Vertical: true;
     Paragraph {
       Lang.Concept; ": ";
-      concept Bold;
+      concept.Concept Bold;
     };
-    var record = new ConceptRecord(concept);
-    DriftChart(record.Cells);
+    DriftChart(concept.Cells);
   };
 
   DriftSection = Block {
     Paragraph {
       Separator: "  ";
-      ConceptDrift(each ConceptsList);
+      ConceptDrift(each Results.WordConceptArray);
     }
   };
 }
