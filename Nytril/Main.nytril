@@ -13,35 +13,6 @@ include "Tables";
 include "RevBayes";
 //======================================================================
 
-Main.Configurations = [
-  new ConfigurationClass("United States") {
-    Language: "en";
-    PaperSystem: ConfigurationClass.PaperSystems.US;
-    UnitSystem: ConfigurationClass.UnitSystems.Imperial;
-  },
-
-  new ConfigurationClass("Spain") {
-    Language: "es";
-    PaperSystem: ConfigurationClass.PaperSystems.A;
-    UnitSystem: ConfigurationClass.UnitSystems.Metric;
-  },
-];
-//======================================================================
-
-class AnalysisViewClass: DocumentViewClass {
-  var OutFolder;
-
-  Constructor(outfolder) {
-    OutFolder = outfolder;
-    super.Constructor("View " outfolder, outfolder);
-  }
-
-  override GetDocument {
-    return GetWatch(new ComputeClass(OutFolder));
-  }
-}
-//======================================================================
-
 // No spaces in the name below!
 // RevBayes has a problem with folder names that contain spaces...
 
@@ -52,7 +23,7 @@ Main.Documents = new DocumentViewClass(null) {
 };
 
 void Main.Run {
-  new ComputeClass("Output2").Calculate;
+  new ComputeClass("Output1").Calculate;
 }
 //======================================================================
 
@@ -64,11 +35,14 @@ enum ConceptsList {
   New,
   We,
   Eye,
-//  One,
+  One,
+  Bone,
 //  Star
 }
 
 with Info {
+  Generations = 1000;
+
   PaperTitle  = "White Paper";
   Journal     = "Transactions of the Beysian Society";
   Publisher   = "The Baysian Society";
@@ -79,6 +53,46 @@ with Info {
     Separator: ", ";
     LastSeparator: " {0} "(Lang.And);
     Style.Author(each Authors);
+  };
+}
+//======================================================================
+
+with Abstract {
+  Title = Lang.Abstract;
+  Body  = Block {
+    Paragraph {
+      "It all started in a little town called Madrid...";
+    };
+  };
+}
+//======================================================================
+
+with Content.Introduction {
+  Title = Lang.Introduction;
+  Body  = Block {
+    Paragraph {
+      "In this paper, we attempt to do the impossible!";
+    };
+  };
+}
+//======================================================================
+
+with Content.Methods {
+  Title = Lang.Methods;
+  Body  = Block {
+    Paragraph {
+      "We used any and all means necessary.";
+    };
+  };
+}
+//======================================================================
+
+with Content.Conclusion {
+  Title = Lang.Conclusion;
+  Body  = Block {
+    Paragraph {
+      "Vene Vidi Vici";
+    };
   };
 }
 //======================================================================
@@ -126,6 +140,14 @@ GetWatch(compute) = Style.WhitePaper {
 };
 //======================================================================
 
+PaperAppendices(compute) = [
+  new AppendixClass("RevBayes Source File", compute.RevBayesSource),
+  new AppendixClass("Character File", compute.CharacterSource),
+  new AppendixClass("Program Output", compute.ShowLanguageTrees),
+  new AppendixClass("Options File", compute.GetOptionsSource),
+];
+//======================================================================
+
 Diagnostics = Style.WhitePaper {
   var appendices = [
     new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
@@ -143,52 +165,33 @@ Diagnostics = Style.WhitePaper {
 };
 //======================================================================
 
-with Abstract {
-  Title = Lang.Abstract;
-  Body  = Block {
-    Paragraph {
-      "It all started in a little town called Madrid...";
-    };
-  };
-}
-//======================================================================
+Main.Configurations = [
+  new ConfigurationClass("United States") {
+    Language: "en";
+    PaperSystem: ConfigurationClass.PaperSystems.US;
+    UnitSystem: ConfigurationClass.UnitSystems.Imperial;
+  },
 
-with Content.Introduction {
-  Title = Lang.Introduction;
-  Body  = Block {
-    Paragraph {
-      "In this paper, we attempt to do the impossible!";
-    };
-  };
-}
-//======================================================================
-
-with Content.Methods {
-  Title = Lang.Methods;
-  Body  = Block {
-    Paragraph {
-      "We used any and all means necessary.";
-    };
-  };
-}
-//======================================================================
-
-with Content.Conclusion {
-  Title = Lang.Conclusion;
-  Body  = Block {
-    Paragraph {
-      "Vene Vidi Vici";
-    };
-  };
-}
-//======================================================================
-
-PaperAppendices(compute) = [
-  new AppendixClass("Options File", compute.GetOptionsSource),
-  new AppendixClass("RevBayes Source File", compute.RevBayesSource),
-  new AppendixClass("Character File", compute.CharacterSource),
-  new AppendixClass("Program Output", compute.ShowLanguageTrees),
+  new ConfigurationClass("Spain") {
+    Language: "es";
+    PaperSystem: ConfigurationClass.PaperSystems.A;
+    UnitSystem: ConfigurationClass.UnitSystems.Metric;
+  },
 ];
+//======================================================================
+
+class AnalysisViewClass: DocumentViewClass {
+  var OutFolder;
+
+  Constructor(outfolder) {
+    OutFolder = outfolder;
+    super.Constructor("View " outfolder, outfolder);
+  }
+
+  override GetDocument {
+    return GetWatch(new ComputeClass(OutFolder));
+  }
+}
 //======================================================================
 
 

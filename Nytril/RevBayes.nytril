@@ -45,10 +45,7 @@ class RevProgramClass {
 //======================================================================
 
 class RevProcessClass: ProcessClass {
-  var Generations;
-
-  Constructor(exe, args, generations) {
-    Generations = generations;
+  Constructor(exe, args) {
     super.Constructor(exe, args);
   }
 
@@ -58,7 +55,7 @@ class RevProcessClass: ProcessClass {
     if (l.Length > 1) {
       var i = Integer(l);
       if (not i.IsError())
-        System.ProgressPercent(i, Generations);
+        System.ProgressPercent(i, Info.Generations);
     }
     else if (line.IndexOf("Error:") >= 0)
       System.ProgressCancel(line);
@@ -67,9 +64,7 @@ class RevProcessClass: ProcessClass {
 //======================================================================
 
 class ComputeClass: RevProgramClass {
-  var Generations,
-      OutFolder,
-      Divisions,
+  var OutFolder,
       EXEName,
       RevSourceName,
       GammaTrees,
@@ -84,10 +79,7 @@ class ComputeClass: RevProgramClass {
   Constructor(outname) {
     super.Constructor;
 
-    Divisions       = 50;
-    Generations     = 500;
     Concepts        = Results.WordConceptArray.Length;
-
     OutFolder       = Folders.Repository Folder("Output") Folder(outname);
     EXEName         = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName   = FileName("Program") Extensions.RevBayes;
@@ -106,7 +98,7 @@ class ComputeClass: RevProgramClass {
     IO.Write(CharacterSource, OutFolder CharacterName);
     IO.Write(RevBayesSource, OutFolder RevSourceName);
 
-    var p = new RevProcessClass(EXEName, OutFolder RevSourceName, Generations) {
+    var p = new RevProcessClass(EXEName, OutFolder RevSourceName) {
 /*      CacheName: "RevBayes";
       CacheInput: [
         OutFolder CharacterName,
@@ -164,8 +156,7 @@ class ComputeClass: RevProgramClass {
     };
     Empty;
 
-    AddVariable("Divisions", Divisions);
-    AddVariable("Generations", Generations);
+    AddVariable("Generations", Info.Generations);
     AddVariable("Languages", Results.TaxaArray.Length);
     AddVariable("Concepts", Concepts);
     AddVariable("Segments", Results.UniqueSegments.Length);
@@ -239,7 +230,7 @@ class ComputeClass: RevProgramClass {
 
     LineComment("You can use any node as the argument of model()");
     "mymodel = model(psi)";
-    "n_gen   = {0}"(Generations div Divisions);
+    "n_gen   = {0}"(Math.Min([10, Info.Generations div 1000]));
 
     LineComment("This prints monitors to the screen");
     "monitors.append(mnScreen(TL, printgen=50) )";
@@ -253,8 +244,8 @@ class ComputeClass: RevProgramClass {
     "mymcmc = mcmc(mymodel, moves, monitors, nruns=1, combine={0})"(ShowString("mixed"));
 
 
-//   "mymcmc.burnin(generations={0}, tuningInterval=200)"(Generations);
-    "mymcmc.run(generations={0})"(Generations);
+//   "mymcmc.burnin(generations={0}, tuningInterval=200)"(Info.Generations);
+    "mymcmc.run(generations={0})"(Info.Generations);
 
     LineComment("Summarizes the MCMC runs");
     "mymcmc.operatorSummary()";
