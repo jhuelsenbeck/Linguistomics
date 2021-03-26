@@ -14,7 +14,8 @@ class WordClass {
     if (text.Length > 0) {
       Segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
       // Test that the word's text is the same as the segments converted back into text
-      System.Assert(text == String(Span {(each Segments).Ipa}), "Round-trip error with text " text);
+      var view = String(Span {(each Segments).Ipa});
+      System.Assert(text == view, "Round-trip error with text {0}-{1}"(text, view));
     }
     else
       Segments = [];
@@ -438,7 +439,7 @@ with MatchingVowels {
   };
 
   MatchVowelAny(segment, data)          = segment.Features.HasFlagMask(Vowel LongVowel Nasal, data.Feature | Vowel) and segment.Open == data.Open;
-  MatchVowelPair(segment, data)         = segment.?Backness and data?.Backness and segment.Backness == data.Backness and MatchVowelAny(segment, data);
+  MatchVowelPair(segment, data)         = MatchVowelAny(segment, data) and segment.Backness == data.Backness;
   FindAnyOpen(set, feature, open)       = Math.FindAny(Results.UsedSegments, segment => MatchVowelAny(segment, {Open: open; Feature: feature}));
   AddCell(set, feature, open, backness) = AddBlock(set, Math.FindSlice(Results.UsedSegments, segment => MatchVowelPair(segment, {Open: open; Feature: feature; Backness: backness})));
 
