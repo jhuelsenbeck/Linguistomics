@@ -135,8 +135,8 @@ class ComputeClass: RevProgramClass {
     schema.LineChart(view, "Posterior");
     schema.LineChart(view, "Tree Length", "TL");
 
-    schema.LineChart(view, null, each "bl[{0}]"(each 1..Concepts*2));
-    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
+//    schema.LineChart(view, null, each "bl[{0}]"(each 1..Concepts*2));
+//    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
   };
 
   AddVariable(name, value) = Span {
@@ -341,14 +341,17 @@ class LogSchemaClass: SchemaClass {
         Type: ChartTypes.Line;
 
         var list = GetFieldList(view, field ?? name);
+
         XAxis: ChartAxis {
           each 0..<list.Length;
         };
         ChartSeries {
 //          Marker: Chars.bullet {TextHeight: 3 pts; TextColor: Colors.Red};
           Stroke: 0.5 pts {MiterLimit: 2 pts};
-          foreach (var l in list)
-            new DataPointClass(null, l);
+          foreach (var l in list) {
+            if (exists l)
+              new DataPointClass(null, l);
+          }
         };
       };
     };

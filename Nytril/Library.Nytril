@@ -30,12 +30,11 @@ class TaxonClass {
       var ma   = Results.WordConceptArray[EachIndex];
       var word = ma.Cells[index];
       var pad  = ma.MaxLength - word.Segments.Length;
-      list.Add(each word.Segments);
       NChar += word.Segments.Length + pad;
-      if (pad > 0) {
-        foreach (var i in 1..pad)
-          list.Add(IPA.GapSegment);
-      }
+
+      list.Add(each word.Segments);
+      for (var i = 0; i < pad; ++i)
+        list.Add(IPA.GapSegment);
     }
     return list;
   }
@@ -136,7 +135,8 @@ with Nexus {
 
   CharacterFile(taxa) = NexusFile {
     var maxlength = Math.Max((each ((each taxa).Name)).Length) + 1;
-    var range     = ((0..<taxa[0].Characters.Length) / (70 - maxlength));
+    var nchar     = taxa[0].NChar;
+    var range     = ((0..<nchar) / (Integer(DocMetrics.PageContent.Width / 9) - maxlength));
 
     Scope("taxa") {
       AddLine("dimensions") {
@@ -150,17 +150,23 @@ with Nexus {
     Scope("data") {
       AddLine("dimensions") {
         AddValue("ntax", taxa.Length);
-        AddValue("nchar", taxa[0].NChar);
+        AddValue("nchar", nchar);
       };
       AddLine("format") {
         AddValue("datatype", "STANDARD");
+        AddValue("interleave", "yes");
         AddValue("gap", IPA.GapSegment.Ipa);
         AddValue("missing", Missing);
         AddValue("symbols", Span {Quote; CharacterList[Results.UniqueSegments.IndexRange]; Quote});
       };
       Empty;
       Keyword("matrix");
-      (each taxa).ShowLetters(maxlength, each range);
+      foreach (var r in range) {
+        if (EachIndex > 0)
+          Empty;
+
+        (each taxa).ShowLetters(maxlength, r);
+      }
       EndMarker;
     };
 

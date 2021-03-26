@@ -438,10 +438,12 @@ with MatchingVowels {
       MatchingOptions.SegmentText(set, matches[0]);
   };
 
-  MatchVowelAny(segment, data)          = segment.Features.HasFlagMask(Vowel LongVowel Nasal, data.Feature | Vowel) and segment.Open == data.Open;
-  MatchVowelPair(segment, data)         = MatchVowelAny(segment, data) and segment.Backness == data.Backness;
-  FindAnyOpen(set, feature, open)       = Math.FindAny(Results.UsedSegments, segment => MatchVowelAny(segment, {Open: open; Feature: feature}));
-  AddCell(set, feature, open, backness) = AddBlock(set, Math.FindSlice(Results.UsedSegments, segment => MatchVowelPair(segment, {Open: open; Feature: feature; Backness: backness})));
+  FindAnyOpen(set, feature, open) = Math.FindAny(Results.UsedSegments, segment => segment.MatchVowelAny(feature, open));
+
+  AddCell(set, feature, open, backness) {
+    var matches = Math.FindSlice(Results.UsedSegments, segment => segment.MatchVowelPair(feature, open, backness));
+    return AddBlock(set, matches);
+  }
 
   AddRow(set, feature, open) {
     if (FindAnyOpen(set, feature, open)) {
