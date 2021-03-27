@@ -1,0 +1,50 @@
+using Format, IO, Math, DB;
+
+Main.Documents = [
+  new DocumentViewClass("Test", ref Watch),
+];
+
+ReadFile(name) {
+  var schema = new SchemaClass("swadish");
+//  schema.AddField(new FieldClass("No.", ValueTypes.Int32));
+//  schema.AddField(new FieldClass("English", ValueTypes.String));
+
+  var path = Folders.Source Folder ("Swadesh") FileName(name) Extensions.Text;
+  return schema.ReadTextFile(path, true);
+}
+
+ShowString(text) = Span {
+  Separator: ", ";
+  foreach (var w in Split(text, ", "))
+    "\"{0}\""(w);
+};
+
+AddBlock(name) = TextBlock {
+  var db = ReadFile("Latin");
+
+  Span {
+    "with WordList.";
+    name;
+    " {";
+  };
+
+  var max = Math.Max((each (each db).GetField("english")).Length);
+
+  foreach (var row in db) {
+    Span {
+      Space*2;
+      var eng = row.GetField("english");
+      eng;
+      Space * (max - eng.Length);
+      " = ";
+      ShowString(row.GetField("IPA"));
+      ";"
+    };
+  }
+
+  "}";
+};
+
+Watch = Document {
+  AddBlock("Latin");
+};
