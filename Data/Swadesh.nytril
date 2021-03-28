@@ -4,47 +4,92 @@ Main.Documents = [
   new DocumentViewClass("Test", ref Watch),
 ];
 
-ReadFile(name) {
-  var schema = new SchemaClass("swadish");
-//  schema.AddField(new FieldClass("No.", ValueTypes.Int32));
-//  schema.AddField(new FieldClass("English", ValueTypes.String));
+Main.Run = Write(Watch, Folders.Source Folder("Swadesh") FileName("WordLists") Extensions.Nytril, FileFormats.Text);
 
-  var path = Folders.Source Folder ("Swadesh") FileName(name) Extensions.Text;
-  return schema.ReadTextFile(path, true);
+ReadFile(name) {
+  var schema = new SchemaClass("swadesh");
+  return schema.ReadTextFile(Folders.Source Folder("Swadesh") FileName(name) Extensions.Text, true);
 }
 
-ShowString(text) = Span {
-  Separator: ", ";
-  foreach (var w in Split(text, ", "))
-    "\"{0}\""(w);
+Correct(text) {
+  if (text.FirstElement == "/")
+    text = text[1..];
+  if (text.LastElement == "/")
+    text = text[0..<-1];
+  return text;
+}
+
+InQuotes(text) {
+  return Span {"\"{0}\""(Correct(text)); TextColor: Color(168, 21, 53)};
+}
+
+ShowWords(spelling, ipa) = Span {
+  if (valid ipa) {
+    var list = Split(ipa, ", ");
+    InQuotes(list[0]);
+
+    "    // ";
+    spelling;
+    ";";
+
+    if (list.Length > 1) {
+      var alt = Correct(each list[1..]);
+      if (Sum((each alt).Length) > 0) {
+        " Alt. [";
+        Span {
+          Separator: ", ";
+          foreach (var w in alt) {
+            if (w.Length > 0)
+              InQuotes(w);
+          }
+        }
+        "]";
+      }
+    }
+  }
+  else
+    "\"\"; // " spelling;
 };
 
-AddBlock(name) = TextBlock {
-  var db = ReadFile("Latin");
+GetName(row) = FindSlice(row.GetField("English"), c => c != ' ' and c != '(' and c != ')');
+GetIPA(row)  = row.GetField("IPA");
 
+AddBlock(name) = TextBlock {
+  var db = ReadFile(name);
   Span {
     "with WordList.";
     name;
     " {";
   };
 
-  var max = Math.Max((each (each db).GetField("english")).Length);
+  var max = Math.Max((each GetName(each db)).Length);
 
   foreach (var row in db) {
     Span {
       Space*2;
-      var eng = row.GetField("english");
-      eng;
-      Space * (max - eng.Length);
+      var v = GetName(row);
+      v {TextCase: TextCases.FirstUpper};
+      Space * (max - v.Length);
       " = ";
-      ShowString(row.GetField("IPA"));
-      ";"
+      ShowWords(row.GetField("Spelling"), GetIPA(row));
     };
   }
 
   "}";
+  Span {"//"; "="*60; TextColor: Colors.Green};
+  Empty;
 };
 
 Watch = Document {
-  AddBlock("Latin");
+  AddBlock(each [
+    "Latin",
+    "French",
+    "Spanish",
+    "Italian",
+    "PortugueseBrazil",
+    "Portuguese",
+    "Catalan",
+    "Walloon",
+    "Friulian",
+    "Romanian"]);
 };
