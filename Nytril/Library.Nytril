@@ -3,47 +3,64 @@ using Format, Units, Math, IO;
 
 class TaxonClass {
   var Name,
-      Characters,
-      Segments,
-      NChar;
+      SegmentList,
+      AlignedList;
 
-  Constructor(lang, index) {
-    NChar      = 0;
-    Name       = lang.GlobalVariableName;
-    Segments   = GetSegments(index);
-    Characters = (each Segments).SegmentToCharacter;
-  }
+  Constructor(lang, langindex) {
+    var count = Results.WordConceptArray.Length;
+    SegmentList = new ListClass(count);
+    AlignedList = new ListClass(count);
+    Name        = lang.GlobalVariableName;
 
-  ShowLetters(maxlength, range) = Span {
-    Span {
-      Nexus.TaxonFormat;
-      Name;
-    };
-    Space * (maxlength - Name.Length);
-    foreach (var c in Characters[range])
-      c.ShowLetter;
-  };
-
-  GetSegments(index) {
-    var list = new ListClass(256);
-    foreach (var concept in ConceptsList) {
-      var ma   = Results.WordConceptArray[EachIndex];
-      var word = ma.Cells[index];
-      var pad  = ma.MaxLength - word.Segments.Length;
-      NChar += word.Segments.Length + pad;
-
-      list.Add(each word.Segments);
-      for (var i = 0; i < pad; ++i)
-        list.Add(IPA.GapSegment);
-    }
-    return list;
+    foreach (var concept in Results.WordConceptArray)
+      SegmentList.Add(concept.Cells[langindex].Segments);
   }
 }
 //======================================================================
 
-with Nexus {
-  TaxonFormat = {TextColor: Colors.DarkGreen};
+with Results {
+  GetTaxaArray(lang) = new TaxonClass(lang, EachIndex);
 
+  ComputeTaxa() {
+    var taxa = GetTaxaArray(each UsedLanguages);
+    for (var concept = 0; concept < WordConceptArray.Length; ++concept) {
+      var wordlist = new ListClass(WordConceptArray.Length);
+      foreach (var taxon in taxa)
+        wordlist.Add(taxon.SegmentList[concept]);
+
+      var align = new AlignClass(wordlist) {
+        Gap: IPA.GapSegment;
+      };
+      var run = align.Run;
+      if (valid run) {
+        var i = 0;
+        foreach (var taxon in taxa)
+          taxon.AlignedList.Add(run.Results[i++]);
+      }
+      else {
+        var max = Max((each wordlist).Length);
+        foreach (var taxon in taxa) {
+          var segs = taxon.SegmentList[concept];
+          taxon.AlignedList.Add(segs + [IPA.GapSegment] * (max - segs.Length));
+        }
+      }
+    }
+    return taxa;
+  }
+
+  AddConceptRecord(concept) = new ConceptRecord(concept);
+  WordConceptArray = AddConceptRecord(each ConceptsList);
+
+  TaxaArray      = ComputeTaxa;
+
+  UsedLanguages  = Math.FindSlice(Languages, lang => lang.Words != null);
+  UniqueSegments = DisplayCharacters.FindUniqueSegments;
+  UsedSegments   = UniqueSegments;//IPA.Segments;
+}
+//======================================================================
+
+with Nexus {
+  TaxonFormat   = {TextColor: Colors.DarkBlue};
   CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1);
   EndMarker     = ";";
   Missing       = "?";
@@ -56,8 +73,9 @@ with Nexus {
 
   Comment(text) = Span {
     TextColor: Colors.Green;
-    "#"
-    text
+    "[ ";
+    text;
+    " ]";
   };
 
   AddLine(name) = Span {
@@ -65,11 +83,13 @@ with Nexus {
     End: EndMarker;
   };
 
-  AddValue(name, value) = Span {
+  AddValue(name, value=null) = Span {
     Space;
     Keyword(name);
-    "=";
-    value;
+    if (exists value) {
+      "=";
+      value;
+    }
   };
 
   AddTaxon(taxon) = Span {
@@ -95,7 +115,10 @@ with Nexus {
 
   NexusFile = TextBlock {
     Style.MonoFamily;
-    Comment("NEXUS");
+    Span {
+      TextColor: Colors.DarkBlue;
+      "#NEXUS";
+    };
   };
 
   Newick(node) = Span {
@@ -135,8 +158,7 @@ with Nexus {
 
   CharacterFile(taxa) = NexusFile {
     var maxlength = Math.Max((each ((each taxa).Name)).Length) + 1;
-    var nchar     = taxa[0].NChar;
-    var range     = ((0..<nchar) / (Integer(DocMetrics.PageContent.Width / 9) - maxlength));
+//    var range     = ((0..<nchar) / (Integer(DocMetrics.PageContent.Width / 9) - maxlength));
 
     Scope("taxa") {
       AddLine("dimensions") {
@@ -150,22 +172,39 @@ with Nexus {
     Scope("data") {
       AddLine("dimensions") {
         AddValue("ntax", taxa.Length);
-        AddValue("nchar", nchar);
+        AddValue("nchar", Sum((each taxa[0].AlignedList).Length));
       };
       AddLine("format") {
         AddValue("datatype", "STANDARD");
         AddValue("interleave", "yes");
+        AddValue("respectcase");
         AddValue("gap", IPA.GapSegment.Ipa);
         AddValue("missing", Missing);
         AddValue("symbols", Span {Quote; CharacterList[Results.UniqueSegments.IndexRange]; Quote});
       };
       Empty;
       Keyword("matrix");
-      foreach (var r in range) {
+
+
+      for (var concept = 0; concept < ConceptsList.Length; ++concept) {
         if (EachIndex > 0)
           Empty;
 
-        (each taxa).ShowLetters(maxlength, r);
+        Comment(ConceptsList[concept].GlobalVariableName);
+
+        foreach (var taxon in taxa) {
+          Span {
+            Span {
+              Nexus.TaxonFormat;
+              taxon.Name;
+            };
+            Space * (maxlength - taxon.Name.Length);
+            foreach (var segment in taxon.AlignedList[concept])
+              segment.SegmentToCharacter.ShowLetter;
+            Space*4;
+            Comment( Span{each (each taxon.AlignedList[concept]).Ipa});
+          };
+        }
       }
       EndMarker;
     };
