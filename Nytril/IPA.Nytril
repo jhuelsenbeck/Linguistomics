@@ -98,6 +98,7 @@ class SegmentClass {
       Sampa,
       Impossible,
       Punctuation,
+      Gap,
       Description,
       Features,
       Diacritic,
@@ -111,6 +112,7 @@ class SegmentClass {
     Impossible  = impossible;
     Punctuation = false;
     Diacritic   = false;
+    Gap         = false;
     Features    = NoFeature;
   };
 
@@ -150,7 +152,10 @@ class SegmentClass {
     };
     Paragraph {
       TextHeight: 10 pts;
-      SegmentName;
+      if (Gap)
+        Lang.Gap;
+      else
+        SegmentName;
     };
     Paragraph {
       TextHeight: 8 pts;
@@ -186,6 +191,8 @@ class SegmentClass {
       System.Assert(false, Lang.Impossible);
       TextColor: Colors.Red;
     }
+    else if (Gap)
+      TextColor: Colors.LightGray;
     if (Diacritic)
       "  ";
     Ipa;
@@ -250,7 +257,7 @@ class VowelClass: SegmentClass {
 
 with IPA {
   NoSegment     = new SegmentClass("?", "!?", true);
-  GapSegment    = new PunctuationClass("-");
+  GapSegment    = new PunctuationClass("-") {Gap: true};
   SpaceSegment  = new PunctuationClass(" ");
 
   with Segments {

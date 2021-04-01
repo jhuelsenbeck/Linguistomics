@@ -61,14 +61,15 @@ with Results {
 
 with Nexus {
   TaxonFormat   = {TextColor: Colors.DarkBlue};
+  CommentFormat = {TextColor: Colors.Green};
   CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1);
   EndMarker     = ";";
   Missing       = "?";
   Quote         = "\"";
 
   Keyword(name) = Span {
-    TextColor: Colors.Blue;
-    name
+    CommentFormat;
+    name;
   };
 
   Comment(text) = Span {
@@ -156,9 +157,11 @@ with Nexus {
     VisitNodeTaxa(set, each node);
   }
 
-  CharacterFile(taxa) = NexusFile {
+  CharacterFile(taxa, paper) = NexusFile {
     var maxlength = Math.Max((each ((each taxa).Name)).Length) + 1;
 //    var range     = ((0..<nchar) / (Integer(DocMetrics.PageContent.Width / 9) - maxlength));
+
+    TabStops: [3 inches];
 
     Scope("taxa") {
       AddLine("dimensions") {
@@ -201,8 +204,24 @@ with Nexus {
             Space * (maxlength - taxon.Name.Length);
             foreach (var segment in taxon.AlignedList[concept])
               segment.SegmentToCharacter.ShowLetter;
-            Space*4;
-            Comment( Span{each (each taxon.AlignedList[concept]).Ipa});
+            if (paper) {
+              Span {
+                CommentFormat;
+                Style.IPAFamily;
+                Tab;
+                foreach (var segment in taxon.AlignedList[concept]) {
+                  Canvas {
+                    Width: 10 pts;
+                    Height: 8 pts;
+                    segment.ShowSegment;
+                  }
+                }
+              }
+            }
+            else {
+              Space*4;
+              Comment( Span{each (each taxon.AlignedList[concept]).Ipa});
+            }
           };
         }
       }
