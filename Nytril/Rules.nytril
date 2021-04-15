@@ -1,0 +1,174 @@
+using Format, Units, FeatureSet, Math;
+//======================================================================
+
+abstract class GroupClass {
+  var Weight,
+      Name;
+
+  Constructor(name, weight) {
+    Name   = name;
+    Weight = weight;
+  }
+
+  abstract Matches(segment);
+}
+
+class ConsonantGroupClass: GroupClass {
+  Constructor() {
+    super.Constructor("Consonant", 1);
+  }
+
+  override Matches(segment) = segment.Features.NotFlag(Vowel Nasal);
+}
+
+class NasalConsonantGroupClass: GroupClass {
+  Constructor() {
+    super.Constructor("Nasal-Consonant", 1);
+  }
+
+  override Matches(segment) = segment.Features.HasFlagMask(Vowel Nasal, Nasal);
+}
+
+class VowelGroupClass: GroupClass {
+  Constructor() {
+    super.Constructor("Vowel", 1);
+  }
+
+  override Matches(segment) = segment.Features.HasFlag(Vowel);
+}
+//======================================================================
+
+class WeightClass {
+  var Weight,
+      Group1,
+      Group2;
+
+  Constructor(weight, group1, group2) {
+    Weight = weight;
+    Group1 = group1;
+    Group2 = group2;
+  }
+}
+//======================================================================
+
+class RuleClass {
+  var Name,
+      Weight;
+
+  Constructor(weight, name) {
+    Weight = weight;
+    Name   = name;
+  }
+}
+//======================================================================
+
+class CVRuleClass: RuleClass {
+  var Groups,
+      RuleMatrix;
+
+  Constructor {
+    super.Constructor(1, "Consonant-Vowel");
+
+    var consonant = new ConsonantGroupClass;
+    var nasal     = new NasalConsonantGroupClass;
+    var vowel     = new VowelGroupClass;
+
+    Groups = [
+      consonant,
+      nasal,
+      vowel,
+    ];
+
+    var weights = [
+      new WeightClass(90, consonant, consonant),
+      new WeightClass(60, consonant, nasal),
+      new WeightClass(25, consonant, vowel),
+
+      new WeightClass(30, nasal, consonant),
+      new WeightClass(90, nasal, nasal),
+      new WeightClass(10, nasal, vowel),
+
+      new WeightClass(10, vowel, consonant),
+      new WeightClass(10, vowel, nasal),
+      new WeightClass(90, vowel, vowel),
+    ];
+
+    var rows = new ListClass(Groups.Length);
+    foreach (var g1 in Groups) {
+      var cols = new ListClass(Groups.Length);
+      foreach (var g2 in Groups) {
+        var s1 = FindSlice(weights, w => w.Group1 == g1 and w.Group2 == g2);
+        if (s1.Length > 0)
+          cols.Add(s1[0].Weight);
+        else
+          cols.Add(0);
+      }
+      rows.Add(cols.ToArray());
+    }
+
+    RuleMatrix = Matrix(rows);
+  }
+
+  GetGroup(s) = FindIndex(Groups, r => r.Matches(s), 1)[0];
+
+  GetFactor(s1, s2) {
+    if (s1 == s2)
+      return 0;
+    var r = GetGroup(s1);
+    var c = GetGroup(s2);
+    return RuleMatrix[r][c];
+  }
+}
+
+Rules = [
+  new CVRuleClass
+];
+
+//======================================================================
+
+
+class TCellClass {
+  var Segment1,
+      Segment2,
+      Value,
+      Shade;
+
+  Constructor(s1, s2) {
+    Segment1 = s1;
+    Segment2 = s2;
+    Value    = GetValue;
+    Shade    = Color(0, Value%, 0);
+  }
+
+  GetValue {
+    var sum  = 0;
+    var wsum = 0;
+    foreach (var rule in Rules) {
+      sum += rule.GetFactor(Segment1, Segment2);
+      wsum += rule.Weight;
+    }
+    return sum;
+  }
+
+  override GetPopup = Group {
+    Vertical: true;
+    HAlign: HAligns.Center;
+    Paragraph {
+      TextHeight: 20 pts;
+      Segment1.ShowSegment;
+      Space;
+      Chars.Rightarrow;
+      Space;
+      Segment2.ShowSegment;
+    };
+    Paragraph {
+      Span {
+        TextDigits: 0;
+        Value;
+      };
+      "%";
+    };
+  };
+}
+//======================================================================
+

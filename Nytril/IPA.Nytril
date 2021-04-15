@@ -1,4 +1,4 @@
-﻿using Format, Units, FeatureSet;
+﻿using Format, Units, FeatureSet, Math;
 //======================================================================
 
 enum Opens {
@@ -120,7 +120,6 @@ class SegmentClass {
 
   MatchVowelPair(feature, open, backness) = MatchVowelAny(feature, open) and Backness == backness;
 
-
   SegmentName = Span {
     if (Features.HasFlag(Vowel)) {
       Open;
@@ -151,13 +150,6 @@ class SegmentClass {
       Ipa;
     };
     Paragraph {
-      TextHeight: 10 pts;
-      if (Gap)
-        Lang.Gap;
-      else
-        SegmentName;
-    };
-    Paragraph {
       TextHeight: 8 pts;
       ParBackground: 95%;
       Style.MonoFamily;
@@ -168,6 +160,21 @@ class SegmentClass {
         if (exists Ipa)
           Integer(each Ipa);
       }
+    };
+/*
+    Paragraph {
+      ParBackground: Colors.AliceBlue;
+      ParAlignment: ParAlignments.Center;
+      Separator: ", ";
+      (each FindSlice(SegmentGroups, r => r.Matches(this))).Name;
+    };
+*/
+    Paragraph {
+      TextHeight: 10 pts;
+      if (Gap)
+        Lang.Gap;
+      else
+        SegmentName;
     };
   };
 
