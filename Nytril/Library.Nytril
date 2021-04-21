@@ -157,24 +157,88 @@ with Nexus {
     VisitNodeTaxa(set, each node);
   }
 
-  CharacterFile(taxa, paper) = NexusFile {
-    var maxlength = Math.Max((each ((each taxa).Name)).Length) + 1;
+  MaxNameLength = Math.Max((each ((each Results.TaxaArray).Name)).Length) + 1;
+
+  WriteTaxa(paper, concept, maxlength) = TextBlock {
+    foreach (var taxon in Results.TaxaArray) {
+      Span {
+        Span {
+          Nexus.TaxonFormat;
+          taxon.Name;
+        };
+        Space * (maxlength - taxon.Name.Length);
+        foreach (var segment in taxon.AlignedList[concept])
+          segment.SegmentToCharacter.ShowLetter;
+
+        switch (paper) {
+          case 0:
+            break;
+
+          case 1:
+            Space*4;
+            Comment( Span{each (each taxon.AlignedList[concept]).Ipa});
+            break;
+
+          case 2:
+            Span {
+              CommentFormat;
+              Style.IPAFamily;
+              Tab;
+              foreach (var segment in taxon.AlignedList[concept]) {
+                Canvas {
+                  Width: 10 pts;
+                  Height: 8 pts;
+                  segment.ShowSegment;
+                }
+              }
+            };
+            break;
+        }
+      };
+    }
+  };
+
+  TKFFile(concept, paper) = TextBlock {
+    if (paper > 0)
+      Comment(ConceptsList[concept].GlobalVariableName);
+
+    Span {
+      Results.TaxaArray.Length;
+      Space;
+      Results.TaxaArray[0].AlignedList[concept].Length;
+      Space;
+      Results.UniqueSegments.Length;
+    };
+    WriteTaxa(paper, concept, MaxNameLength);
+  };
+
+  TKFFiles = TextBlock {
+    Style.MonoFamily;
+    for (var concept = 0; concept < ConceptsList.Length; ++concept) {
+      TKFFile(concept, 2);
+      Empty;
+    }
+  };
+
+  CharacterFile(paper) = NexusFile {
+    var maxlength = MaxNameLength;
+    var ntax      = Results.TaxaArray.Length;
 
     TabStops: [3 inches];
 
     Scope("taxa") {
       AddLine("dimensions") {
-        AddValue("ntax", taxa.Length);
+        AddValue("ntax", ntax);
       };
       AddLine("taxlabels") {
-        AddTaxon(each taxa);
+        AddTaxon(each Results.TaxaArray);
       };
     };
 
     Scope("data") {
       AddLine("dimensions") {
-        AddValue("ntax", taxa.Length);
-        AddValue("nchar", Sum((each taxa[0].AlignedList).Length));
+        AddValue("ntax", ntax);
+        AddValue("nchar", Sum((each Results.TaxaArray[0].AlignedList).Length));
       };
       AddLine("format") {
         AddValue("datatype", "STANDARD");
@@ -187,42 +251,12 @@ with Nexus {
       Empty;
       Keyword("matrix");
 
-
       for (var concept = 0; concept < ConceptsList.Length; ++concept) {
         if (EachIndex > 0)
           Empty;
 
         Comment(ConceptsList[concept].GlobalVariableName);
-
-        foreach (var taxon in taxa) {
-          Span {
-            Span {
-              Nexus.TaxonFormat;
-              taxon.Name;
-            };
-            Space * (maxlength - taxon.Name.Length);
-            foreach (var segment in taxon.AlignedList[concept])
-              segment.SegmentToCharacter.ShowLetter;
-            if (paper) {
-              Span {
-                CommentFormat;
-                Style.IPAFamily;
-                Tab;
-                foreach (var segment in taxon.AlignedList[concept]) {
-                  Canvas {
-                    Width: 10 pts;
-                    Height: 8 pts;
-                    segment.ShowSegment;
-                  }
-                }
-              }
-            }
-            else {
-              Space*4;
-              Comment( Span{each (each taxon.AlignedList[concept]).Ipa});
-            }
-          };
-        }
+        WriteTaxa(paper, concept, maxlength);
       }
       EndMarker;
     };
