@@ -12,10 +12,12 @@ class WordClass {
     Concept  = ConceptsList.GetField(concept);
     Text     = text;
     if (text.Length > 0) {
-      Segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
+      var segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
+      Segments = Math.FindSlice(segments, s => not s.Punctuation);
+
       // Test that the word's text is the same as the segments converted back into text
-      var view = String(Span {(each Segments).Ipa});
-      System.Assert(text == view, "Round-trip error with text {0}-{1}"(text, view));
+      var view = String(Span {(each segments).Ipa});
+      System.Assert(text == view, "Round-trip error with text {0}-{1}"(text, view), text);
     }
     else
       Segments = [];

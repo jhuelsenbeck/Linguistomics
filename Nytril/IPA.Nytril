@@ -84,8 +84,7 @@ class CharacterClass {
 
   ShowLetter = Span {
     Popup: this;
-    if (not Segment.Punctuation)
-      Link: Segment.GlobalVariablePath;
+    Link: Segment.GlobalVariablePath;
     Character;
   };
 
@@ -192,8 +191,7 @@ class SegmentClass {
   ShowSegment = Span {
     Style.IPAFamily;
     Popup: this;
-    if (not Punctuation)
-      Link: GlobalVariablePath;
+    Link: GlobalVariablePath;
     if (Impossible) {
       System.Assert(false, Lang.Impossible);
       TextColor: Colors.Red;
@@ -217,8 +215,8 @@ class SegmentClass {
 //======================================================================
 
 class PunctuationClass: SegmentClass {
-  Constructor(ipa) {
-    super.Constructor(ipa, ipa);
+  Constructor(ipa, sampa=null) {
+    super.Constructor(ipa, sampa ?? ipa);
     Punctuation = true;
   }
 }
@@ -263,11 +261,15 @@ class VowelClass: SegmentClass {
 //======================================================================
 
 with IPA {
-  NoSegment     = new SegmentClass("?", "!?", true);
-  GapSegment    = new PunctuationClass("-") {Gap: true};
-  SpaceSegment  = new PunctuationClass(" ");
+  NoSegment       = new SegmentClass(Chars.bigotimes, "!?", true);
+  GapSegment      = new PunctuationClass("-") {Gap: true};
+  SpaceSegment    = new PunctuationClass(" ");
 
   with Segments {
+    SylableBreak    = new PunctuationClass(".");
+    PrimaryStress   = new PunctuationClass("ˈ", "'");
+    SecondaryStress = new PunctuationClass("ˌ", "%");
+
     //==================================
     // Extra segments found in word list
     //==================================
@@ -572,14 +574,17 @@ with IPA {
 
     NearCloseBackRounded      = new VowelClass(Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U");
     U                         = new VowelClass(LongVowel Rounded, Opens.Close, Backnesses.Back, "uː", "u:");
+    CloseBackRounded          = new VowelClass(Rounded, Opens.Close, Backnesses.Back, "u̯", "<u>");  // SAMPA encoding ???
+    CloseMidFrontUnrounded    = new VowelClass(NoFeature, Opens.CloseMid, Backnesses.Front, "e̯", "<e>");  // SAMPA encoding ???
+
 
 
     // David, these need review
-    NasalU                    = new VowelClass(Vowel Nasal, Opens.Open, Backnesses.Back, "ũ", "u*");
-    NasalE                    = new VowelClass(Vowel Nasal, Opens.Close, Backnesses.Back, "ẽ", "e*");
-    NasalI                    = new VowelClass(Vowel Nasal, Opens.OpenMid, Backnesses.Back, "ĩ", "i*");
-    NasalY                    = new VowelClass(Vowel Nasal, Opens.CloseMid, Backnesses.Back, "ỹ", "y*");
-    NasalA                    = new VowelClass(Vowel Nasal, Opens.NearClose, Backnesses.Back, "ɑ̃", "a*");
+    NasalU                    = new VowelClass(Nasal, Opens.Open, Backnesses.Back, "ũ", "u*");
+    NasalE                    = new VowelClass(Nasal, Opens.Close, Backnesses.Back, "ẽ", "e*");
+    NasalI                    = new VowelClass(Nasal, Opens.OpenMid, Backnesses.Back, "ĩ", "i*");
+    NasalY                    = new VowelClass(Nasal, Opens.CloseMid, Backnesses.Back, "ỹ", "y*");
+    NasalA                    = new VowelClass(Nasal, Opens.NearClose, Backnesses.Back, "ɑ̃", "a*");
     OtherA                    = new VowelClass(Nasal, Opens.Close, Backnesses.Back, "a.", "a.");
     // ==
 
@@ -604,6 +609,9 @@ with IPA {
     OpenMidBackUnrounded      = new VowelClass(Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ʌ", "V");
     OpenMidBackRounded        = new VowelClass(Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ɔ", "O");
     O                         = new VowelClass(LongVowel Rounded Vocoid Continuant, Opens.Mid, Backnesses.Back, "oː", "o:");
+
+    CloseMidBackRounded       = new VowelClass(LongVowel Nasal Rounded, Opens.CloseMid, Backnesses.Back, "õː", "O~:");
+
 
     NearFrontUnrounded        = new VowelClass(NoFeature, Opens.NearOpen, Backnesses.NearFront, "æ", "{");
     FrontOpenRounded          = new VowelClass(Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&");
@@ -745,9 +753,6 @@ with IPA {
     MidCentralized               = new DiacriticClass("Mid-centralized", "\u033D", "_x");
     Downstep                     = new DiacriticClass("Down-step", "↓", "!");
     Upstep                       = new DiacriticClass("Up-step", "↑", "^");
-    SylableBreak                 = new DiacriticClass("Sylable break", ".", ".");
-    PrimaryStress                = new DiacriticClass("Primary stress", "ˈ", "\"");
-    SecondaryStress              = new DiacriticClass("Secondary stress", "ˌ", "%");
     Long                         = new DiacriticClass("Long", "ː", ":");
     HalfLong                     = new DiacriticClass("Half-long", "ˑ", ":\\");
     IndeterminacyinFrenchVowels  = new DiacriticClass("Indeterminacy in french vowels", null, "/");
@@ -809,7 +814,7 @@ with IPA {
   FindWordsWithConcept(language, concept) = Math.FindSlice(language.Words, word => word.Concept == concept);
 
   //======================================================================
-  // Build a dictionary with SAMPA text as the key
+  // Build a dictionary with IPA text as the key
   //======================================================================
 
   SegmentDictionary {
