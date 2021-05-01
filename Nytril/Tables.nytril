@@ -1,6 +1,9 @@
 ﻿using Format, Units, IPA, FeatureSet;
 //======================================================================
 
+TestSegments = IPA.SegmentDictionary.FindTokens("gɾos", IPA.NoSegment);
+
+
 class WordClass {
   var Language,
       Concept,
@@ -22,6 +25,10 @@ class WordClass {
     else
       Segments = [];
   }
+
+  CleanText = Span {
+    (each Segments).Ipa;
+  };
 
   ShowConcept = Span {
     Style.SansSerif;
@@ -193,7 +200,8 @@ with DisplayWords {
 
 with AllWords {
   AddCell(concept, language) = Cell {
-    (each IPA.FindWordsWithConcept(language, concept)).Text
+    foreach (var word in IPA.FindWordsWithConcept(language, concept))
+      word.CleanText;
   };
 
   AddRow(language, concepts) = Row {
