@@ -65,7 +65,6 @@ class RevProcessClass: ProcessClass {
 
 class ComputeClass: RevProgramClass {
   var OutFolder,
-      InFolder,
       EXEName,
       RevSourceName,
       GammaTrees,
@@ -82,7 +81,6 @@ class ComputeClass: RevProgramClass {
 
     Concepts        = Results.WordConceptArray.Length;
     OutFolder       = Folders.Repository Folder("Output") Folder(outname);
-    InFolder        = Folders.Repository Folder("Input");
     EXEName         = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName   = FileName("Program") Extensions.RevBayes;
     CharacterName   = FileName("Characters") Extensions.Nexus;
@@ -95,14 +93,19 @@ class ComputeClass: RevProgramClass {
   }
 
   void Calculate {
+    var inputfolder = OutFolder Folder("Input");
+
     CreateFolder(OutFolder);
+    CreateFolder(inputfolder);
     IO.Write(GetOptionsSource, OutFolder OptionsName);
     IO.Write(Nexus.CharacterFile(1), OutFolder CharacterName);
 
+    IO.Write(TransitionRuleFile, OutFolder FileName("Parameters.txt"));
     foreach (var concept in Results.WordConceptArray)
-      IO.Write(Nexus.TKFFile(EachIndex, 0), InFolder FileName(concept.Concept) Extension("in"), FileFormats.Text);
+      IO.Write(Nexus.TKFFile(EachIndex, 0), inputfolder FileName(concept.Concept) Extension("in"), FileFormats.Text);
 
     IO.Write(RevBayesSource, OutFolder RevSourceName);
+
 
     var p = new RevProcessClass(EXEName, OutFolder RevSourceName) {
 /*      CacheName: "RevBayes";
@@ -166,17 +169,19 @@ class ComputeClass: RevProgramClass {
     AddVariable("Segments", Results.UniqueSegments.Length);
   };
 
-  ShowRule(rule) = Block {
-    Paragraph {
-      rule.Name;
-    };
+  TransitionRuleFile = TextBlock {
+    Style.MonoFamily;
+    "Num_Symbols:{0}"(Results.UsedSegments.Length);
+    (each Rules).ShowFile;
   };
 
-  ShowTransitionRules = Paragraph {
-    ShowRule(each Rules);
+  ShowTransitionRules = Block {
+    (each Rules).ShowDescription;
   };
 
   RevBayesSource = TextBlock {
+    System.Assert(Results.UniqueSegments.Length <= Nexus.CharacterList.Length);
+
     Style.MonoFamily;
     BlockComment("RevBayes Source File for Linguistomics Project");
 

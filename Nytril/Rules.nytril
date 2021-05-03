@@ -1,7 +1,7 @@
 using Format, Units, FeatureSet, Math;
 //======================================================================
 
-abstract class GroupClass {
+abstract class RuleSetClass {
   var Name;
 
   Constructor(name) {
@@ -11,7 +11,7 @@ abstract class GroupClass {
   abstract Matches(segment);
 }
 
-class ConsonantGroupClass: GroupClass {
+class ConsonantSetClass: RuleSetClass {
   Constructor() {
     super.Constructor("Consonant");
   }
@@ -19,7 +19,7 @@ class ConsonantGroupClass: GroupClass {
   override Matches(segment) = segment.Features.NotFlag(Vowel Nasal);
 }
 
-class NasalConsonantGroupClass: GroupClass {
+class NasalConsonantSetClass: RuleSetClass {
   Constructor() {
     super.Constructor("Nasal-Consonant");
   }
@@ -27,7 +27,7 @@ class NasalConsonantGroupClass: GroupClass {
   override Matches(segment) = segment.Features.HasFlagMask(Vowel Nasal, Nasal);
 }
 
-class VowelGroupClass: GroupClass {
+class VowelSetClass: RuleSetClass {
   Constructor() {
     super.Constructor("Vowel");
   }
@@ -36,36 +36,94 @@ class VowelGroupClass: GroupClass {
 }
 //======================================================================
 
-class RuleClass {
-  var Name;
+abstract class RuleClass {
+  var Name,
+      Letter,
+      Symbol;
 
-  Constructor(name) {
-    Name = name;
+  Constructor(name, letter, symbol) {
+    Name   = name;
+    Letter = letter;
+    Symbol = symbol;
   }
+
+  abstract ShowFile;
+
+  virtual ShowDescription = Block {
+    Paragraph {
+      TextHeight: 14 pts;
+      BorderB: 1 pt;
+      SpaceAfter: 10 pts;
+      Letter;
+      "({0})"(Symbol);
+      Tab;
+      Name;
+    }
+  };
 }
 //======================================================================
 
-class CVRuleClass: RuleClass {
-  var RuleSets,
-      Groups;
+class ConsonantVowelRuleClass: RuleClass {
+  var Groups;
 
   Constructor {
-    super.Constructor("Consonant-Vowel");
+    super.Constructor("Consonant-Vowel-Nasal clusters", "Kappa", Chars.kappa);
 
-    RuleSets = [
-      new ConsonantGroupClass,
-      new NasalConsonantGroupClass,
-      new VowelGroupClass,
+    Groups = [
+      new ConsonantSetClass,
+      new NasalConsonantSetClass,
+      new VowelSetClass,
     ];
-
-    Groups = GetGroup(each RuleSets);
   }
 
-  GetGroup(ruleset) = FindSlice(Results.UsedSegments, segment => ruleset.Matches(segment), 1);
+  GetSegments(ruleset) = FindSlice(Results.UsedSegments, segment => ruleset.Matches(segment));
+
+  ShowGroup(g) = Span {
+    "(";
+    (each (each GetSegments(g)).SegmentToCharacter).ShowLetter;
+    ")";
+  };
+
+  override ShowFile = TextBlock {
+    Span {
+      Letter;
+      ":";
+      Span {
+        Separator:",";
+        ShowGroup(each Groups);
+      };
+    }
+  };
+
+  override ShowDescription = Block {
+    super.ShowDescription;
+    Table {
+      Columns: [1.25 inches, 5 inches];
+      Row {
+        Bold;
+        Background: 90%;
+        Lang.Group;
+        Lang.Segments;
+      };
+
+      foreach (var g in Groups) {
+        Row {
+          g.Name;
+          Cell {
+            TextHeight: 14 pts;
+            Span {
+              Separator: Space;
+              (each GetSegments(g)).ShowSegment;
+            };
+          };
+        };
+      }
+    }
+  };
 }
 
 Rules = [
-  new CVRuleClass
+  new ConsonantVowelRuleClass
 ];
 //======================================================================
 
