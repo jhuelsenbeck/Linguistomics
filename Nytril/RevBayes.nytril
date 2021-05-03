@@ -75,8 +75,7 @@ class ComputeClass: RevProgramClass {
       GammaConsensus,
       OptionsName,
       CharacterName,
-      Concepts,
-      Transition;
+      Concepts;
 
   Constructor(outname) {
     super.Constructor;
@@ -93,7 +92,6 @@ class ComputeClass: RevProgramClass {
     GammaMAP        = FileName("Gamma_MAP") Extensions.Tree;
     GammaMCC        = FileName("Gamma_MCC") Extensions.Tree;
     GammaConsensus  = FileName("Gamma_Consensus") Extensions.Tree;
-    Transition      = GetQMatrix;
   }
 
   void Calculate {
@@ -168,36 +166,15 @@ class ComputeClass: RevProgramClass {
     AddVariable("Segments", Results.UniqueSegments.Length);
   };
 
-  ShowTransitionMatrix = Paragraph {
-    MatrixBlock {
-      TextHeight: DocMetrics.PageContent.Width * 0.99 / Results.UniqueSegments.Length;
-      ColumnGap: 1 pts;
-      HAlign: HAligns.Center;
-
-      Row {
-        Empty;
-        foreach (var sc in Results.UniqueSegments)
-          sc.ShowSegment;
-      };
-      foreach (var sr in Results.UniqueSegments) {
-        Row {
-          sr.ShowSegment;
-          foreach (var sc in Results.UniqueSegments) {
-            var tc = new TCellClass(sr, sc);
-            Span {
-              TextColor: tc.Shade;
-              Chars.blacksquare;
-              Popup: tc;
-            }
-          }
-        }
-      }
-    }
+  ShowRule(rule) = Block {
+    Paragraph {
+      rule.Name;
+    };
   };
 
-  GetQMatrix {
-    return MatrixDiagonal(Results.UniqueSegments.Length, 0, 1 / 3)
-  }
+  ShowTransitionRules = Paragraph {
+    ShowRule(each Rules);
+  };
 
   RevBayesSource = TextBlock {
     Style.MonoFamily;
