@@ -1,6 +1,97 @@
 using Format, Units, Math, IO, Genetics;
 //======================================================================
 
+class WordClass {
+  var Language,
+      Concept,
+      Text,
+      Segments;
+
+  Constructor(language, concept, text) {
+    Language = language;
+    Concept  = concept;
+    Text     = text;
+    if (text.Length > 0) {
+      var segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
+      Segments = Math.FindSlice(segments, s => not s.Punctuation);
+
+      // Test that the word's text is the same as the segments converted back into text
+      var view = String(Span {(each segments).Ipa});
+      System.Assert(text == view, "Round-trip error with text {0}-{1}"(text, view), text);
+    }
+    else
+      Segments = [];
+  }
+
+  CleanText = Span {
+    (each Segments).Ipa;
+  };
+
+  ShowConcept = Span {
+    Style.SansSerif;
+    Popup: this;
+    Concept;
+  };
+
+  override GetPopup = Frame {
+    AllWords.ShowConceptTable(Concept);
+  };
+}
+//======================================================================
+
+class LanguageClass {
+  var Name,
+      Cases,
+      Words;
+
+  Constructor(name, cases=0, words=false) {
+    Name  = name;
+    Cases = cases;
+    if (words) {
+      var list = new ListClass(32);
+      foreach (var concept in UsedConcepts) {
+        foreach (var aclass in concept) {
+          foreach (var word in aclass) {
+            if (Name == word.GlobalVariableName)
+              list.Add(new WordClass(this, concept, word[0]));
+          }
+        }
+      }
+      Words = list.ToArray();
+    }
+  }
+}
+//======================================================================
+
+class ConceptRecord {
+  var Cells,
+      MaxLength,
+      Concept;
+
+  Constructor(concept) {
+    Concept   = concept;
+    Cells     = new ListClass(128);
+    MaxLength = 0;
+
+    foreach (var language in Results.UsedLanguages) {
+      var found = false;
+      foreach (var word in language.Words) {
+        if (word.Concept == concept) {
+          Cells.Add(word);
+          var l = word.Segments.Length;
+          if (l > MaxLength)
+            MaxLength = l;
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        Cells.Add(new WordClass(language, concept, Empty));
+    }
+  }
+}
+//======================================================================
+
 class TaxonClass {
   var Name,
       SegmentList,
