@@ -115,8 +115,12 @@ with DisplayWords {
 //======================================================================
 
 with AllWords {
+  WordsPerLine = 7;
+
+  FindWordsWithConcept(language, concept) = Math.FindSlice(language.Words, word => word.Concept == concept);
+
   AddCell(concept, language) = Cell {
-    foreach (var word in IPA.FindWordsWithConcept(language, concept))
+    foreach (var word in FindWordsWithConcept(language, concept))
       word.CleanText;
   };
 
@@ -130,14 +134,16 @@ with AllWords {
   };
 
   ConceptTable(languages, concepts) = Block {
+    var first = 96 pts;
+    var w     = (DocMetrics.PageContent.Width - first) / WordsPerLine;
     Table {
       Edge: 0.5;
-      Columns: [70 pts] + [54 pts] * concepts.Length;
+      Columns: [first] + [w] * WordsPerLine;
       Row {
         Style.TitleBackground;
         Style.SansSerif;
         Empty;
-        each concepts;
+        (each concepts).GlobalVariableName;
       };
       AddRow(each languages, concepts)
     };
@@ -146,11 +152,11 @@ with AllWords {
 
   ShowConceptTable(concepts) = ConceptTable(Results.UsedLanguages, [concepts]);
 
-  ShowTable = ShowLangConcept(Results.UsedLanguages, UsedConcepts);
+  ShowTable = ShowLangConcept(Results.UsedLanguages);
 
-  ShowLangConcept(languages, concepts) = Block {
+  ShowLangConcept(languages) = Block {
     TextHeight: 12 pts;
-    ConceptTable(languages, each (concepts / 8))
+    ConceptTable(languages, each (UsedConcepts / WordsPerLine))
   };
 }
 //======================================================================

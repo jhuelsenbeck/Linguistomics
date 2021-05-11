@@ -52,7 +52,7 @@ class LanguageClass {
       foreach (var concept in UsedConcepts) {
         foreach (var aclass in concept) {
           foreach (var word in aclass) {
-            if (Name == word.GlobalVariableName)
+            if (name == word.GlobalVariableName)
               list.Add(new WordClass(this, concept, word[0]));
           }
         }
@@ -158,12 +158,12 @@ with Results {
 
   WordConceptArray = new ConceptRecord(each UsedConcepts);
 
-  TaxaArray      = ComputeTaxa;
+  TaxaArray        = ComputeTaxa;
 
-  UsedLanguages = GetUsedLanguages;
+  UsedLanguages    = GetUsedLanguages;
 
-  UniqueSegments = DisplayCharacters.FindUniqueSegments;
-  UsedSegments   = UniqueSegments;//IPA.Segments;
+  UniqueSegments   = DisplayCharacters.FindUniqueSegments;
+  UsedSegments     = UniqueSegments;//IPA.Segments;
 }
 //======================================================================
 
@@ -267,15 +267,16 @@ with Nexus {
 
   MaxNameLength = Math.Max((each ((each Results.TaxaArray).Name)).Length) + 1;
 
-  WriteTaxa(paper, concept, maxlength) = TextBlock {
+  WriteTaxa(index, concept, paper, maxlength) = TextBlock {
     foreach (var taxon in Results.TaxaArray) {
       Span {
         Span {
           Nexus.TaxonFormat;
           taxon.Name;
+          Link: concept;
         };
         Space * (maxlength - taxon.Name.Length);
-        foreach (var segment in taxon.AlignedList[concept])
+        foreach (var segment in taxon.AlignedList[index])
           segment.SegmentToCharacter.ShowLetter;
 
         switch (paper) {
@@ -284,7 +285,7 @@ with Nexus {
 
           case 1:
             Space*4;
-            Comment( Span{each (each taxon.AlignedList[concept]).Ipa});
+            Comment( Span{each (each taxon.AlignedList[index]).Ipa});
             break;
 
           case 2:
@@ -292,7 +293,7 @@ with Nexus {
               CommentFormat;
               Style.IPAFamily;
               Tab;
-              foreach (var segment in taxon.AlignedList[concept]) {
+              foreach (var segment in taxon.AlignedList[index]) {
                 Canvas {
                   Width: 10 pts;
                   Height: 8 pts;
@@ -306,26 +307,26 @@ with Nexus {
     }
   };
 
-  TKFFile(concept, paper) = TextBlock {
+  TKFFile(index, concept, paper) = TextBlock {
     if (paper > 0)
-      Comment(UsedConcepts[concept].GlobalVariableName);
+      Comment(concept.GlobalVariableName);
 
     Span {
       Results.TaxaArray.Length;
       Space;
-      Results.TaxaArray[0].AlignedList[concept].Length;
+      Results.TaxaArray[0].AlignedList[index].Length;
       Space;
       Results.UniqueSegments.Length;
     };
-    WriteTaxa(paper, concept, MaxNameLength);
+    WriteTaxa(index, concept, paper, MaxNameLength);
   };
 
   TKFFiles = TextBlock {
     Style.MonoFamily;
     TabStops: [3 inches];
 
-    for (var concept = 0; concept < UsedConcepts.Length; ++concept) {
-      TKFFile(concept, 2);
+    foreach (var concept in UsedConcepts) {
+      TKFFile(EachIndex, concept, 2);
       Empty;
     }
   };
@@ -361,12 +362,12 @@ with Nexus {
       Empty;
       Keyword("matrix");
 
-      for (var concept = 0; concept < UsedConcepts.Length; ++concept) {
+      foreach (var concept in UsedConcepts) {
         if (EachIndex > 0)
           Empty;
 
-        Comment(UsedConcepts[concept].GlobalVariableName);
-        WriteTaxa(paper, concept, maxlength);
+        Comment(concept.GlobalVariableName);
+        WriteTaxa(EachIndex, concept, paper, maxlength);
       }
       EndMarker;
     };
