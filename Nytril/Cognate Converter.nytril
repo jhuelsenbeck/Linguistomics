@@ -1,39 +1,34 @@
 using Format, IO, Math, DB;
 
 include "../data/swadesh/wordtransform";
-
+//===========================================================================
 
 Main.Documents = [
   new DocumentViewClass("Test", ref Watch),
 ];
 
-void WriteCategory(category, doc) {
-  IO.Write(doc, Folders.Source Folder("Categories") FileName(category) Extensions.Nytril, FileFormats.Text);
-}
+Watch = Document {
+  GetConcepts;
+};
 
-void WriteCategories {
-  var list       = new ListClass(3000);
-  var categories = new DictionaryClass(300);
-  Collect(list, categories);
-
-  foreach (var word in categories.Values)
-    WriteCategory(word.Category, word.Output(GetWordList(list, word.Category)));
-}
-
-Main.Run = WriteCategories;
-
+Main.Run = IO.Write(GetConcepts, Folders.Source FileName("Concepts") Extensions.Nytril, FileFormats.Text);
+//===========================================================================
 
 class WordClass {
   var Language,
-      Category,
+      Concept,
       Word,
       Comment;
 
-  Constructor(language, category, word, comment) {
+  Constructor(language, concept, word, comment) {
     Language = language;
-    Category = category;
-    Word     = word;
-    Comment  = comment;
+    if (concept != "TongueOrgan" and concept != "Tooth" and concept[0..1] == "To")
+      Concept  = "To" + ToUpper(concept[2]) + concept[3..];
+    else
+      Concept = concept;
+
+    Word    = word;
+    Comment = comment;
   }
 
   CleanComment(comment) {
@@ -42,8 +37,8 @@ class WordClass {
 
   Output(words) = TextBlock {
     Paragraph {
-      "with Categories.";
-      Category;
+      "with Concepts.";
+      Concept;
       " {"
     };
 
@@ -51,21 +46,27 @@ class WordClass {
 
     foreach (var word in words) {
       if (valid word.Word) {
+        if (EachIndex > 0)
+          Empty;
         Paragraph {
           "    ";
-          word.Language;
-          ".A";
-          Space * (16 - word.Language.Length);
-          " = \"";
+            word.Language;
+          " = [";
+        };
+
+        Paragraph {
+          "      \"";
           word.Word;
-          "\";";
+          "\",";
 
           if (valid word.Comment) {
-            Space * (30 - word.Word.Length);
+            Space * (20 - word.Word.Length);
             "// ";
             CleanComment(word.Comment);
           }
-        }
+        };
+
+        "    ];";
       }
     }
 
@@ -74,45 +75,37 @@ class WordClass {
     Empty;
   };
 }
+//===========================================================================
 
-
-void Collect(list, categories) {
+void Collect(list, concepts) {
   foreach (var language in WordList) {
-    foreach (var category in language) {
-      var w = new WordClass(language.GlobalVariableName, category.GlobalVariableName, category.Word, category.?Comment);
+    foreach (var concept in language) {
+      var w = new WordClass(language.GlobalVariableName, concept.GlobalVariableName, concept.Word, concept.?Comment);
       list.Add(w);
-      categories.Add(w, w.Category);
+      concepts.Add(w, w.Concept);
     }
   }
 }
 
-FormatWord(word) = TextBlock {
-  Span {
-    word.Language;
-    word.Category;
-    word.Word;
-  };
-};
-
-
-GetWordList(list, category) {
-  return FindSlice(list, w => category == w.Category);
+GetWordList(list, concept) {
+  return FindSlice(list, w => concept == w.Concept);
 }
 
-GetWords(list, categories) = TextBlock {
-  foreach (var word in categories.Values) {
+GetWords(list, concepts) = TextBlock {
+  foreach (var word in concepts.Values) {
     TextBlock {
       "//" + "=" * 50;
       Empty;
-      word.Output(GetWordList(list, word.Category));
-      Empty;
+      word.Output(GetWordList(list, word.Concept));
     }
   }
 };
 
-Watch = Document {
-  var list       = new ListClass(3000);
-  var categories = new DictionaryClass(300);
-  Collect(list, categories);
-  GetWords(list.ToArray(), categories);
+GetConcepts = TextBlock {
+  var list     = new ListClass(3000);
+  var concepts = new DictionaryClass(300);
+  Collect(list, concepts);
+  GetWords(list.ToArray(), concepts);
 };
+//===========================================================================
+

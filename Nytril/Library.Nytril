@@ -48,12 +48,29 @@ with Results {
     return taxa;
   }
 
-  AddConceptRecord(concept) = new ConceptRecord(concept);
-  WordConceptArray = AddConceptRecord(each ConceptsList);
+  GetUsedLanguages {
+    var set = new DictionaryClass(64);
+    foreach (var concept in UsedConcepts) {
+      foreach (var aclass in concept) {
+        foreach (var word in aclass) {
+          var langname = word.GlobalVariableName;
+          if (set.FindKey(langname) == null) {
+            var lang = Languages.GetField(langname);
+            if (exists lang)
+              set.Add(lang, langname);
+          }
+        }
+      }
+    }
+    return set.Values;
+  }
+
+  WordConceptArray = new ConceptRecord(each UsedConcepts);
 
   TaxaArray      = ComputeTaxa;
 
-  UsedLanguages  = Math.FindSlice(Languages, lang => lang.Words != null);
+  UsedLanguages = GetUsedLanguages;
+
   UniqueSegments = DisplayCharacters.FindUniqueSegments;
   UsedSegments   = UniqueSegments;//IPA.Segments;
 }
@@ -200,7 +217,7 @@ with Nexus {
 
   TKFFile(concept, paper) = TextBlock {
     if (paper > 0)
-      Comment(ConceptsList[concept].GlobalVariableName);
+      Comment(UsedConcepts[concept].GlobalVariableName);
 
     Span {
       Results.TaxaArray.Length;
@@ -216,7 +233,7 @@ with Nexus {
     Style.MonoFamily;
     TabStops: [3 inches];
 
-    for (var concept = 0; concept < ConceptsList.Length; ++concept) {
+    for (var concept = 0; concept < UsedConcepts.Length; ++concept) {
       TKFFile(concept, 2);
       Empty;
     }
@@ -253,11 +270,11 @@ with Nexus {
       Empty;
       Keyword("matrix");
 
-      for (var concept = 0; concept < ConceptsList.Length; ++concept) {
+      for (var concept = 0; concept < UsedConcepts.Length; ++concept) {
         if (EachIndex > 0)
           Empty;
 
-        Comment(ConceptsList[concept].GlobalVariableName);
+        Comment(UsedConcepts[concept].GlobalVariableName);
         WriteTaxa(paper, concept, maxlength);
       }
       EndMarker;

@@ -3,6 +3,7 @@
 
 TestSegments = IPA.SegmentDictionary.FindTokens("gɾos", IPA.NoSegment);
 
+//======================================================================
 
 class WordClass {
   var Language,
@@ -12,7 +13,7 @@ class WordClass {
 
   Constructor(language, concept, text) {
     Language = language;
-    Concept  = ConceptsList.GetField(concept);
+    Concept  = concept;
     Text     = text;
     if (text.Length > 0) {
       var segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
@@ -47,16 +48,21 @@ class LanguageClass {
       Cases,
       Words;
 
-  Constructor(name, cases=0, words=null) {
+  Constructor(name, cases=0, words=false) {
     Name  = name;
     Cases = cases;
-    if (exists words)
-      Words = AddWord(each words);
+    if (words) {
+      var list = new ListClass(32);
+      foreach (var concept in UsedConcepts) {
+        foreach (var word in concept) {
+          if (Name == word.GlobalVariableName)
+            list.Add(new WordClass(this, concept, word));
+        }
+      }
+      Words = list.ToArray();
+    }
   }
-
-  AddWord(word) = new WordClass(this, word.GlobalVariableName, word);
 }
-//======================================================================
 
 class ConceptRecord {
   var Cells,
@@ -84,8 +90,6 @@ class ConceptRecord {
         Cells.Add(new WordClass(language, concept, Empty));
     }
   }
-
-  GetGeneText(concept, language) = language.Words.FindSlice(word => word.Concept == concept);
 }
 //======================================================================
 // Consonants
@@ -230,7 +234,7 @@ with AllWords {
 
   ShowConceptTable(concepts) = ConceptTable(Results.UsedLanguages, [concepts]);
 
-  ShowTable = ShowLangConcept(Results.UsedLanguages, ConceptsList);
+  ShowTable = ShowLangConcept(Results.UsedLanguages, UsedConcepts);
 
   ShowLangConcept(languages, concepts) = Block {
     TextHeight: 12 pts;
@@ -240,7 +244,7 @@ with AllWords {
 //======================================================================
 
 with DisplayCharacters {
-  CompleteWord(def)     = Math.FindAny(ConceptsList, concept => concept == def.Concept);
+  CompleteWord(def)     = Math.FindAny(UsedConcepts, concept => concept == def.Concept);
   GetWordList(language) = Math.FindSlice(language.Words, def => CompleteWord(def));
 
   FindUniqueSegments {
