@@ -111,6 +111,9 @@ class TaxonClass {
 //======================================================================
 
 with Results {
+  AlignWords = true;
+
+
   GetTaxaArray(lang) = new TaxonClass(lang, EachIndex);
 
   ComputeTaxa() {
@@ -123,7 +126,11 @@ with Results {
       var align = new AlignClass(wordlist) {
         Gap: IPA.GapSegment;
       };
-      var run = align.Run;
+
+      var run;
+      if (AlignWords)
+        run = align.Run;
+
       if (valid run) {
         var i = 0;
         foreach (var taxon in taxa)
