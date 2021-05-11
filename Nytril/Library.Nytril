@@ -30,7 +30,7 @@ class WordClass {
   ShowConcept = Span {
     Style.SansSerif;
     Popup: this;
-    Concept;
+    Concept.GlobalVariableName;
   };
 
   override GetPopup = Frame {
@@ -44,21 +44,22 @@ class LanguageClass {
       Cases,
       Words;
 
-  Constructor(name, cases=0, words=false) {
+  Constructor(name, cases=0) {
     Name  = name;
     Cases = cases;
-    if (words) {
-      var list = new ListClass(32);
-      foreach (var concept in UsedConcepts) {
-        foreach (var aclass in concept) {
-          foreach (var word in aclass) {
-            if (name == word.GlobalVariableName)
-              list.Add(new WordClass(this, concept, word[0]));
-          }
+  }
+
+  void GetWords(id) {
+    var list = new ListClass(32);
+    foreach (var concept in UsedConcepts) {
+      foreach (var aclass in concept) {
+        foreach (var word in aclass) {
+          if (id == word.GlobalVariableName)
+            list.Add(new WordClass(this, concept, word[0]));
         }
       }
-      Words = list.ToArray();
     }
+    Words = list.ToArray();
   }
 }
 //======================================================================
@@ -147,8 +148,10 @@ with Results {
           var langname = word.GlobalVariableName;
           if (set.FindKey(langname) == null) {
             var lang = Languages.GetField(langname);
-            if (exists lang)
+            if (exists lang) {
+              lang.GetWords(langname);
               set.Add(lang, langname);
+            }
           }
         }
       }
