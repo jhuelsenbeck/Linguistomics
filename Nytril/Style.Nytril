@@ -7,17 +7,24 @@ with PaperSizes {
 }
 //======================================================================
 
-with DocMetrics if (PaperSystem == PaperSystems.US) {
+with DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.Normal) {
   DocumentSize = PaperSizes.Letter;
-  Gutter       = 0;
   PageMargin   = Margin(0.75 inches);
 }
-//======================================================================
 
-with DocMetrics if (PaperSystem == PaperSystems.A) {
+with DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.SlideShow) {
+  DocumentSize = PaperSizes.Letter.Landscape;
+  PageMargin   = Margin(0.5 inches, 1.5 inches, 0.5 inches, 0.75 inches);
+}
+
+with DocMetrics if (PaperSystem == PaperSystems.A and DocumentType == DocumentTypes.Normal) {
   DocumentSize = PaperSizes.A4;
-  Gutter       = 0;
   PageMargin   = Margin(20 millimeters);
+}
+
+with DocMetrics if (PaperSystem == PaperSystems.A and DocumentType == DocumentTypes.SlideShow) {
+  DocumentSize = PaperSizes.A4.Landscape;
+  PageMargin   = Margin(0.5 inches, 1.5 inches, 0.5 inches, 0.75 inches);
 }
 //======================================================================
 
@@ -27,8 +34,11 @@ with DocMetrics {
   TreeWidth      = PageContent.Width;
   BoxSize        = Size(18 pts, 20 pts);
   CellSize       = Size(BoxSize.Width * 2, BoxSize.Height);
+  Gutter         = 0;
   SegmentColumns = 4;
   SegmentSize    = 40 pts;
+  SlideFooter    = 0.5 inches;
+  SlideHeader    = 1 inches;
 }
 //======================================================================
 
@@ -58,18 +68,40 @@ with Style {
   ColumnEdge           = {EdgeR: 0.3 pts};
   SegmentBottom        = {EdgeB: 0.25 pts {Color: 80%}};
 
+
+  Logo1                = Color(0, 0, 0xFF);
+  Logo1A               = Color(0, 0, 0xE0);
+  Logo2                = Color(0xFF, 0xA5, 00);
+  LightColor           = Colors.Orange;
+  DarkColor            = Colors.DarkBlue;
+  ArrowColor           = Colors.LightGray;
+  HighlightColor       = Colors.Orange;
+  TextColor            = Colors.Black;
+  SectionBack          = DarkColor;
+  SectionFore          = Colors.White;
+  HeaderText           = Colors.White;
+  SlideHeader          = Colors.SlateGray;
+  Hyperlink            = Color(100, 42, 143);
+  HeaderBar1           = Color(23, 58, 121);
+  HeaderBar2           = Color(23, 54, 114);
+  RightBar             = (99%)..(90%);
+  LeftBar              = (90%)..(99%);
+  BarLine              = LightColor;
+  FooterBar1           = Color(223, 232, 249);
+  FooterBar2           = Colors.White;
+  TitleColor           = Colors.Orange;
+  HeaderLeftBar        = HeaderBar1..HeaderBar2;
+  HeaderRightBar       = (99%)..(90%);
+  FooterLeftBar        = FooterBar1..FooterBar2;
+  FooterRightBar       = FooterBar2..FooterBar1;
+
+
+
   Word(w) = w Italic;
 
   RowBar(i) = {
     if (i mod 2 != 0)
       Background: 95%;
-  };
-
-  WhitePaper = Document {
-    Size: DocMetrics.DocumentSize;
-    Margin: DocMetrics.PageMargin;
-    MainFamily;
-    TextHeight: 11 pts;
   };
 
   NormalHeader(text) = Block {
@@ -405,5 +437,139 @@ Logo = Frame {
     }
   }
 };
+//======================================================================
+
+abstract class BaseViewClass: DocumentViewClass {
+  var OutFolder;
+
+
+  Constructor(name, outfolder) {
+    OutFolder = outfolder;
+    super.Constructor(name, name outfolder);
+  }
+
+  abstract GetContent(compute);
+
+  override GetDocument = Document {
+   Size: DocMetrics.DocumentSize;
+   Margin: DocMetrics.PageMargin;
+   Style.MainFamily;
+
+  Title: Info.Title;
+  Author: Info.AuthorList;
+//  Description: "Test Description";
+//  Comment: "Test Comment";
+//  Subject: "Test Subject";
+//  Keywords: "Test Keywords";
+
+    GetContent(new ComputeClass(OutFolder));
+  };
+
+  FixedFrame(x, y, width, height) = Frame {
+    HRelative: HRelatives.Page;
+    VRelative: VRelatives.Page;
+    Wrapping: Wrappings.BehindText;
+    X: x;
+    Y: y;
+    Width: width;
+    Height: height;
+  };
+
+  Design(width, height, right, bar) = Canvas {
+    Height: height;
+
+    var t  = 0.10 height;
+    var x1 = 0.75 width;
+    var x2 = 0.85 width;
+    var p1 = Point((x2 + x1)*0.5, height * (right ? 0.25 : 0.75));
+
+    Figure {
+      Fill: bar;
+      FigurePath {
+        Closed: true;
+        LineTo(0, t);
+        LineTo(x1, t);
+        QuadTo(p1, Point(x2, height));
+        LineTo(x2, height);
+        LineTo(0, height);
+      }
+    };
+
+    Figure {
+      Fill: Style.RightBar;
+      FigurePath {
+        Closed: true;
+        LineTo(x1, 0);
+        LineTo(width, 0);
+        LineTo(width, height-t);
+        LineTo(x2, height-t);
+        QuadTo(p1, Point(x1, 0));
+      }
+    };
+
+    Figure {
+      Fill: Style.BarLine;
+      FigurePath {
+        Closed: true;
+        MoveTo(0, 0);
+        LineTo(x1, 0);
+        QuadTo(p1, Point(x2, height-t));
+        LineTo(width, height-t);
+        LineTo(width, height);
+        LineTo(x2, height);
+        QuadTo(p1, Point(x1, t));
+        LineTo(0, t);
+      }
+    };
+  };
+
+  HeaderBackground(title, width, height) = Design(width, height, true, Style.HeaderBar1..Style.HeaderBar2) {
+    Frame {
+      Width: 0.75 width;
+      VAlignment: VAligns.Center;
+      X: DocMetrics.PageMargin.Left;
+      Paragraph {
+        TextHeight: 30 pts;
+        TextColor: Colors.White;
+        title;
+      };
+    };
+  };
+
+  FooterBackground(width, height) = Design(width, height, false, Style.LeftBar) {
+    Frame {
+      VAlignment: VAligns.Center;
+      X: DocMetrics.PageMargin.Left;
+      Width: DocMetrics.PageContent.Width;
+      Paragraph {
+        TabStops: [(DocMetrics.PageContent.Width) {Type: TabTypes.Right}];
+        TextHeight: 16 pts;
+        Span {
+          TextColor: Style.HeaderBar1;
+          Info.Title
+        };
+        Tab;
+        Span {
+          TextColor: Style.HeaderBar1;
+          PageNumber;
+        }
+      }
+    }
+  };
+
+  AddSlide(title, page, content) = Block {
+    Paragraph {
+      PageBreakBefore: true;
+      FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
+        HeaderBackground(title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
+      };
+      FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
+        FooterBackground(DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter);
+      };
+    };
+    content.Body;
+  };
+
+}
 //======================================================================
 

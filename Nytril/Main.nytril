@@ -9,8 +9,6 @@ include "IPA";
 include "Rules";
 include "Style";
 include "References";
-//include "WordForms";
-//include "../Data/Swadesh/WordLists";
 include "Concepts";
 include "Tables";
 include "RevBayes";
@@ -21,10 +19,34 @@ include "RevBayes";
 
 ShowOutput = "Run2";
 
-Main.Documents = new DocumentViewClass(null) {
-  new PaperViewClass(ShowOutput);
-  new DiagnosticsViewClass(ShowOutput);
-};
+//======================================================================
+
+Main.Configurations = [
+  new ConfigurationClass("Paper") {
+    Language: ConfigurationClass.Languages.English;
+    PaperSystem: ConfigurationClass.PaperSystems.US;
+    DocumentType: ConfigurationClass.DocumentTypes.Normal;
+  },
+
+  new ConfigurationClass("Presentation") {
+    Language: ConfigurationClass.Languages.English;
+    PaperSystem: ConfigurationClass.PaperSystems.US;
+    DocumentType: ConfigurationClass.DocumentTypes.SlideShow;
+  },
+];
+
+with Main if (DocumentType == DocumentTypes.Normal) {
+  Documents = new DocumentViewClass(null) {
+    new PaperViewClass(ShowOutput);
+    new DiagnosticsViewClass(ShowOutput);
+  };
+}
+
+with Main if (DocumentType == DocumentTypes.SlideShow) {
+  Documents = new DocumentViewClass(null) {
+    new PresentationViewClass(ShowOutput);
+  };
+}
 
 void Main.Run {
   new ComputeClass(ShowOutput).Calculate;
@@ -113,48 +135,6 @@ with Content.Conclusion {
 }
 //======================================================================
 
-Main.Configurations = [
-  new ConfigurationClass("United States") {
-    Language: ConfigurationClass.Languages.English;
-    PaperSystem: ConfigurationClass.PaperSystems.US;
-    UnitSystem: ConfigurationClass.UnitSystems.Imperial;
-  },
-
-  new ConfigurationClass("Spain") {
-    Language: ConfigurationClass.Languages.Spanish;
-    PaperSystem: ConfigurationClass.PaperSystems.A;
-    UnitSystem: ConfigurationClass.UnitSystems.Metric;
-  },
-];
-//======================================================================
-
-abstract class BaseViewClass: DocumentViewClass {
-  var OutFolder;
-
-  Constructor(name, outfolder) {
-    OutFolder = outfolder;
-    super.Constructor(name Space outfolder, name outfolder);
-  }
-
-  override GetDocument {
-   var compute = new ComputeClass(OutFolder);
-
-   return Style.WhitePaper {
-      Title: Info.Title;
-      Author: Info.AuthorList;
-    //  Description: "Test Description";
-    //  Comment: "Test Comment";
-    //  Subject: "Test Subject";
-    //  Keywords: "Test Keywords";
-
-      GetContent(compute);
-    }
-  }
-
-  abstract GetContent(compute);
-}
-//======================================================================
-
 class PaperViewClass: BaseViewClass {
   Constructor(outfolder) {
     super.Constructor("White Paper", outfolder);
@@ -197,6 +177,38 @@ class PaperViewClass: BaseViewClass {
       Style.ShowReferences(References);
     };
     Style.ShowAppendix(each appendices);
+  };
+}
+//======================================================================
+
+class PresentationViewClass: BaseViewClass {
+  Constructor(outfolder) {
+    super.Constructor("Presentation", outfolder);
+  }
+
+  override GetContent(compute) = {
+    Section {
+      Paragraph {
+        TextHeight: 40 pts;
+        SpaceBefore: 1.5 inches;
+        LeftIndent: 1 inch;
+        Info.Title;
+      };
+      Paragraph {
+        TextHeight: 14 pts;
+        SpaceBefore: 1.5 inches;
+        LeftIndent: 1 inch;
+        Info.AuthorList;
+      };
+    };
+
+    Section {
+      SectionBreak: SectionBreaks.NextPage;
+      AddSlide(Lang.Introduction, 1, Content.Introduction);
+
+//      foreach (var section in Slides)
+//        AddSlide(content, EachIndex+1);
+    }
   };
 }
 //======================================================================
