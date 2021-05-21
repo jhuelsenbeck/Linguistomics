@@ -1,0 +1,107 @@
+using Format, Units, Math, IO, Formulas;
+//======================================================================
+
+ExampleLanguages = [
+  Languages.Latin,
+  Languages.Romanian,
+  Languages.Catalan,
+  Languages.Portuguese,
+  Languages.Spanish,
+  Languages.French,
+  Languages.Walloon,
+  Languages.Friulian,
+  Languages.Italian,
+];
+
+ExampleName(language) = "{0} ({1})"(language.Name, EachIndex+1);
+
+ExampleLabels = ExampleName(each ExampleLanguages);
+
+Node(i)        = new TreeNodeClass(ExampleLabels[i-1], 1);
+Branch(branch) = new TreeNodeClass(branch);
+
+Figure1Tree = Branch(17) {
+  Node(1);
+  Branch(16) {
+    Node(5);
+    Node(9);
+  };
+};
+
+Figure1 = Tree {
+  TextHeight: 11 pts;
+  TextFamily: Style.SansSerif;
+  Width: 5 inches;
+  Root: Figure1Tree;
+};
+
+
+with Formulas {
+  Tau = Chars.tau;
+}
+//======================================================================
+
+with Abstract {
+  Title = Lang.Abstract;
+  Body  = Block {
+    Style.BodyPar {
+      "Linguistically phylogenies are standardly inferred on the basis of cognate relationships, which are discrete representations of ancestry. Although inference on the basis of such datasets has yielded important results, it suffers from an obvious fault: it ignores the phylogenetic signal in the segmental form of words. In this paper, we infer the phylogeny of Romance on the basis of segmental data...";
+    };
+  };
+}
+//======================================================================
+
+with Content.Introduction {
+  Title = Lang.Introduction;
+  Body  = Block {
+    Style.BodyPar {
+      "In this paper, we attempt to do the impossible!";
+    };
+  };
+}
+//======================================================================
+
+with Content.Methods {
+  Title = Lang.Methods;
+  Body  = Block {
+    Style.BodyPar {
+      "We use ancestral classes, in which the descendant forms are segmentally aligned.";
+      "It is important to note that our definition of cognate refers only to segmental descent.";
+      "It takes no account of semantics whatsoever.";
+      "So the lexical items for 'ear' in Romance are paired with the Latin word " Style.Word("auricula")
+      " which is the diminute form of 'ear'.";
+    };
+    Style.BodyPar {
+      "Other things we have to mention: "
+    };
+    Style.NumberList {
+      "The data are surface forms, not underlying forms.";
+      "We used the accusative singular for nouns in Latin.";
+    };
+
+    Style.BodyPar {
+      "A phylogeny is an information-rich graph.";
+      "For one, it contains information on the relationships of the languages.";
+      "This topological information is denoted {0}"(Tau);
+    };
+
+    Style.Figure {
+      Figure1;
+    };
+    Style.FigureLabel {
+      "Figure 1:  An example tree showing the relationships of N = {0} languages."(ExampleLanguages.Length);
+    }
+  };
+}
+//======================================================================
+
+with Content.Conclusion {
+  Title = Lang.Conclusion;
+  Body  = Block {
+    Paragraph {
+      "Vene Vidi Vici";
+    };
+  };
+}
+//======================================================================
+

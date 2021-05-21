@@ -54,9 +54,9 @@ class AppendixClass {
 //======================================================================
 
 with Style {
-  MainFamily           = {TextFamily: TextFamilies.TimesNewRoman};
-  SansSerif            = {TextFamily: TextFamilies.Calibri};
-  MonoFamily           = {TextFamily: TextFamilies.Consolas};
+  MainFamily           = {TextFamily: "CMU Serif"};
+  SansSerif            = {TextFamily: "CMU Sans Serif"};
+  MonoFamily           = {TextFamily: "CMU Typewriter Text"};
   IPAFamily            = {TextFamily: TextFamilies.CambriaMath}; // Also can be "Linux Libertine O"
 
   ImpossibleBackground = {Background: 80%};
@@ -82,8 +82,8 @@ with Style {
   HeaderText           = Colors.White;
   SlideHeader          = Colors.SlateGray;
   Hyperlink            = Color(100, 42, 143);
-  HeaderBar1           = Color(23, 58, 121);
-  HeaderBar2           = Color(23, 54, 114);
+  HeaderBar1           = Color(23, 54, 114);
+  HeaderBar2           = 99%;
   RightBar             = (99%)..(90%);
   LeftBar              = (90%)..(99%);
   BarLine              = LightColor;
@@ -406,6 +406,19 @@ with Style {
   BodyPar = Paragraph {
     ParAlignment: ParAlignments.Justify;
     SpaceBefore: 6 pts;
+    Separator: Space;
+  };
+
+  Figure = Paragraph {
+    KeepWithNext: true;
+    ParAlignment: ParAlignments.Center;
+    SpaceBefore: 6 pts;
+  };
+
+  FigureLabel = Paragraph {
+    TextHeight: 12 pts;
+    ParAlignment: ParAlignments.Center;
+    SpaceBefore: 6 pts;
   };
 }
 //======================================================================
@@ -478,20 +491,22 @@ abstract class BaseViewClass: DocumentViewClass {
   Design(width, height, right, bar) = Canvas {
     Height: height;
 
+    var x0 = -0.5;
+    var y0 = -0.5;
     var t  = 0.10 height;
-    var x1 = 0.75 width;
-    var x2 = 0.85 width;
+    var x1 = 0.80 width;
+    var x2 = 0.90 width;
     var p1 = Point((x2 + x1)*0.5, height * (right ? 0.25 : 0.75));
 
     Figure {
       Fill: bar;
       FigurePath {
         Closed: true;
-        LineTo(0, t);
+        LineTo(x0, t);
         LineTo(x1, t);
         QuadTo(p1, Point(x2, height));
         LineTo(x2, height);
-        LineTo(0, height);
+        LineTo(x0, height);
       }
     };
 
@@ -499,11 +514,11 @@ abstract class BaseViewClass: DocumentViewClass {
       Fill: Style.RightBar;
       FigurePath {
         Closed: true;
-        LineTo(x1, 0);
-        LineTo(width, 0);
+        LineTo(x1, y0);
+        LineTo(width, y0);
         LineTo(width, height-t);
         LineTo(x2, height-t);
-        QuadTo(p1, Point(x1, 0));
+        QuadTo(p1, Point(x1, y0));
       }
     };
 
@@ -511,14 +526,14 @@ abstract class BaseViewClass: DocumentViewClass {
       Fill: Style.BarLine;
       FigurePath {
         Closed: true;
-        MoveTo(0, 0);
-        LineTo(x1, 0);
+        MoveTo(x0, y0);
+        LineTo(x1, y0);
         QuadTo(p1, Point(x2, height-t));
         LineTo(width, height-t);
         LineTo(width, height);
         LineTo(x2, height);
         QuadTo(p1, Point(x1, t));
-        LineTo(0, t);
+        LineTo(x0, t);
       }
     };
   };
@@ -545,7 +560,7 @@ abstract class BaseViewClass: DocumentViewClass {
         TabStops: [(DocMetrics.PageContent.Width) {Type: TabTypes.Right}];
         TextHeight: 16 pts;
         Span {
-          TextColor: Style.HeaderBar1;
+          TextColor: 75%;
           Info.Title
         };
         Tab;
@@ -557,7 +572,7 @@ abstract class BaseViewClass: DocumentViewClass {
     }
   };
 
-  AddSlide(title, page, content) = Block {
+  AddSlide(title, page, body) = Block {
     Paragraph {
       PageBreakBefore: true;
       FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
@@ -567,7 +582,7 @@ abstract class BaseViewClass: DocumentViewClass {
         FooterBackground(DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter);
       };
     };
-    content.Body;
+    body;
   };
 
 }

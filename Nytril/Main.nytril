@@ -10,6 +10,7 @@ include "Rules";
 include "Style";
 include "References";
 include "Concepts";
+include "Methods";
 include "Tables";
 include "RevBayes";
 //======================================================================
@@ -19,6 +20,38 @@ include "RevBayes";
 
 ShowOutput = "Run2";
 
+//======================================================================
+
+UsedConcepts = [
+  Concepts.Sun,
+  Concepts.Moon,
+  Concepts.Star,
+  Concepts.Water,
+  Concepts.Rain,
+  Concepts.River,
+  Concepts.Lake,
+  Concepts.Sea,
+  Concepts.Salt,
+  Concepts.Stone,
+  Concepts.Sand,
+];
+//======================================================================
+
+with Info {
+  Generations = 1000;
+
+  PaperTitle  = "White Paper";
+  Journal     = "Transactions of the Beysian Society";
+  Publisher   = "The Baysian Society";
+  Title       = Lang.SimulatedSegments;
+  PriorTree   = GetTreeNodes(LanguageBranches.Romance);
+
+  AuthorList = Span {
+    Separator: ", ";
+    LastSeparator: " {0} "(Lang.And);
+    Style.Author(each Authors);
+  };
+}
 //======================================================================
 
 Main.Configurations = [
@@ -50,88 +83,6 @@ with Main if (DocumentType == DocumentTypes.SlideShow) {
 
 void Main.Run {
   new ComputeClass(ShowOutput).Calculate;
-}
-//======================================================================
-
-UsedConcepts = [
-  Concepts.Sun,
-  Concepts.Moon,
-  Concepts.Star,
-  Concepts.Water,
-  Concepts.Rain,
-  Concepts.River,
-  Concepts.Lake,
-  Concepts.Sea,
-  Concepts.Salt,
-  Concepts.Stone,
-  Concepts.Sand,
-];
-
-with Info {
-  Generations = 1000;
-
-  PaperTitle  = "White Paper";
-  Journal     = "Transactions of the Beysian Society";
-  Publisher   = "The Baysian Society";
-  Title       = Lang.SimulatedSegments;
-  PriorTree   = GetTreeNodes(LanguageBranches.Romance);
-
-  AuthorList = Span {
-    Separator: ", ";
-    LastSeparator: " {0} "(Lang.And);
-    Style.Author(each Authors);
-  };
-}
-//======================================================================
-
-with Abstract {
-  Title = Lang.Abstract;
-  Body  = Block {
-    Style.BodyPar {
-      "Linguistically phylogenies are standardly inferred on the basis of cognate relationships, which are discrete representations of ancestry. Although inference on the basis of such datasets has yielded important results, it suffers from an obvious fault: it ignores the phylogenetic signal in the segmental form of words. In this paper, we infer the phylogeny of Romance on the basis of segmental data...";
-    };
-  };
-}
-//======================================================================
-
-with Content.Introduction {
-  Title = Lang.Introduction;
-  Body  = Block {
-    Style.BodyPar {
-      "In this paper, we attempt to do the impossible!";
-    };
-  };
-}
-//======================================================================
-
-with Content.Methods {
-  Title = Lang.Methods;
-  Body  = Block {
-    Style.BodyPar {
-      "We use ancestral classes, in which the descendant forms are segmentally aligned. "
-      "It is important to note that our definition of cognate refers only to segmental descent. "
-      "It takes no account of semantics whatsoever. "
-      "So the lexical items for 'ear' in Romance are paired with the Latin word " Style.Word("auricula")
-      " which is the diminute form of 'ear'. "
-    };
-    Style.BodyPar {
-      "Other things we have to mention: "
-    };
-    Style.NumberList {
-      "The data are surface forms, not underlying forms.";
-      "We used the accusative singular for nouns in Latin.";
-    };
-  };
-}
-//======================================================================
-
-with Content.Conclusion {
-  Title = Lang.Conclusion;
-  Body  = Block {
-    Paragraph {
-      "Vene Vidi Vici";
-    };
-  };
 }
 //======================================================================
 
@@ -181,6 +132,21 @@ class PaperViewClass: BaseViewClass {
 }
 //======================================================================
 
+class SlideClass {
+  var Title,
+      Body;
+
+  Constructor(title, body) {
+    Body  = body;
+    Title = title;
+  }
+
+  GetBody = Block {
+    Body;
+  };
+}
+//======================================================================
+
 class PresentationViewClass: BaseViewClass {
   Constructor(outfolder) {
     super.Constructor("Presentation", outfolder);
@@ -202,12 +168,25 @@ class PresentationViewClass: BaseViewClass {
       };
     };
 
+    var slides = [
+      new SlideClass(Content.Introduction.Title, Content.Introduction.Body),
+      new SlideClass(Abstract.Title, Abstract.Body),
+      new SlideClass(Content.Methods.Title, Content.Methods.Body),
+      new SlideClass(Lang.ConceptsUsed, AllWords.ShowTable),
+      new SlideClass(Lang.TransitionRules, compute.ShowTransitionRules),
+      new SlideClass("Results", Style.ReadTree(Lang.MCC, compute.OutFolder compute.GammaMCC)),
+      new SlideClass("Questions", Paragraph {
+        ParAlignment: ParAlignments.Center;
+        SpaceBefore: 1 inch;
+        TextHeight: 80 pts;
+        "?";
+      }),
+    ];
+
     Section {
       SectionBreak: SectionBreaks.NextPage;
-      AddSlide(Lang.Introduction, 1, Content.Introduction);
-
-//      foreach (var section in Slides)
-//        AddSlide(content, EachIndex+1);
+      foreach (var slide in slides)
+        AddSlide(slide.Title, EachIndex, slide.GetBody);
     }
   };
 }
@@ -219,7 +198,7 @@ class DiagnosticsViewClass: BaseViewClass {
   }
 
   GetAppendices(compute) = [
-    new AppendixClass("Transition Rules", compute.ShowTransitionRules),
+    new AppendixClass(Lang.TransitionRules, compute.ShowTransitionRules),
     new AppendixClass("Transition Rule File", compute.TransitionRuleFile),
     new AppendixClass("RevBayes Source File", compute.RevBayesSource),
     new AppendixClass("Character File", Nexus.CharacterFile(2)),
