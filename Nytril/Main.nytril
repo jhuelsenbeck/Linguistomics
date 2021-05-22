@@ -77,7 +77,8 @@ with Main if (DocumentType == DocumentTypes.Normal) {
 
 with Main if (DocumentType == DocumentTypes.SlideShow) {
   Documents = new DocumentViewClass(null) {
-    new PresentationViewClass(ShowOutput);
+    new JohnPresentationClass;
+    new DavidPresentationClass;
   };
 }
 
@@ -87,17 +88,17 @@ void Main.Run {
 //======================================================================
 
 class PaperViewClass: BaseViewClass {
-  Constructor(outfolder) {
-    super.Constructor("White Paper", outfolder);
+  Constructor {
+    super.Constructor("White Paper");
   }
 
-  GetAppendices(compute) = [
-    new AppendixClass("Options File", compute.GetOptionsSource),
-    new AppendixClass("Program Output", compute.ShowLanguageTrees),
+  GetAppendices = [
+    new AppendixClass("Options File", Compute.GetOptionsSource),
+    new AppendixClass("Program Output", Compute.ShowLanguageTrees),
   ];
 
-  override GetContent(compute) = {
-    var appendices = GetAppendices(compute);
+  override GetContent = {
+    var appendices = GetAppendices;
     Style.PageSection {
       Header: Style.NormalHeader(Info.Journal) {
         Distance: 0.125 inches;
@@ -148,11 +149,18 @@ class SlideClass {
 //======================================================================
 
 class PresentationViewClass: BaseViewClass {
-  Constructor(outfolder) {
-    super.Constructor("Presentation", outfolder);
+  var Slides;
+
+  Constructor(title) {
+    super.Constructor(title);
+    Slides = new ListClass(64);
   }
 
-  override GetContent(compute) = {
+  void NewSlide(slide) {
+    Slides.Add(slide);
+  }
+
+  override GetContent = {
     Section {
       Paragraph {
         TextHeight: 40 pts;
@@ -168,39 +176,69 @@ class PresentationViewClass: BaseViewClass {
       };
     };
 
-    var slides = [
-      new SlideClass(Content.Introduction.Title, Content.Introduction.Body),
-      new SlideClass(Abstract.Title, Abstract.Body),
-      new SlideClass(Content.Methods.Title, Content.Methods.Body),
-      new SlideClass(Lang.ConceptsUsed, AllWords.ShowTable),
-      new SlideClass(Lang.TransitionRules, compute.ShowTransitionRules),
-      new SlideClass("Results", Style.ReadTree(Lang.MCC, compute.OutFolder compute.GammaMCC)),
-      new SlideClass("Questions", Paragraph {
-        ParAlignment: ParAlignments.Center;
-        SpaceBefore: 1 inch;
-        TextHeight: 80 pts;
-        "?";
-      }),
-    ];
-
     Section {
       SectionBreak: SectionBreaks.NextPage;
-      foreach (var slide in slides)
+      foreach (var slide in Slides)
         AddSlide(slide.Title, EachIndex, slide.GetBody);
-    }
+    };
   };
 }
 //======================================================================
 
+class JohnPresentationClass: PresentationViewClass {
+  Constructor {
+    super.Constructor("John's Presentation");
+
+    NewSlide(new SlideClass(Content.Introduction.Title, Content.Introduction.Body));
+
+    NewSlide(new SlideClass(Abstract.Title, Abstract.Body));
+
+    NewSlide(new SlideClass(Content.Methods.Title, Content.Methods.Body));
+
+    NewSlide(new SlideClass(Lang.ConceptsUsed, AllWords.ShowTable));
+
+    NewSlide(new SlideClass(Lang.TransitionRules, Compute.ShowTransitionRules));
+
+    NewSlide(new SlideClass("Example Tree", Style.SlideFigure(Figures.ExampleTree)));
+
+    NewSlide(new SlideClass("Results", Style.ReadTree(Lang.MCC, Compute.OutFolder Compute.GammaMCC)));
+
+    NewSlide(new SlideClass("Questions", Style.Questions));
+  }
+}
+//======================================================================
+
+class DavidPresentationClass: PresentationViewClass {
+  Constructor {
+    super.Constructor("David's Presentation");
+    NewSlide(new SlideClass(Content.Introduction.Title, Content.Introduction.Body));
+
+    NewSlide(new SlideClass(Abstract.Title, Abstract.Body));
+
+    NewSlide(new SlideClass(Content.Methods.Title, Content.Methods.Body));
+
+    NewSlide(new SlideClass(Lang.ConceptsUsed, AllWords.ShowTable));
+
+    NewSlide(new SlideClass(Lang.TransitionRules, Compute.ShowTransitionRules));
+
+    NewSlide(new SlideClass("Example Tree", Style.SlideFigure(Figures.ExampleTree)));
+
+    NewSlide(new SlideClass("Results", Style.ReadTree(Lang.MCC, Compute.OutFolder Compute.GammaMCC)));
+
+    NewSlide(new SlideClass("Questions", Style.Questions));
+  }
+}
+//======================================================================
+
 class DiagnosticsViewClass: BaseViewClass {
-  Constructor(outfolder) {
-    super.Constructor("Diagnostics", outfolder);
+  Constructor {
+    super.Constructor("Diagnostics");
   }
 
-  GetAppendices(compute) = [
-    new AppendixClass(Lang.TransitionRules, compute.ShowTransitionRules),
-    new AppendixClass("Transition Rule File", compute.TransitionRuleFile),
-    new AppendixClass("RevBayes Source File", compute.RevBayesSource),
+  GetAppendices = [
+    new AppendixClass(Lang.TransitionRules, Compute.ShowTransitionRules),
+    new AppendixClass("Transition Rule File", Compute.TransitionRuleFile),
+    new AppendixClass("RevBayes Source File", Compute.RevBayesSource),
     new AppendixClass("Character File", Nexus.CharacterFile(2)),
     new AppendixClass("TKF Input Files", Nexus.TKFFiles),
     new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
@@ -214,9 +252,8 @@ class DiagnosticsViewClass: BaseViewClass {
   //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
   ];
 
-  override GetContent(compute) = {
-    var appendices = GetAppendices(compute);
-    Style.ShowAppendix(each appendices);
+  override GetContent = {
+    Style.ShowAppendix(each GetAppendices);
   };
 }
 

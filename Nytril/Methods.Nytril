@@ -1,43 +1,127 @@
 using Format, Units, Math, IO, Formulas;
 //======================================================================
 
-ExampleLanguages = [
-  Languages.Latin,
-  Languages.Romanian,
-  Languages.Catalan,
-  Languages.Portuguese,
-  Languages.Spanish,
-  Languages.French,
-  Languages.Walloon,
-  Languages.Friulian,
-  Languages.Italian,
-];
-
-ExampleName(language) = "{0} ({1})"(language.Name, EachIndex+1);
-
-ExampleLabels = ExampleName(each ExampleLanguages);
-
-Node(i)        = new TreeNodeClass(ExampleLabels[i-1], 1);
-Branch(branch) = new TreeNodeClass(branch);
-
-Figure1Tree = Branch(17) {
-  Node(1);
-  Branch(16) {
-    Node(5);
-    Node(9);
-  };
-};
-
-Figure1 = Tree {
-  TextHeight: 11 pts;
-  TextFamily: Style.SansSerif;
-  Width: 5 inches;
-  Root: Figure1Tree;
-};
-
-
 with Formulas {
-  Tau = Chars.tau;
+  Tau           = Chars.tau;
+  BetaParameter = Symbol(Italic Chars.beta);
+  q             = Symbol("q");
+  qsub(x)       = Symbol("q", x);
+  Q             = Symbol(Bold "Q");
+  Equals        = " = ";
+  indexi        = 'i';
+  indexj        = "j";
+  InBraces(x)   = Group {BracketLR: Brackets.Curly; x};
+  InParens(x)   = Group {BracketLR: Brackets.FlatRound; x};
+  InBrackets(x) = Group {BracketLR: Brackets.Square; x};
+}
+//======================================================================
+
+with Figures.ExampleTree {
+  Number = 1;
+
+  LanguageList = [
+    Languages.Latin,
+    Languages.Romanian,
+    Languages.Catalan,
+    Languages.Portuguese,
+    Languages.Spanish,
+    Languages.French,
+    Languages.Walloon,
+    Languages.Friulian,
+    Languages.Italian,
+  ];
+
+  Tip(i, length)       = new TreeNodeClass("{0} ({1})"(LanguageList[i-1].Name, i), length);
+  Branch(name, length) = new TreeNodeClass(name, length);
+
+  Nodes = Branch(17, 1) {
+    Tip(1, 7);
+    Branch(16, 1) {
+      Branch(14, 1) {
+        Branch(13, 1) {
+          Tip(2, 4);
+          Branch(12, 1) {
+            Tip(3, 3);
+            Branch(11, 1) {
+              Branch(10, 1) {
+                Tip(6, 1);
+                Tip(7, 1);
+              };
+              Tip(8, 2);
+            };
+          }
+        };
+        Tip(4, 5);
+      };
+      Branch(15, 5) {
+        Tip(5, 1);
+        Tip(9, 1);
+      };
+    };
+  };
+
+
+  Body = Style.TreeOptions {
+    Root: Nodes;
+  };
+
+  Caption = "An example tree showing the relationships of N = {0} languages."(LanguageList.Length);
+}
+//======================================================================
+
+with StateSection {
+  CellPad = Margin(1 pts, 1 pts, 3 pts, 0);
+  States  = 'A'..'E' step 1;
+
+  MatrixRow(state) = {
+    foreach (var s in States) {
+      Cell {
+        qsub(state s);
+      }
+    }
+  };
+
+  StateRow(state) = Row {
+    Cell {
+      HAlign: HAligns.Right;
+      Span {
+        EachIndex == States.Length div 2 ? Lang.From + Space*3 : Empty;
+        state;
+      }
+    };
+    MatrixRow(state);
+  };
+
+  StateTable = Table {
+    ParAlignment: ParAlignments.Center;
+
+    VAlign: VAligns.Center;
+    HAlign: HAligns.Center;
+    Padding: CellPad;
+    Columns: [(1 inch) {EdgeR: Style.TableEdgeSize}] + 5*[0.5 inches];
+    Row {
+      Empty;
+      Cell {
+        ColSpan: States.Length;
+        Lang.To;
+      };
+    };
+    Row {
+      EdgeB: Style.TableEdgeSize;
+      Empty;
+      States;
+    };
+    StateRow(each States);
+  };
+
+  StateMatrix = MatrixBlock {
+    BracketLR: Brackets.FlatRound;
+    foreach (var state in States) {
+      Row {
+        MatrixRow(state);
+      }
+    }
+  };
 }
 //======================================================================
 
@@ -85,12 +169,31 @@ with Content.Methods {
       "This topological information is denoted {0}"(Tau);
     };
 
-    Style.Figure {
-      Figure1;
+    Style.BodyPar {
+      "Substitution of one segment for another is modeled using a continuous-time Markov model in which the possible states are the set of segments in the phonemic representations.";
+      "At the heart of a continuous-time Markov chain is a rate matrix describing the rate of change between all pairs ofstates.";
+      "As an example, consider a simplified Markov process with only five segments as states.";
+      "The rates of change between the pairs of states can be represented in table form as";
     };
-    Style.FigureLabel {
-      "Figure 1:  An example tree showing the relationships of N = {0} languages."(ExampleLanguages.Length);
-    }
+
+    Style.DocumentFigure(Figures.ExampleTree);
+
+    Style.FigureBody {
+      StateSection.StateTable;
+    };
+
+    Style.FigureBody {
+      Group {
+        VAlign: VAligns.Center;
+        Q;
+        Equals;
+        InBraces(qsub(indexi indexj));
+        Equals;
+        StateSection.StateMatrix;
+        Space;
+        BetaParameter;
+      }
+    };
   };
 }
 //======================================================================

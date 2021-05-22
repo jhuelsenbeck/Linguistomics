@@ -53,6 +53,8 @@ class AppendixClass {
 }
 //======================================================================
 
+Main.MathFamily = "CMU Serif";
+
 with Style {
   MainFamily           = {TextFamily: "CMU Serif"};
   SansSerif            = {TextFamily: "CMU Sans Serif"};
@@ -64,9 +66,10 @@ with Style {
   StringColor          = Color(168, 21, 53);
   Used                 = {TextColor: Colors.Red};
   TitleBackground      = {Background: 90%};
-  TableEdge            = {Edge: 0.3 pts};
-  ColumnEdge           = {EdgeR: 0.3 pts};
-  SegmentBottom        = {EdgeB: 0.25 pts {Color: 80%}};
+  TableEdgeSize        = 0.25 pts;
+  TableEdge            = {Edge: TableEdgeSize};
+  ColumnEdge           = {EdgeR: TableEdgeSize};
+  SegmentBottom        = {EdgeB: TableEdgeSize {Color: 80%}};
 
 
   Logo1                = Color(0, 0, 0xFF);
@@ -225,6 +228,16 @@ with Style {
     return Style.ShowTree(title, Lang.ChangesPerBranch, data.trees.TREE1);
   }
 
+  TreeOptions = Tree {
+    TextHeight: 10 pts;
+    TextFamily: Style.SansSerif;
+    NodeGap: 6 pts;
+    Width: 5 inches;
+    Curvature: 30%;
+    Bevel: 20%;
+    Marker: {Style.IPAFamily; TextHeight: 4 pts; TextColor: Colors.Gray} Chars.blackcirc;
+  };
+
   ShowTree(title, axis, root) = Group {
     Vertical: true;
     Corner: 8 pts;
@@ -238,10 +251,7 @@ with Style {
       Bold;
       title;
     };
-    Tree {
-      Curvature: 30%;
-      Bevel: 20%;
-      Marker: {Style.IPAFamily; TextHeight: 4 pts; TextColor: Colors.Gray} Chars.blackcirc;
+    TreeOptions {
       Width: DocMetrics.TreeWidth - 30 pts;
       ValueLabel: axis;
       ValueAxis: ChartAxis;
@@ -409,7 +419,7 @@ with Style {
     Separator: Space;
   };
 
-  Figure = Paragraph {
+  FigureBody = Paragraph {
     KeepWithNext: true;
     ParAlignment: ParAlignments.Center;
     SpaceBefore: 6 pts;
@@ -419,6 +429,37 @@ with Style {
     TextHeight: 12 pts;
     ParAlignment: ParAlignments.Center;
     SpaceBefore: 6 pts;
+  };
+
+  DocumentFigure(figure) = Block {
+    FigureBody {
+      figure.Body;
+    };
+
+    FigureLabel {
+      Lang.Figure;
+      Space;
+      figure.Number;
+      ": ";
+      figure.Caption;
+    };
+  };
+
+  SlideFigure(figure) = Block {
+    Paragraph {
+      figure.Caption;
+    };
+    Paragraph {
+      ParAlignment: ParAlignments.Center;
+      figure.Body;
+    };
+  };
+
+  Questions = Paragraph {
+    ParAlignment: ParAlignments.Center;
+    SpaceBefore: 1 inch;
+    TextHeight: 80 pts;
+    "?";
   };
 }
 //======================================================================
@@ -453,29 +494,28 @@ Logo = Frame {
 //======================================================================
 
 abstract class BaseViewClass: DocumentViewClass {
-  var OutFolder;
+  var Compute;
 
-
-  Constructor(name, outfolder) {
-    OutFolder = outfolder;
-    super.Constructor(name, name outfolder);
+  Constructor(name) {
+    Compute = new ComputeClass(ShowOutput);
+    super.Constructor(name, name ShowOutput);
   }
 
-  abstract GetContent(compute);
+  abstract GetContent;
 
   override GetDocument = Document {
-   Size: DocMetrics.DocumentSize;
-   Margin: DocMetrics.PageMargin;
-   Style.MainFamily;
+    Size: DocMetrics.DocumentSize;
+    Margin: DocMetrics.PageMargin;
+    Style.MainFamily;
 
-  Title: Info.Title;
-  Author: Info.AuthorList;
+    Title: Info.Title;
+    Author: Info.AuthorList;
 //  Description: "Test Description";
 //  Comment: "Test Comment";
 //  Subject: "Test Subject";
 //  Keywords: "Test Keywords";
 
-    GetContent(new ComputeClass(OutFolder));
+    GetContent;
   };
 
   FixedFrame(x, y, width, height) = Frame {
