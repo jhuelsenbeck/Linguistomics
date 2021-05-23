@@ -1,21 +1,6 @@
 using Format, Units, Math, IO, Formulas;
 //======================================================================
 
-with Formulas {
-  Tau           = Chars.tau;
-  BetaParameter = Symbol(Italic Chars.beta);
-  q             = Symbol("q");
-  qsub(x)       = Symbol("q", x);
-  Q             = Symbol(Bold "Q");
-  Equals        = " = ";
-  indexi        = 'i';
-  indexj        = "j";
-  InBraces(x)   = Group {BracketLR: Brackets.Curly; x};
-  InParens(x)   = Group {BracketLR: Brackets.FlatRound; x};
-  InBrackets(x) = Group {BracketLR: Brackets.Square; x};
-}
-//======================================================================
-
 with Figures.ExampleTree {
   Number = 1;
 
@@ -166,7 +151,7 @@ with Content.Methods {
     Style.BodyPar {
       "A phylogeny is an information-rich graph.";
       "For one, it contains information on the relationships of the languages.";
-      "This topological information is denoted {0}"(Tau);
+      "This topological information is denoted {0}"(sym.tau);
     };
 
     Style.BodyPar {
@@ -183,15 +168,20 @@ with Content.Methods {
     };
 
     Style.FigureBody {
-      Group {
-        VAlign: VAligns.Center;
-        Q;
-        Equals;
-        InBraces(qsub(indexi indexj));
-        Equals;
+      Equation {
+        sym.Q;
+        equals;
+        InBraces(qij);
+        equals;
         StateSection.StateMatrix;
         Space;
-        BetaParameter;
+        sym.Beta;
+      }
+    };
+
+    Style.FigureBody {
+      Equation {
+        InDelDistribution;
       }
     };
   };

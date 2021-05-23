@@ -53,9 +53,53 @@ class AppendixClass {
 }
 //======================================================================
 
-Main.MathFamily = "CMU Serif";
+class AuthorClass {
+  var Title,
+      First,
+      Middle,
+      Last,
+      Address,
+      Website,
+      EMail;
+
+  override GetPopup = Block {
+    Paragraph {
+      Bold;
+      First;
+      Space;
+      Middle;
+      Space;
+      Last;
+    };
+    Block {
+      Address;
+    };
+    if (exists Website) {
+      Paragraph {
+        Span {
+          TextColor: Colors.Gray;
+         "web: ";
+        };
+        Website;
+      };
+    }
+    if (exists EMail) {
+      Paragraph {
+        Span {
+          TextColor: Colors.Gray;
+          "email: ";
+        };
+        EMail;
+      };
+    }
+  };
+}
+//======================================================================
+
+Main.MathFamily = "CMU Classical Serif";
 
 with Style {
+  Fancy                = {TextFamily: "CMU Classical Serif"};
   MainFamily           = {TextFamily: "CMU Serif"};
   SansSerif            = {TextFamily: "CMU Sans Serif"};
   MonoFamily           = {TextFamily: "CMU Typewriter Text"};
@@ -192,6 +236,7 @@ with Style {
 
   Author(author) = Span {
     Link: author.GlobalVariablePath;
+    Popup: author;
     author.Title;
   };
 
@@ -454,13 +499,6 @@ with Style {
       figure.Body;
     };
   };
-
-  Questions = Paragraph {
-    ParAlignment: ParAlignments.Center;
-    SpaceBefore: 1 inch;
-    TextHeight: 80 pts;
-    "?";
-  };
 }
 //======================================================================
 
@@ -494,16 +532,11 @@ Logo = Frame {
 //======================================================================
 
 abstract class BaseViewClass: DocumentViewClass {
-  var Compute;
-
   Constructor(name) {
-    Compute = new ComputeClass(ShowOutput);
     super.Constructor(name, name ShowOutput);
   }
 
-  abstract GetContent;
-
-  override GetDocument = Document {
+  DocMetadata = {
     Size: DocMetrics.DocumentSize;
     Margin: DocMetrics.PageMargin;
     Style.MainFamily;
@@ -514,8 +547,6 @@ abstract class BaseViewClass: DocumentViewClass {
 //  Comment: "Test Comment";
 //  Subject: "Test Subject";
 //  Keywords: "Test Keywords";
-
-    GetContent;
   };
 
   FixedFrame(x, y, width, height) = Frame {
@@ -531,8 +562,8 @@ abstract class BaseViewClass: DocumentViewClass {
   Design(width, height, right, bar) = Canvas {
     Height: height;
 
-    var x0 = -0.5;
-    var y0 = -0.5;
+    var x0 = 0;
+    var y0 = 0;
     var t  = 0.10 height;
     var x1 = 0.80 width;
     var x2 = 0.90 width;
@@ -591,7 +622,7 @@ abstract class BaseViewClass: DocumentViewClass {
     };
   };
 
-  FooterBackground(width, height) = Design(width, height, false, Style.LeftBar) {
+  FooterBackground(title, width, height, page) = Design(width, height, false, Style.LeftBar) {
     Frame {
       VAlignment: VAligns.Center;
       X: DocMetrics.PageMargin.Left;
@@ -601,30 +632,29 @@ abstract class BaseViewClass: DocumentViewClass {
         TextHeight: 16 pts;
         Span {
           TextColor: 75%;
-          Info.Title
+          title
         };
         Tab;
         Span {
           TextColor: Style.HeaderBar1;
-          PageNumber;
+          page;
         }
       }
     }
   };
 
-  AddSlide(title, page, body) = Block {
+  AddSlideBlock(slide, page) = Block {
     Paragraph {
       PageBreakBefore: true;
       FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
-        HeaderBackground(title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
+        HeaderBackground(slide.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
       };
       FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
-        FooterBackground(DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter);
+        FooterBackground(Info.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
       };
     };
-    body;
+    slide.Body;
   };
-
 }
 //======================================================================
 

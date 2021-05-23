@@ -10,7 +10,9 @@ include "Rules";
 include "Style";
 include "References";
 include "Concepts";
+include "Formulas";
 include "Methods";
+include "Slides";
 include "Tables";
 include "RevBayes";
 //======================================================================
@@ -19,6 +21,7 @@ include "RevBayes";
 // RevBayes has a problem with folder names that contain spaces...
 
 ShowOutput = "Run2";
+Compute    = new ComputeClass(ShowOutput);
 
 //======================================================================
 
@@ -83,22 +86,25 @@ with Main if (DocumentType == DocumentTypes.SlideShow) {
 }
 
 void Main.Run {
-  new ComputeClass(ShowOutput).Calculate;
+  Compute.Calculate;
 }
 //======================================================================
 
 class PaperViewClass: BaseViewClass {
+  var Appendices;
+
   Constructor {
     super.Constructor("White Paper");
+
+    Appendices = [
+      new AppendixClass("Options File", Compute.GetOptionsSource),
+      new AppendixClass("Program Output", Compute.ShowLanguageTrees),
+    ];
   }
 
-  GetAppendices = [
-    new AppendixClass("Options File", Compute.GetOptionsSource),
-    new AppendixClass("Program Output", Compute.ShowLanguageTrees),
-  ];
+  override GetDocument = Document {
+    DocMetadata;
 
-  override GetContent = {
-    var appendices = GetAppendices;
     Style.PageSection {
       Header: Style.NormalHeader(Info.Journal) {
         Distance: 0.125 inches;
@@ -124,139 +130,44 @@ class PaperViewClass: BaseViewClass {
       Style.ShowAuthors(Authors);
 
       Style.HeaderCentered(Lang.Appendices);
-      Style.AppendixRow(each appendices);
+      Style.AppendixRow(each Appendices);
 
       Style.ShowReferences(References);
     };
-    Style.ShowAppendix(each appendices);
+    Style.ShowAppendix(each Appendices);
   };
-}
-//======================================================================
-
-class SlideClass {
-  var Title,
-      Body;
-
-  Constructor(title, body) {
-    Body  = body;
-    Title = title;
-  }
-
-  GetBody = Block {
-    Body;
-  };
-}
-//======================================================================
-
-class PresentationViewClass: BaseViewClass {
-  var Slides;
-
-  Constructor(title) {
-    super.Constructor(title);
-    Slides = new ListClass(64);
-  }
-
-  void NewSlide(slide) {
-    Slides.Add(slide);
-  }
-
-  override GetContent = {
-    Section {
-      Paragraph {
-        TextHeight: 40 pts;
-        SpaceBefore: 1.5 inches;
-        LeftIndent: 1 inch;
-        Info.Title;
-      };
-      Paragraph {
-        TextHeight: 14 pts;
-        SpaceBefore: 1.5 inches;
-        LeftIndent: 1 inch;
-        Info.AuthorList;
-      };
-    };
-
-    Section {
-      SectionBreak: SectionBreaks.NextPage;
-      foreach (var slide in Slides)
-        AddSlide(slide.Title, EachIndex, slide.GetBody);
-    };
-  };
-}
-//======================================================================
-
-class JohnPresentationClass: PresentationViewClass {
-  Constructor {
-    super.Constructor("John's Presentation");
-
-    NewSlide(new SlideClass(Content.Introduction.Title, Content.Introduction.Body));
-
-    NewSlide(new SlideClass(Abstract.Title, Abstract.Body));
-
-    NewSlide(new SlideClass(Content.Methods.Title, Content.Methods.Body));
-
-    NewSlide(new SlideClass(Lang.ConceptsUsed, AllWords.ShowTable));
-
-    NewSlide(new SlideClass(Lang.TransitionRules, Compute.ShowTransitionRules));
-
-    NewSlide(new SlideClass("Example Tree", Style.SlideFigure(Figures.ExampleTree)));
-
-    NewSlide(new SlideClass("Results", Style.ReadTree(Lang.MCC, Compute.OutFolder Compute.GammaMCC)));
-
-    NewSlide(new SlideClass("Questions", Style.Questions));
-  }
-}
-//======================================================================
-
-class DavidPresentationClass: PresentationViewClass {
-  Constructor {
-    super.Constructor("David's Presentation");
-    NewSlide(new SlideClass(Content.Introduction.Title, Content.Introduction.Body));
-
-    NewSlide(new SlideClass(Abstract.Title, Abstract.Body));
-
-    NewSlide(new SlideClass(Content.Methods.Title, Content.Methods.Body));
-
-    NewSlide(new SlideClass(Lang.ConceptsUsed, AllWords.ShowTable));
-
-    NewSlide(new SlideClass(Lang.TransitionRules, Compute.ShowTransitionRules));
-
-    NewSlide(new SlideClass("Example Tree", Style.SlideFigure(Figures.ExampleTree)));
-
-    NewSlide(new SlideClass("Results", Style.ReadTree(Lang.MCC, Compute.OutFolder Compute.GammaMCC)));
-
-    NewSlide(new SlideClass("Questions", Style.Questions));
-  }
 }
 //======================================================================
 
 class DiagnosticsViewClass: BaseViewClass {
+  var Appendices;
+
   Constructor {
     super.Constructor("Diagnostics");
+
+    Appendices = [
+      new AppendixClass(Lang.TransitionRules, Compute.ShowTransitionRules),
+      new AppendixClass("Transition Rule File", Compute.TransitionRuleFile),
+      new AppendixClass("RevBayes Source File", Compute.RevBayesSource),
+  //    new AppendixClass("Character File", Nexus.CharacterFile(2)),
+      new AppendixClass("TKF Input Files", Nexus.TKFFiles),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
+      new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),
+      new AppendixClass("Word Lists by Language", DisplayWords.ShowTable),
+      new AppendixClass("Segment Groups", MatchingConsonants.ShowTables),
+      new AppendixClass("Euler Feature Diagram", IPA.FeatureChart),
+      new AppendixClass(Lang.IPAFullName, IPA.SegmentTable),
+      new AppendixClass("Feature Tree", SegmentTree.ShowTree),
+      new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
+    //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
+    ];
   }
 
-  GetAppendices = [
-    new AppendixClass(Lang.TransitionRules, Compute.ShowTransitionRules),
-    new AppendixClass("Transition Rule File", Compute.TransitionRuleFile),
-    new AppendixClass("RevBayes Source File", Compute.RevBayesSource),
-//    new AppendixClass("Character File", Nexus.CharacterFile(2)),
-    new AppendixClass("TKF Input Files", Nexus.TKFFiles),
-    new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
-    new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),
-    new AppendixClass("Word Lists by Language", DisplayWords.ShowTable),
-    new AppendixClass("Segment Groups", MatchingConsonants.ShowTables),
-    new AppendixClass("Euler Feature Diagram", IPA.FeatureChart),
-    new AppendixClass(Lang.IPAFullName, IPA.SegmentTable),
-    new AppendixClass("Feature Tree", SegmentTree.ShowTree),
-    new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
-  //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
-  ];
-
-  override GetContent = {
-    Style.ShowAppendix(each GetAppendices);
+  override GetDocument = Document {
+    DocMetadata;
+    Style.ShowAppendix(each Appendices);
   };
 }
-
 //======================================================================
 
 
