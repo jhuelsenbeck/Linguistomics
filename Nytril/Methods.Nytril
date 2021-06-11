@@ -1,4 +1,4 @@
-using Format, Units, Math, IO, Formulas;
+using Format, Units, Math, IO, Style, Defs;
 //======================================================================
 
 with Figures.ExampleTree {
@@ -46,11 +46,11 @@ with Figures.ExampleTree {
   };
 
 
-  Body = Style.TreeOptions {
+  Body = TreeOptions {
     Root: Nodes;
   };
 
-  Caption = "An example tree showing the relationships of N = {0} languages."(LanguageList.Length);
+  Caption = "An example tree showing the relationships of {0} languages."(SampledLanguages(LanguageList.Length));
 }
 //======================================================================
 
@@ -133,20 +133,29 @@ with Content.Introduction {
 with Content.Methods {
   Title = Lang.Methods;
   Body  = Block {
-    Style.BodyPar {
-      "We use ancestral classes, in which the descendant forms are segmentally aligned.";
-      "It is important to note that our definition of cognate refers only to segmental descent.";
-      "It takes no account of semantics whatsoever.";
-      "So the lexical items for 'ear' in Romance are paired with the Latin word " Style.Word("auricula")
-      " which is the diminute form of 'ear'.";
+    BodyPar {
+      "Here, we describe the details of the modeling assumptions we make for the linguistic characters, how we estimate the parameters of the linguists model, and how different models describing the evolution of words can be compared in a statistical framework.";
     };
-    Style.BodyPar {
-      "Other things we have to mention: "
+
+    BodyPar {
+      BodyTitle {"Phylogeny relating languages."};
+      "We assume that modern-day languages are related by an unknown evolutionary tree, called a {0} and denoted {1}."(SingleQuote {Phylogeny.Name}, ShowVar(Phylogeny));
+      "The phylogeny contains information on the topological relationships among {0} sampled languages as well as information on the divergence times of the languages or on the amount of change that occurred between the languages."(TipLabelCount);
     };
-    Style.NumberList {
-      "The data are surface forms, not underlying forms.";
-      "We used the accusative singular for nouns in Latin.";
+
+    BodyPar {
+      "Figure 1 shows an example of a phylogeny for {0} languages."(SampledLanguages(Results.UsedLanguages.Length));
+      "In the terminology of evolutionary biology, the tree is composed of `nodes' and `branches.'";
+      "(By contrast, mathematicians call nodes and branches `vertices' and `edges,' respectively.)";
+      "The nodes represent the tips of the tree, each of which is assigned a language, and the points on the tree where the languages diverge from one another.";
+      "Each language-assigned tip node is labeled {0}."(TipLabelNumbers);
+      "The interior nodes are labeled {0} in preorder sequence (i.e., ordered sequentially from the tips to the root)."(TipLabelInterior);
+      "The root node is always assigned the label {0}."(TipLastLabel);
+//      "We denote the ancestor of node $i$ as $\sigma(i)$.";
+//      "In the tree of Figure 1, the ancestor of node 3 is $\sigma(3)=12$.";
     };
+
+    Style.DocumentFigure(Figures.ExampleTree);
 
     Style.BodyPar {
       "A phylogeny is an information-rich graph.";
@@ -161,28 +170,38 @@ with Content.Methods {
       "The rates of change between the pairs of states can be represented in table form as";
     };
 
-    Style.DocumentFigure(Figures.ExampleTree);
+    BodyPar {
+      "We use ancestral classes, in which the descendant forms are segmentally aligned.";
+      "It is important to note that our definition of cognate refers only to segmental descent.";
+      "It takes no account of semantics whatsoever.";
+      "So the lexical items for 'ear' in Romance are paired with the Latin word " Word("auricula")
+      " which is the diminute form of 'ear'.";
+    };
+    Style.BodyPar {
+      "Other things we have to mention: "
+    };
+    Style.NumberList {
+      "The data are surface forms, not underlying forms.";
+      "We used the accusative singular for nouns in Latin.";
+    };
+
 
     Style.FigureBody {
       StateSection.StateTable;
     };
 
-    Style.FigureBody {
-      Equation {
-        sym.Q;
-        equals;
-        InBraces(qij);
-        equals;
-        StateSection.StateMatrix;
-        Space;
-        sym.Beta;
-      }
+    Style.EquationPar {
+      sym.Q;
+      Equals;
+      InBraces {qij};
+      Equals;
+      StateSection.StateMatrix;
+      Space;
+      sym.Beta;
     };
 
-    Style.FigureBody {
-      Equation {
-        InDelDistribution;
-      }
+    Style.EquationPar {
+      InDelDistribution;
     };
   };
 }

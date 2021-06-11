@@ -1,4 +1,4 @@
-using Format, Units, Math, IO;
+﻿using Format, Units, Math, IO;
 //======================================================================
 
 with PaperSizes {
@@ -9,7 +9,7 @@ with PaperSizes {
 
 with DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.Normal) {
   DocumentSize = PaperSizes.Letter;
-  PageMargin   = Margin(0.75 inches);
+  PageMargin   = Margin(1 inches);
 }
 
 with DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.SlideShow) {
@@ -96,10 +96,10 @@ class AuthorClass {
 }
 //======================================================================
 
-Main.MathFamily = "CMU Classical Serif";
+Main.MathFamily = "Linux Libertine O";
 
 with Style {
-  Fancy                = {TextFamily: "CMU Classical Serif"};
+  Fancy                = {TextFamily: "CMU Serif Upright Italic"};
   MainFamily           = {TextFamily: "CMU Serif"};
   SansSerif            = {TextFamily: "CMU Sans Serif"};
   MonoFamily           = {TextFamily: "CMU Typewriter Text"};
@@ -144,7 +144,27 @@ with Style {
 
 
 
-  Word(w) = w Italic;
+  Word(w)     = Span {Italic; w};
+  DoubleQuote = Span {Begin: "“"; End: "”"};
+  SingleQuote = Span {Begin: "‘"; End: "’"};
+
+  ShowVar(r) = Span {
+    Popup: Block {
+      Paragraph {
+        TextHeight: 20 pts;
+        r.Var;
+      };
+      Paragraph {
+        Bold;
+        r.Name;
+      };
+      Paragraph {
+        LeftIndent: 0.125 inches;
+        r.Description;
+      };
+    };
+    r.Var;
+  };
 
   RowBar(i) = {
     if (i mod 2 != 0)
@@ -459,15 +479,30 @@ with Style {
   };
 
   BodyPar = Paragraph {
+    TextHeight: 10.5 pts;
     ParAlignment: ParAlignments.Justify;
     SpaceBefore: 6 pts;
     Separator: Space;
+  };
+
+  BodyTitle = Span {
+    Bold;
   };
 
   FigureBody = Paragraph {
     KeepWithNext: true;
     ParAlignment: ParAlignments.Center;
     SpaceBefore: 6 pts;
+  };
+
+  Equation = Span {
+    TextEquation: true;
+  };
+
+  EquationPar = Paragraph {
+    TextEquation: true;
+    TextStacked: true;
+    ParAlignment: ParAlignments.Center;
   };
 
   FigureLabel = Paragraph {
