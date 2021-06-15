@@ -1,4 +1,4 @@
-using Format, Units, Math, IO, Style, Defs;
+﻿using Format, Units, Math, IO, Style, Defs;
 //======================================================================
 
 with Figures.ExampleTree {
@@ -130,6 +130,10 @@ with Content.Introduction {
 }
 //======================================================================
 
+eos = ". ";
+TreeFigure = FigureName(Figures.ExampleTree);
+
+
 with Content.Methods {
   Title = Lang.Methods;
   Body  = Block {
@@ -138,59 +142,239 @@ with Content.Methods {
     };
 
     BodyPar {
-      BodyTitle {"Phylogeny relating languages."};
-      "We assume that modern-day languages are related by an unknown evolutionary tree, called a {0} and denoted {1}."(SingleQuote {Phylogeny.Name}, ShowVar(Phylogeny));
-      "The phylogeny contains information on the topological relationships among {0} sampled languages as well as information on the divergence times of the languages or on the amount of change that occurred between the languages."(TipLabelCount);
+      BodyTitle {"Phylogeny relating languages"}; eos;
+      "We assume that modern-day languages are related by an unknown evolutionary tree, called a ";
+      SingleQuote {Phylogeny.Name};
+      " and denoted "; Phylogeny.Var; eos;
+      "The phylogeny contains information on the topological relationships among "; NumLanguages.Var;
+      " sampled languages as well as information on the divergence times of the languages or on the amount of change that occurred between the languages. ";
     };
 
     BodyPar {
-      "Figure 1 shows an example of a phylogeny for {0} languages."(SampledLanguages(Results.UsedLanguages.Length));
-      "In the terminology of evolutionary biology, the tree is composed of `nodes' and `branches.'";
-      "(By contrast, mathematicians call nodes and branches `vertices' and `edges,' respectively.)";
-      "The nodes represent the tips of the tree, each of which is assigned a language, and the points on the tree where the languages diverge from one another.";
-      "Each language-assigned tip node is labeled {0}."(TipLabelNumbers);
-      "The interior nodes are labeled {0} in preorder sequence (i.e., ordered sequentially from the tips to the root)."(TipLabelInterior);
-      "The root node is always assigned the label {0}."(TipLastLabel);
-//      "We denote the ancestor of node $i$ as $\sigma(i)$.";
-//      "In the tree of Figure 1, the ancestor of node 3 is $\sigma(3)=12$.";
+      TreeFigure; " shows an example of a phylogeny for "; SampledLanguages(Results.UsedLanguages.Length); " languages. ";
+      "In the terminology of evolutionary biology, the tree is composed of ‘nodes’ and ‘branches.’ ";
+      "(By contrast, mathematicians call nodes and branches ‘vertices’ and ‘edges,’ respectively.) ";
+      "The nodes represent the tips of the tree, each of which is assigned a language, and the points on the tree where the languages diverge from one another. ";
+      "Each language-assigned tip node is labeled "; (TipLabelNumbers); ". ";
+      "The interior nodes are labeled "; TipLabelInterior; " in preorder sequence (i.e., ordered sequentially from the tips to the root). ";
+      "The root node is always assigned the label "; TipLastLabel; eos;
+      "We denote the ancestor of node "; NodeIndex; " as "; AncestorNode(NodeIndex); eos;
+      "In the tree of "; TreeFigure; ", the ancestor of node 3 is "; Equation {AncestorNode(3); Equals; 12}; eos;
     };
 
-    Style.DocumentFigure(Figures.ExampleTree);
-
-    Style.BodyPar {
-      "A phylogeny is an information-rich graph.";
-      "For one, it contains information on the relationships of the languages.";
-      "This topological information is denoted {0}"(sym.tau);
+    BodyPar {
+      "The branches connect the nodes of the tree and are represented as lines in "; TreeFigure; ". ";
+      "The branch is assigned the label from its descendant node, so for example in the tree of ";
+      TreeFigure;
+      ", the branch connecting nodes 12 and 13 is assigned the label 12. ";
     };
 
-    Style.BodyPar {
-      "Substitution of one segment for another is modeled using a continuous-time Markov model in which the possible states are the set of segments in the phonemic representations.";
-      "At the heart of a continuous-time Markov chain is a rate matrix describing the rate of change between all pairs ofstates.";
-      "As an example, consider a simplified Markov process with only five segments as states.";
+    DocumentFigure(Figures.ExampleTree);
+
+    BodyPar {
+      "A phylogeny is an information-rich graph. ";
+      "For one, it contains information on the relationships of the languages. ";
+      "This topological information is denoted "; Topology.Var; eos;
+      TreeFigure;
+      " for example, suggests that French and Walloon are each others’ closest relatives. ";
+      "They are more closely related to each other than they are to any another language on the tree because they share a more recent common ancestor with each other than they do with any other language. ";
+      "This common ancestor is the node numbered 10 in "; TreeFigure; eos;
+      "French and Walloon, together, are more closely related to Friulian in the tree of "; TreeFigure; eos;
+      "Both French and Walloon are equally related to Friulian because they both share the same common ancestor with Friulian, at the node numbered 11 in "; TreeFigure; eos;
+      "It is important to realize that there are many possible ways in which the languages can be related to one another, with the tree of ";
+      TreeFigure;
+      " depicting only one of the possibilities. ";
+      "In fact, for the case in which ";
+      SampledLanguages(Results.UsedLanguages.Length);
+      " languages are considered, there are "
+      BranchFormula(Results.UsedLanguages.Length);
+      " possible trees relating the languages. ";
+      "In general, the number of possible rooted trees is the product of the odd numbers up to, and including, ";
+      MaxBranch;
+      ": ";
+      BNEquation; eos;
+      "Each topology is given a unique label, ";
+      Equation {
+        ElipsisList {
+          Topology.Sub(1);
+          Topology.Sub(2);
+          Topology.Sub(BN);
+        }
+      }; eos;
+      "The number of possible tree topologies becomes quite large very quickly — it is a factorial, after all. ";
+      "A linguist interested in the relationships among ";
+      SampledLanguages(60);
+      " languages, for example, would contend with ";
+      Equation {BranchFormula(60); TextScientific: true; TextDigits: 2};
+      " possible topologies, each depicting a unique and different way the languages can be related. ";
+      "For comparison, the number of atoms in the known universe is on the order of "; TextSuper(10, 80); eos;
+    };
+
+    BodyPar {
+     "Ideally, the linguist would not only be able to estimate the correct topology relating the languages of interest, but also the times at which the languages diverged. ";
+     "The interior nodes of the tree represent language divergence events that occurred at specific times in the past and are denoted ";
+     Equation {
+       Bold Time.Var;
+       Equals;
+       InParens {
+         ElipsisList {
+           Tsub("N+1");
+           Tsub("N+2");
+           Tsub("2N-1");
+         };
+       }
+     }; eos;
+
+     "The tip nodes are all assigned the time ";
+     Equation {
+       Time.Var; Equals; 0;
+     }; eos;
+
+     "Below, we will discuss in more detail a stochastic model of language change. ";
+     "However, the model we use, along with every other stochastic model for phylogenies, has an all-important parameter that describes the rate at which the language changes. ";
+     "This parameter is called the substitution rate and is denoted "; SubstitutionRate.Var; eos;
+
+     "Without external information that constrains the divergence times, such as one language divergence time that is considered known, perhaps from textual information, it is impossible to estimate the divergence times. ";
+     "The problem is that one obtains the same net divergence between two languages from a high rate of language evolution and a short divergence time separating the languages, or a low rate of language evolution and a long time separating the languages. ";
+     "In fact, the expected number of evolutionary events that occurred between two languages that diverged at time "; Time.Var; " is ";
+     Equation {
+       ExpectedEvents.Var;
+       Equals;
+       2;
+       Time.Var;
+       SubstitutionRate.Var;
+     }; eos;
+
+     "(The factor of two is introduced because the path between the two languages is the time from one language to the common ancestor, and then back up the tree to the other language.) ";
+     "In this paper, we allow each of the "; MaxBranches; " branches of the tree to have an independent substitution rate. ";
+     "Hence, the expected number of evolutionary events that occur along the "; Span {Fancy "i"; "th"};
+     " branch of the tree is ";
+     ExpectedEventsPerBranch;
+     eos;
+     "In this study, we do not estimate the divergence times on the tree, but rather estimate the compound parameter representing the branch lengths (the ";
+     Equation {Sub(ExpectedEvents.Var, "i")};
+     " which are in units of expected number of substitutions per segment (see below). ";
+    };
+
+    BodyPar {
+      "To summarize, we assume languages only diverge from one another, ignoring events such as word assimilation. ";
+      "We represent the divergence as a phylogeny containing information on both the topology and branch lengths, together denoted ";
+      Equation {
+         Phylogeny.Var;
+         Equals;
+         Arguments {
+           Topology.Var;
+           ExpectedEvents.Var;
+         }
+      };
+      eos;
+      "One of the goals of this study is to estimate these parameters from the data collected from each language."
+    };
+
+    BodyPar {
+      SpaceAfter: 10 pts;
+      BodyTitle {"Data"}; eos;
+      "The similarities of words from different languages are informative about how the languages are related. ";
+      "In this study, we use statistical methods developed in the field of evolutionary biology to estimate the relationships of species based on either the morphological characteristics of the species or the DNA sequences sampled from the same gene and compared across the species. ";
+      "The methods assume that the characteristics compared across species are homologous. ";
+      "Homology, in evolutionary biology, is similarity in some characteristic that is caused by common ancestry. ";
+      "Consider as an example the following DNA sequences sampled from three species,";
+    };
+
+    Table {
+      Columns: [1 inch, 5 inches];
+      AnimalRow(each ExampleAnimals);
+    };
+
+    BodyPar {
+      "These are partial mitochondrial sequences from "; Style.Citation(References.Gojobori88); eos;
+      "In the original paper, the complete data had ";
+      SampledLanguages(12);
+      " primate species and the sequences were each ";
+      // Need to explain what S is
+      Equation {"S" Equals 898};
+      " nucleotides in length. ";
+      "In a phylogenetic analysis of DNA sequenes, homology is assumed at two levels. ";
+      "First, one assumes that the sequences that are compared are homologous. ";
+      "Typically, homology at this level is established by sequence similarity and synteny of the gene (e.g., the gene that is compared across species is in the same, or at least similar, position along the chromosome when compared across species, which is another way of saying the gene that is compared has the same neighboring genes in all of the species in the analysis). "
+    };
+
+    BodyPar {
+      "Not only must the DNA sequences be homologous, but the fine-scale homology of the sequences must also be established. ";
+      "The DNA sequences, above, are in an aligned form in which the fine-scale homology has been established; ";
+      "each column of the alignment is considered to be homologous. ";
+      "So, for example, the first column of the alignment which happens to be the nucleotide A in all three species is assumed to be homologous; ";
+      "it is assumed that the common ancestor of gorillas, chimpanzees, and humans had the same gene that also had a position that was homologous to the first column in the alignment. ";
+      "Fine-scale homology is established using computer programs in a process called ‘alignment.’ ";
+      "Importantly, phylogenetic methods assume that the homology established by the alignment program is correct.";
+    };
+
+    BodyPar {
+      "Linguistic information, of course, is not like biological information. ";
+      "In the past, linguists attempted to find homologous words, called cognates. ";
+      "Typically, words are chosen that are thought to be resistant to assimilation. ";
+      "Variation in the cognate words is carefully scrutinized by the linguist and encoded in a way that computer software, developed with biological character data in mind, can read and produce sensible results. ";
+      "The encoding process produces variants on a cognate word with the variant states coded as 0 or 1 (or sometimes more, if there are more than two states for the word). ";
+    };
+
+    BodyPar {
+      "In this study, we take a different approach. ";
+      "Like others, we concentrate on the so-called ‘basic vocabulary’ of a language (SWADESH REFERENCE), since the lexical items that instantiate concepts in this domain are less prone to horizontal transmission (i.e., linguistic borrowing). ";
+      "In contrast to every study of linguistic phylogenetics that we are aware of, however, our investigation draws inferences from segmental information. ";
+      "For each concept in our dataset, homologous lexical items are assigned to the same class, which we refer to an as a ";
+      Definition("cognate class"); eos;
+      "The word forms within each cognate class are phonemic representations based on the International Phonetic Alphabet (IPA) (IPA REFERENCE). ";
+      "Consider the following word forms for one of the cognate classes for the concept ";
+      SingleQuote {ExampleConcept.Name};
+    };
+
+    Table {
+      TextHeight: 10 pts;
+      Columns: [1.5 inches]*2;
+
+
+      foreach (var language in ExampleConcept.Concept) {
+        Row {
+          Cell {
+            language.GlobalVariableName;
+          };
+
+          Cell {
+            IPAFamily;
+            language[0];
+          };
+        }
+      }
+    };
+
+    BodyPar {
+      "Substitution of one segment for another is modeled using a continuous-time Markov model in which the possible states are the set of segments in the phonemic representations. ";
+      "At the heart of a continuous-time Markov chain is a rate matrix describing the rate of change between all pairs ofstates. ";
+      "As an example, consider a simplified Markov process with only five segments as states. ";
       "The rates of change between the pairs of states can be represented in table form as";
     };
 
     BodyPar {
-      "We use ancestral classes, in which the descendant forms are segmentally aligned.";
-      "It is important to note that our definition of cognate refers only to segmental descent.";
-      "It takes no account of semantics whatsoever.";
-      "So the lexical items for 'ear' in Romance are paired with the Latin word " Word("auricula")
-      " which is the diminute form of 'ear'.";
+      "We use ancestral classes, in which the descendant forms are segmentally aligned. ";
+      "It is important to note that our definition of cognate refers only to segmental descent. ";
+      "It takes no account of semantics whatsoever. ";
+      "So the lexical items for ‘ear’ in Romance are paired with the Latin word "; Word("auricula"); " which is the diminute form of ‘ear’. ";
     };
-    Style.BodyPar {
+
+    BodyPar {
       "Other things we have to mention: "
     };
-    Style.NumberList {
-      "The data are surface forms, not underlying forms.";
-      "We used the accusative singular for nouns in Latin.";
+
+    NumberList {
+      "The data are surface forms, not underlying forms. ";
+      "We used the accusative singular for nouns in Latin. ";
     };
 
-
-    Style.FigureBody {
+    FigureBody {
       StateSection.StateTable;
     };
 
-    Style.EquationPar {
+    EquationPar {
       sym.Q;
       Equals;
       InBraces {qij};
@@ -200,7 +384,7 @@ with Content.Methods {
       sym.Beta;
     };
 
-    Style.EquationPar {
+    EquationPar {
       InDelDistribution;
     };
   };

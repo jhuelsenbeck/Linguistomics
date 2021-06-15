@@ -96,10 +96,51 @@ class AuthorClass {
 }
 //======================================================================
 
+class DefClass {
+  var Symbol,
+      Name,
+      Description;
+
+  Constructor(symbol, name, description) {
+    Symbol      = symbol;
+    Name        = name;
+    Description = description;
+  }
+
+  Var = Style.Equation {
+    Span {
+      Popup: this;
+      Symbol;
+    }
+  };
+
+  Sub(i) = Nary {
+    Operator: Var;
+    Lower: i;
+  };
+
+  override GetPopup = Block {
+    Paragraph {
+      TextHeight: 20 pts;
+      Symbol;
+    };
+    Paragraph {
+      Bold;
+      Name;
+    };
+    Paragraph {
+      LeftIndent: 0.125 inches;
+      Description;
+    };
+  };
+}
+//======================================================================
+
 Main.MathFamily = "Linux Libertine O";
 
 with Style {
   Fancy                = {TextFamily: "CMU Serif Upright Italic"};
+  CalFont              = {TextFamily: "CMSY8"};
   MainFamily           = {TextFamily: "CMU Serif"};
   SansSerif            = {TextFamily: "CMU Sans Serif"};
   MonoFamily           = {TextFamily: "CMU Typewriter Text"};
@@ -114,8 +155,6 @@ with Style {
   TableEdge            = {Edge: TableEdgeSize};
   ColumnEdge           = {EdgeR: TableEdgeSize};
   SegmentBottom        = {EdgeB: TableEdgeSize {Color: 80%}};
-
-
   Logo1                = Color(0, 0, 0xFF);
   Logo1A               = Color(0, 0, 0xE0);
   Logo2                = Color(0xFF, 0xA5, 00);
@@ -142,28 +181,13 @@ with Style {
   FooterLeftBar        = FooterBar1..FooterBar2;
   FooterRightBar       = FooterBar2..FooterBar1;
 
-
-
   Word(w)     = Span {Italic; w};
   DoubleQuote = Span {Begin: "“"; End: "”"};
   SingleQuote = Span {Begin: "‘"; End: "’"};
 
-  ShowVar(r) = Span {
-    Popup: Block {
-      Paragraph {
-        TextHeight: 20 pts;
-        r.Var;
-      };
-      Paragraph {
-        Bold;
-        r.Name;
-      };
-      Paragraph {
-        LeftIndent: 0.125 inches;
-        r.Description;
-      };
-    };
-    r.Var;
+  TextSuper(x, y) = Nary {
+    Operator: x;
+    Upper: y;
   };
 
   RowBar(i) = {
@@ -186,6 +210,18 @@ with Style {
 
   TableNotes = Paragraph {
     SpaceAfter: DocMetrics.TableSpace;
+  };
+
+  AnimalRow(a) = Row {
+    TextHeight: 10 pts;
+    a.GlobalVariableName;
+    Cell {
+      Span {
+        Style.MonoFamily;
+        a;
+      }
+      Chars.ldots;
+    }
   };
 
   TitleCase(text) = Span {
@@ -258,6 +294,16 @@ with Style {
     Link: author.GlobalVariablePath;
     Popup: author;
     author.Title;
+  };
+
+  Citation(r) = Span {
+    Link: r.GlobalVariablePath;
+    r.Cite;
+  };
+
+  Definition(s) = Span {
+    Italic;
+    s
   };
 
   void Collect(list, node) {
@@ -482,7 +528,6 @@ with Style {
     TextHeight: 10.5 pts;
     ParAlignment: ParAlignments.Justify;
     SpaceBefore: 6 pts;
-    Separator: Space;
   };
 
   BodyTitle = Span {
@@ -495,7 +540,7 @@ with Style {
     SpaceBefore: 6 pts;
   };
 
-  Equation = Span {
+  Equation = Group {
     TextEquation: true;
   };
 
@@ -511,15 +556,19 @@ with Style {
     SpaceBefore: 6 pts;
   };
 
+  FigureName(figure) = Span {
+    Lang.Figure;
+    Space;
+    figure.Number;
+  };
+
   DocumentFigure(figure) = Block {
     FigureBody {
       figure.Body;
     };
 
     FigureLabel {
-      Lang.Figure;
-      Space;
-      figure.Number;
+      FigureName(figure);
       ": ";
       figure.Caption;
     };
