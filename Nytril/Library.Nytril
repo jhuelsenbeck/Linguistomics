@@ -3,13 +3,15 @@ using Format, Units, Math, IO, Genetics;
 
 class WordClass {
   var Language,
+      Cognate,
       Concept,
       Text,
       Segments;
 
-  Constructor(language, concept, text) {
+  Constructor(language, cognate, text) {
     Language = language;
-    Concept  = concept;
+    Cognate  = cognate;
+    Concept  = cognate.Concept;
     Text     = text;
     if (text.Length > 0) {
       var segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
@@ -30,12 +32,25 @@ class WordClass {
   ShowConcept = Span {
     Style.SansSerif;
     Popup: this;
-    Concept.GlobalVariableName;
+    Cognate.Name;
   };
 
   override GetPopup = Frame {
-    AllWords.ShowConceptTable(Concept);
+    AllWords.ShowConceptTable(Cognate);
   };
+}
+//======================================================================
+
+class CognateClass {
+  var Name,
+      Concept,
+      AncestralClass;
+
+  Constructor(concept, aclass) {
+    Name           = concept.GlobalVariableName;
+    Concept        = concept;
+    AncestralClass = aclass;
+  }
 }
 //======================================================================
 
@@ -49,14 +64,20 @@ class LanguageClass {
     Cases = cases;
   }
 
+  GetWord(cognate) {
+    foreach (var w in Words) {
+      if (w.Cognate == cognate)
+        return w;
+    }
+    return null;
+  }
+
   void GetWords(id) {
     var list = new ListClass(32);
-    foreach (var concept in UsedConcepts) {
-      foreach (var aclass in concept) {
-        foreach (var word in aclass) {
-          if (id == word.GlobalVariableName)
-            list.Add(new WordClass(this, concept, word[0]));
-        }
+    foreach (var cognate in UsedCognates) {
+      foreach (var word in cognate.AncestralClass) {
+        if (id == word.GlobalVariableName)
+          list.Add(new WordClass(this, cognate, word[0]));
       }
     }
     Words = list.ToArray();
@@ -67,17 +88,18 @@ class LanguageClass {
 class ConceptRecord {
   var Cells,
       MaxLength,
-      Concept;
+      Cognate,
+      AccestralClass;
 
-  Constructor(concept) {
-    Concept   = concept;
+  Constructor(cognate) {
+    Cognate   = cognate;
     Cells     = new ListClass(128);
     MaxLength = 0;
 
     foreach (var language in Results.UsedLanguages) {
       var found = false;
       foreach (var word in language.Words) {
-        if (word.Concept == concept) {
+        if (word.Cognate == cognate) {
           Cells.Add(word);
           var l = word.Segments.Length;
           if (l > MaxLength)
@@ -87,7 +109,7 @@ class ConceptRecord {
         }
       }
       if (!found)
-        Cells.Add(new WordClass(language, concept, Empty));
+        Cells.Add(new WordClass(language, cognate, Empty));
     }
   }
 }
@@ -95,6 +117,7 @@ class ConceptRecord {
 
 class TaxonClass {
   var Name,
+      Language,
       SegmentList,
       AlignedList;
 
@@ -102,6 +125,7 @@ class TaxonClass {
     var count = Results.WordConceptArray.Length;
     SegmentList = new ListClass(count);
     AlignedList = new ListClass(count);
+    Language    = lang;
     Name        = lang.GlobalVariableName;
 
     foreach (var concept in Results.WordConceptArray)
@@ -149,16 +173,14 @@ with Results {
 
   GetUsedLanguages {
     var set = new DictionaryClass(64);
-    foreach (var concept in UsedConcepts) {
-      foreach (var aclass in concept) {
-        foreach (var word in aclass) {
-          var langname = word.GlobalVariableName;
-          if (set.FindKey(langname) == null) {
-            var lang = Languages.GetField(langname);
-            if (exists lang) {
-              lang.GetWords(langname);
-              set.Add(lang, langname);
-            }
+    foreach (var cognate in UsedCognates) {
+      foreach (var word in cognate.AncestralClass) {
+        var langname = word.GlobalVariableName;
+        if (set.FindKey(langname) == null) {
+          var lang = Languages.GetField(langname);
+          if (exists lang) {
+            lang.GetWords(langname);
+            set.Add(lang, langname);
           }
         }
       }
@@ -166,7 +188,7 @@ with Results {
     return set.Values;
   }
 
-  WordConceptArray = new ConceptRecord(each UsedConcepts);
+  WordConceptArray = new ConceptRecord(each UsedCognates);
 
   TaxaArray        = ComputeTaxa;
 
@@ -277,13 +299,13 @@ with Nexus {
 
   MaxNameLength = Math.Max((each ((each Results.TaxaArray).Name)).Length) + 1;
 
-  WriteTaxa(index, concept, paper, maxlength) = TextBlock {
+  WriteTaxa(index, cognate, paper, maxlength) = TextBlock {
     foreach (var taxon in Results.TaxaArray) {
       Span {
         Span {
           Nexus.TaxonFormat;
           taxon.Name;
-          Link: concept;
+          Link: cognate;
         };
         Space * (maxlength - taxon.Name.Length);
         foreach (var segment in taxon.AlignedList[index])
@@ -303,13 +325,8 @@ with Nexus {
               CommentFormat;
               Style.IPAFamily;
               Tab;
-              foreach (var segment in taxon.AlignedList[index]) {
-                Canvas {
-                  Width: 10 pts;
-                  Height: 8 pts;
-                  segment.ShowSegment;
-                }
-              }
+              foreach (var segment in taxon.AlignedList[index])
+                segment.GetBlock;
             };
             break;
         }
@@ -317,9 +334,9 @@ with Nexus {
     }
   };
 
-  TKFFile(index, concept, paper) = TextBlock {
+  TKFFile(index, cognate, paper) = TextBlock {
     if (paper > 0)
-      Comment(concept.GlobalVariableName);
+      Comment(cognate.Name);
 
     Span {
       Results.TaxaArray.Length;
@@ -328,15 +345,15 @@ with Nexus {
       Space;
       Results.UniqueSegments.Length;
     };
-    WriteTaxa(index, concept, paper, MaxNameLength);
+    WriteTaxa(index, cognate, paper, MaxNameLength);
   };
 
   TKFFiles = TextBlock {
     Style.MonoFamily;
     TabStops: [3 inches];
 
-    foreach (var concept in UsedConcepts) {
-      TKFFile(EachIndex, concept, 2);
+    foreach (var cognate in UsedCognates) {
+      TKFFile(EachIndex, cognate, 2);
       Empty;
     }
   };
@@ -372,12 +389,12 @@ with Nexus {
       Empty;
       Keyword("matrix");
 
-      foreach (var concept in UsedConcepts) {
+      foreach (var cognate in UsedCognates) {
         if (EachIndex > 0)
           Empty;
 
-        Comment(concept.GlobalVariableName);
-        WriteTaxa(EachIndex, concept, paper, maxlength);
+        Comment(cognate.Name);
+        WriteTaxa(EachIndex, cognate, paper, maxlength);
       }
       EndMarker;
     };

@@ -25,18 +25,18 @@ Compute    = new ComputeClass(ShowOutput);
 
 //======================================================================
 
-UsedConcepts = [
-  Concepts.Sun,
-  Concepts.Moon,
-  Concepts.Star,
-  Concepts.Water,
-  Concepts.Rain,
-  Concepts.River,
-  Concepts.Lake,
-  Concepts.Sea,
-  Concepts.Salt,
-  Concepts.Stone,
-  Concepts.Sand,
+UsedCognates = [
+  new CognateClass(Concepts.Stone, Concepts.Stone.AncestralClass2),
+  new CognateClass(Concepts.Sun, Concepts.Sun.AncestralClass),
+  new CognateClass(Concepts.Moon, Concepts.Moon.AncestralClass),
+  new CognateClass(Concepts.Star, Concepts.Star.AncestralClass),
+  new CognateClass(Concepts.Water, Concepts.Water.AncestralClass),
+  new CognateClass(Concepts.Rain, Concepts.Rain.AncestralClass),
+  new CognateClass(Concepts.River, Concepts.River.AncestralClass),
+  new CognateClass(Concepts.Lake, Concepts.Lake.AncestralClass),
+  new CognateClass(Concepts.Sea, Concepts.Sea.AncestralClass),
+  new CognateClass(Concepts.Salt, Concepts.Salt.AncestralClass),
+  new CognateClass(Concepts.Sand, Concepts.Sand.AncestralClass),
 ];
 //======================================================================
 
@@ -49,9 +49,7 @@ with Info {
   Title       = Lang.SimulatedSegments;
   PriorTree   = GetTreeNodes(LanguageBranches.Romance);
 
-  AuthorList = Span {
-    Separator: ", ";
-    LastSeparator: " {0} "(Lang.And);
+  AuthorList = TextList {
     Style.Author(each Authors);
   };
 }
@@ -139,6 +137,10 @@ class PaperViewClass: BaseViewClass {
 }
 //======================================================================
 
+ShowSymbols = Block {
+  (each Defs).Appendix;
+};
+
 class DiagnosticsViewClass: BaseViewClass {
   var Appendices;
 
@@ -147,6 +149,7 @@ class DiagnosticsViewClass: BaseViewClass {
 
     Appendices = [
       new AppendixClass(Lang.TransitionRules, Compute.ShowTransitionRules),
+      new AppendixClass("Symbols", ShowSymbols),
       new AppendixClass("Transition Rule File", Compute.TransitionRuleFile),
       new AppendixClass("RevBayes Source File", Compute.RevBayesSource),
   //    new AppendixClass("Character File", Nexus.CharacterFile(2)),

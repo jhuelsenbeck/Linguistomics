@@ -117,23 +117,23 @@ with DisplayWords {
 with AllWords {
   WordsPerLine = 7;
 
-  FindWordsWithConcept(language, concept) = Math.FindSlice(language.Words, word => word.Concept == concept);
+  FindWordsWithConcept(language, cognate) = Math.FindSlice(language.Words, word => word.Cognate == cognate);
 
-  AddCell(concept, language) = Cell {
-    foreach (var word in FindWordsWithConcept(language, concept))
+  AddCell(cognate, language) = Cell {
+    foreach (var word in FindWordsWithConcept(language, cognate))
       word.CleanText;
   };
 
-  AddRow(language, concepts) = Row {
+  AddRow(language, cognates) = Row {
     Cell {
       Style.SansSerif;
       TextColor: Colors.DarkGray;
       language.GlobalVariableName
     };
-    AddCell(each concepts, language)
+    AddCell(each cognates, language)
   };
 
-  ConceptTable(languages, concepts) = Block {
+  ConceptTable(languages, cognates) = Block {
     var first = 96 pts;
     var w     = (DocMetrics.PageContent.Width - first) / WordsPerLine;
     Table {
@@ -144,9 +144,9 @@ with AllWords {
         Style.TitleBackground;
         Style.SansSerif;
         Empty;
-        (each concepts).GlobalVariableName;
+        (each cognates).Name;
       };
-      AddRow(each languages, concepts)
+      AddRow(each languages, cognates)
     };
     Paragraph;
   };
@@ -157,13 +157,13 @@ with AllWords {
 
   ShowLangConcept(languages) = Block {
     TextHeight: 12 pts;
-    ConceptTable(languages, each (UsedConcepts / WordsPerLine))
+    ConceptTable(languages, each (UsedCognates / WordsPerLine))
   };
 }
 //======================================================================
 
 with DisplayCharacters {
-  CompleteWord(def)     = Math.FindAny(UsedConcepts, concept => concept == def.Concept);
+  CompleteWord(def)     = Math.FindAny(UsedCognates, cognate => cognate == def.Cognate);
   GetWordList(language) = Math.FindSlice(language.Words, def => CompleteWord(def));
 
   FindUniqueSegments {

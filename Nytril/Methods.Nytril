@@ -54,6 +54,24 @@ with Figures.ExampleTree {
 }
 //======================================================================
 
+with Figures.Alignment {
+  Number = 2;
+
+  Body = TreeOptions {
+    "Body";
+  };
+
+  Caption = Span {
+    "Alignments ";
+    InParens {SegmentalAlignment.Var};
+    " are formed from the observed segments ";
+    InParens {SegmentalInfo.Var};
+    " and a homology map ";
+    InParens {HomologyMap.Var}; eos;
+  };
+}
+//======================================================================
+
 with StateSection {
   CellPad = Margin(1 pts, 1 pts, 3 pts, 0);
   States  = 'A'..'E' step 1;
@@ -130,13 +148,28 @@ with Content.Introduction {
 }
 //======================================================================
 
-eos = ". ";
-TreeFigure = FigureName(Figures.ExampleTree);
-
+TreeFigure      = FigureName(Figures.ExampleTree);
+AlignmentFigure = FigureName(Figures.Alignment);
 
 with Content.Methods {
   Title = Lang.Methods;
   Body  = Block {
+    BodyPar {
+      "We use ancestral classes, in which the descendant forms are segmentally aligned. ";
+      "It is important to note that our definition of cognate refers only to segmental descent. ";
+      "It takes no account of semantics whatsoever. ";
+      "So the lexical items for ‘ear’ in Romance are paired with the Latin word "; Word("auricula"); " which is the diminute form of ‘ear’. ";
+    };
+
+    BodyPar {
+      "Other things we have to mention: "
+    };
+
+    NumberList {
+      "The data are surface forms, not underlying forms. ";
+      "We used the accusative singular for nouns in Latin. ";
+    };
+
     BodyPar {
       "Here, we describe the details of the modeling assumptions we make for the linguistic characters, how we estimate the parameters of the linguists model, and how different models describing the evolution of words can be compared in a statistical framework.";
     };
@@ -195,7 +228,7 @@ with Content.Methods {
       BNEquation; eos;
       "Each topology is given a unique label, ";
       Equation {
-        ElipsisList {
+        EllipsisList {
           Topology.Sub(1);
           Topology.Sub(2);
           Topology.Sub(BN);
@@ -217,7 +250,7 @@ with Content.Methods {
        Bold Time.Var;
        Equals;
        InParens {
-         ElipsisList {
+         EllipsisList {
            Tsub("N+1");
            Tsub("N+2");
            Tsub("2N-1");
@@ -247,8 +280,7 @@ with Content.Methods {
 
      "(The factor of two is introduced because the path between the two languages is the time from one language to the common ancestor, and then back up the tree to the other language.) ";
      "In this paper, we allow each of the "; MaxBranches; " branches of the tree to have an independent substitution rate. ";
-     "Hence, the expected number of evolutionary events that occur along the "; Span {Fancy "i"; "th"};
-     " branch of the tree is ";
+     "Hence, the expected number of evolutionary events that occur along the "; Ith; " branch of the tree is ";
      ExpectedEventsPerBranch;
      eos;
      "In this study, we do not estimate the divergence times on the tree, but rather estimate the compound parameter representing the branch lengths (the ";
@@ -272,7 +304,7 @@ with Content.Methods {
     };
 
     BodyPar {
-      SpaceAfter: 10 pts;
+      TableGap;
       BodyTitle {"Data"}; eos;
       "The similarities of words from different languages are informative about how the languages are related. ";
       "In this study, we use statistical methods developed in the field of evolutionary biology to estimate the relationships of species based on either the morphological characteristics of the species or the DNA sequences sampled from the same gene and compared across the species. ";
@@ -318,33 +350,125 @@ with Content.Methods {
     };
 
     BodyPar {
+      TableGap;
       "In this study, we take a different approach. ";
       "Like others, we concentrate on the so-called ‘basic vocabulary’ of a language (SWADESH REFERENCE), since the lexical items that instantiate concepts in this domain are less prone to horizontal transmission (i.e., linguistic borrowing). ";
       "In contrast to every study of linguistic phylogenetics that we are aware of, however, our investigation draws inferences from segmental information. ";
-      "For each concept in our dataset, homologous lexical items are assigned to the same class, which we refer to an as a ";
+      "For each concept in our dataset, homologous lexical items are assigned to the same class, which we refer to as a ";
       Definition("cognate class"); eos;
       "The word forms within each cognate class are phonemic representations based on the International Phonetic Alphabet (IPA) (IPA REFERENCE). ";
       "Consider the following word forms for one of the cognate classes for the concept ";
       SingleQuote {ExampleConcept.Name};
     };
 
-    Table {
-      TextHeight: 10 pts;
-      Columns: [1.5 inches]*2;
+    SegmentTable(true);
 
+    BodyPar {
+      "One of the words for "; SingleQuote {ExampleConcept.Name};  " in "; ExampleConcept.Taxon.Name; ", for example, is "
+      "/"; ExampleConcept.LangWord; "/. ";
+      "The matrix for the word "; ExampleConcept.Name; " also assumes that the fine-scale homology of the segments has been established. ";
+      "For example, the above matrix for the concept "; SingleQuote {ExampleConcept.Name};  " assumes that the first segment of the ";
+      TextList {ExampleConcept.LangNames};
+      " languages (respectively, ";
+      TextList {ExampleConcept.FirstLetters};
+      ") are homologous. ";
+      "The dashes indicate that there is no homologous segment at that potential position in the word. ";
+      "Note that the first segment for the word ";
+      ExampleConcept.Name;
+      " in "; ExampleConcept.Callout.Name; " is also "; ExampleConcept.CalloutSegment; eos;
+      "Why wasn't the first segment from Italian considered to be homologous to the first segments in ";
+      TextList {ExampleConcept.LangNames};
+      "? ";
+      "In this case, the alignment program chose the alignment that did not consider ";
+      SingleQuote {ExampleConcept.CalloutSegment};
+      " of "; ExampleConcept.Callout.Name; " as homologous to the ";
+      SingleQuote {ExampleConcept.CalloutSegment};
+      " of French based on the settings chosen by the user. ";
+      "It may be that other alignments are nearly as good as the one that is illustrated. ";
+      AlignmentFigure;
+      " shows two possible alignments of the word "
+      ExampleConcept.Name;
+      eos;
+    };
 
-      foreach (var language in ExampleConcept.Concept) {
-        Row {
-          Cell {
-            language.GlobalVariableName;
-          };
-
-          Cell {
-            IPAFamily;
-            language[0];
-          };
+    BodyPar {
+      "Note that a segmental alignment, denoted ";
+      SegmentalAlignment.Var;
+      ", is constructed by combining the word segment information for the languages of interest with information on the homology of the segments. ";
+      "The segmental information for the ";
+      NumLanguages.Var;
+      " languages of interest is denoted ";
+      Equation {
+        SegmentalInfo.Var;
+        Equals;
+        InParens {
+          EllipsisList {
+            Sub(Defs.Segment.Var, 1);
+            Sub(Defs.Segment.Var, 2);
+            Sub(Defs.Segment.Var, NumLanguages.Var);
+          }
         }
-      }
+      };
+      ", where ";
+      SubI(Defs.Segment.Var);
+      " is the segmental string for the ";
+      Ith;
+      " language. ";
+      "The segmental information for the ";
+      SampledLanguages(Results.UsedLanguages.Length);
+      " languages for the cognate class above for ";
+      SingleQuote {ExampleConcept.Name};
+      " is:";
+    };
+
+    SegmentTable(false);
+
+    DocumentFigure(Figures.Alignment);
+
+    BodyPar {
+      "Here, the segments for "; ExampleConcept.Taxon.Name; " would be ";
+      Equation {
+        Sub(Defs.Segment.Var, 1);
+        Equals;
+        InParens {
+          ExampleConcept.LangWord
+        }; eos;
+      };
+      "The alignment of the segments is accomplished by the use of a map, ";
+      HomologyMap.Var;
+      ", describing the homology of the word segments. ";
+      "The alignment is formed by combining the word segment information with the homology map, ";
+      Equation {
+        SegmentalAlignment.Var;
+        Equals;
+        Arguments {
+          SegmentalInfo.Var;
+          HomologyMap.Var;
+        };
+      }; eos;
+      AlignmentFigure; " shows an example of two alignments for the word "; ExampleConcept.Name; " that can be formed using two different homology maps. ";
+      "Ultimately, the linguist observes the phonetic (in the case of contemporary languages) or graphemic (in the case of corpus languages) forms of words, on the basis of which phonemic representations are posited. ";
+      "The alignment, by contrast, is not directly observed. ";
+      "There are many different ways in which the segments from a cognate word can be homologous. ";
+      "The example from the word "; ExampleConcept.Name; ", above, shows only one such way. ";
+      "In this study, we develop the statistical and analytical machinery that allow us to marginalize over the segmental alignments. ";
+      "Our method considers all possible segmental alignments of the word forms in a cognate class, weighting each such possibility by its probability under a model. ";
+      "In this way, our method does not condition on any specific segmental alignment.";
+    };
+
+    BodyPar {
+      BodyTitle {"Language evolution model"}; eos;
+      "We assume that cognate words evolve along the branches of a phylogenetic tree through substitution of one segment by another, insertion of a new segment, or deletion of a segment.";
+    };
+
+    BodyPar {
+      LeftIndent: 0.25 inches;
+      TextColor: Colors.Red;
+      "The process of linguistic change is more complex than this sentence allows. ";
+      "There are cases where entire words disappear and emerge. ";
+      "There are also cases in which the form of word can change with addition or deletion of a block of segments (called a morpheme). ";
+      "If we want to restrict our scope to the forms of change mentioned at the beginning of this paragraph (i.e., to segmental transitions), we can do that, but that will impact the data that I collect. ";
+      "We would also need to make it explicit that we are by design excluding certain types of well-known linguistic change.";
     };
 
     BodyPar {
@@ -354,41 +478,239 @@ with Content.Methods {
       "The rates of change between the pairs of states can be represented in table form as";
     };
 
-    BodyPar {
-      "We use ancestral classes, in which the descendant forms are segmentally aligned. ";
-      "It is important to note that our definition of cognate refers only to segmental descent. ";
-      "It takes no account of semantics whatsoever. ";
-      "So the lexical items for ‘ear’ in Romance are paired with the Latin word "; Word("auricula"); " which is the diminute form of ‘ear’. ";
-    };
-
-    BodyPar {
-      "Other things we have to mention: "
-    };
-
-    NumberList {
-      "The data are surface forms, not underlying forms. ";
-      "We used the accusative singular for nouns in Latin. ";
-    };
-
     FigureBody {
       StateSection.StateTable;
     };
 
+    BodyPar {
+      "where ";
+      Equation {
+        qij;
+        Chars.geq;
+        0;
+        InParens {
+          sym.i;
+          Chars.neq;
+          sym.j;
+        }
+      };
+      " is the rate of change from segment "; sym.i; " to segment "; sym.j; eos;
+      "The diagonal elements of the rate matrix "; qii; " are specified such that each row sums to zero (i.e., ";
+      Equation {
+        qii;
+        Equals;
+        Negative;
+        Summation {
+          Lower: Span {sym.j Chars.neq; sym.i};
+          qij;
+        }
+      };
+      "); this negative value can be interpreted as the rate at which the process moves away from state "; sym.i; eos;
+      "Note that the information on rates of change between all pairs of states is not typically represented in table form, but rather in matrix form as";
+    };
+
     EquationPar {
-      sym.Q;
+      RateMatrix.Var;
       Equals;
       InBraces {qij};
       Equals;
       StateSection.StateMatrix;
       Space;
-      sym.Beta;
+      RateMatrixScale.Var;
+    };
+
+    BodyPar {
+      "Here, we introduce an additional parameter, ";
+      RateMatrixScale.Var;
+      ", that scales the rate matrix such that the average rate of segmental substitution is one.";
+    };
+
+    BodyPar {
+      "A continuous-time Markov model has a simple physical interpretation. ";
+      "Specifically, when the process is in state "; sym.i; ", one waits an exponentially-distributed time with parameter ";
+      Equation {Negative; qii}; " until the next  segmental substitution occurs. ";
+      "The change, when it occurs, is to state ";
+      Equation {sym.j};
+      " with probability ";
+      Equation {
+        Negative;
+        qij; Divide; qii;
+      } eos;
+      "Several important quantities can be calculated using the information contained in the rate matrix, ";
+      RateMatrix.Var; eos;
+      "For one, the probability the process ends in state ";
+      Equation {sym.j};
+      " conditional on starting in state ";
+      Equation {sym.i};
+      " after a period ";
+      Equation {ExpectedEvents.Var};
+      " can be calculated through exponentiation of the rate matrix, ";
+      Equation {
+        StateProbability.Var;
+        InParens {ExpectedEvents.Var};
+        Equals;
+        Nary {
+          Operator: sym.e;
+          Upper: Span {RateMatrix.Var; ExpectedEvents.Var};
+        }
+      }; eos;
+      "One can also calculate the equilibrium distribution of the process --- denoted ";
+      Equation {EquilibriumDistribution.Var};
+      " and interpreted as the probability of capturing the process in a particular state after a very long time (formally, an infinite amount of time) has passed --- by solving the system of equations defined by ";
+      Equation {
+        EquilibriumDistribution.Var;
+        RateMatrix.Var;
+        Equals;
+        Bold 0;
+      } eos;
+      "Both the transition probabilities and equilibrium probability distribution play an important role in calculating the likelihood (see below).";
+    };
+
+    BodyPar {
+      "Insertions and deletions of single segments occur at rates ";
+      InsertDelete(" and ");
+      ", respectively. ";
+      "Consider, for a moment, the long-term behavior of a process in which ";
+      InsertDelete(" > "); eos;
+      "On average, segments would be inserted more frequently than they would be deleted. ";
+      "Word forms, then, would evolve to become a mouthful, growing without bounds. ";
+      "The opposite situation occurs when ";
+      InsertDelete(" < ");
+      ", in which segments are deleted at a higher rate than they are inserted. ";
+      "In this case, words would be whittled down to nothing; ";
+      "a language speaker would not find the words to describe anything, even important people in the person's life, such as the person who gave birth to him or her! ";
+    };
+
+    BodyPar {
+      ThornEtAl; " described a model of DNA sequence evolution that allowed single nucleotides to be inserted and deleted at rates ";
+      InsertDelete(" and "); eos;
+      "They introduced a convention for thinking about a DNA sequence in which nucleotides were connected by invisible links. ";
+      "Each nucleotide paired with the link to its right. ";
+      "The left-most nucleotide had to its left a special link, termed the immortal link. ";
+      "Importantly, when a nucleotide was inserted, it was inserted to the right of a link and brought along its own link (to its right). ";
+      "Deletions removed a nucleotide and the paired link. Importantly, the immortal link is never deleted. ";
+      "So, in the event that "; InsertDelete(" < "); ", the process does not actually go extinct. ";
+      "Rather, a nucleotide (and its link) can be inserted to to the right of the immortal link. ";
+      "In the model described by "; ThornEtAl; " they constrain the insertion rate to be less than the deletion rate ";
+      InsertDelete(" < "); eos;
+      "The equilibrium distribution of a sequence length is then geometrically-distributed with parameter ";
+      InsertDelete(" / "); eos;
+      "We follow the convention of "; ThornEtAl; " in this study. ";
+      "In fact, the model we use is precisely the same as the "; ThornEtAl; " model, but with a different continuous-time Markov model used to describe segmental transitions (instead of the four-state process describing nucleotide substitutions used by Throne et al., 1991)."
+    };
+
+    BodyPar {
+      "The overall substitution and insertion/deletion process can be described as follows. ";
+      "In a sequence ";
+      WordLength.Var;
+      " segments in length, of which ";
+      SubI(WordLength.Var);
+      " of them are of segment type ";
+      Equation {sym.i};
+      ", the time until the next event occurs is exponentially-distributed with parameter ";
     };
 
     EquationPar {
       InDelDistribution;
     };
+
+    BodyPar {
+      "When an event occurs, it is a substitution with probability ";
+      Equation {
+        InDelProbability;
+      };
+      ", an insertion with probability ";
+      Equation {
+        WordLength.Var;
+        InsertionRate.Var;
+        Divide;
+        RateParameter.Var;
+      };
+      ", and a deletion with probability ";
+      Equation {
+        InParens {
+          WordLength.Var;
+          Minus;
+          1;
+        };
+        DeletionRate.Var;
+        Divide;
+        RateParameter.Var;
+      }; eos;
+      "Importantly, the process allows the alignment map ";
+      Equation {
+        InParens {HomologyMap.Var};
+      };
+      " to be treated as a parameter of the model. ";
+    };
+
+    BodyPar {
+      BodyTitle {"Bayesian estimation of language evolution model parameters"}; eos;
+      "We estimate the parameters of the language-evolution model in a Bayesian framework. ";
+      "Bayesians base inferences on the posterior probability distribution of a parameter, which can be calculated using Bayes' theorem as";
+    };
+
+    EquationPar {
+      PPO;
+      Equals;
+      Fraction {
+        Top: Span {
+          POP;
+          PP;
+        };
+        Bottom: PO;
+      }
+    };
+
+    BodyPar {
+      "where the vertical bar indicates a conditional statement. ";
+      "In other words, the posterior probability distribution of the parameters is equal to the likelihood ";
+      Equation {InBrackets {PPO}};
+      " times the prior probability distribution ";
+      Equation {InBrackets {PP}};
+      ", divided by the marginal likelihood ";
+      Equation {InBrackets {PO}}; eos;
+    };
   };
 }
+
+ThornEtAl = "Thorne et al. (1991)";
+
+Prob(x) = Span {
+  Span {Fancy; Italic; "P"}; InParens {x};
+};
+
+PPO = Prob("Parameter(s) | Observations");
+POP = Prob("Observations | Parameter(s)");
+PP  = Prob("Parameter(s)");
+PO  = Prob("Observations");
+
+InsertDelete(by) = Equation {
+  InsertionRate.Var;
+  by;
+  DeletionRate.Var;
+};
+
+SegmentTable(aligned) = Table {
+  TextHeight: 10 pts;
+  Columns: [1.5 inches]*2;
+
+  foreach (var taxon in Results.TaxaArray) {
+    Row {
+      Cell {
+        taxon.Name;
+      };
+
+      Cell {
+        IPAFamily;
+        Span {
+          var list = aligned ? taxon.AlignedList : taxon.SegmentList;
+          (each list[ExampleConcept.Index]).GetBlock;
+        }
+      };
+    }
+  }
+};
 //======================================================================
 
 with Content.Conclusion {
