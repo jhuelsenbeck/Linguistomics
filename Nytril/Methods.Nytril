@@ -656,6 +656,7 @@ with Content.Methods {
       Fraction {
         Top: Span {
           POP;
+          Space;
           PP;
         };
         Bottom: PO;
@@ -671,12 +672,143 @@ with Content.Methods {
       ", divided by the marginal likelihood ";
       Equation {InBrackets {PO}}; eos;
     };
+
+    BodyPar {
+      "In this study, parameters include:";
+    };
+
+    Table {
+      TextHeight: 12 pts;
+      Columns: [2 inches {HAlign: HAligns.Right}, 10 pts, 4 inches];
+      ParamRow {
+        ParamList(Topology.Var);
+        "Tree Topologies";
+      };
+      ParamRow {
+        ParamList(ExpectedEvents.Var);
+        "Branch length parameters";
+      };
+      ParamRow {
+        Equation {RateMatrixParams.Var};
+        Span {RateMatrixParams.Description; Space; Equation {RateMatrix.Var}};
+      };
+      ParamRow {
+        Equation {InsertDelete(", "); Space; InParens {InsertDelete(" < ")}};
+        "The insertion and deletion rates of  segments";
+      };
+      ParamRow {
+        Equation {HomologyMap.Var};
+        HomologyMap.Description;
+      };
+    };
+
+    BodyPar {
+      "We assign prior probability distributions to all parameters of the model (see Table 1). ";
+      "The posterior probability distribution of the linguistic model parameters is then";
+    };
+
+    EquationPar {
+      Prob(CommaList {
+        Topology.Var;
+        ExpectedEvents.Var;
+        RateMatrixParams.Var;
+        InsertionRate.Var;
+        Span {DeletionRate.Var; "|"; SegmentalInfo.Var};
+      });
+      Equals;
+      Fraction {
+        Top: Span {
+          ProbVar(SegmentalInfo.Var);
+          Space;
+          ProbALL;
+        };
+        Bottom: Prob(SegmentalInfo.Var);
+      }
+    };
+
+    BodyPar {
+      "Note that the likelihood is marginalized over all possible alignments, "
+    };
+
+    EquationPar {
+      ProbVar(SegmentalInfo.Var);
+      Equals;
+      Summation {
+        Lower: HomologyMap.Var;
+        ProbVar(SegmentalAlignment.Var);
+        Prob(CommaList {Span {SegmentalAlignment.Var; "|"; HomologyMap.Var}; SegmentalInfo.Var});
+        Space;
+        Prob(HomologyMap.Var);
+      };
+    };
+
+    BodyPar {
+      "where the sum is over all possible alignment maps, which implies that our inferences are not conditioned on any particular alignment of segments being correct. ";
+      "Similarly, the marginal likelihood accounts for all possible combinations of model parameters:";
+    };
+
+    EquationPar {
+      Prob(SegmentalInfo.Var);
+      Equals;
+      Summation {Lower: Topology.Var};
+      Integral {TextStacked: false; Lower: ExpectedEvents.Var};
+      Integral {TextStacked: false; Lower: RateMatrixParams.Var};
+      Integral {
+        TextStacked: false;
+        Lower: InsertDelete(" < ");
+        ProbVar(SegmentalInfo.Var);
+        Space;
+        ProbALL;
+        Space;
+        Group {
+          D(ExpectedEvents.Var);
+          D(RateMatrixParams.Var);
+          D(InsertionRate.Var);
+          D(DeletionRate.Var);
+        }
+      };
+    };
+
+    BodyPar {
+      "where the integrals represent integration over all possible combinations of branch lengths, rate matrix parameters, and insertion/deletion rates.";
+    };
+
+    BodyPar {
+      "We calculate the likelihood on a per-word basis using the algorithm described by Lunter et al. (2003) that conditions on an alignment. ";
+      "Although the posterior probability distribution can be written down, and individual components such as the prior probability or likelihood for a particular combination of parameters can be calculated, analytically solving the high dimensional summations and integrals required for the posterior probability is unfeasible. ";
+      "Instead, we numerically approximate the joint posterior probability distribution of the parameters using Markov chain Monte Carlo.";
+    };
   };
 }
 
+ParamList(v) = Equation {EllipsisList {Sub(v, 1); Sub(v, BN)}};
+D(x) = Group {Fancy "d"; x};
+
+ProbVar(x) = Prob(CommaList {
+  Span {x; "|"; Topology.Var};
+  ExpectedEvents.Var;
+  RateMatrixParams.Var;
+  InsertionRate.Var;
+  DeletionRate.Var;
+});
+
+ProbALL = Prob(CommaList {
+  Topology.Var;
+  ExpectedEvents.Var;
+  RateMatrixParams.Var;
+  InsertionRate.Var;
+  DeletionRate.Var;
+});
+
+
+
+ParamRow = Row {
+  Separator: Empty;
+};
+
 ThornEtAl = "Thorne et al. (1991)";
 
-Prob(x) = Span {
+Prob(x) = Group {
   Span {Fancy; Italic; "P"}; InParens {x};
 };
 
