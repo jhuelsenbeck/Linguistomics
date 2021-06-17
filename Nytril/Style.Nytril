@@ -107,11 +107,9 @@ class DefClass {
     Description = description;
   }
 
-  Var = Style.Equation {
-    Span {
-      Popup: this;
-      Symbol;
-    }
+  Var = Span {
+    Popup: this;
+    Symbol;
   };
 
   Sub(i) = Nary {
@@ -146,15 +144,20 @@ class DefClass {
 }
 //======================================================================
 
-Main.MathFamily = "Linux Libertine O";
+Main.MathFamily = "CMU Serif";
 
 with Style {
-  Fancy                = {TextFamily: "CMU Serif Upright Italic"};
+//  Fancy                = {TextFamily: "CMU Serif Upright Italic"; Italic};
+  Fancy                = {TextFamily: "CMU Serif"; Italic};
+  Extra                = {TextFamily: "CMU Serif Extra"};
   CalFont              = {TextFamily: "CMSY8"};
   MainFamily           = {TextFamily: "CMU Serif"};
   SansSerif            = {TextFamily: "CMU Sans Serif"};
   MonoFamily           = {TextFamily: "CMU Typewriter Text"};
-  IPAFamily            = {TextFamily: TextFamilies.CambriaMath}; // Also can be "Linux Libertine O"
+//  IPAFamily            = {TextFamily: TextFamilies.CambriaMath}; // Also can be "Linux Libertine O"
+  IPAFamily            = {TextFamily: "Linux Libertine O"};
+
+  theta                = Span {"θ" SansSerif Italic};
 
   ImpossibleBackground = {Background: 80%};
   CommentColor         = Color(0, 0x64, 0);
@@ -165,7 +168,6 @@ with Style {
   TableEdge            = {Edge: TableEdgeSize};
   ColumnEdge           = {EdgeR: TableEdgeSize};
   SegmentBottom        = {EdgeB: TableEdgeSize {Color: 80%}};
-  TableGap             = {SpaceAfter: 10 pts};
   Logo1                = Color(0, 0, 0xFF);
   Logo1A               = Color(0, 0, 0xE0);
   Logo2                = Color(0xFF, 0xA5, 00);
@@ -550,8 +552,18 @@ with Style {
     SpaceBefore: 6 pts;
   };
 
+  BodyTable = Table {
+    SpaceBefore: 10 pts;
+    LeftIndent: 0.5 inches;
+  };
+
   BodyTitle = Span {
     Bold;
+  };
+
+  NeedsReview(text) = InParens {
+    TextColor: Colors.Red;
+    text;
   };
 
   FigureBody = Paragraph {

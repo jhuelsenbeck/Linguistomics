@@ -304,7 +304,6 @@ with Content.Methods {
     };
 
     BodyPar {
-      TableGap;
       BodyTitle {"Data"}; eos;
       "The similarities of words from different languages are informative about how the languages are related. ";
       "In this study, we use statistical methods developed in the field of evolutionary biology to estimate the relationships of species based on either the morphological characteristics of the species or the DNA sequences sampled from the same gene and compared across the species. ";
@@ -313,7 +312,7 @@ with Content.Methods {
       "Consider as an example the following DNA sequences sampled from three species,";
     };
 
-    Table {
+    BodyTable {
       Columns: [1 inch, 5 inches];
       AnimalRow(each ExampleAnimals);
     };
@@ -350,13 +349,15 @@ with Content.Methods {
     };
 
     BodyPar {
-      TableGap;
       "In this study, we take a different approach. ";
-      "Like others, we concentrate on the so-called ‘basic vocabulary’ of a language (SWADESH REFERENCE), since the lexical items that instantiate concepts in this domain are less prone to horizontal transmission (i.e., linguistic borrowing). ";
+      "Like others, we concentrate on the so-called ‘basic vocabulary’ of a language "
+      NeedsReview("SWADESH REFERENCE");
+      ", since the lexical items that instantiate concepts in this domain are less prone to horizontal transmission (i.e., linguistic borrowing). ";
       "In contrast to every study of linguistic phylogenetics that we are aware of, however, our investigation draws inferences from segmental information. ";
       "For each concept in our dataset, homologous lexical items are assigned to the same class, which we refer to as a ";
       Definition("cognate class"); eos;
-      "The word forms within each cognate class are phonemic representations based on the International Phonetic Alphabet (IPA) (IPA REFERENCE). ";
+      "The word forms within each cognate class are phonemic representations based on the International Phonetic Alphabet (IPA) ";
+      NeedsReview("IPA REFERENCE"); eos;
       "Consider the following word forms for one of the cognate classes for the concept ";
       SingleQuote {ExampleConcept.Name};
     };
@@ -463,7 +464,6 @@ with Content.Methods {
 
     BodyPar {
       LeftIndent: 0.25 inches;
-      TextColor: Colors.Red;
       "The process of linguistic change is more complex than this sentence allows. ";
       "There are cases where entire words disappear and emerge. ";
       "There are also cases in which the form of word can change with addition or deletion of a block of segments (called a morpheme). ";
@@ -677,8 +677,8 @@ with Content.Methods {
       "In this study, parameters include:";
     };
 
-    Table {
-      Columns: [2 inches {HAlign: HAligns.Right}, 10 pts, 4 inches];
+    BodyTable {
+      Columns: [1 inches {HAlign: HAligns.Right}, 20 pts, 4 inches];
       ParamRow {
         ParamList(Topology.Var);
         "Tree Topologies";
@@ -783,19 +783,16 @@ with Content.Methods {
     NumberedList {
       Paragraph {
         "The current state of the chain is denoted ";
-        Equation {RateMatrixParams.Var}; eos;
+        RateMatrixParams.Var; eos;
         "If this is the first cycle of the Markov chain, initialize ";
-        Equation {RateMatrixParams.Var};
+        RateMatrixParams.Var;
         ", perhaps by choosing a value from the prior distribution.";
       };
 
       Paragraph {
-        "Propose a new value for ";
-        Equation {RateMatrixParams.Var};
-        " denoted ";
-        Equation {Proposal.Var}; eos;
+        "Propose a new value for "; RateMatrixParams.Var; " denoted "; Proposal.Var; eos;
         "The proposal mechanism is up to the programmer, but must involve the generation of random numbers ";
-        Equation {RandomNumber.Var};
+        RandomNumber.Var;
         " such that the proposed value is a function of the current value and the random numbers, ";
         Equation {
           Proposal.Var;
@@ -873,16 +870,141 @@ with Content.Methods {
 
     BodyPar {
       "The proposals we implement in this study are all typical for phylogenetic models. ";
-      Span {TextColor: Colors.Red; "[Some details here.] "};
+      NeedsReview("Some details here");
       "The unique aspect of this study is a proposal mechanism for the alignments of the segments for various words. ";
       "Here, we use the proposal mechanism described by Lunter et al. (2005). ";
     };
 
     BodyPar {
-      Span {TextColor: Colors.Red; "A bit on interpretation of MCMC results here."};
+      NeedsReview("A bit on interpretation of MCMC results here.");
+    };
+
+    BodyPar {
+      BodyTitle {"Model comparison"}; eos;
+      "In a Bayesian analysis, parameter estimates are based on the joint posterior probability distribution of the parameters, which we numerically approximate using the Metropolis-Hastings algorithm. ";
+      "Often, however, the linguist is interested in the comparison of two or more models with the goal of evaluating which of the models best explains the observations. ";
+      "Bayesian model comparison is based on the marginal likelihoods of the models. ";
+      "Consider two different linguistics models, ";
+      Sub(Model.Var, 1); " and "; Sub(Model.Var, 2);
+      " with marginal likelihoods, "; PSM(1); " and "; PSM(2);
+      " (note the marginal likelihoods are calculated for the same observations). The ratio of the marginal likelihoods,";
+    };
+
+    EquationPar {
+      Sub(BayesFactor.Var, 12);
+      Equals;
+      Fraction {
+        Top: PSM(1);
+        Bottom: PSM(2);
+      }
+    };
+
+    BodyPar {
+      "called the Bayes Factor, measures the relative support of the two models; ";
+      "a Bayes Factor less than one favors ";
+      Sub(Model.Var, 1);
+      " whereas the oppose is true for a Bayes factor greater than one. ";
+      "Unlike in frequentist statistics, one does not obtain p-values in a Bayesian comparison of models. ";
+      "Rather, the Bayes Factor is interpreted as is, or on a log scale. ";
+      "Jeffreys (1961) provided a table to help with the interpretation of Bayes Factors:";
+    };
+
+    BodyTable {
+      Columns: [1 inches, 1 inches, 3 inches];
+      Row {
+        EdgeB: 0.5 pts;
+
+        BayesFactor.Var;
+        Span {Sub("log", 10); BayesFactor.Var};
+        "Interpretation";
+      };
+      Row {
+        Span {1; Minus; 3.2};
+        Span {0; Minus; 1/2};
+        "Not worth a bare mention";
+      };
+      Row {
+        Span {3.2; Minus; 10};
+        Span {1/2; Minus; 1};
+        "Substantial";
+      };
+      Row {
+        Span {10 Minus 100};
+        Span {1 Minus 2};
+        "Strong";
+      };
+      Row {
+        Span {" > "; 100};
+        Span {" > "; 2};
+        "Decisive";
+      };
+    };
+
+    BodyPar {
+      "In a Bayesian analysis, there is no need to penalize parameter rich models for having more parameters. ";
+      "Rather, the penalization is built into the comparison; ";
+      "the additional parameters in a complicated model are each assigned a prior probability distribution. ";
+      "A parameter-rich model has lower prior probability for any combination of model parameters than a simpler model. ";
+      "Hence, there is no need to compare the Bayes factor to a null distribution as there is in frequentist hypothesis testing.";
+    };
+
+    BodyPar {
+      "The main limitation of Bayesian model comparison is numerically approximating the marginal likelihoods of the models. ";
+      "This can be done in numerous ways. ";
+      "For example, one can construct a Markov chain that jumps between models, even if the models differ in dimensions, using a generalization of MCMC described by Green (1995; reversible-jump MCMC). ";
+      "Alternatively, one can numerically approximate the marginal likelihoods using what is called path-sampling in which numerous MCMC chains explore a path between the prior and posterior distributions ";
+      NeedsReview("citations"); eos;
+    };
+
+    BodyPar {
+      "In this study, we compare two models. ";
+      "The first model is the simplest one we could devise, assuming that the rate of change between all segments is equal. ";
+      "Our first model is isomorphic to the earliest model of DNA substitution, called the Jukes and Cantor model in molecular evolution (Jukes and Cantor, 1969). "
+      "The second model assumes that the rate of change to ";
+      NeedsReview("something");
+      " is potentially different than the rate of change to ";
+      NeedsReview("something else");
+      ":";
+    };
+
+    BodyTable {
+      Columns: [0.5 inches, 5 inches];
+      Row {
+        Sub(Model.Var, 1) ":";
+        Equation {
+          qij;
+          Equals;
+          Chars.alpha;
+          " (i.e., all elements of rate matrix are equal)";
+        };
+      };
+      Row {
+        Sub(Model.Var, 2) ":";
+        Equation {
+          qij;
+          Equals;
+          Group {
+            BracketL: Brackets.FlatCurly;
+            Vertical: true;
+            IfValue(Chars.alpha, " is a something");
+            IfValue(Chars.beta, " is a something else");
+          };
+        };
+      };
     };
   };
 }
+
+IfValue(a, text) = Span {
+  a;
+  " if ";
+  sym.i;
+  Space;
+  Chars.rightarrow;
+  Space;
+  sym.j;
+  text;
+};
 
 IntegrateOver(v) = Integral {
   TextStacked: false;
@@ -891,15 +1013,23 @@ IntegrateOver(v) = Integral {
 
 ParamList(v) = Equation {EllipsisList {Sub(v, 1); Sub(v, BN)}};
 
-D(x) = Group {Fancy " d"; x};
+D(x) = Group {Extra " d"; x};
 
-Fof(x) = Span {
-  Fancy "f";
+Fof(x) = Equation {
+  Span {Italic; "f"};
   InParens {
     x;
   }
 };
 
+PSM(n) = Equation {
+  MarginalLikelihood.Var;
+  InParens {
+    SegmentalInfo.Var;
+    "|";
+    Sub(Model.Var, n);
+  }
+};
 
 NewProposal(start, end) = Equation {
   ProbProposal.Var;
@@ -928,8 +1058,6 @@ ProbALL = Prob(CommaList {
   DeletionRate.Var;
 });
 
-
-
 ParamRow = Row {
   Separator: Empty;
 };
@@ -937,7 +1065,7 @@ ParamRow = Row {
 ThornEtAl = "Thorne et al. (1991)";
 
 Prob(x) = Group {
-  Span {Fancy; Italic; "P"}; InParens {x};
+  Span {Extra; "P"}; InParens {x};
 };
 
 PPO = Prob("Parameter(s) | Observations");
@@ -951,7 +1079,7 @@ InsertDelete(by) = Equation {
   DeletionRate.Var;
 };
 
-SegmentTable(aligned) = Table {
+SegmentTable(aligned) = BodyTable {
   TextHeight: 10 pts;
   Columns: [1.5 inches]*2;
 
