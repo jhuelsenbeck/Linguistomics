@@ -1076,17 +1076,14 @@ with IPA {
       Background: Colors.Green;
   };
 
-  FeatureSegment(segment0, segment1) = Group {
-    Vertical: true;
+  FeatureSegment(segment0, segment1) = VBox {
     VAlign: VAligns.Center;
     FeatureBox(each FeatureList, segment0.Features, segment1.Features);
   };
 
-  DriftFeatures(word0, word) = Group {
-    Vertical: true;
+  DriftFeatures(word0, word) = VBox {
     if (word0.Segments.Length > 0 and word.Segments.Length > 0) {
-      Group {
-        Vertical: true;
+      VBox {
         RowBox {
           if (EachIndex == 0)
             word0.Segments[0].ShowSegment;
@@ -1096,40 +1093,36 @@ with IPA {
         };
         BorderB: BorderSize;
       };
-      Group {
+      HBox {
         FeatureSegment(word0.Segments[0], word.Segments[0]);
       }
     }
   };
 
-  DriftChart(cells) = Group {
+  DriftChart(cells) = HBox {
     TextHeight: RowText;
     VAlign: VAligns.Top;
     Border: BorderSize;
-    Group {
-      Vertical: true;
+    VBox {
       BorderR: BorderSize;
-      Group {
-        Vertical: true;
+      VBox {
         VAlign: VAligns.Center;
         RowBox;
         RowBox;
       };
-      Group {
-        Vertical: true;
+      VBox {
         PaddingR: 3 pts;
         BorderT: BorderSize;
         ShowFeature(each FeatureList)
       };
     };
-    Group {
+    HBox {
       DriftFeatures(cells[0], each cells[1..])
     };
   };
 
-  ConceptDrift(concept) = Group {
+  ConceptDrift(concept) = VBox {
     MarginB: 8 pts;
-    Vertical: true;
     Paragraph {
       Lang.Concept; ": ";
       concept.Concept Bold;

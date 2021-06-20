@@ -55,10 +55,189 @@ with Figures.ExampleTree {
 //======================================================================
 
 with Figures.Alignment {
-  Number = 2;
+  Number      = 2;
+  ArrowWidth  = 50;
+  ArrowHeight = 100;
+  ArrowMargin = 20 pts;
+  Arrowhead   = 8 pts;
+  ArrowColor  = 80%;
 
-  Body = TreeOptions {
-    "Body";
+  HMap1 = [
+    "00111110",
+    "10001111",
+    "10001110",
+    "01101111",
+    "10101010",
+    "10101110",
+    "10001111",
+    "00001110",
+    "10001110",
+    "10011111",
+  ];
+
+  HMap2 = [
+    "111110000",
+    "000111100",
+    "000111111",
+    "000111111",
+    "101010100",
+    "000101111",
+    "000101111",
+    "000111000",
+    "111100000",
+    "000111111",
+  ];
+
+  TName(taxon) = Cell {
+    Style.SansSerif;
+    taxon.Name;
+  };
+
+  SegmentTable(aligned) = MatrixBlock {
+    TextHeight: 9 pts;
+
+    foreach (var taxon in Results.TaxaArray) {
+      Row {
+        TName(taxon);
+        Cell {
+          IPAFamily;
+          Span {
+            var list = aligned ? taxon.AlignedList : taxon.SegmentList;
+            (each list[ExampleConcept.Index]).GetBlock;
+          }
+        };
+      }
+    }
+  };
+
+  AlignSegments(segments, map) = Span {
+    IPAFamily;
+
+    var i = 0;
+    foreach (var c in map) {
+      if (c == '1' and i < segments.Length)
+        segments[i++].GetBlock;
+      else
+        IPA.GapSegment.GetBlock;
+    }
+  };
+
+  MapTable(map, text) = MatrixBlock {
+    TextHeight: 9 pts;
+
+    foreach (var taxon in Results.TaxaArray) {
+      Row {
+        TName(taxon);
+        Cell {
+          var t = map[EachIndex];
+          Span {
+            if (text)
+              AlignSegments(taxon.SegmentList[ExampleConcept.Index], t);
+            else {
+              Style.MonoFamily;
+              t;
+            }
+          }
+        };
+      }
+    }
+  };
+
+  LabelBox(label) = HBox {
+    TextHeight: 18 pts;
+    Bold;
+    Equation {label};
+  };
+
+  ContentBox(content) = HBox {
+    MarginL: 4 pts;
+    Border: 1 {Color: ArrowColor};
+    Padding: 2 pts;
+    content;
+  };
+
+  ArrowFigure(w, h, reverse) = Canvas {
+    Size: Size(w, h);
+    Canvas {
+      Size: Size(w, h);
+      if (reverse)
+        Transform: Affine(-1, 0, 0, 1, w, 0);
+      Figure {
+        Stroke: 1.5 {Color: ArrowColor};
+        FigurePath {
+          Point(0, 0);
+          QuadTo(Point(w*0.92, h*0.4), Point(w - Arrowhead*0.5, h - Arrowhead));
+        };
+      };
+      Figure {
+        Fill: ArrowColor;
+        FigurePath {
+          Closed: true;
+          Point(w - Arrowhead, h - Arrowhead);
+          LineTo(w, h - Arrowhead);
+          LineTo(w - Arrowhead * 0.5, h);
+        };
+      };
+      Canvas {
+        Background: Colors.White;
+        Position: Point(w * 0.3, h * 0.25);
+        TextHeight: 20 pts;
+        TextColor: ArrowColor;
+        Bold;
+        Plus;
+      };
+    };
+  };
+
+  CFigure(c) = Figure {
+    Padding: 1;
+    c;
+  };
+
+  NumBox(num, c1, c2) = MatrixBlock {
+    VAlign: VAligns.Top;
+    HAlign: HAligns.Center;
+    ColumnGap: 0;
+    Row {
+      LabelBox(Sub(HomologyMap.Var, num));
+      ContentBox(c1);
+    };
+    Row {
+      Empty;
+      VBox {
+        MarginTB: 6 pts;
+        HAlign: HAligns.Center;
+        TextColor: ArrowColor;
+        CFigure('=');
+        CFigure(Chars.downarrow);
+      }
+    };
+    Row {
+      LabelBox(Sub(SegmentalAlignment.Var, num));
+      ContentBox(c2);
+    };
+  };
+
+  HomBox(i, map) = NumBox(i, MapTable(map, false), MapTable(map, true));
+
+  Body = VBox {
+    HAlign: HAligns.Center;
+    HBox {
+      MarginB: 4 pts;
+      VAlign: VAligns.Bottom;
+      ArrowFigure(ArrowWidth, ArrowHeight, true);
+      HBox {
+        VAlign: VAligns.Top;
+        LabelBox(SegmentalInfo.Var);
+        ContentBox(SegmentTable(false)) {MarginB: ArrowMargin; MarginR: ArrowMargin};
+      };
+      ArrowFigure(ArrowWidth, ArrowHeight, false);
+    };
+    HBox {
+      HomBox(1, HMap1);
+      Canvas {Width: 1 inches};
+      HomBox(2, HMap2);
+    }
   };
 
   Caption = Span {
@@ -424,8 +603,6 @@ with Content.Methods {
 
     SegmentTable(false);
 
-    DocumentFigure(Figures.Alignment);
-
     BodyPar {
       "Here, the segments for "; ExampleConcept.Taxon.Name; " would be ";
       Equation {
@@ -447,7 +624,15 @@ with Content.Methods {
           HomologyMap.Var;
         };
       }; eos;
-      AlignmentFigure; " shows an example of two alignments for the word "; ExampleConcept.Name; " that can be formed using two different homology maps. ";
+      AlignmentFigure;
+      " shows an example of two alignments for the word ";
+      ExampleConcept.Name;
+      " that can be formed using two different homology maps. ";
+    };
+
+    DocumentFigure(Figures.Alignment);
+
+    BodyPar {
       "Ultimately, the linguist observes the phonetic (in the case of contemporary languages) or graphemic (in the case of corpus languages) forms of words, on the basis of which phonemic representations are posited. ";
       "The alignment, by contrast, is not directly observed. ";
       "There are many different ways in which the segments from a cognate word can be homologous. ";
@@ -463,6 +648,7 @@ with Content.Methods {
     };
 
     BodyPar {
+      TextColor: Colors.Red;
       LeftIndent: 0.25 inches;
       "The process of linguistic change is more complex than this sentence allows. ";
       "There are cases where entire words disappear and emerge. ";
@@ -983,9 +1169,8 @@ with Content.Methods {
         Equation {
           qij;
           Equals;
-          Group {
+          VBox {
             BracketL: Brackets.FlatCurly;
-            Vertical: true;
             IfValue(Chars.alpha, " is a something");
             IfValue(Chars.beta, " is a something else");
           };
@@ -1013,7 +1198,7 @@ IntegrateOver(v) = Integral {
 
 ParamList(v) = Equation {EllipsisList {Sub(v, 1); Sub(v, BN)}};
 
-D(x) = Group {Extra " d"; x};
+D(x) = HBox {Extra " d"; x};
 
 Fof(x) = Equation {
   Span {Italic; "f"};
@@ -1064,7 +1249,7 @@ ParamRow = Row {
 
 ThornEtAl = "Thorne et al. (1991)";
 
-Prob(x) = Group {
+Prob(x) = HBox {
   Span {Extra; "P"}; InParens {x};
 };
 

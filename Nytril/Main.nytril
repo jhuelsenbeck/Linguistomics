@@ -7,6 +7,7 @@ include "Languages";
 include "LanguageTree";
 include "IPA";
 include "Rules";
+include "RevBayes";
 include "Style";
 include "References";
 include "Concepts";
@@ -14,7 +15,6 @@ include "Formulas";
 include "Methods";
 include "Slides";
 include "Tables";
-include "RevBayes";
 //======================================================================
 
 // No spaces in the name below!
@@ -22,7 +22,21 @@ include "RevBayes";
 
 ShowOutput = "Run2";
 Compute    = new ComputeClass(ShowOutput);
+//======================================================================
 
+with Info {
+  Generations = 1000;
+
+  PaperTitle  = "White Paper";
+  Journal     = "Transactions of the Beysian Society";
+  Publisher   = "The Baysian Society";
+  Title       = Lang.SimulatedSegments;
+  PriorTree   = GetTreeNodes(LanguageBranches.Romance);
+
+  AuthorList = TextList {
+    Style.Author(each Authors);
+  };
+}
 //======================================================================
 
 UsedCognates = [
@@ -40,18 +54,25 @@ UsedCognates = [
 ];
 //======================================================================
 
-with Info {
-  Generations = 1000;
+with ExampleConcept {
+  Index   = 0;  // Index into the UsedCognates array above
+  Cognate = UsedCognates[Index];
+  Taxon   = Results.TaxaArray[0];
+  Callout = Results.TaxaArray[3];
+  Name    = ToLower(Cognate.Name);
 
-  PaperTitle  = "White Paper";
-  Journal     = "Transactions of the Beysian Society";
-  Publisher   = "The Baysian Society";
-  Title       = Lang.SimulatedSegments;
-  PriorTree   = GetTreeNodes(LanguageBranches.Romance);
+  GetTaxon(language) = Math.FindSlice(Results.TaxaArray, t => t.Language == language)[0];
 
-  AuthorList = TextList {
-    Style.Author(each Authors);
-  };
+  LanguageList   = GetTaxon(each [Languages.Romanian, Languages.Catalan, Languages.Portuguese, Languages.French, Languages.Friulian]);
+  LangNames      = (each LanguageList).Name;
+  CalloutSegment = FirstLetter(Callout);
+  LangWord       = Span {(each Taxon.SegmentList[Index]).Ipa};
+
+  FirstLetter(taxon) {
+    return taxon.AlignedList[Index][0].Ipa;
+  }
+
+  FirstLetters = FirstLetter(each LanguageList);
 }
 //======================================================================
 
