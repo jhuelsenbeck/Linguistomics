@@ -45,7 +45,6 @@ with Figures.ExampleTree {
     };
   };
 
-
   Body = TreeOptions {
     Root: Nodes;
   };
@@ -190,6 +189,7 @@ with Figures.Alignment {
   };
 
   CFigure(c) = Figure {
+    Fill: ArrowColor;
     Padding: 1;
     c;
   };
@@ -199,21 +199,21 @@ with Figures.Alignment {
     HAlign: HAligns.Center;
     ColumnGap: 0;
     Row {
-      LabelBox(Sub(HomologyMap.Var, num));
+      LabelBox(HomologyMap.Var sub num);
       ContentBox(c1);
     };
     Row {
       Empty;
       VBox {
         MarginTB: 6 pts;
+        TextHeight: 20 pts;
         HAlign: HAligns.Center;
-        TextColor: ArrowColor;
         CFigure('=');
         CFigure(Chars.downarrow);
       }
     };
     Row {
-      LabelBox(Sub(SegmentalAlignment.Var, num));
+      LabelBox(SegmentalAlignment.Var sub num);
       ContentBox(c2);
     };
   };
@@ -258,7 +258,7 @@ with StateSection {
   MatrixRow(state) = {
     foreach (var s in States) {
       Cell {
-        qsub(state s);
+        sym.q sub (state s);
       }
     }
   };
@@ -419,7 +419,7 @@ with Content.Methods {
       " languages, for example, would contend with ";
       Equation {BranchFormula(60); TextScientific: true; TextDigits: 2};
       " possible topologies, each depicting a unique and different way the languages can be related. ";
-      "For comparison, the number of atoms in the known universe is on the order of "; TextSuper(10, 80); eos;
+      "For comparison, the number of atoms in the known universe is on the order of "; 10 sup 80; eos;
     };
 
     BodyPar {
@@ -430,9 +430,9 @@ with Content.Methods {
        Equals;
        InParens {
          EllipsisList {
-           Tsub("N+1");
-           Tsub("N+2");
-           Tsub("2N-1");
+           Time.Var sub (NumLanguages.Var Plus 1);
+           Time.Var sub (NumLanguages.Var Plus 2);
+           Time.Var sub (2 NumLanguages.Var Minus 1);
          };
        }
      }; eos;
@@ -463,7 +463,7 @@ with Content.Methods {
      ExpectedEventsPerBranch;
      eos;
      "In this study, we do not estimate the divergence times on the tree, but rather estimate the compound parameter representing the branch lengths (the ";
-     Equation {Sub(ExpectedEvents.Var, "i")};
+     Equation {ExpectedEvents.Var  sub sym.i};
      " which are in units of expected number of substitutions per segment (see below). ";
     };
 
@@ -583,14 +583,14 @@ with Content.Methods {
         Equals;
         InParens {
           EllipsisList {
-            Sub(Defs.Segment.Var, 1);
-            Sub(Defs.Segment.Var, 2);
-            Sub(Defs.Segment.Var, NumLanguages.Var);
+            Defs.Segment.Var sub 1;
+            Defs.Segment.Var sub 2;
+            Defs.Segment.Var sub NumLanguages.Var;
           }
         }
       };
       ", where ";
-      SubI(Defs.Segment.Var);
+      Defs.Segment.Var sub sym.i;
       " is the segmental string for the ";
       Ith;
       " language. ";
@@ -606,7 +606,7 @@ with Content.Methods {
     BodyPar {
       "Here, the segments for "; ExampleConcept.Taxon.Name; " would be ";
       Equation {
-        Sub(Defs.Segment.Var, 1);
+        Defs.Segment.Var sub 1;
         Equals;
         InParens {
           ExampleConcept.LangWord
@@ -671,7 +671,7 @@ with Content.Methods {
     BodyPar {
       "where ";
       Equation {
-        qij;
+        sym.qij;
         Chars.geq;
         0;
         InParens {
@@ -681,14 +681,14 @@ with Content.Methods {
         }
       };
       " is the rate of change from segment "; sym.i; " to segment "; sym.j; eos;
-      "The diagonal elements of the rate matrix "; qii; " are specified such that each row sums to zero (i.e., ";
+      "The diagonal elements of the rate matrix "; sym.qii; " are specified such that each row sums to zero (i.e., ";
       Equation {
-        qii;
+        sym.qii;
         Equals;
         Negative;
         Summation {
           Lower: Span {sym.j Chars.neq; sym.i};
-          qij;
+          sym.qij;
         }
       };
       "); this negative value can be interpreted as the rate at which the process moves away from state "; sym.i; eos;
@@ -698,7 +698,7 @@ with Content.Methods {
     EquationPar {
       RateMatrix.Var;
       Equals;
-      InBraces {qij};
+      InBraces {sym.qij};
       Equals;
       StateSection.StateMatrix;
       Space;
@@ -714,13 +714,13 @@ with Content.Methods {
     BodyPar {
       "A continuous-time Markov model has a simple physical interpretation. ";
       "Specifically, when the process is in state "; sym.i; ", one waits an exponentially-distributed time with parameter ";
-      Equation {Negative; qii}; " until the next  segmental substitution occurs. ";
+      Equation {Negative; sym.qii}; " until the next  segmental substitution occurs. ";
       "The change, when it occurs, is to state ";
       Equation {sym.j};
       " with probability ";
       Equation {
         Negative;
-        qij; Divide; qii;
+        sym.qij; Divide; sym.qii;
       } eos;
       "Several important quantities can be calculated using the information contained in the rate matrix, ";
       RateMatrix.Var; eos;
@@ -790,7 +790,7 @@ with Content.Methods {
       "In a sequence ";
       WordLength.Var;
       " segments in length, of which ";
-      SubI(WordLength.Var);
+      WordLength.Var sub sym.i;
       " of them are of segment type ";
       Equation {sym.i};
       ", the time until the next event occurs is exponentially-distributed with parameter ";
@@ -921,6 +921,7 @@ with Content.Methods {
       Summation {
         Lower: HomologyMap.Var;
         ProbVar(SegmentalAlignment.Var);
+        Space;
         Prob(CommaList {Span {SegmentalAlignment.Var; "|"; HomologyMap.Var}; SegmentalInfo.Var});
         Space;
         Prob(HomologyMap.Var);
@@ -1071,13 +1072,13 @@ with Content.Methods {
       "Often, however, the linguist is interested in the comparison of two or more models with the goal of evaluating which of the models best explains the observations. ";
       "Bayesian model comparison is based on the marginal likelihoods of the models. ";
       "Consider two different linguistics models, ";
-      Sub(Model.Var, 1); " and "; Sub(Model.Var, 2);
+      Model.Var sub 1; " and "; Model.Var sub 2;
       " with marginal likelihoods, "; PSM(1); " and "; PSM(2);
       " (note the marginal likelihoods are calculated for the same observations). The ratio of the marginal likelihoods,";
     };
 
     EquationPar {
-      Sub(BayesFactor.Var, 12);
+      BayesFactor.Var sub 12;
       Equals;
       Fraction {
         PSM(1);
@@ -1088,7 +1089,7 @@ with Content.Methods {
     BodyPar {
       "called the Bayes Factor, measures the relative support of the two models; ";
       "a Bayes Factor less than one favors ";
-      Sub(Model.Var, 1);
+      Model.Var sub 1;
       " whereas the oppose is true for a Bayes factor greater than one. ";
       "Unlike in frequentist statistics, one does not obtain p-values in a Bayesian comparison of models. ";
       "Rather, the Bayes Factor is interpreted as is, or on a log scale. ";
@@ -1101,7 +1102,7 @@ with Content.Methods {
         EdgeB: 0.5 pts;
 
         BayesFactor.Var;
-        Span {Sub("log", 10); BayesFactor.Var};
+        Span {"log" sub 10; BayesFactor.Var};
         "Interpretation";
       };
       Row {
@@ -1156,18 +1157,18 @@ with Content.Methods {
     BodyTable {
       Columns: [0.5 inches, 5 inches];
       Row {
-        Sub(Model.Var, 1) ":";
+        Span {Model.Var sub 1; ":"};
         Equation {
-          qij;
+          sym.qij;
           Equals;
           Chars.alpha;
           " (i.e., all elements of rate matrix are equal)";
         };
       };
       Row {
-        Sub(Model.Var, 2) ":";
+        Span {Model.Var sub 2; ":"};
         Equation {
-          qij;
+          sym.qij;
           Equals;
           VBox {
             BracketL: Brackets.FlatCurly;
@@ -1196,7 +1197,7 @@ IntegrateOver(v) = Integral {
   Lower: v;
 };
 
-ParamList(v) = Equation {EllipsisList {Sub(v, 1); Sub(v, BN)}};
+ParamList(v) = Equation {EllipsisList {v sub 1; v sub BN}};
 
 D(x) = HBox {Extra " d"; x};
 
@@ -1212,7 +1213,7 @@ PSM(n) = Equation {
   InParens {
     SegmentalInfo.Var;
     "|";
-    Sub(Model.Var, n);
+    Model.Var sub n;
   }
 };
 
