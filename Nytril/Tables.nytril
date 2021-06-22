@@ -115,8 +115,6 @@ with DisplayWords {
 //======================================================================
 
 with AllWords {
-  WordsPerLine = 7;
-
   FindWordsWithConcept(language, cognate) = Math.FindSlice(language.Words, word => word.Cognate == cognate);
 
   AddCell(cognate, language) = Cell {
@@ -133,13 +131,13 @@ with AllWords {
     AddCell(each cognates, language)
   };
 
-  ConceptTable(languages, cognates) = Block {
+  ConceptTable(wordsperline, languages, cognates) = Block {
     var first = 96 pts;
-    var w     = (DocMetrics.PageContent.Width - first) / WordsPerLine;
+    var w     = (DocMetrics.PageContent.Width - first) / wordsperline;
     Table {
       Style.IPAFamily;
       Edge: 0.5;
-      Columns: [first] + [w] * WordsPerLine;
+      Columns: [first] + [w] * wordsperline;
       Row {
         Style.TitleBackground;
         Style.SansSerif;
@@ -151,13 +149,14 @@ with AllWords {
     Paragraph;
   };
 
-  ShowConceptTable(concepts) = ConceptTable(Results.UsedLanguages, [concepts]);
+  ShowConceptTable(concepts) = ConceptTable(7, Results.UsedLanguages, [concepts]);
 
-  ShowTable = ShowLangConcept(Results.UsedLanguages);
+  ShowTable = ShowLangConcept(Results.UsedLanguages, 10 pts);
 
-  ShowLangConcept(languages) = Block {
-    TextHeight: 12 pts;
-    ConceptTable(languages, each (UsedCognates / WordsPerLine))
+  ShowLangConcept(languages, textheight) = Block {
+    TextHeight: textheight;
+    var wordsperline = Math.Round(DocMetrics.PageContent.Width / (6 * ((textheight into pixels) / pixels)));
+    ConceptTable(wordsperline, languages, each (UsedCognates / wordsperline))
   };
 }
 //======================================================================
