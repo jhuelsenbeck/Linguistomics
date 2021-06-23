@@ -117,9 +117,32 @@ with DisplayWords {
 with AllWords {
   FindWordsWithConcept(language, cognate) = Math.FindSlice(language.Words, word => word.Cognate == cognate);
 
-  AddCell(cognate, language, textheight) = Cell {
-    foreach (var word in FindWordsWithConcept(language, cognate))
-      word.AlignedText(textheight, true);
+  AddCell(row, cognate, language, textheight) = Canvas {
+    var rw = textheight*0.025;
+    var w  = textheight;
+    foreach (var word in FindWordsWithConcept(language, cognate)) {
+      foreach (var segment in word.AlignedSegments) {
+        var x = w * EachIndex;
+        Canvas {
+          X: x;
+          Width: w;
+          HAlign: HAligns.Center;
+          segment.ShowSegment;
+//          if ((EachIndex mod 2) == 0)
+//            Background: Style.AlignBackColor;
+        };
+
+        var sets = Rules[0].FindRuleSet(segment);
+        foreach (var set in sets) {
+          Canvas {
+            X: x + EachIndex*rw;
+            Width: rw;
+            Height: textheight;
+            Background: set.Color;
+          }
+        }
+      }
+    }
   };
 
   AddRow(language, cognates, textheight) = Row {
@@ -128,11 +151,11 @@ with AllWords {
       TextColor: Colors.DarkGray;
       language.GlobalVariableName
     };
-    AddCell(each cognates, language, textheight)
+    AddCell(EachIndex, each cognates, language, textheight)
   };
 
-  ConceptTable(textheight, wordsperline, languages, cognates) = Block {
-    var first = 96 pts;
+  ConceptTable(textheight, wordsperline, languages, cognates) = HBox {
+    var first = 70 pts;
     var w     = (DocMetrics.PageContent.Width - first) / wordsperline;
     Table {
       Style.IPAFamily;
@@ -154,8 +177,10 @@ with AllWords {
   ShowTable = ShowLangConcept(Results.UsedLanguages, 8 pts);
 
   ShowLangConcept(languages, textheight) = Block {
+    Rules[0].Legend;
+
     TextHeight: textheight;
-    var wordsperline = Math.Round(DocMetrics.PageContent.Width / (8 * ((textheight into pixels) / pixels)));
+    var wordsperline = Math.Round(DocMetrics.PageContent.Width / (11 * ((textheight into pixels) / pixels)));
     ConceptTable(textheight, wordsperline, languages, each (UsedCognates / wordsperline))
   };
 }

@@ -2,10 +2,12 @@ using Format, Units, FeatureSet, Math;
 //======================================================================
 
 abstract class RuleSetClass {
-  var Name;
+  var Name,
+      Color;
 
-  Constructor(name) {
+  Constructor(name, color) {
     Name = name;
+    Color = color;
   }
 
   abstract Matches(segment);
@@ -13,7 +15,7 @@ abstract class RuleSetClass {
 
 class ConsonantSetClass: RuleSetClass {
   Constructor() {
-    super.Constructor("Consonant");
+    super.Constructor("Consonant", null);
   }
 
   override Matches(segment) = segment.Features.NotFlag(Vowel Nasal);
@@ -21,7 +23,7 @@ class ConsonantSetClass: RuleSetClass {
 
 class NasalConsonantSetClass: RuleSetClass {
   Constructor() {
-    super.Constructor("Nasal-Consonant");
+    super.Constructor("Nasal-Consonant", Colors.Green);
   }
 
   override Matches(segment) = segment.Features.HasFlagMask(Vowel Nasal, Nasal);
@@ -29,7 +31,7 @@ class NasalConsonantSetClass: RuleSetClass {
 
 class VowelSetClass: RuleSetClass {
   Constructor() {
-    super.Constructor("Vowel");
+    super.Constructor("Vowel", Colors.Blue);
   }
 
   override Matches(segment) = segment.Features.HasFlag(Vowel);
@@ -78,6 +80,12 @@ class ConsonantVowelRuleClass: RuleClass {
 
   GetSegments(ruleset) = FindSlice(Results.UsedSegments, segment => ruleset.Matches(segment));
 
+  FindRuleSet(segment) {
+    if (segment.Punctuation)
+      return [];
+    return FindSlice(Groups, g => g.Matches(segment));
+  }
+
   ShowGroup(g) = Span {
     "(";
     (each (each GetSegments(g)).SegmentToCharacter).ShowLetter;
@@ -92,6 +100,21 @@ class ConsonantVowelRuleClass: RuleClass {
         Separator:",";
         ShowGroup(each Groups);
       };
+    }
+  };
+
+  Legend = Block {
+    foreach (var g in Groups) {
+      Paragraph {
+        Canvas {
+          Border: 0.25;
+          Width: 10 pts;
+          Height: 8 pts;
+          Background: g.Color;
+        };
+        Space;
+        g.Name;
+      }
     }
   };
 
@@ -121,6 +144,8 @@ class ConsonantVowelRuleClass: RuleClass {
     }
   };
 }
+
+
 
 Rules = [
   new ConsonantVowelRuleClass
