@@ -117,21 +117,21 @@ with DisplayWords {
 with AllWords {
   FindWordsWithConcept(language, cognate) = Math.FindSlice(language.Words, word => word.Cognate == cognate);
 
-  AddCell(cognate, language) = Cell {
+  AddCell(cognate, language, textheight) = Cell {
     foreach (var word in FindWordsWithConcept(language, cognate))
-      word.CleanText;
+      word.AlignedText(textheight, true);
   };
 
-  AddRow(language, cognates) = Row {
+  AddRow(language, cognates, textheight) = Row {
     Cell {
       Style.SansSerif;
       TextColor: Colors.DarkGray;
       language.GlobalVariableName
     };
-    AddCell(each cognates, language)
+    AddCell(each cognates, language, textheight)
   };
 
-  ConceptTable(wordsperline, languages, cognates) = Block {
+  ConceptTable(textheight, wordsperline, languages, cognates) = Block {
     var first = 96 pts;
     var w     = (DocMetrics.PageContent.Width - first) / wordsperline;
     Table {
@@ -144,19 +144,19 @@ with AllWords {
         Empty;
         (each cognates).Name;
       };
-      AddRow(each languages, cognates)
+      AddRow(each languages, cognates, textheight)
     };
     Paragraph;
   };
 
   ShowConceptTable(concepts) = ConceptTable(7, Results.UsedLanguages, [concepts]);
 
-  ShowTable = ShowLangConcept(Results.UsedLanguages, 10 pts);
+  ShowTable = ShowLangConcept(Results.UsedLanguages, 8 pts);
 
   ShowLangConcept(languages, textheight) = Block {
     TextHeight: textheight;
-    var wordsperline = Math.Round(DocMetrics.PageContent.Width / (6 * ((textheight into pixels) / pixels)));
-    ConceptTable(wordsperline, languages, each (UsedCognates / wordsperline))
+    var wordsperline = Math.Round(DocMetrics.PageContent.Width / (8 * ((textheight into pixels) / pixels)));
+    ConceptTable(textheight, wordsperline, languages, each (UsedCognates / wordsperline))
   };
 }
 //======================================================================
@@ -201,7 +201,7 @@ with DisplayCharacters {
       Style.IPAFamily;
       Span {
         Separator: ", ";
-        (each words).Text
+        (each words).CleanText;
       }
     }
   };

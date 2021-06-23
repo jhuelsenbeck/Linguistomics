@@ -6,6 +6,7 @@ class WordClass {
       Cognate,
       Concept,
       Text,
+      AlignedSegments,
       Segments;
 
   Constructor(language, cognate, text) {
@@ -15,18 +16,33 @@ class WordClass {
     Text     = text;
     if (text.Length > 0) {
       var segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
-      Segments = Math.FindSlice(segments, s => not s.Punctuation);
+      AlignedSegments  = Math.FindSlice(segments, s => s.Gap or (not s.Punctuation));
+      Segments         = Math.FindSlice(segments, s => not s.Punctuation);
 
       // Test that the word's text is the same as the segments converted back into text
       var view = String(Span {(each segments).Ipa});
       System.Assert(text == view, "Round-trip error with text {0}-{1}"(text, view), text);
     }
-    else
-      Segments = [];
+    else {
+      Segments        = [];
+      AlignedSegments = [];
+    }
   }
 
   CleanText = Span {
     (each Segments).ShowSegment;
+  };
+
+  AlignedText(textheight, back) = HBox {
+    foreach (var s in AlignedSegments) {
+      Canvas {
+        HAlign: HAligns.Center;
+        Width: textheight * 0.7;
+        if ((EachIndex mod 2) == 0)
+          Background: 90%;
+        s.ShowSegment;
+      };
+    }
   };
 
   ShowConcept = Span {
@@ -118,55 +134,47 @@ class ConceptRecord {
 class TaxonClass {
   var Name,
       Language,
+      MaxLength,
       SegmentList,
+      BaseAlignList,
       AlignedList;
 
   Constructor(lang, langindex) {
-    var count = Results.WordConceptArray.Length;
-    SegmentList = new ListClass(count);
-    AlignedList = new ListClass(count);
-    Language    = lang;
-    Name        = lang.GlobalVariableName;
-
-    foreach (var concept in Results.WordConceptArray)
-      SegmentList.Add(concept.Cells[langindex].Segments);
+    Language      = lang;
+    Name          = lang.GlobalVariableName;
+    MaxLength     = 0;
+    SegmentList   = new ListClass(Results.WordConceptArray.Length);
+    BaseAlignList = new ListClass(Results.WordConceptArray.Length);
+    foreach (var concept in Results.WordConceptArray) {
+      var word = concept.Cells[langindex];
+      SegmentList.Add(word.Segments);
+      var aligned = word.AlignedSegments;
+      BaseAlignList.Add(aligned);
+      var wl = aligned.Length;
+      if (wl > MaxLength)
+        MaxLength = wl;
+    }
   }
 }
 //======================================================================
 
 with Results {
-  AlignWords = true;
-
-
   GetTaxaArray(lang) = new TaxonClass(lang, EachIndex);
 
   ComputeTaxa() {
-    var taxa = GetTaxaArray(each UsedLanguages);
-    for (var concept = 0; concept < WordConceptArray.Length; ++concept) {
-      var wordlist = new ListClass(WordConceptArray.Length);
-      foreach (var taxon in taxa)
-        wordlist.Add(taxon.SegmentList[concept]);
+    var taxa     = GetTaxaArray(each UsedLanguages);
+    var concepts = WordConceptArray.Length;
 
-      var align = new AlignClass(wordlist) {
-        Gap: IPA.GapSegment;
-      };
 
-      var run;
-      if (AlignWords)
-        run = align.Run;
-
-      if (valid run) {
-        var i = 0;
-        foreach (var taxon in taxa)
-          taxon.AlignedList.Add(run.Results[i++]);
+    foreach (var taxon in taxa) {
+      var aligned = new ListClass(concepts);
+      for (var concept = 0; concept < concepts; ++concept) {
+        var a = taxon.BaseAlignList[concept];
+        if (a.Length < taxon.MaxLength)
+          a += [IPA.Segments.GapSegment] * (taxon.MaxLength - a.Length);
+        aligned.Add(a);
       }
-      else {
-        var max = Max((each wordlist).Length);
-        foreach (var taxon in taxa) {
-          var segs = taxon.SegmentList[concept];
-          taxon.AlignedList.Add(segs + [IPA.GapSegment] * (max - segs.Length));
-        }
-      }
+      taxon.AlignedList = aligned;
     }
     return taxa;
   }
@@ -189,11 +197,8 @@ with Results {
   }
 
   WordConceptArray = new ConceptRecord(each UsedCognates);
-
   TaxaArray        = ComputeTaxa;
-
   UsedLanguages    = GetUsedLanguages;
-
   UniqueSegments   = DisplayCharacters.FindUniqueSegments;
   UsedSegments     = UniqueSegments;//IPA.Segments;
 }
@@ -382,7 +387,7 @@ with Nexus {
         AddValue("datatype", "STANDARD");
         AddValue("interleave", "yes");
         AddValue("respectcase");
-        AddValue("gap", IPA.GapSegment.Ipa);
+        AddValue("gap", IPA.Segments.GapSegment.Ipa);
         AddValue("missing", Missing);
         AddValue("symbols", Span {Quote; CharacterList[Results.UniqueSegments.IndexRange]; Quote});
       };
