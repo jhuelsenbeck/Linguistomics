@@ -89,14 +89,11 @@ with DisplayWords {
     d
   };
 
-  ShowTable {
-    return ShowLanguage(each Results.UsedLanguages);
-  }
-
-  ShowLanguage(language) = Block {
+  ShowLanguage(taxon) = Block {
     Table {
-      Columns: [1.1 inches, 1.5 inches, DocMetrics.PageContent.Width - 2.6 inches];
-      Style.TitleBar(language.GlobalVariableName, 3);
+      Edge: 0.5;
+      Columns: [2.1 inches, 1.5 inches, DocMetrics.PageContent.Width - 3.6 inches];
+      Style.TitleBar(taxon.Name, 3);
       Row {
         HeaderCell(Lang.Class);
         HeaderCell(Lang.IPA);
@@ -104,26 +101,31 @@ with DisplayWords {
       };
 
       var i = 0;
-      foreach (var word in language.Words) {
-        if (exists word.Concept)
-          WordRow(word, i++);
+      foreach (var cognate in Results.UsedCognates) {
+        foreach (var word in cognate.Words[taxon.Index]) {
+          if (word.Segments.Length > 0)
+            WordRow(word, i++);
+        }
       }
     };
     Paragraph;
   };
+
+  ShowTable {
+    return ShowLanguage(each Results.TaxaArray);
+  }
 }
 //======================================================================
 
 with AllWords {
-  FindWordsWithConcept(language, cognate) = Math.FindSlice(language.Words, word => word.Cognate == cognate);
-
-  AddCell(row, cognate, language, textheight) = Canvas {
-    var rw = textheight*0.025;
+  AddCell(row, cognate, textheight) = Canvas {
+    var rh = textheight*0.015;
     var w  = textheight;
-    foreach (var word in FindWordsWithConcept(language, cognate)) {
-      foreach (var segment in word.AlignedSegments) {
+    foreach (var word in cognate.Words) {
+      foreach (var segment in word.Aligned) {
         var x = w * EachIndex;
         Canvas {
+          BorderL: (0.125 pts) {Color: 80%};
           X: x;
           Width: w;
           HAlign: HAligns.Center;
@@ -135,9 +137,10 @@ with AllWords {
         var sets = Rules[0].FindRuleSet(segment);
         foreach (var set in sets) {
           Canvas {
-            X: x + EachIndex*rw;
-            Width: rw;
-            Height: textheight;
+            Y: textheight + 1 + EachIndex*rh;
+            X: x;
+            Width: w - 1;
+            Height: rh;
             Background: set.Color;
           }
         }
@@ -145,16 +148,16 @@ with AllWords {
     }
   };
 
-  AddRow(language, cognates, textheight) = Row {
+  AddRow(taxon, cognates, textheight) = Row {
     Cell {
       Style.SansSerif;
       TextColor: Colors.DarkGray;
-      language.GlobalVariableName
+      taxon.Name
     };
-    AddCell(EachIndex, each cognates, language, textheight)
+    AddCell(EachIndex, each cognates, textheight)
   };
 
-  ConceptTable(textheight, wordsperline, languages, cognates) = HBox {
+  ConceptTable(textheight, wordsperline, cognates) = HBox {
     var first = 70 pts;
     var w     = (DocMetrics.PageContent.Width - first) / wordsperline;
     Table {
@@ -167,42 +170,33 @@ with AllWords {
         Empty;
         (each cognates).Name;
       };
-      AddRow(each languages, cognates, textheight)
+      AddRow(each Results.TaxaArray, cognates, textheight)
     };
     Paragraph;
   };
 
-  ShowConceptTable(concepts) = ConceptTable(7, Results.UsedLanguages, [concepts]);
+  ShowConceptTable(concepts) = ConceptTable(10 pts, 7, [concepts]);
 
-  ShowTable = ShowLangConcept(Results.UsedLanguages, 8 pts);
-
-  ShowLangConcept(languages, textheight) = Block {
-    Rules[0].Legend;
+  ShowLangConcept(textheight) = Block {
+    Rules[0].ShowLegend;
 
     TextHeight: textheight;
-    var wordsperline = Math.Round(DocMetrics.PageContent.Width / (11 * ((textheight into pixels) / pixels)));
-    ConceptTable(textheight, wordsperline, languages, each (UsedCognates / wordsperline))
+    var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * ((textheight into pixels) / pixels)));
+    ConceptTable(textheight, wordsperline, each (Results.UsedCognates / wordsperline))
   };
+
+  ShowTable = ShowLangConcept(8 pts);
 }
 //======================================================================
 
 with DisplayCharacters {
-  CompleteWord(def)     = Math.FindAny(UsedCognates, cognate => cognate == def.Cognate);
-  GetWordList(language) = Math.FindSlice(language.Words, def => CompleteWord(def));
-
-  FindUniqueSegments {
-    var set = new DictionaryClass(256);
-    foreach (var language in Results.UsedLanguages) {
-      foreach (var word in GetWordList(language))
-        set.Add(each word.Segments);
-    }
-    return set.Values;
-  }
+  CompleteWord(def)    = Math.FindAny(Results.UsedCognates, cognate => cognate == def.Cognate);
+  GetWordList(cognate) = Math.FindSlice(cognate.Words, def => CompleteWord(def));
 
   WordsWithSegment(segment) {
     var set = new DictionaryClass(256);
-    foreach (var language in Results.UsedLanguages) {
-      foreach (var word in GetWordList(language)) {
+    foreach (var cognate in Results.UsedCognates) {
+      foreach (var word in GetWordList(cognate)) {
         if (Math.FindAny(word.Segments, s => s == segment))
           set.Add(word, word.Text);
       }
@@ -214,7 +208,7 @@ with DisplayCharacters {
     Cell {
       HAlign: HAligns.Center;
       Style.TitleBackground;
-      Nexus.CharacterList[EachIndex]
+      Nexus.GetCharacter(EachIndex)
     };
     Cell {
       HAlign: HAligns.Center;

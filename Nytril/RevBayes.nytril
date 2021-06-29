@@ -73,13 +73,11 @@ class ComputeClass: RevProgramClass {
       GammaMCC,
       GammaConsensus,
       OptionsName,
-      CharacterName,
-      Concepts;
+      CharacterName;
 
   Constructor(outname) {
     super.Constructor;
 
-    Concepts        = Results.WordConceptArray.Length;
     OutFolder       = Folders.Repository Folder("Run") Folder(outname);
     EXEName         = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName   = FileName("Program") Extensions.RevBayes;
@@ -101,8 +99,8 @@ class ComputeClass: RevProgramClass {
     IO.Write(Nexus.CharacterFile(1), OutFolder CharacterName);
 
     IO.Write(TransitionRuleFile, OutFolder FileName("Parameters.txt"));
-    foreach (var r in Results.WordConceptArray)
-      IO.Write(Nexus.TKFFile(EachIndex, r.Cognate, 0), inputfolder FileName(r.Cognate.GlobalVariableName) Extension("in"), FileFormats.Text);
+    foreach (var cognate in Results.UsedCognates)
+      IO.Write(Nexus.TKFFile(cognate, 0), inputfolder FileName(cognate.Name) Extension("in"), FileFormats.Text);
 
     IO.Write(RevBayesSource, OutFolder RevSourceName);
 
@@ -165,7 +163,7 @@ class ComputeClass: RevProgramClass {
 
     AddVariable("Generations", Info.Generations);
     AddVariable("Languages", Results.TaxaArray.Length);
-    AddVariable("Concepts", Concepts);
+    AddVariable("Concepts", Results.UsedCognates.Length);
     AddVariable("Segments", Results.UniqueSegments.Length);
   };
 
@@ -180,7 +178,7 @@ class ComputeClass: RevProgramClass {
   };
 
   RevBayesSource = TextBlock {
-    System.Assert(Results.UniqueSegments.Length <= Nexus.CharacterList.Length);
+//    System.Assert(Results.UniqueSegments.Length <= Nexus.CharacterList.Length, "Too many segments");
 
     Style.MonoFamily;
     BlockComment("RevBayes Source File for Linguistomics Project");
@@ -238,8 +236,9 @@ class ComputeClass: RevProgramClass {
     "alpha ~ dnUniform(0, 10.0)";
     "moves.append(mvScale(alpha, weight=1))";
 
-    LineComment(Concepts " concepts in the experiment" );
-    "site_rates := fnDiscretizeGamma(alpha, alpha, {0})"(Concepts);
+    var cnum = Results.UsedCognates.Length;
+    LineComment(cnum " cognate classes in the experiment" );
+    "site_rates := fnDiscretizeGamma(alpha, alpha, {0})"(cnum);
 
     BlockComment("PhyloCTMC Model");
     "seq ~ dnPhyloCTMC(tree=psi, Q=Q, type={0}, siteRates=site_rates)"(ShowString("Standard"));

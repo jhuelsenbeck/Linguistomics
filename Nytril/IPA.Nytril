@@ -166,14 +166,6 @@ class SegmentClass {
           Integer(each Ipa);
       }
     };
-/*
-    Paragraph {
-      ParBackground: Colors.AliceBlue;
-      ParAlignment: ParAlignments.Center;
-      Separator: ", ";
-      (each FindSlice(SegmentGroups, r => r.Matches(this))).Name;
-    };
-*/
     Paragraph {
       TextHeight: 10 pts;
       if (Gap)
@@ -183,21 +175,18 @@ class SegmentClass {
     };
   };
 
-  SegmentToCharacter {
+  ToCharacter {
     if (Punctuation)
       return new CharacterClass(Ipa, this);
 
     var f = Math.FindIndex(Results.UniqueSegments, s => s == this);
     if (f.Length >= 1)
-      return new CharacterClass(Nexus.CharacterList[f[0]], this);
+      return new CharacterClass(Nexus.GetCharacter(f[0]), this);
     else
       return new CharacterClass('?', IPA.NoSegment);
   }
 
-  ShowSegment() = Span {
-    Style.IPAFamily;
-    Popup: this;
-    Link: GlobalVariablePath;
+  ShowSegment = Span {
     if (Impossible) {
       System.Assert(false, Lang.Impossible);
       TextColor: Colors.Red;
@@ -207,6 +196,9 @@ class SegmentClass {
     if (Diacritic)
       "  ";
     Ipa;
+    Style.IPAFamily;
+    Popup: this;
+    Link: GlobalVariablePath;
   };
 
   override GetPopup = Frame {
@@ -272,6 +264,7 @@ with IPA {
 
   with Segments {
     GapSegment      = new PunctuationClass("-") {Gap: true};
+    MissingSegment  = new PunctuationClass("?") {Gap: true};
 
     SylableBreak     = new PunctuationClass(".");
     PrimaryStressAlt = new PunctuationClass("'", "'");
@@ -647,8 +640,8 @@ with IPA {
     aj_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "aj", "");
     oj_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "oj", "");
     diphthong_portuguese          = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ɐj", "");
-    nasal_diphthong_portuguese1          = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ẽj̃", "");
-    nasal_diphthong_portuguese2          = new VowelClass(NoFeature, "ɐ̃j̃", "");
+    nasal_diphthong_portuguese1   = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ẽj̃", "");
+    nasal_diphthong_portuguese2   = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ɐ̃j̃", "");
     au_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "au̯", "");
     eh_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ɛj", "");
     ej_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ej", "");
@@ -1057,98 +1050,6 @@ with IPA {
     FeatureFrame(77, 77, 10, null, Vibrant TapFlap Rhotic Liquid Lateral);
     FeatureFrame(54, 84, 10, null, Vibrant Trill);
     FeatureFrame(66, 84, 10, null, Vibrant Trill Rhotic Liquid);
-  };
-  //======================================================================
-  // Code for drift diagram
-  //======================================================================
-
-  RowText     = 8 pts;
-  RowHeight   = 9 pts;
-  BoxWidth    = 6 pts;
-  BorderSize  = 0.33 pts;
-  FeatureList = FeatureSet[1..];
-
-  RowBox = Canvas {
-    Height: RowHeight;
-    Width: BoxWidth;
-    HAlign: HAligns.Center;
-    VAlign: VAligns.Center;
-  };
-
-  ShowFeature(feature) = Canvas {
-    Height: RowHeight;
-    VAlign: VAligns.Center;
-    feature.Name
-  };
-
-  FeatureBox(feature, features0, features1) = RowBox {
-    if (features0.HasFlag(feature)) {
-      if (not features1.HasFlag(feature))
-        Background: Colors.Red;
-    }
-    else if (features1.HasFlag(feature))
-      Background: Colors.Green;
-  };
-
-  FeatureSegment(segment0, segment1) = VBox {
-    VAlign: VAligns.Center;
-    FeatureBox(each FeatureList, segment0.Features, segment1.Features);
-  };
-
-  DriftFeatures(word0, word) = VBox {
-    if (word0.Segments.Length > 0 and word.Segments.Length > 0) {
-      VBox {
-        RowBox {
-          if (EachIndex == 0)
-            word0.Segments[0].ShowSegment;
-        };
-        RowBox {
-          word.Segments[0].ShowSegment;
-        };
-        BorderB: BorderSize;
-      };
-      HBox {
-        FeatureSegment(word0.Segments[0], word.Segments[0]);
-      }
-    }
-  };
-
-  DriftChart(cells) = HBox {
-    TextHeight: RowText;
-    VAlign: VAligns.Top;
-    Border: BorderSize;
-    VBox {
-      BorderR: BorderSize;
-      VBox {
-        VAlign: VAligns.Center;
-        RowBox;
-        RowBox;
-      };
-      VBox {
-        PaddingR: 3 pts;
-        BorderT: BorderSize;
-        ShowFeature(each FeatureList)
-      };
-    };
-    HBox {
-      DriftFeatures(cells[0], each cells[1..])
-    };
-  };
-
-  ConceptDrift(concept) = VBox {
-    MarginB: 8 pts;
-    Paragraph {
-      Lang.Concept; ": ";
-      concept.Concept Bold;
-    };
-    DriftChart(concept.Cells);
-  };
-
-  DriftSection = Block {
-    Paragraph {
-      Separator: "  ";
-      ConceptDrift(each Results.WordConceptArray);
-    }
   };
 }
 //======================================================================

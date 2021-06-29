@@ -17,6 +17,18 @@ include "Slides";
 include "Tables";
 //======================================================================
 
+Main.Documents = new DocumentViewClass(null) {
+  new PaperViewClass(ShowOutput);
+  new DiagnosticsViewClass(ShowOutput);
+  new JohnPresentationClass;
+  new DavidPresentationClass;
+};
+
+void Main.Run {
+  Compute.Calculate;
+}
+//======================================================================
+
 // No spaces in the name below!
 // RevBayes has a problem with folder names that contain spaces...
 
@@ -27,7 +39,6 @@ Compute    = new ComputeClass(ShowOutput);
 with Info {
   Generations = 1000;
 
-  PaperTitle  = "White Paper";
   Journal     = "Transactions of the Beysian Society";
   Publisher   = "The Baysian Society";
   Title       = Lang.SimulatedSegments;
@@ -39,89 +50,74 @@ with Info {
 }
 //======================================================================
 
-UsedCognates = [
-  new CognateClass(Concepts.Stone, Concepts.Stone.AncestralClass2),
-  new CognateClass(Concepts.Sun, Concepts.Sun.AncestralClass),
-  new CognateClass(Concepts.Moon, Concepts.Moon.AncestralClass),
-  new CognateClass(Concepts.Star, Concepts.Star.AncestralClass),
-  new CognateClass(Concepts.Water, Concepts.Water.AncestralClass),
-  new CognateClass(Concepts.Rain, Concepts.Rain.AncestralClass),
-//  new CognateClass(Concepts.River, Concepts.River.AncestralClass),
-
-  new CognateClass(Concepts.Lake, Concepts.Lake.AncestralClass),
-  new CognateClass(Concepts.Sea, Concepts.Sea.AncestralClass),
-  new CognateClass(Concepts.Salt, Concepts.Salt.AncestralClass),
-
-  new CognateClass(Concepts.Sand, Concepts.Sand.AncestralClass),
-
-  new CognateClass(Concepts.One, Concepts.One.AncestralClass),
-  new CognateClass(Concepts.Two, Concepts.Two.duos),
-  new CognateClass(Concepts.Three, Concepts.Three.AncestralClass),
-  new CognateClass(Concepts.Five, Concepts.Five.AncestralClass),
-  new CognateClass(Concepts.Sky, Concepts.Sky.AncestralClass),
-  new CognateClass(Concepts.Earth, Concepts.Earth.AncestralClass),
-  new CognateClass(Concepts.Wide, Concepts.Wide.AncestralClass1),
-  new CognateClass(Concepts.Wide, Concepts.Wide.AncestralClass2),
-  new CognateClass(Concepts.Tongue, Concepts.Tongue.AncestralClass),
-  new CognateClass(Concepts.ToGive, Concepts.ToGive.AncestralClass),
-  new CognateClass(Concepts.Wind, Concepts.Wind.AncestralClass),
-
-//  new CognateClass(Concepts.Name, Concepts.Name.AncestralClass),
+UsedConcepts = [
+  Concepts.I,
+  Concepts.Who,
+  Concepts.What,
+  Concepts.When,
+  Concepts.How,
+  Concepts.One,
+  Concepts.Two,
+  Concepts.Three,
+  Concepts.Five,
+  Concepts.Wide,
+  Concepts.Wide,
+  Concepts.Fish,
+  Concepts.Bird,
+  Concepts.ToPlay,
+  Concepts.Sun,
+  Concepts.Moon,
+  Concepts.Star,
+  Concepts.Water,
+  Concepts.Rain,
+  Concepts.Lake,
+  Concepts.Sea,
+  Concepts.Salt,
+  Concepts.Earth,
+  Concepts.Sky,
+  Concepts.Wind,
+  Concepts.Fire,
+  Concepts.Year,
+  Concepts.Name,
+  Concepts.Tongue,
+  Concepts.Stone,
+  Concepts.River,
+  Concepts.Sand,
+  Concepts.ToGive,
 ];
-//======================================================================
+
+UsedLanguages = [
+  Languages.Latin,
+  Languages.French,
+  Languages.Italian,
+  Languages.Spanish,
+  Languages.PortugueseBrazil,
+  Languages.Portuguese,
+  Languages.Catalan,
+  Languages.Walloon,
+  Languages.Friulian,
+  Languages.Romanian,
+];
+//=====================================================================
 
 with ExampleConcept {
-  Index   = 0;  // Index into the UsedCognates array above
-  Cognate = UsedCognates[Index];
-  Taxon   = Results.TaxaArray[0];
-  Callout = Results.TaxaArray[3];
-  Name    = ToLower(Cognate.Name);
+  Cognate            = Results.UsedCognates[25];
 
+//  Cognate            = FindSlice(Results.UsedCognates, c => c.Cognate == Concepts.Sky.AncestralClass, 1)[0];
   GetTaxon(language) = Math.FindSlice(Results.TaxaArray, t => t.Language == language)[0];
 
-  LanguageList   = GetTaxon(each [Languages.Romanian, Languages.Catalan, Languages.Portuguese, Languages.French, Languages.Friulian]);
-  LangNames      = (each LanguageList).Name;
+  TaxonIndex     = 0;
+  Taxon          = Results.TaxaArray[TaxonIndex];
+  Callout        = Results.TaxaArray[3];
+  Name           = ToLower(Cognate.Name);
+  ExLanguages    = [Languages.Romanian, Languages.Catalan, Languages.Portuguese, Languages.French, Languages.Friulian];
+  TaxonList      = GetTaxon(each ExLanguages);
+  LangNames      = (each TaxonList).Name;
   CalloutSegment = FirstLetter(Callout);
-  LangWord       = Span {(each Taxon.SegmentList[Index]).Ipa};
+  LangWord       = Span {(each Cognate.Words[TaxonIndex].Segments).Ipa};
 
-  FirstLetter(taxon) {
-    return taxon.AlignedList[Index][0].Ipa;
-  }
-
-  FirstLetters = FirstLetter(each LanguageList);
-}
-//======================================================================
-
-Main.Configurations = [
-  new ConfigurationClass("Paper") {
-    Language: ConfigurationClass.Languages.English;
-    PaperSystem: ConfigurationClass.PaperSystems.US;
-    DocumentType: ConfigurationClass.DocumentTypes.Normal;
-  },
-
-  new ConfigurationClass("Presentation") {
-    Language: ConfigurationClass.Languages.English;
-    PaperSystem: ConfigurationClass.PaperSystems.US;
-    DocumentType: ConfigurationClass.DocumentTypes.SlideShow;
-  },
-];
-
-with Main if (DocumentType == DocumentTypes.Normal) {
-  Documents = new DocumentViewClass(null) {
-    new PaperViewClass(ShowOutput);
-    new DiagnosticsViewClass(ShowOutput);
-  };
-}
-
-with Main if (DocumentType == DocumentTypes.SlideShow) {
-  Documents = new DocumentViewClass(null) {
-    new JohnPresentationClass;
-    new DavidPresentationClass;
-  };
-}
-
-void Main.Run {
-  Compute.Calculate;
+  FirstLetter(taxon) = Cognate.Words[taxon.Index].Segments[0].Ipa;
+  FirstLetters = FirstLetter(each TaxonList);
 }
 //======================================================================
 
@@ -129,7 +125,7 @@ class PaperViewClass: BaseViewClass {
   var Appendices;
 
   Constructor {
-    super.Constructor("White Paper");
+    super.Constructor("White Paper", "paper", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
       new AppendixClass("Options File", Compute.GetOptionsSource),
@@ -183,7 +179,7 @@ class DiagnosticsViewClass: BaseViewClass {
   var Appendices;
 
   Constructor {
-    super.Constructor("Diagnostics");
+    super.Constructor("Diagnostics", "diag", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
       new AppendixClass(Lang.TransitionRules, Compute.ShowTransitionRules),

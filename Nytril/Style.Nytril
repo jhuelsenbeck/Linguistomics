@@ -107,27 +107,9 @@ class DefClass {
     Description = description;
   }
 
-  Var = Span {
+  override GetLayout = Span {
     Popup: this;
     Symbol;
-  };
-
-  Sub(i) = Nary {
-    Operator: Var;
-    Lower: i;
-  };
-
-  Appendix = Block {
-    Paragraph {
-      TextHeight: 16 pts;
-      Style.Equation {Symbol};
-      Tab;
-      Name;
-    };
-    Paragraph {
-      LeftIndent: 0.5 inches;
-      Description;
-    };
   };
 
   override GetPopup = Block {
@@ -142,16 +124,30 @@ class DefClass {
       Description;
     };
   };
+
+  Appendix = Block {
+    Paragraph {
+      TextHeight: 16 pts;
+      Style.Equation {Symbol};
+      Tab;
+      Name;
+    };
+    Paragraph {
+      LeftIndent: 0.5 inches;
+      Description;
+    };
+  };
 }
 //======================================================================
 
-Main.MathFamily = "CMU Serif"; //"Linux Libertine Display O";
+Main.MathFamily = Style.MathFace; //"Linux Libertine Display O";
 
 with Style {
-  Fancy                = {TextFamily: "CMU Serif"; TextItalic: true};
+  MathFace             = "CMU Serif";
+  GreekFamily          = {TextFamily: MathFace};
+  MainFamily           = {TextFamily: MathFace};
+  Classical            = {TextFamily: "CMU Classical Serif"};
   Extra                = {TextFamily: "CMU Serif Extra"};
-  GreekFamily          = {TextFamily: "CMU Sans Serif"; TextItalic: true};
-  MainFamily           = {TextFamily: "CMU Serif"};
   SansSerif            = {TextFamily: "CMU Sans Serif"};
   MonoFamily           = {TextFamily: "CMU Typewriter Text"};
   IPAFamily            = {TextFamily: "Linux Libertine O"};
@@ -642,8 +638,8 @@ Logo = Frame {
 //======================================================================
 
 abstract class BaseViewClass: DocumentViewClass {
-  Constructor(name) {
-    super.Constructor(name, name ShowOutput);
+  Constructor(title, key, type) {
+    super.Constructor(title, key, type);
   }
 
   DocMetadata = {
