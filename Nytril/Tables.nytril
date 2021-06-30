@@ -118,31 +118,30 @@ with DisplayWords {
 //======================================================================
 
 with AllWords {
-  AddCell(row, cognate, textheight) = Canvas {
-    var rh = textheight*0.015;
-    var w  = textheight;
-    foreach (var word in cognate.Words) {
-      foreach (var segment in word.Aligned) {
-        var x = w * EachIndex;
-        Canvas {
-          BorderL: (0.125 pts) {Color: 80%};
-          X: x;
-          Width: w;
-          HAlign: HAligns.Center;
-          segment.ShowSegment;
+  AddCell(taxon, cognate, textheight) = Canvas {
+    var rh   = textheight*0.015;
+    var w    = textheight;
+    var word = cognate.Words[taxon.Index];
+    foreach (var segment in word.Aligned) {
+      var x = w * EachIndex;
+      Canvas {
+        BorderL: (0.125 pts) {Color: 80%};
+        X: x;
+        Width: w;
+        HAlign: HAligns.Center;
+        segment.ShowSegment;
 //          if ((EachIndex mod 2) == 0)
 //            Background: Style.AlignBackColor;
-        };
+      };
 
-        var sets = Rules[0].FindRuleSet(segment);
-        foreach (var set in sets) {
-          Canvas {
-            Y: textheight + 1 + EachIndex*rh;
-            X: x;
-            Width: w - 1;
-            Height: rh;
-            Background: set.Color;
-          }
+      var sets = Rules[0].FindRuleSet(segment);
+      foreach (var set in sets) {
+        Canvas {
+          Y: textheight + 1 + EachIndex*rh;
+          X: x;
+          Width: w - 1;
+          Height: rh;
+          Background: set.Color;
         }
       }
     }
@@ -154,7 +153,7 @@ with AllWords {
       TextColor: Colors.DarkGray;
       taxon.Name
     };
-    AddCell(EachIndex, each cognates, textheight)
+    AddCell(taxon, each cognates, textheight)
   };
 
   ConceptTable(textheight, wordsperline, cognates) = HBox {
@@ -168,7 +167,7 @@ with AllWords {
         Style.TitleBackground;
         Style.SansSerif;
         Empty;
-        (each cognates).Name;
+        (each cognates).Title;
       };
       AddRow(each Results.TaxaArray, cognates, textheight)
     };
@@ -177,15 +176,15 @@ with AllWords {
 
   ShowConceptTable(concepts) = ConceptTable(10 pts, 7, [concepts]);
 
-  ShowLangConcept(textheight) = Block {
+  ShowTable = Block {
+    var textheight = 8 pts;
+
     Rules[0].ShowLegend;
 
     TextHeight: textheight;
     var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * ((textheight into pixels) / pixels)));
     ConceptTable(textheight, wordsperline, each (Results.UsedCognates / wordsperline))
   };
-
-  ShowTable = ShowLangConcept(8 pts);
 }
 //======================================================================
 
