@@ -73,25 +73,6 @@ flags FeatureSet {
 }
 //======================================================================
 
-class CharacterClass {
-  var Character,
-      Segment;
-
-  Constructor(character, segment) {
-    Character = character;
-    Segment   = segment;
-  }
-
-  ShowLetter = Span {
-    Popup: this;
-    Link: Segment.GlobalVariablePath;
-    Character;
-  };
-
-  override GetPopup = Segment.GetPopup;
-}
-//======================================================================
-
 class SegmentClass {
   var Ipa,
       Sampa,
@@ -103,6 +84,7 @@ class SegmentClass {
       Diacritic,
       Open,
       Backness,
+      Character,
       Place;
 
   Constructor(ipa, sampa, impossible=false) = {
@@ -112,12 +94,30 @@ class SegmentClass {
     Punctuation = false;
     Diacritic   = false;
     Gap         = false;
+    Character   = ipa;
     Features    = NoFeature;
   };
 
   MatchVowelAny(feature, open) = Features.HasFlagMask(Vowel LongVowel Nasal, feature | Vowel) and Open == open;
 
   MatchVowelPair(feature, open, backness) = MatchVowelAny(feature, open) and Backness == backness;
+
+  void GetCharacter(segments) {
+    if (Punctuation)
+      Character = Ipa;
+    else {
+      var f = Math.FindIndex(segments, s => s == this);
+      if (f.Length >= 1)
+        Character = Nexus.GetCharacter(f[0]);
+      else
+        Character = '?';
+    }
+  }
+
+  ShowCharacter = Span {
+    Popup: this;
+    Character;
+  };
 
   SegmentName = Span {
     if (Features.HasFlag(Vowel)) {
@@ -174,17 +174,6 @@ class SegmentClass {
         SegmentName;
     };
   };
-
-  ToCharacter {
-    if (Punctuation)
-      return new CharacterClass(Ipa, this);
-
-    var f = Math.FindIndex(Results.UniqueSegments, s => s == this);
-    if (f.Length >= 1)
-      return new CharacterClass(Nexus.GetCharacter(f[0]), this);
-    else
-      return new CharacterClass('?', IPA.NoSegment);
-  }
 
   ShowSegment = Span {
     if (Impossible) {

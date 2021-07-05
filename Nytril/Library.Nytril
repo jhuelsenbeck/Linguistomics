@@ -3,13 +3,77 @@ using Format, Units, Math, IO, Genetics;
 
 class LanguageClass {
   var Name,
-      Cases;
+      Cases,
+      Variable,
+      MapImage,
+      MapAttribution;
 
   Constructor(name, cases=0) {
     Name  = name;
     Cases = cases;
   }
+
+  virtual Description = null;
+
+  override GetLayout = Span {
+    Popup: this;
+    Name;
+  };
+
+  override GetPopup = Block {
+    Paragraph {
+      Bold;
+      TextHeight: 14 pts;
+      Name;
+    };
+    Description;
+    ShowMap(Size(5 inches, 3 inches));
+  };
+
+  LoadImage(name) = IO.Read(Info.ImageFolder FileName(name));
+
+  ShowMap(size) {
+    if (valid MapImage) {
+      return VBox {
+        var h = 6 pts;
+
+        Size: size;
+        HAlign: HAligns.Center;
+
+        Style.BodyPar {
+          ParAlignment: ParAlignments.Center;
+          MapImage {
+            Size: Size(size.Width, size.Height - h);
+            Proportional: true;
+          };
+        };
+
+        Style.BodyPar {
+          ParAlignment: ParAlignments.Center;
+          TextHeight: h;
+          TextColor: 80%;
+          Span {
+            Lang.Credit;
+            Popup: MapAttribution;
+          }
+        }
+      };
+    }
+    return null;
+  }
 }
+
+ShowLanguageDetails = Block {
+  foreach (var language in UsedLanguages) {
+    Style.Header1(language.Name);
+    Block {
+      language.Description;
+
+      if (valid language.MapImage)
+        language.ShowMap(Size(5 inches, 3 inches));
+    }
+  }
+};
 //======================================================================
 
 class CognateClass {
@@ -78,15 +142,21 @@ class WordClass {
 //======================================================================
 
 class TaxonClass {
-  var Name,
+  var Variable,
       Language,
       Index;
 
   Constructor(lang) {
     Index    = EachIndex;
     Language = lang;
-    Name     = lang.GlobalVariableName;
+    Variable = lang.GlobalVariableName;
   }
+
+  override GetLayout = Span {
+    Nexus.TaxonFormat;
+    Variable;
+    Popup: Language;
+  };
 }
 //======================================================================
 
@@ -126,6 +196,16 @@ class ResultsClass {
 
     UniqueSegments = set.Values;
     UsedSegments   = UniqueSegments;//IPA.Segments;
+
+
+    foreach (var cognate in UsedCognates) {
+      foreach (var w in cognate.Words) {
+        foreach (var s in w.Segments)
+          s.GetCharacter(UsedSegments);
+        foreach (var s in w.Aligned)
+          s.GetCharacter(UsedSegments);
+      }
+    }
   }
 
   void ComputeCognate(cognate) {
@@ -135,7 +215,7 @@ class ResultsClass {
     foreach (var taxon in TaxaArray) {
       var word = null;
       foreach (var langword in cognate.Cognate) {
-        if (langword.GlobalVariableName == taxon.Name) {
+        if (langword.GlobalVariableName == taxon.Variable) {
           var t = langword[0];
           maxlength = Math.Max([maxlength, t.Length]);
 
@@ -163,6 +243,44 @@ class ResultsClass {
         w.Padded = [IPA.Segments.MissingSegment] * maxlength;
     }
   }
+
+  ShowLanguages = Block {
+    var rows      = 2;
+    var cols      = (TaxaArray.Length + 1) div rows;
+    var taxagroup = TaxaArray / cols;
+    var h         = 14 pts;
+    var space     = 5 pts;
+    var size      = Size(DocMetrics.SlideContent.Width / cols - space, DocMetrics.SlideContent.Height / rows);
+
+    foreach (var group in taxagroup) {
+      HBox {
+        VAlign: VAligns.Top;
+
+        foreach (var taxon in group) {
+          VBox {
+            MarginR: space;
+            Size: size;
+            HAlign: HAligns.Center;
+
+            Paragraph {
+              TextHeight: h;
+              Bold;
+              taxon.Language;
+            };
+            Canvas {
+              Corner: 10 pts;
+              BorderStroke: 3 pts {Color: Colors.White};
+              BorderClip: true;
+              Span {
+                Popup: taxon.Language;
+                taxon.Language.ShowMap(Size(size.Width, size.Height - h));
+              }
+            };
+          }
+        }
+      }
+    }
+  };
 }
 
 Results = new ResultsClass();
@@ -206,7 +324,7 @@ with Nexus {
   AddTaxon(taxon) = Span {
     TaxonFormat;
     Space;
-    taxon.Name;
+    taxon.Variable;
   };
 
   Scope(name) = TextBlock {
@@ -267,39 +385,16 @@ with Nexus {
     VisitNodeTaxa(set, each node);
   }
 
-  MaxNameLength = Math.Max((each ((each Results.TaxaArray).Name)).Length) + 1;
-
-  GetList(taxon, index) {
-    var space = false;
-
-    var list = new ListClass(100);
-    foreach (var segment in taxon.AlignedList[index]) {
-      if (segment.Punctuation) {
-        list.Add("-");
-        space = false;
-      }
-      else
-        list.Add(segment.ToCharacter.ShowLetter);
-    }
-    return list;
-  }
+  MaxNameLength = Math.Max((each ((each Results.TaxaArray).Variable)).Length) + 1;
 
   WriteTaxa(cognate, paper, maxlength) = TextBlock {
     foreach (var taxon in Results.TaxaArray) {
+      var words = cognate.Words[taxon.Index];
       Span {
-        Span {
-          Nexus.TaxonFormat;
-          taxon.Name;
-          Link: taxon;
-        };
-        Space * (maxlength - taxon.Name.Length);
-        foreach (var segment in cognate.Words[taxon.Index].Padded) {
-          if (segment != null) {
-            var c = segment.ToCharacter;
-            if (valid c)
-              c.ShowLetter;
-          }
-        }
+        taxon;
+        Space * (maxlength - taxon.Variable.Length);
+        foreach (var segment in words.Padded)
+          segment.ShowCharacter;
 
         switch (paper) {
           case 0:
@@ -315,7 +410,7 @@ with Nexus {
               CommentFormat;
               Style.IPAFamily;
               Tab;
-              foreach (var segment in cognate.Words[taxon.Index].Aligned)
+              foreach (var segment in words.Aligned)
                 segment.GetBlock;
             };
             break;

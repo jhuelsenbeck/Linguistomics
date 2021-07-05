@@ -39,6 +39,8 @@ Compute    = new ComputeClass(ShowOutput);
 with Info {
   Generations = 1000;
 
+  ImageFolder = Folders.Source Folder("Images");
+
   Journal     = "Transactions of the Beysian Society";
   Publisher   = "The Baysian Society";
   Title       = Lang.SimulatedSegments;
@@ -100,7 +102,7 @@ UsedLanguages = [
 //=====================================================================
 
 with ExampleConcept {
-  Cognate            = FindSlice(Results.UsedCognates, c => c.Concept == Concepts.Moon, 1)[0];
+  Cognate            = FindSlice(Results.UsedCognates, c => c.Concept == Concepts.Star, 1)[0];
   GetTaxon(language) = Math.FindSlice(Results.TaxaArray, t => t.Language == language)[0];
 
   TaxonIndex     = 0;
@@ -109,11 +111,11 @@ with ExampleConcept {
   Name           = ToLower(Cognate.Name);
   ExLanguages    = [Languages.Romanian, Languages.Catalan, Languages.Portuguese, Languages.French, Languages.Friulian];
   TaxonList      = GetTaxon(each ExLanguages);
-  LangNames      = (each TaxonList).Name;
+  LangNames      = (each TaxonList).Language;
   CalloutSegment = FirstLetter(Callout);
   LangWord       = Span {(each Cognate.Words[TaxonIndex].Segments).Ipa};
 
-  FirstLetter(taxon) = Cognate.Words[taxon.Index].Segments[0].Ipa;
+  FirstLetter(taxon) = Cognate.Words[taxon.Index].Segments[0].ShowSegment;
   FirstLetters = FirstLetter(each TaxonList);
 }
 //======================================================================
@@ -181,6 +183,7 @@ class DiagnosticsViewClass: BaseViewClass {
     super.Constructor("Diagnostics", "diag", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
+      new AppendixClass(Lang.Languages, ShowLanguageDetails),
       new AppendixClass(Lang.TransitionRules, Compute.ShowTransitionRules),
       new AppendixClass("RevBayes Source File", Compute.RevBayesSource),
       new AppendixClass("Character File", Nexus.CharacterFile(2)),
