@@ -102,16 +102,11 @@ class SegmentClass {
 
   MatchVowelPair(feature, open, backness) = MatchVowelAny(feature, open) and Backness == backness;
 
-  void GetCharacter(segments) {
+  void GetCharacter(i) {
     if (Punctuation)
       Character = Ipa;
-    else {
-      var f = Math.FindIndex(segments, s => s == this);
-      if (f.Length >= 1)
-        Character = Nexus.GetCharacter(f[0]);
-      else
-        Character = '?';
-    }
+    else
+      Character = Nexus.GetCharacter(i);
   }
 
   ShowCharacter = Span {
@@ -782,7 +777,7 @@ with IPA {
     I65 = new ImpossibleClass(Ejective Tenuis Lateral Click Affricate, Places.Pharyngeal);
   }                 									
 
-  AllSegments = Results.UsedSegments + ImpossibleSegments;
+  AllSegments = Results.DisplaySegments + ImpossibleSegments;
 
   with DiacriticModifiers {
     UndefinedEscapeCharacter     = new DiacriticClass("Undefined escape character", null, "*");
@@ -872,11 +867,11 @@ with IPA {
 
   SegmentTable = Block {
     var c      = DocMetrics.SegmentColumns;
-    var sorted = Math.Sort(Results.UsedSegments, false, ref AlphaOrder);
+    var sorted = Math.Sort(Results.DisplaySegments, false, ref AlphaOrder);
 
+    Style.TitleBar(Lang.IPAListing);
     Table {
       Columns: [DocMetrics.PageContent.Width / c] * c;
-      Style.TitleBar(Lang.IPAListing, c);
       foreach (var segments in (sorted / c)) {
         Row {
           SegmentCell(each segments);
@@ -940,7 +935,7 @@ with IPA {
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
 
-  FeatureSegments(features) = Math.FindSlice(Results.UsedSegments, segment => segment.Features.HasFlagMask(FeatureMask, features));
+  FeatureSegments(features) = Math.FindSlice(Results.DisplaySegments, segment => segment.Features.HasFlagMask(FeatureMask, features));
 
   FeatureFrame(x, y, width, name, features) = Canvas {
     X: EX(x);

@@ -14,6 +14,7 @@ class LanguageClass {
   }
 
   virtual Description = null;
+  virtual Details = null;
 
   override GetLayout = Span {
     Popup: this;
@@ -68,6 +69,7 @@ ShowLanguageDetails = Block {
     Style.Header1(language.Name);
     Block {
       language.Description;
+      language.Details;
 
       if (valid language.MapImage)
         language.ShowMap(Size(5 inches, 3 inches));
@@ -163,10 +165,12 @@ class TaxonClass {
 class ResultsClass {
   var UsedCognates,
       TaxaArray,
+      DisplaySegments,
       UniqueSegments,
-      UsedSegments;
+      TotalLength;
 
   Constructor {
+    TotalLength = 0;
     var list = new ListClass(256);
     foreach (var concept in UsedConcepts) {
       foreach (var cognate in concept) {
@@ -180,32 +184,24 @@ class ResultsClass {
       }
     }
     UsedCognates = list.ToArray;
-
-    TaxaArray = new TaxonClass(each UsedLanguages);
+    TaxaArray    = new TaxonClass(each UsedLanguages);
 
     foreach (var cognate in UsedCognates)
       ComputeCognate(cognate);
 
+    var i = 0;
     var set = new DictionaryClass(256);
     foreach (var cognate in UsedCognates) {
       foreach (var word in cognate.Words) {
-        foreach (var s in word.Segments)
-          set.Add(s);
+        foreach (var s in word.Segments) {
+          if (set.Add(s))
+            s.GetCharacter(i++);
+        }
       }
     }
 
-    UniqueSegments = set.Values;
-    UsedSegments   = UniqueSegments;//IPA.Segments;
-
-
-    foreach (var cognate in UsedCognates) {
-      foreach (var w in cognate.Words) {
-        foreach (var s in w.Segments)
-          s.GetCharacter(UsedSegments);
-        foreach (var s in w.Aligned)
-          s.GetCharacter(UsedSegments);
-      }
-    }
+    UniqueSegments  = set.Values;
+    DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the tables
   }
 
   void ComputeCognate(cognate) {
@@ -242,6 +238,8 @@ class ResultsClass {
       else
         w.Padded = [IPA.Segments.MissingSegment] * maxlength;
     }
+
+    TotalLength += maxlength;
   }
 
   ShowLanguages = Block {
@@ -289,10 +287,11 @@ Results = new ResultsClass();
 with Nexus {
   TaxonFormat   = {TextColor: Colors.DarkBlue};
   CommentFormat = {TextColor: Colors.Green};
-  CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1) + ['!', '$', '%', '&', '`', '*', '+', ',', '.', '/', '<', '_', '=', '@'];
   EndMarker     = ";";
   Quote         = "\"";
 
+    // This is the set of characters used for the nexus file
+  CharacterList   = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1) + ['!', '$', '%', '&', '`', '*', '+', ',', '.', '/', '<', '_', '=', '@'];
   GetCharacter(i) = i < CharacterList.Length ? CharacterList[i] : '*';
 
   Keyword(name) = Span {
@@ -391,7 +390,7 @@ with Nexus {
     foreach (var taxon in Results.TaxaArray) {
       var words = cognate.Words[taxon.Index];
       Span {
-        taxon;
+        taxon.Variable;
         Space * (maxlength - taxon.Variable.Length);
         foreach (var segment in words.Padded)
           segment.ShowCharacter;
@@ -461,7 +460,7 @@ with Nexus {
     Scope("characters") {
       AddLine("dimensions") {
         AddValue("ntax", ntax);
-        AddValue("nchar", Sum((each Results.UsedCognates).MaxLength));
+        AddValue("nchar", Results.TotalLength);
       };
       AddLine("format") {
         AddValue("datatype", "STANDARD");
