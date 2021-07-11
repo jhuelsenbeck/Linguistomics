@@ -167,15 +167,19 @@ class ResultsClass {
   Constructor {
     TotalLength = 0;
     var list = new ListClass(256);
-    foreach (var concept in UsedConcepts) {
-      foreach (var cognate in concept) {
-        var count = 0;
-        foreach (var t in cognate) {
-          if (t[0].Length > 0)
-            ++count;
+    foreach (var concept in Concepts) {
+      if (exists concept.?Done) {
+        foreach (var cognate in concept) {
+          if (cognate.GlobalVariableName() != "Done") {
+            var count = 0;
+            foreach (var t in cognate) {
+              if (t[0].Length > 0)
+                ++count;
+            }
+            if (count > 1)
+              list.Add(new CognateClass(concept, cognate));
+          }
         }
-        if (count > 1)
-          list.Add(new CognateClass(concept, cognate));
       }
     }
     UsedCognates = list.ToArray;
