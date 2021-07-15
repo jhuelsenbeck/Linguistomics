@@ -72,7 +72,6 @@ class ComputeClass: RevProgramClass {
       GammaMAP,
       GammaMCC,
       GammaConsensus,
-      OptionsName,
       CharacterName;
 
   Constructor(outname) {
@@ -82,7 +81,6 @@ class ComputeClass: RevProgramClass {
     EXEName         = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName   = FileName("Program") Extensions.RevBayes;
     CharacterName   = FileName("Characters") Extensions.Nexus;
-    OptionsName     = FileName("Options") Extensions.Nytril;
     GammaTrees      = FileName("Gamma.trees");
     GammaLog        = FileName("Gamma.log");
     GammaMAP        = FileName("Gamma_MAP") Extensions.Tree;
@@ -95,7 +93,6 @@ class ComputeClass: RevProgramClass {
 
     CreateFolder(OutFolder);
     CreateFolder(inputfolder);
-    IO.Write(GetOptionsSource, OutFolder OptionsName);
     IO.Write(Nexus.CharacterFile(1), OutFolder CharacterName);
 
     IO.Write(TransitionRuleFile, OutFolder FileName("Parameters.txt"));
@@ -144,27 +141,6 @@ class ComputeClass: RevProgramClass {
 
 //    schema.LineChart(view, null, each "bl[{0}]"(each 1..Concepts*2));
 //    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
-  };
-
-  AddVariable(name, value) = Span {
-    name;
-    " = ";
-    value;
-    ";";
-  };
-
-  GetOptionsSource = TextBlock {
-    Style.MonoFamily;
-    Span {
-      TextColor: Style.CommentColor;
-      "// Run options";
-    };
-    Empty;
-
-    AddVariable("Generations", Info.Generations);
-    AddVariable("Languages", Results.TaxaArray.Length);
-    AddVariable("Concepts", Results.UsedCognates.Length);
-    AddVariable("Segments", Results.UniqueSegments.Length);
   };
 
   TransitionRuleFile = TextBlock {
