@@ -1,0 +1,122 @@
+using Format, Units, Math, IO;
+
+//======================================================================
+
+with Slides.Questions {
+  Title = Lang.Questions;
+
+  Body = Paragraph {
+    ParAlignment: ParAlignments.Center;
+    SpaceBefore: 1 inch;
+    Figure {
+      TextHeight: 150 pts;
+      Fill: (Style.LightColor..Style.DarkColor) {Vertical: true};
+      "?";
+    }
+  };
+}
+
+with Slides.Introduction {
+  Title = Content.Introduction.Title;
+  Body  = Content.Introduction.Body;
+}
+
+with Slides.ExampleTree {
+  Title = "Example Tree";
+  Body  = Style.SlideFigure(Figures.ExampleTree);
+}
+
+with Slides.Alignment {
+  Title = "Alignment";
+  Body  = Style.SlideFigure(Figures.Alignment, 5 pts);
+}
+
+with Slides.ShowResults {
+  Title = "Results";
+  Body  = Style.ReadTree(Lang.MCC, Compute.OutFolder Compute.GammaMCC);
+}
+
+with Slides.LanguagesUsed {
+  Title = Lang.Languages;
+  Body  = Results.ShowLanguages;
+}
+
+with Slides.ConceptsUsed {
+  Title = Lang.ConceptsUsed;
+  Body  = AllWords.ShowTable;
+}
+
+with Slides.TransitionRules {
+  Title = Lang.TransitionRules;
+  Body  = Compute.ShowTransitionRules;
+}
+//======================================================================
+
+class PresentationViewClass: BaseViewClass {
+  var SlideList,
+      Author;
+
+  Constructor(title, key, author) {
+    super.Constructor(title, key, ConfigurationClass.DocumentTypes.SlideShow);
+    Author    = author;
+    SlideList = new ListClass(64);
+  }
+
+  void AddSlide(slide) {
+    SlideList.Add(slide);
+  }
+
+  override GetDocument = Document {
+    DocMetadata;
+    Paragraph {
+      TextHeight: 40 pts;
+      SpaceBefore: 1.5 inches;
+      LeftIndent: 1 inch;
+      Info.Title;
+    };
+    Paragraph {
+      TextHeight: 18 pts;
+      SpaceBefore: 1.5 inches;
+      LeftIndent: 1 inch;
+      Author.First;
+      Space;
+      Author.Last;
+    };
+    Paragraph {
+      TextHeight: 12 pts;
+      LeftIndent: 1 inch;
+      Author.EMail;
+    };
+    foreach (var slide in SlideList)
+      AddSlideBlock(slide, EachIndex+1);
+  };
+}
+//======================================================================
+
+class JohnPresentationClass: PresentationViewClass {
+  Constructor {
+    super.Constructor("John's Presentation", "pre-john", Authors.JPHuelsenbeck);
+    AddSlide(Slides.Introduction);
+    AddSlide(Slides.LanguagesUsed);
+    AddSlide(Slides.ExampleTree);
+    AddSlide(Slides.Alignment);
+    AddSlide(Slides.ShowResults);
+    AddSlide(Slides.Questions);
+  }
+}
+//======================================================================
+
+class DavidPresentationClass: PresentationViewClass {
+  Constructor {
+    super.Constructor("David's Presentation", "pre-david", Authors.DMGoldstein);
+    AddSlide(Slides.Introduction);
+    AddSlide(Slides.LanguagesUsed);
+//    AddSlide(Slides.ExampleTree);
+    AddSlide(Slides.ConceptsUsed);
+    AddSlide(Slides.TransitionRules);
+    AddSlide(Slides.ShowResults);
+    AddSlide(Slides.Questions);
+  }
+}
+//======================================================================
+
