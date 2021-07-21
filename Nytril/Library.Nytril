@@ -212,9 +212,8 @@ class ResultsClass {
       foreach (var langword in cognate.Cognate) {
         if (langword.GlobalVariableName == taxon.Variable) {
           var t = langword[0];
-          maxlength = Math.Max([maxlength, t.Length]);
-
-          word = new WordClass(taxon.Language, cognate, t);
+          word      = new WordClass(taxon.Language, cognate, t);
+          maxlength = Math.Max([maxlength, word.Aligned.Length]);
           break;
         }
       }
@@ -292,6 +291,7 @@ Results = new ResultsClass();
 with Nexus {
   TaxonFormat   = {TextColor: Colors.DarkBlue};
   CommentFormat = {TextColor: Colors.Green};
+  KeywordFormat = {TextColor: Colors.Blue};
   EndMarker     = ";";
   Quote         = "\"";
 
@@ -300,12 +300,12 @@ with Nexus {
   GetCharacter(i) = i < CharacterList.Length ? CharacterList[i] : '*';
 
   Keyword(name) = Span {
-    CommentFormat;
+    KeywordFormat;
     name;
   };
 
   Comment(text) = Span {
-    TextColor: Colors.Green;
+    CommentFormat;
     "[ ";
     text;
     " ]";
@@ -348,10 +348,7 @@ with Nexus {
 
   NexusFile = TextBlock {
     Style.MonoFamily;
-    Span {
-      TextColor: Colors.DarkBlue;
-      "#NEXUS";
-    };
+    Keyword("#NEXUS");
   };
 
   Newick(node) = Span {
@@ -474,20 +471,8 @@ with Nexus {
         AddValue("gap", IPA.Segments.GapSegment.Ipa);
         AddValue("missing", IPA.Segments.MissingSegment.Ipa);
         AddValue("symbols", Span {Quote; CharacterList; Quote});
-
-//        AddValue("tokens");
-//        AddValue("items", "States");
       };
 
-/*
-      AddLine("charstatelabels") {
-        " 1 value/";
-        Span {
-          Separator: Space;
-          CharacterList[Results.UniqueSegments.IndexRange];
-        }
-      };
-*/
       Empty;
       Keyword("matrix");
 
@@ -500,10 +485,6 @@ with Nexus {
       }
       EndMarker;
     };
-
-//    Scope("trees") {
-//      ShowTreeLine(tree);
-//    };
   };
 }
 //======================================================================
