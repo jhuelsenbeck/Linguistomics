@@ -75,6 +75,7 @@ flags FeatureSet {
 
 class SegmentClass {
   var Ipa,
+      Character,
       Sampa,
       Impossible,
       Punctuation,
@@ -84,35 +85,22 @@ class SegmentClass {
       Diacritic,
       Open,
       Backness,
-      Character,
       Place;
 
   Constructor(ipa, sampa, impossible=false) = {
     Ipa         = ipa;
+    Character   = ipa;
     Sampa       = sampa;
     Impossible  = impossible;
     Punctuation = false;
     Diacritic   = false;
     Gap         = false;
-    Character   = ipa;
     Features    = NoFeature;
   };
 
   MatchVowelAny(feature, open) = Features.HasFlagMask(Vowel LongVowel Nasal, feature | Vowel) and Open == open;
 
   MatchVowelPair(feature, open, backness) = MatchVowelAny(feature, open) and Backness == backness;
-
-  void GetCharacter(i) {
-    if (Punctuation)
-      Character = Ipa;
-    else
-      Character = Nexus.GetCharacter(i);
-  }
-
-  ShowCharacter = Span {
-    Popup: this;
-    Character;
-  };
 
   SegmentName = Span {
     if (Features.HasFlag(Vowel)) {
@@ -132,10 +120,30 @@ class SegmentClass {
     }
   };
 
-  GetBlock = Canvas {
+  ShowCharacter = Span {
+    Popup: this;
+    Character;
+  };
+
+  ShowBlock = Canvas {
     Width: 10 pts;
     Height: 8 pts;
     ShowSegment;
+  };
+
+  ShowSegment = Span {
+    if (Impossible) {
+      System.Assert(false, Lang.Impossible);
+      TextColor: Colors.Red;
+    }
+    else if (Gap)
+      TextColor: Colors.LightGray;
+    if (Diacritic)
+      "  ";
+    Ipa;
+    Style.IPAFamily;
+    Popup: this;
+    Link: GlobalVariablePath;
   };
 
   Display(location) = Block {
@@ -168,21 +176,6 @@ class SegmentClass {
       else
         SegmentName;
     };
-  };
-
-  ShowSegment = Span {
-    if (Impossible) {
-      System.Assert(false, Lang.Impossible);
-      TextColor: Colors.Red;
-    }
-    else if (Gap)
-      TextColor: Colors.LightGray;
-    if (Diacritic)
-      "  ";
-    Ipa;
-    Style.IPAFamily;
-    Popup: this;
-    Link: GlobalVariablePath;
   };
 
   override GetPopup = Frame {

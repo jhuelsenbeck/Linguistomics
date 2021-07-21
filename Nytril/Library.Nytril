@@ -188,13 +188,18 @@ class ResultsClass {
     foreach (var cognate in UsedCognates)
       ComputeCognate(cognate);
 
-    var i = 0;
-    var set = new DictionaryClass(256);
+    // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
+    var i    = 0;
+    var set  = new DictionaryClass(256);
+    var last = Nexus.CharacterList.Length-1;
     foreach (var cognate in UsedCognates) {
       foreach (var word in cognate.Words) {
         foreach (var s in word.Segments) {
-          if (set.Add(s))
-            s.GetCharacter(i++);
+          if (set.Add(s)) {
+            if (!s.Punctuation)
+              s.Character = Nexus.CharacterList[i < last ? i : last];
+            ++i;
+          }
         }
       }
     }
@@ -296,8 +301,7 @@ with Nexus {
   Quote         = "\"";
 
     // This is the set of characters used for the nexus file
-  CharacterList   = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1) + ['!', '$', '%', '&', '`', '*', '+', ',', '.', '/', '<', '_', '=', '@'];
-  GetCharacter(i) = i < CharacterList.Length ? CharacterList[i] : '*';
+  CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1) + ['!', '$', '%', '&', '`', '+', ',', '.', '/', '<', '_', '=', '@', '*'];
 
   Keyword(name) = Span {
     KeywordFormat;
@@ -412,7 +416,7 @@ with Nexus {
               Style.IPAFamily;
               Tab;
               foreach (var segment in words.Aligned)
-                segment.GetBlock;
+                segment.ShowBlock;
             };
             break;
         }
