@@ -162,6 +162,7 @@ class ResultsClass {
       TaxaArray,
       DisplaySegments,
       UniqueSegments,
+      UniqueCharacters,
       TotalLength;
 
   Constructor {
@@ -189,23 +190,25 @@ class ResultsClass {
       ComputeCognate(cognate);
 
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
-    var i    = 0;
-    var set  = new DictionaryClass(256);
-    var last = Nexus.CharacterList.Length-1;
+    var i     = 0;
+    var set   = new DictionaryClass(256);
+    var clist = Nexus.CharacterList;
+    var last  = clist.Length-1;
     foreach (var cognate in UsedCognates) {
       foreach (var word in cognate.Words) {
         foreach (var s in word.Segments) {
           if (set.Add(s)) {
             if (!s.Punctuation)
-              s.Character = Nexus.CharacterList[i < last ? i : last];
+              s.Character = clist[i < last ? i : last];
             ++i;
           }
         }
       }
     }
 
-    UniqueSegments  = set.Values;
-    DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the tables
+    UniqueSegments   = set.Values;
+    UniqueCharacters = UniqueSegments.Length;
+    DisplaySegments  = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
   }
 
   void ComputeCognate(cognate) {
@@ -433,7 +436,7 @@ with Nexus {
       Space;
       cognate.Words[0].Padded.Length;
       Space;
-      Results.UniqueSegments.Length;
+      Results.UniqueCharacters;
     };
     WriteTaxa(cognate, paper, MaxNameLength);
   };
@@ -474,7 +477,7 @@ with Nexus {
         AddValue("respectcase");
         AddValue("gap", IPA.Segments.GapSegment.Ipa);
         AddValue("missing", IPA.Segments.MissingSegment.Ipa);
-        AddValue("symbols", Span {Quote; CharacterList; Quote});
+        AddValue("symbols", Span {Quote; CharacterList[0..<Math.Min([Results.UniqueCharacters, CharacterList.Length])]; Quote});
       };
 
       Empty;

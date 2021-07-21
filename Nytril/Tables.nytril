@@ -1,9 +1,5 @@
 ﻿using Format, Units, IPA, FeatureSet;
 //======================================================================
-
-TestSegments = IPA.SegmentDictionary.FindTokens("gɾos", IPA.NoSegment);
-
-//======================================================================
 // Consonants
 //======================================================================
 
@@ -246,22 +242,21 @@ with DisplayCharacters {
 //======================================================================
 
 with MatchingOptions {
-  CheckFlags(sflags, rflags, options)   = sflags.NotFlag(options.Exclude)
-                                          and sflags.HasFlag(options.Include)
-                                          and sflags.HasFlagMask(options.RowMask | rflags, rflags);
+  CheckFlags(sflags, rflags, options)   = sflags.NotFlag(options.Exclude) and
+                                          sflags.HasFlag(options.Include) and
+                                          sflags.HasFlagMask(options.RowMask | rflags, rflags);
 
   AnyManners(manner, features, options) = CheckFlags(features, manner | options.All, options);
 
-  SamePlace(segment, place)             = segment.?Place and place and
-                                          segment.Place == place;
+  SamePlace(segment, place)             = segment.?Place and place and segment.Place == place;
 
   MatchInclude(segment, place, options) = SamePlace(segment, place) and
-                                        segment.Features.NotFlag(options.Exclude) and
-                                        segment.Features.HasFlag(options.Include) and
-                                        Math.FindAny(options.Manners, manner => AnyManners(manner, segment.Features, options));
+                                          segment.Features.NotFlag(options.Exclude) and
+                                          segment.Features.HasFlag(options.Include) and
+                                          Math.FindAny(options.Manners, manner => AnyManners(manner, segment.Features, options));
 
-  MatchPlace(place, options)          = Math.FindAny(AllSegments, segment => MatchInclude(segment, place, options));
-  GetPlaces(options)                  = Math.FindSlice(Places, place => MatchPlace(place, options));
+  MatchPlace(place, options) = Math.FindAny(AllSegments, segment => MatchInclude(segment, place, options));
+  GetPlaces(options) = Math.FindSlice(Places, place => MatchPlace(place, options));
 
 
   SegmentText(segments, segment) {
