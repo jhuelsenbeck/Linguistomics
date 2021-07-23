@@ -114,10 +114,10 @@ with DisplayWords {
 //======================================================================
 
 with AllWords {
-  AddCell(taxon, cognate, textheight) = Cell {
+  AddCell(rule, taxon, cognate, textheight) = Cell {
     Background: EachIndex mod 2 == 0 ? 97% : null;
     Canvas {
-      var rh   = textheight*0.015;
+      var rh   = textheight*0.1;
       var w    = textheight;
       var word = cognate.Words[taxon.Index];
       foreach (var segment in word.Aligned) {
@@ -128,34 +128,32 @@ with AllWords {
           Width: w;
           HAlign: HAligns.Center;
           segment.ShowSegment;
-  //          if ((EachIndex mod 2) == 0)
-  //            Background: Style.AlignBackColor;
         };
 
-        var sets = Rules[0].FindRuleSet(segment);
-        foreach (var set in sets) {
+        var filter = rule.FindRule(segment);
+        if (filter != null) {
           Canvas {
-            Y: textheight + 1 + EachIndex*rh;
+            Y: textheight + 1;
             X: x;
             Width: w - 1;
             Height: rh;
-            Background: set.Color;
+            Background: filter.Color;
           }
         }
       }
     }
   };
 
-  AddRow(taxon, cognates, textheight) = Row {
+  AddRow(rule, taxon, cognates, textheight) = Row {
     Cell {
       Style.SansSerif;
       TextColor: Colors.DarkGray;
       taxon.Language;
     };
-    AddCell(taxon, each cognates, textheight)
+    AddCell(rule, taxon, each cognates, textheight)
   };
 
-  ConceptTable(textheight, wordsperline, cognates) = HBox {
+  ConceptTable(rule, textheight, wordsperline, cognates) = HBox {
     var first = 70 pts;
     var w     = (DocMetrics.PageContent.Width - first) / wordsperline;
     Table {
@@ -168,21 +166,21 @@ with AllWords {
         Empty;
         (each cognates).Title;
       };
-      AddRow(each Results.TaxaArray, cognates, textheight)
+      AddRow(rule, each Results.TaxaArray, cognates, textheight)
     };
     Paragraph;
   };
 
-  ShowConceptTable(concepts) = ConceptTable(10 pts, 7, [concepts]);
+  ShowConceptTable(rule, concepts) = ConceptTable(rule, 10 pts, 7, [concepts]);
 
-  ShowTable = Block {
-    var textheight = 5 pts;
+  ShowTable(rule) = Block {
+    var textheight = 9 pts;
 
-    Rules[0].ShowLegend;
+    rule.ShowLegend;
 
     TextHeight: textheight;
     var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * ((textheight into pixels) / pixels)));
-    ConceptTable(textheight, wordsperline, each (Results.UsedCognates / wordsperline))
+    ConceptTable(rule, textheight, wordsperline, each (Results.UsedCognates / wordsperline))
   };
 }
 //======================================================================
@@ -213,12 +211,10 @@ with DisplayCharacters {
       segment.ShowSegment;
     };
     Cell {
-      var words = WordsWithSegment(segment);
-
       Style.IPAFamily;
       Span {
         Separator: ", ";
-        (each words).CleanText;
+        WordsWithSegment(segment);
       }
     }
   };

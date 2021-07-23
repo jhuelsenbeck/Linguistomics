@@ -1,55 +1,55 @@
 using Format, Units, FeatureSet, Math;
 //======================================================================
 
-abstract class RuleSetClass {
+class FilterClass {
   var Name,
       Color;
 
-  Constructor(name, color) {
+  Constructor(name) {
     Name = name;
-    Color = color;
   }
 
-  abstract Matches(segment);
-}
-
-class ConsonantSetClass: RuleSetClass {
-  Constructor() {
-    super.Constructor("Consonant", null);
-  }
-
-  override Matches(segment) = segment.Features.NotFlag(Vowel Nasal);
-}
-
-class NasalConsonantSetClass: RuleSetClass {
-  Constructor() {
-    super.Constructor("Nasal-Consonant", Colors.Green);
-  }
-
-  override Matches(segment) = segment.Features.HasFlagMask(Vowel Nasal, Nasal);
-}
-
-class VowelSetClass: RuleSetClass {
-  Constructor() {
-    super.Constructor("Vowel", Colors.Blue);
-  }
-
-  override Matches(segment) = segment.Features.HasFlag(Vowel);
+  virtual Matches(segment) = true;
 }
 //======================================================================
 
 abstract class RuleClass {
   var Name,
       Letter,
-      Symbol;
+      Symbol,
+      Filters;
 
   Constructor(name, letter, symbol) {
-    Name   = name;
-    Letter = letter;
-    Symbol = symbol;
+    Name    = name;
+    Letter  = letter;
+    Symbol  = symbol;
   }
 
-  abstract ShowFile;
+  void InitFilters {
+    foreach (var filter in Filters)
+      filter.Color = ChartColor(EachIndex);
+  }
+
+  MatchesRule(filter, segment) {
+    foreach (var f in Filters) {
+      if (f == filter)
+        return f.Matches(segment);
+      if (f.Matches(segment))
+        return false;
+    }
+    return false;
+  }
+
+  FindRule(segment) {
+    if (segment.Punctuation)
+      return null;
+
+    foreach (var f in Filters) {
+      if (f.Matches(segment))
+        return f;
+    }
+    return null;
+  }
 
   virtual ShowDescription = Block {
     Paragraph {
@@ -62,29 +62,35 @@ abstract class RuleClass {
       Name;
     }
   };
-}
-//======================================================================
 
-class ConsonantVowelRuleClass: RuleClass {
-  var Groups;
+  ShowFile = TextBlock {
+    Span {
+      Letter;
+      ":";
+      Span {
+        Separator:",";
+        ShowGroup(each Filters);
+      };
+    }
+  };
 
-  Constructor {
-    super.Constructor("Consonant-Vowel-Nasal clusters", "Kappa", Tex.kappa);
+  ShowLegend = Paragraph {
+    Separator: Space*2;
+    foreach (var filter in Filters) {
+      Span {
+        Canvas {
+          Border: 0.25;
+          Width: 10 pts;
+          Height: 8 pts;
+          Background: filter.Color;
+        };
+        Space;
+        filter.Name;
+      }
+    }
+  };
 
-    Groups = [
-      new ConsonantSetClass,
-      new NasalConsonantSetClass,
-      new VowelSetClass,
-    ];
-  }
-
-  GetSegments(ruleset) = FindSlice(Results.DisplaySegments, segment => ruleset.Matches(segment));
-
-  FindRuleSet(segment) {
-    if (segment.Punctuation)
-      return [];
-    return FindSlice(Groups, g => g.Matches(segment));
-  }
+  GetSegments(filter) = FindSlice(Results.DisplaySegments, segment => MatchesRule(filter, segment));
 
   ShowGroup(g) = Span {
     "(";
@@ -92,52 +98,26 @@ class ConsonantVowelRuleClass: RuleClass {
     ")";
   };
 
-  override ShowFile = TextBlock {
-    Span {
-      Letter;
-      ":";
-      Span {
-        Separator:",";
-        ShowGroup(each Groups);
-      };
-    }
-  };
-
-  ShowLegend = Paragraph {
-    Separator: Space*2;
-    foreach (var g in Groups) {
-      Span {
-        Canvas {
-          Border: 0.25;
-          Width: 10 pts;
-          Height: 8 pts;
-          Background: g.Color;
-        };
-        Space;
-        g.Name;
-      }
-    }
-  };
-
   override ShowDescription = Block {
-    super.ShowDescription;
     Table {
-      Columns: [1.25 inches, 5 inches];
+      Columns: [15 pts, 1.4 inches, DocMetrics.PageContent.Width - 1.55 inches];
       Row {
         Bold;
         Background: 90%;
-        Lang.Group;
+        "#";
+        Lang.Filter;
         Lang.Segments;
       };
 
-      foreach (var g in Groups) {
+      foreach (var filter in Filters) {
         Row {
-          g.Name;
+          Nexus.CharacterList[EachIndex];
+          filter.Name;
           Cell {
             TextHeight: 14 pts;
             Span {
               Separator: Space;
-              (each GetSegments(g)).ShowSegment;
+              (each GetSegments(filter)).ShowSegment;
             };
           };
         };
@@ -145,11 +125,71 @@ class ConsonantVowelRuleClass: RuleClass {
     }
   };
 }
+//======================================================================
 
+class SingleClass: FilterClass {
+  var Segment;
 
+  Constructor(segment) {
+    super.Constructor(segment.Ipa);
+    Segment = segment;
+  }
 
-Rules = [
-  new ConsonantVowelRuleClass
-];
+  override Matches(segment) = segment == Segment;
+}
+//======================================================================
+
+class FeatureMaskClass: FilterClass {
+  var Mask,
+      Flags;
+
+  Constructor(name, mask, flag) {
+    super.Constructor(name);
+    Mask  = mask;
+    Flags = flag;
+  }
+
+  override Matches(segment) = segment.Features.HasFlagMask(Mask, Flags);
+}
+//======================================================================
+
+class LRClass: FilterClass {
+  Constructor {
+    super.Constructor("LR");
+  }
+
+  override Matches(segment) = segment == IPA.Segments.l or segment == IPA.Segments.r;
+}
+//======================================================================
+
+class GroupRuleClass: RuleClass {
+  Constructor {
+    super.Constructor("Consonant-Vowel-Nasal clusters", "Kappa", Tex.kappa);
+
+    Filters = [
+      // Vowels
+      new FeatureMaskClass("Nasal Vowel", Vowel Nasal, Vowel Nasal),
+      new FeatureMaskClass("Rounded Vowel", Vowel Rounded, Vowel Rounded),
+      new FeatureMaskClass("Long Vowel", Vowel LongVowel, Vowel LongVowel),
+      new FeatureMaskClass("Vowel", Vowel, Vowel),
+
+      // Specially selected
+      new SingleClass(IPA.Segments.j),
+      new SingleClass(IPA.Segments.w),
+
+      // Consonants
+      new FeatureMaskClass("Voiceless Stop", Voiced Stop, Stop),
+      new FeatureMaskClass("Voiced Stop", Voiced Stop, Voiced Stop),
+      new FeatureMaskClass("Voiced Affricate", Voiced Affricate, Voiced Affricate),
+      new FeatureMaskClass("Voiceless Affricate", Voiced Affricate, Affricate),
+      new FeatureMaskClass("Nasal Consonant", Nasal, Nasal),
+      new FeatureMaskClass("Rhotic", Rhotic, Rhotic),
+      new FeatureMaskClass("Sibilants", Sibilant, Sibilant),
+      new FeatureMaskClass("Pulmonic", Pulmonic, Pulmonic),
+      new FilterClass("Consonant"),
+    ];
+    InitFilters;
+  }
+}
 //======================================================================
 

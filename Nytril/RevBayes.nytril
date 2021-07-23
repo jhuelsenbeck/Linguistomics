@@ -72,11 +72,13 @@ class ComputeClass: RevProgramClass {
       GammaMAP,
       GammaMCC,
       GammaConsensus,
-      CharacterName;
+      CharacterName,
+      Rule;
 
-  Constructor(outname) {
+  Constructor(rule, outname) {
     super.Constructor;
 
+    Rule           = rule;
     OutFolder      = Folders.Repository Folder("Run") Folder(outname);
     EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName  = FileName("Program") Extensions.RevBayes;
@@ -146,11 +148,11 @@ class ComputeClass: RevProgramClass {
   TransitionRuleFile = TextBlock {
     Style.MonoFamily;
     "Num_Symbols:{0}"(Results.DisplaySegments.Length);
-    (each Rules).ShowFile;
+    Rule.ShowFile;
   };
 
   ShowTransitionRules = Block {
-    (each Rules).ShowDescription;
+    Rule.ShowDescription;
   };
 
   RevBayesSource = TextBlock {
@@ -179,7 +181,7 @@ class ComputeClass: RevProgramClass {
     "monitors = VectorMonitors()";
 
     BlockComment("Substitution Model");
-    LineComment("Create a rate matrix using {0} unique segments"(Results.DisplaySegments.Length));
+    LineComment("Create a rate matrix using {0} unique characters"(Results.UniqueCharacters));
     "Q <- fnJC({0})"(Results.UniqueCharacters);
 
     BlockComment("Tree Model");
@@ -223,7 +225,7 @@ class ComputeClass: RevProgramClass {
     "n_gen   = {0}"(Math.Min([10, Info.Generations div 1000]));
 
     LineComment("This prints monitors to the screen");
-    "monitors.append(mnScreen(TL, printgen=50) )";
+    "monitors.append(mnScreen(TL, printgen=n_gen) )";
 
     LineComment("This monitors the trees and puts them in a file");
     "monitors.append(mnFile(psi, filename=gammapath, printgen=n_gen))";

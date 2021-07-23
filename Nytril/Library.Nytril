@@ -101,9 +101,11 @@ class WordClass {
       Text,
       Segments,
       Aligned,
-      Padded;
+      Padded,
+      Rule;
 
-  Constructor(language, cognate, text) {
+  Constructor(rule, language, cognate, text) {
+    Rule     = rule;
     Language = language;
     Cognate  = cognate;
     Text     = text;
@@ -122,18 +124,21 @@ class WordClass {
     }
   }
 
-  CleanText = Span {
-    (each Segments).ShowSegment;
-  };
-
   ShowConcept = Span {
     Style.SansSerif;
     Popup: this;
     Cognate.Title;
   };
 
+  override GetLayout = Span {
+    foreach (var s in Segments) {
+      if (!s.Punctuation)
+        s.Ipa;
+    }
+  };
+
   override GetPopup = Frame {
-    AllWords.ShowConceptTable(Cognate);
+    AllWords.ShowConceptTable(Rule, Cognate);
   };
 }
 //======================================================================
@@ -165,7 +170,7 @@ class ResultsClass {
       UniqueCharacters,
       TotalLength;
 
-  Constructor {
+  Constructor(rule) {
     TotalLength = 0;
     var list = new ListClass(256);
     foreach (var concept in Concepts) {
@@ -187,7 +192,7 @@ class ResultsClass {
     TaxaArray    = new TaxonClass(each UsedLanguages);
 
     foreach (var cognate in UsedCognates)
-      ComputeCognate(cognate);
+      ComputeCognate(rule, cognate);
 
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
     var i     = 0;
@@ -197,21 +202,36 @@ class ResultsClass {
     foreach (var cognate in UsedCognates) {
       foreach (var word in cognate.Words) {
         foreach (var s in word.Segments) {
-          if (set.Add(s)) {
-            if (!s.Punctuation)
-              s.Character = clist[i < last ? i : last];
-            ++i;
+          if (!s.Punctuation) {
+            if (set.Add(s)) {
+              var c = i;
+              if (Info.RuleCharacters) {
+                c = 0;
+                foreach (var filter in rule.Filters) {
+                  if (rule.MatchesRule(filter, s))
+                    break;
+                  ++c;
+                }
+              }
+
+              s.Character = clist[c < last ? c : last];
+              ++i;
+            }
           }
         }
       }
     }
 
     UniqueSegments   = set.Values;
-    UniqueCharacters = UniqueSegments.Length;
     DisplaySegments  = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
+
+    if (Info.RuleCharacters)
+      UniqueCharacters = rule.Filters.Length;
+    else
+      UniqueCharacters = UniqueSegments.Length;
   }
 
-  void ComputeCognate(cognate) {
+  void ComputeCognate(rule, cognate) {
     var words     = new ListClass(TaxaArray.Length);
     var maxlength = 0;
 
@@ -220,13 +240,13 @@ class ResultsClass {
       foreach (var langword in cognate.Cognate) {
         if (langword.GlobalVariableName == taxon.Variable) {
           var t = langword[0];
-          word      = new WordClass(taxon.Language, cognate, t);
+          word      = new WordClass(rule, taxon.Language, cognate, t);
           maxlength = Math.Max([maxlength, word.Aligned.Length]);
           break;
         }
       }
       if (word == null)
-        word = new WordClass(taxon.Language, cognate, Empty);
+        word = new WordClass(rule, taxon.Language, cognate, Empty);
       words.Add(word);
     }
 
@@ -292,8 +312,6 @@ class ResultsClass {
     }
   };
 }
-
-Results = new ResultsClass();
 //======================================================================
 
 with Nexus {
