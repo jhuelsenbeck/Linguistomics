@@ -73,6 +73,24 @@ flags FeatureSet {
 }
 //======================================================================
 
+enum RootVowels {
+  None {Name: "None"},
+  A    {Name:  "a"},
+  E    {Name: "e"},
+  Eh   {Name: "ɛ"},
+  I    {Name: "i"},
+  O    {Name: "o"},
+  U    {Name: "u"},
+  Oo   {Name: "ø"},
+  Ee   {Name: "ɨ"},
+  Uh   {Name: "ə"},
+  Ah   {Name: "ɑ"},
+  Aeh  {Name: "ɪ"},
+  Aoh  {Name: "ɔ"},
+  Aah  {Name: "ɐ"},
+  Eee  {Name:  "y"},
+}
+
 class SegmentClass {
   var Ipa,
       Character,
@@ -85,7 +103,8 @@ class SegmentClass {
       Diacritic,
       Open,
       Backness,
-      Place;
+      Place,
+      Root;
 
   Constructor(ipa, sampa, impossible=false) = {
     Ipa         = ipa;
@@ -144,7 +163,7 @@ class SegmentClass {
     Ipa;
     Style.IPAFamily;
     Popup: this;
-    Link: GlobalVariablePath;
+//    Link: GlobalVariablePath;
   };
 
   Display(location) = Block {
@@ -227,8 +246,9 @@ class ConsonantClass: SegmentClass {
 //======================================================================
 
 class VowelClass: SegmentClass {
-  Constructor(features, open, backness, ipa, sampa) {
+  Constructor(root, features, open, backness, ipa, sampa) {
     super.Constructor(ipa, sampa);
+    Root     = root;
     Features = features | Vowel;
     Open     = open;
     Backness = backness;
@@ -310,7 +330,7 @@ with IPA {
     kk                           = new ConsonantClass(Velarized Pulmonic, Places.Velar, "kː", "k:");
 
 
-    kw                           = new ConsonantClass(Pulmonic Stop Occlusive, Places.Labial, "kʷ", "k_W");
+    kw                           = new ConsonantClass(Pulmonic Stop Occlusive, Places.LabialVelar, "kʷ", "k_W");
     kh                           = new ConsonantClass(Pulmonic Stop, Places.Velar, "kʰ", "k_h");  // Check properties
 
 
@@ -320,7 +340,7 @@ with IPA {
 
     g                            = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Velar, "ɡ", "g");
     j                            = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Velar, "g", "g");
-    gw                           = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Labial, "ɡʷ", "g_W");
+    gw                           = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.LabialVelar, "ɡʷ", "g_W");
 
     VlUvularStop                 = new ConsonantClass(Pulmonic Stop Occlusive, Places.Uvular, "q", "q");
     VdUvularStop                 = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Uvular, "ɢ", "G\\");
@@ -497,7 +517,7 @@ with IPA {
 
 
 
-    Mystery1                          = new ConsonantClass(Pulmonic Sibilant Affricate, Places.AlveoloPalatal, "t͡ʃʲ", ""); // ??????
+    Mystery1                     = new ConsonantClass(Pulmonic Sibilant Affricate, Places.AlveoloPalatal, "t͡ʃʲ", ""); // ??????
 
 
     // Non-Sibilants
@@ -588,123 +608,118 @@ with IPA {
     // Vowels
     //==================================
 
-    e                         = new VowelClass(Vocoid Continuant, Opens.Close, Backnesses.Front, "i", "i");
-    E                         = new VowelClass(LongVowel Vocoid Continuant, Opens.Close, Backnesses.Front, "iː", "i:");
-    eeh                       = new VowelClass(Rounded Vocoid Continuant, Opens.Close, Backnesses.Front, "y", "y");
+    e                         = new VowelClass(RootVowels.I, Vocoid Continuant, Opens.Close, Backnesses.Front, "i", "i");
+    E                         = new VowelClass(RootVowels.I, LongVowel Vocoid Continuant, Opens.Close, Backnesses.Front, "iː", "i:");
 
-    eee                       = new VowelClass(NoFeature, Opens.Close, Backnesses.Central, "ɨ", "1");
-    CloseCentralRounded       = new VowelClass(Rounded, Opens.Close, Backnesses.Central, "ʉ", "}");
-    CloseBackUnrounded        = new VowelClass(Vocoid Continuant, Opens.Close, Backnesses.Back, "ɯ", "M");
-    u                         = new VowelClass(Rounded Vocoid Continuant, Opens.Close, Backnesses.Back, "u", "u");
+    eee                       = new VowelClass(RootVowels.Ee, NoFeature, Opens.Close, Backnesses.Central, "ɨ", "1");
+    CloseCentralRounded       = new VowelClass(RootVowels.None, Rounded, Opens.Close, Backnesses.Central, "ʉ", "}");
+    CloseBackUnrounded        = new VowelClass(RootVowels.None, Vocoid Continuant, Opens.Close, Backnesses.Back, "ɯ", "M");
+    u                         = new VowelClass(RootVowels.U, Rounded Vocoid Continuant, Opens.Close, Backnesses.Back, "u", "u");
 
-    NearCloseCentralUnrounded = new VowelClass(NoFeature, Opens.NearClose, Backnesses.Central, "ᵻ", "I\\");
-    NearCloseFrontUnrounded   = new VowelClass(NoFeature, Opens.NearClose, Backnesses.NearFront, "ɪ", "I");
-    Mystery3                  = new VowelClass(NoFeature, Opens.NearClose, Backnesses.NearFront, "ɪ̯", ""); // Check properties
+    NearCloseCentralUnrounded = new VowelClass(RootVowels.None, NoFeature, Opens.NearClose, Backnesses.Central, "ᵻ", "I\\");
+    NearCloseFrontUnrounded   = new VowelClass(RootVowels.Aeh, NoFeature, Opens.NearClose, Backnesses.NearFront, "ɪ", "I");
+    Mystery3                  = new VowelClass(RootVowels.Aeh, NoFeature, Opens.NearClose, Backnesses.NearFront, "ɪ̯", ""); // Check properties
 
-    NearCloseFrontRounded     = new VowelClass(Rounded, Opens.NearClose, Backnesses.NearFront, "ʏ", "Y");
-    NearCloseCentralRounded   = new VowelClass(Rounded, Opens.NearClose, Backnesses.Central, "ᵿ", "U\\");
+    NearCloseFrontRounded     = new VowelClass(RootVowels.None, Rounded, Opens.NearClose, Backnesses.NearFront, "ʏ", "Y");
+    NearCloseCentralRounded   = new VowelClass(RootVowels.None, Rounded, Opens.NearClose, Backnesses.Central, "ᵿ", "U\\");
 
-    NearCloseBackRounded      = new VowelClass(Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U");
-    U                         = new VowelClass(LongVowel Rounded, Opens.Close, Backnesses.Back, "uː", "u:");
-    ohh                       = new VowelClass(Rounded, Opens.Close, Backnesses.Back, "u̯", "<u>");  // SAMPA encoding ???
-    eah                       = new VowelClass(NoFeature, Opens.CloseMid, Backnesses.Front, "e̯", "<e>");  // SAMPA encoding ???
+    NearCloseBackRounded      = new VowelClass(RootVowels.None, Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U");
+    U                         = new VowelClass(RootVowels.U, LongVowel Rounded, Opens.Close, Backnesses.Back, "uː", "u:");
+    ohh                       = new VowelClass(RootVowels.U, Rounded, Opens.Close, Backnesses.Back, "u̯", "<u>");  // SAMPA encoding ???
 
 
 
     // David, these need review
 
-    midfront_diphthong_romanian   = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "e̯a", "");
-    midback_diphthong_romanian    = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "o̯a", "");
-    aj_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "aj", "");
-    oj_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "oj", "");
-    diphthong_portuguese          = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ɐj", "");
-    nasal_diphthong_portuguese1   = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ẽj̃", "");
-    nasal_diphthong_portuguese2   = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ɐ̃j̃", "");
-    au_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "au̯", "");
-    eh_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ɛj", "");
-    ej_diphthong                  = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ej", "");
-    eu_nasalized_diphthong        = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ẽu̯", "");
+    midfront_diphthong_romanian   = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "e̯a", "");
+    midback_diphthong_romanian    = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "o̯a", "");
+    aj_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "aj", "");
+    oj_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "oj", "");
+    diphthong_portuguese          = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ɐj", "");
+    nasal_diphthong_portuguese1   = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ẽj̃", "");
+    nasal_diphthong_portuguese2   = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ɐ̃j̃", "");
+    au_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "au̯", "");
+    eh_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ɛj", "");
+    ej_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ej", "");
+    eu_nasalized_diphthong        = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ẽu̯", "");
 
-    ooo                       = new VowelClass(Nasal, Opens.Open, Backnesses.Back, "ũ", "u*");
-    ehn                       = new VowelClass(Nasal, Opens.Close, Backnesses.Back, "ẽ", "e*");
+// Different references say different things about these two
+    ooo                       = new VowelClass(RootVowels.U, Nasal, Opens.Open, Backnesses.Back, "ũ", "u*");
+//    uh                        = new VowelClass(BaseVowels.U, Nasal Rounded, Opens.Close, Backnesses.Back, "ũ", "u*");
 
-    LongNasalE                = new VowelClass(LongVowel Nasal, Opens.Close, Backnesses.Back, "ẽː", "e*:");  // Check properties
-
-
-    NasalI                    = new VowelClass(Nasal, Opens.OpenMid, Backnesses.Back, "ĩ", "i*");
-    NasalY                    = new VowelClass(Nasal, Opens.CloseMid, Backnesses.Back, "ỹ", "y*");
-    LongY                    = new VowelClass(LongVowel Nasal, Opens.CloseMid, Backnesses.Back, "yː", "y:");
-
+    ehn                       = new VowelClass(RootVowels.E, Nasal, Opens.Close, Backnesses.Back, "ẽ", "e*");
+    LongNasalE                = new VowelClass(RootVowels.E, LongVowel Nasal, Opens.Close, Backnesses.Back, "ẽː", "e*:");  // Check properties
+    ay                        = new VowelClass(RootVowels.E, Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "e", "e");
+    eah                       = new VowelClass(RootVowels.E, NoFeature, Opens.CloseMid, Backnesses.Front, "e̯", "<e>");  // SAMPA encoding ???
 
 
-    NasalA                    = new VowelClass(Nasal, Opens.NearClose, Backnesses.Back, "ɑ̃", "a*");
-    OtherA                    = new VowelClass(Nasal, Opens.Close, Backnesses.Back, "a.", "a.");
-    aj                        = new VowelClass(Nasal, Opens.Close, Backnesses.Back, "aj", "aj");  // Check
-    // ==
-
-
-    ay                        = new VowelClass(Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "e", "e");
-    uu                        = new VowelClass(Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "ø", "2");
-
-    o                         = new VowelClass(LongVowel Rounded Vocoid, Opens.Open, Backnesses.Front, "øː", "");  // Check properties
+    NasalY                    = new VowelClass(RootVowels.Eee, Nasal, Opens.CloseMid, Backnesses.Back, "ỹ", "y*");
+    eeh                       = new VowelClass(RootVowels.Eee, Rounded Vocoid Continuant, Opens.Close, Backnesses.Front, "y", "y");
+    LongY                     = new VowelClass(RootVowels.Eee, LongVowel Nasal, Opens.CloseMid, Backnesses.Back, "yː", "y:");
 
 
 
+    NasalA                    = new VowelClass(RootVowels.Ah, Nasal, Opens.NearClose, Backnesses.Back, "ɑ̃", "a*");
+    OtherA                    = new VowelClass(RootVowels.None, Nasal, Opens.Close, Backnesses.Back, "a.", "a.");
+    aj                        = new VowelClass(RootVowels.None, Nasal, Opens.Close, Backnesses.Back, "aj", "aj");  // Check
 
-    MidCentralUnrounded       = new VowelClass(NoFeature, Opens.Mid, Backnesses.Central, "ɘ", "@\\");
-    aah                       = new VowelClass(NoFeature, Opens.CloseMid, Backnesses.Central, "ə", "@");
-    ooh                       = new VowelClass(Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8");
-    CloseMidBackUnrounded     = new VowelClass(Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "ɤ", "7");
-    oh                        = new VowelClass(Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "o", "o");
-
-    ooow                      = new VowelClass(Rounded, Opens.CloseMid, Backnesses.Back, "o(w)", "");  // Not sure what the IPA for this is
-
-    MidFrontUnrounded         = new VowelClass(NoFeature, Opens.Mid, Backnesses.Front, "ø̞", "");
-    MidBackUnrounded          = new VowelClass(NoFeature, Opens.Mid, Backnesses.Back, "o̞", "");
-
-    eh                        = new VowelClass(Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E");
-    Eh                        = new VowelClass(LongVowel Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "ɛː", "E:");  // Check properties
-    ai                        = new VowelClass(LongVowel Vocoid Continuant, Opens.Mid, Backnesses.Front, "eː", "e:");
-
-    OpenMidNearFrontRounded   = new VowelClass(Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "œ", "9");
-    OpenMidCentralRounded     = new VowelClass(Rounded, Opens.OpenMid, Backnesses.Central, "ɞ", "3\\");
-    aeh                       = new VowelClass(NoFeature, Opens.OpenMid, Backnesses.Central, "ɜ", "3");
-    OpenMidBackUnrounded      = new VowelClass(Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ʌ", "V");
-    euh                       = new VowelClass(Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ɔ", "O");
-    LongOpenMidBackRounded    = new VowelClass(LongVowel Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ɔː", ""); // Check properties
+    uu                        = new VowelClass(RootVowels.Oo, Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "ø", "2");
+    o                         = new VowelClass(RootVowels.Oo, LongVowel Rounded Vocoid, Opens.Open, Backnesses.Front, "øː", "");  // Check properties
+    MidFrontUnrounded         = new VowelClass(RootVowels.Oo, NoFeature, Opens.Mid, Backnesses.Front, "ø̞", "");
 
 
-    O                         = new VowelClass(LongVowel Rounded Vocoid Continuant, Opens.Mid, Backnesses.Back, "oː", "o:");
 
-    on                            = new VowelClass(Nasal Rounded, Opens.CloseMid, Backnesses.Back, "õ", "O~");  // Check properties
-    LongCloseMidBackRoundedNasal  = new VowelClass(LongVowel Nasal Rounded, Opens.CloseMid, Backnesses.Back, "õː", "O~:"); // Check properties
-    oa                         = new VowelClass(Rounded, Opens.CloseMid, Backnesses.Back, "o̯", ""); // Check properties
 
-    NearFrontUnrounded        = new VowelClass(NoFeature, Opens.NearOpen, Backnesses.NearFront, "æ", "{");
-    FrontOpenRounded          = new VowelClass(Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&");
-    ahh                       = new VowelClass(Rounded, Opens.NearOpen, Backnesses.Central, "ɐ", "6");
+    MidCentralUnrounded       = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Central, "ɘ", "@\\");
+    aah                       = new VowelClass(RootVowels.Uh, NoFeature, Opens.CloseMid, Backnesses.Central, "ə", "@");
+    ooh                       = new VowelClass(RootVowels.None, Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8");
+    CloseMidBackUnrounded     = new VowelClass(RootVowels.None, Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "ɤ", "7");
 
-    OpenCentralUnrounded      = new VowelClass(NoFeature, Opens.Open, Backnesses.Central, "ä", "a_\"");
-    ah                        = new VowelClass(Vocoid Continuant, Opens.Open, Backnesses.NearFront, "a", "a");
+    oh                        = new VowelClass(RootVowels.O, Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "o", "o");
+    ooow                      = new VowelClass(RootVowels.O, Rounded, Opens.CloseMid, Backnesses.Back, "o(w)", "");  // Not sure what the IPA for this is
+    MidBackUnrounded          = new VowelClass(RootVowels.O, NoFeature, Opens.Mid, Backnesses.Back, "o̞", "");
+    O                         = new VowelClass(RootVowels.O, LongVowel Rounded Vocoid Continuant, Opens.Mid, Backnesses.Back, "oː", "o:");
+    on                        = new VowelClass(RootVowels.O, Nasal Rounded, Opens.CloseMid, Backnesses.Back, "õ", "O~");  // Check properties
+    oa                        = new VowelClass(RootVowels.O, Rounded, Opens.CloseMid, Backnesses.Back, "o̯", ""); // Check properties
 
-    an                        = new VowelClass(Nasal, Opens.NearOpen, Backnesses.Central, "ã", ""); // Check properties
+    eh                        = new VowelClass(RootVowels.Eh, Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E");
+    Eh                        = new VowelClass(RootVowels.Eh, LongVowel Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "ɛː", "E:");  // Check properties
+    ai                        = new VowelClass(RootVowels.E, LongVowel Vocoid Continuant, Opens.Mid, Backnesses.Front, "eː", "e:");
 
-    A                         = new VowelClass(LongVowel Vocoid Continuant, Opens.Open, Backnesses.Central, "aː", "a:");
+    OpenMidNearFrontRounded   = new VowelClass(RootVowels.None, Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "œ", "9");
+    OpenMidCentralRounded     = new VowelClass(RootVowels.None, Rounded, Opens.OpenMid, Backnesses.Central, "ɞ", "3\\");
+    aeh                       = new VowelClass(RootVowels.None, NoFeature, Opens.OpenMid, Backnesses.Central, "ɜ", "3");
+    OpenMidBackUnrounded      = new VowelClass(RootVowels.None, Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ʌ", "V");
+    euh                       = new VowelClass(RootVowels.Aoh, Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ɔ", "O");
+    LongOpenMidBackRounded    = new VowelClass(RootVowels.Aoh, LongVowel Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ɔː", ""); // Check properties
+    oon                       = new VowelClass(RootVowels.Aoh, Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*");       // French Fish "poisson"
 
-    OpenNearFrontRounded      = new VowelClass(Rounded Vocoid Continuant, Opens.Open, Backnesses.NearFront, "ɶ", "&");
-    a                         = new VowelClass(Vocoid Continuant, Opens.Open, Backnesses.Back, "ɑ", "A");
-    OpenBackRounded           = new VowelClass(Rounded Vocoid Continuant, Opens.Open, Backnesses.Back, "ɒ", "Q");
 
-    uuh                       = new VowelClass(Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ̃", "oe*"); // French One "un"
-    ey                        = new VowelClass(Rounded Nasal, Opens.Close, Backnesses.Front, "ỹ", "y~");
-    aa                        = new VowelClass(Nasal, Opens.Open, Backnesses.NearFront, "ã", "~a");
-    ahn                       = new VowelClass(Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ̃", "a*");   // Supposed to be "ɛ̃" as in French Dog "chien"?
-    oon                       = new VowelClass(Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*");       // French Fish "poisson"
-    aehn                      = new VowelClass(Nasal, Opens.OpenMid, Backnesses.NearFront, "ɜ̃", "3*");
-    ehnn                      = new VowelClass(Nasal, Opens.OpenMid, Backnesses.NearFront, "ɛ̃", "E*");
-    uh                        = new VowelClass(Nasal Rounded, Opens.Close, Backnesses.Back, "ũ", "u*");         // Portuguese One "um"
-    en                        = new VowelClass(Nasal, Opens.CloseMid, Backnesses.Front, "ẽ", "e*");             // Portuguese Trail "se*da
-    een                       = new VowelClass(Nasal, Opens.Close, Backnesses.Front, "ĩ", "i*");                // Portuguese Tongue
+    LongCloseMidBackRoundedNasal  = new VowelClass(RootVowels.None, LongVowel Nasal Rounded, Opens.CloseMid, Backnesses.Back, "õː", "O~:"); // Check properties
+
+    NearFrontUnrounded        = new VowelClass(RootVowels.None, NoFeature, Opens.NearOpen, Backnesses.NearFront, "æ", "{");
+    FrontOpenRounded          = new VowelClass(RootVowels.None, Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&");
+    ahh                       = new VowelClass(RootVowels.Aah, Rounded, Opens.NearOpen, Backnesses.Central, "ɐ", "6");
+
+    OpenCentralUnrounded      = new VowelClass(RootVowels.A, NoFeature, Opens.Open, Backnesses.Central, "ä", "a_\"");
+    ah                        = new VowelClass(RootVowels.A, Vocoid Continuant, Opens.Open, Backnesses.NearFront, "a", "a");
+
+    an                        = new VowelClass(RootVowels.A, Nasal, Opens.NearOpen, Backnesses.Central, "ã", ""); // Check properties
+
+    A                         = new VowelClass(RootVowels.A, LongVowel Vocoid Continuant, Opens.Open, Backnesses.Central, "aː", "a:");
+
+    OpenNearFrontRounded      = new VowelClass(RootVowels.None, Rounded Vocoid Continuant, Opens.Open, Backnesses.NearFront, "ɶ", "&");
+    a                         = new VowelClass(RootVowels.Ah, Vocoid Continuant, Opens.Open, Backnesses.Back, "ɑ", "A");
+    OpenBackRounded           = new VowelClass(RootVowels.None, Rounded Vocoid Continuant, Opens.Open, Backnesses.Back, "ɒ", "Q");
+
+    uuh                       = new VowelClass(RootVowels.None, Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ̃", "oe*"); // French One "un"
+    ey                        = new VowelClass(RootVowels.None, Rounded Nasal, Opens.Close, Backnesses.Front, "ỹ", "y~");
+    aa                        = new VowelClass(RootVowels.A, Nasal, Opens.Open, Backnesses.NearFront, "ã", "~a");
+    ahn                       = new VowelClass(RootVowels.Aah, Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ̃", "a*");   // Supposed to be "ɛ̃" as in French Dog "chien"?
+    aehn                      = new VowelClass(RootVowels.None, Nasal, Opens.OpenMid, Backnesses.NearFront, "ɜ̃", "3*");
+    ehnn                      = new VowelClass(RootVowels.Eh, Nasal, Opens.OpenMid, Backnesses.NearFront, "ɛ̃", "E*");
+    en                        = new VowelClass(RootVowels.E, Nasal, Opens.CloseMid, Backnesses.Front, "ẽ", "e*");
+    een                       = new VowelClass(RootVowels.I, Nasal, Opens.Close, Backnesses.Front, "ĩ", "i*");
 
 
 // How to show rhotic vowels?

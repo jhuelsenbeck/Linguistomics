@@ -19,10 +19,10 @@ abstract class RuleClass {
       Symbol,
       Filters;
 
-  Constructor(name, letter, symbol) {
+  Constructor(name) {
     Name    = name;
-    Letter  = letter;
-    Symbol  = symbol;
+    Letter  = "Kappa";
+    Symbol  = Tex.kappa;
   }
 
   void InitFilters {
@@ -100,27 +100,38 @@ abstract class RuleClass {
 
   override ShowDescription = Block {
     Table {
+      PaddingLR: 1;
       Columns: [15 pts, 1.4 inches, DocMetrics.PageContent.Width - 1.55 inches];
       Row {
         Bold;
-        Background: 90%;
+        Style.TitleBackground;
         "#";
         Lang.Filter;
         Lang.Segments;
       };
 
+      var i = 0;
       foreach (var filter in Filters) {
-        Row {
-          Nexus.CharacterList[EachIndex];
-          filter.Name;
-          Cell {
-            TextHeight: 14 pts;
-            Span {
-              Separator: Space;
-              (each GetSegments(filter)).ShowSegment;
+        var segments = GetSegments(filter);
+        if (segments.Length > 0) {
+          Row {
+            Cell {
+              Style.MonoFamily;
+              Style.TitleBackground;
+              Bold;
+              HAlign: HAligns.Center;
+              Nexus.CharacterList[i++];
+            };
+            filter.Name;
+            Cell {
+              TextHeight: 14 pts;
+              Span {
+                Separator: Space;
+                (each segments).ShowSegment;
+              };
             };
           };
-        };
+        }
       }
     }
   };
@@ -153,43 +164,159 @@ class FeatureMaskClass: FilterClass {
 }
 //======================================================================
 
-class LRClass: FilterClass {
+class LabiovelarFilterClass: FilterClass {
   Constructor {
-    super.Constructor("LR");
+    super.Constructor("Labiovelar");
   }
 
-  override Matches(segment) = segment == IPA.Segments.l or segment == IPA.Segments.r;
+  override Matches(segment) = segment.Features.HasFlagMask(Vowel, NoFeature) and segment.Place == Places.LabialVelar;
 }
 //======================================================================
 
+class LongShortClass: FilterClass {
+  var Root;
+
+  Constructor(root) {
+    Root = root;
+    super.Constructor("Long & Short " + root.Name);
+  }
+
+  override Matches(segment) = segment.Root == Root and segment.Features.HasFlagMask(Vowel Nasal, Vowel);
+}
+//======================================================================
+
+class NasalClass: FilterClass {
+  var Root;
+
+  Constructor(root) {
+    Root = root;
+    super.Constructor("Nasal " + root.Name);
+  }
+
+  override Matches(segment) = segment.Root == Root and segment.Features.HasFlag(Vowel Nasal);
+}
+//======================================================================
+
+class RootVowelClass: FilterClass {
+  Constructor() {
+    super.Constructor("Root vowels");
+  }
+
+  override Matches(segment) = segment.Features.HasFlag(Vowel) and segment.Root != RootVowels.None;
+}
+//======================================================================
+
+Residue             = new FilterClass("Residue");
+NasalVowels         = new FeatureMaskClass("Nasal Vowel", Vowel Nasal, Vowel Nasal);
+RoundedVowels       = new FeatureMaskClass("Rounded Vowel", Vowel Rounded, Vowel Rounded);
+LongVowels          = new FeatureMaskClass("Long Vowel", Vowel LongVowel, Vowel LongVowel);
+ShortVowels         = new FeatureMaskClass("Short Vowel", Vowel LongVowel, Vowel);
+AllRootVowels       = new RootVowelClass;
+Vowels              = new FeatureMaskClass("Vowel", Vowel, Vowel);
+VoicelessStops      = new FeatureMaskClass("Voiceless Stop", Voiced Stop, Stop);
+VoicedStops         = new FeatureMaskClass("Voiced Stop", Voiced Stop, Voiced Stop);
+VoicedAffricates    = new FeatureMaskClass("Voiced Affricate", Voiced Affricate, Voiced Affricate);
+VoicelessAffricates = new FeatureMaskClass("Voiceless Affricate", Voiced Affricate, Affricate);
+NasalConsonants     = new FeatureMaskClass("Nasal Consonant", Nasal, Nasal);
+Rhotics             = new FeatureMaskClass("Rhotic", Rhotic, Rhotic);
+Sibilants           = new FeatureMaskClass("Sibilants", Sibilant, Sibilant);
+Approximants        = new FeatureMaskClass("Approximant", Approximant, Approximant);
+Pulmonics           = new FeatureMaskClass("Pulmonic", Pulmonic, Pulmonic);
+VoicedFricatives    = new FeatureMaskClass("Voiced Fricatives", Pulmonic Voiced Fricative, Pulmonic Voiced Fricative);
+VoicelessFricatives = new FeatureMaskClass("Voiceless Fricatives", Pulmonic, Pulmonic Fricative);
+Laterals            = new FeatureMaskClass("Lateral", Lateral, Lateral);
+Labiovelars         = new LabiovelarFilterClass;
+
+
+LongShortRoot = new LongShortClass(each RootVowels[1..]);
+NasalRoot     = new NasalClass(each RootVowels[1..]);
+//======================================================================
+
+
 class GroupRuleClass: RuleClass {
   Constructor {
-    super.Constructor("Consonant-Vowel-Nasal clusters", "Kappa", Tex.kappa);
+    super.Constructor("Clusters");
 
-    Filters = [
-      // Vowels
-      new FeatureMaskClass("Nasal Vowel", Vowel Nasal, Vowel Nasal),
-      new FeatureMaskClass("Rounded Vowel", Vowel Rounded, Vowel Rounded),
-      new FeatureMaskClass("Long Vowel", Vowel LongVowel, Vowel LongVowel),
-      new FeatureMaskClass("Vowel", Vowel, Vowel),
-
-      // Specially selected
-      new SingleClass(IPA.Segments.j),
-      new SingleClass(IPA.Segments.w),
-
-      // Consonants
-      new FeatureMaskClass("Voiceless Stop", Voiced Stop, Stop),
-      new FeatureMaskClass("Voiced Stop", Voiced Stop, Voiced Stop),
-      new FeatureMaskClass("Voiced Affricate", Voiced Affricate, Voiced Affricate),
-      new FeatureMaskClass("Voiceless Affricate", Voiced Affricate, Affricate),
-      new FeatureMaskClass("Nasal Consonant", Nasal, Nasal),
-      new FeatureMaskClass("Rhotic", Rhotic, Rhotic),
-      new FeatureMaskClass("Sibilants", Sibilant, Sibilant),
-      new FeatureMaskClass("Pulmonic", Pulmonic, Pulmonic),
-      new FilterClass("Consonant"),
+    Filters = LongShortRoot + NasalRoot + [
+      NasalVowels,
+      RoundedVowels,
+      Vowels,
+      Labiovelars,
+      VoicelessStops,
+      VoicedStops,
+      VoicedAffricates,
+      VoicelessAffricates,
+      NasalConsonants,
+      Laterals,
+      Rhotics,
+      Sibilants,
+      Approximants,
+      VoicedFricatives,
+      VoicelessFricatives,
+      Residue,
     ];
     InitFilters;
   }
 }
+//======================================================================
+
+// This produces a tree with Catalan and Spanish in the same clade
+class SimpleRuleClass: RuleClass {
+  Constructor {
+    super.Constructor("Simple");
+
+    Filters = [
+      NasalVowels,
+      RoundedVowels,
+      LongVowels,
+      Vowels,
+      VoicelessStops,
+      VoicedStops,
+      VoicedAffricates,
+      VoicelessAffricates,
+      NasalConsonants,
+      Rhotics,
+      Sibilants,
+      Pulmonics,
+      Residue,
+    ];
+    InitFilters;
+  }
+}
+//======================================================================
+
+class ExRuleClass: RuleClass {
+  Constructor {
+    super.Constructor("Ex");
+
+    Filters = [
+      NasalVowels,
+      RoundedVowels,
+      LongVowels,
+      AllRootVowels,
+      Vowels,
+      Labiovelars,
+      VoicelessStops,
+      VoicedStops,
+      VoicedAffricates,
+      VoicelessAffricates,
+      NasalConsonants,
+      Laterals,
+      Rhotics,
+      Sibilants,
+      Approximants,
+      VoicedFricatives,
+      VoicelessFricatives,
+      Residue,
+    ];
+    InitFilters;
+  }
+}
+//======================================================================
+// Here is the active rule group
+
+//Rule = new GroupRuleClass;
+//Rule = new SimpleRuleClass;
+Rule = new ExRuleClass;
 //======================================================================
 
