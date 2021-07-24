@@ -18,63 +18,46 @@ include "Tables";
 //======================================================================
 
 Main.Documents = new DocumentViewClass(null) {
-  new PaperViewClass(ShowOutput);
-  new DiagnosticsViewClass(ShowOutput);
+  new PaperViewClass;
+  new ExperimentViewClass;
+  new DiagnosticsViewClass;
   new JohnPresentationClass;
   new DavidPresentationClass;
 };
 
 void Main.Run {
-  Compute.Calculate;
+  Results.Compute.Calculate;
 }
 //======================================================================
 
 // No spaces in the name below!
 // RevBayes has a problem with folder names that contain spaces...
 
-ShowOutput = "Run3";
-Results    = new ResultsClass(Rule);
-Compute    = new ComputeClass(Rule, ShowOutput);
+Results = new ResultsClass(Rule, "Run1");
 //======================================================================
 
 with Info {
-  RuleCharacters = true;
-  Generations    = 10000;
-
-  ImageFolder = Folders.Source Folder("Images");
-
-  Journal     = "Transactions of the Beysian Society";
-  Publisher   = "The Baysian Society";
-  Title       = Lang.SimulatedSegments;
-  PriorTree   = GetTreeNodes(LanguageBranches.Romance);
+  IncludeVerbs = true;
+  Generations  = 1000;
+  ImageFolder  = Folders.Source Folder("Images");
+  Journal      = "Transactions of the Beysian Society";
+  Publisher    = "The Baysian Society";
+  Title        = Lang.SimulatedSegments;
+  PriorTree    = GetTreeNodes(LanguageBranches.Romance);
 
   AuthorList = TextList {
     Style.Author(each Authors);
   };
 }
-//======================================================================
-
-UsedLanguages = [
-  Languages.Latin,
-  Languages.French,
-  Languages.Italian,
-  Languages.Spanish,
-  Languages.PortugueseBrazil,
-  Languages.Portuguese,
-  Languages.Catalan,
-  Languages.Walloon,
-  Languages.Friulian,
-  Languages.Romanian,
-];
 //=====================================================================
 
 with ExampleConcept {
   Cognate            = FindSlice(Results.UsedCognates, c => c.Concept == Concepts.Star, 1)[0];
-  GetTaxon(language) = Math.FindSlice(Results.TaxaArray, t => t.Language == language)[0];
+  GetTaxon(language) = Math.FindSlice(Results.Taxa, t => t.Language == language)[0];
 
   TaxonIndex     = 0;
-  Taxon          = Results.TaxaArray[TaxonIndex];
-  Callout        = Results.TaxaArray[3];
+  Taxon          = Results.Taxa[TaxonIndex];
+  Callout        = Results.Taxa[3];
   Name           = ToLower(Cognate.Name);
   ExLanguages    = [Languages.Romanian, Languages.Catalan, Languages.Portuguese, Languages.French, Languages.Friulian];
   TaxonList      = GetTaxon(each ExLanguages);
@@ -94,12 +77,9 @@ class PaperViewClass: BaseViewClass {
     super.Constructor("White Paper", "paper", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-      new AppendixClass("Program Output", Compute.ShowLanguageTrees),
-      new AppendixClass(Lang.TransitionRules, Compute.ShowTransitionRules),
+      new AppendixClass("Program Output", Results.Compute.ShowLanguageTrees),
+      new AppendixClass(Lang.TransitionRules, Results.Compute.ShowTransitionRules),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(Rule)),
-      new AppendixClass("Transition Rule File", Compute.TransitionRuleFile),
-
-//      new AppendixClass("Symbols", ShowSymbols),
     ];
   }
 
@@ -140,6 +120,33 @@ class PaperViewClass: BaseViewClass {
 }
 //======================================================================
 
+class ExperimentViewClass: BaseViewClass {
+  var Appendices;
+
+  Constructor {
+    super.Constructor("Experiment", "experiment", ConfigurationClass.DocumentTypes.Normal);
+
+    Appendices = [
+      new AppendixClass(Lang.TransitionRules, Results.Compute.ShowTransitionRules),
+      new AppendixClass(Lang.Results, Results.Compute.ShowLanguageTrees),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(Rule)),
+      new AppendixClass("Statistics", Results.Compute.ShowStats),
+    ];
+  }
+
+  override GetDocument = Document {
+    DocMetadata;
+
+    Style.PageSection {
+      Style.Title(Info.Title);
+      Style.HeaderCentered(Lang.Appendices);
+      Style.AppendixRow(each Appendices);
+    };
+    Style.ShowAppendix(each Appendices);
+  };
+}
+//======================================================================
+
 ShowSymbols = Block {
   (each Defs).Appendix;
 };
@@ -151,7 +158,7 @@ class DiagnosticsViewClass: BaseViewClass {
     super.Constructor("Diagnostics", "diag", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-      new AppendixClass("RevBayes Source File", Compute.RevBayesSource),
+      new AppendixClass("RevBayes Source File", Results.Compute.RevBayesSource),
       new AppendixClass("Character File", Nexus.CharacterFile(2)),
 //      new AppendixClass("TKF Input Files", Nexus.TKFFiles),
       new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),
@@ -162,7 +169,8 @@ class DiagnosticsViewClass: BaseViewClass {
 //      new AppendixClass("Feature Tree", SegmentTree.ShowTree),
 //      new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
     //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
-      new AppendixClass(Lang.Languages, ShowLanguageDetails),
+      new AppendixClass(Lang.Languages, Results.ShowLanguageDetails),
+      new AppendixClass("Symbols", ShowSymbols),
     ];
   }
 

@@ -58,19 +58,6 @@ class LanguageClass {
     return null;
   }
 }
-
-ShowLanguageDetails = Block {
-  foreach (var language in UsedLanguages) {
-    Style.Header1(language.Name);
-    Block {
-      language.Description;
-      language.Details;
-
-      if (valid language.MapImage)
-        language.ShowMap(Size(5 inches, 3 inches));
-    }
-  }
-};
 //======================================================================
 
 class CognateClass {
@@ -164,32 +151,15 @@ class TaxonClass {
 
 class ResultsClass {
   var UsedCognates,
-      TaxaArray,
+      Taxa,
       DisplaySegments,
       UniqueSegments,
       UniqueCharacters,
-      TotalLength;
+      TotalLength,
+      Compute;
 
-  Constructor(rule) {
-    TotalLength = 0;
-    var list = new ListClass(256);
-    foreach (var concept in Concepts) {
-      if (exists concept.?Done) {
-        foreach (var cognate in concept) {
-          if (cognate.GlobalVariableName() != "Done") {
-            var count = 0;
-            foreach (var t in cognate) {
-              if (t[0].Length > 0)
-                ++count;
-            }
-            if (count > 1)
-              list.Add(new CognateClass(concept, cognate));
-          }
-        }
-      }
-    }
-    UsedCognates = list.ToArray;
-    TaxaArray    = new TaxonClass(each UsedLanguages);
+  Constructor(rule, folder) {
+    GetConcepts;
 
     foreach (var cognate in UsedCognates)
       ComputeCognate(rule, cognate);
@@ -204,16 +174,12 @@ class ResultsClass {
         foreach (var s in word.Segments) {
           if (!s.Punctuation) {
             if (set.Add(s)) {
-              var c = i;
-              if (Info.RuleCharacters) {
-                c = 0;
-                foreach (var filter in rule.Filters) {
-                  if (rule.MatchesRule(filter, s))
-                    break;
-                  ++c;
-                }
+              var c = 0;
+              foreach (var filter in rule.Filters) {
+                if (rule.MatchesRule(filter, s))
+                  break;
+                ++c;
               }
-
               s.Character = clist[c < last ? c : last];
               ++i;
             }
@@ -224,18 +190,67 @@ class ResultsClass {
 
     UniqueSegments   = set.Values;
     DisplaySegments  = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
-
-    if (Info.RuleCharacters)
-      UniqueCharacters = rule.Filters.Length;
-    else
-      UniqueCharacters = UniqueSegments.Length;
+    UniqueCharacters = rule.Filters.Length;
+    Compute          = new ComputeClass(rule, folder);
   }
 
+  void GetConcepts {
+    var set = new DictionaryClass(32);
+
+    TotalLength = 0;
+    var clist = new ListClass(256);
+    foreach (var concept in Concepts) {
+      if (exists concept.?Done and (Info.IncludeVerbs or not exists concept.?Verb)) {
+        foreach (var cognate in concept) {
+          var vname = cognate.GlobalVariableName();
+          if (vname != "Done" and vname != "Verb") {
+            var count = 0;
+            foreach (var t in cognate) {
+              var tn = t.GlobalVariableName();
+              set.Add(tn, tn);
+              if (t[0].Length > 0)
+                ++count;
+            }
+            if (count > 1)
+              clist.Add(new CognateClass(concept, cognate));
+          }
+        }
+      }
+    }
+    UsedCognates = clist.ToArray;
+
+    var nameset = set.Values;
+    var tlist   = new ListClass(nameset.Length);
+
+    foreach (var ln in nameset) {
+      var lang = Languages.GetField(ln);
+      if (valid lang)
+        tlist.Add(new TaxonClass(lang));
+      else
+        System.Assert(false);
+    }
+    Taxa = tlist.ToArray;
+  }
+
+  ShowLanguageDetails = Block {
+    foreach (var taxon in Taxa) {
+      var language = taxon.Language;
+      Style.Header1(language.Name);
+      Block {
+        language.Description;
+        language.Details;
+
+        if (valid language.MapImage)
+          language.ShowMap(Size(5 inches, 3 inches));
+      }
+    }
+  };
+
   void ComputeCognate(rule, cognate) {
-    var words     = new ListClass(TaxaArray.Length);
+    var words     = new ListClass(Taxa.Length);
     var maxlength = 0;
 
-    foreach (var taxon in TaxaArray) {
+    foreach (var taxon in Taxa) {
       var word = null;
       foreach (var langword in cognate.Cognate) {
         if (langword.GlobalVariableName == taxon.Variable) {
@@ -270,8 +285,8 @@ class ResultsClass {
 
   ShowLanguages = Block {
     var rows      = 2;
-    var cols      = (TaxaArray.Length + 1) div rows;
-    var taxagroup = TaxaArray / cols;
+    var cols      = (Taxa.Length + 1) div rows;
+    var taxagroup = Taxa / cols;
     var h         = 14 pts;
     var space     = 5 pts;
     var size      = Size(DocMetrics.SlideContent.Width / cols - space, DocMetrics.SlideContent.Height / rows);
@@ -411,10 +426,10 @@ with Nexus {
     VisitNodeTaxa(set, each node);
   }
 
-  MaxNameLength = Math.Max((each ((each Results.TaxaArray).Variable)).Length) + 1;
+  MaxNameLength = Math.Max((each ((each Results.Taxa).Variable)).Length) + 1;
 
   WriteTaxa(cognate, paper, maxlength) = TextBlock {
-    foreach (var taxon in Results.TaxaArray) {
+    foreach (var taxon in Results.Taxa) {
       var words = cognate.Words[taxon.Index];
       Span {
         taxon.Variable;
@@ -450,7 +465,7 @@ with Nexus {
       Comment(cognate.Name);
 
     Span {
-      Results.TaxaArray.Length;
+      Results.Taxa.Length;
       Space;
       cognate.Words[0].Padded.Length;
       Space;
@@ -471,7 +486,7 @@ with Nexus {
 
   CharacterFile(paper) = NexusFile {
     var maxlength = MaxNameLength;
-    var ntax      = Results.TaxaArray.Length;
+    var ntax      = Results.Taxa.Length;
 
     TabStops: [4 inches];
 
@@ -480,7 +495,7 @@ with Nexus {
         AddValue("ntax", ntax);
       };
       AddLine("taxlabels") {
-        AddTaxon(each Results.TaxaArray);
+        AddTaxon(each Results.Taxa);
       };
     };
 

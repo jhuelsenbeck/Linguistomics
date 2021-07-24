@@ -75,11 +75,11 @@ class ComputeClass: RevProgramClass {
       CharacterName,
       Rule;
 
-  Constructor(rule, outname) {
+  Constructor(rule, folder) {
     super.Constructor;
 
     Rule           = rule;
-    OutFolder      = Folders.Repository Folder("Run") Folder(outname);
+    OutFolder      = Folders.Repository Folder("Run") Folder(folder);
     EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName  = FileName("Program") Extensions.RevBayes;
     CharacterName  = FileName("Characters") Extensions.Nexus;
@@ -97,7 +97,6 @@ class ComputeClass: RevProgramClass {
     CreateFolder(inputfolder);
     IO.Write(Nexus.CharacterFile(1), OutFolder CharacterName);
 
-    IO.Write(TransitionRuleFile, OutFolder FileName("Parameters.txt"));
     foreach (var cognate in Results.UsedCognates)
       IO.Write(Nexus.TKFFile(cognate, 0), inputfolder FileName(cognate.Name) Extension("in"), FileFormats.Text);
 
@@ -131,7 +130,9 @@ class ComputeClass: RevProgramClass {
     Style.ReadTree("Consensus", OutFolder GammaConsensus);
     Style.ReadTree("MAP", OutFolder GammaMAP);
     Style.ReadTree(Lang.MCC, OutFolder GammaMCC);
+  };
 
+  ShowStats = Block {
     var schema = new LogSchemaClass();
     var view   = schema.ReadTextFile(OutFolder GammaLog, true, ValueTypes.Double);
     schema.GetHistogram(view, "alpha");
@@ -145,11 +146,11 @@ class ComputeClass: RevProgramClass {
 //    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
   };
 
-  TransitionRuleFile = TextBlock {
-    Style.MonoFamily;
-    "Num_Symbols:{0}"(Results.DisplaySegments.Length);
-    Rule.ShowFile;
-  };
+//  TransitionRuleFile = TextBlock {
+//    Style.MonoFamily;
+//    "Num_Symbols:{0}"(Results.DisplaySegments.Length);
+//    Rule.ShowFile;
+//  };
 
   ShowTransitionRules = Block {
     Rule.ShowDescription;
