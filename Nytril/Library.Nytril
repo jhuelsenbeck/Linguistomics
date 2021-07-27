@@ -88,11 +88,9 @@ class WordClass {
       Text,
       Segments,
       Aligned,
-      Padded,
-      Rule;
+      Padded;
 
-  Constructor(rule, language, cognate, text) {
-    Rule     = rule;
+  Constructor(language, cognate, text) {
     Language = language;
     Cognate  = cognate;
     Text     = text;
@@ -125,7 +123,7 @@ class WordClass {
   };
 
   override GetPopup = Frame {
-    AllWords.ShowConceptTable(Rule, Cognate);
+    AllWords.ShowConceptTable(Cognate);
   };
 }
 //======================================================================
@@ -150,7 +148,8 @@ class TaxonClass {
 //======================================================================
 
 class ResultsClass {
-  var UsedCognates,
+  var Rule,
+      UsedCognates,
       Taxa,
       DisplaySegments,
       UniqueSegments,
@@ -158,44 +157,45 @@ class ResultsClass {
       TotalLength,
       Compute;
 
-  Constructor(rule, folder) {
+  Constructor(folder) {
     GetConcepts;
-
     foreach (var cognate in UsedCognates)
-      ComputeCognate(rule, cognate);
+      ComputeCognate(cognate);
 
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
-    var i     = 0;
-    var set   = new DictionaryClass(256);
-    var clist = Nexus.CharacterList;
-    var last  = clist.Length-1;
+    Rule = new DiphthongPairRuleClass;
+//    Rule = new DiphthongRuleClass;
+//    Rule = new VowelsSeparatedRuleClass;
+//    Rule = new SegmentTypesRuleClass;
+
+    GetUniqueSegments;
+    Rule.AssignCharacters(UniqueSegments);
+
+    var max = 0;
+    foreach (var segment in UniqueSegments) {
+      if (segment.Character > max)
+        max = segment.Character;
+    }
+    UniqueCharacters = max+1;
+    Compute          = new RevProgramClass(Models.JC, folder);
+  }
+
+  void GetUniqueSegments {
+    var set = new DictionaryClass(256);
     foreach (var cognate in UsedCognates) {
       foreach (var word in cognate.Words) {
-        foreach (var s in word.Segments) {
-          if (!s.Punctuation) {
-            if (set.Add(s)) {
-              var c = 0;
-              foreach (var filter in rule.Filters) {
-                if (rule.MatchesRule(filter, s))
-                  break;
-                ++c;
-              }
-              s.Character = clist[c < last ? c : last];
-              ++i;
-            }
-          }
+        foreach (var segment in word.Segments) {
+          if (!segment.Punctuation)
+            set.Add(segment, segment.Ipa);
         }
       }
     }
-
-    UniqueSegments   = set.Values;
-    DisplaySegments  = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
-    UniqueCharacters = rule.Filters.Length;
-    Compute          = new ComputeClass(rule, folder);
+    UniqueSegments  = set.Values;
+    DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
   }
 
   void GetConcepts {
-    var set = new DictionaryClass(32);
+    var set = new DictionaryClass(256);
 
     TotalLength = 0;
     var clist = new ListClass(256);
@@ -232,6 +232,12 @@ class ResultsClass {
     Taxa = tlist.ToArray;
   }
 
+  TransitionRuleFile = TextBlock {
+    Style.MonoFamily;
+    "Num_Symbols:{0}"(DisplaySegments.Length);
+    Rule.ShowFile;
+  };
+
   ShowLanguageDetails = Block {
     foreach (var taxon in Taxa) {
       var language = taxon.Language;
@@ -246,7 +252,7 @@ class ResultsClass {
     }
   };
 
-  void ComputeCognate(rule, cognate) {
+  void ComputeCognate(cognate) {
     var words     = new ListClass(Taxa.Length);
     var maxlength = 0;
 
@@ -255,13 +261,13 @@ class ResultsClass {
       foreach (var langword in cognate.Cognate) {
         if (langword.GlobalVariableName == taxon.Variable) {
           var t = langword[0];
-          word      = new WordClass(rule, taxon.Language, cognate, t);
+          word      = new WordClass(taxon.Language, cognate, t);
           maxlength = Math.Max([maxlength, word.Aligned.Length]);
           break;
         }
       }
       if (word == null)
-        word = new WordClass(rule, taxon.Language, cognate, Empty);
+        word = new WordClass(taxon.Language, cognate, Empty);
       words.Add(word);
     }
 

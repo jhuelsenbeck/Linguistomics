@@ -1,7 +1,7 @@
 using Format, Units, Math, IO, DB;
 //======================================================================
 
-class RevProgramClass {
+class RevSourceClass {
   var CommentChar,
       CommentSpace;
 
@@ -63,7 +63,12 @@ class RevProcessClass: ProcessClass {
 }
 //======================================================================
 
-class ComputeClass: RevProgramClass {
+enum Models {
+  JC,
+  MK,
+}
+
+class RevProgramClass: RevSourceClass {
   var OutFolder,
       EXEName,
       RevSourceName,
@@ -73,12 +78,12 @@ class ComputeClass: RevProgramClass {
       GammaMCC,
       GammaConsensus,
       CharacterName,
-      Rule;
+      Model;
 
-  Constructor(rule, folder) {
+  Constructor(model, folder) {
     super.Constructor;
 
-    Rule           = rule;
+    Model          = model;
     OutFolder      = Folders.Repository Folder("Run") Folder(folder);
     EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName  = FileName("Program") Extensions.RevBayes;
@@ -101,6 +106,7 @@ class ComputeClass: RevProgramClass {
       IO.Write(Nexus.TKFFile(cognate, 0), inputfolder FileName(cognate.Name) Extension("in"), FileFormats.Text);
 
     IO.Write(RevBayesSource, OutFolder RevSourceName);
+    IO.Write(RunBatchFile, OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
 
 
     var p = new RevProcessClass(EXEName, OutFolder RevSourceName) {
@@ -146,14 +152,8 @@ class ComputeClass: RevProgramClass {
 //    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
   };
 
-//  TransitionRuleFile = TextBlock {
-//    Style.MonoFamily;
-//    "Num_Symbols:{0}"(Results.DisplaySegments.Length);
-//    Rule.ShowFile;
-//  };
-
-  ShowTransitionRules = Block {
-    Rule.ShowDescription;
+  RunBatchFile = TextBlock {
+    "\"../../revbayes/rb.exe\" program.rev";
   };
 
   RevBayesSource = TextBlock {
@@ -180,10 +180,30 @@ class ComputeClass: RevProgramClass {
     LineComment("Create helper variables");
     "moves    = VectorMoves()";
     "monitors = VectorMonitors()";
-
     BlockComment("Substitution Model");
-    LineComment("Create a rate matrix using {0} unique characters"(Results.UniqueCharacters));
-    "Q <- fnJC({0})"(Results.UniqueCharacters);
+
+    LineComment("This is the number of unique characters from the segment filters");
+    "unique_chars = {0}"(Results.UniqueCharacters);
+
+    switch (Model) {
+      case Models.JC:
+        "Q <- fnJC(unique_chars)";
+        break;
+
+      case Models.MK:
+        LineComment("I'm guessing completely with this number");
+        "rate_pr <- 10.0";
+        "rate_parameter ~ dnExponential(rate_pr)";
+        "moves.append(mvScale(rate_parameter, weight=2))";
+
+        "for (mi in 1:unique_chars) {";
+        "  for (mj in 1:unique_chars) {";
+        "    matrix[mi][mj] <- rate_parameter ";
+        "  }";
+        "}";
+        "Q := fnFreeK(matrix, rescale=TRUE)";
+        break;
+    }
 
     BlockComment("Tree Model");
 
@@ -194,7 +214,6 @@ class ComputeClass: RevProgramClass {
     "topology ~ dnUniformTopology(taxa, outgroup=out_group, rooted=TRUE)";
 
     LineComment("These are moves that change the tree topology");
-
     "moves.append(mvNNI(topology, weight=num_taxa/2.0))";
     "moves.append(mvSPR(topology, weight=num_taxa/10.0))";
 
@@ -214,6 +233,8 @@ class ComputeClass: RevProgramClass {
     "moves.append(mvScale(alpha, weight=1))";
 
     "site_rates := fnDiscretizeGamma(alpha, alpha, 4)";
+
+
 
     BlockComment("PhyloCTMC Model");
     "seq ~ dnPhyloCTMC(tree=psi, Q=Q, type={0}, siteRates=site_rates)"(ShowString("Standard"));

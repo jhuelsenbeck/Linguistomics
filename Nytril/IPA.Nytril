@@ -70,6 +70,7 @@ flags FeatureSet {
   Continuant  {Name: Lang.Continuant},
   Vibrant     {Name: Lang.Vibrant},
   Liquid      {Name: Lang.Liquid},
+  Diphthong   {Name: Lang.Diphthong},
 }
 //======================================================================
 
@@ -104,11 +105,12 @@ class SegmentClass {
       Open,
       Backness,
       Place,
-      Root;
+      Root,
+      DiphthongRoot;
 
   Constructor(ipa, sampa, impossible=false) = {
     Ipa         = ipa;
-    Character   = ipa;
+    Character   = -1;
     Sampa       = sampa;
     Impossible  = impossible;
     Punctuation = false;
@@ -141,7 +143,10 @@ class SegmentClass {
 
   ShowCharacter = Span {
     Popup: this;
-    Character;
+    if (Character < 0)
+      Ipa;
+    else
+      Nexus.CharacterList[Character];
   };
 
   ShowBlock = Canvas {
@@ -631,17 +636,48 @@ with IPA {
 
     // David, these need review
 
-    midfront_diphthong_romanian   = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "e̯a", "");
-    midback_diphthong_romanian    = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "o̯a", "");
-    aj_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "aj", "");
-    oj_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "oj", "");
-    diphthong_portuguese          = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ɐj", "");
-    nasal_diphthong_portuguese1   = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ẽj̃", "");
-    nasal_diphthong_portuguese2   = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ɐ̃j̃", "");
-    au_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "au̯", "");
-    eh_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ɛj", "");
-    ej_diphthong                  = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ej", "");
-    eu_nasalized_diphthong        = new VowelClass(RootVowels.None, NoFeature, Opens.Mid, Backnesses.Front, "ẽu̯", "");
+    midfront_diphthong_romanian   = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "e̯a", "") {
+      DiphthongRoot: eah
+    };
+
+    midback_diphthong_romanian    = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "o̯a", "") {
+      DiphthongRoot: oa
+    };
+    oj_diphthong                  = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "oj", "") {
+      DiphthongRoot: oh
+    };
+
+    uuh                          = new VowelClass(RootVowels.None, Diphthong Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ̃", "oe*") { // French One "un"
+      DiphthongRoot: oh
+    };
+
+    aj_diphthong                  = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "aj", "") {
+      DiphthongRoot: ah
+    };
+    au_diphthong                  = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "au̯", "") {
+      DiphthongRoot: ah
+    };
+
+
+    diphthong_portuguese          = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "ɐj", "");
+    nasal_diphthong_portuguese1   = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "ẽj̃", "") {
+      DiphthongRoot: ehn
+    };
+
+    nasal_diphthong_portuguese2   = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "ɐ̃j̃", "") {
+      DiphthongRoot: ahn
+    };
+
+    eh_diphthong                  = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "ɛj", "") {
+      DiphthongRoot: eh
+    };
+
+    ej_diphthong                  = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "ej", "") {
+      DiphthongRoot: ay
+    };
+    eu_nasalized_diphthong        = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "ẽu̯", "") {
+      DiphthongRoot: ehn
+    };
 
 // Different references say different things about these two
     ooo                       = new VowelClass(RootVowels.U, Nasal, Opens.Open, Backnesses.Back, "ũ", "u*");
@@ -712,7 +748,6 @@ with IPA {
     a                         = new VowelClass(RootVowels.Ah, Vocoid Continuant, Opens.Open, Backnesses.Back, "ɑ", "A");
     OpenBackRounded           = new VowelClass(RootVowels.None, Rounded Vocoid Continuant, Opens.Open, Backnesses.Back, "ɒ", "Q");
 
-    uuh                       = new VowelClass(RootVowels.None, Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ̃", "oe*"); // French One "un"
     ey                        = new VowelClass(RootVowels.None, Rounded Nasal, Opens.Close, Backnesses.Front, "ỹ", "y~");
     aa                        = new VowelClass(RootVowels.A, Nasal, Opens.Open, Backnesses.NearFront, "ã", "~a");
     ahn                       = new VowelClass(RootVowels.Aah, Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ̃", "a*");   // Supposed to be "ɛ̃" as in French Dog "chien"?

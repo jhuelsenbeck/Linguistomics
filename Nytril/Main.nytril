@@ -33,7 +33,7 @@ void Main.Run {
 // No spaces in the name below!
 // RevBayes has a problem with folder names that contain spaces...
 
-Results = new ResultsClass(Rule, "Run1");
+Results = new ResultsClass("Run1");
 //======================================================================
 
 with Info {
@@ -78,8 +78,8 @@ class PaperViewClass: BaseViewClass {
 
     Appendices = [
       new AppendixClass("Program Output", Results.Compute.ShowLanguageTrees),
-      new AppendixClass(Lang.TransitionRules, Results.Compute.ShowTransitionRules),
-      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(Rule)),
+      new AppendixClass(Lang.CharacterRules, Results.Rule.ShowDescription),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
     ];
   }
 
@@ -127,9 +127,10 @@ class ExperimentViewClass: BaseViewClass {
     super.Constructor("Experiment", "experiment", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-      new AppendixClass(Lang.TransitionRules, Results.Compute.ShowTransitionRules),
+      new AppendixClass(Lang.CharacterRules, Results.Rule.ShowDescription),
+      new AppendixClass("RevBayes Source File", Results.Compute.RevBayesSource),
       new AppendixClass(Lang.Results, Results.Compute.ShowLanguageTrees),
-      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(Rule)),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
       new AppendixClass("Statistics", Results.Compute.ShowStats),
     ];
   }
@@ -158,7 +159,6 @@ class DiagnosticsViewClass: BaseViewClass {
     super.Constructor("Diagnostics", "diag", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-      new AppendixClass("RevBayes Source File", Results.Compute.RevBayesSource),
       new AppendixClass("Character File", Nexus.CharacterFile(2)),
 //      new AppendixClass("TKF Input Files", Nexus.TKFFiles),
       new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),

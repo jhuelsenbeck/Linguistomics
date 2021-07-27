@@ -114,7 +114,7 @@ with DisplayWords {
 //======================================================================
 
 with AllWords {
-  AddCell(rule, taxon, cognate, textheight) = Cell {
+  AddCell(taxon, cognate, textheight) = Cell {
     Background: EachIndex mod 2 == 0 ? 97% : null;
     Canvas {
       var rh   = textheight*0.1;
@@ -129,31 +129,20 @@ with AllWords {
           HAlign: HAligns.Center;
           segment.ShowSegment;
         };
-
-        var filter = rule.FindRule(segment);
-        if (filter != null) {
-          Canvas {
-            Y: textheight + 1;
-            X: x;
-            Width: w - 1;
-            Height: rh;
-            Background: filter.Color;
-          }
-        }
       }
     }
   };
 
-  AddRow(rule, taxon, cognates, textheight) = Row {
+  AddRow(taxon, cognates, textheight) = Row {
     Cell {
       Style.SansSerif;
       TextColor: Colors.DarkGray;
       taxon.Language;
     };
-    AddCell(rule, taxon, each cognates, textheight)
+    AddCell(taxon, each cognates, textheight)
   };
 
-  ConceptTable(rule, textheight, wordsperline, cognates) = HBox {
+  ConceptTable(textheight, wordsperline, cognates) = HBox {
     var first = 70 pts;
     var w     = (DocMetrics.PageContent.Width - first) / wordsperline;
     Table {
@@ -166,21 +155,18 @@ with AllWords {
         Empty;
         (each cognates).Title;
       };
-      AddRow(rule, each Results.Taxa, cognates, textheight)
+      AddRow(each Results.Taxa, cognates, textheight)
     };
     Paragraph;
   };
 
-  ShowConceptTable(rule, concepts) = ConceptTable(rule, 10 pts, 7, [concepts]);
+  ShowConceptTable(concepts) = ConceptTable(10 pts, 7, [concepts]);
 
-  ShowTable(rule) = Block {
+  ShowTable = Block {
     var textheight = 9 pts;
-
-    rule.ShowLegend;
-
     TextHeight: textheight;
     var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * ((textheight into pixels) / pixels)));
-    ConceptTable(rule, textheight, wordsperline, each (Results.UsedCognates / wordsperline))
+    ConceptTable(textheight, wordsperline, each (Results.UsedCognates / wordsperline))
   };
 }
 //======================================================================
