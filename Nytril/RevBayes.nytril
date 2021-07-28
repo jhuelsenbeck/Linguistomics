@@ -153,7 +153,11 @@ class RevProgramClass: RevSourceClass {
   };
 
   RunBatchFile = TextBlock {
-    "\"../../revbayes/rb.exe\" program.rev";
+    Span {
+      "\"../../revbayes/rb.exe\" \"";
+      OutFolder RevSourceName;
+      "\"";
+    }
   };
 
   RevBayesSource = TextBlock {
@@ -180,33 +184,8 @@ class RevProgramClass: RevSourceClass {
     LineComment("Create helper variables");
     "moves    = VectorMoves()";
     "monitors = VectorMonitors()";
-    BlockComment("Substitution Model");
-
-    LineComment("This is the number of unique characters from the segment filters");
-    "unique_chars = {0}"(Results.UniqueCharacters);
-
-    switch (Model) {
-      case Models.JC:
-        "Q <- fnJC(unique_chars)";
-        break;
-
-      case Models.MK:
-        LineComment("I'm guessing completely with this number");
-        "rate_pr <- 10.0";
-        "rate_parameter ~ dnExponential(rate_pr)";
-        "moves.append(mvScale(rate_parameter, weight=2))";
-
-        "for (mi in 1:unique_chars) {";
-        "  for (mj in 1:unique_chars) {";
-        "    matrix[mi][mj] <- rate_parameter ";
-        "  }";
-        "}";
-        "Q := fnFreeK(matrix, rescale=TRUE)";
-        break;
-    }
 
     BlockComment("Tree Model");
-
     LineComment("Outgroup is a clade consisting of one language");
     "out_group = clade({0})"(ShowString(Languages.Latin));
 
@@ -223,9 +202,39 @@ class RevProgramClass: RevSourceClass {
     "  bl[i] ~ dnExponential(10.0)";
     "  moves.append(mvScale(bl[i]))";
     "}";
-
+    Empty;
     "TL  := sum(bl)";
+    Empty;
     "psi := treeAssembly(topology, bl)";
+    Empty;
+
+    BlockComment("Substitution Model");
+    LineComment("This is the number of unique characters from the segment filters");
+    "unique_chars = {0}"(Results.UniqueCharacters);
+
+    switch (Model) {
+      case Models.JC:
+        "Q <- fnJC(unique_chars)";
+        break;
+
+      case Models.MK:
+        LineComment("I'm guessing completely with this number");
+        "rate_pr <- 10.0";
+        Empty;
+        "rate_parameter ~ dnExponential(rate_pr)";
+        Empty;
+        Empty;
+        "moves.append(mvScale(rate_parameter, weight=2))";
+        Empty;
+        "for (i in 1:unique_chars) {";
+        "  for (j in 1:unique_chars) {";
+        "    m[i][j] := rate_parameter";
+        "  }";
+        "}";
+        Empty;
+        "Q := fnFreeK(m, rescale=TRUE)";
+        break;
+    }
 
     BlockComment("Gamma model for among-site variation");
 
@@ -233,8 +242,6 @@ class RevProgramClass: RevSourceClass {
     "moves.append(mvScale(alpha, weight=1))";
 
     "site_rates := fnDiscretizeGamma(alpha, alpha, 4)";
-
-
 
     BlockComment("PhyloCTMC Model");
     "seq ~ dnPhyloCTMC(tree=psi, Q=Q, type={0}, siteRates=site_rates)"(ShowString("Standard"));
@@ -247,13 +254,18 @@ class RevProgramClass: RevSourceClass {
     "n_gen   = {0}"(Math.Min([100, Math.Max([10, Info.Generations div 1000])]));
 
     LineComment("This prints monitors to the screen");
-    "monitors.append(mnScreen(TL, printgen=n_gen) )";
+    Span {
+      "monitors.append(mnScreen(TL, ";
+      if (Model == Models.MK)
+        "rate_parameter, ";
+      "printgen=n_gen))";
+    };
 
     LineComment("This monitors the trees and puts them in a file");
     "monitors.append(mnFile(psi, filename=gammapath, printgen=n_gen))";
 
     LineComment("Model monitor");
-    "monitors.append( mnModel(filename={0}, printgen=n_gen))"(PathPlus(GammaLog));
+    "monitors.append(mnModel(filename={0}, printgen=n_gen))"(PathPlus(GammaLog));
 
     "mymcmc = mcmc(mymodel, moves, monitors, nruns=1, combine={0})"(ShowString("mixed"));
 

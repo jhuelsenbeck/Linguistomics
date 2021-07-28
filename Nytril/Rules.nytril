@@ -85,7 +85,7 @@ abstract class RuleClass {
     }
   };
 
-  GetSegments(filter) = FindSlice(Results.DisplaySegments, segment => MatchesRule(filter, segment));
+  GetSegments(filter) = FindSlice(Results.UniqueSegments, segment => MatchesRule(filter, segment));
 
   override ShowDescription = Block {
     Paragraph {
@@ -212,14 +212,14 @@ class RootVowelClass: FilterClass {
 //======================================================================
 
 class DiphthongFilterClass: FilterClass {
-  var Segment;
+  var Root;
 
-  Constructor(segment) {
+  Constructor(root) {
     super.Constructor("Root+Diphthongs");
-    Segment = segment;
+    Root = root;
   }
 
-  override Matches(segment) = segment == Segment or segment == Segment.DiphthongRoot;
+  override Matches(segment) = segment == Root or segment.DiphthongRoot == Root;
 }
 //======================================================================
 
@@ -329,7 +329,7 @@ class DiphthongPairRuleClass: RuleClass {
   var FilterList;
 
   Constructor {
-    super.Constructor("Diphthong Paired with Vowels");
+    super.Constructor("Diphthongs Paired with Vowels");
     FilterList = new ListClass(128);
   }
 
@@ -340,7 +340,7 @@ class DiphthongPairRuleClass: RuleClass {
       if (valid dr) {
         var fi = -1;
         foreach (var f in FilterList) {
-          if (f.Segment.DiphthongRoot == dr) {
+          if (f.Matches(segment)) {
             fi = EachIndex;
             break;
           }
@@ -348,7 +348,7 @@ class DiphthongPairRuleClass: RuleClass {
         if (fi < 0) {
           segment.Character = count;
           dr.Character      = count;
-          FilterList.Add(new DiphthongFilterClass(segment));
+          FilterList.Add(new DiphthongFilterClass(dr));
           ++count;
         }
         else {
