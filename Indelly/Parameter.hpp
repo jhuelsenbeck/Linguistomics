@@ -1,0 +1,42 @@
+#ifndef Parameter_hpp
+#define Parameter_hpp
+
+#include <string>
+class Model;
+class RandomVariable;
+
+
+
+class Parameter {
+
+    public:
+                            Parameter(void) = delete;
+                            Parameter(RandomVariable* r, Model* m, std::string n);
+        virtual            ~Parameter(void) { }
+        virtual void        accept(void) = 0;
+        virtual std::string getHeader(void) = 0;
+        std::string         getName(void) { return parmName; }
+        std::string         getLastUpdate(void) { return lastUpdateType; }
+        double              getProposalProbability(void) { return proposalProbability; }
+        virtual std::string getString(void) = 0;
+        bool                getUpdateChangesEigens(void) { return updateChangesEigens; }
+        bool                getUpdateChangesTransitionProbabilities(void) { return updateChangesTransitionProbabilities; }
+        virtual double      lnPriorProbability(void) = 0;
+        virtual void        reject(void) = 0;
+        void                setLastUpdate(std::string s) { lastUpdateType = s; }
+        void                setProposalProbability(double x) { proposalProbability = x; }
+        void                setUpdateChangesEigens(bool tf) { updateChangesEigens = tf; }
+        void                setUpdateChangesTransitionProbabilities(bool tf) { updateChangesTransitionProbabilities = tf; }
+        virtual double      update(void) = 0;
+        
+    protected:
+        std::string         parmName;
+        double              proposalProbability;
+        Model*              modelPtr;
+        RandomVariable*     rv;
+        std::string         lastUpdateType;
+        bool                updateChangesEigens;
+        bool                updateChangesTransitionProbabilities;
+};
+
+#endif
