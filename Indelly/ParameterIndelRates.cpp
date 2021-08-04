@@ -17,7 +17,7 @@ ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::strin
     
     epsilon[0].resize(2);
     epsilon[1].resize(2);
-    std::cout << "Expected Epsilon = " << expEpsilon << std::endl;
+    //std::cout << "Expected Epsilon = " << expEpsilon << std::endl;
     alpha0 = 100.0;
     alpha.resize(2);
     alpha[0] = alpha0 * expEpsilon;
@@ -30,7 +30,7 @@ ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::strin
     epsilon[1] = epsilon[0];
     rho[1] = rho[0];
 
-    std::cout << "lambda = " << getInsertionRate() << " mu = " << getDeletionRate() << " E(L) = " << getExpectedSequenceLength() << std::endl;
+    //std::cout << "lambda = " << getInsertionRate() << " mu = " << getDeletionRate() << " E(L) = " << getExpectedSequenceLength() << std::endl;
 }
 
 ParameterIndelRates::~ParameterIndelRates(void) {

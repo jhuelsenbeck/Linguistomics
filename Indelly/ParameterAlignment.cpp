@@ -10,7 +10,7 @@
 
 
 ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n) : Parameter(r, m, n) {
-
+    
     updateChangesEigens = false;
 
     std::string name = a->getName();

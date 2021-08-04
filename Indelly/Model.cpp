@@ -24,8 +24,9 @@
 
 Model::Model(RandomVariable* r) {
 
+    // initialize a few important parameters
     UserSettings& settings = UserSettings::userSettings();
-
+    substitutionModel = settings.getSubstitutionModel();
     rv = r;
     
     // read the data file
@@ -37,11 +38,12 @@ Model::Model(RandomVariable* r) {
         Msg::error("The maximum number of states is " + std::to_string(wordAlignments[0]->getMaximumNumberOfStates()));
         
     std::cout << "   Model" << std::endl;
+    
     // set up the tree parameter
     Parameter* pTree = new ParameterTree(rv, this, settings.getTreeFile(), taxonNames, settings.getInverseTreeLength());
     pTree->setProposalProbability(10.0);
     parameters.push_back(pTree);
-
+    
     // set up the indel parameter
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);
     pIndel->setProposalProbability(1.0);
@@ -58,23 +60,29 @@ Model::Model(RandomVariable* r) {
         }
         
     // check for consistency between alignment(s) and tree
-    if (taxonNames.size() != getTree()->getTaxonNames().size())
-        Msg::error("Mismatch in the number of taxa read in from the files and in the tree");
-    for (int i=0; i<taxonNames.size(); i++)
+    std::vector<std::string> treeTaxonNames = getTree()->getTaxonNames();
+    if (treeTaxonNames.size() != taxonNames.size())
+        Msg::error("Mismatch between the size of the starting tree and the alignments");
+    for (int i=0; i<treeTaxonNames.size(); i++)
         {
-        if (getTree()->isTaxonPresent(taxonNames[i]) == false)
-            Msg::error("Mismatch in the taxon composition between the input tree and alignment files");
+        if (treeTaxonNames[i] != taxonNames[i])
+            Msg::error("Taxon names in tree do not match names in the alignments");
         }
+    if (getTree()->isBinary() == false)
+        Msg::error("The initial tree is not binary");
     
-    // set up exchangability parameters
-    Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates, wordAlignments[0]->getStates());
-    pExchange->setProposalProbability(50.0);
-    parameters.push_back(pExchange);
-    
-    // set up equilibrium frequencies
-    Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates, wordAlignments[0]->getStates());
-    pEquil->setProposalProbability(50.0);
-    parameters.push_back(pEquil);
+    if (substitutionModel == "GTR")
+        {
+        // set up exchangability parameters
+        Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates, wordAlignments[0]->getStates());
+        pExchange->setProposalProbability(50.0);
+        parameters.push_back(pExchange);
+        
+        // set up equilibrium frequencies
+        Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates, wordAlignments[0]->getStates());
+        pEquil->setProposalProbability(50.0);
+        parameters.push_back(pEquil);
+        }
     
     // delete the alignment objects, leaving behind only the alignment parameters
     for (int i=0; i<wordAlignments.size(); i++)
@@ -83,13 +91,16 @@ Model::Model(RandomVariable* r) {
     std::cout << std::endl;
     
     // initialize the eigen system object and calculate the first set of eigens
-    EigenSystem& eigs = EigenSystem::eigenSystem();
-    eigs.initialize(numStates);
-    eigs.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
+    if (substitutionModel == "GTR")
+        {
+        EigenSystem& eigs = EigenSystem::eigenSystem();
+        eigs.initialize(numStates);
+        eigs.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
+        }
     
     // initialize the transition probabilities
     TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
-    tProbs.initialize( this, getTree()->getNumNodes(), numStates );
+    tProbs.initialize( this, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();
 
@@ -274,7 +285,10 @@ double Model::lnLikelihood(void) {
     
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
+        {
+        //std::cout << i << " " << threadLnL[i] << std::endl;
         lnL += threadLnL[i];
+        }
         
     return lnL;
     
@@ -285,8 +299,11 @@ double Model::lnLikelihood(void) {
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
         {
-        LikelihoodTkf likelihood(wordParameterAlignments[i], tree, this);
-        lnL += likelihood.tkfLike();
+        std::cout << wordParameterAlignments[i]->getName() << std::endl;
+        LikelihoodTkf likelihood(wordParameterAlignments[i], tree, this, substitutionModel);
+        double lnP = likelihood.tkfLike();
+        //std::cout << i << " " << lnP << std::endl;
+        lnL += lnP;
         }
     return lnL;
     
@@ -361,7 +378,10 @@ std::vector<std::string> Model::readWords(std::string fp, std::vector<Alignment*
 			
 #   if 0
     for (int i=0; i<wordAlignments.size(); i++)
+        {
+        std::cout << wordAlignments[i]->getName() << std::endl;
         wordAlignments[i]->print();
+        }
 #   endif
 
     return taxonNames;
@@ -403,6 +423,6 @@ double Model::update(void) {
 
 void Model::wordLnLike(int i, ParameterAlignment* aln, Tree* t) {
 
-    LikelihoodTkf likelihood(aln, t, this);
+    LikelihoodTkf likelihood(aln, t, this, substitutionModel);
     threadLnL[i] = likelihood.tkfLike();
 }

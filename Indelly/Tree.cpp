@@ -182,6 +182,8 @@ Tree::Tree(std::string fileName, std::vector<std::string> tNames, double betaT, 
         for (int i=0; i<nodes.size(); i++)
             nodes[i]->setBranchProportion( nodes[i]->getBranchProportion()/treeLength );
         }
+        
+    //print();
 }
 
 Tree::~Tree(void) {
@@ -323,6 +325,26 @@ std::string Tree::getNewick(void) {
         }
     std::string newick = ss.str();
     return newick;
+}
+
+bool Tree::isBinary(void) {
+
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        int ndes = (int)p->numDescendants();
+        if (p->getIsLeaf() == true)
+            {
+            if (ndes != 0)
+                return false;
+            }
+        else
+            {
+            if (ndes != 2)
+                return false;
+            }
+        }
+    return true;
 }
 
 bool Tree::isTaxonPresent(std::string tn) {

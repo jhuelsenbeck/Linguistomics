@@ -43,6 +43,7 @@ class Model {
         std::vector<Parameter*>             parameters;
         std::vector<ParameterAlignment*>    wordParameterAlignments;
         int                                 updatedParameterIdx;
+        std::string                         substitutionModel;
 };
 
 #endif

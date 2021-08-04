@@ -30,6 +30,7 @@ class Alignment {
         bool                            isIndel(size_t i, size_t j);
         void                            listTaxa(void);
         void                            print(void);
+        void                            printCode(void);
         void                            printIndels(void);
         void                            setName(std::string s) { name = s; }
         int                             stateCode(char s);

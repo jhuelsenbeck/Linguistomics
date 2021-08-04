@@ -25,6 +25,7 @@ class Tree {
         Node*                       getRoot(void) { return root; }
         std::vector<std::string>&   getTaxonNames(void) { return taxonNames; }
         double                      getTreeLength(void) { return treeLength; }
+        bool                        isBinary(void);
         bool                        isRoot(Node* p) { return ((p == root) ? true : false); }
         bool                        isTaxonPresent(std::string tn);
         void                        print(void);

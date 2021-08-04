@@ -37,7 +37,7 @@ void TransitionProbabilities::flipActive(void) {
         activeProbs = 0;
 }
 
-void TransitionProbabilities::initialize(Model* m, int nn, int ns) {
+void TransitionProbabilities::initialize(Model* m, int nn, int ns, std::string sm) {
 
     if (isInitialized == true)
         {
@@ -48,7 +48,9 @@ void TransitionProbabilities::initialize(Model* m, int nn, int ns) {
     modelPtr = m;
     numNodes = nn;
     numStates = ns;
+    substitutionModel = sm;
     int numStatesSquared = numStates * numStates;
+    
     
     for (int s=0; s<2; s++)
         {
@@ -64,6 +66,9 @@ void TransitionProbabilities::initialize(Model* m, int nn, int ns) {
                     probs[s][n][i][j] = 0.0;
             }
         }
+        
+    stationaryFreqs[0].resize(numStates);
+    stationaryFreqs[1].resize(numStates);
         
     isInitialized = true;
 }
@@ -88,48 +93,67 @@ void TransitionProbabilities::setTransitionProbabilities(void) {
     if (needsUpdate == false)
         return;
  
-    EigenSystem& eigs = EigenSystem::eigenSystem();
-    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1>& ceigenvalue = eigs.getEigenValues();
-    std::complex<double>* ccIjk = eigs.getCijk();
-
-    std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
-    for (int n=0; n<traversalSeq.size(); n++)
+    if (substitutionModel == "GTR")
         {
-        Node* p = traversalSeq[n];
-        double** tp = probs[activeProbs][p->getIndex()];
-        double v = p->getBranchLength();
-        
-#       if 1
-        std::complex<double> ceigValExp[numStates];
-        for (int s=0; s<numStates; s++)
-            ceigValExp[s] = exp(ceigenvalue[s] * v);
+        // calculate transition probabilities for GTR model
+        EigenSystem& eigs = EigenSystem::eigenSystem();
+        Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1>& ceigenvalue = eigs.getEigenValues();
+        std::complex<double>* ccIjk = eigs.getCijk();
 
-        std::complex<double>* ptr = ccIjk;
-        for (int i=0; i<numStates; i++)
+        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+        for (int n=0; n<traversalSeq.size(); n++)
             {
-            for (int j=0; j<numStates; j++)
+            Node* p = traversalSeq[n];
+            double** tp = probs[activeProbs][p->getIndex()];
+            double v = p->getBranchLength();
+            
+            std::complex<double> ceigValExp[numStates];
+            for (int s=0; s<numStates; s++)
+                ceigValExp[s] = exp(ceigenvalue[s] * v);
+
+            std::complex<double>* ptr = ccIjk;
+            for (int i=0; i<numStates; i++)
                 {
-                std::complex<double> sum = std::complex<double>(0.0, 0.0);
-                for(int s=0; s<numStates; s++)
-                    sum += (*ptr++) * ceigValExp[s];
-                tp[i][j] = (sum.real() < 0.0) ? 0.0 : sum.real();
+                for (int j=0; j<numStates; j++)
+                    {
+                    std::complex<double> sum = std::complex<double>(0.0, 0.0);
+                    for(int s=0; s<numStates; s++)
+                        sum += (*ptr++) * ceigValExp[s];
+                    tp[i][j] = (sum.real() < 0.0) ? 0.0 : sum.real();
+                    }
                 }
             }
-#       else
-        double x = -((double)numStates/(numStates-1));
-        double pChange = (1.0/numStates) - (1.0/numStates) * exp(x * v);
-        double pNoChange = (1.0/numStates) + ((double)(numStates-1)/numStates) * exp(x * v);
-        for (int i=0; i<numStates; i++)
+            
+        stationaryFreqs[activeProbs] = eigs.getStationaryFrequencies();
+        }
+    else
+        {
+        // calculate transition probabilities under the Jukes-Cantor (1969) model
+        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+        for (int n=0; n<traversalSeq.size(); n++)
             {
-            for (int j=0; j<numStates; j++)
+            Node* p = traversalSeq[n];
+            double** tp = probs[activeProbs][p->getIndex()];
+            double v = p->getBranchLength();
+            
+            double x = -((double)numStates/(numStates-1));
+            double pChange = (1.0/numStates) - (1.0/numStates) * exp(x * v);
+            double pNoChange = (1.0/numStates) + ((double)(numStates-1)/numStates) * exp(x * v);
+            for (int i=0; i<numStates; i++)
                 {
-                if (i == j)
-                    tp[i][j] = pNoChange;
-                else
-                    tp[i][j] = pChange;
+                for (int j=0; j<numStates; j++)
+                    {
+                    if (i == j)
+                        tp[i][j] = pNoChange;
+                    else
+                        tp[i][j] = pChange;
+                    }
                 }
             }
-#       endif
+            
+        double sf = 1.0 / numStates;
+        for (int i=0; i<numStates; i++)
+            stationaryFreqs[activeProbs][i] = sf;
         }
         
     needsUpdate = false;

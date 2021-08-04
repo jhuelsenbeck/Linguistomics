@@ -6,7 +6,7 @@
 #include "Alignment.hpp"
 #include "Msg.hpp"
 
-std::string Alignment::states = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+std::string Alignment::states = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!$%&`+,./<";
 int Alignment::gapCode = (int)states.size();
 
 
@@ -273,6 +273,22 @@ void Alignment::print(void) {
 		std::cout << '\n';
 		}
     std::cout << std::endl;
+}
+
+void Alignment::printCode(void) {
+    
+    std::cout << name << std::endl;
+    std::cout << "numTaxa = " << numTaxa << ";" << std::endl;
+    std::cout << "numChar = " << numSites << ";" << std::endl;
+    std::cout << "aln = new char[numTaxa][numChar];" << std::endl;
+    for (int i=0; i<numTaxa; i++)
+        {
+        for (int j=0; j<numSites; j++)
+            {
+            int charCode = getCharacter(i, j);
+            std::cout << "aln[" << i << "][" << j << "] = '" << getCharFromCode(charCode) << "';" << std::endl;
+            }
+        }
 }
 
 void Alignment::printIndels(void) {
