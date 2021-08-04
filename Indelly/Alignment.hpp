@@ -16,6 +16,7 @@ class Alignment {
         std::string                     getDataType(void) { return dataType; }
         int                             getGapCode(void) { return gapCode; }
         std::string                     getName(void) { return name; }
+        int                             getMaximumNumberOfStates(void) { return (int)states.length(); }
         int                             getNumTaxa(void) { return numTaxa; }
         int                             getNumSites(void) { return numSites; }
         int                             getNumStates(void) { return numStates; }

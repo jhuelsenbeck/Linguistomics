@@ -4,7 +4,6 @@
 #include <map>
 #include <vector>
 #include "IntVector.hpp"
-#include "mpreal.h"
 class Model;
 class Node;
 class ParameterAlignment;

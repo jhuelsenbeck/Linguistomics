@@ -33,6 +33,8 @@ Model::Model(RandomVariable* r) {
     std::vector<std::string> taxonNames = readWords(settings.getDataFile(), wordAlignments);
     threadLnL = new double[wordAlignments.size()];
     int numStates = wordAlignments[0]->getNumStates();
+    if (numStates > wordAlignments[0]->getMaximumNumberOfStates())
+        Msg::error("The maximum number of states is " + std::to_string(wordAlignments[0]->getMaximumNumberOfStates()));
         
     std::cout << "   Model" << std::endl;
     // set up the tree parameter
