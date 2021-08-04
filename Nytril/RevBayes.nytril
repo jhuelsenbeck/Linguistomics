@@ -66,6 +66,7 @@ class RevProcessClass: ProcessClass {
 enum Models {
   JC,
   MK,
+  CustomQ
 }
 
 class RevProgramClass: RevSourceClass {
@@ -136,6 +137,31 @@ class RevProgramClass: RevSourceClass {
     Style.ReadTree("Consensus", OutFolder GammaConsensus);
     Style.ReadTree("MAP", OutFolder GammaMAP);
     Style.ReadTree(Lang.MCC, OutFolder GammaMCC);
+  };
+
+  QMatrix = TextBlock {
+    "Q <- [";
+    for (var i = 0; i < Results.UniqueCharacters; ++i) {
+      TextBlock {
+        Span {
+          "[";
+          Span {
+            Separator: ",";
+            for (var j = 0; j < Results.UniqueCharacters; ++j) {
+              Span {
+                if (j == i)
+                  -1;
+                else {
+                  1 / Results.UniqueCharacters;
+                }
+              };
+            }
+          }
+          "],";
+        }
+      }
+    }
+    "]";
   };
 
   ShowStats = Block {
@@ -214,10 +240,12 @@ class RevProgramClass: RevSourceClass {
 
     switch (Model) {
       case Models.JC:
+        LineComment("Jukes-Cantor model");
         "Q <- fnJC(unique_chars)";
         break;
 
       case Models.MK:
+        LineComment("Mk model");
         LineComment("I'm guessing completely with this number");
         "rate_pr <- 10.0";
         Empty;
@@ -233,6 +261,10 @@ class RevProgramClass: RevSourceClass {
         "}";
         Empty;
         "Q := fnFreeK(m, rescale=TRUE)";
+        break;
+
+      case Models.CustomQ:
+        QMatrix;
         break;
     }
 
