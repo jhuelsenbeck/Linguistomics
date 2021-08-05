@@ -14,6 +14,7 @@ class Tree {
     public:
                                     Tree(std::string fileName, std::vector<std::string> tNames, double betaT, RandomVariable* rv);
                                     Tree(Tree& t);
+                                    Tree(Tree& t, std::vector<bool> taxonMask);
                                    ~Tree(void);
         Tree&                       operator=(Tree& t);
         std::string                 getNewick(void);

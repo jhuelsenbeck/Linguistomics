@@ -36,7 +36,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-n");
     commands.push_back("100000");
     commands.push_back("-p");
-    commands.push_back("1");
+    commands.push_back("10");
     commands.push_back("-s");
     commands.push_back("500");
     commands.push_back("-l");

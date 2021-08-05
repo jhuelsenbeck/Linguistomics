@@ -23,6 +23,15 @@ ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string fileName, 
     
     //trees[0]->print("trees[0]");
     //trees[1]->print("trees[1]");
+    
+    std::vector<bool> tMask(tNames.size());
+    for (int i=0; i<tMask.size(); i++)
+        tMask[i] = false;
+    tMask[2] = true;
+    tMask[6] = true;
+    tMask[7] = true;
+    Tree t = Tree(*trees[0], tMask);
+    
 }
 
 ParameterTree::~ParameterTree(void) {

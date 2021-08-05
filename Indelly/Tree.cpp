@@ -17,6 +17,103 @@ Tree::Tree(Tree& t) {
     clone(t);
 }
 
+Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
+
+    // clone the tree
+    if (t.getNumTaxa() != taxonMask.size())
+        Msg::error("Cannot create pruned tree with ill-formated taxon mask");
+    clone(t);
+    
+    // mark taxa to include
+    std::vector<Node*> dpSeq = this->downPassSequence;
+    for (int n=0; n<dpSeq.size(); n++)
+        {
+        Node* p = dpSeq[n];
+        if (p->getIsLeaf() == true && taxonMask[p->getIndex()] == true)
+            p->setFlag(true);
+        else
+            p->setFlag(false);
+        }
+        
+    // mark internal nodes to include
+    for (int n=0; n<dpSeq.size(); n++)
+        {
+        Node* p = dpSeq[n];
+        if (p->getIsLeaf() == false)
+            {
+            std::set<Node*,CompNode>& des = p->getDescendants()->getNodes();
+            for (Node* nde : des)
+                {
+                if (nde->getFlag() == true)
+                    {
+                    p->setFlag(true);
+                    break;
+                    }
+                }
+            }
+        }
+        
+    // collect nodes to remove
+    std::vector<Node*> nodesDeadToMe;
+    for (int n=0; n<dpSeq.size(); n++)
+        {
+        Node* p = dpSeq[n];
+        if (p->getFlag() == false)
+            nodesDeadToMe.push_back(p);
+        }
+        
+    // perform reconnections for nodes to be removed
+    for (int i=0; i<nodesDeadToMe.size(); i++)
+        {
+        Node* p = nodesDeadToMe[i];
+        Node* pAnc = p->getAncestor();
+        if (pAnc != NULL)
+            pAnc->removeDescendant(p);
+        std::set<Node*,CompNode>& des = p->getDescendants()->getNodes();
+        for (Node* nde : des)
+            {
+            nde->setAncestor(pAnc);
+            nde->setBranchProportion( nde->getBranchProportion() + p->getBranchProportion() );
+            if (pAnc != NULL)
+                pAnc->addDescendant(nde);
+            }
+        }
+        
+    // prune nodes from the root
+    for (int n=(int)dpSeq.size()-1; n>=0; n--)
+        {
+        Node* p = dpSeq[n];
+        if (p->numDescendants() == 1)
+            {
+            Node* pAnc = p->getAncestor();
+            std::set<Node*,CompNode>& des = p->getDescendants()->getNodes();
+            std::set<Node*,CompNode>::iterator it = des.begin();
+            if (pAnc == NULL)
+                {
+                (*it)->setAncestor(NULL);
+                (*it)->setBranchProportion(0.0);
+                root = (*it);
+                }
+            else
+                {
+                pAnc->removeDescendant(p);
+                pAnc->addDescendant((*it));
+                (*it)->setAncestor(pAnc);
+                (*it)->setBranchProportion( (*it)->getBranchProportion() + p->getBranchProportion() );
+                }
+            p->removeDescendants();
+            p->setAncestor(NULL);
+            nodesDeadToMe.push_back(p);
+            }
+        }
+    
+    initializeDownPassSequence();
+        
+    t.print("original tree");
+    print("pruned tree");
+        
+}
+
 Tree::Tree(std::string fileName, std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
 
     // open the file
