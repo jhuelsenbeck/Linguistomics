@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include "ParameterIndelRates.hpp"
 #include "RandomVariable.hpp"
@@ -132,6 +133,12 @@ double ParameterIndelRates::lnPriorProbability(void) {
     double mu = getDeletionRate();
     double lnP = log(deletionLambda) + log(insertionLambda + deletionLambda) - deletionLambda * mu - insertionLambda * lambda;
     return lnP;
+}
+
+void ParameterIndelRates::print(void) {
+
+    std::cout << std::fixed << std::setprecision(6);
+    std::cout << "[ " << getInsertionRate() << " " << getDeletionRate() << " ]" << std::endl;
 }
 
 void ParameterIndelRates::reject(void) {

@@ -24,71 +24,21 @@
 
 Model::Model(RandomVariable* r) {
 
-    // initialize a few important parameters
-    UserSettings& settings = UserSettings::userSettings();
-    substitutionModel = settings.getSubstitutionModel();
-    rv = r;
-    
-    // read the data file
-    std::vector<Alignment*> wordAlignments;
-    std::vector<std::string> taxonNames = readWords(settings.getDataFile(), wordAlignments);
-    threadLnL = new double[wordAlignments.size()];
-    int numStates = wordAlignments[0]->getNumStates();
-    if (numStates > wordAlignments[0]->getMaximumNumberOfStates())
-        Msg::error("The maximum number of states is " + std::to_string(wordAlignments[0]->getMaximumNumberOfStates()));
-        
     std::cout << "   Model" << std::endl;
-    
-    // set up the tree parameter
-    Parameter* pTree = new ParameterTree(rv, this, settings.getTreeFile(), taxonNames, settings.getInverseTreeLength());
-    pTree->setProposalProbability(10.0);
-    parameters.push_back(pTree);
-    
-    // set up the indel parameter
-    Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);
-    pIndel->setProposalProbability(1.0);
-    parameters.push_back(pIndel);
 
-    // set up the alignment parameter
-    for (int i=0; i<wordAlignments.size(); i++)
-        {
-        std::string alnName = wordAlignments[i]->getName();
-        Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName);
-        pAlign->setProposalProbability(1.0);
-        parameters.push_back(pAlign);
-        wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
-        }
-        
-    // check for consistency between alignment(s) and tree
-    std::vector<std::string> treeTaxonNames = getTree()->getTaxonNames();
-    if (treeTaxonNames.size() != taxonNames.size())
-        Msg::error("Mismatch between the size of the starting tree and the alignments");
-    for (int i=0; i<treeTaxonNames.size(); i++)
-        {
-        if (treeTaxonNames[i] != taxonNames[i])
-            Msg::error("Taxon names in tree do not match names in the alignments");
-        }
-    if (getTree()->isBinary() == false)
-        Msg::error("The initial tree is not binary");
+    rv = r;
+    UserSettings& settings = UserSettings::userSettings();
+
+    // read the json file
+    nlohmann::json j = parseJsonFile(settings.getDataFile());
+
+    // initialize alignments
+    std::vector<Alignment*> wordAlignments = initializeAlignments(j);
+    std::vector<std::string> taxonNames = wordAlignments[0]->getTaxonNames();
+    int numStates = wordAlignments[0]->getNumStates();
     
-    if (substitutionModel == "GTR")
-        {
-        // set up exchangability parameters
-        Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates, wordAlignments[0]->getStates());
-        pExchange->setProposalProbability(50.0);
-        parameters.push_back(pExchange);
-        
-        // set up equilibrium frequencies
-        Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates, wordAlignments[0]->getStates());
-        pEquil->setProposalProbability(50.0);
-        parameters.push_back(pEquil);
-        }
-    
-    // delete the alignment objects, leaving behind only the alignment parameters
-    for (int i=0; i<wordAlignments.size(); i++)
-        delete wordAlignments[i];
-        
-    std::cout << std::endl;
+    // initialize parameters of model
+    initializeParameters(&settings, wordAlignments, j);
     
     // initialize the eigen system object and calculate the first set of eigens
     if (substitutionModel == "GTR")
@@ -103,13 +53,6 @@ Model::Model(RandomVariable* r) {
     tProbs.initialize( this, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();
-
-    // set proposal probabilities
-    double sum = 0.0;
-    for (int i=0; i<parameters.size(); i++)
-        sum += parameters[i]->getProposalProbability();
-    for (int i=0; i<parameters.size(); i++)
-        parameters[i]->setProposalProbability( parameters[i]->getProposalProbability() / sum );
 }
 
 Model::~Model(void) {
@@ -266,6 +209,160 @@ std::string Model::getUpdatedParameterName(void) {
     return parameters[updatedParameterIdx]->getName();
 }
 
+std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
+
+    // check that there are words in the json object
+    auto it = j.find("Words");
+    if (it == j.end())
+        Msg::error("Could not find word information in the JSON file");
+    size_t numWords = j["Words"].size();
+    std::cout << "   * Found " << numWords << " words in JSON file" << std::endl;
+    
+    // check that there is a list of valid states
+    it = j.find("States");
+    if (it == j.end())
+        Msg::error("Could not find state information in the JSON file");
+    std::string validStates = j["States"];
+    if (validStates.length() <= 1)
+        Msg::error("There must be at least two states in the model");
+    
+    // read each word
+    std::vector<Alignment*> words;
+    std::vector<std::string> taxonNames;
+    std::string tempStates = "";
+    for (size_t i=0; i<numWords; i++)
+        {
+        // instantiate the word alignment from the json object
+        nlohmann::json jw = j["Words"][i];
+        Alignment* aln = new Alignment(jw, validStates);
+        if (i == 0)
+            {
+            taxonNames = aln->getTaxonNames();
+            tempStates = aln->getStates();
+            }
+        
+        // check if we have problems
+        if (taxonNames.size() != aln->numCompleteTaxa())
+            {
+            Msg::warning("   * Word " + aln->getName() + " will is taxa with no word segments and will not be included");
+            delete aln;
+            continue;
+            }
+        std::vector<std::string> alnTaxonNames = aln->getTaxonNames();
+        if (taxonNames.size() != alnTaxonNames.size())
+            Msg::error("List of taxa is inconsistent across words");
+        for (int j=0; j<taxonNames.size(); j++)
+            {
+            if (taxonNames[j] != alnTaxonNames[j])
+                Msg::error("List of taxa is inconsistent across words");
+            }
+        std::string alnStates = aln->getStates();
+        if (tempStates.size() != alnStates.size())
+            Msg::error("The set of states is inconsistent acros word alignments");
+        for (int j=0; j<tempStates.length(); j++)
+            {
+            if (tempStates.at(j) != alnStates.at(j))
+                Msg::error("The set of states is inconsistent acros word alignments");
+            }
+            
+        words.push_back(aln);
+        }
+
+    if (words.size() < 1)
+        Msg::error("No word alignments were read!");
+        
+    std::cout << "   * Number of words                       = " << words.size() << std::endl;
+    std::cout << "   * Number of taxa in each word alignment = " << taxonNames.size() << std::endl;
+    
+#   if 0
+    for (int i=0; i<words.size(); i++)
+        words[i]->print();
+#   endif
+
+    return words;
+}
+
+void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>& wordAlignments, nlohmann::json& j) {
+
+    // attempt to find the initial tree in the json object
+    std::string treeStr = "";
+    auto it = j.find("Tree");
+    if (it != j.end())
+        treeStr = j["Tree"];
+
+    // initialize a few important parameters
+    substitutionModel = settings->getSubstitutionModel();
+    int numStates = wordAlignments[0]->getNumStates();
+    std::vector<std::string> taxonNames = wordAlignments[0]->getTaxonNames();
+    
+    // set up the tree parameter
+    Parameter* pTree = new ParameterTree(rv, this, treeStr, taxonNames, settings->getInverseTreeLength());
+    pTree->setProposalProbability(10.0);
+    parameters.push_back(pTree);
+    
+    // set up the indel parameter
+    Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);
+    pIndel->setProposalProbability(1.0);
+    parameters.push_back(pIndel);
+
+    // set up the alignment parameter
+    for (int i=0; i<wordAlignments.size(); i++)
+        {
+        std::string alnName = wordAlignments[i]->getName();
+        Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName);
+        pAlign->setProposalProbability(1.0);
+        parameters.push_back(pAlign);
+        wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
+        }
+        
+    // check for consistency between alignment(s) and tree
+    std::vector<std::string> treeTaxonNames = getTree()->getTaxonNames();
+    if (treeTaxonNames.size() != taxonNames.size())
+        Msg::error("Mismatch between the size of the starting tree and the alignments");
+    for (int i=0; i<treeTaxonNames.size(); i++)
+        {
+        if (treeTaxonNames[i] != taxonNames[i])
+            Msg::error("Taxon names in tree do not match names in the alignments");
+        }
+    if (getTree()->isBinary() == false)
+        Msg::error("The initial tree is not binary");
+    
+    if (substitutionModel == "GTR")
+        {
+        // set up exchangability parameters
+        Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates, wordAlignments[0]->getStates());
+        pExchange->setProposalProbability(50.0);
+        parameters.push_back(pExchange);
+        
+        // set up equilibrium frequencies
+        Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates, wordAlignments[0]->getStates());
+        pEquil->setProposalProbability(50.0);
+        parameters.push_back(pEquil);
+        }
+    
+    // delete the alignment objects, leaving behind only the alignment parameters
+    for (int i=0; i<wordAlignments.size(); i++)
+        delete wordAlignments[i];
+    wordAlignments.clear();
+    
+    // set proposal probabilities
+    double sum = 0.0;
+    for (int i=0; i<parameters.size(); i++)
+        sum += parameters[i]->getProposalProbability();
+    for (int i=0; i<parameters.size(); i++)
+        parameters[i]->setProposalProbability( parameters[i]->getProposalProbability() / sum );
+        
+    // make certain to allocate memory to hold thread log likelihoods
+    threadLnL = new double[wordParameterAlignments.size()];
+    for (int i=0; i<wordParameterAlignments.size(); i++)
+        threadLnL[i] = 0.0;
+        
+#   if 0
+    for (int i=0; i<parameters.size(); i++)
+        parameters[i]->print();
+#   endif
+}
+
 double Model::lnLikelihood(void) {
 
 #   if 1
@@ -299,10 +396,8 @@ double Model::lnLikelihood(void) {
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
         {
-        std::cout << wordParameterAlignments[i]->getName() << std::endl;
         LikelihoodTkf likelihood(wordParameterAlignments[i], tree, this, substitutionModel);
         double lnP = likelihood.tkfLike();
-        //std::cout << i << " " << lnP << std::endl;
         lnL += lnP;
         }
     return lnL;
@@ -318,75 +413,19 @@ double Model::lnPriorProbability(void) {
     return lnP;
 }
 
-std::vector<std::string> Model::readWords(std::string fp, std::vector<Alignment*>& wordAlignments) {
+nlohmann::json Model::parseJsonFile(std::string fn) {
 
-    std::cout << "   Data" << std::endl;
-
-    // file manager
-    IoManager fileMngr;
-    fileMngr.setFilePath(fp);
-    
-    std::cout << "   * Reading word alignments in directory \"" << fp << "\"" << std::endl;
-    
-	// check first by reading all of the alignments, calculating the number of nucleotides for each
-	int numAlignmentsToRead = 0;
-    std::vector<std::string> taxonNames;
-	for (int fn=0; fn<fileMngr.getNumFilesInDirectory(); fn++)
-		{
-        
-		std::string fileName = fileMngr.getFileNumber(fn);
-        //std::cout << "fileName = " << fileName << std::endl;
-		Alignment* alignmentPtr = new Alignment(fp+ "/" + fileName, true);
-		if (fn == 0)
-			{
-            taxonNames = alignmentPtr->getTaxonNames();
-			}
-		else
-			{
-			std::vector<std::string> namesFromAln = alignmentPtr->getTaxonNames();
-			bool isSame = true;
-			if ( namesFromAln.size() != taxonNames.size() )
-				isSame = false;
-			else
-				{
-				for (int i=0; i<taxonNames.size(); i++)
-					if ( namesFromAln[i] != taxonNames[i] )
-						isSame = false;
-				}
-			if (isSame == false)
-				{
-                for (int i=0; i<taxonNames.size(); i++)
-                    std::cout << i << " -- " << taxonNames[i] << " " << namesFromAln[i] << std::endl;;
-                Msg::error("Missmatch in the taxon names of the alignments: " + fileName);
-				}
-			}
-		numAlignmentsToRead++;
-
-        std::string lastPathComponent = fileName;
-        const size_t lastSlashIdx = lastPathComponent.find_last_of("/");
-        if (std::string::npos != lastSlashIdx)
-            lastPathComponent.erase(0, lastSlashIdx + 1);
-        const size_t periodIdx = lastPathComponent.rfind('.');
-        if (std::string::npos != periodIdx)
-            lastPathComponent.erase(periodIdx);
-
-        alignmentPtr->setName(lastPathComponent);
-        wordAlignments.push_back(alignmentPtr);
-		}
-		
-    std::cout << "   * Number of words                       = " << numAlignmentsToRead << std::endl;
-    std::cout << "   * Number of taxa in each word alignment = " << taxonNames.size() << std::endl;
-    std::cout << std::endl;
-			
-#   if 0
-    for (int i=0; i<wordAlignments.size(); i++)
+    std::ifstream ifs(fn);
+    nlohmann::json j;
+    try
         {
-        std::cout << wordAlignments[i]->getName() << std::endl;
-        wordAlignments[i]->print();
+        j = nlohmann::json::parse(ifs);
         }
-#   endif
-
-    return taxonNames;
+    catch (nlohmann::json::parse_error& ex)
+        {
+        Msg::error("Error parsing JSON file at byte " + std::to_string(ex.byte));
+        }
+    return j;
 }
 
 void Model::reject(void) {

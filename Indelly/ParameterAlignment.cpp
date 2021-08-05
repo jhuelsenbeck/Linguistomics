@@ -22,7 +22,7 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     
     // initialize the alignment
     int numTaxa = a->getNumTaxa();
-    int numSites = a->getNumSites();
+    int numSites = a->getNumChar();
     printWidth = numSites * 1.8;
     gapCode = a->getGapCode();
     numStates = a->getNumStates();

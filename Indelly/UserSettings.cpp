@@ -11,7 +11,6 @@ UserSettings::UserSettings(void) {
 
     // dafault values
     dataFile          = "";
-    treeFile          = "";
     numMcmcCycles     = 1000;
     printFrequency    = 100;
     sampleFrequency   = 100;
@@ -26,9 +25,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 #   if defined(DEBUG_MODE)
     commands.push_back(argv[0]);
     commands.push_back("-d");
-    commands.push_back("/Users/johnh/Desktop/Indelly/alignments");
-    commands.push_back("-t");
-    commands.push_back("/Users/johnh/Desktop/Indelly/words10.tree");
+    commands.push_back("/Users/johnh/Desktop/Indelly/json.in");
     commands.push_back("-o");
     commands.push_back("/Users/johnh/Desktop/Indelly/out/test");
     commands.push_back("-m");
@@ -59,8 +56,6 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
             {
             if (arg == "-d")
                 dataFile = cmd;
-            else if (arg == "-t")
-                treeFile = cmd;
             else if (arg == "-o")
                 outFile = cmd;
             else if (arg == "-m")
@@ -87,8 +82,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 void UserSettings::print(void) {
 
     std::cout << "   Settings" << std::endl;
-    std::cout << "   * Directory with initial word alignments = \"" << dataFile << "\"" << std::endl;
-    std::cout << "   * Tree file path and name                = \"" << treeFile << "\"" << std::endl;
+    std::cout << "   * File with initial word alignments      = \"" << dataFile << "\"" << std::endl;
     std::cout << "   * Substitution model                     = \"" << substitutionModel << "\"" << std::endl;
     std::cout << "   * Number of MCMC cycles                  = " << numMcmcCycles << std::endl;
     std::cout << "   * Print-to-screen frequency              = " << printFrequency << std::endl;
@@ -100,8 +94,7 @@ void UserSettings::print(void) {
 void UserSettings::usage(void) {
 
     std::cout << "   Usage" << std::endl;
-    std::cout << "   * -d -- Path to initial alignments of words" << std::endl;
-    std::cout << "   * -t -- Tree file path and name" << std::endl;
+    std::cout << "   * -d -- File with initial alignments of words" << std::endl;
     std::cout << "   * -m -- Substitution model (JC69/GTR)" << std::endl;
     std::cout << "   * -n -- Number of MCMC cycles" << std::endl;
     std::cout << "   * -p -- Print-to-screen frequency" << std::endl;

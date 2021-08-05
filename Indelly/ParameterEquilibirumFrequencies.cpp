@@ -1,3 +1,5 @@
+#include <iomanip>
+#include <iostream>
 #include <map>
 #include "EigenSystem.hpp"
 #include "Model.hpp"
@@ -58,6 +60,17 @@ std::string ParameterEquilibirumFrequencies::getString(void) {
 double ParameterEquilibirumFrequencies::lnPriorProbability(void) {
 
     return rv->lnGamma(numStates-1);
+}
+
+void ParameterEquilibirumFrequencies::print(void) {
+
+    std::cout << "[ ";
+    std::cout << std::fixed << std::setprecision(6);
+    for (int i=0; i<freqs[0].size(); i++)
+        {
+        std::cout << freqs[0][i] << " ";
+        }
+    std::cout << "]" << std::endl;
 }
 
 void ParameterEquilibirumFrequencies::normalize(std::vector<double>& vec, double minVal) {

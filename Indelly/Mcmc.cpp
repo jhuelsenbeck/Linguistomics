@@ -85,7 +85,7 @@ void Mcmc::openOutputFiles(void) {
     if (!treeStrm)
         Msg::error("Cannot open file \"" + treeFileName + "\"");
     algnStrm.open( algnFileName.c_str(), std::ios::out );
-    if (!treeStrm)
+    if (!algnStrm)
         Msg::error("Cannot open file \"" + algnFileName + "\"");
 }
 
@@ -130,7 +130,7 @@ void Mcmc::run(void) {
     double curLnL = modelPtr->lnLikelihood();
     double curLnP = modelPtr->lnPriorProbability();
     UpdateInfo& updateInfo = UpdateInfo::updateInfo();
-    
+
     // Metropolis-Hastings algorithm
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     for (int n=1; n<=numMcmcCycles; n++)

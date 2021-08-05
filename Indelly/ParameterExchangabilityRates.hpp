@@ -19,6 +19,7 @@ class ParameterExchangabilityRates : public Parameter {
         std::string                     getString(void);
         std::vector<double>&            getValue(void) { return rates[0]; }
         double                          lnPriorProbability(void);
+        void                            print(void);
         void                            reject(void);
         double                          update(void);
         

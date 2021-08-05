@@ -6,141 +6,106 @@
 #include "Alignment.hpp"
 #include "Msg.hpp"
 
-std::string Alignment::states = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!$%&`+,./<";
-int Alignment::gapCode = (int)states.size();
 
 
-
-Alignment::Alignment(std::string fileName, bool dirMode) {
-
-	// open the file
-	std::ifstream seqStream(fileName.c_str());
-	if (seqStream.is_open() == true)
-        {
-        if (dirMode == false)
-            std::cout << "   * Reading data file \"" << fileName << "\"" << std::endl;
-        }
-    else
-		{
-		std::cerr << "Cannot open file \"" + fileName + "\"" << std::endl;
-		exit(1);
-		}
-
-	std::string linestring = "";
-	int line = 0;
-	int taxonNum = 0;
-	matrix = NULL;
+Alignment::Alignment(nlohmann::json& j, std::string validStates) {
+    
+    matrix = NULL;
     indelMatrix = NULL;
-	numTaxa = numSites = 0;
-    dataType = "";
-    while ( getline (seqStream, linestring) )
-		{
-        if (hasBOM(linestring) == true)
-            linestring = bomLessString(linestring);
-		std::istringstream linestream(linestring);
-        //std::cout << line << " -- \"" << linestring << "\"" << std::endl;
-		int ch;
-		std::string word = "";
-		int wordNum = 0;
-		int siteNum = 0;
-		std::string cmdString = "";
-		do
-			{
-			word = "";
-			linestream >> word;
-			wordNum++;
-            //std::cout << "word:" << wordNum << "\"" << word << "\"" << std::endl;
-			if (line == 0)
-				{
-				// read the number of taxa/chars from the first line
-				if (wordNum == 1)
-					numTaxa = atoi(word.c_str());
-				else if (wordNum == 2)
-					numSites = atoi(word.c_str());
-                else
-                    {
-                    if (isInteger(word) == true)
-                        {
-                        dataType = "syllable";
-                        numStates = atoi(word.c_str());
-                        }
-                    else
-                        {
-                        std::locale loc;
-                        for(auto elem : word)
-                           dataType += std::tolower(elem,loc);
-                        if (dataType == "dna")
-                            Msg::error("Only linguistic data can be input");
-                        else if (dataType == "aa")
-                            Msg::error("Only linguistic data can be input");
-                        else
-                            Msg::error("Unknown data type " + word);
-                        }
-                    }
-				if (numTaxa > 0 && numSites > 0 && dataType != "" && matrix == NULL)
-					{	
-					matrix = new int*[numTaxa];
-					matrix[0] = new int[numTaxa * numSites];
-					for (size_t i=1; i<numTaxa; i++)
-						matrix[i] = matrix[i-1] + numSites;
-					for (size_t i=0; i<numTaxa; i++)
-						for (size_t j=0; j<numSites; j++)
-							matrix[i][j] = 0;
- 
-                    indelMatrix = new bool*[numTaxa];
-                    indelMatrix[0] = new bool[numTaxa * numSites];
-                    for (size_t i=1; i<numTaxa; i++)
-                        indelMatrix[i] = indelMatrix[i-1] + numSites;
-                    for (size_t i=0; i<numTaxa; i++)
-                        for (size_t j=0; j<numSites; j++)
-                            indelMatrix[i][j] = true;
-                            
-                    std::string lastPathComponent = fileName;
-                    const size_t lastSlashIdx = lastPathComponent.find_last_of("/");
-                    if (std::string::npos != lastSlashIdx)
-                        lastPathComponent.erase(0, lastSlashIdx + 1);
-                    const size_t periodIdx = lastPathComponent.rfind('.');
-                    if (std::string::npos != periodIdx)
-                        lastPathComponent.erase(periodIdx);
+    
+    // set the state information
+    states = validStates;
+    numStates = (int)states.length();
+    gapCode = (int)validStates.length();
+    if (gapCode <= 1)
+        Msg::error("There must be at least two states in the model");
 
-                    if (dataType == "syllable")
-                        std::cout << "   * Word alignment \"" << lastPathComponent << "\" has " << numTaxa << " taxa and " << numSites << " syllables" << std::endl;
-                    else
-                        Msg::error("Unknown data type");
-					}
-				}
-			else
-				{
-				if (wordNum == 1)
-					{
-                    taxonNames.push_back(word);
-                    taxonNum++;
-					}
-				else
-					{
-                    for (int i=0; i<word.length(); i++)
-                        {
-                        char site = word.at(i);
-                        matrix[taxonNum-1][siteNum++] = stateCode(site);
-                        }
-					}
-				}
-			} while ( (ch=linestream.get()) != EOF );
-			
-		line++;
-		}	
-	
-	// close the file
-	seqStream.close();
- 
+    // read the word name
+    auto it = j.find("Name");
+    if (it == j.end())
+        Msg::error("Could not find word name in the JSON object");
+    name = j["Name"];
+    
+    // read the data
+    it = j.find("Data");
+    if (it == j.end())
+        Msg::error("Could not find word data in the JSON object");
+    numTaxa = (int)j["Data"].size();
+    if (numTaxa <= 0)
+        Msg::error("Must have at least one taxon in the word");
+    numChar = 0;
+    for (int i=0; i<numTaxa; i++)
+        {
+        nlohmann::json jw = j["Data"][i];
+        
+        // check that there is taxon name information
+        it = jw.find("Taxon");
+        if (it == jw.end())
+            Msg::error("Could not find taxon name in the JSON object");
+        std::string tName = jw["Taxon"];
+        taxonNames.push_back(tName);
+        
+        // check that there is segment information
+        it = jw.find("Segments");
+        if (it == jw.end())
+            Msg::error("Could not find segment data in the JSON object");
+        std::string segInfo = jw["Segments"];
+        
+        // check that the number of word segments is the same for each taxon
+        if (i == 0)
+            {
+            numChar = (int)segInfo.length();
+            if (numChar <= 0)
+                Msg::error("Must have at least one segment in the word");
+
+            if (matrix == NULL)
+                {
+                matrix = new int*[numTaxa];
+                matrix[0] = new int[numTaxa * numChar];
+                for (size_t i=1; i<numTaxa; i++)
+                    matrix[i] = matrix[i-1] + numChar;
+                for (size_t i=0; i<numTaxa; i++)
+                    for (size_t j=0; j<numChar; j++)
+                        matrix[i][j] = 0;
+                }
+            if (indelMatrix == NULL)
+                {
+                indelMatrix = new bool*[numTaxa];
+                indelMatrix[0] = new bool[numTaxa * numChar];
+                for (size_t i=1; i<numTaxa; i++)
+                    indelMatrix[i] = indelMatrix[i-1] + numChar;
+                for (size_t i=0; i<numTaxa; i++)
+                    for (size_t j=0; j<numChar; j++)
+                        indelMatrix[i][j] = true;
+                }
+            }
+        else
+            {
+            if (segInfo.length() != numChar)
+                Msg::error("Inconsistent segment lengths for word " + name);
+            }
+            
+        //read the segment information
+        for (int j=0; j<segInfo.length(); j++)
+            {
+            char site = segInfo.at(j);
+            matrix[i][j] = stateCode(site);
+            }
+        }
+        
     // fill in the indel matrix
     for (int i=0; i<numTaxa; i++)
-        for (int j=0; j<numSites; j++)
+        {
+        for (int j=0; j<numChar; j++)
             {
             if (isIndel(i, j) == true)
                 indelMatrix[i][j] = false;
             }
+        }
+            
+    std::cout << "   * Word alignment \"" << name << "\" has " << numTaxa << " taxa and " << numChar << " syllables" << std::endl;
 }
+
 
 Alignment::~Alignment(void) {
 
@@ -186,10 +151,10 @@ std::vector<std::vector<int> > Alignment::getIndelMatrix(void) {
     // the rows contain the information for the i-th site while
     // the columns contain the information the j-th taxon)
     std::vector<std::vector<int> > m;
-    m.resize(numSites);
-    for (int i=0; i<numSites; i++)
+    m.resize(numChar);
+    for (int i=0; i<numChar; i++)
         m[i].resize(numTaxa);
-    for (int i=0; i<numSites; i++)
+    for (int i=0; i<numChar; i++)
         {
         for (int j=0; j<numTaxa; j++)
             {
@@ -205,7 +170,7 @@ std::vector<std::vector<int> > Alignment::getIndelMatrix(void) {
 std::vector<int> Alignment::getRawSequence(int txnIdx) {
 
     std::vector<int> seq;
-    for (int j=0; j<numSites; j++)
+    for (int j=0; j<numChar; j++)
         {
         if (isIndel(txnIdx, j) == false)
             {
@@ -301,10 +266,29 @@ int Alignment::getTaxonIndex(std::string ns) {
 	return taxonIndex;
 }
 
+int Alignment::numCompleteTaxa(void) {
+
+    int n = 0;
+    for (int i=0; i<numTaxa; i++)
+        {
+        bool hasNongap = false;
+        for (int j=0; j<numChar; j++)
+            {
+            if (isIndel(i,j) == false)
+                hasNongap = true;
+            }
+        if (hasNongap == true)
+            n++;
+        }
+    
+    return n;
+}
+
 void Alignment::print(void) {
 
 	int** x = matrix;
 		
+    std::cout << "Name: " << name << std::endl;
 	std::cout << "        ";
 	for (size_t i=0; i<numTaxa; i++)
 		std::cout << std::setw(3) << i;
@@ -313,7 +297,7 @@ void Alignment::print(void) {
 	for (size_t i=0; i<numTaxa; i++)
 		std::cout << "---";
 	std::cout << '\n';
-	for (size_t j=0; j<numSites; j++)
+	for (size_t j=0; j<numChar; j++)
 		{
 		std::cout << std::setw(4) << j+1 << " -- ";
 		for (size_t i=0; i<numTaxa; i++)
@@ -327,11 +311,11 @@ void Alignment::printCode(void) {
     
     std::cout << name << std::endl;
     std::cout << "numTaxa = " << numTaxa << ";" << std::endl;
-    std::cout << "numChar = " << numSites << ";" << std::endl;
+    std::cout << "numChar = " << numChar << ";" << std::endl;
     std::cout << "aln = new char[numTaxa][numChar];" << std::endl;
     for (int i=0; i<numTaxa; i++)
         {
-        for (int j=0; j<numSites; j++)
+        for (int j=0; j<numChar; j++)
             {
             int charCode = getCharacter(i, j);
             std::cout << "aln[" << i << "][" << j << "] = '" << getCharFromCode(charCode) << "';" << std::endl;
@@ -351,7 +335,7 @@ void Alignment::printIndels(void) {
     for (size_t i=0; i<numTaxa; i++)
         std::cout << "---";
     std::cout << '\n';
-    for (size_t j=0; j<numSites; j++)
+    for (size_t j=0; j<numChar; j++)
         {
         std::cout << std::setw(4) << j+1 << " -- ";
         for (size_t i=0; i<numTaxa; i++)
@@ -368,7 +352,7 @@ int Alignment::stateCode(char s) {
     if (s == '?')
         Msg::error("Missing data (?) is not allowed in the data matrix");
     if (s == '-')
-        return (int)states.size();
+        return gapCode;
         
     for (int i=0; i<numStates; i++)
         {

@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     UserSettings& settings = UserSettings::userSettings();
     settings.readCommandLineArguments(argc, argv);
     settings.print();
-    
+        
     // instantiate the random number generator
     RandomVariable rv;
         

@@ -3,11 +3,13 @@
 
 #include <string>
 #include <vector>
+#include "json.hpp"
 class Alignment;
 class Parameter;
 class ParameterAlignment;
 class RandomVariable;
 class Tree;
+class UserSettings;
 
 
 
@@ -15,7 +17,7 @@ class Model {
 
     public:
                                             Model(void) = delete;
-                                            Model(RandomVariable* r);
+                                            Model(RandomVariable* rj);
                                            ~Model(void);
         void                                accept(void);
         std::string                         getLastUpdate(void);
@@ -36,7 +38,9 @@ class Model {
         double                              update(void);
     
     private:
-        std::vector<std::string>            readWords(std::string fp, std::vector<Alignment*>& wordAlignments);
+        std::vector<Alignment*>             initializeAlignments(nlohmann::json& j);
+        void                                initializeParameters(UserSettings* settings, std::vector<Alignment*>& wordAlignments, nlohmann::json& j);
+        nlohmann::json                      parseJsonFile(std::string fn);
         void                                wordLnLike(int i, ParameterAlignment* aln, Tree* t);
         RandomVariable*                     rv;
         double*                             threadLnL;

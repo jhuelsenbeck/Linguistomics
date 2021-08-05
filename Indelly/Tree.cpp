@@ -1,4 +1,3 @@
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <istream>
@@ -114,104 +113,179 @@ Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
         
 }
 
-Tree::Tree(std::string fileName, std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
+Tree::Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
 
-    // open the file
-    std::ifstream treeStream(fileName.c_str());
-    if (treeStream.is_open() == true)
+    // read the tree file
+    root = NULL;
+    numTaxa = 0;
+    taxonNames = tNames;
+
+    // start with a simple two-species tree
+    Node* n1 = addNode();
+    Node* n2 = addNode();
+    n1->setName(tNames[0]);
+    n2->setName(tNames[1]);
+    n1->setIsLeaf(true);
+    n2->setIsLeaf(true);
+    root = addNode();
+    root->addDescendant(n1);
+    root->addDescendant(n2);
+    n1->setAncestor(root);
+    n2->setAncestor(root);
+    
+    for (int i=2; i<tNames.size(); i++)
         {
-        //std::cout << "   * Reading tree file \"" << fileName << "\"" << std::endl << std::endl;
+        Node* newTip = addNode();
+        Node* newInt = addNode();
+        newTip->setName(tNames[i]);
+        newTip->setIsLeaf(true);
+        
+        Node* p = nodes[(int)(rv->uniformRv()*nodes.size())];
+        Node* pAnc = p->getAncestor();
+        
+        if (pAnc == NULL)
+            {
+            p->setAncestor(newInt);
+            newTip->setAncestor(newInt);
+            newInt->addDescendant(p);
+            newInt->addDescendant(newTip);
+            newInt->setAncestor(NULL);
+            root = newInt;
+            }
+        else
+            {
+            p->setAncestor(newInt);
+            pAnc->removeDescendant(p);
+            pAnc->addDescendant(newInt);
+            newInt->addDescendant(p);
+            newInt->addDescendant(newTip);
+            newInt->setAncestor(pAnc);
+            newTip->setAncestor(newInt);
+            }
         }
-    else
+
+    // initialize down pass sequence
+    initializeDownPassSequence();
+
+    // reindex interior nodes
+    int intIdx = numTaxa;
+    for (int i=0; i<downPassSequence.size(); i++)
         {
-        std::cerr << "Cannot open file \"" + fileName + "\"" << std::endl;
-        exit(1);
+        Node* p = downPassSequence[i];
+        if (p->getIsLeaf() == false)
+            p->setIndex(intIdx++);
         }
+
+    // initialize branch lengths
+    // first, initialize all branch lengths, except the root node
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p != root)
+            p->setBranchProportion(rv->exponentialRv(1.0));
+        else
+            p->setBranchProportion(0.0);
+        }
+    // make certain the two branches incident to the root are the
+    // same in length and considered one branch
+    std::vector<Node*> rootDes = root->getDescendantsVector();
+    if (rootDes.size() != 2)
+        Msg::error("Expecting two descendants of the root node");
+    double x = rootDes[0]->getBranchProportion() + rootDes[1]->getBranchProportion();
+    rootDes[0]->setBranchProportion(x/4.0);
+    rootDes[1]->setBranchProportion(x/4.0);
+
+    // rescale so branch proportions sum to 1.0
+    double sum = 0.0;
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        sum += p->getBranchProportion();
+        }
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        p->setBranchProportion( p->getBranchProportion()/sum );
+        }
+        
+    treeLength = rv->gammaRv(1.0, betaT);
+        
+
+}
+
+Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
 
     // read the tree file
     Node* p = NULL;
     root = NULL;
     numTaxa = 0;
     taxonNames = tNames;
-    
-    std::string linestring = "";
+
+    std::vector<std::string> tokens = tokenizeTreeString(treeStr);
     bool readingBrlen = false;
-    int line = 0;
-    while ( getline (treeStream, linestring) )
+    for (int i=0; i<tokens.size(); i++)
         {
-        std::istringstream linestream(linestring);
-        //std::cout << line << " -- \"" << linestring << "\"" << std::endl;
-        std::vector<std::string> tokens = tokenizeTreeString(linestring);
-        
-        for (int i=0; i<tokens.size(); i++)
+        std::string token = tokens[i];
+        if (token == "(")
             {
-            std::string token = tokens[i];
-            if (token == "(")
+            if (p == NULL)
                 {
-                if (p == NULL)
-                    {
-                    Node* newNode = addNode();
-                    p = newNode;
-                    root = newNode;
-                    }
-                else
-                    {
-                    Node* newNode = addNode();
-                    p->addDescendant(newNode);
-                    newNode->setAncestor(p);
-                    p = newNode;
-                    }
-                readingBrlen = false;
-                }
-            else if (token == ")" || token == ",")
-                {
-                if (p->getAncestor() != NULL)
-                    p = p->getAncestor();
-                readingBrlen = false;
-                }
-            else if (token == ";")
-                {
-                readingBrlen = false;
-                }
-            else if (token == ":")
-                {
-                readingBrlen = true;
+                Node* newNode = addNode();
+                p = newNode;
+                root = newNode;
                 }
             else
                 {
-                if (readingBrlen == false)
-                    {
-                    int n = 0;
-                    for (std::string s : tNames)
-                        {
-                        if (s == token)
-                            break;
-                        n++;
-                        }
-                    
-                    Node* newNode = addNode();
-                    p->addDescendant(newNode);
-                    newNode->setAncestor(p);
-                    newNode->setName(token);
-                    newNode->setIsLeaf(true);
-                    newNode->setIndex(n);
-                    p = newNode;
-                    numTaxa++;
-                    }
-                else
-                    {
-                    double brlen = std::stod(token);
-                    p->setBranchProportion(brlen);
-                    }
-                readingBrlen = false;
+                Node* newNode = addNode();
+                p->addDescendant(newNode);
+                newNode->setAncestor(p);
+                p = newNode;
                 }
+            readingBrlen = false;
             }
-        
-        line++;
+        else if (token == ")" || token == ",")
+            {
+            if (p->getAncestor() != NULL)
+                p = p->getAncestor();
+            readingBrlen = false;
+            }
+        else if (token == ";")
+            {
+            readingBrlen = false;
+            }
+        else if (token == ":")
+            {
+            readingBrlen = true;
+            }
+        else
+            {
+            if (readingBrlen == false)
+                {
+                int n = 0;
+                for (std::string s : tNames)
+                    {
+                    if (s == token)
+                        break;
+                    n++;
+                    }
+                
+                Node* newNode = addNode();
+                p->addDescendant(newNode);
+                newNode->setAncestor(p);
+                newNode->setName(token);
+                newNode->setIsLeaf(true);
+                newNode->setIndex(n);
+                p = newNode;
+                numTaxa++;
+                }
+            else
+                {
+                double brlen = std::stod(token);
+                p->setBranchProportion(brlen);
+                }
+            readingBrlen = false;
+            }
         }
-
-    // close the file
-    treeStream.close();
 
     // initialize down pass sequence
     initializeDownPassSequence();
