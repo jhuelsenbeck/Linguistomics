@@ -36,6 +36,8 @@ class Alignment {
         int                             stateCode(char s);
 
     private:
+        std::string                     bomLessString(std::string& str);
+        bool                            hasBOM(std::string& str);
         bool                            isInteger(const std::string& str);
         std::vector<std::string>        taxonNames;
         int**                           matrix;

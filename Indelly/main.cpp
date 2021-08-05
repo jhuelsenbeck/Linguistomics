@@ -39,7 +39,6 @@ void printHeader(void) {
     std::cout << "   TongueTwister 1.0" << std::endl;
     std::cout << "   * John P. Huelsenbeck (University of California, Berkeley)" << std::endl;
     std::cout << "   * Shawn McCreight (University of California, Berkeley)" << std::endl;
-    std::cout << "   * Sveta Krasikova (University of California, Berkeley)" << std::endl;
     std::cout << "   * David Goldstein (University of California, Los Angeles)" << std::endl;
     std::cout << "   * Running on " << std::thread::hardware_concurrency() << " processors" << std::endl;
     std::cout << std::endl;

@@ -333,7 +333,9 @@ std::vector<std::string> Model::readWords(std::string fp, std::vector<Alignment*
     std::vector<std::string> taxonNames;
 	for (int fn=0; fn<fileMngr.getNumFilesInDirectory(); fn++)
 		{
+        
 		std::string fileName = fileMngr.getFileNumber(fn);
+        //std::cout << "fileName = " << fileName << std::endl;
 		Alignment* alignmentPtr = new Alignment(fp+ "/" + fileName, true);
 		if (fn == 0)
 			{

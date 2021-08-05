@@ -35,6 +35,8 @@ Alignment::Alignment(std::string fileName, bool dirMode) {
     dataType = "";
     while ( getline (seqStream, linestring) )
 		{
+        if (hasBOM(linestring) == true)
+            linestring = bomLessString(linestring);
 		std::istringstream linestream(linestring);
         //std::cout << line << " -- \"" << linestring << "\"" << std::endl;
 		int ch;
@@ -148,6 +150,19 @@ Alignment::~Alignment(void) {
     delete [] indelMatrix;
 }
 
+std::string Alignment::bomLessString(std::string& str) {
+
+    std::stringstream is(str);
+    std::string rStr = "";
+    char c;
+    while (is.get(c))
+        {
+        if (c != '\xEF' && c != '\xBB' && c != '\xBF')
+            rStr += c;
+        }
+    return rStr;
+}
+
 int Alignment::getCharacter(size_t i, size_t j) {
 
     return matrix[i][j];
@@ -211,6 +226,39 @@ std::vector<std::vector<int> > Alignment::getRawSequenceMatrix(void) {
         }
         
     return seqMat;
+}
+
+bool Alignment::hasBOM(std::string& str) {
+
+    std::stringstream is(str);
+
+    // read the first byte
+    char const c0 = is.get();
+    if (c0 != '\xEF')
+        {
+        is.putback(c0);
+        return false;
+        }
+
+    // read the second byte
+    char const c1 = is.get();
+    if (c1 != '\xBB')
+        {
+        is.putback(c1);
+        is.putback(c0);
+        return false;
+        }
+
+    // peek the third byte
+    char const c2 = is.peek();
+    if (c2 != '\xBF')
+        {
+        is.putback(c1);
+        is.putback(c0);
+        return false;
+        }
+
+    return true;
 }
 
 bool Alignment::isIndel(size_t i, size_t j) {
