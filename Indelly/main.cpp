@@ -1,8 +1,5 @@
-#include <iomanip>
 #include <iostream>
-#include <string>
 #include <thread>
-#include "Alignment.hpp"
 #include "Mcmc.hpp"
 #include "Model.hpp"
 #include "RandomVariable.hpp"

@@ -35,8 +35,6 @@ class ParameterIndelRates : public Parameter {
         
     protected:
         double                          expectedEpsilon(double slen);
-        double                          alpha0;
-        std::vector<double>             alpha;
         double                          insertionLambda;
         double                          deletionLambda;
         double                          expEpsilon;

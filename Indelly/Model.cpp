@@ -1,10 +1,10 @@
 #include <future>
+#include <fstream>
 #include <iostream>
 #include <list>
 #include <mutex>
 #include "Alignment.hpp"
 #include "EigenSystem.hpp"
-#include "IoManager.hpp"
 #include "LikelihoodTkf.hpp"
 #include "Model.hpp"
 #include "Msg.hpp"
@@ -53,6 +53,8 @@ Model::Model(RandomVariable* r) {
     tProbs.initialize( this, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();
+    
+    std::cout << std::endl;
 }
 
 Model::~Model(void) {
@@ -80,7 +82,6 @@ ParameterAlignment* Model::getAlignment(int idx) {
             n++;
             }
         }
-    
     return NULL;
 }
 

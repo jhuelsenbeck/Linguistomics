@@ -11,6 +11,8 @@
 
 ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns, std::string s) : Parameter(r, m, n) {
 
+    std::cout << "   * Setting up exchangeability rates parameter " << std::endl;
+
     updateChangesEigens = true;
 
     numStates = ns;
@@ -134,7 +136,9 @@ void ParameterExchangabilityRates::reject(void) {
 }
 
 double ParameterExchangabilityRates::update(void) {
-    
+
+    lastUpdateType = "exchangeability rates";
+
     int k = 1;
     
     double lnP = 0.0;

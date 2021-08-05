@@ -11,6 +11,8 @@
 
 ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable* r, Model* m, std::string n, int ns, std::string s) : Parameter(r, m, n) {
 
+    std::cout << "   * Setting up equilibrium frequencies parameter " << std::endl;
+
     updateChangesEigens = true;
 
     numStates = ns;
@@ -127,7 +129,9 @@ void ParameterEquilibirumFrequencies::reject(void) {
 }
 
 double ParameterEquilibirumFrequencies::update(void) {
-    
+
+    lastUpdateType = "equilibrium frequencies";
+
     int k = 1;
     
     double lnP = 0.0;
