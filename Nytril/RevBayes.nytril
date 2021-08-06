@@ -175,7 +175,7 @@ class RevProgramClass: RevSourceClass {
   };
 
   ShowCharacter(c) = Span {
-    Popup: c;
+//    Popup: c;
     c.Character;
   };
 
@@ -188,13 +188,13 @@ class RevProgramClass: RevSourceClass {
   AddWord(word) = Span {
     "  {";
     Variable("Taxon");
-    ShowString(word.Language);
+    ShowString(word.Language.GlobalVariableName);
     CommaSpace;
     Variable("Segments");
     "[";
     Span {
       Separator: CommaSpace;
-      ShowCharacter(each word.Aligned);
+      ShowCharacter(each word.Padded);
     };
     "]}";
   };
@@ -233,6 +233,15 @@ class RevProgramClass: RevSourceClass {
       Variable("NumberOfStates");
       Results.UniqueCharacters;
       CommaSpace;
+    };
+
+    Span {
+      Variable("Taxa");  "[";
+      Span {
+        Separator: CommaSpace;
+        ShowString(each (each Results.Taxa).Variable);
+      }
+      "],";
     };
 
     Span {
