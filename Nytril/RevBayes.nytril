@@ -3,11 +3,15 @@ using Format, Units, Math, IO, DB;
 
 class RevSourceClass {
   var CommentChar,
-      CommentSpace;
+      CommentSpace,
+      CommaSpace,
+      Quote;
 
   Constructor {
     CommentChar  = "#";
     CommentSpace = "  ";
+    CommaSpace   = ", ";
+    Quote        = "\"";
   }
 
   CommentBlock = TextBlock {
@@ -32,14 +36,20 @@ class RevSourceClass {
 
   ShowString(text) = Span {
     TextColor: Style.StringColor;
-    "\"";
+    Quote;
     text;
-    "\"";
+    Quote;
   };
 
   PathPlus(name) = Span {
     "path+";
     ShowString(name);
+  };
+
+
+  Variable(v) = Span {
+    TextColor: Style.VariableColor;
+    Quote; v; Quote; ": ";
   };
 }
 //======================================================================
@@ -66,7 +76,6 @@ class RevProcessClass: ProcessClass {
 enum Models {
   JC,
   MK,
-  CustomQ
 }
 
 class RevProgramClass: RevSourceClass {
@@ -79,6 +88,7 @@ class RevProgramClass: RevSourceClass {
       GammaMCC,
       GammaConsensus,
       CharacterName,
+      AddComma,
       Model;
 
   Constructor(model, folder) {
@@ -97,17 +107,11 @@ class RevProgramClass: RevSourceClass {
   }
 
   void Calculate {
-    var inputfolder = OutFolder Folder("Input");
-
     CreateFolder(OutFolder);
-    CreateFolder(inputfolder);
     IO.Write(Nexus.CharacterFile(1), OutFolder CharacterName);
-
-    foreach (var cognate in Results.UsedCognates)
-      IO.Write(Nexus.TKFFile(cognate, 0), inputfolder FileName(cognate.Name) Extension("in"), FileFormats.Text);
-
     IO.Write(RevBayesSource, OutFolder RevSourceName);
     IO.Write(RunBatchFile, OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
+    IO.Write(ConfigFile, OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
 
 
     var p = new RevProcessClass(EXEName, OutFolder RevSourceName) {
@@ -127,9 +131,9 @@ class RevProgramClass: RevSourceClass {
       Directory: OutFolder;
     };
 
-    var results = p.Run;
-    if (results.ExitCode != 0)
-      System.Assert(false, results.StandardOutput, p);
+//    var results = p.Run;
+//    if (results.ExitCode != 0)
+//      System.Assert(false, results.StandardOutput, p);
   }
 
   ShowLanguageTrees = Block {
@@ -137,31 +141,6 @@ class RevProgramClass: RevSourceClass {
     Style.ReadTree("Consensus", OutFolder GammaConsensus);
     Style.ReadTree("MAP", OutFolder GammaMAP);
     Style.ReadTree(Lang.MCC, OutFolder GammaMCC);
-  };
-
-  QMatrix = TextBlock {
-    "Q <- [";
-    for (var i = 0; i < Results.UniqueCharacters; ++i) {
-      TextBlock {
-        Span {
-          "[";
-          Span {
-            Separator: ",";
-            for (var j = 0; j < Results.UniqueCharacters; ++j) {
-              Span {
-                if (j == i)
-                  -1;
-                else {
-                  1 / Results.UniqueCharacters;
-                }
-              };
-            }
-          }
-          "],";
-        }
-      }
-    }
-    "]";
   };
 
   ShowStats = Block {
@@ -184,6 +163,94 @@ class RevProgramClass: RevSourceClass {
       OutFolder RevSourceName;
       "\"";
     }
+  };
+
+  AddTree = TextBlock {
+    Span {
+      Variable("Tree");
+      Quote;
+      Nexus.Newick(GetTreeNodes(LanguageBranches.Experiment));
+      Quote; ",";
+    };
+  };
+
+  ShowCharacter(c) = Span {
+    Popup: c;
+    c.Character;
+  };
+
+  AddScope = TextBlock {
+    IndentSpace: 2;
+    Begin: "{";
+    End: "}";
+  };
+
+  AddWord(word) = Span {
+    "  {";
+    Variable("Taxon");
+    ShowString(word.Language);
+    CommaSpace;
+    Variable("Segments");
+    "[";
+    Span {
+      Separator: CommaSpace;
+      ShowCharacter(each word.Aligned);
+    };
+    "]}";
+  };
+
+  AddCognate(cognate) = AddScope {
+    Span {
+      Variable("Name"); ShowString(cognate.Name); CommaSpace;
+    };
+    Span {
+      Variable("Data"); "[";
+    };
+
+    TextBlock {
+      Separator: ",";
+      foreach (var word in each cognate.Words) {
+        if (valid word.Aligned)
+          AddWord(word);
+      }
+    };
+    "]";
+  };
+
+  AddPartition = Span {
+    Separator: ",";
+    var total = Results.UniqueCharacters * (Results.UniqueCharacters-1) div 2;
+    foreach (var i in 1..total)
+      1;
+  };
+
+  ConfigFile = AddScope {
+    Style.MonoFamily;
+    TextHeight: 8 pts;
+
+    AddTree;
+    Span {
+      Variable("NumberOfStates");
+      Results.UniqueCharacters;
+      CommaSpace;
+    };
+
+    Span {
+      Variable("Partition"); "[";
+      Span {
+        AddPartition;
+      };
+      "],";
+    };
+
+    Span {
+      Variable("Words"); "[";
+    };
+    TextBlock {
+      Separator: ",";
+      AddCognate(each Results.UsedCognates);
+    };
+    "]";
   };
 
   RevBayesSource = TextBlock {
@@ -261,10 +328,6 @@ class RevProgramClass: RevSourceClass {
         "}";
         Empty;
         "Q := fnFreeK(m, rescale=TRUE)";
-        break;
-
-      case Models.CustomQ:
-        QMatrix;
         break;
     }
 

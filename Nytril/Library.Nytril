@@ -177,7 +177,7 @@ class ResultsClass {
         max = segment.Character;
     }
     UniqueCharacters = max+1;
-    Compute          = new RevProgramClass(Models.CustomQ, folder);
+    Compute          = new RevProgramClass(Models.JC, folder);
   }
 
   void GetUniqueSegments {
@@ -407,8 +407,10 @@ with Nexus {
       ")";
     }
     node.Label;
-    ":";
-    node.BranchLength
+    if (node.BranchLength != 1.0) {
+      ":";
+      node.BranchLength;
+    }
   };
 
   ShowTreeLine(tree) = Span {
@@ -416,7 +418,7 @@ with Nexus {
     tree.GlobalVariableName;
     " = ";
     Newick(tree);
-    EndMarker
+    EndMarker;
   };
 
   GetTaxaLabels(tree) {
@@ -463,30 +465,6 @@ with Nexus {
             break;
         }
       };
-    }
-  };
-
-  TKFFile(cognate, paper) = TextBlock {
-    if (paper > 0)
-      Comment(cognate.Name);
-
-    Span {
-      Results.Taxa.Length;
-      Space;
-      cognate.Words[0].Padded.Length;
-      Space;
-      Results.UniqueCharacters;
-    };
-    WriteTaxa(cognate, paper, MaxNameLength);
-  };
-
-  TKFFiles = TextBlock {
-    Style.MonoFamily;
-    TabStops: [4 inches];
-
-    foreach (var cognate in Results.UsedCognates) {
-      TKFFile(cognate, 2);
-      Empty;
     }
   };
 
