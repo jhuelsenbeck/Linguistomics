@@ -12,7 +12,7 @@ class ParameterEquilibirumFrequencies : public Parameter {
     public:
                                         ParameterEquilibirumFrequencies(void) = delete;
                                         ParameterEquilibirumFrequencies(const ParameterEquilibirumFrequencies& pr) = delete;
-                                        ParameterEquilibirumFrequencies(RandomVariable* r, Model* m, std::string n, int ns, std::string s);
+                                        ParameterEquilibirumFrequencies(RandomVariable* r, Model* m, std::string n, int ns);
                                        ~ParameterEquilibirumFrequencies(void);
         void                            accept(void);
         std::string                     getHeader(void);
@@ -29,7 +29,6 @@ class ParameterEquilibirumFrequencies : public Parameter {
         int                             numStates;
         std::vector<double>             freqs[2];
         std::vector<double>             alpha;
-        std::string                     states;
 };
 
 #endif

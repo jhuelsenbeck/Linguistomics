@@ -9,14 +9,13 @@
 
 
 
-ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns, std::string s) : Parameter(r, m, n) {
+ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns) : Parameter(r, m, n) {
 
     std::cout << "   * Setting up exchangeability rates parameter " << std::endl;
 
     updateChangesEigens = true;
 
     numStates = ns;
-    states = s;
     numRates = numStates * (numStates-1) / 2;
     rates[0].resize(numRates);
     rates[1].resize(numRates);
@@ -45,9 +44,9 @@ std::string ParameterExchangabilityRates::getHeader(void) {
         for (int j=i+1; j<numStates; j++)
             {
             str += "R[";
-            str += states[i];
+            str += std::to_string(i);
             str += "-";
-            str += states[j];
+            str += std::to_string(j);
             str += "]";
             str += '\t';
             }

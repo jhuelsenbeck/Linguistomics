@@ -9,14 +9,13 @@
 
 
 
-ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable* r, Model* m, std::string n, int ns, std::string s) : Parameter(r, m, n) {
+ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable* r, Model* m, std::string n, int ns) : Parameter(r, m, n) {
 
     std::cout << "   * Setting up equilibrium frequencies parameter " << std::endl;
 
     updateChangesEigens = true;
 
     numStates = ns;
-    states = s;
     freqs[0].resize(numStates);
     freqs[1].resize(numStates);
     alpha.resize(numStates);
@@ -41,7 +40,7 @@ std::string ParameterEquilibirumFrequencies::getHeader(void) {
     for (int i=0; i<numStates; i++)
         {
         str += "F[";
-        str += states[i];
+        str += std::to_string(i);
         str += "]";
         str += '\t';
         }
