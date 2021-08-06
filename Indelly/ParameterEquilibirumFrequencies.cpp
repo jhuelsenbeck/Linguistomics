@@ -137,7 +137,7 @@ double ParameterEquilibirumFrequencies::update(void) {
     double lnP = 0.0;
     if (k == 1)
         {
-        double alpha0 = 1000.0;
+        double alpha0 = 100.0;
         
         int indexToUpdate = (int)(rv->uniformRv()*numStates);
 

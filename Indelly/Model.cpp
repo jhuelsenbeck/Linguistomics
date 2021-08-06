@@ -25,7 +25,6 @@
 Model::Model(RandomVariable* r) {
 
     std::cout << "   Model" << std::endl;
-
     rv = r;
     UserSettings& settings = UserSettings::userSettings();
 
@@ -34,26 +33,13 @@ Model::Model(RandomVariable* r) {
 
     // initialize alignments
     std::vector<Alignment*> wordAlignments = initializeAlignments(j);
-    std::vector<std::string> taxonNames = wordAlignments[0]->getTaxonNames();
-    int numStates = wordAlignments[0]->getNumStates();
     
     // initialize parameters of model
     initializeParameters(&settings, wordAlignments, j);
     
-    // initialize the eigen system object and calculate the first set of eigens
-    if (substitutionModel == "GTR")
-        {
-        EigenSystem& eigs = EigenSystem::eigenSystem();
-        eigs.initialize(numStates);
-        eigs.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
-        }
-    
-    // initialize the transition probabilities
-    TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
-    tProbs.initialize( this, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
-    tProbs.setNeedsUpdate(true);
-    tProbs.setTransitionProbabilities();
-    
+    // initialize transition probabilities
+    initializeTransitionProbabilities(wordAlignments[0]->getNumStates());
+        
     std::cout << std::endl;
 }
 
@@ -364,6 +350,24 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
 #   endif
 }
 
+void Model::initializeTransitionProbabilities(int numStates) {
+
+    // initialize the eigen system object and calculate the first set of eigens
+    std::cout << "   * Initializing likelihood-calculation machinery" << std::endl;
+    if (substitutionModel == "GTR")
+        {
+        EigenSystem& eigs = EigenSystem::eigenSystem();
+        eigs.initialize(numStates);
+        eigs.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
+        }
+    
+    // initialize the transition probabilities
+    TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
+    tProbs.initialize( this, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
+    tProbs.setNeedsUpdate(true);
+    tProbs.setTransitionProbabilities();
+}
+
 double Model::lnLikelihood(void) {
 
 #   if 1
@@ -383,10 +387,7 @@ double Model::lnLikelihood(void) {
     
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
-        {
-        //std::cout << i << " " << threadLnL[i] << std::endl;
         lnL += threadLnL[i];
-        }
         
     return lnL;
     
