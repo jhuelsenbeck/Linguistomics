@@ -11,18 +11,34 @@
 
 
 
-ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string fileName, std::vector<std::string> tNames, double itl) : Parameter(r, m, "tree") {
+ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, double itl) : Parameter(r, m, "tree") {
 
     updateChangesEigens = false;
     
     betaT = itl;
     
-    std::cout << "   * Setting up the tree parameter from tree in file " << fileName << std::endl;
-    trees[0] = new Tree(fileName, tNames, betaT, rv);
+    if (treeStr != "")
+        std::cout << "   * Setting up the tree parameter from information in json file " << std::endl;
+    else
+        std::cout << "   * Setting up the tree parameter with randomly chosen tree" << std::endl;
+        
+    if (treeStr != "")
+        trees[0] = new Tree(treeStr, tNames, betaT, rv);
+    else
+        trees[0] = new Tree(tNames, betaT, rv);
     trees[1] = new Tree(*trees[0]);
     
     //trees[0]->print("trees[0]");
     //trees[1]->print("trees[1]");
+    
+    /*std::vector<bool> tMask(tNames.size());
+    for (int i=0; i<tMask.size(); i++)
+        tMask[i] = false;
+    tMask[2] = true;
+    tMask[6] = true;
+    tMask[7] = true;
+    Tree t = Tree(*trees[0], tMask);*/
+    
 }
 
 ParameterTree::~ParameterTree(void) {
@@ -120,6 +136,11 @@ void ParameterTree::normalize(std::vector<double>& vec, double minVal) {
     if ( fabs(1.0 - sum) > 0.000001)
         std::cout << "Problem normalizing vector " << std::fixed << std::setprecision(20) << sum << std::endl;
 #   endif
+}
+
+void ParameterTree::print(void) {
+
+    trees[0]->print();
 }
 
 void ParameterTree::reject(void) {

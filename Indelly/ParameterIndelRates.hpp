@@ -29,13 +29,12 @@ class ParameterIndelRates : public Parameter {
         double                          getInsertionRate(void);
         std::string                     getString(void);
         double                          lnPriorProbability(void);
+        void                            print(void);
         void                            reject(void);
         double                          update(void);
         
     protected:
         double                          expectedEpsilon(double slen);
-        double                          alpha0;
-        std::vector<double>             alpha;
         double                          insertionLambda;
         double                          deletionLambda;
         double                          expEpsilon;

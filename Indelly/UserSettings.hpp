@@ -15,10 +15,10 @@ class UserSettings {
         std::string             getDataFile(void) { return dataFile; }
         double                  getInverseTreeLength(void) { return inverseTreeLength; }
         std::string             getOutFile(void) { return outFile; }
-        std::string             getTreeFile(void) { return treeFile; }
         int                     getNumMcmcCycles(void) { return numMcmcCycles; }
         int                     getPrintFrequency(void) { return printFrequency; }
         int                     getSampleFrequency(void) { return sampleFrequency; }
+        std::string             getSubstitutionModel(void) { return substitutionModel; }
         void                    print(void);
         void                    readCommandLineArguments(int argc, char* argv[]);
     
@@ -27,12 +27,12 @@ class UserSettings {
                                 UserSettings(const UserSettings& s) = delete;
         void                    usage(void);
         std::string             dataFile;
-        std::string             treeFile;
         std::string             outFile;
         int                     numMcmcCycles;
         int                     printFrequency;
         int                     sampleFrequency;
         double                  inverseTreeLength;
+        std::string             substitutionModel;
 };
 
 #endif

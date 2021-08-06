@@ -22,6 +22,7 @@ class Parameter {
         bool                getUpdateChangesEigens(void) { return updateChangesEigens; }
         bool                getUpdateChangesTransitionProbabilities(void) { return updateChangesTransitionProbabilities; }
         virtual double      lnPriorProbability(void) = 0;
+        virtual void        print(void) = 0;
         virtual void        reject(void) = 0;
         void                setLastUpdate(std::string s) { lastUpdateType = s; }
         void                setProposalProbability(double x) { proposalProbability = x; }

@@ -11,6 +11,8 @@
 
 ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns, std::string s) : Parameter(r, m, n) {
 
+    std::cout << "   * Setting up exchangeability rates parameter " << std::endl;
+
     updateChangesEigens = true;
 
     numStates = ns;
@@ -100,6 +102,17 @@ void ParameterExchangabilityRates::normalize(std::vector<double>& vec, double mi
 #   endif
 }
 
+void ParameterExchangabilityRates::print(void) {
+
+    std::cout << "[ ";
+    std::cout << std::fixed << std::setprecision(6);
+    for (int i=0; i<rates[0].size(); i++)
+        {
+        std::cout << rates[0][i] << " ";
+        }
+    std::cout << "]" << std::endl;
+}
+
 std::vector<int> ParameterExchangabilityRates::randomlyChooseIndices(int k, int n) {
 
     std::vector<int> possibleIndices(n);
@@ -123,7 +136,9 @@ void ParameterExchangabilityRates::reject(void) {
 }
 
 double ParameterExchangabilityRates::update(void) {
-    
+
+    lastUpdateType = "exchangeability rates";
+
     int k = 1;
     
     double lnP = 0.0;

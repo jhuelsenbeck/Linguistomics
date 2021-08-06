@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include "ParameterIndelRates.hpp"
 #include "RandomVariable.hpp"
@@ -8,6 +9,8 @@
 
 ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::string n, double slen, double insLam, double delLam) : Parameter(r, m, n) {
     
+    std::cout << "   * Setting up insertion/deletion rates parameter " << std::endl;
+
     updateChangesEigens = false;
 
     insertionLambda = insLam;
@@ -17,11 +20,10 @@ ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::strin
     
     epsilon[0].resize(2);
     epsilon[1].resize(2);
-    std::cout << "Expected Epsilon = " << expEpsilon << std::endl;
-    alpha0 = 100.0;
-    alpha.resize(2);
-    alpha[0] = alpha0 * expEpsilon;
-    alpha[1] = alpha0 * (1.0 - expEpsilon);
+    //std::cout << "Expected Epsilon = " << expEpsilon << std::endl;
+    std::vector<double> alpha(2);
+    alpha[0] = 100.0 * expEpsilon;
+    alpha[1] = 190.0 * (1.0 - expEpsilon);
     rv->dirichletRv(alpha, epsilon[0]);
 
     rhoExpParm = 100.0;
@@ -30,7 +32,7 @@ ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::strin
     epsilon[1] = epsilon[0];
     rho[1] = rho[0];
 
-    std::cout << "lambda = " << getInsertionRate() << " mu = " << getDeletionRate() << " E(L) = " << getExpectedSequenceLength() << std::endl;
+    //std::cout << "lambda = " << getInsertionRate() << " mu = " << getDeletionRate() << " E(L) = " << getExpectedSequenceLength() << std::endl;
 }
 
 ParameterIndelRates::~ParameterIndelRates(void) {
@@ -134,6 +136,12 @@ double ParameterIndelRates::lnPriorProbability(void) {
     return lnP;
 }
 
+void ParameterIndelRates::print(void) {
+
+    std::cout << std::fixed << std::setprecision(6);
+    std::cout << "[ " << getInsertionRate() << " " << getDeletionRate() << " ]" << std::endl;
+}
+
 void ParameterIndelRates::reject(void) {
 
     epsilon[0] = epsilon[1];
@@ -148,10 +156,10 @@ double ParameterIndelRates::update(void) {
         {
         // update epsilon
         lastUpdateType = "epsilon";
-        double updateAlpha0 = 100.0;
+        double alpha0 = 100.0;
         std::vector<double> forwardAlpha(2);
-        forwardAlpha[0] = updateAlpha0 * epsilon[0][0];
-        forwardAlpha[1] = updateAlpha0 * epsilon[0][1];
+        forwardAlpha[0] = alpha0 * epsilon[0][0];
+        forwardAlpha[1] = alpha0 * epsilon[0][1];
         std::vector<double> newEpsilon(2);
         
         do {
@@ -159,8 +167,8 @@ double ParameterIndelRates::update(void) {
             } while(newEpsilon[0] > 0.99 || newEpsilon[0] < 0.01);
         
         std::vector<double> reverseAlpha(2);
-        forwardAlpha[0] = updateAlpha0 * newEpsilon[0];
-        forwardAlpha[1] = updateAlpha0 * newEpsilon[1];
+        reverseAlpha[0] = alpha0 * newEpsilon[0];
+        reverseAlpha[1] = alpha0 * newEpsilon[1];
         
         lnProposalProbability = rv->lnDirichletPdf(reverseAlpha, epsilon[0]) - rv->lnDirichletPdf(forwardAlpha, newEpsilon);
         epsilon[0] = newEpsilon;

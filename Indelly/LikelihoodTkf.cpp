@@ -25,12 +25,13 @@ int LikelihoodTkf::maxUnalignableDimension = 10;
 
 
 
-LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m) {
+LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m, std::string sm) {
 
 
     data = a;
     tree = t;
     model = m;
+    substitutionModel = sm;
     init();
 }
 
@@ -106,8 +107,7 @@ void LikelihoodTkf::initTransitionProbabilities(void) {
         
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
     transitionProbabilities = tip.getTransitionProbabilities();
-    EigenSystem& eigs = EigenSystem::eigenSystem();
-    stateEquilibriumFrequencies = eigs.getStationaryFrequencies();
+    stateEquilibriumFrequencies = tip.getStationaryFrequencies();
 
 #   if 0
     tip.print();
@@ -163,6 +163,8 @@ void LikelihoodTkf::initTree(Tree* t) {
 
     parents = t->getAncestorIndices();
     tau = t->getBranchLengthVector();
+    
+    //printTreeInfo();
 
 #   if defined(DEBUG_TKF91)
     std::cout << "Tree" << std::endl;
@@ -187,6 +189,20 @@ void LikelihoodTkf::printTable(void) {
     for (std::map<IntVector*,double,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
         {
         std::cout << i++ << " -- " << *(it->first) << " -- " << it->second << std::endl;
+        }
+}
+
+void LikelihoodTkf::printTreeInfo(void) {
+
+    for (int i=0; i<parents.size(); i++)
+        {
+        std::cout << "iParent[" << i << "] = " << parents[i] << ";" << std::endl;
+        }
+        
+    for (int i=0; i<tau.size(); i++)
+        {
+        std::cout << std::fixed << std::setprecision(10);
+        std::cout << "iTau[" << i << "] = " << tau[i] << ";" << std::endl;
         }
 }
 
@@ -234,9 +250,9 @@ double LikelihoodTkf::tkfLike(void) {
     
     // Calculate correction factor for null emissions ("wing folding", or linear equation solving.)
     double nullEmissionFactor = treeRecursion( &pos, &pos );
-//    mpfr::mpreal f = immortalProbability / nullEmissionFactor;
     double f = immortalProbability / nullEmissionFactor;
     dpTable.insert( std::make_pair(new IntVector(pos), f) );   // insert the first probability into dpTable
+    //printTable();
  
     // Array of possible vector indices, used in inner loop
     std::vector<int> possibleVectorIndices(maxUnalignableDimension, 0);
@@ -325,6 +341,7 @@ double LikelihoodTkf::tkfLike(void) {
                 if (unusedPos)
                     {
                     dpTable.insert( std::make_pair(new IntVector(newPos), rht) );
+                    //printTable();
                     }
                 else
                     {
@@ -332,6 +349,7 @@ double LikelihoodTkf::tkfLike(void) {
                     if (it2 == dpTable.end())
                         Msg::error("Should have found newPos in table. What happened?");
                     it2->second = rht;
+                    //printTable();
                     }
                 }
 
@@ -357,6 +375,7 @@ double LikelihoodTkf::tkfLike(void) {
         std::map<IntVector*,double,CompIntVector>::iterator it = dpTable.find(&newPos);
         if (it == dpTable.end())
             Msg::error("Could not find newPos in dpTable");
+        //std::cout << "found " << it->first << " " << it->second << " " << log(it->second) << std::endl;
         double lnL = log(it->second);
         clearDpTable();
         return lnL;

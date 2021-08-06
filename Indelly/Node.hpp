@@ -22,6 +22,7 @@ class Node {
         double              getBranchProportion(void) { return proportion; }
         NodeSet*&           getDescendants(void) { return descendants; }
         std::vector<Node*>  getDescendantsVector(void);
+        bool                getFlag(void) { return flag; }
         int                 getIndex(void) { return index; }
         bool                getIsLeaf(void) { return isLeaf; }
         std::string         getName(void) { return name; }
@@ -34,6 +35,7 @@ class Node {
         void                removeDescendants(void);
         void                setAncestor(Node* p) { ancestor = p; }
         void                setBranchProportion(double x) { proportion = x; }
+        void                setFlag(bool tf) { flag = tf; }
         void                setIndex(int x) { index = x; }
         void                setIsLeaf(bool tf) { isLeaf = tf; }
         void                setMyTree(Tree* t) { myTree = t; }
@@ -49,6 +51,7 @@ class Node {
         double              proportion;
         int                 offset;
         Tree*               myTree;
+        bool                flag;
 };
 
 struct CompNode {

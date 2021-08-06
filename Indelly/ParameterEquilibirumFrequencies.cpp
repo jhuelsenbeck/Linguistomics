@@ -1,3 +1,5 @@
+#include <iomanip>
+#include <iostream>
 #include <map>
 #include "EigenSystem.hpp"
 #include "Model.hpp"
@@ -8,6 +10,8 @@
 
 
 ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable* r, Model* m, std::string n, int ns, std::string s) : Parameter(r, m, n) {
+
+    std::cout << "   * Setting up equilibrium frequencies parameter " << std::endl;
 
     updateChangesEigens = true;
 
@@ -58,6 +62,17 @@ std::string ParameterEquilibirumFrequencies::getString(void) {
 double ParameterEquilibirumFrequencies::lnPriorProbability(void) {
 
     return rv->lnGamma(numStates-1);
+}
+
+void ParameterEquilibirumFrequencies::print(void) {
+
+    std::cout << "[ ";
+    std::cout << std::fixed << std::setprecision(6);
+    for (int i=0; i<freqs[0].size(); i++)
+        {
+        std::cout << freqs[0][i] << " ";
+        }
+    std::cout << "]" << std::endl;
 }
 
 void ParameterEquilibirumFrequencies::normalize(std::vector<double>& vec, double minVal) {
@@ -114,7 +129,9 @@ void ParameterEquilibirumFrequencies::reject(void) {
 }
 
 double ParameterEquilibirumFrequencies::update(void) {
-    
+
+    lastUpdateType = "equilibrium frequencies";
+
     int k = 1;
     
     double lnP = 0.0;

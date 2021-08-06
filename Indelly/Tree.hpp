@@ -12,8 +12,10 @@ class RandomVariable;
 class Tree {
 
     public:
-                                    Tree(std::string fileName, std::vector<std::string> tNames, double betaT, RandomVariable* rv);
+                                    Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
+                                    Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv);
                                     Tree(Tree& t);
+                                    Tree(Tree& t, std::vector<bool> taxonMask);
                                    ~Tree(void);
         Tree&                       operator=(Tree& t);
         std::string                 getNewick(void);
@@ -25,6 +27,7 @@ class Tree {
         Node*                       getRoot(void) { return root; }
         std::vector<std::string>&   getTaxonNames(void) { return taxonNames; }
         double                      getTreeLength(void) { return treeLength; }
+        bool                        isBinary(void);
         bool                        isRoot(Node* p) { return ((p == root) ? true : false); }
         bool                        isTaxonPresent(std::string tn);
         void                        print(void);
