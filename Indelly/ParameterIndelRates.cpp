@@ -156,7 +156,7 @@ double ParameterIndelRates::update(void) {
         {
         // update epsilon
         lastUpdateType = "epsilon";
-        double alpha0 = 100.0;
+        double alpha0 = 10.0;
         std::vector<double> forwardAlpha(2);
         forwardAlpha[0] = alpha0 * epsilon[0][0];
         forwardAlpha[1] = alpha0 * epsilon[0][1];
