@@ -8,15 +8,16 @@
 
 
 
-Alignment::Alignment(nlohmann::json& j, std::string validStates) {
+Alignment::Alignment(nlohmann::json& j, int ns) {
+    
+    //std::cout << j.dump() << std::endl;
     
     matrix = NULL;
     indelMatrix = NULL;
     
     // set the state information
-    states = validStates;
-    numStates = (int)states.length();
-    gapCode = (int)validStates.length();
+    numStates = ns;
+    gapCode = numStates;
     if (gapCode <= 1)
         Msg::error("There must be at least two states in the model");
 
@@ -49,12 +50,12 @@ Alignment::Alignment(nlohmann::json& j, std::string validStates) {
         it = jw.find("Segments");
         if (it == jw.end())
             Msg::error("Could not find segment data in the JSON object");
-        std::string segInfo = jw["Segments"];
+        std::vector<int> segInfo = jw["Segments"];
         
         // check that the number of word segments is the same for each taxon
         if (i == 0)
             {
-            numChar = (int)segInfo.length();
+            numChar = (int)segInfo.size();
             if (numChar <= 0)
                 Msg::error("Must have at least one segment in the word");
 
@@ -81,15 +82,17 @@ Alignment::Alignment(nlohmann::json& j, std::string validStates) {
             }
         else
             {
-            if (segInfo.length() != numChar)
+            if (segInfo.size() != numChar)
                 Msg::error("Inconsistent segment lengths for word " + name);
             }
             
         //read the segment information
-        for (int j=0; j<segInfo.length(); j++)
+        for (int j=0; j<segInfo.size(); j++)
             {
-            char site = segInfo.at(j);
-            matrix[i][j] = stateCode(site);
+            if (segInfo[j] == -1)
+                matrix[i][j] = gapCode;
+            else
+                matrix[i][j] = segInfo[j];
             }
         }
         
@@ -136,13 +139,6 @@ int Alignment::getCharacter(size_t i, size_t j) {
 std::vector<std::string> Alignment::getTaxonNames(void) {
 
     return taxonNames;
-}
-
-char Alignment::getCharFromCode(int code) {
-
-    if (code == states.size())
-        return '-';
-    return states[code];
 }
 
 std::vector<std::vector<int> > Alignment::getIndelMatrix(void) {
@@ -301,26 +297,15 @@ void Alignment::print(void) {
 		{
 		std::cout << std::setw(4) << j+1 << " -- ";
 		for (size_t i=0; i<numTaxa; i++)
-            std::cout << std::setw(3) << getCharFromCode( x[i][j] );
+            {
+            if (x[i][j] == gapCode)
+                std::cout << std::setw(3) << "-";
+            else
+                std::cout << std::setw(3) << x[i][j];
+            }
 		std::cout << '\n';
 		}
     std::cout << std::endl;
-}
-
-void Alignment::printCode(void) {
-    
-    std::cout << name << std::endl;
-    std::cout << "numTaxa = " << numTaxa << ";" << std::endl;
-    std::cout << "numChar = " << numChar << ";" << std::endl;
-    std::cout << "aln = new char[numTaxa][numChar];" << std::endl;
-    for (int i=0; i<numTaxa; i++)
-        {
-        for (int j=0; j<numChar; j++)
-            {
-            int charCode = getCharacter(i, j);
-            std::cout << "aln[" << i << "][" << j << "] = '" << getCharFromCode(charCode) << "';" << std::endl;
-            }
-        }
 }
 
 void Alignment::printIndels(void) {
@@ -347,20 +332,3 @@ void Alignment::printIndels(void) {
     std::cout << std::endl;
 }
 
-int Alignment::stateCode(char s) {
-
-    if (s == '?')
-        Msg::error("Missing data (?) is not allowed in the data matrix");
-    if (s == '-')
-        return gapCode;
-        
-    for (int i=0; i<numStates; i++)
-        {
-        char c = states[i];
-        if (c == s)
-            return i;
-        }
-        
-    Msg::error("Unidentified state " + std::to_string(s));
-    return -1;
-}

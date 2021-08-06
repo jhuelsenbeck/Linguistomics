@@ -45,7 +45,6 @@ class ParameterAlignment : public Parameter {
         double                          gapPenalty;
         int                             numStates;
         int                             gapCode;       // the gap code is simply the maximum number of states possible in any Markov model
-        std::string                     states;
         int                             printWidth;
 };
 

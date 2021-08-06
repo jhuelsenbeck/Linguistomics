@@ -198,40 +198,45 @@ std::string Model::getUpdatedParameterName(void) {
 
 std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
 
+    // get the list of taxa
+    auto it = j.find("Taxa");
+    if (it == j.end())
+        Msg::error("Could not find list of taxa in the JSON file");
+    size_t numTaxa = j["Taxa"].size();
+    std::vector<std::string> canonicalTaxonList = j["Taxa"];
+    std::cout << "   * Found " << canonicalTaxonList.size() << " taxa in JSON file" << std::endl;
+    
     // check that there are words in the json object
-    auto it = j.find("Words");
+    it = j.find("Words");
     if (it == j.end())
         Msg::error("Could not find word information in the JSON file");
     size_t numWords = j["Words"].size();
     std::cout << "   * Found " << numWords << " words in JSON file" << std::endl;
     
-    // check that there is a list of valid states
-    it = j.find("States");
+    // check that the json object has the number of states
+    it = j.find("NumberOfStates");
     if (it == j.end())
-        Msg::error("Could not find state information in the JSON file");
-    std::string validStates = j["States"];
-    if (validStates.length() <= 1)
+        Msg::error("Could not the number of states in the JSON file");
+    int numStates = j["NumberOfStates"];
+    if (numStates <= 1)
         Msg::error("There must be at least two states in the model");
+    std::cout << "   * The substitution model has " << numStates << " states" << std::endl;
     
     // read each word
     std::vector<Alignment*> words;
     std::vector<std::string> taxonNames;
-    std::string tempStates = "";
     for (size_t i=0; i<numWords; i++)
         {
         // instantiate the word alignment from the json object
         nlohmann::json jw = j["Words"][i];
-        Alignment* aln = new Alignment(jw, validStates);
+        Alignment* aln = new Alignment(jw, numStates);
         if (i == 0)
-            {
             taxonNames = aln->getTaxonNames();
-            tempStates = aln->getStates();
-            }
         
         // check if we have problems
-        if (taxonNames.size() != aln->numCompleteTaxa())
+        if (taxonNames.size() != aln->numCompleteTaxa() || aln->numCompleteTaxa() != numTaxa)
             {
-            Msg::warning("   * Word " + aln->getName() + " will is taxa with no word segments and will not be included");
+            Msg::warning("Word " + aln->getName() + " has at least one taxon with no word segments and will not be included.\n     In the future, such words will use a subtree of the full tree used in the analysis.");
             delete aln;
             continue;
             }
@@ -243,13 +248,12 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
             if (taxonNames[j] != alnTaxonNames[j])
                 Msg::error("List of taxa is inconsistent across words");
             }
-        std::string alnStates = aln->getStates();
-        if (tempStates.size() != alnStates.size())
-            Msg::error("The set of states is inconsistent acros word alignments");
-        for (int j=0; j<tempStates.length(); j++)
+            
+        // make certain that each taxon in the alignment is in the canonical list of taxa
+        for (int j=0; j<alnTaxonNames.size(); j++)
             {
-            if (tempStates.at(j) != alnStates.at(j))
-                Msg::error("The set of states is inconsistent acros word alignments");
+            if (std::find(canonicalTaxonList.begin(), canonicalTaxonList.end(), alnTaxonNames[j]) == canonicalTaxonList.end())
+                Msg::error("Could not find taxon " + alnTaxonNames[j] + " in canonical taxon list for word " + aln->getName());
             }
             
         words.push_back(aln);
@@ -317,12 +321,12 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
     if (substitutionModel == "GTR")
         {
         // set up exchangability parameters
-        Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates, wordAlignments[0]->getStates());
+        Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates);
         pExchange->setProposalProbability(50.0);
         parameters.push_back(pExchange);
         
         // set up equilibrium frequencies
-        Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates, wordAlignments[0]->getStates());
+        Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates);
         pEquil->setProposalProbability(50.0);
         parameters.push_back(pEquil);
         }
@@ -351,6 +355,8 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
 }
 
 void Model::initializeTransitionProbabilities(int numStates) {
+
+    UserSettings& settings = UserSettings::userSettings();
 
     // initialize the eigen system object and calculate the first set of eigens
     std::cout << "   * Initializing likelihood-calculation machinery" << std::endl;

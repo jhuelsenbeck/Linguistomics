@@ -25,7 +25,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 #   if defined(DEBUG_MODE)
     commands.push_back(argv[0]);
     commands.push_back("-d");
-    commands.push_back("/Users/johnh/Desktop/Indelly/json.in");
+    commands.push_back("/Users/johnh/Repositories/Linguistomics/Run/Run1/config.json");
     commands.push_back("-o");
     commands.push_back("/Users/johnh/Desktop/Indelly/out/test");
     commands.push_back("-m");

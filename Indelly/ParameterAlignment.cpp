@@ -27,7 +27,6 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     gapCode = a->getGapCode();
     numStates = a->getNumStates();
     taxonNames = a->getTaxonNames();
-    states = a->getStates();
     gapCode = a->getGapCode();
     alignment[0].resize(numTaxa);
     for (int i=0; i<numTaxa; i++)
@@ -66,13 +65,6 @@ ParameterAlignment::~ParameterAlignment(void) {
 void ParameterAlignment::accept(void) {
 
     alignment[1] = alignment[0];
-}
-
-char ParameterAlignment::getCharFromCode(int code) {
-
-    if (code == gapCode)
-        return '-';
-    return states[code];
 }
 
 std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(void) {

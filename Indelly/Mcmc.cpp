@@ -245,6 +245,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     
     // output to alignment file
     std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
+    int gapCode = alns[0]->getGapCode();
     std::vector<std::string> taxonNames = alns[0]->getTaxonNames();
     int longestNameLength = 0;
     for (int i=0; i<taxonNames.size(); i++)
@@ -264,11 +265,11 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
             for (int j=0; j<aln[i].size(); j++)
                 {
                 int charCode = aln[i][j];
-                algnStrm << alns[n]->getCharFromCode(charCode);
+                if (charCode == gapCode)
+                    algnStrm << std::setw(3) << "-";
+                else
+                    algnStrm << std::setw(3) << charCode;
                 }
-//            for (int j=0; j<alns[n]->getPrintWidth()-aln[i].size(); j++)
-//                algnStrm << " ";
-
             algnStrm << '\t';
             }
         algnStrm << std::endl;

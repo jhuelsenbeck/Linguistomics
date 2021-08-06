@@ -10,20 +10,18 @@ class Alignment {
 
     public:
                                         Alignment(void) = delete;
-                                        Alignment(nlohmann::json& j, std::string validStates);
+                                        Alignment(nlohmann::json& j, int ns);
                                        ~Alignment(void);
         int                             getCharacter(size_t i, size_t j);
-        char                            getCharFromCode(int code);
         int                             getGapCode(void) { return gapCode; }
         std::string                     getName(void) { return name; }
-        int                             getMaximumNumberOfStates(void) { return (int)states.length(); }
+        int                             getMaximumNumberOfStates(void) { return numStates; }
         int                             getNumTaxa(void) { return numTaxa; }
         int                             getNumChar(void) { return numChar; }
         int                             getNumStates(void) { return numStates; }
         std::vector<int>                getRawSequence(int txnIdx);
         std::vector<std::vector<int> >  getRawSequenceMatrix(void);
         std::vector<std::vector<int> >  getIndelMatrix(void);
-        std::string                     getStates(void) { return states; }
         int                             getTaxonIndex(std::string ns);
         std::vector<std::string>        getTaxonNames(void);
         std::string                     getTaxonName(int i);
@@ -31,10 +29,8 @@ class Alignment {
         void                            listTaxa(void);
         int                             numCompleteTaxa(void);
         void                            print(void);
-        void                            printCode(void);
         void                            printIndels(void);
         void                            setName(std::string s) { name = s; }
-        int                             stateCode(char s);
 
     private:
         std::string                     bomLessString(std::string& str);
@@ -47,7 +43,6 @@ class Alignment {
         int                             numChar;
         int                             numStates;
         std::string                     name;
-        std::string                     states;
         int                             gapCode;
 };
 
