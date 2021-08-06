@@ -54,23 +54,26 @@ class AppendixClass {
 }
 //======================================================================
 
-class AuthorClass {
-  var Title,
-      First,
-      Middle,
-      Last,
-      Address,
+class AuthorClass: PersonClass {
+  var Address,
       Website,
       EMail;
+
+  Title = Span {
+    Separator: ". ";
+    FirstName[0];
+    MiddleName[0];
+    LastName;
+  };
 
   override GetPopup = Block {
     Paragraph {
       Bold;
-      First;
+      FirstName;
       Space;
-      Middle;
+      MiddleName;
       Space;
-      Last;
+      LastName;
     };
     Block {
       Address;
@@ -194,6 +197,12 @@ with Style {
   SingleQuote          = Span {Begin: "‘"; End: "’"};
   eos                  = ". ";
 
+  MainDocument = Document {
+    Size: DocMetrics.DocumentSize;
+    Margin: DocMetrics.PageMargin;
+    MainFamily;
+  };
+
   RowBar(i) = {
     if (i mod 2 != 0)
       Background: 95%;
@@ -292,12 +301,6 @@ with Style {
     Style.MonoFamily;
     TextHeight: 10 pts;
     ParBackground: 97%;
-  };
-
-  Author(author) = Span {
-    Link: author.GlobalVariablePath;
-    Popup: author;
-    author.Title;
   };
 
   Citation(r) = Span {
@@ -401,9 +404,9 @@ with Style {
         Separator: Space;
         if (exists author.Website)
           Link: author.Website;
-        author.First;
-        author.Middle;
-        author.Last;
+        author.FirstName;
+        author.MiddleName;
+        author.LastName;
       };
     };
     Span {
@@ -427,6 +430,19 @@ with Style {
       Link: Lang.Appendix + EachIndex;
       appendix.Title
     };
+  };
+
+  Author(author) = Span {
+    Link: author.GlobalVariablePath;
+    Popup: author;
+    author.Title;
+  };
+
+  AuthorList(authors) = Paragraph {
+    ParAlignment: ParAlignments.Center;
+    Separator: ", ";
+    LastSeparator: " and ";
+    Style.Author(each authors);
   };
 
   ShowAuthors(authors) = Block {
@@ -642,19 +658,6 @@ abstract class BaseViewClass: DocumentViewClass {
   Constructor(title, key, type) {
     super.Constructor(title, key, type);
   }
-
-  DocMetadata = {
-    Size: DocMetrics.DocumentSize;
-    Margin: DocMetrics.PageMargin;
-    Style.MainFamily;
-
-    Title: Info.Title;
-    Author: Info.AuthorList;
-//  Description: "Test Description";
-//  Comment: "Test Comment";
-//  Subject: "Test Subject";
-//  Keywords: "Test Keywords";
-  };
 
   FixedFrame(x, y, width, height) = Frame {
     HRelative: HRelatives.Page;

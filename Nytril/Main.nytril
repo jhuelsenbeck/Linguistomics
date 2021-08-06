@@ -34,6 +34,19 @@ void Main.Run {
 // RevBayes has a problem with folder names that contain spaces...
 
 Results = new ResultsClass("Run1");
+
+ViewInfo = new ViewInfoClass {
+  Title: Info.Title;
+//  Description: "Test Description";
+//  Comment: "Test Comment";
+//  Subject: "Test Subject";
+//  Keywords: "Test Keywords";
+};
+
+DocMetadata = {
+  LinkTypes.ViewInfo -> ViewInfo;
+  LinkTypes.ViewAuthor -> Authors;
+};
 //======================================================================
 
 with Info {
@@ -44,10 +57,6 @@ with Info {
   Publisher    = "The Baysian Society";
   Title        = Lang.SimulatedSegments;
   PriorTree    = GetTreeNodes(LanguageBranches.Experiment);
-
-  AuthorList = TextList {
-    Style.Author(each Authors);
-  };
 }
 //=====================================================================
 
@@ -83,7 +92,7 @@ class PaperViewClass: BaseViewClass {
     ];
   }
 
-  override GetDocument = Document {
+  override GetDocument = Style.MainDocument {
     DocMetadata;
 
     Style.PageSection {
@@ -99,10 +108,7 @@ class PaperViewClass: BaseViewClass {
         Logo;
       };
       Style.Title(Info.Title);
-      Paragraph {
-        ParAlignment: ParAlignments.Center;
-        Info.AuthorList;
-      };
+      Style.AuthorList(Authors);
 
       Style.HeaderCentered(Abstract.Title);
       Abstract.Body;
@@ -127,15 +133,15 @@ class ExperimentViewClass: BaseViewClass {
     super.Constructor("Experiment", "experiment", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-//      new AppendixClass(Lang.CharacterRules, Results.Rule.ShowDescription),
       new AppendixClass("TKF Configuration", Results.Compute.ConfigFile),
-//      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
+      new AppendixClass(Lang.CharacterRules, Results.Rule.ShowDescription),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
       new AppendixClass(Lang.Results, Results.Compute.ShowLanguageTrees),
-//      new AppendixClass("Statistics", Results.Compute.ShowStats),
+      new AppendixClass("Statistics", Results.Compute.ShowStats),
     ];
   }
 
-  override GetDocument = Document {
+  override GetDocument = Style.MainDocument {
     DocMetadata;
 
     Style.PageSection {
@@ -174,7 +180,7 @@ class DiagnosticsViewClass: BaseViewClass {
     ];
   }
 
-  override GetDocument = Document {
+  override GetDocument = Style.MainDocument {
     DocMetadata;
     Style.ShowAppendix(each Appendices);
   };
