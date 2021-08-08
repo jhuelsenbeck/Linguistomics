@@ -16,12 +16,14 @@ abstract class RuleClass {
   var Name,
       Letter,
       Symbol,
-      Filters;
+      Filters,
+      Numbers;
 
   Constructor(name) {
     Name    = name;
     Letter  = "Kappa";
     Symbol  = Tex.kappa;
+    Numbers = false;
   }
 
   virtual void GetFilters {
@@ -47,28 +49,21 @@ abstract class RuleClass {
     return c;
   }
 
+  void SetSegmentCharacter(SegmentClass segment, index) {
+    segment.CharacterIndex  = index;
+    segment.CharacterLetter = Numbers ? index : Nexus.CharacterList[index];
+  }
+
   virtual void AssignCharacters(segmentlist) {
     var last = Nexus.CharacterList.Length-1;
     foreach (var segment in segmentlist) {
-      var c = GetCharacterIndex(segment);
-      if (c > last)
-        c = last;
-      segment.Character = c;
+      var index = GetCharacterIndex(segment);
+      if (index > last)
+        index = last;
+      SetSegmentCharacter(segment, index);
     }
     GetFilters;
   }
-
-  virtual ShowDescription = Block {
-    Paragraph {
-      TextHeight: 14 pts;
-      BorderB: 1 pt;
-      SpaceAfter: 10 pts;
-      Letter;
-      "({0})"(Symbol);
-      Tab;
-      Name;
-    }
-  };
 
   ShowFile = TextBlock {
     Span {
@@ -87,47 +82,59 @@ abstract class RuleClass {
 
   GetSegments(filter) = FindSlice(Results.UniqueSegments, segment => MatchesRule(filter, segment));
 
-  override ShowDescription = Block {
+  ShowSymbols = Block {
+    Paragraph {
+      TextHeight: 14 pts;
+      BorderB: 1 pt;
+      SpaceAfter: 10 pts;
+      Letter;
+      "({0})"(Symbol);
+      Tab;
+      Name;
+    }
+  };
+
+  ShowAssignments = Block {
     Paragraph {
       TextHeight: 14 pts;
       Name;
     };
 
-    Table {
-      PaddingLR: 1;
-      Columns: [15 pts, 1.4 inches, DocMetrics.PageContent.Width - 1.55 inches];
-      Row {
-        Bold;
-        Style.TitleBackground;
-        "#";
-        Lang.Filter;
-        Lang.Segments;
-      };
+    Paragraph {
+      Separator: Space;
 
       var i = 0;
       foreach (var filter in Filters) {
         var segments = GetSegments(filter);
         if (segments.Length > 0) {
-          Row {
-            Cell {
+          HBox {
+            VAlign: VAligns.Center;
+            Margin: 2;
+            PaddingLR: 1;
+            Border: 0.25 pts {Color: 80%};
+            Span {
               Style.MonoFamily;
-              Style.TitleBackground;
-              Bold;
               HAlign: HAligns.Center;
-              Nexus.CharacterList[i++];
+              if (Numbers)
+                i++;
+              else
+                Nexus.CharacterList[i++];
             };
-            filter.Name;
-            Cell {
-              TextHeight: 14 pts;
-              Span {
-                Separator: Space;
-                (each segments).ShowSegment;
-              };
+            Space*5;
+            Span {
+              TextHeight: 18 pts;
+              Separator: Space;
+              (each segments).ShowSegment;
             };
-          };
+          }
         }
       }
     }
+  };
+
+  ShowDescription = Block {
+    ShowSymbols;
+    ShowAssignments;
   };
 }
 //======================================================================
@@ -346,20 +353,19 @@ class DiphthongPairRuleClass: RuleClass {
           }
         }
         if (fi < 0) {
-          segment.Character = count;
-          dr.Character      = count;
+          SetSegmentCharacter(segment, count);
+          SetSegmentCharacter(dr, count);
           FilterList.Add(new DiphthongFilterClass(dr));
           ++count;
         }
-        else {
-          segment.Character = fi;
-        }
+        else
+          SetSegmentCharacter(segment, fi);
       }
     }
 
     foreach (var segment in segmentlist) {
-      if (segment.Character < 0) {
-        segment.Character = count++;
+      if (segment.CharacterIndex < 0) {
+        SetSegmentCharacter(segment, count++);
         FilterList.Add(new SingleFilterClass(segment));
       }
     }
@@ -367,6 +373,25 @@ class DiphthongPairRuleClass: RuleClass {
   }
 
   override void GetFilters {
+    Filters = FilterList.ToArray;
+  }
+}
+//======================================================================
+
+class SingletonRuleClass: RuleClass {
+  var FilterList;
+
+  Constructor {
+    super.Constructor("Each segment gets a different character");
+    FilterList = new ListClass(128);
+    Numbers    = true;
+  }
+
+  override void AssignCharacters(segmentlist) {
+    foreach (var segment in segmentlist) {
+      SetSegmentCharacter(segment, EachIndex);
+      FilterList.Add(new SingleFilterClass(segment));
+    }
     Filters = FilterList.ToArray;
   }
 }

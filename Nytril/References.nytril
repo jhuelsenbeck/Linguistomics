@@ -1,110 +1,230 @@
 ﻿using IO, Format;
 //======================================================================
 
-with Authors {
-  DMGoldstein = new AuthorClass {
+with Organizations {
+  SystemicBiology = new OrganizationClass {
+    Name : "Systematic Biology";
+  };
+
+  JournalComputationalBiology = new OrganizationClass {
+    Name: "Journal Of Computational Biology";
+  };
+
+  Wikipedia = new OrganizationClass {
+    Name : "Wikipedia";
+  };
+
+  InternationalPhoneticAlphabet = new OrganizationClass {
+    Name : "InternationalPhoneticAlphabet.org";
+  };
+
+  ASJP = new OrganizationClass {
+    Name : "ASJP";
+  };
+
+  UCLA = new OrganizationClass {
+    Name : "UCLA";
+    LinkTypes.MainOffice -> new PlaceClass {
+      City: "Los Angeles";
+      State: "CA";
+      PostalCode: "90095-1543";
+      Country: "USA";
+    }
+  };
+}
+//======================================================================
+
+class AuthorClass: PersonClass {
+  override GetPopup = Block {
+    Paragraph {
+      Bold;
+      FirstName;
+      Space;
+      MiddleName;
+      Space;
+      LastName;
+    };
+/*
+    Block {
+      Address;
+    };
+    if (exists Website) {
+      Paragraph {
+        Span {
+          TextColor: Colors.Gray;
+         "web: ";
+        };
+        Website;
+      };
+    }
+    if (exists EMail) {
+      Paragraph {
+        Span {
+          TextColor: Colors.Gray;
+          "email: ";
+        };
+        EMail;
+      };
+    }
+*/
+  };
+}
+//======================================================================
+
+Website(url)   = LinkTypes.WorkWebsite -> new URLClass(url);
+Email(address) = LinkTypes.WorkEmail -> new EmailClass(address);
+
+
+with People {
+  DMGoldstein = new PersonClass {
+    Id         : #0ebaaa7b75120342aac20f4210b40f61#;
     FirstName  : "David";
     MiddleName : "M.";
     LastName   : "Goldstein";
-    Address    : ["UCLA", "Los Angeles, CA 90095-1543", "USA"];
-    Website    : Domain("https://linguistics.ucla.edu/person/david-goldstein");
-    EMail      : "dgoldstein@humnet.ucla.edu";
+
+    LinkTypes.WorkAddress -> new PlaceClass {
+      Name: "UCLA";
+      City: "Los Angeles";
+      State: "CA";
+      PostalCode: "90095-1543";
+      Country: "USA";
+    };
+    Website("https://linguistics.ucla.edu/person/david-goldstein");
+    Email("dgoldstein@humnet.ucla.edu");
   };
 
-  JPHuelsenbeck = new AuthorClass {
-    FirstName   : "John";
-    MiddleName  : "P.";
-    LastName    : "Huelsenbeck";
-    Address     : ["UC Berkeley", "3040 Valley Life Sciences Building #3140", "Berkeley, CA 94720-3140", "USA"];
-    Website     : Domain("https://vcresearch.berkeley.edu/faculty/john-huelsenbeck");
-    EMail       : "johnh@berkeley.edu";
+  JPHuelsenbeck = new PersonClass {
+    Id         : #e11bbf3b3aa9d94e89e343ca69d90c02#;
+    FirstName  : "John";
+    MiddleName : "P.";
+    LastName   : "Huelsenbeck";
+
+    LinkTypes.WorkAddress -> new PlaceClass {
+      Name: "UC Berkeley";
+      Address: "3040 Valley Life Sciences Building #3140";
+      City: "Berkeley";
+      State: "CA";
+      PostalCode: "94720-3140";
+      Country: "USA";
+    };
+
+    Website("https://vcresearch.berkeley.edu/faculty/john-huelsenbeck");
+    Email("johnh@berkeley.edu");
   };
 
-  SHMcCreight = new AuthorClass {
-    FirstName   : "Shawn";
-    MiddleName  : "H.";
-    LastName    : "McCreight";
-    Address     : ["3060 San Pasqual St.", "Pasadena, CA 91107", "USA"];
-    Website     : Domain("https://nytril.com");
-    EMail       : "shawn.mccreight@gmail.com";
+  SHMcCreight = new PersonClass {
+    Id         : #13f9cafa3a23d143871c828ea60a96e8#;
+    FirstName  : "Shawn";
+    MiddleName : "H.";
+    LastName   : "McCreight";
+
+    LinkTypes.WorkAddress -> new PlaceClass {
+      Address: "3060 San Pasqual St.";
+      City: "Pasadena";
+      State: "CA";
+      PostalCode: "91107";
+      Country: "USA";
+    };
+
+    Website("https://nytril.com");
+    Email("shawn.mccreight@gmail.com");
+  };
+
+  SHöhna = new PersonClass {
+    Id         : #654b7bfe5302c74493f57d3c99bfe500#;
+    FirstName  : "Sebastian";
+    LastName   : "Höhna";
+  };
+
+  TGojobori = new PersonClass {
+    Id         : #0a9f570bf1eeda4e8d5424b931f2382c#;
+    FirstName  : "Takashi";
+    LastName   : "Gojobori";
   };
 }
+//======================================================================
+
+Authors = [
+  People.DMGoldstein,
+  People.SHMcCreight,
+  People.JPHuelsenbeck,
+];
 //======================================================================
 
 WikipediaLink(name) = Domain("en.wikipedia.org") Folder("wiki") Folder(name);
 
 with References {
-  with RevBayes {
-    Author    = "Höhna, Landis, Heath, Boussau, Lartillot, Moore, Huelsenbeck, Ronquist";
-    Year      = 2016;
-    Title     = "RevBayes: Bayesian phylogenetic inference using graphical models and an interactive model-specification language";
-    Publisher = "Systematic Biology";
-    Pages     = "65:726-736";
-    Link      = Domain("http://www.revbayes.com");
-  }
+  RevBayes = new RefClass(ReferenceTypes.Misc) {
+//    Author        : "Höhna, Landis, Heath, Boussau, Lartillot, Moore, Huelsenbeck, Ronquist";
+    PubDate : DateTime(2016);
+    Title   : "RevBayes: Bayesian phylogenetic inference using graphical models and an interactive model-specification language";
+    Pages   : "65:726-736";
 
-  with WordLists {
-    Author    = null;
-    Year      = 2019;
-    Title     = "IPA Symbols Chart Complete";
-    Publisher = "InternationalPhoneticAlphabet.org";
-    Link      = Domain("http://www.internationalphoneticalphabet.org") Folder("ipa-charts") Folder("ipa-symbols-chart-complete");
-  }
+    LinkTypes.ReferenceURL -> new URLClass("http://www.revbayes.com", DateTime(2021));
+    LinkTypes.ReferencePublisher -> Organizations.SystemicBiology;
+    LinkTypes.ReferenceAuthor -> People.SHöhna;
+    LinkTypes.ReferenceAuthor -> People.JPHuelsenbeck;
+  };
 
-  with IPAInformation {
-    Author    = null;
-    Year      = 2019;
-    Title     = "IPA Symbols Chart Complete";
-    Publisher = "InternationalPhoneticAlphabet.org";
-    Link      = Domain("http://www.internationalphoneticalphabet.org") Folder("ipa-charts") Folder("ipa-symbols-chart-complete");
-  }
+  WordLists = new RefClass(ReferenceTypes.Article) {
+    PubDate : DateTime(2019);
+    Title   : "IPA Symbols Chart Complete";
 
-  with IPAWikipedia {
-    Author    = null;
-    Year      = 2019;
-    Title     = "International Phonetic Alphabet";
-    Publisher = "Wikipedia";
-    Link      = WikipediaLink("International_Phonetic_Alphabet");
-  }
+    LinkTypes.ReferenceURL -> new URLClass("http://www.internationalphoneticalphabet.org/ipa-charts/ipa-symbols-chart-complete");
+    LinkTypes.ReferencePublisher -> Organizations.InternationalPhoneticAlphabet;
+  };
 
-  with ASJP {
-    Author    = "Wichmann, Søren, Eric W. Holman, and Cecil H. Brown (eds.)";
-    Year      = 2018;
-    Title     = "The ASJP Database (version 18)";
-    Publisher = "ASJP";
-    Link      = Domain("asjp.clld.org");
-  }
+  IPAInformation = new RefClass(ReferenceTypes.Article) {
+    PubDate : DateTime(2019);
+    Title   : "IPA Symbols Chart Complete";
 
-  with XSAMPA {
-    Author    = null;
-    Year      = 2016;
-    Title     = "Extended Speech Assessment Methods Phonetic Alphabet";
-    Publisher = "Wikipedia";
-    Link      = WikipediaLink("X-SAMPA");
-  }
+    LinkTypes.ReferenceURL -> new URLClass("http://www.internationalphoneticalphabet.org/ipa-charts/ipa-symbols-chart-complete");
+    LinkTypes.ReferencePublisher -> Organizations.InternationalPhoneticAlphabet;
+  };
 
-  with DistinctiveFeature {
-    Author    = null;
-    Year      = 2020;
-    Title     = "Distinctive Feature";
-    Publisher = "Wikipedia";
-    Link      = WikipediaLink("Distinctive_feature");
-  }
+  IPAWikipedia = new RefClass(ReferenceTypes.Article) {
+    PubDate : DateTime(2019);
+    Title   : "International Phonetic Alphabet";
+    LinkTypes.ReferenceURL -> new URLClass(WikipediaLink("International_Phonetic_Alphabet"));
+    LinkTypes.ReferencePublisher -> Organizations.Wikipedia;
+  };
 
-  with Lunter {
-    Author    = "G. A. Lunter, I. Miklós, Y. S. Song, and J. Hein";
-    Year      = 2003;
-    Title     = "An Efficient Algorithm for Statistical Multiple Alignment on Arbitrary Phylogenetic Trees";
-    Publisher = "Journal Of Computational Biology";
-  }
+  ASJP = new RefClass(ReferenceTypes.Article) {
+//    Author    : "Wichmann, Søren, Eric W. Holman, and Cecil H. Brown (eds.)";
+    PubDate : DateTime(2018);
+    Title   : "The ASJP Database (version 18)";
 
-  with Gojobori88 {
-    Author    = "Takashi Gojobori";
-    Year      = 1988;
-    Title     = "";
-    Publisher = "";
-    Cite      = "Gojobori88";
-  }
+    LinkTypes.ReferenceURL -> new URLClass(Domain("asjp.clld.org"));
+    LinkTypes.ReferencePublisher -> Organizations.ASJP;
+  };
+
+  XSAMPA = new RefClass(ReferenceTypes.Article) {
+    PubDate : DateTime(2016);
+    Title   : "Extended Speech Assessment Methods Phonetic Alphabet";
+    LinkTypes.ReferenceURL -> new URLClass(WikipediaLink("X-SAMPA"));
+    LinkTypes.ReferencePublisher -> Organizations.Wikipedia;
+  };
+
+  DistinctiveFeature = new RefClass(ReferenceTypes.Article) {
+    PubDate : DateTime(2020);
+    Title   : "Distinctive Feature";
+    LinkTypes.ReferenceURL -> new URLClass(WikipediaLink("Distinctive_feature"));
+    LinkTypes.ReferencePublisher -> Organizations.Wikipedia;
+  };
+
+  Lunter = new RefClass(ReferenceTypes.Article) {
+//    Author    : "G. A. Lunter, I. Miklós, Y. S. Song, and J. Hein";
+    PubDate : DateTime(2003);
+    Title   : "An Efficient Algorithm for Statistical Multiple Alignment on Arbitrary Phylogenetic Trees";
+    LinkTypes.ReferencePublisher -> Organizations.JournalComputationalBiology;
+  };
+
+  Gojobori88 = new RefClass(ReferenceTypes.Article) {
+    Title   : "To be determined";
+    PubDate : DateTime(1988);
+
+    LinkTypes.ReferenceAuthor -> People.TGojobori;
+  };
 }
 //======================================================================
 

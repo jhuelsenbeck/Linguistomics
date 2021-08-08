@@ -54,52 +54,6 @@ class AppendixClass {
 }
 //======================================================================
 
-class AuthorClass: PersonClass {
-  var Address,
-      Website,
-      EMail;
-
-  Title = Span {
-    Separator: ". ";
-    FirstName[0];
-    MiddleName[0];
-    LastName;
-  };
-
-  override GetPopup = Block {
-    Paragraph {
-      Bold;
-      FirstName;
-      Space;
-      MiddleName;
-      Space;
-      LastName;
-    };
-    Block {
-      Address;
-    };
-    if (exists Website) {
-      Paragraph {
-        Span {
-          TextColor: Colors.Gray;
-         "web: ";
-        };
-        Website;
-      };
-    }
-    if (exists EMail) {
-      Paragraph {
-        Span {
-          TextColor: Colors.Gray;
-          "email: ";
-        };
-        EMail;
-      };
-    }
-  };
-}
-//======================================================================
-
 class DefClass {
   var Symbol,
       Name,
@@ -303,11 +257,6 @@ with Style {
     ParBackground: 97%;
   };
 
-  Citation(r) = Span {
-    Link: r.GlobalVariablePath;
-    r.Cite;
-  };
-
   Definition(s) = Span {
     Italic;
     s
@@ -395,31 +344,6 @@ with Style {
     }
   };
 
-  ShowAuthorFull(author) = Block {
-    LeftIndent: 0.25 inches;
-    Paragraph {
-      LocationMark: author.GlobalVariablePath;
-      FirstIndent: -0.25 inches;
-      Span {
-        Separator: Space;
-        if (exists author.Website)
-          Link: author.Website;
-        author.FirstName;
-        author.MiddleName;
-        author.LastName;
-      };
-    };
-    Span {
-      Separator: ", ";
-      author.Address
-    };
-    Span {
-      "{0}: "(Lang.EMail);
-      author.EMail;
-    };
-    Empty;
-  };
-
   AppendixRow(appendix) = Paragraph {
     LeftIndent: 20 pts;
     FirstIndent: -20 pts;
@@ -432,10 +356,38 @@ with Style {
     };
   };
 
-  Author(author) = Span {
-    Link: author.GlobalVariablePath;
-    Popup: author;
-    author.Title;
+  ShowAuthorFull(PersonClass person) = Block {
+    LeftIndent: 0.25 inches;
+    Paragraph {
+      LocationMark: person.GlobalVariablePath;
+      FirstIndent: -0.25 inches;
+      Span {
+        Separator: Space;
+//        if (exists person.Website)
+//          Link: person.Website;
+        person.FirstName;
+        person.MiddleName;
+        person.LastName;
+      };
+    };
+    Span {
+      Separator: ", ";
+//      person.Address
+    };
+    Span {
+      "{0}: "(Lang.EMail);
+//      person.EMail;
+    };
+    Empty;
+  };
+
+  Author(PersonClass person) = Span {
+    Link: person.GlobalVariablePath;
+    Popup: person;
+    Separator: ". ";
+    person.FirstName[0];
+    person.MiddleName[0];
+    person.LastName;
   };
 
   AuthorList(authors) = Paragraph {
@@ -448,43 +400,6 @@ with Style {
   ShowAuthors(authors) = Block {
     HeaderCentered(Lang.Authors);
     ShowAuthorFull(each authors);
-  };
-
-  ShowReference(r) = Paragraph {
-    LeftIndent: 0.25 inches;
-    FirstIndent: -0.25 inches;
-    if (exists r.Author) {
-      TitleCase(r.Author);
-      if (exists r.Title) {
-        ", ";
-        r.Title;
-      }
-    }
-    else
-      r.Title;
-
-    if (exists r.Year) {
-      ", ";
-      r.Year;
-    }
-    if (exists r.Publisher) {
-      ", ";
-      Italic r.Publisher;
-      r.?Page;
-    }
-    if (exists r.?Link) {
-      ". : ";
-      Span {
-        Link: r.Link;
-        TextColor: Colors.DarkBlue;
-        r.Link;
-      };
-    }
-  };
-
-  ShowReferences(references) = Block {
-    HeaderCentered(Lang.References);
-    ShowReference(each references)
   };
 
   ShowAppendix(appendix) = PageSection {

@@ -94,7 +94,8 @@ enum RootVowels {
 
 class SegmentClass {
   var Ipa,
-      Character,
+      CharacterIndex,
+      CharacterLetter,
       Sampa,
       Impossible,
       Punctuation,
@@ -109,14 +110,15 @@ class SegmentClass {
       DiphthongRoot;
 
   Constructor(ipa, sampa, impossible=false) = {
-    Ipa         = ipa;
-    Character   = -1;
-    Sampa       = sampa;
-    Impossible  = impossible;
-    Punctuation = false;
-    Diacritic   = false;
-    Gap         = false;
-    Features    = NoFeature;
+    Ipa             = ipa;
+    CharacterIndex  = -1;
+    CharacterLetter = ipa;
+    Sampa           = sampa;
+    Impossible      = impossible;
+    Punctuation     = false;
+    Diacritic       = false;
+    Gap             = false;
+    Features        = NoFeature;
   };
 
   MatchVowelAny(feature, open) = Features.HasFlagMask(Vowel LongVowel Nasal, feature | Vowel) and Open == open;
@@ -143,10 +145,7 @@ class SegmentClass {
 
   ShowCharacter = Span {
     Popup: this;
-    if (Character < 0)
-      Ipa;
-    else
-      Nexus.CharacterList[Character];
+    CharacterLetter;
   };
 
   ShowBlock = Canvas {

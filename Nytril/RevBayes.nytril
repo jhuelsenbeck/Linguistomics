@@ -89,9 +89,10 @@ class RevProgramClass: RevSourceClass {
       GammaConsensus,
       CharacterName,
       AddComma,
-      Model;
+      Model,
+      Rule;
 
-  Constructor(model, folder) {
+  Constructor(rule, model, folder) {
     super.Constructor;
 
     Model          = model;
@@ -108,8 +109,10 @@ class RevProgramClass: RevSourceClass {
 
   void Calculate {
     CreateFolder(OutFolder);
-    IO.Write(Nexus.CharacterFile(1), OutFolder CharacterName);
-    IO.Write(RevBayesSource, OutFolder RevSourceName);
+    if (!Rule.Numbers) {
+      IO.Write(Nexus.CharacterFile(1), OutFolder CharacterName);
+      IO.Write(RevBayesSource, OutFolder RevSourceName);
+    }
     IO.Write(RunBatchFile, OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
     IO.Write(ConfigFile, OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
 
@@ -137,7 +140,8 @@ class RevProgramClass: RevSourceClass {
   }
 
   ShowLanguageTrees = Block {
-    Style.ShowTree("Priors", Lang.Years, Info.PriorTree);
+    Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, GetTreeNodes(LanguageBranches.Romance));
+    Style.ShowTree("Priors", Lang.Years, GetTreeNodes(LanguageBranches.Experiment));
     Style.ReadTree("Consensus", OutFolder GammaConsensus);
     Style.ReadTree("MAP", OutFolder GammaMAP);
     Style.ReadTree(Lang.MCC, OutFolder GammaMCC);
@@ -176,7 +180,7 @@ class RevProgramClass: RevSourceClass {
 
   ShowCharacter(c) = Span {
 //    Popup: c;
-    c.Character;
+    c.CharacterLetter;
   };
 
   AddScope = TextBlock {
@@ -228,7 +232,7 @@ class RevProgramClass: RevSourceClass {
     Style.MonoFamily;
     TextHeight: 8 pts;
 
-//    AddTree;
+    AddTree;
     Span {
       Variable("NumberOfStates");
       Results.UniqueCharacters;
@@ -239,7 +243,7 @@ class RevProgramClass: RevSourceClass {
       Variable("Taxa");  "[";
       Span {
         Separator: CommaSpace;
-//        ShowString(each (each Results.Taxa).Variable);
+        ShowString(each (each Results.Taxa).Variable);
       }
       "],";
     };
