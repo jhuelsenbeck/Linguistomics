@@ -586,6 +586,11 @@ void Tree::passDown(Node* p) {
         }
 }
 
+Node* Tree::randomNode(RandomVariable* rv) {
+
+    return nodes[(int)(rv->uniformRv()*nodes.size())];
+}
+
 std::vector<std::string> Tree::tokenizeTreeString(std::string ls) {
 
     std::vector<std::string> tks;

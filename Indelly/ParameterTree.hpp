@@ -25,8 +25,10 @@ class ParameterTree : public Parameter {
         double                          update(void);
                 
     private:
+        void                            nniArea(std::vector<Node*>& backbone, Node*& incidentNode);
         void                            normalize(std::vector<double>& vec, double minVal);
         double                          updateBrlenProportions(void);
+        double                          updateNni(void);
         double                          updateSpr(void);
         double                          updateTreeLength(void);
         Tree*                           trees[2];

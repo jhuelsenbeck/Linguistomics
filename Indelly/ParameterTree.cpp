@@ -52,6 +52,57 @@ void ParameterTree::accept(void) {
     *trees[1] = *trees[0];
 }
 
+void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
+
+    Tree* t = trees[0];
+    Node* p = NULL;
+    do
+        {
+        p = t->randomNode(rv);
+        } while(p->getIsLeaf() == true || p == t->getRoot());
+    Node* pAnc = p->getAncestor();
+    
+    if (pAnc == NULL)
+        Msg::error("Problem choosing random backbone");
+    std::vector<Node*> pDes = p->getDescendantsVector();
+    if (pDes.size() != 2)
+        Msg::error("Problem choosing random backbone");
+    std::vector<Node*> pAncDes = pAnc->getDescendantsVector();
+    if (pAncDes.size() != 2)
+        Msg::error("Problem choosing random backbone");
+
+    std::vector<Node*> possibleIncidentNodes(2);
+    Node* a = pDes[(int)(rv->uniformRv()*2)];
+    if (a == pDes[0])
+        possibleIncidentNodes[0] = pDes[1];
+    else
+        possibleIncidentNodes[0] = pDes[0];
+    Node* b = NULL;
+    if (rv->uniformRv() < 0.5)
+        {
+        b = pAnc;
+        if (pAncDes[0] == p)
+            possibleIncidentNodes[1] = pAncDes[1];
+        else
+            possibleIncidentNodes[1] = pAncDes[0];
+        }
+    else
+        {
+        if (pAncDes[0] == p)
+            b = pAncDes[1];
+        else
+            b = pAncDes[0];
+        possibleIncidentNodes[1] = pAnc;
+        }
+        
+    // we always assume this order, from tip to root
+    backbone.clear();
+    backbone.push_back(a);
+    backbone.push_back(p);
+    backbone.push_back(b);
+    incidentNode = possibleIncidentNodes[(int)(rv->uniformRv()*2)];
+}
+
 std::string ParameterTree::getString(void) {
 
     std::string str = trees[0]->getNewick();
@@ -150,6 +201,8 @@ void ParameterTree::reject(void) {
 
 double ParameterTree::update(void) {
 
+//    updateNni();
+    
     // pick a tree parameter to update
     double u = rv->uniformRv();
     
@@ -280,6 +333,73 @@ double ParameterTree::updateBrlenProportions(void) {
 #   endif
 
     return lnH;
+}
+
+double ParameterTree::updateNni(void) {
+
+    double tuning = log(4.0);
+    Tree* t = trees[0];
+    
+    // temporarily, make all of the branch proportion instance variables
+    // for the tree equal to the branch length
+    double treeLen = t->getTreeLength();
+    std::vector<Node*> dpSeq = t->getDownPassSequence();
+    for (int i=0; i<dpSeq.size(); i++)
+        {
+        double bp = dpSeq[i]->getBranchProportion();
+        dpSeq[i]->setBranchProportion(bp*treeLen);
+        }
+    
+    // randomly choose area of rearrangement
+    std::vector<Node*> backbone;
+    Node* incidentNode = NULL;
+    nniArea(backbone, incidentNode);
+    
+    // calculate the length of the backbone
+    double m = 0.0;
+    for (int i=0; i<3; i++)
+        m += backbone[i]->getBranchProportion();
+        
+    // choose a new length for the backbone
+    double mPrime = m * exp(tuning*(rv->uniformRv()-0.5));
+    double factor = mPrime / m;
+    backbone[0]->setBranchProportion( backbone[0]->getBranchProportion()*factor );
+    backbone[1]->setBranchProportion( backbone[1]->getBranchProportion()*factor );
+    backbone[2]->setBranchProportion( backbone[2]->getBranchProportion()*factor );
+    
+    // slide the incident node a random amount along the backbone
+    if (backbone[1]->isDescendant(incidentNode) == true)
+        {
+        // the incident node is above the backbone
+        }
+    else
+        {
+        // the incident node is below the backbone
+        }
+    
+    
+    
+    // reinitialize the down pass sequence for the tree, in case the topology has changed
+    t->initializeDownPassSequence();
+    
+    // convert back to branch proportions and a tree length
+    dpSeq = t->getDownPassSequence();
+    treeLen = 0.0;
+    for (int i=0; i<dpSeq.size(); i++)
+        treeLen +=  dpSeq[i]->getBranchProportion();
+    for (int i=0; i<dpSeq.size(); i++)
+        dpSeq[i]->setBranchProportion( dpSeq[i]->getBranchProportion()/treeLen );
+    t->setTreeLength(treeLen);
+    
+    
+    t->print();
+    std::cout << "backbone[0]  = " << backbone[0]->getIndex() << std::endl;
+    std::cout << "backbone[1]  = " << backbone[1]->getIndex() << std::endl;
+    std::cout << "backbone[2]  = " << backbone[2]->getIndex() << std::endl;
+    std::cout << "incidentNode = " << incidentNode->getIndex() << std::endl;
+
+    exit(1);
+    return log(mPrime) - log(m);
 }
 
 double ParameterTree::updateSpr(void) {
