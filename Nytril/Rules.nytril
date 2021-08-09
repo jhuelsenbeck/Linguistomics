@@ -12,17 +12,27 @@ class FilterClass {
 }
 //======================================================================
 
+class PartitionClass {
+  var Index,
+      Filter,
+      Segments;
+
+  Constructor(index, filter, segments) {
+    Index    = index;
+    Filter   = filter;
+    Segments = segments;
+  }
+}
+//======================================================================
+
 abstract class RuleClass {
   var Name,
-      Letter,
-      Symbol,
       Filters,
+      Partitions,
       Numbers;
 
   Constructor(name) {
     Name    = name;
-    Letter  = "Kappa";
-    Symbol  = Tex.kappa;
     Numbers = false;
   }
 
@@ -39,7 +49,7 @@ abstract class RuleClass {
     return false;
   }
 
-  virtual GetCharacterIndex(segment) {
+  virtual GetFilterIndex(segment) {
     var c = 0;
     foreach (var filter in Filters) {
       if (MatchesRule(filter, segment))
@@ -50,14 +60,19 @@ abstract class RuleClass {
   }
 
   void SetSegmentCharacter(SegmentClass segment, index) {
-    segment.CharacterIndex  = index;
-    segment.CharacterLetter = Numbers ? index : Nexus.CharacterList[index];
+    segment.CharacterIndex = index;
+    if (Numbers)
+      segment.CharacterLetter = index;
+    else if (index < Rev.CharacterList.Length)
+      segment.CharacterLetter = Rev.CharacterList[index];
+    else
+      System.Assert(false, "Too many characters");
   }
 
-  virtual void AssignCharacters(segmentlist) {
-    var last = Nexus.CharacterList.Length-1;
-    foreach (var segment in segmentlist) {
-      var index = GetCharacterIndex(segment);
+  virtual void AssignCharacters(segments) {
+    var last = Rev.CharacterList.Length-1;
+    foreach (var segment in segments) {
+      var index = GetFilterIndex(segment);
       if (index > last)
         index = last;
       SetSegmentCharacter(segment, index);
@@ -65,47 +80,63 @@ abstract class RuleClass {
     GetFilters;
   }
 
-  ShowFile = TextBlock {
-    Span {
-      Letter;
-      ":";
-      Span {
-        Separator:",";
-        foreach (var filter in Filters) {
-          "(";
-          (each GetSegments(filter)).ShowCharacter;
-          ")";
-        }
-      };
+  virtual void AssignPartitions(segments) {
+    var list = new ListClass(segments.Length);
+    var i    = 0;
+    foreach (var filter in Filters) {
+      var find = GetSegments(segments, filter);
+      if (valid find) {
+        list.Add(new PartitionClass(i, filter, find));
+        foreach (var s in find)
+          s.PartitionIndex = i;
+        ++i;
+      }
     }
-  };
+    Partitions = list.ToArray;
+  }
 
-  GetSegments(filter) = FindSlice(Results.UniqueSegments, segment => MatchesRule(filter, segment));
+  GetSegments(segments, filter) = FindSlice(segments, segment => MatchesRule(filter, segment));
 
-  ShowSymbols = Block {
+  ShowPartitions = Block {
     Paragraph {
       TextHeight: 14 pts;
-      BorderB: 1 pt;
-      SpaceAfter: 10 pts;
-      Letter;
-      "({0})"(Symbol);
-      Tab;
       Name;
+    };
+
+    foreach (var partition in Partitions) {
+      Paragraph {
+        BorderB: 0.5;
+        TabStops: [0.25 inch];
+
+        partition.Index+1;
+        Tab;
+        partition.Filter.Name; Bold
+      };
+
+      Paragraph {
+        TextHeight: 16 pts;
+        LeftIndent: 0.25 inches;
+
+        Span {
+          Separator: Space;
+          (each partition.Segments).ShowSegment;
+        }
+      }
     }
   };
 
-  ShowAssignments = Block {
+  ShowDescription = Block {
     Paragraph {
       TextHeight: 14 pts;
       Name;
     };
 
     Paragraph {
-      Separator: Space;
+      Separator: Space*2;
 
       var i = 0;
       foreach (var filter in Filters) {
-        var segments = GetSegments(filter);
+        var segments = GetSegments(Results.UniqueSegments, filter);
         if (segments.Length > 0) {
           HBox {
             VAlign: VAligns.Center;
@@ -117,8 +148,10 @@ abstract class RuleClass {
               HAlign: HAligns.Center;
               if (Numbers)
                 i++;
+              else if (i < Rev.CharacterList.Length)
+                Rev.CharacterList[i++];
               else
-                Nexus.CharacterList[i++];
+                System.Assert(false);
             };
             Space*5;
             Span {
@@ -130,11 +163,6 @@ abstract class RuleClass {
         }
       }
     }
-  };
-
-  ShowDescription = Block {
-    ShowSymbols;
-    ShowAssignments;
   };
 }
 //======================================================================
@@ -230,6 +258,18 @@ class DiphthongFilterClass: FilterClass {
 }
 //======================================================================
 
+class SegmentListClass: FilterClass {
+  var List;
+
+  Constructor(name, list) {
+    super.Constructor(name);
+    List = list;
+  }
+
+  override Matches(segment) = FindAny(List, s => s == segment);
+}
+//======================================================================
+
 Residue             = new FilterClass("Residue");
 NasalVowels         = new FeatureMaskClass("Nasal Vowel", Vowel Nasal, Vowel Nasal);
 RoundedVowels       = new FeatureMaskClass("Rounded Vowel", Vowel Rounded, Vowel Rounded);
@@ -250,11 +290,13 @@ VoicedFricatives    = new FeatureMaskClass("Voiced Fricative", Pulmonic Voiced F
 VoicelessFricatives = new FeatureMaskClass("Voiceless Fricative", Pulmonic, Pulmonic Fricative);
 Laterals            = new FeatureMaskClass("Lateral", Lateral, Lateral);
 Diphthongs          = new FeatureMaskClass("Diphthong", Diphthong, Diphthong);
+Consonants          = new FeatureMaskClass("Consonants", Vowel, NoFeature);
 Labiovelars         = new LabiovelarFilterClass;
 LongShortRoot       = new LongShortClass(each RootVowels[1..]);
 NasalRoot           = new RootMaskClass("Nasal", Vowel Nasal LongVowel, Vowel Nasal, each RootVowels[1..]);
 LongRoot            = new RootMaskClass("Long", Vowel Nasal LongVowel, Vowel LongVowel, each RootVowels[1..]);
 ShortRoot           = new RootMaskClass("Short", Vowel Nasal LongVowel, Vowel, each RootVowels[1..]);
+Consonants1         = new SegmentListClass("Consonant Group 1", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]);
 //======================================================================
 
 
@@ -317,7 +359,7 @@ class DiphthongRuleClass: RuleClass {
     FilterList = new ListClass(128);
   }
 
-  override GetCharacterIndex(segment) {
+  override GetFilterIndex(segment) {
     var c = FilterList.Length;
     if (segment.Features.HasFlag(Diphthong))
       return c;
@@ -340,9 +382,9 @@ class DiphthongPairRuleClass: RuleClass {
     FilterList = new ListClass(128);
   }
 
-  override void AssignCharacters(segmentlist) {
+  override void AssignCharacters(segments) {
     var count = 0;
-    foreach (var segment in segmentlist) {
+    foreach (var segment in segments) {
       var dr = segment.DiphthongRoot;
       if (valid dr) {
         var fi = -1;
@@ -363,7 +405,7 @@ class DiphthongPairRuleClass: RuleClass {
       }
     }
 
-    foreach (var segment in segmentlist) {
+    foreach (var segment in segments) {
       if (segment.CharacterIndex < 0) {
         SetSegmentCharacter(segment, count++);
         FilterList.Add(new SingleFilterClass(segment));
@@ -387,12 +429,28 @@ class SingletonRuleClass: RuleClass {
     Numbers    = true;
   }
 
-  override void AssignCharacters(segmentlist) {
-    foreach (var segment in segmentlist) {
+  override void AssignCharacters(segments) {
+    foreach (var segment in segments) {
       SetSegmentCharacter(segment, EachIndex);
       FilterList.Add(new SingleFilterClass(segment));
     }
     Filters = FilterList.ToArray;
+  }
+}
+//======================================================================
+
+class Partition1Class: RuleClass {
+  Constructor {
+    super.Constructor("David's basic rules");
+    Numbers = true;
+
+    Filters = [
+      NasalVowels,
+      Vowels,
+      Consonants1,
+      Consonants,
+      Residue,
+    ];
   }
 }
 //======================================================================

@@ -33,7 +33,7 @@ with Slides.Alignment {
 
 with Slides.ShowResults {
   Title = "Results";
-  Body  = Style.ReadTree(Lang.MCC, Results.Compute.OutFolder Results.Compute.GammaMCC);
+  Body  = Style.ReadTree(Lang.MCC, Results.Program.OutFolder Results.Program.GammaMCC);
 }
 
 with Slides.LanguagesUsed {
@@ -43,12 +43,17 @@ with Slides.LanguagesUsed {
 
 with Slides.ConceptsUsed {
   Title = Lang.ConceptsUsed;
-  Body  = AllWords.ShowTable(Results.Rule);
+  Body  = AllWords.ShowTable;
 }
 
-with Slides.TransitionRules {
+with Slides.CharacterRules {
   Title = Lang.CharacterRules;
-  Body  = Results.Rule.ShowDescription;
+  Body  = Results.CharacterRule.ShowDescription;
+}
+
+with Slides.PartitionRules {
+  Title = Lang.PartitionRules;
+  Body  = Results.PartitionRule.ShowPartitions;
 }
 //======================================================================
 
@@ -68,25 +73,29 @@ class PresentationViewClass: BaseViewClass {
 
   override GetDocument = Style.MainDocument {
     DocMetadata;
-    Paragraph {
-      TextHeight: 40 pts;
-      SpaceBefore: 1.5 inches;
+    Block {
       LeftIndent: 1 inch;
-      Info.Title;
+
+      Paragraph {
+        TextHeight: 40 pts;
+        SpaceBefore: 1.5 inches;
+        Info.Title;
+      };
+      Paragraph {
+        TextHeight: 18 pts;
+        SpaceBefore: 1.5 inches;
+        Author.FirstName;
+        Space;
+        Author.LastName;
+      };
+      Paragraph {
+        Seperator: ", ";
+        TextHeight: 12 pts;
+        foreach (var email in Author.FindFacts(LinkTypes.WorkEmail))
+          email.Value;
+      };
     };
-    Paragraph {
-      TextHeight: 18 pts;
-      SpaceBefore: 1.5 inches;
-      LeftIndent: 1 inch;
-      Author.First;
-      Space;
-      Author.Last;
-    };
-    Paragraph {
-      TextHeight: 12 pts;
-      LeftIndent: 1 inch;
-      Author.EMail;
-    };
+
     foreach (var slide in SlideList)
       AddSlideBlock(slide, EachIndex+1);
   };
@@ -100,6 +109,8 @@ class JohnPresentationClass: PresentationViewClass {
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ExampleTree);
     AddSlide(Slides.Alignment);
+    AddSlide(Slides.CharacterRules);
+    AddSlide(Slides.PartitionRules);
     AddSlide(Slides.ShowResults);
     AddSlide(Slides.Questions);
   }
@@ -113,7 +124,8 @@ class DavidPresentationClass: PresentationViewClass {
     AddSlide(Slides.LanguagesUsed);
 //    AddSlide(Slides.ExampleTree);
     AddSlide(Slides.ConceptsUsed);
-    AddSlide(Slides.TransitionRules);
+    AddSlide(Slides.CharacterRules);
+    AddSlide(Slides.PartitionRules);
     AddSlide(Slides.ShowResults);
     AddSlide(Slides.Questions);
   }

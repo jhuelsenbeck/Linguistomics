@@ -370,14 +370,34 @@ with Style {
         person.LastName;
       };
     };
+
     Span {
       Separator: ", ";
-//      person.Address
+      foreach (var place in person.FindFacts(LinkTypes.WorkAddress)) {
+        place.Address;
+        place.City;
+      }
     };
-    Span {
-      "{0}: "(Lang.EMail);
-//      person.EMail;
-    };
+
+    var emails = person.FindFacts(LinkTypes.WorkEmail);
+    if (valid emails) {
+      Lang.EMail;
+      ": ";
+      Paragraph {
+        Seperator: ", ";
+        foreach (var email in emails)
+          email.Value;
+      };
+    }
+
+    var sites = person.FindFacts(LinkTypes.WorkWebsite);
+    if (valid sites) {
+      Paragraph {
+        Seperator: ", ";
+        foreach (var site in site)
+          site.Value;
+      };
+    }
     Empty;
   };
 
