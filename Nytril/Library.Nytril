@@ -170,7 +170,6 @@ class ResultsClass {
       GammaMCC,
       GammaConsensus,
       CharacterName,
-      PartitionMatrix,
       AddComma,
       Model;
 
@@ -193,12 +192,6 @@ class ResultsClass {
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
     CharacterRule = new SingletonRuleClass;
     PartitionRule = new Partition1Class;
-    PartitionMatrix = [
-      [1, 2, 3, 4],
-      [2, 1, 5, 6],
-      [3, 5, 1, 4],
-      [4, 6, 4, 1],
-    ];
 
 //    Rule = new DiphthongRuleClass;
 //    Rule = new VowelsSeparatedRuleClass;
@@ -481,13 +474,6 @@ class ResultsClass {
     };
   };
 
-  AddPartition = Span {
-    Separator: ",";
-    for (var i = 1; i < UniqueSegments.Length; ++i) {
-      for (var j = i + 1; j < UniqueSegments.Length; ++j)
-        PartitionMatrix[UniqueSegments[i].PartitionIndex][UniqueSegments[j].PartitionIndex];
-    }
-  };
 
   ConfigFile = AddScope {
     Style.MonoFamily;
@@ -506,7 +492,24 @@ class ResultsClass {
     };
 
     ArraySpan("Partition") {
-      AddPartition;
+      Separator: ",";
+      foreach (var segment in UniqueSegments)
+        segment.PartitionIndex;
+    };
+    ArraySpan("PartitionSets") {
+      Span {
+        Separator: ",";
+        foreach (var partition in PartitionRule.Partitions) {
+          Span {
+            "[";
+            Span {
+              Separator: ",";
+              (each partition.Segments).CharacterIndex;
+            };
+            "]";
+          }
+        }
+      };
     };
 
     Span {

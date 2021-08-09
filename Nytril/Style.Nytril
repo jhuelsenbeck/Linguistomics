@@ -358,52 +358,73 @@ with Style {
 
   ShowAuthorFull(PersonClass person) = Block {
     LeftIndent: 0.25 inches;
+    var sites = person.FindFacts(LinkTypes.WorkWebsite);
+
+
     Paragraph {
       LocationMark: person.GlobalVariablePath;
       FirstIndent: -0.25 inches;
       Span {
         Separator: Space;
-//        if (exists person.Website)
-//          Link: person.Website;
+        if (valid sites)
+          Link: sites[0].Value;
         person.FirstName;
         person.MiddleName;
         person.LastName;
       };
     };
 
-    Span {
-      Separator: ", ";
+    Paragraph {
       foreach (var place in person.FindFacts(LinkTypes.WorkAddress)) {
         place.Address;
+        if (valid place.Address)
+          ", ";
         place.City;
+        if (valid place.City)
+          ", ";
+        place.State;
+        if (valid place.State)
+          Space;
+        place.PostalCode;
+        if (valid place.PostalCode)
+          Space;
+        place.Country;
       }
     };
 
     var emails = person.FindFacts(LinkTypes.WorkEmail);
     if (valid emails) {
-      Lang.EMail;
-      ": ";
       Paragraph {
-        Seperator: ", ";
-        foreach (var email in emails)
-          email.Value;
+        Lang.EMail;
+        ": ";
+        Span {
+          Seperator: ", ";
+          foreach (var email in emails)
+            email.Value;
+        }
       };
     }
 
-    var sites = person.FindFacts(LinkTypes.WorkWebsite);
     if (valid sites) {
       Paragraph {
         Seperator: ", ";
-        foreach (var site in site)
-          site.Value;
+        foreach (var site in sites) {
+          Span {
+            Link: site.Value;
+            site.Value;
+          }
+        }
       };
     }
     Empty;
   };
 
   Author(PersonClass person) = Span {
-    Link: person.GlobalVariablePath;
-    Popup: person;
+    var sites = person.FindFacts(LinkTypes.WorkWebsite);
+    if (valid sites)
+      Link: sites[0].Value;
+
+//    Popup: ref ShowAuthorFull;
     Separator: ". ";
     person.FirstName[0];
     person.MiddleName[0];
@@ -415,11 +436,6 @@ with Style {
     Separator: ", ";
     LastSeparator: " and ";
     Style.Author(each authors);
-  };
-
-  ShowAuthors(authors) = Block {
-    HeaderCentered(Lang.Authors);
-    ShowAuthorFull(each authors);
   };
 
   ShowAppendix(appendix) = PageSection {

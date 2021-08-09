@@ -18,16 +18,24 @@ include "Tables";
 include "../../nytril/deploy/citations/citations";
 //======================================================================
 
-Main.Documents = new DocumentViewClass(null) {
-  new PaperViewClass;
-  new ExperimentViewClass;
-  new DiagnosticsViewClass;
-  new JohnPresentationClass;
-  new DavidPresentationClass;
-};
+with Main {
+  Documents = new DocumentViewClass(null) {
+    new PaperViewClass;
+    new ExperimentViewClass;
+    new DiagnosticsViewClass;
+    new JohnPresentationClass;
+    new DavidPresentationClass;
+  };
 
-void Main.Run {
-  Results.Calculate;
+  void Run {
+    Results.Calculate;
+  }
+
+  Links = {
+    LinkTypes.ViewInfo -> ViewInfo;
+    LinkTypes.ViewAuthor -> Authors;
+    LinkTypes.ViewReference ->References;
+  };
 }
 //======================================================================
 
@@ -42,13 +50,6 @@ ViewInfo = new ViewInfoClass {
 //  Comment: "Test Comment";
 //  Subject: "Test Subject";
 //  Keywords: "Test Keywords";
-};
-
-DocMetadata = {
-  LinkTypes.ViewInfo -> ViewInfo;
-  LinkTypes.ViewAuthor -> Authors;
-  LinkTypes.ViewReference ->References;
-  RefStyle: new ChicagoStyleClass;
 };
 //======================================================================
 
@@ -96,7 +97,7 @@ class PaperViewClass: BaseViewClass {
   }
 
   override GetDocument = Style.MainDocument {
-    DocMetadata;
+    RefStyle: new ChicagoStyleClass;
 
     Style.PageSection {
       Header: Style.NormalHeader(Info.Journal) {
@@ -117,7 +118,9 @@ class PaperViewClass: BaseViewClass {
       Abstract.Body;
 
       Style.ShowContent(each Content);
-      Style.ShowAuthors(Authors);
+
+      Style.HeaderCentered(Lang.Authors);
+      Style.ShowAuthorFull(each Authors);
 
       Style.HeaderCentered(Lang.Appendices);
       Style.AppendixRow(each Appendices);
@@ -136,9 +139,9 @@ class ExperimentViewClass: BaseViewClass {
     super.Constructor("Experiment", "experiment", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-//      new AppendixClass("TKF Configuration", Results.ConfigFile),
       new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
       new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
+      new AppendixClass("TKF Configuration", Results.ConfigFile),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
       new AppendixClass(Lang.Results, Results.ShowLanguageTrees),
       new AppendixClass("Statistics", Results.ShowStats),
@@ -146,8 +149,6 @@ class ExperimentViewClass: BaseViewClass {
   }
 
   override GetDocument = Style.MainDocument {
-    DocMetadata;
-
     Style.PageSection {
       Style.Title(Info.Title);
       Style.HeaderCentered(Lang.Appendices);
@@ -185,7 +186,6 @@ class DiagnosticsViewClass: BaseViewClass {
   }
 
   override GetDocument = Style.MainDocument {
-    DocMetadata;
     Style.ShowAppendix(each Appendices);
   };
 }

@@ -1,4 +1,4 @@
-using Format, Units, FeatureSet, Math;
+using Format, Units, FeatureSet, Math, SegmentGroups;
 //======================================================================
 
 class FilterClass {
@@ -27,16 +27,20 @@ class PartitionClass {
 
 abstract class RuleClass {
   var Name,
+      FilterList,
       Filters,
       Partitions,
+      Matrix,
       Numbers;
 
   Constructor(name) {
-    Name    = name;
-    Numbers = false;
+    Name       = name;
+    Numbers    = false;
+    FilterList = new ListClass(128);
   }
 
-  virtual void GetFilters {
+  void Add(filter) {
+    FilterList.Add(filter);
   }
 
   MatchesRule(filter, segment) {
@@ -69,6 +73,11 @@ abstract class RuleClass {
       System.Assert(false, "Too many characters");
   }
 
+  void GetFilters {
+    Add(Residue);
+    Filters = FilterList.ToArray;
+  }
+
   virtual void AssignCharacters(segments) {
     var last = Rev.CharacterList.Length-1;
     foreach (var segment in segments) {
@@ -81,6 +90,26 @@ abstract class RuleClass {
   }
 
   virtual void AssignPartitions(segments) {
+    var n  = FilterList.Length-1;
+    Matrix = MatrixDiagonal(n);
+    for (var i = 0; i < n; ++i) {
+      for (var j = 0; j <= i; ++j) {
+        if (i != j) {
+          var v = i+j+1;
+          Matrix.SetValue(i, j, v);
+          Matrix.SetValue(j, i, v);
+        }
+      }
+    }
+
+
+//      [1, 2, 3, 4],
+//      [2, 1, 5, 6],
+//      [3, 5, 1, 4],
+//      [4, 6, 4, 1],
+//    ];
+
+
     var list = new ListClass(segments.Length);
     var i    = 0;
     foreach (var filter in Filters) {
@@ -270,33 +299,35 @@ class SegmentListClass: FilterClass {
 }
 //======================================================================
 
-Residue             = new FilterClass("Residue");
-NasalVowels         = new FeatureMaskClass("Nasal Vowel", Vowel Nasal, Vowel Nasal);
-RoundedVowels       = new FeatureMaskClass("Rounded Vowel", Vowel Rounded, Vowel Rounded);
-LongVowels          = new FeatureMaskClass("Long Vowel", Vowel LongVowel, Vowel LongVowel);
-ShortVowels         = new FeatureMaskClass("Short Vowel", Vowel LongVowel, Vowel);
-AllRootVowels       = new RootVowelClass;
-Vowels              = new FeatureMaskClass("Vowel", Vowel, Vowel);
-VoicelessStops      = new FeatureMaskClass("Voiceless Stop", Voiced Stop, Stop);
-VoicedStops         = new FeatureMaskClass("Voiced Stop", Voiced Stop, Voiced Stop);
-VoicedAffricates    = new FeatureMaskClass("Voiced Affricate", Voiced Affricate, Voiced Affricate);
-VoicelessAffricates = new FeatureMaskClass("Voiceless Affricate", Voiced Affricate, Affricate);
-NasalConsonants     = new FeatureMaskClass("Nasal Consonant", Nasal, Nasal);
-Rhotics             = new FeatureMaskClass("Rhotic", Rhotic, Rhotic);
-Sibilants           = new FeatureMaskClass("Sibilant", Sibilant, Sibilant);
-Approximants        = new FeatureMaskClass("Approximant", Approximant, Approximant);
-Pulmonics           = new FeatureMaskClass("Pulmonic", Pulmonic, Pulmonic);
-VoicedFricatives    = new FeatureMaskClass("Voiced Fricative", Pulmonic Voiced Fricative, Pulmonic Voiced Fricative);
-VoicelessFricatives = new FeatureMaskClass("Voiceless Fricative", Pulmonic, Pulmonic Fricative);
-Laterals            = new FeatureMaskClass("Lateral", Lateral, Lateral);
-Diphthongs          = new FeatureMaskClass("Diphthong", Diphthong, Diphthong);
-Consonants          = new FeatureMaskClass("Consonants", Vowel, NoFeature);
-Labiovelars         = new LabiovelarFilterClass;
-LongShortRoot       = new LongShortClass(each RootVowels[1..]);
-NasalRoot           = new RootMaskClass("Nasal", Vowel Nasal LongVowel, Vowel Nasal, each RootVowels[1..]);
-LongRoot            = new RootMaskClass("Long", Vowel Nasal LongVowel, Vowel LongVowel, each RootVowels[1..]);
-ShortRoot           = new RootMaskClass("Short", Vowel Nasal LongVowel, Vowel, each RootVowels[1..]);
-Consonants1         = new SegmentListClass("Consonant Group 1", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]);
+with SegmentGroups {
+  NasalVowels         = new FeatureMaskClass("Nasal Vowel", Vowel Nasal, Vowel Nasal);
+  RoundedVowels       = new FeatureMaskClass("Rounded Vowel", Vowel Rounded, Vowel Rounded);
+  LongVowels          = new FeatureMaskClass("Long Vowel", Vowel LongVowel, Vowel LongVowel);
+  ShortVowels         = new FeatureMaskClass("Short Vowel", Vowel LongVowel, Vowel);
+  AllRootVowels       = new RootVowelClass;
+  Vowels              = new FeatureMaskClass("Vowel", Vowel, Vowel);
+  VoicelessStops      = new FeatureMaskClass("Voiceless Stop", Voiced Stop, Stop);
+  VoicedStops         = new FeatureMaskClass("Voiced Stop", Voiced Stop, Voiced Stop);
+  VoicedAffricates    = new FeatureMaskClass("Voiced Affricate", Voiced Affricate, Voiced Affricate);
+  VoicelessAffricates = new FeatureMaskClass("Voiceless Affricate", Voiced Affricate, Affricate);
+  NasalConsonants     = new FeatureMaskClass("Nasal Consonant", Nasal, Nasal);
+  Rhotics             = new FeatureMaskClass("Rhotic", Rhotic, Rhotic);
+  Sibilants           = new FeatureMaskClass("Sibilant", Sibilant, Sibilant);
+  Approximants        = new FeatureMaskClass("Approximant", Approximant, Approximant);
+  Pulmonics           = new FeatureMaskClass("Pulmonic", Pulmonic, Pulmonic);
+  VoicedFricatives    = new FeatureMaskClass("Voiced Fricative", Pulmonic Voiced Fricative, Pulmonic Voiced Fricative);
+  VoicelessFricatives = new FeatureMaskClass("Voiceless Fricative", Pulmonic, Pulmonic Fricative);
+  Laterals            = new FeatureMaskClass("Lateral", Lateral, Lateral);
+  Diphthongs          = new FeatureMaskClass("Diphthong", Diphthong, Diphthong);
+  Consonants          = new FeatureMaskClass("Consonants", Vowel, NoFeature);
+  Labiovelars         = new LabiovelarFilterClass;
+  LongShortRoot       = new LongShortClass(each RootVowels[1..]);
+  NasalRoot           = new RootMaskClass("Nasal", Vowel Nasal LongVowel, Vowel Nasal, each RootVowels[1..]);
+  LongRoot            = new RootMaskClass("Long", Vowel Nasal LongVowel, Vowel LongVowel, each RootVowels[1..]);
+  ShortRoot           = new RootMaskClass("Short", Vowel Nasal LongVowel, Vowel, each RootVowels[1..]);
+  Consonants1         = new SegmentListClass("Consonant Group 1", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]);
+  Residue             = new FilterClass("Residue");
+}
 //======================================================================
 
 
@@ -304,24 +335,24 @@ class VowelsSeparatedRuleClass: RuleClass {
   Constructor {
     super.Constructor("Vowels Separated");
 
-    Filters = LongRoot + ShortRoot + NasalRoot + [
-      NasalVowels,
-      RoundedVowels,
-      Vowels,
-      Labiovelars,
-      VoicelessStops,
-      VoicedStops,
-      VoicedAffricates,
-      VoicelessAffricates,
-      NasalConsonants,
-      Laterals,
-      Rhotics,
-      Sibilants,
-      Approximants,
-      VoicedFricatives,
-      VoicelessFricatives,
-      Residue,
-    ];
+    Add(LongRoot);
+    Add(ShortRoot);
+    Add(NasalRoot);
+    Add(NasalVowels);
+    Add(RoundedVowels)
+    Add(Vowels);
+    Add(Labiovelars);
+    Add(VoicelessStops);
+    Add(VoicedStops);
+    Add(VoicedAffricates);
+    Add(VoicelessAffricates);
+    Add(NasalConsonants);
+    Add(Laterals);
+    Add(Rhotics);
+    Add(Sibilants);
+    Add(Approximants);
+    Add(VoicedFricatives);
+    Add(VoicelessFricatives);
   }
 }
 //======================================================================
@@ -331,32 +362,27 @@ class SegmentTypesRuleClass: RuleClass {
   Constructor {
     super.Constructor("Segment Types");
 
-    Filters = [
-      NasalVowels,
-      RoundedVowels,
-      LongVowels,
-      AllRootVowels,
-      Vowels,
-      VoicelessStops,
-      VoicedStops,
-      VoicedAffricates,
-      VoicelessAffricates,
-      NasalConsonants,
-      Rhotics,
-      Sibilants,
-      Pulmonics,
-      Residue,
-    ];
+    Add(NasalVowels);
+    Add(RoundedVowels);
+    Add(LongVowels);
+    Add(AllRootVowels);
+    Add(Vowels);
+    Add(VoicelessStops);
+    Add(VoicedStops);
+    Add(VoicedAffricates);
+    Add(VoicelessAffricates);
+    Add(NasalConsonants);
+    Add(Rhotics);
+    Add(Sibilants);
+    Add(Pulmonics);
   }
 }
 //======================================================================
 
 class DiphthongRuleClass: RuleClass {
-  var FilterList;
-
   Constructor {
     super.Constructor("Diphthongs Separated");
-    FilterList = new ListClass(128);
+    Add(Diphthongs);
   }
 
   override GetFilterIndex(segment) {
@@ -366,20 +392,12 @@ class DiphthongRuleClass: RuleClass {
     FilterList.Add(new SingleFilterClass(segment));
     return c;
   }
-
-  override void GetFilters {
-    FilterList.Add(Diphthongs);
-    Filters = FilterList.ToArray;
-  }
 }
 //======================================================================
 
 class DiphthongPairRuleClass: RuleClass {
-  var FilterList;
-
   Constructor {
     super.Constructor("Diphthongs Paired with Vowels");
-    FilterList = new ListClass(128);
   }
 
   override void AssignCharacters(segments) {
@@ -397,7 +415,7 @@ class DiphthongPairRuleClass: RuleClass {
         if (fi < 0) {
           SetSegmentCharacter(segment, count);
           SetSegmentCharacter(dr, count);
-          FilterList.Add(new DiphthongFilterClass(dr));
+          Add(new DiphthongFilterClass(dr));
           ++count;
         }
         else
@@ -408,33 +426,26 @@ class DiphthongPairRuleClass: RuleClass {
     foreach (var segment in segments) {
       if (segment.CharacterIndex < 0) {
         SetSegmentCharacter(segment, count++);
-        FilterList.Add(new SingleFilterClass(segment));
+        Add(new SingleFilterClass(segment));
       }
     }
     GetFilters;
-  }
-
-  override void GetFilters {
-    Filters = FilterList.ToArray;
   }
 }
 //======================================================================
 
 class SingletonRuleClass: RuleClass {
-  var FilterList;
-
   Constructor {
     super.Constructor("Each segment gets a different number");
-    FilterList = new ListClass(128);
     Numbers    = true;
   }
 
   override void AssignCharacters(segments) {
     foreach (var segment in segments) {
       SetSegmentCharacter(segment, EachIndex);
-      FilterList.Add(new SingleFilterClass(segment));
+      Add(new SingleFilterClass(segment));
     }
-    Filters = FilterList.ToArray;
+    GetFilters;
   }
 }
 //======================================================================
@@ -444,13 +455,11 @@ class Partition1Class: RuleClass {
     super.Constructor("David's basic rules");
     Numbers = true;
 
-    Filters = [
-      NasalVowels,
-      Vowels,
-      Consonants1,
-      Consonants,
-      Residue,
-    ];
+    Add(NasalVowels);
+    Add(Vowels);
+    Add(Consonants1);
+    Add(Consonants);
+    GetFilters;
   }
 }
 //======================================================================
