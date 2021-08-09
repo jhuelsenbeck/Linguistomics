@@ -54,49 +54,6 @@ class AppendixClass {
 }
 //======================================================================
 
-class AuthorClass {
-  var Title,
-      First,
-      Middle,
-      Last,
-      Address,
-      Website,
-      EMail;
-
-  override GetPopup = Block {
-    Paragraph {
-      Bold;
-      First;
-      Space;
-      Middle;
-      Space;
-      Last;
-    };
-    Block {
-      Address;
-    };
-    if (exists Website) {
-      Paragraph {
-        Span {
-          TextColor: Colors.Gray;
-         "web: ";
-        };
-        Website;
-      };
-    }
-    if (exists EMail) {
-      Paragraph {
-        Span {
-          TextColor: Colors.Gray;
-          "email: ";
-        };
-        EMail;
-      };
-    }
-  };
-}
-//======================================================================
-
 class DefClass {
   var Symbol,
       Name,
@@ -193,6 +150,12 @@ with Style {
   DoubleQuote          = Span {Begin: "“"; End: "”"};
   SingleQuote          = Span {Begin: "‘"; End: "’"};
   eos                  = ". ";
+
+  MainDocument = Document {
+    Size: DocMetrics.DocumentSize;
+    Margin: DocMetrics.PageMargin;
+    MainFamily;
+  };
 
   RowBar(i) = {
     if (i mod 2 != 0)
@@ -294,17 +257,6 @@ with Style {
     ParBackground: 97%;
   };
 
-  Author(author) = Span {
-    Link: author.GlobalVariablePath;
-    Popup: author;
-    author.Title;
-  };
-
-  Citation(r) = Span {
-    Link: r.GlobalVariablePath;
-    r.Cite;
-  };
-
   Definition(s) = Span {
     Italic;
     s
@@ -392,31 +344,6 @@ with Style {
     }
   };
 
-  ShowAuthorFull(author) = Block {
-    LeftIndent: 0.25 inches;
-    Paragraph {
-      LocationMark: author.GlobalVariablePath;
-      FirstIndent: -0.25 inches;
-      Span {
-        Separator: Space;
-        if (exists author.Website)
-          Link: author.Website;
-        author.First;
-        author.Middle;
-        author.Last;
-      };
-    };
-    Span {
-      Separator: ", ";
-      author.Address
-    };
-    Span {
-      "{0}: "(Lang.EMail);
-      author.EMail;
-    };
-    Empty;
-  };
-
   AppendixRow(appendix) = Paragraph {
     LeftIndent: 20 pts;
     FirstIndent: -20 pts;
@@ -429,46 +356,70 @@ with Style {
     };
   };
 
+  ShowAuthorFull(PersonClass person) = Block {
+    LeftIndent: 0.25 inches;
+    Paragraph {
+      LocationMark: person.GlobalVariablePath;
+      FirstIndent: -0.25 inches;
+      Span {
+        Separator: Space;
+//        if (exists person.Website)
+//          Link: person.Website;
+        person.FirstName;
+        person.MiddleName;
+        person.LastName;
+      };
+    };
+
+    Span {
+      Separator: ", ";
+      foreach (var place in person.FindFacts(LinkTypes.WorkAddress)) {
+        place.Address;
+        place.City;
+      }
+    };
+
+    var emails = person.FindFacts(LinkTypes.WorkEmail);
+    if (valid emails) {
+      Lang.EMail;
+      ": ";
+      Paragraph {
+        Seperator: ", ";
+        foreach (var email in emails)
+          email.Value;
+      };
+    }
+
+    var sites = person.FindFacts(LinkTypes.WorkWebsite);
+    if (valid sites) {
+      Paragraph {
+        Seperator: ", ";
+        foreach (var site in site)
+          site.Value;
+      };
+    }
+    Empty;
+  };
+
+  Author(PersonClass person) = Span {
+    Link: person.GlobalVariablePath;
+    Popup: person;
+    Separator: ". ";
+    person.FirstName[0];
+    person.MiddleName[0];
+    person.LastName;
+  };
+
+  AuthorList(authors) = Paragraph {
+    ParAlignment: ParAlignments.Center;
+    Separator: ", ";
+    LastSeparator: " and ";
+    Style.Author(each authors);
+  };
+
   ShowAuthors(authors) = Block {
     HeaderCentered(Lang.Authors);
     ShowAuthorFull(each authors);
-  };
-
-  ShowReference(r) = Paragraph {
-    LeftIndent: 0.25 inches;
-    FirstIndent: -0.25 inches;
-    if (exists r.Author) {
-      TitleCase(r.Author);
-      if (exists r.Title) {
-        ", ";
-        r.Title;
-      }
-    }
-    else
-      r.Title;
-
-    if (exists r.Year) {
-      ", ";
-      r.Year;
-    }
-    if (exists r.Publisher) {
-      ", ";
-      Italic r.Publisher;
-      r.?Page;
-    }
-    if (exists r.?Link) {
-      ". : ";
-      Span {
-        Link: r.Link;
-        TextColor: Colors.DarkBlue;
-        r.Link;
-      };
-    }
-  };
-
-  ShowReferences(references) = Block {
-    HeaderCentered(Lang.References);
-    ShowReference(each references)
   };
 
   ShowAppendix(appendix) = PageSection {
@@ -642,19 +593,6 @@ abstract class BaseViewClass: DocumentViewClass {
   Constructor(title, key, type) {
     super.Constructor(title, key, type);
   }
-
-  DocMetadata = {
-    Size: DocMetrics.DocumentSize;
-    Margin: DocMetrics.PageMargin;
-    Style.MainFamily;
-
-    Title: Info.Title;
-    Author: Info.AuthorList;
-//  Description: "Test Description";
-//  Comment: "Test Comment";
-//  Subject: "Test Subject";
-//  Keywords: "Test Keywords";
-  };
 
   FixedFrame(x, y, width, height) = Frame {
     HRelative: HRelatives.Page;

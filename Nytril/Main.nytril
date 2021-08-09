@@ -15,6 +15,7 @@ include "Formulas";
 include "Methods";
 include "Slides";
 include "Tables";
+include "../../nytril/deploy/citations/citations";
 //======================================================================
 
 Main.Documents = new DocumentViewClass(null) {
@@ -26,7 +27,7 @@ Main.Documents = new DocumentViewClass(null) {
 };
 
 void Main.Run {
-  Results.Compute.Calculate;
+  Results.Calculate;
 }
 //======================================================================
 
@@ -34,6 +35,21 @@ void Main.Run {
 // RevBayes has a problem with folder names that contain spaces...
 
 Results = new ResultsClass("Run1");
+
+ViewInfo = new ViewInfoClass {
+  Title: Info.Title;
+//  Description: "Test Description";
+//  Comment: "Test Comment";
+//  Subject: "Test Subject";
+//  Keywords: "Test Keywords";
+};
+
+DocMetadata = {
+  LinkTypes.ViewInfo -> ViewInfo;
+  LinkTypes.ViewAuthor -> Authors;
+  LinkTypes.ViewReference ->References;
+  RefStyle: new ChicagoStyleClass;
+};
 //======================================================================
 
 with Info {
@@ -43,11 +59,6 @@ with Info {
   Journal      = "Transactions of the Beysian Society";
   Publisher    = "The Baysian Society";
   Title        = Lang.SimulatedSegments;
-  PriorTree    = GetTreeNodes(LanguageBranches.Experiment);
-
-  AuthorList = TextList {
-    Style.Author(each Authors);
-  };
 }
 //=====================================================================
 
@@ -77,13 +88,14 @@ class PaperViewClass: BaseViewClass {
     super.Constructor("White Paper", "paper", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-      new AppendixClass("Program Output", Results.Compute.ShowLanguageTrees),
-      new AppendixClass(Lang.CharacterRules, Results.Rule.ShowDescription),
+      new AppendixClass("Program Output", Results.ShowLanguageTrees),
+      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
+      new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
     ];
   }
 
-  override GetDocument = Document {
+  override GetDocument = Style.MainDocument {
     DocMetadata;
 
     Style.PageSection {
@@ -99,10 +111,7 @@ class PaperViewClass: BaseViewClass {
         Logo;
       };
       Style.Title(Info.Title);
-      Paragraph {
-        ParAlignment: ParAlignments.Center;
-        Info.AuthorList;
-      };
+      Style.AuthorList(Authors);
 
       Style.HeaderCentered(Abstract.Title);
       Abstract.Body;
@@ -112,10 +121,10 @@ class PaperViewClass: BaseViewClass {
 
       Style.HeaderCentered(Lang.Appendices);
       Style.AppendixRow(each Appendices);
-
-      Style.ShowReferences(References);
     };
     Style.ShowAppendix(each Appendices);
+    PageBreak;
+    Bibliography;
   };
 }
 //======================================================================
@@ -127,15 +136,16 @@ class ExperimentViewClass: BaseViewClass {
     super.Constructor("Experiment", "experiment", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-//      new AppendixClass(Lang.CharacterRules, Results.Rule.ShowDescription),
-      new AppendixClass("TKF Configuration", Results.Compute.ConfigFile),
-//      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
-      new AppendixClass(Lang.Results, Results.Compute.ShowLanguageTrees),
-//      new AppendixClass("Statistics", Results.Compute.ShowStats),
+//      new AppendixClass("TKF Configuration", Results.ConfigFile),
+      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
+      new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
+      new AppendixClass(Lang.Results, Results.ShowLanguageTrees),
+      new AppendixClass("Statistics", Results.ShowStats),
     ];
   }
 
-  override GetDocument = Document {
+  override GetDocument = Style.MainDocument {
     DocMetadata;
 
     Style.PageSection {
@@ -159,8 +169,8 @@ class DiagnosticsViewClass: BaseViewClass {
     super.Constructor("Diagnostics", "diag", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-      new AppendixClass("Character File", Nexus.CharacterFile(2)),
-      new AppendixClass("RevBayes Source File", Results.Compute.RevBayesSource),
+//      new AppendixClass("Character File", Results.CharacterFile(2)),
+      new AppendixClass("RevBayes Source File", Results.RevBayesSource),
       new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),
       new AppendixClass("Word Lists by Language", DisplayWords.ShowTable),
       new AppendixClass("Segment Groups", MatchingConsonants.ShowTables),
@@ -174,7 +184,7 @@ class DiagnosticsViewClass: BaseViewClass {
     ];
   }
 
-  override GetDocument = Document {
+  override GetDocument = Style.MainDocument {
     DocMetadata;
     Style.ShowAppendix(each Appendices);
   };

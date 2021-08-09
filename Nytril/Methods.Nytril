@@ -1,48 +1,54 @@
-﻿using Format, Units, Math, IO, Style, Defs;
+﻿using Format, Units, Math, IO, Style, Defs, Languages;
 //======================================================================
 
 with Figures.ExampleTree {
   Number = 1;
 
   LanguageList = [
-    Languages.Latin,
-    Languages.Romanian,
-    Languages.Catalan,
-    Languages.Portuguese,
-    Languages.Spanish,
-    Languages.French,
-    Languages.Walloon,
-    Languages.Friulian,
-    Languages.Italian,
+    Latin,
+    Romanian,
+    Portuguese,
+    PortugueseBrazil,
+    Spanish,
+    Catalan,
+    French,
+    Walloon,
+    Friulian,
+    Italian,
   ];
 
-  Tip(i, length)       = new TreeNodeClass("{0} ({1})"(LanguageList[i-1], i), length);
-  Branch(name, length) = new TreeNodeClass(name, length);
+  LangNumber(language) = Math.FindIndex(LanguageList, l => l == language)[0]+1;
 
-  Nodes = Branch(17, 1) {
-    Tip(1, 7);
-    Branch(16, 1) {
-      Branch(14, 1) {
-        Branch(13, 1) {
-          Tip(2, 4);
-          Branch(12, 1) {
-            Tip(3, 3);
-            Branch(11, 1) {
-              Branch(10, 1) {
-                Tip(6, 1);
-                Tip(7, 1);
+  Leaf(language, length) = new TreeNodeClass("{0} ({1})"(language, LangNumber(language)), length);
+  Branch(name, length)   = new TreeNodeClass(name, length);
+
+  Nodes = Branch(19, 1) {
+    Leaf(Latin, 7);
+    Branch(18, 1) {
+      Leaf(Romanian, 6);
+      Branch(17, 1) {
+        Branch(16, 1) {
+          Branch(15, 1) {
+            Leaf(Walloon, 3);
+            Leaf(French, 3);
+          };
+          Branch(14, 1) {
+            Branch(13, 1) {
+              Branch(12, 1) {
+                Leaf(Portuguese, 1);
+                Leaf(PortugueseBrazil, 1);
               };
-              Tip(8, 2);
+              Leaf(Spanish, 2);
             };
+            Leaf(Catalan, 3);
           }
         };
-        Tip(4, 5);
-      };
-      Branch(15, 5) {
-        Tip(5, 1);
-        Tip(9, 1);
-      };
-    };
+        Branch(11, 1) {
+          Leaf(Friulian, 4);
+          Leaf(Italian, 4);
+        }
+      }
+    }
   };
 
   Body = TreeOptions {
@@ -387,11 +393,27 @@ with Content.Methods {
       "For one, it contains information on the relationships of the languages. ";
       "This topological information is denoted "; Topology; eos;
       TreeFigure;
-      " for example, suggests that French and Walloon are each others’ closest relatives. ";
+      " for example, suggests that ";
+      French;
+      " and ";
+      Walloon;
+      " are each others’ closest relatives. ";
       "They are more closely related to each other than they are to any another language on the tree because they share a more recent common ancestor with each other than they do with any other language. ";
-      "This common ancestor is the node numbered 10 in "; TreeFigure; eos;
-      "French and Walloon, together, are more closely related to Friulian in the tree of "; TreeFigure; eos;
-      "Both French and Walloon are equally related to Friulian because they both share the same common ancestor with Friulian, at the node numbered 11 in "; TreeFigure; eos;
+      "This common ancestor is the node numbered 15 in "; TreeFigure; eos;
+      French;
+      " and ";
+      Walloon;
+      ", together, are more closely related to ";
+      Friulian;
+      " in the tree of "; TreeFigure; eos;
+      "Both French and Walloon are equally related to ";
+      Friulian;
+      " because they both share the same common ancestor with ";
+      Friulian;
+      ", at the node numbered ";
+      Figures.ExampleTree.LangNumber(Friulian);
+      " in ";
+      TreeFigure; eos;
       "It is important to realize that there are many possible ways in which the languages can be related to one another, with the tree of ";
       TreeFigure;
       " depicting only one of the possibilities. ";
@@ -496,7 +518,7 @@ with Content.Methods {
     };
 
     BodyPar {
-      "These are partial mitochondrial sequences from "; Style.Citation(References.Gojobori88); eos;
+      "These are partial mitochondrial sequences from Gojobori88"; References.Gojobori88; eos;
       "In the original paper, the complete data had ";
       SampledLanguages(12);
       " primate species and the sequences were each ";

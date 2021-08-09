@@ -1,4 +1,4 @@
-using Format, Units, Math, IO, Genetics;
+using Format, Units, Math, IO, Rev;
 //======================================================================
 
 class LanguageClass {
@@ -140,44 +140,80 @@ class TaxonClass {
   }
 
   override GetLayout = Span {
-    Nexus.TaxonFormat;
+    TaxonFormat;
     Variable;
     Popup: Language;
   };
 }
 //======================================================================
 
+enum Models {
+  JC,
+  MK,
+}
+
 class ResultsClass {
-  var Rule,
+  var CharacterRule,
+      PartitionRule,
       UsedCognates,
       Taxa,
       DisplaySegments,
       UniqueSegments,
       UniqueCharacters,
       TotalLength,
-      Compute;
+      OutFolder,
+      EXEName,
+      RevSourceName,
+      GammaTrees,
+      GammaLog,
+      GammaMAP,
+      GammaMCC,
+      GammaConsensus,
+      CharacterName,
+      PartitionMatrix,
+      AddComma,
+      Model;
 
   Constructor(folder) {
+    Model          = Models.JC;
+    OutFolder      = Folders.Repository Folder("Run") Folder(folder);
+    EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
+    RevSourceName  = FileName("Program") Extensions.RevBayes;
+    CharacterName  = FileName("Characters") Extensions.Nexus;
+    GammaTrees     = FileName("Gamma.trees");
+    GammaLog       = FileName("Gamma.log");
+    GammaMAP       = FileName("Gamma_MAP") Extensions.Tree;
+    GammaMCC       = FileName("Gamma_MCC") Extensions.Tree;
+    GammaConsensus = FileName("Gamma_Consensus") Extensions.Tree;
+
     GetConcepts;
     foreach (var cognate in UsedCognates)
       ComputeCognate(cognate);
 
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
-    Rule = new DiphthongPairRuleClass;
+    CharacterRule = new SingletonRuleClass;
+    PartitionRule = new Partition1Class;
+    PartitionMatrix = [
+      [1, 2, 3, 4],
+      [2, 1, 5, 6],
+      [3, 5, 1, 4],
+      [4, 6, 4, 1],
+    ];
+
 //    Rule = new DiphthongRuleClass;
 //    Rule = new VowelsSeparatedRuleClass;
 //    Rule = new SegmentTypesRuleClass;
 
     GetUniqueSegments;
-    Rule.AssignCharacters(UniqueSegments);
+    CharacterRule.AssignCharacters(UniqueSegments);
+    PartitionRule.AssignPartitions(UniqueSegments);
 
     var max = 0;
     foreach (var segment in UniqueSegments) {
-      if (segment.Character > max)
-        max = segment.Character;
+      if (segment.CharacterIndex > max)
+        max = segment.CharacterIndex;
     }
     UniqueCharacters = max+1;
-    Compute          = new RevProgramClass(Models.JC, folder);
   }
 
   void GetUniqueSegments {
@@ -231,12 +267,6 @@ class ResultsClass {
     }
     Taxa = tlist.ToArray;
   }
-
-  TransitionRuleFile = TextBlock {
-    Style.MonoFamily;
-    "Num_Symbols:{0}"(UniqueSegments.Length);
-    Rule.ShowFile;
-  };
 
   ShowLanguageDetails = Block {
     foreach (var taxon in Taxa) {
@@ -332,112 +362,339 @@ class ResultsClass {
       }
     }
   };
-}
-//======================================================================
 
-with Nexus {
-  TaxonFormat   = {TextColor: Colors.DarkBlue};
-  CommentFormat = {TextColor: Colors.Green};
-  KeywordFormat = {TextColor: Colors.Blue};
-  EndMarker     = ";";
-  Quote         = "\"";
+  void Calculate {
+    CreateFolder(OutFolder);
+    if (not CharacterRule.Numbers) {
+      IO.Write(CharacterFile(1), OutFolder CharacterName);
+      IO.Write(RevBayesSource, OutFolder RevSourceName);
+    }
+    IO.Write(RunBatchFile, OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
+    IO.Write(ConfigFile, OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
 
-    // This is the set of characters used for the nexus file
-  CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1) + ['!', '$', '%', '&', '`', '+', ',', '.', '/', '<', '_', '=', '@', '*'];
 
-  Keyword(name) = Span {
-    KeywordFormat;
-    name;
+    var p = new RevProcessClass(EXEName, OutFolder RevSourceName) {
+/*      CacheName: "RevBayes";
+      CacheInput: [
+        OutFolder CharacterName,
+        OutFolder RevSourceName,
+      ];
+      CacheOutput: [
+        OutFolder GammaTrees,
+        OutFolder GammaConsensus,
+        OutFolder GammaMAP,
+        OutFolder GammaMCC,
+        OutFolder GammaLog,
+      ];
+*/
+      Directory: OutFolder;
+    };
+
+//    var results = p.Run;
+//    if (results.ExitCode != 0)
+//      System.Assert(false, results.StandardOutput, p);
+  }
+
+  ShowLanguageTrees = Block {
+    Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, GetTreeNodes(LanguageBranches.Romance));
+    Style.ShowTree("Priors", Lang.Years, GetTreeNodes(LanguageBranches.Experiment));
+    Style.ReadTree("Consensus", OutFolder GammaConsensus);
+    Style.ReadTree("MAP", OutFolder GammaMAP);
+    Style.ReadTree(Lang.MCC, OutFolder GammaMCC);
   };
 
-  Comment(text) = Span {
-    CommentFormat;
-    "[ ";
-    text;
-    " ]";
+  ShowStats = Block {
+    var schema = new LogSchemaClass();
+    var view   = schema.ReadTextFile(OutFolder GammaLog, true, DB.ValueTypes.Double);
+    schema.GetHistogram(view, "alpha");
+
+    schema.LineChart(view, "Prior");
+    schema.LineChart(view, "Likelihood");
+    schema.LineChart(view, "Posterior");
+    schema.LineChart(view, "Tree Length", "TL");
+
+//    schema.LineChart(view, null, each "bl[{0}]"(each 1..Concepts*2));
+//    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
   };
 
-  AddLine(name) = Span {
-    Keyword(name);
-    End: EndMarker;
-  };
-
-  AddValue(name, value=null) = Span {
-    Space;
-    Keyword(name);
-    if (exists value) {
-      "=";
-      value;
+  RunBatchFile = TextBlock {
+    Span {
+      "\"../../revbayes/rb.exe\" \"";
+      OutFolder RevSourceName;
+      "\"";
     }
   };
 
-  AddTaxon(taxon) = Span {
-    TaxonFormat;
-    Space;
-    taxon.Variable;
+  AddTree = TextBlock {
+    Span {
+      Variable("Tree");
+      Quote;
+      Newick(GetTreeNodes(LanguageBranches.Experiment));
+      ";"; Quote; ",";
+    };
   };
 
-  Scope(name) = TextBlock {
+  AddScope = TextBlock {
     IndentSpace: 2;
-    Begin: Span {
-      Keyword("begin");
-      Space;
-      name;
-      EndMarker;
+    Begin: "{";
+    End: "}";
+  };
+
+  AddWord(word, last) = Span {
+    "  {";
+    Variable("Taxon");
+    ShowString(word.Language.GlobalVariableName);
+    CommaSpace;
+    Variable("Segments");
+    "[";
+    Span {
+      Separator: CommaSpace;
+      (each word.Padded).CharacterIndex;
     };
-    End: Span {
-      Keyword("end");
-      EndMarker;
-      LineBreak;
+    Span {
+      "]}";
+      if (not last)
+         ",";
     };
   };
 
-  NexusFile = TextBlock {
+  AddCognate(cognate, last) = TextBlock {
+    Span {
+      "{";
+      Variable("Name");
+      ShowString(cognate.Name);
+      CommaSpace;
+      Variable("Data"); "[";
+    };
+
+    TextBlock {
+      var good = FindSlice(cognate.Words, w => valid w.Aligned);
+      var lg   = good.Length-1;
+      foreach (var word in good)
+        AddWord(word, EachIndex == lg);
+    };
+
+    Span {
+      "]}";
+      if (not last)
+        ",";
+    };
+  };
+
+  AddPartition = Span {
+    Separator: ",";
+    for (var i = 1; i < UniqueSegments.Length; ++i) {
+      for (var j = i + 1; j < UniqueSegments.Length; ++j)
+        PartitionMatrix[UniqueSegments[i].PartitionIndex][UniqueSegments[j].PartitionIndex];
+    }
+  };
+
+  ConfigFile = AddScope {
     Style.MonoFamily;
-    Keyword("#NEXUS");
+    TextHeight: 9 pts;
+
+    AddTree;
+    Span {
+      Variable("NumberOfStates");
+      UniqueCharacters;
+      CommaSpace;
+    };
+
+    ArraySpan("Taxa") {
+      Separator: CommaSpace;
+      ShowString(each (each Taxa).Variable);
+    };
+
+    ArraySpan("Partition") {
+      AddPartition;
+    };
+
+    Span {
+      Variable("Words"); "[";
+    };
+    TextBlock {
+      var last = UsedCognates.Length-1;
+      foreach (var cognate in UsedCognates)
+        AddCognate(cognate, EachIndex == last);
+    };
+    "]";
   };
 
-  Newick(node) = Span {
-    if (node.Length > 0) {
-      "(";
-      Span {
-        Separator: ",";
-        Newick(each node)
+  RevBayesSource = TextBlock {
+    Style.MonoFamily;
+    BlockComment("RevBayes Source File for Linguistomics Project");
+
+    "clear()";
+//    "setwd({0})"(ShowString(folder));
+    "path = " ShowString(OutFolder Folder("/"));
+    "gammapath = {0}"(PathPlus(GammaTrees));
+
+
+    LineComment("Read in discrete character data");
+    "data = readDiscreteCharacterData({0})"(PathPlus(CharacterName));
+
+    LineComment("Get some useful variables from the data. We need these later on");
+    "num_taxa <- data.ntaxa()";
+
+    LineComment("Number of branches in an rooted tree");
+    "num_branches <- 2 * num_taxa - 2";
+
+    "taxa <- data.taxa()";
+
+    LineComment("Create helper variables");
+    "moves    = VectorMoves()";
+    "monitors = VectorMonitors()";
+
+    BlockComment("Tree Model");
+    LineComment("Outgroup is a clade consisting of one language");
+    "out_group = clade({0})"(ShowString(Languages.Latin));
+
+    LineComment("Prior distribution on the tree topology");
+    "topology ~ dnUniformTopology(taxa, outgroup=out_group, rooted=TRUE)";
+
+    LineComment("These are moves that change the tree topology");
+    "moves.append(mvNNI(topology, weight=num_taxa/2.0))";
+    "moves.append(mvSPR(topology, weight=num_taxa/10.0))";
+
+    LineComment("Branch length prior");
+
+    "for (i in 1:num_branches) {";
+    "  bl[i] ~ dnExponential(10.0)";
+    "  moves.append(mvScale(bl[i]))";
+    "}";
+    Empty;
+    "TL  := sum(bl)";
+    Empty;
+    "psi := treeAssembly(topology, bl)";
+    Empty;
+
+    BlockComment("Substitution Model");
+    LineComment("This is the number of unique characters from the segment filters");
+    "unique_chars = {0}"(UniqueCharacters);
+
+    switch (Model) {
+      case Models.JC:
+        LineComment("Jukes-Cantor model");
+        "Q <- fnJC(unique_chars)";
+        break;
+
+      case Models.MK:
+        LineComment("Mk model");
+        LineComment("I'm guessing completely with this number");
+        "rate_pr <- 10.0";
+        Empty;
+        "rate_parameter ~ dnExponential(rate_pr)";
+        Empty;
+        Empty;
+        "moves.append(mvScale(rate_parameter, weight=2))";
+        Empty;
+        "for (i in 1:unique_chars) {";
+        "  for (j in 1:unique_chars) {";
+        "    m[i][j] := rate_parameter";
+        "  }";
+        "}";
+        Empty;
+        "Q := fnFreeK(m, rescale=TRUE)";
+        break;
+    }
+
+    BlockComment("Gamma model for among-site variation");
+
+    "alpha ~ dnUniform(0, 10.0)";
+    "moves.append(mvScale(alpha, weight=1))";
+
+    "site_rates := fnDiscretizeGamma(alpha, alpha, 4)";
+
+    BlockComment("PhyloCTMC Model");
+    "seq ~ dnPhyloCTMC(tree=psi, Q=Q, type={0}, siteRates=site_rates)"(ShowString("Standard"));
+    "seq.clamp(data)";
+
+    BlockComment("Analysis");
+
+    LineComment("You can use any node as the argument of model()");
+    "mymodel = model(psi)";
+    "n_gen   = {0}"(Math.Min([100, Math.Max([10, Info.Generations div 1000])]));
+
+    LineComment("This prints monitors to the screen");
+    Span {
+      "monitors.append(mnScreen(TL, ";
+      if (Model == Models.MK)
+        "rate_parameter, ";
+      "printgen=n_gen))";
+    };
+
+    LineComment("This monitors the trees and puts them in a file");
+    "monitors.append(mnFile(psi, filename=gammapath, printgen=n_gen))";
+
+    LineComment("Model monitor");
+    "monitors.append(mnModel(filename={0}, printgen=n_gen))"(PathPlus(GammaLog));
+
+    "mymcmc = mcmc(mymodel, moves, monitors, nruns=1, combine={0})"(ShowString("mixed"));
+
+
+//   "mymcmc.burnin(generations={0}, tuningInterval=200)"(Info.Generations);
+    "mymcmc.run(generations={0})"(Info.Generations);
+
+    LineComment("Summarizes the MCMC runs");
+    "mymcmc.operatorSummary()";
+
+    BlockComment("Post processing");
+    "treetrace      = readTreeTrace(gammapath, outgroup=out_group)";
+    "map_tree       = mapTree(treetrace, {0})"(PathPlus(GammaMAP));
+    "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(GammaMCC));
+    "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(GammaConsensus));
+
+    LineComment("Exit the program");
+    "q()";
+  };
+
+  CharacterFile(paper) = NexusFile {
+    var maxlength = MaxNameLength;
+    var ntax      = Taxa.Length;
+
+    TabStops: [4 inches];
+
+    Scope("taxa") {
+      AddLine("dimensions") {
+        AddValue("ntax", ntax);
       };
-      ")";
-    }
-    node.Label;
-    if (node.BranchLength != 1.0) {
-      ":";
-      node.BranchLength;
-    }
+      AddLine("taxlabels") {
+        AddTaxon(each Taxa);
+      };
+    };
+
+    Scope("characters") {
+      AddLine("dimensions") {
+        AddValue("ntax", ntax);
+        AddValue("nchar", TotalLength);
+      };
+      AddLine("format") {
+        AddValue("datatype", "STANDARD");
+        AddValue("interleave", "yes");
+        AddValue("respectcase");
+        AddValue("gap", IPA.Segments.GapSegment.Ipa);
+        AddValue("missing", IPA.Segments.MissingSegment.Ipa);
+        AddValue("symbols", Span {Quote; CharacterList[0..<Math.Min([UniqueCharacters, Rev.CharacterList.Length])]; Quote});
+      };
+
+      Empty;
+      Keyword("matrix");
+
+      foreach (var cognate in UsedCognates) {
+        if (EachIndex > 0)
+          Empty;
+
+        Comment(cognate.Name);
+        WriteTaxa(cognate, paper, maxlength);
+      }
+      EndMarker;
+    };
   };
 
-  ShowTreeLine(tree) = Span {
-    "tree ";
-    tree.GlobalVariableName;
-    " = ";
-    Newick(tree);
-    EndMarker;
-  };
-
-  GetTaxaLabels(tree) {
-    var set = new DictionaryClass(256);
-    VisitNodeTaxa(set, tree);
-    return (each set).Name;
-  }
-
-  void VisitNodeTaxa(set, node) {
-    var name = exists node.Language ? node.Name : null;
-    if (valid name)
-      set.Add(node, name);
-    VisitNodeTaxa(set, each node);
-  }
-
-  MaxNameLength = Math.Max((each ((each Results.Taxa).Variable)).Length) + 1;
+  MaxNameLength = Math.Max((each ((each Taxa).Variable)).Length) + 1;
 
   WriteTaxa(cognate, paper, maxlength) = TextBlock {
-    foreach (var taxon in Results.Taxa) {
+    foreach (var taxon in Taxa) {
       var words = cognate.Words[taxon.Index];
       Span {
         taxon.Variable;
@@ -466,49 +723,6 @@ with Nexus {
         }
       };
     }
-  };
-
-  CharacterFile(paper) = NexusFile {
-    var maxlength = MaxNameLength;
-    var ntax      = Results.Taxa.Length;
-
-    TabStops: [4 inches];
-
-    Scope("taxa") {
-      AddLine("dimensions") {
-        AddValue("ntax", ntax);
-      };
-      AddLine("taxlabels") {
-        AddTaxon(each Results.Taxa);
-      };
-    };
-
-    Scope("characters") {
-      AddLine("dimensions") {
-        AddValue("ntax", ntax);
-        AddValue("nchar", Results.TotalLength);
-      };
-      AddLine("format") {
-        AddValue("datatype", "STANDARD");
-        AddValue("interleave", "yes");
-        AddValue("respectcase");
-        AddValue("gap", IPA.Segments.GapSegment.Ipa);
-        AddValue("missing", IPA.Segments.MissingSegment.Ipa);
-        AddValue("symbols", Span {Quote; CharacterList[0..<Math.Min([Results.UniqueCharacters, CharacterList.Length])]; Quote});
-      };
-
-      Empty;
-      Keyword("matrix");
-
-      foreach (var cognate in Results.UsedCognates) {
-        if (EachIndex > 0)
-          Empty;
-
-        Comment(cognate.Name);
-        WriteTaxa(cognate, paper, maxlength);
-      }
-      EndMarker;
-    };
   };
 }
 //======================================================================
