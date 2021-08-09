@@ -258,10 +258,11 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         algnStrm << taxonNames[i];
         for (int j=0; j<longestNameLength-taxonNames[i].size(); j++)
             algnStrm << " ";
-        algnStrm << 't';
+        algnStrm << '\t';
         for (int n=0; n<alns.size(); n++)
             {
             std::vector<std::vector<int> >& aln = alns[n]->getAlignment();
+            algnStrm << "(";
             for (int j=0; j<aln[i].size(); j++)
                 {
                 int charCode = aln[i][j];
@@ -270,6 +271,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
                 else
                     algnStrm << std::setw(3) << charCode;
                 }
+            algnStrm << ")";
             algnStrm << '\t';
             }
         algnStrm << std::endl;
