@@ -13,6 +13,7 @@ class UserSettings {
                                     static UserSettings us;
                                     return us;
                                 }
+        bool                    getCalculateMarginalLikelihood(void) { return calculateMarginalLikelihood; }
         std::string             getDataFile(void) { return dataFile; }
         double                  getInverseTreeLength(void) { return inverseTreeLength; }
         std::string             getOutFile(void) { return outFile; }
@@ -34,6 +35,7 @@ class UserSettings {
         int                     sampleFrequency;
         double                  inverseTreeLength;
         int                     substitutionModel;
+        bool                    calculateMarginalLikelihood;
 };
 
 #endif

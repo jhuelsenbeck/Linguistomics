@@ -10,12 +10,14 @@
 UserSettings::UserSettings(void) {
 
     // dafault values
-    dataFile          = "";
-    numMcmcCycles     = 1000;
-    printFrequency    = 100;
-    sampleFrequency   = 100;
-    inverseTreeLength = 1.0;
-    substitutionModel = jc69;
+    dataFile                    = "";
+    outFile                     = "";
+    numMcmcCycles               = 1000;
+    printFrequency              = 100;
+    sampleFrequency             = 100;
+    inverseTreeLength           = 1.0;
+    substitutionModel           = jc69;
+    calculateMarginalLikelihood = false;
 }
 
 void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
@@ -33,11 +35,13 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-n");
     commands.push_back("100000");
     commands.push_back("-p");
-    commands.push_back("1");
+    commands.push_back("100");
     commands.push_back("-s");
-    commands.push_back("200");
+    commands.push_back("100");
     commands.push_back("-l");
     commands.push_back("0.15");
+    commands.push_back("-z");
+    commands.push_back("no");
 #   else
     for (int i=0; i<argc; i++)
         commands.push_back(argv[i]);
@@ -77,6 +81,15 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 sampleFrequency = atoi(cmd.c_str());
             else if (arg == "-l")
                 inverseTreeLength = atof(cmd.c_str());
+            else if (arg == "-z")
+                {
+                if (cmd == "yes")
+                    calculateMarginalLikelihood = true;
+                else if (cmd == "no")
+                    calculateMarginalLikelihood = false;
+                else
+                    Msg::error("Unknon option for calculating marginal likelihood");
+                }
             else
                 {
                 usage();
@@ -92,7 +105,16 @@ void UserSettings::print(void) {
 
     std::cout << "   Settings" << std::endl;
     std::cout << "   * File with initial word alignments      = \"" << dataFile << "\"" << std::endl;
-    std::cout << "   * Substitution model                     = \"" << substitutionModel << "\"" << std::endl;
+    if (substitutionModel == jc69)
+        std::cout << "   * Substitution model                     = " << "JC69" << std::endl;
+    else if (substitutionModel == gtr)
+        std::cout << "   * Substitution model                     = " << "GTR" << std::endl;
+    else
+        std::cout << "   * Substitution model                     = " << "Custom" << std::endl;
+    if (calculateMarginalLikelihood == true)
+        std::cout << "   * Calculate marginal likelihood          = " << "yes" << std::endl;
+    else
+        std::cout << "   * Calculate marginal likelihood          = " << "no" << std::endl;
     std::cout << "   * Number of MCMC cycles                  = " << numMcmcCycles << std::endl;
     std::cout << "   * Print-to-screen frequency              = " << printFrequency << std::endl;
     std::cout << "   * Chain sample frequency                 = " << sampleFrequency << std::endl;
@@ -104,7 +126,8 @@ void UserSettings::usage(void) {
 
     std::cout << "   Usage" << std::endl;
     std::cout << "   * -d -- File with initial alignments of words" << std::endl;
-    std::cout << "   * -m -- Substitution model (JC69/GTR)" << std::endl;
+    std::cout << "   * -m -- Substitution model (jc69/gtr/custom)" << std::endl;
+    std::cout << "   * -z -- Calculate marginal likelihood (no/yes)" << std::endl;
     std::cout << "   * -n -- Number of MCMC cycles" << std::endl;
     std::cout << "   * -p -- Print-to-screen frequency" << std::endl;
     std::cout << "   * -s -- Chain sample frequency" << std::endl;
