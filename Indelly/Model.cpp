@@ -14,6 +14,7 @@
 #include "ParameterIndelRates.hpp"
 #include "ParameterTree.hpp"
 #include "RandomVariable.hpp"
+#include "RateMatrixHelper.hpp"
 #include "ThreadPool.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
@@ -38,7 +39,7 @@ Model::Model(RandomVariable* r) {
     initializeParameters(&settings, wordAlignments, j);
     
     // initialize transition probabilities
-    initializeTransitionProbabilities(wordAlignments[0]->getNumStates());
+    initializeTransitionProbabilities(wordAlignments[0]->getNumStates(), j);
         
     std::cout << std::endl;
 }
@@ -225,6 +226,7 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
     // read each word
     std::vector<Alignment*> words;
     std::vector<std::string> taxonNames;
+    std::vector<std::string> rejectedWords;
     for (size_t i=0; i<numWords; i++)
         {
         // instantiate the word alignment from the json object
@@ -236,7 +238,7 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         // check if we have problems
         if (taxonNames.size() != aln->numCompleteTaxa() || aln->numCompleteTaxa() != numTaxa)
             {
-            Msg::warning("Word " + aln->getName() + " has at least one taxon with no word segments and will not be included.\n     In the future, such words will use a subtree of the full tree used in the analysis.");
+            rejectedWords.push_back(aln->getName());
             delete aln;
             continue;
             }
@@ -264,6 +266,25 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         
     std::cout << "   * Number of words                       = " << words.size() << std::endl;
     std::cout << "   * Number of taxa in each word alignment = " << taxonNames.size() << std::endl;
+    if (rejectedWords.size() > 0)
+        {
+        std::cout << "   * These words were not included because at least one " << std::endl;
+        std::cout << "     taxon had no word segments: ";
+        int cnt = 28;
+        for (int i=0; i<rejectedWords.size(); i++)
+            {
+            std::cout << rejectedWords[i];
+            if (i+1 != rejectedWords.size())
+                std::cout << ", ";
+            cnt += rejectedWords[i].length();
+            if (cnt > 40)
+                {
+                std::cout << std::endl << "     ";
+                cnt = 0;
+                }
+            }
+        std::cout << std::endl;
+        }
     
 #   if 0
     for (int i=0; i<words.size(); i++)
@@ -280,11 +301,29 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
     auto it = j.find("Tree");
     if (it != j.end())
         treeStr = j["Tree"];
+        
+    // find the number of states in the json object
+    it = j.find("NumberOfStates");
+    if (it == j.end())
+        Msg::error("Could not find the number of states in the substitution model");
+    int numStates = j["NumberOfStates"];
 
     // initialize a few important parameters
     substitutionModel = settings->getSubstitutionModel();
-    int numStates = wordAlignments[0]->getNumStates();
     std::vector<std::string> taxonNames = wordAlignments[0]->getTaxonNames();
+    
+    // if the model is a custom one, make certain there is a partition of states to read
+    if (substitutionModel == custom)
+        {
+        it = j.find("PartitionSets");
+        if (it == j.end())
+            Msg::error("Could not finda  partition of the substitution model states");
+        nlohmann::json jsonPart = j["PartitionSets"];
+            
+        RateMatrixHelper& helper = RateMatrixHelper::rateMatrixHelper();
+        helper.initialize(numStates, jsonPart);
+        helper.print();
+        }
     
     // set up the tree parameter
     Parameter* pTree = new ParameterTree(rv, this, treeStr, taxonNames, settings->getInverseTreeLength());
@@ -296,7 +335,7 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
     pIndel->setProposalProbability(1.0);
     parameters.push_back(pIndel);
 
-    // set up the alignment parameter
+    // set up the alignment parameter(s)
     for (int i=0; i<wordAlignments.size(); i++)
         {
         std::string alnName = wordAlignments[i]->getName();
@@ -318,7 +357,7 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
     if (getTree()->isBinary() == false)
         Msg::error("The initial tree is not binary");
     
-    if (substitutionModel == "GTR")
+    if (substitutionModel == gtr)
         {
         // set up exchangability parameters
         Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates);
@@ -328,6 +367,21 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
         // set up equilibrium frequencies
         Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates);
         pEquil->setProposalProbability(50.0);
+        parameters.push_back(pEquil);
+        }
+    else if (substitutionModel == custom)
+        {
+        // set up exchangability parameters
+        RateMatrixHelper& helper = RateMatrixHelper::rateMatrixHelper();
+        std::vector<std::string> labels = helper.getLabels();
+        
+        Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates, labels);
+        pExchange->setProposalProbability(5.0);
+        parameters.push_back(pExchange);
+        
+        // set up equilibrium frequencies
+        Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates);
+        pEquil->setProposalProbability(5.0);
         parameters.push_back(pEquil);
         }
     
@@ -354,13 +408,13 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
 #   endif
 }
 
-void Model::initializeTransitionProbabilities(int numStates) {
+void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) {
 
     UserSettings& settings = UserSettings::userSettings();
 
     // initialize the eigen system object and calculate the first set of eigens
     std::cout << "   * Initializing likelihood-calculation machinery" << std::endl;
-    if (substitutionModel == "GTR")
+    if (substitutionModel == gtr || substitutionModel == custom)
         {
         EigenSystem& eigs = EigenSystem::eigenSystem();
         eigs.initialize(numStates);
@@ -472,6 +526,6 @@ double Model::update(void) {
 
 void Model::wordLnLike(int i, ParameterAlignment* aln, Tree* t) {
 
-    LikelihoodTkf likelihood(aln, t, this, substitutionModel);
+    LikelihoodTkf likelihood(aln, t, this);
     threadLnL[i] = likelihood.tkfLike();
 }

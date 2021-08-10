@@ -16,7 +16,7 @@ class LikelihoodTkf {
     public:
                                                         LikelihoodTkf(void) = delete;
                                                         LikelihoodTkf(LikelihoodTkf& lkf) = delete;
-                                                        LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m, std::string sm);
+                                                        LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m);
                                                        ~LikelihoodTkf(void);
         double                                          tkfLike(void);
         
@@ -57,7 +57,6 @@ class LikelihoodTkf {
         static int                                      unalignableRegionSize;
         static int                                      maxUnalignableDimension;
         static constexpr double                         minEdgeLength = 1e-6;
-        std::string                                     substitutionModel;
 };
 
 #endif

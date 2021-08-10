@@ -11,6 +11,7 @@
 #include "ParameterAlignment.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
+#include "UserSettings.hpp"
 
 #undef DEBUG_TKF91
 int LikelihoodTkf::unalignableRegionSize = 0;
@@ -25,13 +26,12 @@ int LikelihoodTkf::maxUnalignableDimension = 10;
 
 
 
-LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m, std::string sm) {
+LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m) {
 
 
     data = a;
     tree = t;
     model = m;
-    substitutionModel = sm;
     init();
 }
 

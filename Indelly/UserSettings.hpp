@@ -4,6 +4,7 @@
 #include <string>
 
 
+enum SubstitutionModel { jc69, gtr, custom };
 
 class UserSettings {
 
@@ -18,7 +19,7 @@ class UserSettings {
         int                     getNumMcmcCycles(void) { return numMcmcCycles; }
         int                     getPrintFrequency(void) { return printFrequency; }
         int                     getSampleFrequency(void) { return sampleFrequency; }
-        std::string             getSubstitutionModel(void) { return substitutionModel; }
+        int                     getSubstitutionModel(void) { return substitutionModel; }
         void                    print(void);
         void                    readCommandLineArguments(int argc, char* argv[]);
     
@@ -32,7 +33,7 @@ class UserSettings {
         int                     printFrequency;
         int                     sampleFrequency;
         double                  inverseTreeLength;
-        std::string             substitutionModel;
+        int                     substitutionModel;
 };
 
 #endif

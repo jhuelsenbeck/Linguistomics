@@ -15,7 +15,7 @@ UserSettings::UserSettings(void) {
     printFrequency    = 100;
     sampleFrequency   = 100;
     inverseTreeLength = 1.0;
-    substitutionModel = "JC69";
+    substitutionModel = jc69;
 }
 
 void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
@@ -29,11 +29,11 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-o");
     commands.push_back("/Users/johnh/Desktop/Indelly/out/test");
     commands.push_back("-m");
-    commands.push_back("GTR");
+    commands.push_back("custom");
     commands.push_back("-n");
     commands.push_back("100000");
     commands.push_back("-p");
-    commands.push_back("50");
+    commands.push_back("1");
     commands.push_back("-s");
     commands.push_back("200");
     commands.push_back("-l");
@@ -59,7 +59,16 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
             else if (arg == "-o")
                 outFile = cmd;
             else if (arg == "-m")
-                substitutionModel = cmd;
+                {
+                if (cmd == "jc69")
+                    substitutionModel = jc69;
+                else if (cmd == "gtr")
+                    substitutionModel = gtr;
+                else if (cmd == "custom")
+                    substitutionModel = custom;
+                else
+                    Msg::error("Unknon substitution model " + cmd);
+                }
             else if (arg == "-n")
                 numMcmcCycles = atoi(cmd.c_str());
             else if (arg == "-p")

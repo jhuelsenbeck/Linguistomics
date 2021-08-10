@@ -37,7 +37,7 @@ void TransitionProbabilities::flipActive(void) {
         activeProbs = 0;
 }
 
-void TransitionProbabilities::initialize(Model* m, int nn, int ns, std::string sm) {
+void TransitionProbabilities::initialize(Model* m, int nn, int ns, int sm) {
 
     if (isInitialized == true)
         {
@@ -50,6 +50,8 @@ void TransitionProbabilities::initialize(Model* m, int nn, int ns, std::string s
     numStates = ns;
     substitutionModel = sm;
     int numStatesSquared = numStates * numStates;
+    std::cout << "   * Number of states = " << numStates << std::endl;
+    
     
     
     for (int s=0; s<2; s++)
@@ -92,8 +94,37 @@ void TransitionProbabilities::setTransitionProbabilities(void) {
 
     if (needsUpdate == false)
         return;
- 
-    if (substitutionModel == "GTR")
+        
+    if (substitutionModel == jc69)
+        {
+        // calculate transition probabilities under the Jukes-Cantor (1969) model
+        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+        for (int n=0; n<traversalSeq.size(); n++)
+            {
+            Node* p = traversalSeq[n];
+            double** tp = probs[activeProbs][p->getIndex()];
+            double v = p->getBranchLength();
+            
+            double x = -((double)numStates/(numStates-1));
+            double pChange = (1.0/numStates) - (1.0/numStates) * exp(x * v);
+            double pNoChange = (1.0/numStates) + ((double)(numStates-1)/numStates) * exp(x * v);
+            for (int i=0; i<numStates; i++)
+                {
+                for (int j=0; j<numStates; j++)
+                    {
+                    if (i == j)
+                        tp[i][j] = pNoChange;
+                    else
+                        tp[i][j] = pChange;
+                    }
+                }
+            }
+            
+        double sf = 1.0 / numStates;
+        for (int i=0; i<numStates; i++)
+            stationaryFreqs[activeProbs][i] = sf;
+        }
+    else
         {
         // calculate transition probabilities for GTR model
         EigenSystem& eigs = EigenSystem::eigenSystem();
@@ -125,36 +156,7 @@ void TransitionProbabilities::setTransitionProbabilities(void) {
             }
             
         stationaryFreqs[activeProbs] = eigs.getStationaryFrequencies();
-        }
-    else
-        {
-        // calculate transition probabilities under the Jukes-Cantor (1969) model
-        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
-        for (int n=0; n<traversalSeq.size(); n++)
-            {
-            Node* p = traversalSeq[n];
-            double** tp = probs[activeProbs][p->getIndex()];
-            double v = p->getBranchLength();
-            
-            double x = -((double)numStates/(numStates-1));
-            double pChange = (1.0/numStates) - (1.0/numStates) * exp(x * v);
-            double pNoChange = (1.0/numStates) + ((double)(numStates-1)/numStates) * exp(x * v);
-            for (int i=0; i<numStates; i++)
-                {
-                for (int j=0; j<numStates; j++)
-                    {
-                    if (i == j)
-                        tp[i][j] = pNoChange;
-                    else
-                        tp[i][j] = pChange;
-                    }
-                }
-            }
-            
-        double sf = 1.0 / numStates;
-        for (int i=0; i<numStates; i++)
-            stationaryFreqs[activeProbs][i] = sf;
-        }
+        }        
         
     needsUpdate = false;
 }

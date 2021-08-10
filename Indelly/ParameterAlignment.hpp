@@ -16,6 +16,7 @@ class ParameterAlignment : public Parameter {
                                         ParameterAlignment(const ParameterAlignment& pa) = delete;
                                         ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n);
                                        ~ParameterAlignment(void);
+        double                          update(void);
         void                            accept(void);
         std::vector<std::vector<int> >& getAlignment(void) { return alignment[0]; }
         std::vector<std::vector<int> >& getAlignment(int idx) { return alignment[idx]; }
@@ -34,7 +35,6 @@ class ParameterAlignment : public Parameter {
         double                          lnPriorProbability(void);
         void                            print(void);
         void                            reject(void);
-        double                          update(void);
     
     protected:
         std::vector<std::vector<int> >  alignment[2];  // numTaxa X numSites

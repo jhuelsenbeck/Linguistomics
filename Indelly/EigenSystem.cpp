@@ -7,6 +7,7 @@
 #include <vector>
 #include "EigenSystem.hpp"
 #include "Msg.hpp"
+#include "RateMatrixHelper.hpp"
 
 
 
@@ -97,7 +98,7 @@ void EigenSystem::initialize(int ns) {
     ccIjk[1] = new std::complex<double>[numStates*numStates*numStates];
     pi[0].resize(numStates);
     pi[1].resize(numStates);
-
+    
     isInitialized = true;
 }
 
@@ -117,18 +118,38 @@ void  EigenSystem::updateRateMatrix(std::vector<double>& rates, std::vector<doub
 
     // initialize the rate matrix
     StateMatrix_t Q(numStates,numStates);
-        
-    // fill in off diagonal components of rate matrix
-    for (int i=0, k=0; i<numStates; i++)
+    
+    // fill in off diagonal components of the rate matrix in
+    // a model-dependent manner
+    if (rates.size() == numStates * (numStates-1) / 2)
         {
-        for (int j=i+1; j<numStates; j++)
+        // gtr model
+        for (int i=0, k=0; i<numStates; i++)
             {
-            Q(i,j) = rates[k] * f[j];
-            Q(j,i) = rates[k] * f[i];
-            k++;
+            for (int j=i+1; j<numStates; j++)
+                {
+                Q(i,j) = rates[k] * f[j];
+                Q(j,i) = rates[k] * f[i];
+                k++;
+                }
             }
         }
-        
+    else
+        {
+        // custom model
+        RateMatrixHelper& helper = RateMatrixHelper::rateMatrixHelper();
+        int** map = helper.getMap();
+        for (int i=0; i<numStates; i++)
+            {
+            for (int j=i+1; j<numStates; j++)
+                {
+                int changeType = map[i][j];
+                Q(i,j) = rates[changeType] * f[j];
+                Q(j,i) = rates[changeType] * f[i];
+                }
+            }
+        }
+                
     // fill in the diagonal elements of the rate matrix
     for (int i=0; i<numStates; i++)
         {

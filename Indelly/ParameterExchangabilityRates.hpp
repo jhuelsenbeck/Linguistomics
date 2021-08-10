@@ -13,6 +13,7 @@ class ParameterExchangabilityRates : public Parameter {
                                         ParameterExchangabilityRates(void) = delete;
                                         ParameterExchangabilityRates(const ParameterExchangabilityRates& pr) = delete;
                                         ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns);
+                                        ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns, std::vector<std::string> labs);
                                        ~ParameterExchangabilityRates(void);
         void                            accept(void);
         std::string                     getHeader(void);
@@ -30,6 +31,7 @@ class ParameterExchangabilityRates : public Parameter {
         int                             numRates;
         std::vector<double>             rates[2];
         std::vector<double>             alpha;
+        std::vector<std::string>        rateLabels;
 };
 
 #endif

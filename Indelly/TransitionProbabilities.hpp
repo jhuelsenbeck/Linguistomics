@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "UserSettings.hpp"
 class Model;
 
 
@@ -20,7 +21,7 @@ class TransitionProbabilities {
         std::vector<double>             getStationaryFrequencies(void) { return stationaryFreqs[activeProbs]; }
         std::vector<double**>           getTransitionProbabilities(void) { return probs[activeProbs]; }
         double**                        getTransitionProbabilities(int nodeIdx) { return probs[activeProbs][nodeIdx]; }
-        void                            initialize(Model* m, int nn, int ns, std::string sm);
+        void                            initialize(Model* m, int nn, int ns, int sm);
         void                            print(void);
         void                            setNeedsUpdate(bool tf) { needsUpdate = tf; }
         void                            setTransitionProbabilities(void);
@@ -37,7 +38,7 @@ class TransitionProbabilities {
         std::vector<double>             stationaryFreqs[2];
         Model*                          modelPtr;
         bool                            needsUpdate;
-        std::string                     substitutionModel;
+        int                             substitutionModel;
 };
 
 #endif

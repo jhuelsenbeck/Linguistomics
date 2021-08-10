@@ -17,6 +17,36 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
 
     numStates = ns;
     numRates = numStates * (numStates-1) / 2;
+    for (int i=0; i<numStates; i++)
+        {
+        std::string str = std::to_string(i) + "-";
+        for (int j=i+1; j<numStates; j++)
+            {
+            str += std::to_string(j);
+            rateLabels.push_back(str);
+            }
+        }
+            
+    rates[0].resize(numRates);
+    rates[1].resize(numRates);
+    alpha.resize(numRates);
+    for (int i=0; i<numRates; i++)
+        alpha[i] = 1.0;
+    rv->dirichletRv(alpha, rates[0]);
+    rates[1] = rates[0];
+    
+}
+
+ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns, std::vector<std::string> labs) : Parameter(r, m, n) {
+
+    std::cout << "   * Setting up custom exchangeability rates parameter " << std::endl;
+
+    updateChangesEigens = true;
+
+    numStates = ns;
+    rateLabels = labs;
+    numRates = (int)rateLabels.size();
+    
     rates[0].resize(numRates);
     rates[1].resize(numRates);
     alpha.resize(numRates);
@@ -39,17 +69,13 @@ void ParameterExchangabilityRates::accept(void) {
 std::string ParameterExchangabilityRates::getHeader(void) {
 
     std::string str = "";
-    for (int i=0; i<numStates; i++)
+    for (int i=0; i<rateLabels.size(); i++)
         {
-        for (int j=i+1; j<numStates; j++)
-            {
-            str += "R[";
-            str += std::to_string(i);
-            str += "-";
-            str += std::to_string(j);
-            str += "]";
-            str += '\t';
-            }
+        std::string s = "R[";
+        s += rateLabels[i];
+        s += "]";
+        s += '\t';
+        str += s;
         }
     return str;
 }
