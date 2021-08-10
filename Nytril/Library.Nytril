@@ -491,22 +491,21 @@ class ResultsClass {
       ShowString(each (each Taxa).Variable);
     };
 
-    ArraySpan("Partition") {
-      Separator: ",";
-      foreach (var segment in UniqueSegments)
-        segment.PartitionIndex;
-    };
     ArraySpan("PartitionSets") {
       Span {
         Separator: ",";
         foreach (var partition in PartitionRule.Partitions) {
           Span {
+            "{"; Variable("Name");
+            ShowString(partition.Filter.Name);
+            CommaSpace;
+            Variable("Set");
             "[";
             Span {
-              Separator: ",";
+              Separator: CommaSpace;
               (each partition.Segments).CharacterIndex;
             };
-            "]";
+            "]}";
           }
         }
       };
