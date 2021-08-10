@@ -123,6 +123,78 @@ void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double ne
 
 void Mcmc::run(void) {
 
+    UserSettings& settings = UserSettings::userSettings();
+    if (settings.getCalculateMarginalLikelihood() == false)
+        runPosterior();
+    else
+        runPathSampling();
+}
+
+void Mcmc::runPathSampling(void) {
+
+    std::cout << "   Markov chain Monte Carlo" << std::endl;
+    
+    // initialize the chain
+    openOutputFiles();
+    double curLnL = modelPtr->lnLikelihood();
+    double curLnP = modelPtr->lnPriorProbability();
+    UpdateInfo& updateInfo = UpdateInfo::updateInfo();
+
+    // Metropolis-Hastings algorithm
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    for (int n=1; n<=numMcmcCycles; n++)
+        {
+        // propose a new value for the chain
+        double lnProposalRatio = modelPtr->update();
+        
+        // calculate the likelihood and prior ratios (natural log scale)
+        double newLnL = modelPtr->lnLikelihood();
+        double lnLikelihoodRatio = newLnL - curLnL;
+        double newLnP = modelPtr->lnPriorProbability();
+        double lnPriorRatio = newLnP - curLnP;
+        
+        // accept or reject the state
+        bool accept = false;
+        if ( log(rv->uniformRv()) < lnLikelihoodRatio + lnPriorRatio + lnProposalRatio )
+            accept = true;
+        
+        // print to the screen to give the user some clue where the chain is
+        if (n == 1 || n == numMcmcCycles || n % printFrequency == 0)
+            print(n, curLnL, newLnL, curLnP, newLnP, accept);
+        
+        // update the state of the chain
+        if (accept == false)
+            {
+            modelPtr->reject();
+            updateInfo.reject(modelPtr->getLastUpdate());
+            }
+        else
+            {
+            modelPtr->accept();
+            updateInfo.accept(modelPtr->getLastUpdate());
+            curLnL = newLnL;
+            curLnP = newLnP;
+            }
+        
+        // sample the chain, printing the current state to files
+        if (n == 1 || n == numMcmcCycles || n % sampleFrequency == 0)
+            sample(n, curLnL, curLnP);
+        }
+    std::chrono::high_resolution_clock::time_point stop = std::chrono::high_resolution_clock::now();
+        
+    // print summary information
+    std::cout << std::endl;
+    std::cout << "   Markov chain Monte Carlo run summary" << std::endl;
+    std::cout << "   * Run time = " << formattedTime(start, stop) << std::endl;
+    updateInfo.print();
+    std::cout << std::endl;
+    
+    // clean up
+    closeOutputFiles();
+}
+
+void Mcmc::runPosterior(void) {
+
     std::cout << "   Markov chain Monte Carlo" << std::endl;
     
     // initialize the chain

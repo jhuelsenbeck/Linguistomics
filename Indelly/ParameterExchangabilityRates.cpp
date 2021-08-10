@@ -164,7 +164,7 @@ double ParameterExchangabilityRates::update(void) {
 
     lastUpdateType = "exchangeability rates";
 
-    int k = 1;
+    int k = numRates;
     
     double lnP = 0.0;
     if (k == 1)
@@ -254,7 +254,7 @@ double ParameterExchangabilityRates::update(void) {
         }
     else
         {
-        double alpha0 = 100000.0;
+        double alpha0 = 1000.0;
         // update all of the rates
         std::vector<double>& oldValues = rates[0];
         std::vector<double> alphaForward(numRates);
