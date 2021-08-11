@@ -7,6 +7,8 @@
 #include "RandomVariable.hpp"
 #include "TransitionProbabilities.hpp"
 
+double ParameterEquilibirumFrequencies::minVal = 0.0001;
+
 
 
 ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable* r, Model* m, std::string n, int ns) : Parameter(r, m, n) {
@@ -22,6 +24,7 @@ ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable*
     for (int i=0; i<numStates; i++)
         alpha[i] = 1.0;
     rv->dirichletRv(alpha, freqs[0]);
+    normalize(freqs[0], minVal);
     freqs[1] = freqs[0];
 }
 
@@ -151,7 +154,7 @@ double ParameterEquilibirumFrequencies::update(void) {
         alphaForward[1] = oldValues[1] * alpha0;
         
         rv->dirichletRv(alphaForward, newValues);
-        normalize(newValues, 0.00000001);
+        normalize(newValues, minVal);
         
         alphaReverse[0] = newValues[0] * alpha0;
         alphaReverse[1] = newValues[1] * alpha0;
@@ -192,7 +195,7 @@ double ParameterEquilibirumFrequencies::update(void) {
         
         // draw a new value for the reduced vector
         rv->dirichletRv(alphaForward, newValues);
-        normalize(newValues, 0.00000001);
+        normalize(newValues, minVal);
         
         // fill in the Dirichlet parameters for the reverse probability calculations
         for (size_t i=0; i<k+1; i++)
@@ -230,7 +233,7 @@ double ParameterEquilibirumFrequencies::update(void) {
         
         std::vector<double> newValues(numStates);
         rv->dirichletRv(alphaForward, newValues);
-        normalize(newValues, 0.000001);
+        normalize(newValues, minVal);
         
         std::vector<double> alphaReverse(numStates);
         for (int i=0; i<numStates; i++)

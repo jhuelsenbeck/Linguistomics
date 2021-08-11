@@ -29,6 +29,7 @@ class ParameterEquilibirumFrequencies : public Parameter {
         int                             numStates;
         std::vector<double>             freqs[2];
         std::vector<double>             alpha;
+        static double                   minVal;
 };
 
 #endif

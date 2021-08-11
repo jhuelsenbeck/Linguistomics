@@ -158,6 +158,7 @@ void RateMatrixHelper::print(void) {
             std::cout << j << " ";
         std::cout << ")" << std::endl;
         }
+    std::cout << "     The model has " << groupIndices.size() << " rate parameters" << std::endl;
 }
 
 GroupPair::GroupPair(int i, int j) {

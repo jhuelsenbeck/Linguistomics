@@ -7,6 +7,8 @@
 #include "RandomVariable.hpp"
 #include "TransitionProbabilities.hpp"
 
+double ParameterExchangabilityRates::minVal = 0.00001;
+
 
 
 ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns) : Parameter(r, m, n) {
@@ -33,6 +35,7 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
     for (int i=0; i<numRates; i++)
         alpha[i] = 1.0;
     rv->dirichletRv(alpha, rates[0]);
+    normalize(rates[0], minVal);
     rates[1] = rates[0];
     
 }
@@ -184,7 +187,7 @@ double ParameterExchangabilityRates::update(void) {
         alphaForward[1] = oldValues[1] * alpha0;
         
         rv->dirichletRv(alphaForward, newValues);
-        normalize(newValues, 0.00000001);
+        normalize(newValues, minVal);
         
         alphaReverse[0] = newValues[0] * alpha0;
         alphaReverse[1] = newValues[1] * alpha0;
@@ -225,7 +228,7 @@ double ParameterExchangabilityRates::update(void) {
         
         // draw a new value for the reduced vector
         rv->dirichletRv(alphaForward, newValues);
-        normalize(newValues, 0.00000001);
+        normalize(newValues, minVal);
         
         // fill in the Dirichlet parameters for the reverse probability calculations
         for (size_t i=0; i<k+1; i++)
@@ -263,7 +266,7 @@ double ParameterExchangabilityRates::update(void) {
         
         std::vector<double> newValues(numRates);
         rv->dirichletRv(alphaForward, newValues);
-        normalize(newValues, 0.000001);
+        normalize(newValues, minVal);
         
         std::vector<double> alphaReverse(numRates);
         for (int i=0; i<numRates; i++)
