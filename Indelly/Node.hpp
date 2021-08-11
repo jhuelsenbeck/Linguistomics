@@ -28,6 +28,7 @@ class Node {
         std::string         getName(void) { return name; }
         int                 getOffset(void) { return offset; }
         int                 getOffset(void) const { return offset; }
+        Node*               getSisterNode(void);
         bool                isDescendant(Node* p);
         size_t              numDescendants(void);
         void                print(void);

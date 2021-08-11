@@ -10,10 +10,16 @@
 RateMatrixHelper::RateMatrixHelper(void) {
 
     isInitialized = false;
+    m = NULL;
 }
 
 RateMatrixHelper::~RateMatrixHelper(void) {
 
+    if (m != NULL)
+        {
+        delete [] m[0];
+        delete [] m;
+        }
 }
 
 std::vector<std::string> RateMatrixHelper::getLabels(void) {

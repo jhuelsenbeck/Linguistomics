@@ -433,6 +433,13 @@ void Tree::initializeDownPassSequence(void) {
 
     downPassSequence.clear();
     passDown(root);
+    int idx = numTaxa;
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p->getIsLeaf() == false)
+            p->setIndex(idx++);
+        }
 }
 
 std::vector<int> Tree::getAncestorIndices(void) {
@@ -536,7 +543,8 @@ void Tree::listNodes(Node* p, size_t indent) {
         
         for (int i=0; i<indent; i++)
             std::cout << " ";
-        std::cout << p->getIndex() << " " << p << " ( ";
+//        std::cout << p->getIndex() << " " << p << " ( ";
+        std::cout << p->getIndex() << " ( ";
         if (p->getAncestor() != NULL)
             std::cout << "a_" << p->getAncestor()->getIndex() << " ";
         else

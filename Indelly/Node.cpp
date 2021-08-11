@@ -52,6 +52,21 @@ std::vector<Node*> Node::getDescendantsVector(void) {
     return nb;
 }
 
+Node* Node::getSisterNode(void) {
+
+    if (ancestor == NULL)
+        return NULL;
+    std::set<Node*,CompNode>& des = ancestor->getDescendants()->getNodes();
+    if (des.size() != 2)
+        return NULL;
+    for (Node* n : des)
+        {
+        if (n != this)
+            return n;
+        }
+    return NULL;
+}
+
 bool Node::isDescendant(Node* p) {
 
     std::set<Node*,CompNode>& des = descendants->getNodes();

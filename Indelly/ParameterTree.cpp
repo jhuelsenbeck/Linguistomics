@@ -9,6 +9,8 @@
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 
+#undef DEBUG_LOCAL
+
 
 
 ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, double itl) : Parameter(r, m, "tree") {
@@ -55,11 +57,18 @@ void ParameterTree::accept(void) {
 void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
 
     Tree* t = trees[0];
+    Node* r = t->getRoot();
     Node* p = NULL;
+    bool goodNode = true;
     do
         {
         p = t->randomNode(rv);
-        } while(p->getIsLeaf() == true || p == t->getRoot());
+        goodNode = true;
+        if (p->getIsLeaf() == true || p == r)
+            goodNode = false;
+        else if (p->getAncestor() == r)
+            goodNode = false;
+        } while(goodNode == false);
     Node* pAnc = p->getAncestor();
     
     if (pAnc == NULL)
@@ -200,13 +209,12 @@ void ParameterTree::reject(void) {
 }
 
 double ParameterTree::update(void) {
-
-//    updateNni();
     
     // pick a tree parameter to update
     double u = rv->uniformRv();
-    
-    if (u < 0.75)
+    if (u <= 0.50)
+        return updateNni();
+    else if (u > 0.50 && u <= 0.75)
         return updateBrlenProportions();
     else
         return updateTreeLength();
@@ -337,10 +345,15 @@ double ParameterTree::updateBrlenProportions(void) {
 
 double ParameterTree::updateNni(void) {
 
+    lastUpdateType = "local";
+
     double tuning = log(4.0);
     Tree* t = trees[0];
+#   if defined(DEBUG_LOCAL)
+    t->print("BEFORE");
+#   endif
     
-    // temporarily, make all of the branch proportion instance variables
+    // temporarily, make all of the branch proportions
     // for the tree equal to the branch length
     double treeLen = t->getTreeLength();
     std::vector<Node*> dpSeq = t->getDownPassSequence();
@@ -354,30 +367,101 @@ double ParameterTree::updateNni(void) {
     std::vector<Node*> backbone;
     Node* incidentNode = NULL;
     nniArea(backbone, incidentNode);
-    
-    // calculate the length of the backbone
-    double m = 0.0;
-    for (int i=0; i<3; i++)
-        m += backbone[i]->getBranchProportion();
-        
-    // choose a new length for the backbone
-    double mPrime = m * exp(tuning*(rv->uniformRv()-0.5));
-    double factor = mPrime / m;
-    backbone[0]->setBranchProportion( backbone[0]->getBranchProportion()*factor );
-    backbone[1]->setBranchProportion( backbone[1]->getBranchProportion()*factor );
-    backbone[2]->setBranchProportion( backbone[2]->getBranchProportion()*factor );
-    
-    // slide the incident node a random amount along the backbone
-    if (backbone[1]->isDescendant(incidentNode) == true)
+    Node* p = backbone[1];
+    Node* pAnc = p->getAncestor();
+    Node* a = backbone[0];
+    Node* b = backbone[2];
+    if (b == pAnc && b->getAncestor() == t->getRoot())
         {
-        // the incident node is above the backbone
+        std::vector<Node*> rDes = t->getRoot()->getDescendantsVector();
+        double rBrlen = rDes[0]->getBranchProportion() + rDes[1]->getBranchProportion();
+        rDes[0]->setBranchProportion(0.0);
+        rDes[1]->setBranchProportion(0.0);
+        b->setBranchProportion(rBrlen);
+        }
+        
+    // get length of backbone and randomly change it
+    double mOld = a->getBranchProportion() + p->getBranchProportion() + b->getBranchProportion();
+    double mNew = mOld * exp(tuning*(rv->uniformRv()-0.5));
+    double factor = mNew / mOld;
+    a->setBranchProportion( a->getBranchProportion() * factor );
+    p->setBranchProportion( p->getBranchProportion() * factor );
+    b->setBranchProportion( b->getBranchProportion() * factor );
+
+    // rearrange the tree
+    if (incidentNode == pAnc)
+        {
+        // the backbone must be rotated around incident
+        double newPt = rv->uniformRv() * mNew;
+        if (newPt < a->getBranchProportion())
+            {
+            p->removeDescendant(a);
+            p->addDescendant(b);
+            pAnc->removeDescendant(b);
+            pAnc->addDescendant(a);
+            a->setAncestor(pAnc);
+            b->setAncestor(p);
+            b->setBranchProportion( b->getBranchProportion() + p->getBranchProportion() );
+            p->setBranchProportion(newPt);
+            a->setBranchProportion( a->getBranchProportion() - newPt );
+            }
+        else
+            {
+            // no topology change, but adjust branch lengths for pAnc descendants
+            newPt -= a->getBranchProportion();
+            double sum = b->getBranchProportion() + p->getBranchProportion();
+            b->setBranchProportion(newPt);
+            p->setBranchProportion(sum-newPt);
+            }
         }
     else
         {
-        // the incident node is below the backbone
+        // detach and reattach incident as it's above backbone
+        Node* incidentAnc = incidentNode->getAncestor();
+        Node* incidentSis = incidentNode->getSisterNode();
+        Node* incidentAncAnc = incidentAnc->getAncestor();
+        incidentAncAnc->removeDescendant(incidentAnc);
+        incidentAncAnc->addDescendant(incidentSis);
+        incidentSis->setAncestor(incidentAncAnc);
+        incidentSis->setBranchProportion( incidentSis->getBranchProportion() + incidentAnc->getBranchProportion() );
+        incidentAnc->removeDescendant(incidentSis);
+        
+        double newPt = rv->uniformRv() * mNew;
+        if (newPt < a->getBranchProportion())
+            {
+            // reattach along branch a
+            Node* aAnc = a->getAncestor();
+            aAnc->removeDescendant(a);
+            aAnc->addDescendant(incidentAnc);
+            incidentAnc->addDescendant(a);
+            incidentAnc->setAncestor(aAnc);
+            a->setAncestor(incidentAnc);
+            a->setBranchProportion( a->getBranchProportion() - newPt );
+            incidentAnc->setBranchProportion( newPt );
+            }
+        else
+            {
+            Node* x = NULL;
+            if (a->getAncestor() == p)
+                x = p;
+            else
+                {
+                if (pAnc == b)
+                    x = pAnc;
+                else
+                    x = b;
+                }
+            Node* xAnc = x->getAncestor();
+            xAnc->removeDescendant(x);
+            xAnc->addDescendant(incidentAnc);
+            incidentAnc->addDescendant(x);
+            incidentAnc->setAncestor(xAnc);
+            x->setAncestor(incidentAnc);
+            double xPt = newPt - a->getBranchProportion();
+            x->setBranchProportion( x->getBranchProportion() - xPt );
+            incidentAnc->setBranchProportion( xPt );
+            }
         }
-    
-    
     
     // reinitialize the down pass sequence for the tree, in case the topology has changed
     t->initializeDownPassSequence();
@@ -391,15 +475,28 @@ double ParameterTree::updateNni(void) {
         dpSeq[i]->setBranchProportion( dpSeq[i]->getBranchProportion()/treeLen );
     t->setTreeLength(treeLen);
     
-    
-    t->print();
+    // break the branch at the root evenly in two
+    std::vector<Node*> rDes = t->getRoot()->getDescendantsVector();
+    double rBrlenSum = rDes[0]->getBranchProportion() + rDes[1]->getBranchProportion();
+    rDes[0]->setBranchProportion(rBrlenSum*0.5);
+    rDes[1]->setBranchProportion(rBrlenSum*0.5);
+
+    // update the transition probabilities
+    updateChangesTransitionProbabilities = true;
+    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
+    tip.flipActive();
+    tip.setNeedsUpdate(true);
+    tip.setTransitionProbabilities();
+
+#   if defined(DEBUG_LOCAL)
+    t->print("AFTER");
     std::cout << "backbone[0]  = " << backbone[0]->getIndex() << std::endl;
     std::cout << "backbone[1]  = " << backbone[1]->getIndex() << std::endl;
     std::cout << "backbone[2]  = " << backbone[2]->getIndex() << std::endl;
     std::cout << "incidentNode = " << incidentNode->getIndex() << std::endl;
+#   endif
 
-    exit(1);
-    return log(mPrime) - log(m);
+    return 3.0 * log(factor);
 }
 
 double ParameterTree::updateSpr(void) {
