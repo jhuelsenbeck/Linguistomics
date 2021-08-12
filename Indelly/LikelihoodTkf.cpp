@@ -13,6 +13,8 @@
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 
+#include <gmpxx.h>
+
 #undef DEBUG_TKF91
 int LikelihoodTkf::unalignableRegionSize = 0;
 int LikelihoodTkf::maxUnalignableDimension = 10;
@@ -28,6 +30,7 @@ int LikelihoodTkf::maxUnalignableDimension = 10;
 
 LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m) {
 
+//    mpf_class x;
 
     data = a;
     tree = t;

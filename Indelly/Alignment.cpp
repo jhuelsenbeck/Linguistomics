@@ -285,6 +285,11 @@ void Alignment::print(void) {
 	int** x = matrix;
 		
     std::cout << "Name: " << name << std::endl;
+    std::cout << "Taxa: ( ";
+    for (int i=0; i<taxonNames.size(); i++)
+        std::cout << taxonNames[i] << " ";
+    std::cout << ")" << std::endl;
+    std::cout << "Name: " << name << std::endl;
 	std::cout << "        ";
 	for (size_t i=0; i<numTaxa; i++)
 		std::cout << std::setw(3) << i;

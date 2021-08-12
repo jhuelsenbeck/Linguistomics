@@ -27,16 +27,15 @@ Model::Model(RandomVariable* r) {
 
     std::cout << "   Model" << std::endl;
     rv = r;
-    UserSettings& settings = UserSettings::userSettings();
 
     // read the json file
-    nlohmann::json j = parseJsonFile(settings.getDataFile());
+    nlohmann::json j = parseJsonFile();
 
     // initialize alignments
     std::vector<Alignment*> wordAlignments = initializeAlignments(j);
     
     // initialize parameters of model
-    initializeParameters(&settings, wordAlignments, j);
+    initializeParameters(wordAlignments, j);
     
     // initialize transition probabilities
     initializeTransitionProbabilities(wordAlignments[0]->getNumStates(), j);
@@ -225,24 +224,28 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
     
     // read each word
     std::vector<Alignment*> words;
-    std::vector<std::string> taxonNames;
     std::vector<std::string> rejectedWords;
+    std::vector<std::string> taxonNames;
     for (size_t i=0; i<numWords; i++)
         {
-        // instantiate the word alignment from the json object
+        // get the json object for the word
         nlohmann::json jw = j["Words"][i];
+
+        // instantiate the word alignment from the json object
         Alignment* aln = new Alignment(jw, numStates);
-        if (i == 0)
-            taxonNames = aln->getTaxonNames();
-        
-        // check if we have problems
-        if (taxonNames.size() != aln->numCompleteTaxa() || aln->numCompleteTaxa() != numTaxa)
+                
+        // check if we have problems, deleting the alignment if we do
+        std::vector<std::string> alnTaxonNames = aln->getTaxonNames();
+        if (canonicalTaxonList.size() != aln->numCompleteTaxa())
             {
             rejectedWords.push_back(aln->getName());
             delete aln;
             continue;
             }
-        std::vector<std::string> alnTaxonNames = aln->getTaxonNames();
+            
+        if (taxonNames.size() == 0)
+            taxonNames = aln->getTaxonNames();
+            
         if (taxonNames.size() != alnTaxonNames.size())
             Msg::error("List of taxa is inconsistent across words");
         for (int j=0; j<taxonNames.size(); j++)
@@ -294,7 +297,9 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
     return words;
 }
 
-void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>& wordAlignments, nlohmann::json& j) {
+void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohmann::json& j) {
+
+    UserSettings& settings = UserSettings::userSettings();
 
     // attempt to find the initial tree in the json object
     std::string treeStr = "";
@@ -309,7 +314,7 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
     int numStates = j["NumberOfStates"];
 
     // initialize a few important parameters
-    substitutionModel = settings->getSubstitutionModel();
+    substitutionModel = settings.getSubstitutionModel();
     std::vector<std::string> taxonNames = wordAlignments[0]->getTaxonNames();
     
     // if the model is a custom one, make certain there is a partition of states to read
@@ -326,7 +331,7 @@ void Model::initializeParameters(UserSettings* settings, std::vector<Alignment*>
         }
     
     // set up the tree parameter
-    Parameter* pTree = new ParameterTree(rv, this, treeStr, taxonNames, settings->getInverseTreeLength());
+    Parameter* pTree = new ParameterTree(rv, this, treeStr, taxonNames, settings.getInverseTreeLength());
     pTree->setProposalProbability(10.0);
     parameters.push_back(pTree);
     
@@ -475,8 +480,11 @@ double Model::lnPriorProbability(void) {
     return lnP;
 }
 
-nlohmann::json Model::parseJsonFile(std::string fn) {
+nlohmann::json Model::parseJsonFile(void) {
 
+    // parse the file
+    UserSettings& settings = UserSettings::userSettings();
+    std::string fn = settings.getDataFile();
     std::ifstream ifs(fn);
     nlohmann::json j;
     try
@@ -487,6 +495,18 @@ nlohmann::json Model::parseJsonFile(std::string fn) {
         {
         Msg::error("Error parsing JSON file at byte " + std::to_string(ex.byte));
         }
+        
+    // print the json information to a file
+    std::string configPath = settings.getOutFile();
+    configPath += ".config";
+    std::ofstream configStrm;
+    configStrm.open( configPath.c_str(), std::ios::out );
+    if (!configStrm)
+        Msg::error("Cannot open file \"" + configPath + "\"");
+    configStrm << j.dump() << std::endl;
+    configStrm.close();
+    
+    // return the json object
     return j;
 }
 
