@@ -35,6 +35,7 @@ class ParameterIndelRates : public Parameter {
         
     protected:
         double                          expectedEpsilon(double slen);
+        double                          updateFromPrior(void);
         double                          insertionLambda;
         double                          deletionLambda;
         double                          expEpsilon;

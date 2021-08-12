@@ -115,102 +115,7 @@ Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
 
 Tree::Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
 
-    // read the tree file
-    root = NULL;
-    numTaxa = 0;
-    taxonNames = tNames;
-
-    // start with a simple two-species tree
-    Node* n1 = addNode();
-    Node* n2 = addNode();
-    n1->setName(tNames[0]);
-    n2->setName(tNames[1]);
-    n1->setIsLeaf(true);
-    n2->setIsLeaf(true);
-    root = addNode();
-    root->addDescendant(n1);
-    root->addDescendant(n2);
-    n1->setAncestor(root);
-    n2->setAncestor(root);
-    
-    for (int i=2; i<tNames.size(); i++)
-        {
-        Node* newTip = addNode();
-        Node* newInt = addNode();
-        newTip->setName(tNames[i]);
-        newTip->setIsLeaf(true);
-        
-        Node* p = nodes[(int)(rv->uniformRv()*nodes.size())];
-        Node* pAnc = p->getAncestor();
-        
-        if (pAnc == NULL)
-            {
-            p->setAncestor(newInt);
-            newTip->setAncestor(newInt);
-            newInt->addDescendant(p);
-            newInt->addDescendant(newTip);
-            newInt->setAncestor(NULL);
-            root = newInt;
-            }
-        else
-            {
-            p->setAncestor(newInt);
-            pAnc->removeDescendant(p);
-            pAnc->addDescendant(newInt);
-            newInt->addDescendant(p);
-            newInt->addDescendant(newTip);
-            newInt->setAncestor(pAnc);
-            newTip->setAncestor(newInt);
-            }
-        }
-
-    // initialize down pass sequence
-    initializeDownPassSequence();
-
-    // reindex interior nodes
-    int intIdx = numTaxa;
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        if (p->getIsLeaf() == false)
-            p->setIndex(intIdx++);
-        }
-
-    // initialize branch lengths
-    // first, initialize all branch lengths, except the root node
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        if (p != root)
-            p->setBranchProportion(rv->exponentialRv(1.0));
-        else
-            p->setBranchProportion(0.0);
-        }
-    // make certain the two branches incident to the root are the
-    // same in length and considered one branch
-    std::vector<Node*> rootDes = root->getDescendantsVector();
-    if (rootDes.size() != 2)
-        Msg::error("Expecting two descendants of the root node");
-    double x = rootDes[0]->getBranchProportion() + rootDes[1]->getBranchProportion();
-    rootDes[0]->setBranchProportion(x/4.0);
-    rootDes[1]->setBranchProportion(x/4.0);
-
-    // rescale so branch proportions sum to 1.0
-    double sum = 0.0;
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        sum += p->getBranchProportion();
-        }
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        p->setBranchProportion( p->getBranchProportion()/sum );
-        }
-        
-    treeLength = rv->gammaRv(1.0, betaT);
-        
-
+    buildRandomTree(tNames, betaT, rv);
 }
 
 Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
@@ -376,6 +281,107 @@ Node* Tree::addNode(void) {
     newNode->setMyTree(this);
     nodes.push_back(newNode);
     return newNode;
+}
+
+void Tree::buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
+
+    deleteAllNodes();
+    
+    root = NULL;
+    numTaxa = 0;
+    taxonNames = tNames;
+
+    // start with a simple two-species tree
+    Node* n1 = addNode();
+    Node* n2 = addNode();
+    n1->setName(tNames[0]);
+    n2->setName(tNames[1]);
+    n1->setIsLeaf(true);
+    n2->setIsLeaf(true);
+    root = addNode();
+    root->addDescendant(n1);
+    root->addDescendant(n2);
+    n1->setAncestor(root);
+    n2->setAncestor(root);
+    
+    for (int i=2; i<tNames.size(); i++)
+        {
+        Node* newTip = addNode();
+        Node* newInt = addNode();
+        newTip->setName(tNames[i]);
+        newTip->setIsLeaf(true);
+        
+        Node* p = nodes[(int)(rv->uniformRv()*nodes.size())];
+        Node* pAnc = p->getAncestor();
+        
+        if (pAnc == NULL)
+            {
+            p->setAncestor(newInt);
+            newTip->setAncestor(newInt);
+            newInt->addDescendant(p);
+            newInt->addDescendant(newTip);
+            newInt->setAncestor(NULL);
+            root = newInt;
+            }
+        else
+            {
+            p->setAncestor(newInt);
+            pAnc->removeDescendant(p);
+            pAnc->addDescendant(newInt);
+            newInt->addDescendant(p);
+            newInt->addDescendant(newTip);
+            newInt->setAncestor(pAnc);
+            newTip->setAncestor(newInt);
+            }
+        }
+
+    // initialize down pass sequence
+    initializeDownPassSequence();
+
+    // reindex interior nodes
+    int intIdx = numTaxa;
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p->getIsLeaf() == false)
+            p->setIndex(intIdx++);
+        }
+
+    // initialize branch lengths
+    // first, initialize all branch lengths, except the root node
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p != root)
+            p->setBranchProportion(rv->exponentialRv(1.0));
+        else
+            p->setBranchProportion(0.0);
+        }
+        
+    // make certain the two branches incident to the root are the
+    // same in length and considered one branch
+    std::vector<Node*> rootDes = root->getDescendantsVector();
+    if (rootDes.size() != 2)
+        Msg::error("Expecting two descendants of the root node");
+    double x = rootDes[0]->getBranchProportion() + rootDes[1]->getBranchProportion();
+    rootDes[0]->setBranchProportion(x/4.0);
+    rootDes[1]->setBranchProportion(x/4.0);
+
+    // rescale so branch proportions sum to 1.0
+    double sum = 0.0;
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        sum += p->getBranchProportion();
+        }
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        p->setBranchProportion( p->getBranchProportion()/sum );
+        }
+        
+    // set the tree length from a gamma
+    treeLength = rv->gammaRv(1.0, betaT);
 }
 
 void Tree::clone(Tree& t) {

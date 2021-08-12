@@ -257,3 +257,24 @@ double ParameterEquilibirumFrequencies::update(void) {
     
     return lnP;
 }
+
+double ParameterEquilibirumFrequencies::updateFromPrior(void) {
+
+    lastUpdateType = "random equilibrium frequencies";
+
+    // draw from the prior distribution, which is a flat Dirichlet distribution
+    rv->dirichletRv(alpha, freqs[0]);
+
+    // update the eigen system and transition probabilities
+    EigenSystem& eigs = EigenSystem::eigenSystem();
+    eigs.flipActiveValues();
+    eigs.updateRateMatrix(modelPtr->getExchangabilityRates(), freqs[0]);
+
+    updateChangesTransitionProbabilities = true;
+    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
+    tip.flipActive();
+    tip.setNeedsUpdate(true);
+    tip.setTransitionProbabilities();
+
+    return 0.0;
+}

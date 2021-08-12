@@ -18,6 +18,7 @@ class Tree {
                                     Tree(Tree& t, std::vector<bool> taxonMask);
                                    ~Tree(void);
         Tree&                       operator=(Tree& t);
+        void                        buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
         std::string                 getNewick(void);
         int                         getNumNodes(void) { return (int)nodes.size(); }
         int                         getNumTaxa(void) { return numTaxa; }

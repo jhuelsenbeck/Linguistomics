@@ -257,7 +257,7 @@ double ParameterExchangabilityRates::update(void) {
         }
     else
         {
-        double alpha0 = 1000.0;
+        double alpha0 = 2000.0;
         // update all of the rates
         std::vector<double>& oldValues = rates[0];
         std::vector<double> alphaForward(numRates);
@@ -291,4 +291,25 @@ double ParameterExchangabilityRates::update(void) {
     // and it also changes the eigen system
 
     return lnP;
+}
+
+double ParameterExchangabilityRates::updateFromPrior(void) {
+
+    lastUpdateType = "random exchangeability rates";
+
+    // draw from the prior distribution, which is a flat Dirichlet distribution
+    rv->dirichletRv(alpha, rates[0]);
+
+    // update the eigen system and transition probabilities
+    EigenSystem& eigs = EigenSystem::eigenSystem();
+    eigs.flipActiveValues();
+    eigs.updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
+
+    updateChangesTransitionProbabilities = true;
+    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
+    tip.flipActive();
+    tip.setNeedsUpdate(true);
+    tip.setTransitionProbabilities();
+
+    return 0.0;
 }

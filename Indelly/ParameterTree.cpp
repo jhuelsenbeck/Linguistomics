@@ -524,3 +524,53 @@ double ParameterTree::updateTreeLength(void) {
 
     return log(newL) - log(oldL);
 }
+
+double ParameterTree::updateTopologyFromPrior(void) {
+
+    lastUpdateType = "random tree";
+    
+    Tree* t = getActiveTree();
+    std::vector<std::string> tNames;
+    std::vector<std::string>& tNamesToCopy = t->getTaxonNames();
+    for (int i=0; i<tNamesToCopy.size(); i++)
+        tNames.push_back(tNamesToCopy[i]);
+        
+    double lnP1 = lnPriorProbability();
+    t->buildRandomTree(tNames, betaT, rv);
+    double lnP2 = lnPriorProbability();
+
+    return lnP1 - lnP2;
+}
+
+double ParameterTree::updateBranchlengthsFromPrior(void) {
+
+    lastUpdateType = "random branch lengths";
+
+    Tree* t = getActiveTree();
+    double lnP1 = lnPriorProbability();
+    std::vector<Node*> dpSeq = t->getDownPassSequence();
+    double sum = 0.0;
+    for (int i=0; i<dpSeq.size(); i++)
+        {
+        Node* p = dpSeq[i];
+        if (p != t->getRoot())
+            {
+            p->setBranchProportion( rv->exponentialRv(1.0) );
+            sum += p->getBranchProportion();
+            }
+        else
+            p->setBranchProportion(0.0);
+        }
+    for (int i=0; i<dpSeq.size(); i++)
+        {
+        Node* p = dpSeq[i];
+        p->setBranchProportion( p->getBranchProportion() / sum );
+        }
+
+    double treeLength = rv->gammaRv(1.0, betaT);
+    t->setTreeLength(treeLength);
+
+    double lnP2 = lnPriorProbability();
+
+    return lnP1 - lnP2;
+}

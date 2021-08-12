@@ -36,6 +36,7 @@ class UserSettings {
         double                  inverseTreeLength;
         int                     substitutionModel;
         bool                    calculateMarginalLikelihood;
+        std::string             executablePath;
 };
 
 #endif

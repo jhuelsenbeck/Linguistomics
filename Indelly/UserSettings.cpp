@@ -24,8 +24,9 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 
     // move the command-line arguments to a good-ol' C++ STL vector of strings
     std::vector<std::string> commands;
+    executablePath = argv[0];
 #   if defined(DEBUG_MODE)
-    commands.push_back(argv[0]);
+    commands.push_back(executablePath);
     commands.push_back("-d");
     commands.push_back("/Users/johnh/Repositories/Linguistomics/Run/Run1/config.json");
     commands.push_back("-o");
@@ -35,7 +36,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-n");
     commands.push_back("100000");
     commands.push_back("-p");
-    commands.push_back("1");
+    commands.push_back("100");
     commands.push_back("-s");
     commands.push_back("100");
     commands.push_back("-l");
@@ -46,6 +47,12 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     for (int i=0; i<argc; i++)
         commands.push_back(argv[i]);
 #   endif
+
+    if (commands.size() % 2 == 0 || commands.size() == 1)
+        {
+        usage();
+        Msg::error("Problem with arguments for \"" + executablePath + "\"");
+        }
     
     // read the command-line arguments, starting with the second one
     std::string arg = "";
@@ -104,6 +111,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 void UserSettings::print(void) {
 
     std::cout << "   Settings" << std::endl;
+    std::cout << "   * Executable path                        = " << executablePath << std::endl;
     std::cout << "   * File with initial word alignments      = \"" << dataFile << "\"" << std::endl;
     if (substitutionModel == jc69)
         std::cout << "   * Substitution model                     = " << "JC69" << std::endl;

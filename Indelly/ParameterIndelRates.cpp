@@ -193,3 +193,24 @@ double ParameterIndelRates::update(void) {
 
     return lnProposalProbability;
 }
+
+double ParameterIndelRates::updateFromPrior(void) {
+
+    lastUpdateType = "random indel rates";
+
+    double newLambda = 0.0, newMu = 0.0;
+    do
+        {
+        newLambda = rv->exponentialRv(insertionLambda);
+        newMu = rv->exponentialRv(deletionLambda);
+        } while (newLambda > newMu);
+        
+    double lnP  = log(deletionLambda) + log(insertionLambda + deletionLambda) - deletionLambda * newMu - insertionLambda * newLambda;
+           lnP += log(deletionLambda) + log(insertionLambda + deletionLambda) - deletionLambda * getDeletionRate() - insertionLambda * getInsertionRate();
+           
+    epsilon[0][0] = newLambda / newMu;
+    epsilon[0][1] = 1.0 - epsilon[0][0];
+    rho[0] = newLambda + newMu;
+
+    return lnP;
+}
