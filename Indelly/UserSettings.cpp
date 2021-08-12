@@ -30,11 +30,11 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-d");
     commands.push_back("/Users/johnh/Repositories/Linguistomics/Run/Run1/config.json");
     commands.push_back("-o");
-    commands.push_back("/Users/johnh/Desktop/Indelly/out/test_jc");
+    commands.push_back("/Users/johnh/Desktop/Indelly/out/test_custom");
     commands.push_back("-m");
-    commands.push_back("jc69");
+    commands.push_back("custom");
     commands.push_back("-n");
-    commands.push_back("100000");
+    commands.push_back("2000000");
     commands.push_back("-p");
     commands.push_back("100");
     commands.push_back("-s");
