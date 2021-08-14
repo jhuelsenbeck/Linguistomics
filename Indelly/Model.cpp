@@ -202,7 +202,6 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
     auto it = j.find("Taxa");
     if (it == j.end())
         Msg::error("Could not find list of taxa in the JSON file");
-    size_t numTaxa = j["Taxa"].size();
     std::vector<std::string> canonicalTaxonList = j["Taxa"];
     std::cout << "   * Found " << canonicalTaxonList.size() << " taxa in JSON file" << std::endl;
     
