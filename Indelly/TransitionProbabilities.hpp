@@ -39,6 +39,7 @@ class TransitionProbabilities {
         Model*                          modelPtr;
         bool                            needsUpdate;
         int                             substitutionModel;
+        int                             numRateCategories;
 };
 
 #endif

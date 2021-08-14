@@ -34,7 +34,8 @@ class LikelihoodTkf {
         void                                            printVector(std::string header, std::vector<int>& v);
         void                                            printVector(std::string header, std::vector<double>& v);
         void                                            printVector(std::string header, std::vector< std::vector<double> >& v);
-        double                                          treeRecursion(IntVector* signature, IntVector* pos);
+        void                                            printVector(std::string header, std::vector< std::vector<int> >& v);
+        double                                          treeRecursion(IntVector* signature, IntVector* pos, int siteColumn);
         ParameterAlignment*                             data;
         Tree*                                           tree;
         Model*                                          model;

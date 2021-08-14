@@ -77,6 +77,7 @@ void LikelihoodTkf::initAlignment(void) {
             
     alignment = data->getIndelMatrix();
             
+//    printVector("Alignment", alignment);
 #   if 0
     std::cout << "Variable = alignment" << std::endl;
     std::cout << "name = " << data->getName() << std::endl;
@@ -243,6 +244,18 @@ void LikelihoodTkf::printVector(std::string header, std::vector< std::vector<dou
         }
 }
 
+void LikelihoodTkf::printVector(std::string header, std::vector< std::vector<int> >& v) {
+
+    if (header != "")
+        std::cout << header << std::endl;
+    for (int i=0; i<v.size(); i++)
+        {
+        for (int j=0; j<v[i].size(); j++)
+            std::cout << std::setw(2) << v[i][j] << " ";
+        std::cout << std::endl;
+        }
+}
+
 double LikelihoodTkf::tkfLike(void) {
     
     int len = (int)alignment.size();
@@ -250,9 +263,10 @@ double LikelihoodTkf::tkfLike(void) {
     int firstNotUsed = 0;                                    // First not-'used' alignment vector (for efficiency)
     std::vector<int> state(len);                             // Helper array, to traverse the region in the DP table corresp. to the alignment
 	IntVector pos(numLeaves);                                // Current position; sum of all used vectors
+    int currentAlignmentColumn = 0;                          // Keep track of which alignment column is being calculated
     
     // Calculate correction factor for null emissions ("wing folding", or linear equation solving.)
-    double nullEmissionFactor = treeRecursion( &pos, &pos );
+    double nullEmissionFactor = treeRecursion( &pos, &pos, -1 );
     double f = immortalProbability / nullEmissionFactor;
     dpTable.insert( std::make_pair(new IntVector(pos), f) );   // insert the first probability into dpTable
     //printTable();
@@ -277,7 +291,7 @@ double LikelihoodTkf::tkfLike(void) {
                         {
                         // This gets too hairy - bail out.
                         unalignableRegionSize++;
-                        Msg::warning("We bailed out cause it was hairy: numPossible=" + std::to_string(numPossible));
+                        Msg::warning("We bailed out because things became too hairy: numPossible = " + std::to_string(numPossible));
                         return -std::numeric_limits<double>::infinity();
                         }
                     possibleVectorIndices[numPossible++] = ptr;
@@ -298,6 +312,7 @@ double LikelihoodTkf::tkfLike(void) {
 			for (int posPtr=numPossible-1; posPtr>=0; --posPtr)
                 {
 			    int curPtr = possibleVectorIndices[ posPtr ];
+                currentAlignmentColumn = curPtr;
                 if (state[ curPtr ] == possible)
                     {
                     state[ curPtr ] = edgeUsed;
@@ -321,7 +336,7 @@ double LikelihoodTkf::tkfLike(void) {
                 {
                 std::map<IntVector*,double,CompIntVector>::iterator it = dpTable.find(&pos);
                 if (it == dpTable.end())
-                    Msg::error("Could not find pos in dpTable map.");
+                    Msg::error("Could not find pos vector in dpTable map.");
                 double lft = it->second;
                 it = dpTable.find(&newPos);
                 double rht;
@@ -336,7 +351,8 @@ double LikelihoodTkf::tkfLike(void) {
                     unusedPos = false;
                     }
                     
-                double transFac = (-treeRecursion( &signature, &pos )) / nullEmissionFactor;
+//                std::cout << "currentAlignmentColumn = " << currentAlignmentColumn << std::endl;
+                double transFac = (-treeRecursion( &signature, &pos, currentAlignmentColumn )) / nullEmissionFactor;
                 lft *= transFac;
                 rht += lft;
 
@@ -428,7 +444,7 @@ void LikelihoodTkf::debugPrint(void) {
         }
 }
 
-double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos) {
+double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int siteColumn) {
 
     int numLeaves = (int)signature->size();                                       // Dimension of alignment columns, i.e. number of leaves
     int numNodes = (int)parents.size();                                           // Number of internal nodes
@@ -492,6 +508,8 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos) {
         return 0.0;
         }
 
+//    std::cout << *signature << std::endl;
+    
     // Start recursion.  First initialise the leaves
     for (int i=0; i<numLeaves; i++)
         {

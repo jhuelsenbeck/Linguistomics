@@ -434,7 +434,7 @@ void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) 
 
 double Model::lnLikelihood(void) {
 
-#   if 1
+#   if 0
     // set up thread pool
     ThreadPool& workers = ThreadPool::threadPoolInstance();
     Tree* tree = getTree();
@@ -462,7 +462,7 @@ double Model::lnLikelihood(void) {
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
         {
-        LikelihoodTkf likelihood(wordParameterAlignments[i], tree, this, substitutionModel);
+        LikelihoodTkf likelihood(wordParameterAlignments[i], tree, this);
         double lnP = likelihood.tkfLike();
         lnL += lnP;
         }

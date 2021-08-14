@@ -7,6 +7,7 @@
 #include "Node.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
+#include "UserSettings.hpp"
 
 
 
@@ -45,15 +46,16 @@ void TransitionProbabilities::initialize(Model* m, int nn, int ns, int sm) {
         return;
         }
         
+    UserSettings& settings = UserSettings::userSettings();
     modelPtr = m;
     numNodes = nn;
     numStates = ns;
     substitutionModel = sm;
+    numRateCategories = settings.getNumRateCategories();
     int numStatesSquared = numStates * numStates;
     std::cout << "   * Number of states = " << numStates << std::endl;
-    
-    
-    
+    std::cout << "   * Number of gamma rate categories = " << numRateCategories << std::endl;
+        
     for (int s=0; s<2; s++)
         {
         probs[s].resize(numNodes);

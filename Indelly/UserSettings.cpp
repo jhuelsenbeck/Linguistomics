@@ -18,6 +18,7 @@ UserSettings::UserSettings(void) {
     inverseTreeLength           = 1.0;
     substitutionModel           = jc69;
     calculateMarginalLikelihood = false;
+    numRateCategories           = 1;
 }
 
 void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
@@ -43,6 +44,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("0.15");
     commands.push_back("-z");
     commands.push_back("no");
+    commands.push_back("-g");
+    commands.push_back("4");
 #   else
     for (int i=0; i<argc; i++)
         commands.push_back(argv[i]);
@@ -97,6 +100,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 else
                     Msg::error("Unknon option for calculating marginal likelihood");
                 }
+            else if (arg == "-g")
+                numRateCategories = atoi(cmd.c_str());
             else
                 {
                 usage();
@@ -119,6 +124,7 @@ void UserSettings::print(void) {
         std::cout << "   * Substitution model                     = " << "GTR" << std::endl;
     else
         std::cout << "   * Substitution model                     = " << "Custom" << std::endl;
+    std::cout << "   * Number of gamma rate categories        = " << numRateCategories << std::endl;
     if (calculateMarginalLikelihood == true)
         std::cout << "   * Calculate marginal likelihood          = " << "yes" << std::endl;
     else
@@ -135,6 +141,7 @@ void UserSettings::usage(void) {
     std::cout << "   Usage" << std::endl;
     std::cout << "   * -d -- File with initial alignments of words" << std::endl;
     std::cout << "   * -m -- Substitution model (jc69/gtr/custom)" << std::endl;
+    std::cout << "   * -g -- Number of gamma rate categories (=1 is no rate variation)" << std::endl;
     std::cout << "   * -z -- Calculate marginal likelihood (no/yes)" << std::endl;
     std::cout << "   * -n -- Number of MCMC cycles" << std::endl;
     std::cout << "   * -p -- Print-to-screen frequency" << std::endl;
