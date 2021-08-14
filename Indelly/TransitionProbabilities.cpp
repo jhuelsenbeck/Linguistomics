@@ -140,7 +140,7 @@ void TransitionProbabilities::setTransitionProbabilities(void) {
             double** tp = probs[activeProbs][p->getIndex()];
             double v = p->getBranchLength();
             
-            std::complex<double> ceigValExp[numStates];
+            std::vector<std::complex<double> > ceigValExp(numStates);
             for (int s=0; s<numStates; s++)
                 ceigValExp[s] = exp(ceigenvalue[s] * v);
 

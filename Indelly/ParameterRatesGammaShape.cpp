@@ -21,7 +21,7 @@ ParameterRatesGammaShape::ParameterRatesGammaShape(RandomVariable* r, Model* m, 
     
     rates[0].resize(numCategories);
     rates[1].resize(numCategories);
-    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, true);
+    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, false);
     rates[1] = rates[0];
 }
 
@@ -72,7 +72,7 @@ double ParameterRatesGammaShape::update(void) {
     double lnP = log(newAlpha) - log(alpha[0]);
     
     alpha[0] = newAlpha;
-    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, true);
+    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, false);
 
     updateChangesTransitionProbabilities = true;
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();

@@ -21,7 +21,7 @@ ParameterIndelGammaShape::ParameterIndelGammaShape(RandomVariable* r, Model* m, 
     
     rates[0].resize(numCategories);
     rates[1].resize(numCategories);
-    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, true);
+    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, false);
     rates[1] = rates[0];
 }
 
@@ -64,7 +64,7 @@ void ParameterIndelGammaShape::reject(void) {
 
 double ParameterIndelGammaShape::update(void) {
 
-    lastUpdateType = "gamma shape parameter";
+    lastUpdateType = "indel shape parameter";
     
     double tuning = log(4.0);
 
@@ -72,7 +72,7 @@ double ParameterIndelGammaShape::update(void) {
     double lnP = log(newAlpha) - log(alpha[0]);
     
     alpha[0] = newAlpha;
-    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, true);
+    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, false);
 
     updateChangesTransitionProbabilities = true;
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();

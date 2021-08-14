@@ -130,77 +130,32 @@ void LikelihoodTkf::initTKF91(void) {
 
     // size the vectors for the indel portion of the process
     int numNodes = (int)parents.size();
-    immortalProbability.resize(numIndelCategories);
     std::vector<double> beta(numNodes);
     birthProbability.resize(numNodes);
     extinctionProbability.resize(numNodes);
     homologousProbability.resize(numNodes);
     nonHomologousProbability.resize(numNodes);
+        
+    immortalProbability= 1.0;
     for (int i=0; i<numNodes; i++)
         {
-        birthProbability[i].resize(numIndelCategories);
-        extinctionProbability[i].resize(numIndelCategories);
-        homologousProbability[i].resize(numIndelCategories);
-        nonHomologousProbability[i].resize(numIndelCategories);
-        }
-        
-    if (numIndelCategories == 1)
-        {
-        // case for one category
-        immortalProbability[0] = 1.0;
-        for (int i=0; i<numNodes; i++)
+        if (i == numNodes-1)
             {
-            if (i == numNodes-1)
-                {
-                // root
-                beta[i] = 1.0 / deletionRate;
-                homologousProbability[i][0] = 0.0;
-                }
-            else
-                {
-                // internal node or tip
-                beta[i] = exp( (insertionRate - deletionRate) * tau[i] );
-                beta[i] = (1.0 - beta[i]) / (deletionRate - insertionRate * beta[i]);
-                homologousProbability[i][0] = exp( -deletionRate * tau[i]) * (1.0 - insertionRate * beta[i] );
-                }
-            birthProbability[i][0]         = insertionRate * beta[i];
-            extinctionProbability[i][0]    = deletionRate * beta[i];
-            nonHomologousProbability[i][0] = (1.0 - deletionRate * beta[i]) * (1.0 - birthProbability[i][0]) - homologousProbability[i][0];
-            immortalProbability[0] *= (1.0 - birthProbability[i][0]);
+            // root
+            beta[i] = 1.0 / deletionRate;
+            homologousProbability[i] = 0.0;
             }
-        }
-    else
-        {
-        // gamma variation in indel rates
-        std::vector<double>& indelRates = model->getIndelGammaRates();
-
-        for (int k=0; k<numIndelCategories; k++)
+        else
             {
-            double kDeletionRate = deletionRate * indelRates[k];
-            double kInsertionRate = insertionRate * indelRates[k];
-            
-            immortalProbability[k] = 1.0;
-            for (int i=0; i<numNodes; i++)
-                {
-                if (i == numNodes-1)
-                    {
-                    // root
-                    beta[i] = 1.0 / kDeletionRate;
-                    homologousProbability[i][k] = 0.0;
-                    }
-                else
-                    {
-                    // internal node or tip
-                    beta[i] = exp( (kInsertionRate - kDeletionRate) * tau[i] );
-                    beta[i] = (1.0 - beta[i]) / (kDeletionRate - kInsertionRate * beta[i]);
-                    homologousProbability[i][k] = exp( -kDeletionRate * tau[i]) * (1.0 - kInsertionRate * beta[i] );
-                    }
-                birthProbability[i][k]         = kInsertionRate * beta[i];
-                extinctionProbability[i][k]    = kDeletionRate * beta[i];
-                nonHomologousProbability[i][k] = (1.0 - kDeletionRate * beta[i]) * (1.0 - birthProbability[i][k]) - homologousProbability[i][k];
-                immortalProbability[k] *= (1.0 - birthProbability[i][k]);
-                }
+            // internal node or tip
+            beta[i] = exp( (insertionRate - deletionRate) * tau[i] );
+            beta[i] = (1.0 - beta[i]) / (deletionRate - insertionRate * beta[i]);
+            homologousProbability[i] = exp( -deletionRate * tau[i]) * (1.0 - insertionRate * beta[i] );
             }
+        birthProbability[i]         = insertionRate * beta[i];
+        extinctionProbability[i]    = deletionRate * beta[i];
+        nonHomologousProbability[i] = (1.0 - deletionRate * beta[i]) * (1.0 - birthProbability[i]) - homologousProbability[i];
+        immortalProbability *= (1.0 - birthProbability[i]);
         }
         
 #   if defined(DEBUG_TKF91)
@@ -317,12 +272,8 @@ double LikelihoodTkf::tkfLike(void) {
     
     // Calculate correction factor for null emissions ("wing folding", or linear equation solving.)
     double nullEmissionFactor = treeRecursion( &pos, &pos, -1 );
-#   if 0
     double f = immortalProbability / nullEmissionFactor;
     dpTable.insert( std::make_pair(new IntVector(pos), f) );  
-#   else
-    dpTable.insert( std::make_pair(new IntVector(pos), nullEmissionFactor) );
-#   endif
     //printTable();
  
     // Array of possible vector indices, used in inner loop
@@ -469,8 +420,7 @@ void LikelihoodTkf::debugPrint(void) {
     for (int i=0; i<parents.size(); i++)
         {
         std::cout << std::setw(3) << i << " : " << std::setw(3) << parents[i] << " " << std::fixed << std::setprecision(5) << tau[i] << " ";
-        for (int k=0; k<numIndelCategories; k++)
-            std::cout << birthProbability[i][k] << " " << extinctionProbability[i][k] << " " << homologousProbability[i][k] << " " << nonHomologousProbability[i][k];
+        std::cout << birthProbability[i] << " " << extinctionProbability[i] << " " << homologousProbability[i] << " " << nonHomologousProbability[i];
         std::cout << std::endl;
         }
         
@@ -598,19 +548,16 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
         if ((nodeHomology[i] != 0) && (nodeHomology[i] == nodeHomology[lftChildIdx]) && (nodeHomology[i] == nodeHomology[rhtChildIdx]))
             {
             // case 1
-            for (int idCat=0; idCat<numIndelCategories; idCat++)
+            for (int j=0; j<numStates; j++)
                 {
-                for (int j=0; j<numStates; j++)
+                double lft = 0.0;
+                double rht = 0.0;
+                for (int k=0; k<numStates; k++)
                     {
-                    double lft = 0.0;
-                    double rht = 0.0;
-                    for (int k=0; k<numStates; k++)
-                        {
-                        lft += fH[lftChildIdx][k] * homologousProbability[lftChildIdx][idCat] * transitionProbabilities[lftChildIdx][j][k];
-                        rht += fH[rhtChildIdx][k] * homologousProbability[rhtChildIdx][idCat] * transitionProbabilities[rhtChildIdx][j][k];
-                        }
-                    fH[i][j] = lft * rht;
+                    lft += fH[lftChildIdx][k] * homologousProbability[lftChildIdx] * transitionProbabilities[lftChildIdx][j][k];
+                    rht += fH[rhtChildIdx][k] * homologousProbability[rhtChildIdx] * transitionProbabilities[rhtChildIdx][j][k];
                     }
+                fH[i][j] = lft * rht;
                 }
                 // Others: 0.0
             }
@@ -629,21 +576,18 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
                 inhomologousChildIdx = lftChildIdx;
                 }
 
-            for (int idCat=0; idCat<numIndelCategories; idCat++)
+            for (int j=0; j<numStates; j++)
                 {
-                for (int j=0; j<numStates; j++)
+                double lft = 0.0;
+                double rht = extinctionProbability[inhomologousChildIdx] * fI[inhomologousChildIdx][numStates];
+                for (int k=0; k<numStates; k++)
                     {
-                    double lft = 0.0;
-                    double rht = extinctionProbability[inhomologousChildIdx][idCat] * fI[inhomologousChildIdx][numStates];
-                    for (int k=0; k<numStates; k++)
-                        {
-                        lft += fH[homologousChildIdx][k] * homologousProbability[homologousChildIdx][idCat] * transitionProbabilities[homologousChildIdx][j][k];
-                        rht +=
-                            (fH[inhomologousChildIdx][k] + fI[inhomologousChildIdx][k]) * (nonHomologousProbability[inhomologousChildIdx][idCat] - extinctionProbability[inhomologousChildIdx][idCat] * birthProbability[inhomologousChildIdx][idCat]) * stateEquilibriumFrequencies[k] +
-                            fI[inhomologousChildIdx][k] * homologousProbability[inhomologousChildIdx][idCat] * transitionProbabilities[inhomologousChildIdx][j][k];
-                        }
-                    fH[i][j] = lft * rht;
+                    lft += fH[homologousChildIdx][k] * homologousProbability[homologousChildIdx] * transitionProbabilities[homologousChildIdx][j][k];
+                    rht +=
+                        (fH[inhomologousChildIdx][k] + fI[inhomologousChildIdx][k]) * (nonHomologousProbability[inhomologousChildIdx] - extinctionProbability[inhomologousChildIdx] * birthProbability[inhomologousChildIdx]) * stateEquilibriumFrequencies[k] +
+                        fI[inhomologousChildIdx][k] * homologousProbability[inhomologousChildIdx] * transitionProbabilities[inhomologousChildIdx][j][k];
                     }
+                fH[i][j] = lft * rht;
                 }
             // Others: 0.0
             }
@@ -652,60 +596,39 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
             // case 3
             int child1Idx = lftChildIdx;
             int child2Idx = rhtChildIdx;
-            for (int idCat=0; idCat<numIndelCategories; idCat++)
+            for (int j=0; j<numStates; j++)
                 {
-                for (int j=0; j<numStates; j++)
+                double lft1 = 0.0, lft2 = 0.0;
+                double rht1 = extinctionProbability[child1Idx] * fI[child1Idx][numStates];
+                double rht2 = extinctionProbability[child2Idx] * fI[child2Idx][numStates];
+                for (int k=0; k<numStates; k++)
                     {
-                    double lft1 = 0.0, lft2 = 0.0;
-                    double rht1 = extinctionProbability[child1Idx][idCat] * fI[child1Idx][numStates];
-                    double rht2 = extinctionProbability[child2Idx][idCat] * fI[child2Idx][numStates];
-                    for (int k=0; k<numStates; k++)
-                        {
-                        lft1 += fH[child1Idx][k] * homologousProbability[child1Idx][idCat] * transitionProbabilities[child1Idx][j][k];
-                        lft2 += fH[child2Idx][k] * homologousProbability[child2Idx][idCat] * transitionProbabilities[child2Idx][j][k];
-                        rht1 += (fH[child1Idx][k] + fI[child1Idx][k]) * (nonHomologousProbability[child1Idx][idCat] - extinctionProbability[child1Idx][idCat] * birthProbability[child1Idx][idCat]) * stateEquilibriumFrequencies[k] + fI[child1Idx][k] * homologousProbability[child1Idx][idCat] * transitionProbabilities[child1Idx][j][k];
-                        rht2 += (fH[child2Idx][k] + fI[child2Idx][k]) * (nonHomologousProbability[child2Idx][idCat] - extinctionProbability[child2Idx][idCat] * birthProbability[child2Idx][idCat]) * stateEquilibriumFrequencies[k] + fI[child2Idx][k] * homologousProbability[child2Idx][idCat] * transitionProbabilities[child2Idx][j][k];
-                        }
-                    fH[i][j] = lft1 * rht2 + lft2 * rht1;  // homology pops out below iC1 + homology pops out below iC2
-                    fI[i][j] = rht1 * rht2;                // no homology with j below i.
+                    lft1 += fH[child1Idx][k] * homologousProbability[child1Idx] * transitionProbabilities[child1Idx][j][k];
+                    lft2 += fH[child2Idx][k] * homologousProbability[child2Idx] * transitionProbabilities[child2Idx][j][k];
+                    rht1 += (fH[child1Idx][k] + fI[child1Idx][k]) * (nonHomologousProbability[child1Idx] - extinctionProbability[child1Idx] * birthProbability[child1Idx]) * stateEquilibriumFrequencies[k] + fI[child1Idx][k] * homologousProbability[child1Idx] * transitionProbabilities[child1Idx][j][k];
+                    rht2 += (fH[child2Idx][k] + fI[child2Idx][k]) * (nonHomologousProbability[child2Idx] - extinctionProbability[child2Idx] * birthProbability[child2Idx]) * stateEquilibriumFrequencies[k] + fI[child2Idx][k] * homologousProbability[child2Idx] * transitionProbabilities[child2Idx][j][k];
                     }
-                double lft = fI[child1Idx][numStates];
-                double rht = fI[child2Idx][numStates];
-                for (int j=0; j<numStates; j++)
-                    {
-                    lft -= birthProbability[child1Idx][idCat] * (fI[child1Idx][j] + fH[child1Idx][j]) * stateEquilibriumFrequencies[j];
-                    rht -= birthProbability[child2Idx][idCat] * (fI[child2Idx][j] + fH[child2Idx][j]) * stateEquilibriumFrequencies[j];
-                    }
-                fI[i][numStates] = lft * rht;
+                fH[i][j] = lft1 * rht2 + lft2 * rht1;  // homology pops out below iC1 + homology pops out below iC2
+                fI[i][j] = rht1 * rht2;                // no homology with j below i.
                 }
+            double lft = fI[child1Idx][numStates];
+            double rht = fI[child2Idx][numStates];
+            for (int j=0; j<numStates; j++)
+                {
+                lft -= birthProbability[child1Idx] * (fI[child1Idx][j] + fH[child1Idx][j]) * stateEquilibriumFrequencies[j];
+                rht -= birthProbability[child2Idx] * (fI[child2Idx][j] + fH[child2Idx][j]) * stateEquilibriumFrequencies[j];
+                }
+            fI[i][numStates] = lft * rht;
+
             }
             
         }
 
     // Now calculate the final result
     int rootIdx = numNodes - 1;
-    double indelCatProb = 1.0 / numIndelCategories;
-    double like = 0.0;
-    if (siteColumn == -1)
-        {
-        for (int idCat=0; idCat<numIndelCategories; idCat++)
-            {
-            double res = fI[rootIdx][numStates];
-            for (int i=0; i<numStates; i++)
-                res -= (fI[rootIdx][i] + fH[rootIdx][i]) * birthProbability[rootIdx][idCat] * stateEquilibriumFrequencies[i];
-            like += (immortalProbability[idCat] / res) * indelCatProb;
-            }
-        }
-    else
-        {
-        for (int idCat=0; idCat<numIndelCategories; idCat++)
-            {
-            double res = fI[rootIdx][numStates];
-            for (int i=0; i<numStates; i++)
-                res -= (fI[rootIdx][i] + fH[rootIdx][i]) * birthProbability[rootIdx][idCat] * stateEquilibriumFrequencies[i];
-            like += res * indelCatProb;
-            }
-        }
-    return like;
+    double res = fI[rootIdx][numStates];
+    for (int i=0; i<numStates; i++)
+        res -= (fI[rootIdx][i] + fH[rootIdx][i]) * birthProbability[rootIdx] * stateEquilibriumFrequencies[i];
+    return res;
 }
 
