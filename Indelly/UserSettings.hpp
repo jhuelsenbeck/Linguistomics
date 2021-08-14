@@ -18,6 +18,7 @@ class UserSettings {
         double                  getInverseTreeLength(void) { return inverseTreeLength; }
         std::string             getOutFile(void) { return outFile; }
         int                     getNumMcmcCycles(void) { return numMcmcCycles; }
+        int                     getNumIndelCategories(void) { return numIndelCategories; }
         int                     getNumRateCategories(void) { return numRateCategories; }
         int                     getPrintFrequency(void) { return printFrequency; }
         int                     getSampleFrequency(void) { return sampleFrequency; }
@@ -39,6 +40,7 @@ class UserSettings {
         bool                    calculateMarginalLikelihood;
         std::string             executablePath;
         int                     numRateCategories;
+        int                     numIndelCategories;
 };
 
 #endif

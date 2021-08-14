@@ -26,6 +26,7 @@ class Model {
         double                              getDeletionRate(void);
         std::vector<double>&                getEquilibriumFrequencies(void);
         std::vector<double>&                getExchangabilityRates(void);
+        std::vector<double>&                getIndelGammaRates(void);
         double                              getInsertionRate(void);
         int                                 getNumAlignments(void);
         std::string                         getParameterHeader(void);

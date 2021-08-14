@@ -19,6 +19,7 @@ UserSettings::UserSettings(void) {
     substitutionModel           = jc69;
     calculateMarginalLikelihood = false;
     numRateCategories           = 1;
+    numIndelCategories          = 1;
 }
 
 void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
@@ -35,9 +36,9 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-m");
     commands.push_back("custom");
     commands.push_back("-n");
-    commands.push_back("2000000");
+    commands.push_back("1");
     commands.push_back("-p");
-    commands.push_back("100");
+    commands.push_back("1");
     commands.push_back("-s");
     commands.push_back("100");
     commands.push_back("-l");
@@ -46,6 +47,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("no");
     commands.push_back("-g");
     commands.push_back("4");
+    commands.push_back("-i");
+    commands.push_back("1");
 #   else
     for (int i=0; i<argc; i++)
         commands.push_back(argv[i]);
@@ -102,6 +105,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 }
             else if (arg == "-g")
                 numRateCategories = atoi(cmd.c_str());
+            else if (arg == "-i")
+                numIndelCategories = atoi(cmd.c_str());
             else
                 {
                 usage();
@@ -125,6 +130,7 @@ void UserSettings::print(void) {
     else
         std::cout << "   * Substitution model                     = " << "Custom" << std::endl;
     std::cout << "   * Number of gamma rate categories        = " << numRateCategories << std::endl;
+    std::cout << "   * Number of gamma indel categories       = " << numIndelCategories << std::endl;
     if (calculateMarginalLikelihood == true)
         std::cout << "   * Calculate marginal likelihood          = " << "yes" << std::endl;
     else
@@ -142,6 +148,7 @@ void UserSettings::usage(void) {
     std::cout << "   * -d -- File with initial alignments of words" << std::endl;
     std::cout << "   * -m -- Substitution model (jc69/gtr/custom)" << std::endl;
     std::cout << "   * -g -- Number of gamma rate categories (=1 is no rate variation)" << std::endl;
+    std::cout << "   * -i -- Number of gamma indel categories (=1 is no indel rate variation)" << std::endl;
     std::cout << "   * -z -- Calculate marginal likelihood (no/yes)" << std::endl;
     std::cout << "   * -n -- Number of MCMC cycles" << std::endl;
     std::cout << "   * -p -- Print-to-screen frequency" << std::endl;

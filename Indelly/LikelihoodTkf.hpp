@@ -45,6 +45,7 @@ class LikelihoodTkf {
         std::vector<std::vector<int> >                  sequences;
         std::vector<double**>                           transitionProbabilities;
         std::vector<double>                             stateEquilibriumFrequencies;
+        int                                             numIndelCategories;
         std::vector<double>                             birthProbability;
         std::vector<double>                             extinctionProbability;
         std::vector<double>                             homologousProbability;

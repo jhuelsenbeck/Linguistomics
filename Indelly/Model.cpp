@@ -12,6 +12,7 @@
 #include "ParameterEquilibirumFrequencies.hpp"
 #include "ParameterExchangabilityRates.hpp"
 #include "ParameterIndelRates.hpp"
+#include "ParameterIndelGammaShape.hpp"
 #include "ParameterTree.hpp"
 #include "RandomVariable.hpp"
 #include "RateMatrixHelper.hpp"
@@ -118,6 +119,18 @@ std::vector<double>& Model::getExchangabilityRates(void) {
             break;
         }
     return p->getValue();
+}
+
+std::vector<double>& Model::getIndelGammaRates(void) {
+
+    ParameterIndelGammaShape* p = NULL;
+    for (int i=0; i<parameters.size(); i++)
+        {
+        p = dynamic_cast<ParameterIndelGammaShape*>(parameters[i]);
+        if (p != NULL)
+            break;
+        }
+    return p->getRates();
 }
 
 double Model::getInsertionRate(void) {
@@ -338,6 +351,14 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);
     pIndel->setProposalProbability(1.0);
     parameters.push_back(pIndel);
+    
+    // set up the indel rate variation parameter
+    if (settings.getNumIndelCategories() > 1)
+        {
+        Parameter* pIndelGamma = new ParameterIndelGammaShape(rv, this, "indel gamma", 2.0, settings.getNumIndelCategories());
+        pIndelGamma->setProposalProbability(1.0);
+        parameters.push_back(pIndelGamma);
+        }
 
     // set up the alignment parameter(s)
     for (int i=0; i<wordAlignments.size(); i++)

@@ -125,32 +125,44 @@ void LikelihoodTkf::initTKF91(void) {
     deletionRate  = model->getDeletionRate();
 
     // initialize parameters of TKF91 model
+    UserSettings& settings = UserSettings::userSettings();
+    numIndelCategories = settings.getNumIndelCategories();
+
     int numNodes = (int)parents.size();
     std::vector<double> beta(numNodes);
     birthProbability.resize(numNodes);
     extinctionProbability.resize(numNodes);
     homologousProbability.resize(numNodes);
     nonHomologousProbability.resize(numNodes);
-    immortalProbability = 1.0;
-    for (int i=0; i<numNodes; i++)
+
+    if (numIndelCategories == 1)
         {
-        if (i == numNodes-1)
+        
+        immortalProbability = 1.0;
+        for (int i=0; i<numNodes; i++)
             {
-            // root
-            beta[ i ] = 1.0 / deletionRate;
-            homologousProbability[i] = 0.0;
+            if (i == numNodes-1)
+                {
+                // root
+                beta[ i ] = 1.0 / deletionRate;
+                homologousProbability[i] = 0.0;
+                }
+            else
+                {
+                // internal node or tip
+                beta[i] = exp( (insertionRate - deletionRate) * tau[i] );
+                beta[i] = (1.0 - beta[i]) / (deletionRate - insertionRate * beta[i]);
+                homologousProbability[i] = exp( -deletionRate * tau[i]) * (1.0 - insertionRate * beta[i] );
+                }
+            birthProbability[i]         = insertionRate * beta[i];
+            extinctionProbability[i]    = deletionRate * beta[i];
+            nonHomologousProbability[i] = (1.0 - deletionRate * beta[i]) * (1.0 - birthProbability[i]) - homologousProbability[i];
+            immortalProbability *= (1.0 - birthProbability[i]);
             }
-        else
-            {
-            // internal node or tip
-            beta[i] = exp( (insertionRate - deletionRate) * tau[i] );
-            beta[i] = (1.0 - beta[i]) / (deletionRate - insertionRate * beta[i]);
-            homologousProbability[i] = exp( -deletionRate * tau[i]) * (1.0 - insertionRate * beta[i] );
-            }
-        birthProbability[i]         = insertionRate * beta[i];
-        extinctionProbability[i]    = deletionRate * beta[i];
-        nonHomologousProbability[i] = (1.0 - deletionRate * beta[i]) * (1.0 - birthProbability[i]) - homologousProbability[i];
-        immortalProbability *= (1.0 - birthProbability[i]);
+        }
+    else
+        {
+        
         }
         
 #   if defined(DEBUG_TKF91)
