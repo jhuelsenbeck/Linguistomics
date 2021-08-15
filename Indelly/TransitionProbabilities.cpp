@@ -201,81 +201,8 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
                 
         for (int i=0; i<numStates; i++)
             for (int j=0; j<numStates; j++)
-                tp[i][j] = P(i,j);
+                tp[i][j] = (P(i,j) < 0.0) ? 0.0 : P(i,j);
         }
         
     stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
-        
-#   if 0
-	int dim = A.dim1();
-	if (dim != A.dim2())
-		return (1);
-	
-	// create identity matrices
-	MbMatrix<double> D(dim,dim,0.0);
-	for (int i=0; i<dim; i++)
-		D[i][i] = 1.0;
-	MbMatrix<double> N(D.copy()), X(D.copy());
-
-	// create uninitialized matrix
-	MbMatrix<double> cX(dim, dim);
-	
-	// We assume that we have a rate matrix where rows sum to zero
-	// Then the infinity-norm is twice the maximum absolute value
-	// of the diagonal cells.
-	double normA = 0.0;
-	for (int i=0; i<dim; i++) {
-		double x = fabs (A[i][i]);
-		if (x > normA)
-			normA = x;
-	}
-	normA *= 2.0;
-
-	// Calculate 1 + floor (log2(normA))
-	int y;
-	frexp(normA, &y);	// this will give us the floor(log2(normA)) part in y
-	y++;
-
-	// Get max(0,y)
-	int j = 0;
-	if (y > 0)
-		j = y;
-
-	// divide A by scalar 2^j
-	A /= ldexp (1.0, j);
-	
-	double c = 1.0;
-	for (int k=1; k<=qValue; k++)
-        {
-		c = c * (qValue - k + 1.0) / ((2.0 * qValue - k + 1.0) * k);
-
-		/* X = AX */
-		X = A * X;
-
-		/* N = N + cX */
-		cX = c * X;
-		N = N + cX;
-
-		/* D = D + (-1)^k*cX */
-		if (k % 2 == 0)
-			D = D + cX;
-		else
-			D = D - cX;
-		}
-
-	MbMath::gaussianElimination(D, N, F);
-
-	for (int k=0; k<j; k++)
-		F = F * F;
-	
-	for (int i=0; i<dim; i++)
-		{
-		for (j=0; j<dim; j++)
-			{
-			if (F[i][j] < 0.0)
-				F[i][j] = fabs(F[i][j]);
-			}
-		}
-	return (0);
-#   endif
 }

@@ -23,8 +23,6 @@ class RateMatrix {
     private:
                                 RateMatrix(void);
                                 RateMatrix(const RateMatrix&) = delete;
-        int                     findPadeQValue(const double tol);
-        void                    setPadeTolerance(const double tol);
         int                     numStates;
         int                     activeMatrix;
         bool                    useEigenSystem;
