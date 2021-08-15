@@ -1,10 +1,10 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include "EigenSystem.hpp"
 #include "Model.hpp"
 #include "ParameterEquilibirumFrequencies.hpp"
 #include "RandomVariable.hpp"
+#include "RateMatrix.hpp"
 #include "TransitionProbabilities.hpp"
 
 double ParameterEquilibirumFrequencies::minVal = 0.001;
@@ -244,10 +244,10 @@ double ParameterEquilibirumFrequencies::update(void) {
         freqs[0] = newValues;
         }
     
-    // update the eigen system and transition probabilities
-    EigenSystem& eigs = EigenSystem::eigenSystem();
-    eigs.flipActiveValues();
-    eigs.updateRateMatrix(modelPtr->getExchangabilityRates(), freqs[0]);
+    // update the rate matrix and transition probabilities
+    RateMatrix& rmat = RateMatrix::rateMatrix();
+    rmat.flipActiveValues();
+    rmat.updateRateMatrix(modelPtr->getExchangabilityRates(), freqs[0]);
 
     updateChangesTransitionProbabilities = true;
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
@@ -265,10 +265,10 @@ double ParameterEquilibirumFrequencies::updateFromPrior(void) {
     // draw from the prior distribution, which is a flat Dirichlet distribution
     rv->dirichletRv(alpha, freqs[0]);
 
-    // update the eigen system and transition probabilities
-    EigenSystem& eigs = EigenSystem::eigenSystem();
-    eigs.flipActiveValues();
-    eigs.updateRateMatrix(modelPtr->getExchangabilityRates(), freqs[0]);
+    // update the rate matrix and transition probabilities
+    RateMatrix& rmat = RateMatrix::rateMatrix();
+    rmat.flipActiveValues();
+    rmat.updateRateMatrix(modelPtr->getExchangabilityRates(), freqs[0]);
 
     updateChangesTransitionProbabilities = true;
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();

@@ -96,8 +96,6 @@ void EigenSystem::initialize(int ns) {
     activeVals = 0;
     ccIjk[0] = new std::complex<double>[numStates*numStates*numStates];
     ccIjk[1] = new std::complex<double>[numStates*numStates*numStates];
-    pi[0].resize(numStates);
-    pi[1].resize(numStates);
     
     isInitialized = true;
 }
@@ -108,76 +106,4 @@ double EigenSystem::sumVector(std::vector<double>& v) {
     for (int i=0; i<numStates; i++)
         sum += v[i];
     return sum;
-}
-
-void EigenSystem::testStationaryFrequencies(StateMatrix_t& Q) {
-
-}
-
-void  EigenSystem::updateRateMatrix(std::vector<double>& rates, std::vector<double>& f) {
-
-    // initialize the rate matrix
-    StateMatrix_t Q(numStates,numStates);
-    
-    // fill in off diagonal components of the rate matrix in
-    // a model-dependent manner
-    if (rates.size() == numStates * (numStates-1) / 2)
-        {
-        // gtr model
-        for (int i=0, k=0; i<numStates; i++)
-            {
-            for (int j=i+1; j<numStates; j++)
-                {
-                Q(i,j) = rates[k] * f[j];
-                Q(j,i) = rates[k] * f[i];
-                k++;
-                }
-            }
-        }
-    else
-        {
-        // custom model
-        RateMatrixHelper& helper = RateMatrixHelper::rateMatrixHelper();
-        int** map = helper.getMap();
-        for (int i=0; i<numStates; i++)
-            {
-            for (int j=i+1; j<numStates; j++)
-                {
-                int changeType = map[i][j];
-                Q(i,j) = rates[changeType] * f[j];
-                Q(j,i) = rates[changeType] * f[i];
-                }
-            }
-        }
-                
-    // fill in the diagonal elements of the rate matrix
-    for (int i=0; i<numStates; i++)
-        {
-        double sum = 0.0;
-        for (int j=0; j<numStates; j++)
-            {
-            if (i != j)
-                sum += Q(i,j);
-            }
-        Q(i,i) = -sum;
-        }
-    
-    // rescale the rate matrix
-    double averageRate = 0.0;
-    for (int i=0; i<numStates; i++)
-        averageRate += -f[i] * Q(i,i);
-    double scaleFactor = 1.0 / averageRate;
-    Q *= scaleFactor;
-    
-    // calculate the Eigenvalues and Eigenvectors and do some precomputation
-    setStationaryFrequencies(f);
-    calculateEigenSystem(Q);
-    
-#   if 0
-    std::cout << std::fixed << std::setprecision(5);
-    std::cout << Q << std::endl;
-    for (int i=0; i<numStates; i++)
-        std::cout << sf[i] << " ";
-    std::cout << std::endl;
-#   endif
 }

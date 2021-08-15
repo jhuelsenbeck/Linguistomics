@@ -1,10 +1,10 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include "EigenSystem.hpp"
 #include "Model.hpp"
 #include "ParameterExchangabilityRates.hpp"
 #include "RandomVariable.hpp"
+#include "RateMatrix.hpp"
 #include "TransitionProbabilities.hpp"
 
 double ParameterExchangabilityRates::minVal = 0.001;
@@ -277,10 +277,10 @@ double ParameterExchangabilityRates::update(void) {
         rates[0] = newValues;
         }
     
-    // update the eigen system and transition probabilities
-    EigenSystem& eigs = EigenSystem::eigenSystem();
-    eigs.flipActiveValues();
-    eigs.updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
+    // update the rate matrix and transition probabilities
+    RateMatrix& rmat = RateMatrix::rateMatrix();
+    rmat.flipActiveValues();
+    rmat.updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
 
     updateChangesTransitionProbabilities = true;
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
@@ -300,10 +300,10 @@ double ParameterExchangabilityRates::updateFromPrior(void) {
     // draw from the prior distribution, which is a flat Dirichlet distribution
     rv->dirichletRv(alpha, rates[0]);
 
-    // update the eigen system and transition probabilities
-    EigenSystem& eigs = EigenSystem::eigenSystem();
-    eigs.flipActiveValues();
-    eigs.updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
+    // update the rate matrix and transition probabilities
+    RateMatrix& rmat = RateMatrix::rateMatrix();
+    rmat.flipActiveValues();
+    rmat.updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
 
     updateChangesTransitionProbabilities = true;
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();

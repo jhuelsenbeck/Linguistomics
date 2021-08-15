@@ -5,6 +5,7 @@
 #include "Model.hpp"
 #include "Msg.hpp"
 #include "Node.hpp"
+#include "RateMatrix.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
@@ -129,6 +130,8 @@ void TransitionProbabilities::setTransitionProbabilities(void) {
     else
         {
         // calculate transition probabilities for GTR model
+        RateMatrix& rmat = RateMatrix::rateMatrix();
+        
         EigenSystem& eigs = EigenSystem::eigenSystem();
         Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1>& ceigenvalue = eigs.getEigenValues();
         std::complex<double>* ccIjk = eigs.getCijk();
@@ -157,7 +160,7 @@ void TransitionProbabilities::setTransitionProbabilities(void) {
                 }
             }
             
-        stationaryFreqs[activeProbs] = eigs.getStationaryFrequencies();
+        stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
         }        
         
     needsUpdate = false;

@@ -23,6 +23,7 @@ class UserSettings {
         int                     getPrintFrequency(void) { return printFrequency; }
         int                     getSampleFrequency(void) { return sampleFrequency; }
         int                     getSubstitutionModel(void) { return substitutionModel; }
+        bool                    getUseEigenSystem(void) { return useEigenSystem; }
         void                    print(void);
         void                    readCommandLineArguments(int argc, char* argv[]);
     
@@ -41,6 +42,7 @@ class UserSettings {
         std::string             executablePath;
         int                     numRateCategories;
         int                     numIndelCategories;
+        bool                    useEigenSystem;
 };
 
 #endif

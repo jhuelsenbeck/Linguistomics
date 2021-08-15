@@ -125,7 +125,7 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
     if (useEigenSystem == true)
         {
         EigenSystem& eigs = EigenSystem::eigenSystem();
-        //eigs.setActiveEigens(activeMatrix);
+        eigs.setActiveEigens(activeMatrix);
         eigs.calculateEigenSystem(Q);
         }
         
