@@ -1,6 +1,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <unsupported/Eigen/MatrixFunctions>
 #include "EigenSystem.hpp"
 #include "Model.hpp"
 #include "Msg.hpp"
@@ -183,8 +184,28 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
 
 void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
 
-    Msg::error("Pade method is not yet implemented");
-
+    RateMatrix& rmat = RateMatrix::rateMatrix();
+    Eigen::MatrixXd M(numStates,numStates);
+    StateMatrix_t& Q = rmat.getRateMatrix();
+    Eigen::MatrixXd P(numStates,numStates);
+    
+    std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+    for (int n=0; n<traversalSeq.size(); n++)
+        {
+        Node* p = traversalSeq[n];
+        double** tp = probs[activeProbs][p->getIndex()];
+        double v = p->getBranchLength();
+        
+        M = Q * v;
+        P = M.exp();
+                
+        for (int i=0; i<numStates; i++)
+            for (int j=0; j<numStates; j++)
+                tp[i][j] = P(i,j);
+        }
+        
+    stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
+        
 #   if 0
 	int dim = A.dim1();
 	if (dim != A.dim2())

@@ -1,4 +1,6 @@
 #include <cmath>
+#include <iomanip>
+#include <iostream>
 #include "RateMatrix.hpp"
 #include "RateMatrixHelper.hpp"
 
@@ -133,7 +135,7 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
     std::cout << std::fixed << std::setprecision(5);
     std::cout << Q << std::endl;
     for (int i=0; i<numStates; i++)
-        std::cout << sf[i] << " ";
+        std::cout << equilibriumFrequencies[activeMatrix][i] << " ";
     std::cout << std::endl;
 #   endif
 }

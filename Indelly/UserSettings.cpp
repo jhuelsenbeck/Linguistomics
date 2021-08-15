@@ -39,7 +39,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-n");
     commands.push_back("200000");
     commands.push_back("-p");
-    commands.push_back("10");
+    commands.push_back("100");
     commands.push_back("-s");
     commands.push_back("100");
     commands.push_back("-l");
@@ -47,7 +47,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-z");
     commands.push_back("no");
     commands.push_back("-e");
-    commands.push_back("yes");
+    commands.push_back("no");
 #   else
     for (int i=0; i<argc; i++)
         commands.push_back(argv[i]);

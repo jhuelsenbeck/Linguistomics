@@ -449,6 +449,8 @@ void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) 
         eigs.initialize(numStates);
         rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
         }
+    else if (settings.getUseEigenSystem() == false && settings.getSubstitutionModel() != jc69)
+        rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
     
     // initialize the transition probabilities
     TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
