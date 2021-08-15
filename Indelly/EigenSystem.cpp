@@ -170,8 +170,8 @@ void  EigenSystem::updateRateMatrix(std::vector<double>& rates, std::vector<doub
     Q *= scaleFactor;
     
     // calculate the Eigenvalues and Eigenvectors and do some precomputation
-    calculateEigenSystem(Q);
     setStationaryFrequencies(f);
+    calculateEigenSystem(Q);
     
 #   if 0
     std::cout << std::fixed << std::setprecision(5);

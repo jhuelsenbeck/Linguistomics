@@ -25,6 +25,7 @@ class EigenSystem {
         std::complex<double>*                                   getCijk(void);
         Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1>& getEigenValues(void);
         void                                                    initialize(int ns);
+        void                                                    setActiveEigens(int x) { activeVals = x; }
         void                                                    setStationaryFrequencies(std::vector<double> f) { pi[activeVals] = f; }
         void                                                    testStationaryFrequencies(StateMatrix_t& Q);
         void                                                    updateRateMatrix(std::vector<double>& rates, std::vector<double>& f);

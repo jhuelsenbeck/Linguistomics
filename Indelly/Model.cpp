@@ -455,7 +455,7 @@ void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) 
 
 double Model::lnLikelihood(void) {
 
-#   if 0
+#   if 1
     // set up thread pool
     ThreadPool& workers = ThreadPool::threadPoolInstance();
     Tree* tree = getTree();

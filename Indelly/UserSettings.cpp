@@ -3,7 +3,7 @@
 #include "Msg.hpp"
 #include "UserSettings.hpp"
 
-#define DEBUG_MODE
+#undef DEBUG_MODE
 
 
 

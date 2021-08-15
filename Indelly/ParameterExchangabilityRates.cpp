@@ -7,7 +7,7 @@
 #include "RandomVariable.hpp"
 #include "TransitionProbabilities.hpp"
 
-double ParameterExchangabilityRates::minVal = 0.00001;
+double ParameterExchangabilityRates::minVal = 0.001;
 
 
 

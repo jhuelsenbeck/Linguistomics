@@ -7,7 +7,7 @@
 #include "RandomVariable.hpp"
 #include "TransitionProbabilities.hpp"
 
-double ParameterEquilibirumFrequencies::minVal = 0.0001;
+double ParameterEquilibirumFrequencies::minVal = 0.001;
 
 
 

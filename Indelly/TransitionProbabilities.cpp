@@ -132,15 +132,15 @@ void TransitionProbabilities::setTransitionProbabilities(void) {
         EigenSystem& eigs = EigenSystem::eigenSystem();
         Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1>& ceigenvalue = eigs.getEigenValues();
         std::complex<double>* ccIjk = eigs.getCijk();
+        std::vector<std::complex<double> > ceigValExp(numStates);
 
         std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
         for (int n=0; n<traversalSeq.size(); n++)
             {
             Node* p = traversalSeq[n];
             double** tp = probs[activeProbs][p->getIndex()];
-            double v = p->getBranchLength();
             
-            std::vector<std::complex<double> > ceigValExp(numStates);
+            double v = p->getBranchLength();
             for (int s=0; s<numStates; s++)
                 ceigValExp[s] = exp(ceigenvalue[s] * v);
 
