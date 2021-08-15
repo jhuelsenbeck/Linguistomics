@@ -15,6 +15,7 @@
 #include "ParameterIndelGammaShape.hpp"
 #include "ParameterTree.hpp"
 #include "RandomVariable.hpp"
+#include "RateMatrix.hpp"
 #include "RateMatrixHelper.hpp"
 #include "ThreadPool.hpp"
 #include "TransitionProbabilities.hpp"
@@ -435,16 +436,21 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
 
 void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) {
 
-    UserSettings& settings = UserSettings::userSettings();
-
-    // initialize the eigen system object and calculate the first set of eigens
     std::cout << "   * Initializing likelihood-calculation machinery" << std::endl;
-    if (substitutionModel == gtr || substitutionModel == custom)
+
+    UserSettings& settings = UserSettings::userSettings();
+    
+    // set up the rate matrix
+    RateMatrix& rmat = RateMatrix::rateMatrix();
+    rmat.initialize(numStates, settings.getUseEigenSystem());
+    if (settings.getUseEigenSystem() == true && settings.getSubstitutionModel() != jc69)
         {
         EigenSystem& eigs = EigenSystem::eigenSystem();
         eigs.initialize(numStates);
-        eigs.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
+        rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
         }
+    else if (settings.getUseEigenSystem() == false && settings.getSubstitutionModel() != jc69)
+        rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
     
     // initialize the transition probabilities
     TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
@@ -455,7 +461,7 @@ void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) 
 
 double Model::lnLikelihood(void) {
 
-#   if 0
+#   if 1
     // set up thread pool
     ThreadPool& workers = ThreadPool::threadPoolInstance();
     Tree* tree = getTree();
@@ -534,11 +540,11 @@ void Model::reject(void) {
 
     Parameter* parm = parameters[updatedParameterIdx];
     parm->reject();
-    if (parm->getUpdateChangesEigens() == true)
+    if (parm->getUpdateChangesRateMatrix() == true)
         {
-        // flip eigen index to original state
-        EigenSystem& eigs = EigenSystem::eigenSystem();
-        eigs.flipActiveValues();
+        // flip rate matrix index to original state
+        RateMatrix& rmat = RateMatrix::rateMatrix();
+        rmat.flipActiveValues();
         }
     if (parm->getUpdateChangesTransitionProbabilities() == true)
         {

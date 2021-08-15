@@ -11,15 +11,14 @@
 
 ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n) : Parameter(r, m, n) {
     
-    updateChangesEigens = false;
+    updateChangesRateMatrix = false;
 
     std::string name = a->getName();
     const size_t periodIdx = name.rfind('.');
     if (std::string::npos != periodIdx)
         name.erase(periodIdx);
-
     std::cout << "   * Setting up alignment parameter for word " << name << std::endl;
-    
+
     // initialize the alignment
     int numTaxa = a->getNumTaxa();
     int numSites = a->getNumChar();

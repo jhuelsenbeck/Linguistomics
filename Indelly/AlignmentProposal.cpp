@@ -2,7 +2,6 @@
 #include <iomanip>
 #include <iostream>
 #include "AlignmentProposal.hpp"
-#include "EigenSystem.hpp"
 #include "IntVector.hpp"
 #include "Msg.hpp"
 #include "ParameterAlignment.hpp"
@@ -330,7 +329,6 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
     /* dynamic programming algorithm for the proposal */
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
     std::vector<double**> tiProbs = tip.getTransitionProbabilities();
-    //EigenSystem& eigs = EigenSystem::eigenSystem();
     std::vector<double> stationaryFrequencies = tip.getStationaryFrequencies();
     int numStates = tip.getNumStates();
     std::vector<std::vector<double> > scoring;

@@ -20,6 +20,7 @@ UserSettings::UserSettings(void) {
     calculateMarginalLikelihood = false;
     numRateCategories           = 1;
     numIndelCategories          = 1;
+    useEigenSystem              = true;
 }
 
 void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
@@ -38,15 +39,15 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-n");
     commands.push_back("200000");
     commands.push_back("-p");
-    commands.push_back("10");
+    commands.push_back("100");
     commands.push_back("-s");
     commands.push_back("100");
     commands.push_back("-l");
     commands.push_back("0.15");
     commands.push_back("-z");
     commands.push_back("no");
-    commands.push_back("-g");
-    commands.push_back("4");
+    commands.push_back("-e");
+    commands.push_back("no");
 #   else
     for (int i=0; i<argc; i++)
         commands.push_back(argv[i]);
@@ -101,6 +102,15 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 else
                     Msg::error("Unknon option for calculating marginal likelihood");
                 }
+            else if (arg == "-e")
+                {
+                if (cmd == "yes")
+                    useEigenSystem = true;
+                else if (cmd == "no")
+                    useEigenSystem = false;
+                else
+                    Msg::error("Unknon option for calculating matrix exponential");
+                }
             else if (arg == "-g")
                 numRateCategories = atoi(cmd.c_str());
             else if (arg == "-i")
@@ -119,24 +129,28 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 void UserSettings::print(void) {
 
     std::cout << "   Settings" << std::endl;
-    std::cout << "   * Executable path                        = " << executablePath << std::endl;
-    std::cout << "   * File with initial word alignments      = \"" << dataFile << "\"" << std::endl;
+    std::cout << "   * Executable path                         = " << executablePath << std::endl;
+    std::cout << "   * File with initial word alignments       = \"" << dataFile << "\"" << std::endl;
     if (substitutionModel == jc69)
-        std::cout << "   * Substitution model                     = " << "JC69" << std::endl;
+        std::cout << "   * Substitution model                      = JC69" << std::endl;
     else if (substitutionModel == gtr)
-        std::cout << "   * Substitution model                     = " << "GTR" << std::endl;
+        std::cout << "   * Substitution model                      = GTR" << std::endl;
     else
-        std::cout << "   * Substitution model                     = " << "Custom" << std::endl;
-    std::cout << "   * Number of gamma rate categories        = " << numRateCategories << std::endl;
-    std::cout << "   * Number of gamma indel categories       = " << numIndelCategories << std::endl;
+        std::cout << "   * Substitution model                      = Custom" << std::endl;
+    std::cout << "   * Number of gamma rate categories         = " << numRateCategories << std::endl;
+    std::cout << "   * Number of gamma indel categories        = " << numIndelCategories << std::endl;
     if (calculateMarginalLikelihood == true)
-        std::cout << "   * Calculate marginal likelihood          = " << "yes" << std::endl;
+        std::cout << "   * Calculate marginal likelihood           = yes" << std::endl;
     else
-        std::cout << "   * Calculate marginal likelihood          = " << "no" << std::endl;
-    std::cout << "   * Number of MCMC cycles                  = " << numMcmcCycles << std::endl;
-    std::cout << "   * Print-to-screen frequency              = " << printFrequency << std::endl;
-    std::cout << "   * Chain sample frequency                 = " << sampleFrequency << std::endl;
-    std::cout << "   * Tree length prior parameter            = " << inverseTreeLength << std::endl;
+        std::cout << "   * Calculate marginal likelihood           = no" << std::endl;
+    if (useEigenSystem == true)
+        std::cout << "   * Use eigen system for matrix exponential = yes" << std::endl;
+    else
+        std::cout << "   * Use eigen system for matrix exponential = no" << std::endl;
+    std::cout << "   * Number of MCMC cycles                   = " << numMcmcCycles << std::endl;
+    std::cout << "   * Print-to-screen frequency               = " << printFrequency << std::endl;
+    std::cout << "   * Chain sample frequency                  = " << sampleFrequency << std::endl;
+    std::cout << "   * Tree length prior parameter             = " << inverseTreeLength << std::endl;
     std::cout << std::endl;
 }
 
@@ -151,6 +165,7 @@ void UserSettings::usage(void) {
     std::cout << "   * -n -- Number of MCMC cycles" << std::endl;
     std::cout << "   * -p -- Print-to-screen frequency" << std::endl;
     std::cout << "   * -s -- Chain sample frequency" << std::endl;
+    std::cout << "   * -e -- Use the Eigen system when calculating the matrix exponential (no/yes)" << std::endl;
     std::cout << "   * -l -- Inverse of the tree length prior" << std::endl;
     std::cout << std::endl;
 }

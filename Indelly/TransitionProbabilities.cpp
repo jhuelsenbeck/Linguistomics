@@ -1,10 +1,12 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <unsupported/Eigen/MatrixFunctions>
 #include "EigenSystem.hpp"
 #include "Model.hpp"
 #include "Msg.hpp"
 #include "Node.hpp"
+#include "RateMatrix.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
@@ -99,67 +101,108 @@ void TransitionProbabilities::setTransitionProbabilities(void) {
         
     if (substitutionModel == jc69)
         {
-        // calculate transition probabilities under the Jukes-Cantor (1969) model
-        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
-        for (int n=0; n<traversalSeq.size(); n++)
-            {
-            Node* p = traversalSeq[n];
-            double** tp = probs[activeProbs][p->getIndex()];
-            double v = p->getBranchLength();
-            
-            double x = -((double)numStates/(numStates-1));
-            double pChange = (1.0/numStates) - (1.0/numStates) * exp(x * v);
-            double pNoChange = (1.0/numStates) + ((double)(numStates-1)/numStates) * exp(x * v);
-            for (int i=0; i<numStates; i++)
-                {
-                for (int j=0; j<numStates; j++)
-                    {
-                    if (i == j)
-                        tp[i][j] = pNoChange;
-                    else
-                        tp[i][j] = pChange;
-                    }
-                }
-            }
-            
-        double sf = 1.0 / numStates;
-        for (int i=0; i<numStates; i++)
-            stationaryFreqs[activeProbs][i] = sf;
+        // the transition probabilities can be calculated analytically (and quickly)
+        setTransitionProbabilitiesJc69();
         }
     else
         {
-        // calculate transition probabilities for GTR model
-        EigenSystem& eigs = EigenSystem::eigenSystem();
-        Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1>& ceigenvalue = eigs.getEigenValues();
-        std::complex<double>* ccIjk = eigs.getCijk();
-
-        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
-        for (int n=0; n<traversalSeq.size(); n++)
-            {
-            Node* p = traversalSeq[n];
-            double** tp = probs[activeProbs][p->getIndex()];
-            double v = p->getBranchLength();
-            
-            std::vector<std::complex<double> > ceigValExp(numStates);
-            for (int s=0; s<numStates; s++)
-                ceigValExp[s] = exp(ceigenvalue[s] * v);
-
-            std::complex<double>* ptr = ccIjk;
-            for (int i=0; i<numStates; i++)
-                {
-                for (int j=0; j<numStates; j++)
-                    {
-                    std::complex<double> sum = std::complex<double>(0.0, 0.0);
-                    for(int s=0; s<numStates; s++)
-                        sum += (*ptr++) * ceigValExp[s];
-                    tp[i][j] = (sum.real() < 0.0) ? 0.0 : sum.real();
-                    }
-                }
-            }
-            
-        stationaryFreqs[activeProbs] = eigs.getStationaryFrequencies();
-        }        
+        // the transition probabilities are calculated using either the Eigen
+        // system of the rate matrix or using the Pade approximation
+        RateMatrix& rmat = RateMatrix::rateMatrix();
+        if (rmat.getUseEigenSystem() == true)
+            setTransitionProbabilitiesUsingEigenSystem();
+        else
+            setTransitionProbabilitiesUsingPadeMethod();
+        }
         
     needsUpdate = false;
 }
 
+void TransitionProbabilities::setTransitionProbabilitiesJc69(void) {
+
+    // calculate transition probabilities under the Jukes-Cantor (1969) model
+    std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+    for (int n=0; n<traversalSeq.size(); n++)
+        {
+        Node* p = traversalSeq[n];
+        double** tp = probs[activeProbs][p->getIndex()];
+        double v = p->getBranchLength();
+        
+        double x = -((double)numStates/(numStates-1));
+        double pChange = (1.0/numStates) - (1.0/numStates) * exp(x * v);
+        double pNoChange = (1.0/numStates) + ((double)(numStates-1)/numStates) * exp(x * v);
+        for (int i=0; i<numStates; i++)
+            {
+            for (int j=0; j<numStates; j++)
+                {
+                if (i == j)
+                    tp[i][j] = pNoChange;
+                else
+                    tp[i][j] = pChange;
+                }
+            }
+        }
+            
+        double sf = 1.0 / numStates;
+        for (int i=0; i<numStates; i++)
+            stationaryFreqs[activeProbs][i] = sf;
+}
+
+void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
+
+    EigenSystem& eigs = EigenSystem::eigenSystem();
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1>& ceigenvalue = eigs.getEigenValues();
+    std::complex<double>* ccIjk = eigs.getCijk();
+    std::vector<std::complex<double> > ceigValExp(numStates);
+
+    std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+    for (int n=0; n<traversalSeq.size(); n++)
+        {
+        Node* p = traversalSeq[n];
+        double** tp = probs[activeProbs][p->getIndex()];
+        
+        double v = p->getBranchLength();
+        for (int s=0; s<numStates; s++)
+            ceigValExp[s] = exp(ceigenvalue[s] * v);
+
+        std::complex<double>* ptr = ccIjk;
+        for (int i=0; i<numStates; i++)
+            {
+            for (int j=0; j<numStates; j++)
+                {
+                std::complex<double> sum = std::complex<double>(0.0, 0.0);
+                for(int s=0; s<numStates; s++)
+                    sum += (*ptr++) * ceigValExp[s];
+                tp[i][j] = (sum.real() < 0.0) ? 0.0 : sum.real();
+                }
+            }
+        }
+        
+    RateMatrix& rmat = RateMatrix::rateMatrix();
+    stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
+}
+
+void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
+
+    RateMatrix& rmat = RateMatrix::rateMatrix();
+    Eigen::MatrixXd M(numStates,numStates);
+    StateMatrix_t& Q = rmat.getRateMatrix();
+    Eigen::MatrixXd P(numStates,numStates);
+    
+    std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+    for (int n=0; n<traversalSeq.size(); n++)
+        {
+        Node* p = traversalSeq[n];
+        double** tp = probs[activeProbs][p->getIndex()];
+        double v = p->getBranchLength();
+        
+        M = Q * v;
+        P = M.exp();
+                
+        for (int i=0; i<numStates; i++)
+            for (int j=0; j<numStates; j++)
+                tp[i][j] = (P(i,j) < 0.0) ? 0.0 : P(i,j);
+        }
+        
+    stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
+}
