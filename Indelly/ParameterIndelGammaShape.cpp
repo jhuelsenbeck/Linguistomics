@@ -11,7 +11,7 @@ ParameterIndelGammaShape::ParameterIndelGammaShape(RandomVariable* r, Model* m, 
 
     std::cout << "   * Setting up gamma shape parameter for insertion/deletion rates " << std::endl;
 
-    updateChangesEigens = false;
+    updateChangesRateMatrix = false;
     
     expPriorVal = ep;
     numCategories = nc;

@@ -15,7 +15,7 @@
 
 ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, double itl) : Parameter(r, m, "tree") {
 
-    updateChangesEigens = false;
+    updateChangesRateMatrix = false;
     
     betaT = itl;
     

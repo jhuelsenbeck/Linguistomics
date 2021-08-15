@@ -15,7 +15,7 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
 
     std::cout << "   * Setting up exchangeability rates parameter " << std::endl;
 
-    updateChangesEigens = true;
+    updateChangesRateMatrix = true;
 
     numStates = ns;
     numRates = numStates * (numStates-1) / 2;
@@ -44,7 +44,7 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
 
     std::cout << "   * Setting up custom exchangeability rates parameter " << std::endl;
 
-    updateChangesEigens = true;
+    updateChangesRateMatrix = true;
 
     numStates = ns;
     rateLabels = labs;

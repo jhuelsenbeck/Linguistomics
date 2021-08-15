@@ -11,7 +11,7 @@ ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::strin
     
     std::cout << "   * Setting up insertion/deletion rates parameter " << std::endl;
 
-    updateChangesEigens = false;
+    updateChangesRateMatrix = false;
 
     insertionLambda = insLam;
     deletionLambda  = delLam;

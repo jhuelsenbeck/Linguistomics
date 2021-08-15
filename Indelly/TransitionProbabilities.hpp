@@ -30,6 +30,9 @@ class TransitionProbabilities {
                                         TransitionProbabilities(void);
                                        ~TransitionProbabilities(void);
                                         TransitionProbabilities(const TransitionProbabilities& tp) = delete;
+        void                            setTransitionProbabilitiesJc69(void);
+        void                            setTransitionProbabilitiesUsingEigenSystem(void);
+        void                            setTransitionProbabilitiesUsingPadeMethod(void);
         bool                            isInitialized;
         int                             numNodes;
         int                             numStates;

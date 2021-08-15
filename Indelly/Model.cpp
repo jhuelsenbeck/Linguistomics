@@ -443,20 +443,12 @@ void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) 
     // set up the rate matrix
     RateMatrix& rmat = RateMatrix::rateMatrix();
     rmat.initialize(numStates, settings.getUseEigenSystem());
-    if (settings.getUseEigenSystem() == true)
+    if (settings.getUseEigenSystem() == true && settings.getSubstitutionModel() != jc69)
         {
         EigenSystem& eigs = EigenSystem::eigenSystem();
         eigs.initialize(numStates);
+        rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
         }
-    rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
-
-    // initialize the eigen system object and calculate the first set of eigens
-//    if (substitutionModel == gtr || substitutionModel == custom)
-//        {
-//        EigenSystem& eigs = EigenSystem::eigenSystem();
-//        eigs.initialize(numStates);
-//        eigs.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
-//        }
     
     // initialize the transition probabilities
     TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
@@ -546,9 +538,9 @@ void Model::reject(void) {
 
     Parameter* parm = parameters[updatedParameterIdx];
     parm->reject();
-    if (parm->getUpdateChangesEigens() == true)
+    if (parm->getUpdateChangesRateMatrix() == true)
         {
-        // flip eigen index to original state
+        // flip rate matrix index to original state
         RateMatrix& rmat = RateMatrix::rateMatrix();
         rmat.flipActiveValues();
         }

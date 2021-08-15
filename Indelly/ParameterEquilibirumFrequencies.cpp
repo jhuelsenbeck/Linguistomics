@@ -15,7 +15,7 @@ ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable*
 
     std::cout << "   * Setting up equilibrium frequencies parameter " << std::endl;
 
-    updateChangesEigens = true;
+    updateChangesRateMatrix = true;
 
     numStates = ns;
     freqs[0].resize(numStates);
