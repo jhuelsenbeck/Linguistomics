@@ -112,10 +112,6 @@ void LikelihoodTkf::initTransitionProbabilities(void) {
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
     transitionProbabilities = tip.getTransitionProbabilities();
     stateEquilibriumFrequencies = tip.getStationaryFrequencies();
-
-#   if 0
-    tip.print();
-#   endif
 }
 
 void LikelihoodTkf::initTKF91(void) {
