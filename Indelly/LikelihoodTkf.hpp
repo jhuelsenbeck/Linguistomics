@@ -23,15 +23,12 @@ class LikelihoodTkf {
         
     private:
         void                                            clearDpTable(void);
-        void                                            debugPrint(void);
         void                                            init(void);
         void                                            initAlignment(void);
         void                                            initSequences(void);
         void                                            initTKF91(void);
         void                                            initTransitionProbabilities(void);
-        void                                            initTree(Tree* t);
         void                                            printTable(void);
-        void                                            printTreeInfo(void);
         void                                            printVector(std::string header, std::vector<int>& v);
         void                                            printVector(std::string header, std::vector<double>& v);
         void                                            printVector(std::string header, std::vector< std::vector<double> >& v);
@@ -40,8 +37,6 @@ class LikelihoodTkf {
         ParameterAlignment*                             data;
         Tree*                                           tree;
         Model*                                          model;
-        std::vector<int>                                parents;
-        std::vector<double>                             tau;
         std::vector<std::vector<int> >                  alignment;
         std::vector<std::vector<int> >                  sequences;
         std::vector<StateMatrix_t*>                     transitionProbabilities;

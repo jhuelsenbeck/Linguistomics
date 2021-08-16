@@ -13,7 +13,7 @@
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 
-#include <gmpxx.h>
+
 
 #undef DEBUG_TKF91
 int LikelihoodTkf::unalignableRegionSize = 0;
@@ -30,8 +30,6 @@ int LikelihoodTkf::maxUnalignableDimension = 10;
 
 LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m) {
 
-//    mpf_class x;
-
     data = a;
     tree = t;
     model = m;
@@ -45,8 +43,6 @@ LikelihoodTkf::~LikelihoodTkf(void) {
 
 void LikelihoodTkf::clearDpTable(void) {
 
-//    for (std::map<IntVector*,mpfr::mpreal,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
-//        delete it->first;
     for (std::map<IntVector*,double,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
         delete it->first;
     dpTable.clear();
@@ -57,19 +53,16 @@ void LikelihoodTkf::init(void) {
     // initialize some useful variables
     numStates = data->getNumStates();
 
-    // initialize the iParent and iTau arrays based on the given tree.
-    initTree(tree);
-      
-    // initialize the iAlignment array from the given alignment.
+    // initialize the alignment array from the given alignment.
     initAlignment();
 
-    // initialize the iSequences array from the given alignment.
+    // initialize the sequences array from the given alignment.
     initSequences();
 
-    // initialize the iTrans array from the substitution model -- must be called after populating tree!
+    // initialize the transitionProbabilities array from the substitution model
     initTransitionProbabilities();
 
-    // Initialise TKF91 coefficients in iB, iH, iN, iE, and iInitial
+    // initialise TKF91 probabilities
     initTKF91();
 }
 
@@ -125,7 +118,7 @@ void LikelihoodTkf::initTKF91(void) {
     numIndelCategories = settings.getNumIndelCategories();
 
     // size the vectors for the indel portion of the process
-    int numNodes = (int)parents.size();
+    int numNodes = tree->getNumNodes();
     std::vector<double> beta(numNodes);
     birthProbability.resize(numNodes);
     extinctionProbability.resize(numNodes);
@@ -133,25 +126,29 @@ void LikelihoodTkf::initTKF91(void) {
     nonHomologousProbability.resize(numNodes);
         
     immortalProbability= 1.0;
-    for (int i=0; i<numNodes; i++)
+    std::vector<Node*> dpSequence = tree->getDownPassSequence();
+    for (int n=0; n<dpSequence.size(); n++)
         {
-        if (i == numNodes-1)
+        Node* p = dpSequence[n];
+        int pIdx = p->getIndex();
+        double v = p->getBranchLength();
+        if (p->getAncestor() == NULL)
             {
             // root
-            beta[i] = 1.0 / deletionRate;
-            homologousProbability[i] = 0.0;
+            beta[pIdx] = 1.0 / deletionRate;
+            homologousProbability[pIdx] = 0.0;
             }
         else
             {
             // internal node or tip
-            beta[i] = exp( (insertionRate - deletionRate) * tau[i] );
-            beta[i] = (1.0 - beta[i]) / (deletionRate - insertionRate * beta[i]);
-            homologousProbability[i] = exp( -deletionRate * tau[i]) * (1.0 - insertionRate * beta[i] );
+            beta[pIdx] = exp( (insertionRate - deletionRate) * v );
+            beta[pIdx] = (1.0 - beta[pIdx]) / (deletionRate - insertionRate * beta[pIdx]);
+            homologousProbability[pIdx] = exp( -deletionRate * v) * (1.0 - insertionRate * beta[pIdx] );
             }
-        birthProbability[i]         = insertionRate * beta[i];
-        extinctionProbability[i]    = deletionRate * beta[i];
-        nonHomologousProbability[i] = (1.0 - deletionRate * beta[i]) * (1.0 - birthProbability[i]) - homologousProbability[i];
-        immortalProbability *= (1.0 - birthProbability[i]);
+        birthProbability[pIdx]         = insertionRate * beta[pIdx];
+        extinctionProbability[pIdx]    = deletionRate * beta[pIdx];
+        nonHomologousProbability[pIdx] = (1.0 - deletionRate * beta[pIdx]) * (1.0 - birthProbability[pIdx]) - homologousProbability[pIdx];
+        immortalProbability *= (1.0 - birthProbability[pIdx]);
         }
         
 #   if defined(DEBUG_TKF91)
@@ -164,50 +161,14 @@ void LikelihoodTkf::initTKF91(void) {
 #   endif
 }
 
-void LikelihoodTkf::initTree(Tree* t) {
-
-    parents = t->getAncestorIndices();
-    tau = t->getBranchLengthVector();
-    
-    //printTreeInfo();
-
-#   if defined(DEBUG_TKF91)
-    std::cout << "Tree" << std::endl;
-    for (int i=0; i<parents.size(); i++)
-        {
-        std::cout << std::setw(3) << i << " -- " << std::setw(4) << parents[i] << " ";
-        std::cout << std::fixed << std::setprecision(4) << tau[i] << " ";
-        std::cout << std::endl;
-        }
-#   endif
-}
-
 void LikelihoodTkf::printTable(void) {
 
     std::cout << "dpTable" << std::endl;
     std::cout << std::fixed << std::setprecision(10) << std::scientific;
     int i = 0;
-//    for (std::map<IntVector*,mpfr::mpreal,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
-//        {
-//        std::cout << i++ << " -- " << *(it->first) << " -- " << it->second.toString() << std::endl;
-//        }
     for (std::map<IntVector*,double,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
         {
         std::cout << i++ << " -- " << *(it->first) << " -- " << it->second << std::endl;
-        }
-}
-
-void LikelihoodTkf::printTreeInfo(void) {
-
-    for (int i=0; i<parents.size(); i++)
-        {
-        std::cout << "iParent[" << i << "] = " << parents[i] << ";" << std::endl;
-        }
-        
-    for (int i=0; i<tau.size(); i++)
-        {
-        std::cout << std::fixed << std::setprecision(10);
-        std::cout << "iTau[" << i << "] = " << tau[i] << ";" << std::endl;
         }
 }
 
@@ -410,50 +371,13 @@ double LikelihoodTkf::tkfLike(void) {
     } while (true);
 }
 
-void LikelihoodTkf::debugPrint(void) {
-
-    std::cout << "Node information:" << std::endl;
-    for (int i=0; i<parents.size(); i++)
-        {
-        std::cout << std::setw(3) << i << " : " << std::setw(3) << parents[i] << " " << std::fixed << std::setprecision(5) << tau[i] << " ";
-        std::cout << birthProbability[i] << " " << extinctionProbability[i] << " " << homologousProbability[i] << " " << nonHomologousProbability[i];
-        std::cout << std::endl;
-        }
-        
-    std::cout << "Parameters:" << std::endl;
-    std::cout << "  Lambda = " << insertionRate << std::endl;
-    std::cout << "  Mu     = " << deletionRate << std::endl;
-    std::cout << "  E(N)   = " << insertionRate / (deletionRate - insertionRate) << std::endl;
-    
-    for (int i=0; i<sequences.size(); i++)
-        {
-        for (int j=0; j<sequences[i].size(); j++)
-            std::cout << sequences[i][j] << " ";
-        std::cout << std::endl;
-        }
-        
-    for (int i=0; i<transitionProbabilities.size(); i++)
-        {
-        std::cout << "iTrans[" << i << "] (" << tau[i] << "):" << std::endl;
-        for (int j=0; j<numStates; j++)
-            {
-            std::cout << "  ";
-            for (int k=0; k<numStates; k++)
-                std::cout << std::fixed << std::setprecision(3) << (*transitionProbabilities[i])(j,k) << " ";
-            std::cout << std::endl;
-            }
-        }
-}
-
 double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int siteColumn) {
 
     int numLeaves = (int)signature->size();                                       // Dimension of alignment columns, i.e. number of leaves
-    int numNodes = (int)parents.size();                                           // Number of internal nodes
+    int numNodes = tree->getNumNodes();                                           // Number of internal nodes
     std::vector<int> nodeHomology(numNodes);                                      // Homology for every node; 0 if node need not be homologous to an emitted nucleotide
     std::vector<int> numHomologousEmissions(numNodes);                            // Number of homologous emissions accounted for by homologous nucleotide at this node
     std::vector<int> numHomologousEmissionsForClass(maxUnalignableDimension + 1); // Number of emissions for each class of homologous nucleotides
-    std::vector<int> lftChildrenIndices(numNodes);                                // Left children
-    std::vector<int> rhtChildrenIndices(numNodes);                                // Right children
 
     std::vector< std::vector<double> > fH(numNodes);
     std::vector< std::vector<double> > fI(numNodes);
@@ -462,6 +386,7 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
 	    fH[i].resize(numStates, 0.0);
 	    fI[i].resize(numStates + 1, 0.0);   // Extra position for 'gap' entry
         }
+        
     for (int i=0; i<numLeaves; i++)
         {
         numHomologousEmissionsForClass[ (*signature)[ i ] ]++;
@@ -475,156 +400,163 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
     // Loop over all nodes except root, and find out which nodes need carry nucleotides of what
     // homology class.  Also fill iChild* arrays, which point to the two children of every parent.
     bool isHomologyClashing = false;
-    for (int i=0; i<numNodes-1; i++)
+    std::vector<Node*> dpSequence = tree->getDownPassSequence();
+    for (int n=0; n<dpSequence.size(); n++)
         {
-        if ((numHomologousEmissions[i] == numHomologousEmissionsForClass[ nodeHomology[i] ]) || (nodeHomology[i] == 0))
+        Node* p = dpSequence[n];
+        if (p->getAncestor() != NULL)
             {
-            // This node is the MRCA of the homologous nucleotides iHom[i], or a gap - do nothing
-            }
-        else
-            {
-            if (nodeHomology[ parents[ i ]] == 0 || nodeHomology[ parents[ i ]] == nodeHomology[i])
+            int pIdx = p->getIndex();
+            int pAncIdx = p->getAncestor()->getIndex();
+            
+            if ((numHomologousEmissions[pIdx] == numHomologousEmissionsForClass[ nodeHomology[pIdx] ]) || (nodeHomology[pIdx] == 0))
                 {
-                // This node is not yet MRCA, so node above must be homologous
-                nodeHomology[parents[i]] = nodeHomology[i];
-                // If iHom[i]==0, iHomNum[i]==0.
-                numHomologousEmissions[parents[i]] += numHomologousEmissions[i];
+                // This node is the MRCA of the homologous nucleotides iHom[i], or a gap - do nothing
                 }
             else
                 {
-                // Clashing homology; signal
-                isHomologyClashing = true;
+                if (nodeHomology[pAncIdx] == 0 || nodeHomology[pAncIdx] == nodeHomology[pIdx])
+                    {
+                    // This node is not yet MRCA, so node above must be homologous
+                    nodeHomology[pAncIdx] = nodeHomology[pIdx];
+                    // If iHom[i]==0, iHomNum[i]==0.
+                    numHomologousEmissions[pAncIdx] += numHomologousEmissions[pIdx];
+                    }
+                else
+                    {
+                    // Clashing homology; signal
+                    isHomologyClashing = true;
+                    }
                 }
             }
-        if (lftChildrenIndices[ parents[ i ] ] == 0)
-            lftChildrenIndices[ parents[ i ] ] = i;
-        else
-            rhtChildrenIndices[ parents[ i ] ] = i;
         }
 
-    // Bail out - cheaper than do this implicitly in the recursion below
+    // argh
     if (isHomologyClashing)
-        {
-        //std::cout << "Homology clashes!" << std::endl;
         return 0.0;
-        }
 
 //    std::cout << *signature << std::endl;
     
-    // Start recursion.  First initialise the leaves
-    for (int i=0; i<numLeaves; i++)
+    // pruning algorithm down the tree
+    for (int n=0; n<dpSequence.size(); n++)
         {
-        if ( (*signature)[i] == 0)
+        Node* p = dpSequence[n];
+        int pIdx = p->getIndex();
+        if (p->getIsLeaf() == true)
             {
-            // gap
-            fI[i][numStates] = 1.0;
-            }
-        else
-            {
-            // nucleotide
-            fH[i][ sequences[i][(*pos)[i]] ] = 1.0;
-            }
-        }
-
-    // Now do the recursion, bottom-up, on all internal nodes
-    for (int i=numLeaves; i<numNodes; i++)
-        {
-        int lftChildIdx = lftChildrenIndices[i];
-        int rhtChildIdx = rhtChildrenIndices[i];
-        
-        // Find out whether:
-        // 1- One homology family spanning tree intersects both child edges, i.e.
-        //    a 'homologous' nucleotide should travel down both edges,
-        // 2- One homology family Spanning tree intersects one of the child edges, i.e.
-        //    'homologous' nucleotide must travel down a specific edge
-        // 3- No homology family's spanning tree intersect either child edge, i.e.
-        //    a 'homologous' nucleotide may travel down either edge and pop out at a leaf,
-        //    or may travel down both edges but has to die in at least one subtree, or
-        //    an 'inhomologous' nucleotide may do whatever it likes here.
-        if ((nodeHomology[i] != 0) && (nodeHomology[i] == nodeHomology[lftChildIdx]) && (nodeHomology[i] == nodeHomology[rhtChildIdx]))
-            {
-            // case 1
-            for (int j=0; j<numStates; j++)
+            if ( (*signature)[pIdx] == 0 )
                 {
-                double lft = 0.0;
-                double rht = 0.0;
-                for (int k=0; k<numStates; k++)
-                    {
-                    lft += fH[lftChildIdx][k] * homologousProbability[lftChildIdx] * (*transitionProbabilities[lftChildIdx])(j,k);
-                    rht += fH[rhtChildIdx][k] * homologousProbability[rhtChildIdx] * (*transitionProbabilities[rhtChildIdx])(j,k);
-                    }
-                fH[i][j] = lft * rht;
-                }
-                // Others: 0.0
-            }
-        else if (nodeHomology[i] != 0)
-            {
-            // case 2.  Figure out which is the homologous child, and which the inhomologous one.
-            int homologousChildIdx, inhomologousChildIdx;
-            if (nodeHomology[i] == nodeHomology[lftChildIdx])
-                {
-                homologousChildIdx = lftChildIdx;
-                inhomologousChildIdx = rhtChildIdx;
+                // gap
+                fI[pIdx][numStates] = 1.0;
                 }
             else
                 {
-                homologousChildIdx = rhtChildIdx;
-                inhomologousChildIdx = lftChildIdx;
+                // nucleotide
+                fH[pIdx][ sequences[pIdx][(*pos)[pIdx]] ] = 1.0;
                 }
-
-            for (int j=0; j<numStates; j++)
-                {
-                double lft = 0.0;
-                double rht = extinctionProbability[inhomologousChildIdx] * fI[inhomologousChildIdx][numStates];
-                for (int k=0; k<numStates; k++)
-                    {
-                    lft += fH[homologousChildIdx][k] * homologousProbability[homologousChildIdx] * (*transitionProbabilities[homologousChildIdx])(j,k);
-                    rht +=
-                        (fH[inhomologousChildIdx][k] + fI[inhomologousChildIdx][k]) * (nonHomologousProbability[inhomologousChildIdx] - extinctionProbability[inhomologousChildIdx] * birthProbability[inhomologousChildIdx]) * stateEquilibriumFrequencies[k] +
-                        fI[inhomologousChildIdx][k] * homologousProbability[inhomologousChildIdx] * (*transitionProbabilities[inhomologousChildIdx])(j,k);
-                    }
-                fH[i][j] = lft * rht;
-                }
-            // Others: 0.0
             }
         else
             {
-            // case 3
-            int child1Idx = lftChildIdx;
-            int child2Idx = rhtChildIdx;
-            for (int j=0; j<numStates; j++)
-                {
-                double lft1 = 0.0, lft2 = 0.0;
-                double rht1 = extinctionProbability[child1Idx] * fI[child1Idx][numStates];
-                double rht2 = extinctionProbability[child2Idx] * fI[child2Idx][numStates];
-                for (int k=0; k<numStates; k++)
-                    {
-                    lft1 += fH[child1Idx][k] * homologousProbability[child1Idx] * (*transitionProbabilities[child1Idx])(j,k);
-                    lft2 += fH[child2Idx][k] * homologousProbability[child2Idx] * (*transitionProbabilities[child2Idx])(j,k);
-                    rht1 += (fH[child1Idx][k] + fI[child1Idx][k]) * (nonHomologousProbability[child1Idx] - extinctionProbability[child1Idx] * birthProbability[child1Idx]) * stateEquilibriumFrequencies[k] + fI[child1Idx][k] * homologousProbability[child1Idx] * (*transitionProbabilities[child1Idx])(j,k);
-                    rht2 += (fH[child2Idx][k] + fI[child2Idx][k]) * (nonHomologousProbability[child2Idx] - extinctionProbability[child2Idx] * birthProbability[child2Idx]) * stateEquilibriumFrequencies[k] + fI[child2Idx][k] * homologousProbability[child2Idx] * (*transitionProbabilities[child2Idx])(j,k);
-                    }
-                fH[i][j] = lft1 * rht2 + lft2 * rht1;  // homology pops out below iC1 + homology pops out below iC2
-                fI[i][j] = rht1 * rht2;                // no homology with j below i.
-                }
-            double lft = fI[child1Idx][numStates];
-            double rht = fI[child2Idx][numStates];
-            for (int j=0; j<numStates; j++)
-                {
-                lft -= birthProbability[child1Idx] * (fI[child1Idx][j] + fH[child1Idx][j]) * stateEquilibriumFrequencies[j];
-                rht -= birthProbability[child2Idx] * (fI[child2Idx][j] + fH[child2Idx][j]) * stateEquilibriumFrequencies[j];
-                }
-            fI[i][numStates] = lft * rht;
-
-            }
+            std::vector<Node*> des = p->getDescendantsVector();
+            if (des.size() != 2)
+                Msg::error("Expecting two descendants");
+            int lftChildIdx = des[0]->getIndex();
+            int rhtChildIdx = des[1]->getIndex();
             
+            // Find out whether:
+            // 1- One homology family spanning tree intersects both child edges, i.e.
+            //    a 'homologous' nucleotide should travel down both edges,
+            // 2- One homology family Spanning tree intersects one of the child edges, i.e.
+            //    'homologous' nucleotide must travel down a specific edge
+            // 3- No homology family's spanning tree intersect either child edge, i.e.
+            //    a 'homologous' nucleotide may travel down either edge and pop out at a leaf,
+            //    or may travel down both edges but has to die in at least one subtree, or
+            //    an 'inhomologous' nucleotide may do whatever it likes here.
+            if ((nodeHomology[pIdx] != 0) && (nodeHomology[pIdx] == nodeHomology[lftChildIdx]) && (nodeHomology[pIdx] == nodeHomology[rhtChildIdx]))
+                {
+                // case 1
+                for (int j=0; j<numStates; j++)
+                    {
+                    double lft = 0.0;
+                    double rht = 0.0;
+                    for (int k=0; k<numStates; k++)
+                        {
+                        lft += fH[lftChildIdx][k] * homologousProbability[lftChildIdx] * (*transitionProbabilities[lftChildIdx])(j,k);
+                        rht += fH[rhtChildIdx][k] * homologousProbability[rhtChildIdx] * (*transitionProbabilities[rhtChildIdx])(j,k);
+                        }
+                    fH[pIdx][j] = lft * rht;
+                    }
+                    // Others: 0.0
+                }
+            else if (nodeHomology[pIdx] != 0)
+                {
+                // case 2.  Figure out which is the homologous child, and which the inhomologous one.
+                int homologousChildIdx, inhomologousChildIdx;
+                if (nodeHomology[pIdx] == nodeHomology[lftChildIdx])
+                    {
+                    homologousChildIdx = lftChildIdx;
+                    inhomologousChildIdx = rhtChildIdx;
+                    }
+                else
+                    {
+                    homologousChildIdx = rhtChildIdx;
+                    inhomologousChildIdx = lftChildIdx;
+                    }
+
+                for (int j=0; j<numStates; j++)
+                    {
+                    double lft = 0.0;
+                    double rht = extinctionProbability[inhomologousChildIdx] * fI[inhomologousChildIdx][numStates];
+                    for (int k=0; k<numStates; k++)
+                        {
+                        lft += fH[homologousChildIdx][k] * homologousProbability[homologousChildIdx] * (*transitionProbabilities[homologousChildIdx])(j,k);
+                        rht +=
+                            (fH[inhomologousChildIdx][k] + fI[inhomologousChildIdx][k]) * (nonHomologousProbability[inhomologousChildIdx] - extinctionProbability[inhomologousChildIdx] * birthProbability[inhomologousChildIdx]) * stateEquilibriumFrequencies[k] +
+                            fI[inhomologousChildIdx][k] * homologousProbability[inhomologousChildIdx] * (*transitionProbabilities[inhomologousChildIdx])(j,k);
+                        }
+                    fH[pIdx][j] = lft * rht;
+                    }
+                // Others: 0.0
+                }
+            else
+                {
+                // case 3
+                int child1Idx = lftChildIdx;
+                int child2Idx = rhtChildIdx;
+                for (int j=0; j<numStates; j++)
+                    {
+                    double lft1 = 0.0, lft2 = 0.0;
+                    double rht1 = extinctionProbability[child1Idx] * fI[child1Idx][numStates];
+                    double rht2 = extinctionProbability[child2Idx] * fI[child2Idx][numStates];
+                    for (int k=0; k<numStates; k++)
+                        {
+                        lft1 += fH[child1Idx][k] * homologousProbability[child1Idx] * (*transitionProbabilities[child1Idx])(j,k);
+                        lft2 += fH[child2Idx][k] * homologousProbability[child2Idx] * (*transitionProbabilities[child2Idx])(j,k);
+                        rht1 += (fH[child1Idx][k] + fI[child1Idx][k]) * (nonHomologousProbability[child1Idx] - extinctionProbability[child1Idx] * birthProbability[child1Idx]) * stateEquilibriumFrequencies[k] + fI[child1Idx][k] * homologousProbability[child1Idx] * (*transitionProbabilities[child1Idx])(j,k);
+                        rht2 += (fH[child2Idx][k] + fI[child2Idx][k]) * (nonHomologousProbability[child2Idx] - extinctionProbability[child2Idx] * birthProbability[child2Idx]) * stateEquilibriumFrequencies[k] + fI[child2Idx][k] * homologousProbability[child2Idx] * (*transitionProbabilities[child2Idx])(j,k);
+                        }
+                    fH[pIdx][j] = lft1 * rht2 + lft2 * rht1;  // homology pops out below child1 + homology pops out below child2
+                    fI[pIdx][j] = rht1 * rht2;                // no homology with j below i.
+                    }
+                double lft = fI[child1Idx][numStates];
+                double rht = fI[child2Idx][numStates];
+                for (int j=0; j<numStates; j++)
+                    {
+                    lft -= birthProbability[child1Idx] * (fI[child1Idx][j] + fH[child1Idx][j]) * stateEquilibriumFrequencies[j];
+                    rht -= birthProbability[child2Idx] * (fI[child2Idx][j] + fH[child2Idx][j]) * stateEquilibriumFrequencies[j];
+                    }
+                fI[pIdx][numStates] = lft * rht;
+                }
+            
+            }
         }
 
     // Now calculate the final result
-    int rootIdx = numNodes - 1;
+    int rootIdx = tree->getRoot()->getIndex();
     double res = fI[rootIdx][numStates];
     for (int i=0; i<numStates; i++)
         res -= (fI[rootIdx][i] + fH[rootIdx][i]) * birthProbability[rootIdx] * stateEquilibriumFrequencies[i];
     return res;
 }
+
 

@@ -27,8 +27,6 @@ TransitionProbabilities::~TransitionProbabilities(void) {
         for (int n=0; n<probs[s].size(); n++)
             {
             delete probs[s][n];
-//            delete [] probs[s][n][0];
-//            delete [] probs[s][n];
             }
         }
 }
