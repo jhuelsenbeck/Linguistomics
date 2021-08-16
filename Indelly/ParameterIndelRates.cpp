@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include "ParameterIndelRates.hpp"
+#include "Probability.hpp"
 #include "RandomVariable.hpp"
 #include "TransitionProbabilities.hpp"
 
@@ -24,10 +25,10 @@ ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::strin
     std::vector<double> alpha(2);
     alpha[0] = 100.0 * expEpsilon;
     alpha[1] = 190.0 * (1.0 - expEpsilon);
-    rv->dirichletRv(alpha, epsilon[0]);
+    Probability::Dirichlet::rv(rv, alpha, epsilon[0]);
 
     rhoExpParm = 100.0;
-    rho[0] = rv->exponentialRv(rhoExpParm);
+    rho[0] = Probability::Exponential::rv(rv, rhoExpParm);
     
     epsilon[1] = epsilon[0];
     rho[1] = rho[0];
@@ -163,14 +164,14 @@ double ParameterIndelRates::update(void) {
         std::vector<double> newEpsilon(2);
         
         do {
-            rv->dirichletRv(forwardAlpha, newEpsilon);
+            Probability::Dirichlet::rv(rv, forwardAlpha, newEpsilon);
             } while(newEpsilon[0] > 0.99 || newEpsilon[0] < 0.01);
         
         std::vector<double> reverseAlpha(2);
         reverseAlpha[0] = alpha0 * newEpsilon[0];
         reverseAlpha[1] = alpha0 * newEpsilon[1];
         
-        lnProposalProbability = rv->lnDirichletPdf(reverseAlpha, epsilon[0]) - rv->lnDirichletPdf(forwardAlpha, newEpsilon);
+        lnProposalProbability = Probability::Dirichlet::lnPdf(reverseAlpha, epsilon[0]) - Probability::Dirichlet::lnPdf(forwardAlpha, newEpsilon);
         epsilon[0] = newEpsilon;
         }
     else
@@ -201,8 +202,8 @@ double ParameterIndelRates::updateFromPrior(void) {
     double newLambda = 0.0, newMu = 0.0;
     do
         {
-        newLambda = rv->exponentialRv(insertionLambda);
-        newMu = rv->exponentialRv(deletionLambda);
+        newLambda = Probability::Exponential::rv(rv, insertionLambda);
+        newMu = Probability::Exponential::rv(rv, deletionLambda);
         } while (newLambda > newMu);
         
     double lnP  = log(deletionLambda) + log(insertionLambda + deletionLambda) - deletionLambda * newMu - insertionLambda * newLambda;

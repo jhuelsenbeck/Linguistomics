@@ -6,6 +6,7 @@
 #include "Msg.hpp"
 #include "Node.hpp"
 #include "NodeSet.hpp"
+#include "Probability.hpp"
 #include "RandomVariable.hpp"
 #include "Tree.hpp"
 
@@ -221,7 +222,7 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
             {
             p = downPassSequence[i];
             if (p != root)
-                p->setBranchProportion(rv->exponentialRv(1.0));
+                p->setBranchProportion(Probability::Exponential::rv(rv, 1.0));
             else
                 p->setBranchProportion(0.0);
             }
@@ -247,7 +248,7 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
             p->setBranchProportion( p->getBranchProportion()/sum );
             }
             
-        treeLength = rv->gammaRv(1.0, betaT);
+        treeLength = Probability::Gamma::rv(rv, 1.0, betaT);
         }
     else
         {
@@ -353,7 +354,7 @@ void Tree::buildRandomTree(std::vector<std::string> tNames, double betaT, Random
         {
         Node* p = downPassSequence[i];
         if (p != root)
-            p->setBranchProportion(rv->exponentialRv(1.0));
+            p->setBranchProportion(Probability::Exponential::rv(rv,1.0));
         else
             p->setBranchProportion(0.0);
         }
@@ -381,7 +382,7 @@ void Tree::buildRandomTree(std::vector<std::string> tNames, double betaT, Random
         }
         
     // set the tree length from a gamma
-    treeLength = rv->gammaRv(1.0, betaT);
+    treeLength = Probability::Gamma::rv(rv, 1.0, betaT);
 }
 
 void Tree::clone(Tree& t) {

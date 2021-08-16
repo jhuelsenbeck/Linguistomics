@@ -1,11 +1,8 @@
 #include <cmath>
 #include <iostream>
-#include "Branch.hpp"
 #include "Msg.hpp"
-#include "Node.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
-#include "Tree.hpp"
 
 
 #pragma mark - Beta
@@ -399,123 +396,6 @@ int Probability::Geometric::rv(RandomVariable* rng, double p) {
     while (rng->uniformRv() < p)
         n++;
     return n;
-}
-
-#pragma mark - Phylogenetic
-
-double Probability::Phylogenetic::pdf(Tree& t, double lambda) {
-
-    double lnP = Probability::Phylogenetic::lnPdf(t, lambda);
-    if (lnP < -300.0)
-        return 0.0;
-    return exp(lnP);
-}
-
-double Probability::Phylogenetic::lnPdf(Tree& t, double lambda) {
-
-    double lnP = 0.0;
-    std::map<NodePair, Branch*, CompNodePair>& branches = t.getBranches();
-    for (std::map<NodePair, Branch*, CompNodePair>::iterator it = branches.begin(); it != branches.end(); it++)
-        lnP += log( it->second->getLength() );
-    return lnP;
-}
-
-void Probability::Phylogenetic::rv(RandomVariable* rng, Tree& t, std::vector<std::string> tn, double lambda) {
-        
-    // check size
-    if (tn.size() < 3)
-        Msg::error("Tree is too small");
-        
-    // initialize some important variables
-    t.setNumLeaves( (int)tn.size() );
-    t.setTaxonNames( tn );
-    
-    // set up the initial tree
-    Node* r = t.addNode();
-    t.setRoot(r);
-    std::vector<Node*> possibleAttachmentNodes;
-    possibleAttachmentNodes.push_back(r);
-    for (int i=0; i<2; i++)
-        {
-        Node* p = t.addNode();
-        possibleAttachmentNodes.push_back(p);
-        p->setName(tn[i]);
-        p->setIndex(i);
-        p->setIsLeaf(true);
-        p->addNeighbor(r);
-        r->addNeighbor(p);
-        p->setAncestor(r);
-        }
-        
-    // randomly add taxa to branches
-    for (int i=2; i<tn.size(); i++)
-        {
-        Node* p = possibleAttachmentNodes[ (int)(rng->uniformRv()*possibleAttachmentNodes.size()) ];
-        
-        Node* n1 = t.addNode();
-        Node* n2 = t.addNode();
-        n2->setIsLeaf(true);
-        n2->setName(tn[i]);
-        n2->setIndex(i);
-
-        possibleAttachmentNodes.push_back(n1);
-        possibleAttachmentNodes.push_back(n1);
-
-        if (p == t.getRoot())
-            {
-            // add the new taxon as sister to the current tree
-            n1->addNeighbor(p);
-            n1->addNeighbor(n2);
-            p->addNeighbor(n1);
-            n2->addNeighbor(n1);
-            p->setAncestor(n1);
-            n2->setAncestor(n1);
-            t.setRoot(n1);
-            }
-        else
-            {
-            // add the branch on another branch
-            Node* pAnc = p->getAncestor();
-            p->removeNeighbor(pAnc);
-            pAnc->removeNeighbor(p);
-            n1->addNeighbor(p);
-            n1->addNeighbor(pAnc);
-            n1->addNeighbor(n2);
-            n1->setAncestor(pAnc);
-            p->setAncestor(n1);
-            p->addNeighbor(n1);
-            pAnc->addNeighbor(n1);
-            n2->addNeighbor(n1);
-            n2->setAncestor(n1);
-            }
-        }
-        
-    // get the down pass sequence
-    t.initalizeDownPassSequence();
-
-    // re-index interior nodes
-    std::vector<Node*>& dps = t.getDownPassSequence();
-    int intIdx = (int)tn.size();
-    for (Node* p : dps)
-        {
-        if (p->getIsLeaf() == false)
-            p->setIndex(intIdx++);
-        }
-    
-    // add the branches to the tree
-    for (Node* p : dps)
-        {
-        if (p != t.getRoot())
-            {
-            Node* pAnc = p->getAncestor();
-            Branch* b = t.addBranch(p, pAnc);
-            b->setEnds(p, pAnc);
-            b->setLength( Probability::Exponential::rv(rng, lambda) );
-            }
-        }
-        
-    //t.print();
-    //t.printBranches();
 }
 
 #pragma mark - Normal

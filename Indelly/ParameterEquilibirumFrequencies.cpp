@@ -3,6 +3,7 @@
 #include <map>
 #include "Model.hpp"
 #include "ParameterEquilibirumFrequencies.hpp"
+#include "Probability.hpp"
 #include "RandomVariable.hpp"
 #include "RateMatrix.hpp"
 #include "TransitionProbabilities.hpp"
@@ -23,7 +24,7 @@ ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable*
     alpha.resize(numStates);
     for (int i=0; i<numStates; i++)
         alpha[i] = 1.0;
-    rv->dirichletRv(alpha, freqs[0]);
+    Probability::Dirichlet::rv(rv, alpha, freqs[0]);
     normalize(freqs[0], minVal);
     freqs[1] = freqs[0];
 }
@@ -63,7 +64,7 @@ std::string ParameterEquilibirumFrequencies::getString(void) {
 
 double ParameterEquilibirumFrequencies::lnPriorProbability(void) {
 
-    return rv->lnGamma(numStates-1);
+    return Probability::Helper::lnGamma(numStates-1);
 }
 
 void ParameterEquilibirumFrequencies::print(void) {
@@ -153,7 +154,7 @@ double ParameterEquilibirumFrequencies::update(void) {
         alphaForward[0] = oldValues[0] * alpha0;
         alphaForward[1] = oldValues[1] * alpha0;
         
-        rv->dirichletRv(alphaForward, newValues);
+        Probability::Dirichlet::rv(rv, alphaForward, newValues);
         normalize(newValues, minVal);
         
         alphaReverse[0] = newValues[0] * alpha0;
@@ -165,7 +166,7 @@ double ParameterEquilibirumFrequencies::update(void) {
             freqs[0][i] *= factor;
         freqs[0][indexToUpdate] = newValues[0];
 
-        lnP = rv->lnDirichletPdf(alphaReverse, oldValues) - rv->lnDirichletPdf(alphaForward, newValues);
+        lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         lnP += (numStates - 2) * log(factor); // Jacobian
         }
     else if (k > 1 && k < numStates)
@@ -194,7 +195,7 @@ double ParameterEquilibirumFrequencies::update(void) {
             alphaForward[i] = oldValues[i] * alpha0;;
         
         // draw a new value for the reduced vector
-        rv->dirichletRv(alphaForward, newValues);
+        Probability::Dirichlet::rv(rv, alphaForward, newValues);
         normalize(newValues, minVal);
         
         // fill in the Dirichlet parameters for the reverse probability calculations
@@ -213,7 +214,7 @@ double ParameterEquilibirumFrequencies::update(void) {
             }
         
         // Hastings ratio
-        lnP = rv->lnDirichletPdf(alphaReverse, oldValues) - rv->lnDirichletPdf(alphaForward, newValues);
+        lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         lnP += (numStates - k - 1) * log(factor); // Jacobian
 //        std::cout << "lnP 2 = " << lnP << std::endl;
 //        std::cout << std::fixed << std::setprecision(10);
@@ -232,14 +233,14 @@ double ParameterEquilibirumFrequencies::update(void) {
             alphaForward[i] = oldValues[i] * alpha0;
         
         std::vector<double> newValues(numStates);
-        rv->dirichletRv(alphaForward, newValues);
+        Probability::Dirichlet::rv(rv, alphaForward, newValues);
         normalize(newValues, minVal);
         
         std::vector<double> alphaReverse(numStates);
         for (int i=0; i<numStates; i++)
             alphaReverse[i] = newValues[i] * alpha0;
 
-        lnP = rv->lnDirichletPdf(alphaReverse, oldValues) - rv->lnDirichletPdf(alphaForward, newValues);
+        lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         
         freqs[0] = newValues;
         }
@@ -263,7 +264,7 @@ double ParameterEquilibirumFrequencies::updateFromPrior(void) {
     lastUpdateType = "random equilibrium frequencies";
 
     // draw from the prior distribution, which is a flat Dirichlet distribution
-    rv->dirichletRv(alpha, freqs[0]);
+    Probability::Dirichlet::rv(rv, alpha, freqs[0]);
 
     // update the rate matrix and transition probabilities
     RateMatrix& rmat = RateMatrix::rateMatrix();

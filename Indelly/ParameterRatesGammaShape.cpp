@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include "ParameterRatesGammaShape.hpp"
+#include "Probability.hpp"
 #include "RandomVariable.hpp"
 #include "TransitionProbabilities.hpp"
 
@@ -16,12 +17,12 @@ ParameterRatesGammaShape::ParameterRatesGammaShape(RandomVariable* r, Model* m, 
     expPriorVal = ep;
     numCategories = nc;
     
-    alpha[0] = rv->exponentialRv(expPriorVal);
+    alpha[0] = Probability::Exponential::rv(rv, expPriorVal);
     alpha[1] = alpha[0];
     
     rates[0].resize(numCategories);
     rates[1].resize(numCategories);
-    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, false);
+    Probability::Gamma::discretization(rates[0], alpha[0], alpha[0], numCategories, false);
     rates[1] = rates[0];
 }
 
@@ -72,7 +73,7 @@ double ParameterRatesGammaShape::update(void) {
     double lnP = log(newAlpha) - log(alpha[0]);
     
     alpha[0] = newAlpha;
-    rv->discretizeGamma(rates[0], alpha[0], alpha[0], numCategories, false);
+    Probability::Gamma::discretization(rates[0], alpha[0], alpha[0], numCategories, false);
 
     updateChangesTransitionProbabilities = true;
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();

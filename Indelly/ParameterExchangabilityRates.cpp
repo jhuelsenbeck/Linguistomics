@@ -3,6 +3,7 @@
 #include <map>
 #include "Model.hpp"
 #include "ParameterExchangabilityRates.hpp"
+#include "Probability.hpp"
 #include "RandomVariable.hpp"
 #include "RateMatrix.hpp"
 #include "TransitionProbabilities.hpp"
@@ -34,7 +35,7 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
     alpha.resize(numRates);
     for (int i=0; i<numRates; i++)
         alpha[i] = 1.0;
-    rv->dirichletRv(alpha, rates[0]);
+    Probability::Dirichlet::rv(rv, alpha, rates[0]);
     normalize(rates[0], minVal);
     rates[1] = rates[0];
     
@@ -55,7 +56,7 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
     alpha.resize(numRates);
     for (int i=0; i<numRates; i++)
         alpha[i] = 1.0;
-    rv->dirichletRv(alpha, rates[0]);
+    Probability::Dirichlet::rv(rv, alpha, rates[0]);
     rates[1] = rates[0];
     
 }
@@ -96,7 +97,8 @@ std::string ParameterExchangabilityRates::getString(void) {
 
 double ParameterExchangabilityRates::lnPriorProbability(void) {
 
-    return rv->lnGamma(numRates-1);
+    return Probability::Helper::lnGamma(numRates-1);
+    
 }
 
 void ParameterExchangabilityRates::normalize(std::vector<double>& vec, double minVal) {
@@ -186,7 +188,7 @@ double ParameterExchangabilityRates::update(void) {
         alphaForward[0] = oldValues[0] * alpha0;
         alphaForward[1] = oldValues[1] * alpha0;
         
-        rv->dirichletRv(alphaForward, newValues);
+        Probability::Dirichlet::rv(rv, alphaForward, newValues);
         normalize(newValues, minVal);
         
         alphaReverse[0] = newValues[0] * alpha0;
@@ -198,7 +200,7 @@ double ParameterExchangabilityRates::update(void) {
             rates[0][i] *= factor;
         rates[0][indexToUpdate] = newValues[0];
 
-        lnP = rv->lnDirichletPdf(alphaReverse, oldValues) - rv->lnDirichletPdf(alphaForward, newValues);
+        lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         lnP += (numRates - 2) * log(factor); // Jacobian
         }
     else if (k > 1 && k < numRates)
@@ -227,7 +229,7 @@ double ParameterExchangabilityRates::update(void) {
             alphaForward[i] = oldValues[i] * alpha0;;
         
         // draw a new value for the reduced vector
-        rv->dirichletRv(alphaForward, newValues);
+        Probability::Dirichlet::rv(rv, alphaForward, newValues);
         normalize(newValues, minVal);
         
         // fill in the Dirichlet parameters for the reverse probability calculations
@@ -246,7 +248,7 @@ double ParameterExchangabilityRates::update(void) {
             }
         
         // Hastings ratio
-        lnP = rv->lnDirichletPdf(alphaReverse, oldValues) - rv->lnDirichletPdf(alphaForward, newValues);
+        lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         lnP += (numRates - k - 1) * log(factor); // Jacobian
 //        std::cout << "lnP 2 = " << lnP << std::endl;
 //        std::cout << std::fixed << std::setprecision(10);
@@ -265,14 +267,14 @@ double ParameterExchangabilityRates::update(void) {
             alphaForward[i] = oldValues[i] * alpha0;
         
         std::vector<double> newValues(numRates);
-        rv->dirichletRv(alphaForward, newValues);
+        Probability::Dirichlet::rv(rv, alphaForward, newValues);
         normalize(newValues, minVal);
         
         std::vector<double> alphaReverse(numRates);
         for (int i=0; i<numRates; i++)
             alphaReverse[i] = newValues[i] * alpha0;
 
-        lnP = rv->lnDirichletPdf(alphaReverse, oldValues) - rv->lnDirichletPdf(alphaForward, newValues);
+        lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         
         rates[0] = newValues;
         }
@@ -298,7 +300,7 @@ double ParameterExchangabilityRates::updateFromPrior(void) {
     lastUpdateType = "random exchangeability rates";
 
     // draw from the prior distribution, which is a flat Dirichlet distribution
-    rv->dirichletRv(alpha, rates[0]);
+    Probability::Dirichlet::rv(rv, alpha, rates[0]);
 
     // update the rate matrix and transition probabilities
     RateMatrix& rmat = RateMatrix::rateMatrix();

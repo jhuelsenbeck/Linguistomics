@@ -34,10 +34,7 @@ void RateMatrix::initialize(int d, bool useEigens) {
     Q[1].resize(numStates,numStates);
     equilibriumFrequencies[0].resize(numStates);
     equilibriumFrequencies[1].resize(numStates);
-    
-    if (useEigenSystem == false)
-        setPadeTolerance(1E-6);
-        
+
     isInitialized = true;
 }
 

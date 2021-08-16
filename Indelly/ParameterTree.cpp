@@ -5,6 +5,7 @@
 #include "Node.hpp"
 #include "NodeSet.hpp"
 #include "ParameterTree.hpp"
+#include "Probability.hpp"
 #include "RandomVariable.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
@@ -156,9 +157,9 @@ double ParameterTree::lnPriorProbability(void) {
         }
         
     double lnP = 0.0;
-    lnP += alphaT * log(betaT) - rv->lnGamma(alphaT) - betaT * treeLength;
+    lnP += alphaT * log(betaT) - Probability::Helper::lnGamma(alphaT) - betaT * treeLength;
     lnP += (alphaT - 1.0) * log(treeLength);
-    lnP += rv->lnGamma(2 * s - 4.0 + 1.0);
+    lnP += Probability::Helper::lnGamma(2 * s - 4.0 + 1.0);
     lnP += (-2.0 * s + 4.0) * log(treeLength);
             
     return lnP;
@@ -267,7 +268,7 @@ double ParameterTree::updateBrlenProportions(void) {
     for (int i=0; i<2; i++)
         alphaForward[i] = oldProportions[i] * alpha0;
     std::vector<double> newProportions(2);
-    rv->dirichletRv(alphaForward, newProportions);
+    Probability::Dirichlet::rv(rv, alphaForward, newProportions);
     
     // check the proposed values
     normalize(newProportions, 0.000001);
@@ -316,7 +317,7 @@ double ParameterTree::updateBrlenProportions(void) {
     
     // calculate Hastings ratio, including the Jacobian
     int n = 2 * t->getNumTaxa() - 3;
-    double lnH  = rv->lnDirichletPdf(alphaReverse, oldProportions) - rv->lnDirichletPdf(alphaForward, newProportions); // Hastings Ratio
+    double lnH  = Probability::Dirichlet::lnPdf(alphaReverse, oldProportions) - Probability::Dirichlet::lnPdf(alphaForward, newProportions); // Hastings Ratio
     lnH += (n - 2) * log(newProportions[1] / oldProportions[1]); // Jacobian (check this)
 
     // update the transition probabilities
@@ -555,7 +556,7 @@ double ParameterTree::updateBranchlengthsFromPrior(void) {
         Node* p = dpSeq[i];
         if (p != t->getRoot())
             {
-            p->setBranchProportion( rv->exponentialRv(1.0) );
+            p->setBranchProportion( Probability::Exponential::rv(rv, 1.0) );
             sum += p->getBranchProportion();
             }
         else
@@ -567,7 +568,7 @@ double ParameterTree::updateBranchlengthsFromPrior(void) {
         p->setBranchProportion( p->getBranchProportion() / sum );
         }
 
-    double treeLength = rv->gammaRv(1.0, betaT);
+    double treeLength = Probability::Gamma::rv(rv, 1.0, betaT);
     t->setTreeLength(treeLength);
 
     double lnP2 = lnPriorProbability();
