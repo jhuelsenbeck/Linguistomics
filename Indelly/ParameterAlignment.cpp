@@ -116,6 +116,47 @@ std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(std::vector<st
     return m;
 }
 
+std::string ParameterAlignment::getJsonString(void) {
+
+    int longestName = 0;
+    for (int i=0; i<taxonNames.size(); i++)
+        {
+        if (taxonNames[i].length() > longestName)
+            longestName = (int)taxonNames[i].length();
+        }
+        
+    std::string jsonStr = "";
+    jsonStr += "{\"Name\": \"" + parmName + "\", \"Data\": [\n";
+    for (int i=0; i<alignment[0].size(); i++)
+        {
+        jsonStr += "{\"Taxon\": \"" + taxonNames[i] + "\", ";
+        for (int j=0; j<longestName-taxonNames[i].length(); j++)
+            jsonStr += " ";
+        jsonStr += "\"Segments\": [";
+        for (int j=0; j<alignment[0][i].size(); j++)
+            {
+            int x = alignment[0][i][j];
+            if (x == numStates)
+                jsonStr += "-1";
+            else
+                {
+                if (x < 10)
+                    jsonStr += " ";
+                jsonStr += std::to_string(x);
+                }
+            if (j + 1 != alignment[0][i].size())
+                jsonStr += ",";
+            }
+        jsonStr += "]}";
+        if (i + 1 != alignment[0].size())
+            jsonStr += ",";
+        jsonStr += "\n";
+        }
+    jsonStr += "]}";
+    
+    return jsonStr;
+}
+
 double ParameterAlignment::lnPriorProbability(void) {
 
     return 0.0;

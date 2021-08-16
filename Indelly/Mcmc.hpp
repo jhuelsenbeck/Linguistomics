@@ -32,6 +32,7 @@ class Mcmc {
         int             printFrequency;
         int             sampleFrequency;
         std::ofstream   algnStrm;
+        std::ofstream*  algnJsonStrm;
         std::ofstream   parmStrm;
         std::ofstream   treeStrm;
         int             maxPriorPrint;

@@ -36,6 +36,11 @@ void Mcmc::closeOutputFiles(void) {
     parmStrm.close();
     treeStrm.close();
     algnStrm.close();
+
+    std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
+    for (int i=0; i<alns.size(); i++)
+        algnJsonStrm[i].close();
+    delete [] algnJsonStrm;
 }
 
 std::string Mcmc::formattedTime(std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
@@ -87,6 +92,16 @@ void Mcmc::openOutputFiles(void) {
     algnStrm.open( algnFileName.c_str(), std::ios::out );
     if (!algnStrm)
         Msg::error("Cannot open file \"" + algnFileName + "\"");
+  
+    std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
+    algnJsonStrm = new std::ofstream[alns.size()];
+    for (int i=0; i<alns.size(); i++)
+        {
+        std::string fn = outPath + alns[i]->getName() + ".aln";
+        algnJsonStrm[i].open( fn.c_str(), std::ios::out );
+        if (!algnJsonStrm[i])
+            Msg::error("Cannot open file \"" + fn + "\"");
+        }
 }
 
 void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept) {
@@ -298,7 +313,11 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
         algnStrm << "Languages" << '\t';
         for (int i=0; i<alns.size(); i++)
+            {
             algnStrm << alns[i]->getName() << '\t';
+            algnJsonStrm[i] << "{\"Samples\": [";
+            algnJsonStrm[i] << alns[i]->getJsonString() << "," << std::endl;
+            }
         algnStrm << std::endl;
         }
         
@@ -350,6 +369,14 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         }
     algnStrm << std::endl;
     
+    for (int i=0; i<alns.size(); i++)
+        {
+        algnJsonStrm[i] << alns[i]->getJsonString();
+        if (gen == numMcmcCycles)
+            algnJsonStrm[i] << "]" << std::endl;
+        else
+            algnJsonStrm[i] << "," << std::endl;
+        }
     
     if (gen == numMcmcCycles)
         {

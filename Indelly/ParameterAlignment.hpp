@@ -26,6 +26,7 @@ class ParameterAlignment : public Parameter {
         std::vector<std::vector<int> >  getIndelMatrix(void);
         std::vector<std::vector<int> >  getIndelMatrix(int idx);
         std::vector<std::vector<int> >  getIndelMatrix(std::vector<std::vector<int> >& aln);
+        std::string                     getJsonString(void);
         int                             getNumSites(void) { return (int)alignment[0][0].size(); }
         int                             getNumStates(void) { return numStates; }
         int                             getPrintWidth(void) { return printWidth; }
