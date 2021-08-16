@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include "IntVector.hpp"
+#include "TransitionProbabilities.hpp"
 class Model;
 class Node;
 class ParameterAlignment;
@@ -43,7 +44,7 @@ class LikelihoodTkf {
         std::vector<double>                             tau;
         std::vector<std::vector<int> >                  alignment;
         std::vector<std::vector<int> >                  sequences;
-        std::vector<double**>                           transitionProbabilities;
+        std::vector<StateMatrix_t*>                     transitionProbabilities;
         std::vector<double>                             stateEquilibriumFrequencies;
         int                                             numIndelCategories;
         std::vector<double>                             birthProbability;

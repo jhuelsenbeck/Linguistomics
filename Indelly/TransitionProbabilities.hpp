@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "EigenSystem.hpp"
 #include "UserSettings.hpp"
 class Model;
 
@@ -19,8 +20,8 @@ class TransitionProbabilities {
         int                             getNumNodes(void) { return numNodes; }
         int                             getNumStates(void) { return numStates; }
         std::vector<double>             getStationaryFrequencies(void) { return stationaryFreqs[activeProbs]; }
-        std::vector<double**>           getTransitionProbabilities(void) { return probs[activeProbs]; }
-        double**                        getTransitionProbabilities(int nodeIdx) { return probs[activeProbs][nodeIdx]; }
+        std::vector<StateMatrix_t*>     getTransitionProbabilities(void) { return probs[activeProbs]; }
+        StateMatrix_t*                  getTransitionProbabilities(int nodeIdx) { return probs[activeProbs][nodeIdx]; }
         void                            initialize(Model* m, int nn, int ns, int sm);
         void                            print(void);
         void                            setNeedsUpdate(bool tf) { needsUpdate = tf; }
@@ -37,7 +38,7 @@ class TransitionProbabilities {
         int                             numNodes;
         int                             numStates;
         int                             activeProbs;
-        std::vector<double**>           probs[2];
+        std::vector<StateMatrix_t*>     probs[2];
         std::vector<double>             stationaryFreqs[2];
         Model*                          modelPtr;
         bool                            needsUpdate;

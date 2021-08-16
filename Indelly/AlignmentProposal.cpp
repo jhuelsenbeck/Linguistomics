@@ -328,7 +328,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
     
     /* dynamic programming algorithm for the proposal */
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    std::vector<double**> tiProbs = tip.getTransitionProbabilities();
+    std::vector<StateMatrix_t*> tiProbs = tip.getTransitionProbabilities();
     std::vector<double> stationaryFrequencies = tip.getStationaryFrequencies();
     int numStates = tip.getNumStates();
     std::vector<std::vector<double> > scoring;
@@ -353,7 +353,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
                 {
                 scoring[i][j] = 0.0;
                 for (int l=0; l<numStates; l++)
-                    scoring[i][j] += tiProbs[lftChild][i][l] * tiProbs[rhtChild][l][j];
+                    scoring[i][j] += (*tiProbs[lftChild])(i,l) * (*tiProbs[rhtChild])(l,j);
                 }
             }
         for (int i=0; i<numStates; i++)
@@ -668,7 +668,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
                 {
                 scoring[i][j] = 0.0;
                 for (int l = 0; l < numStates; l++)
-                    scoring[i][j] += tiProbs[lftChildrenIndices[k]][i][l] * tiProbs[rhtChildrenIndices[k]][l][j];
+                    scoring[i][j] += (*tiProbs[lftChildrenIndices[k]])(i,l) * (*tiProbs[rhtChildrenIndices[k]])(l,j);
                 }
         for (int i = 0; i < numStates; i++)
             for (int j = 0; j < numStates; j++)

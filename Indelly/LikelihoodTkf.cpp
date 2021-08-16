@@ -439,7 +439,7 @@ void LikelihoodTkf::debugPrint(void) {
             {
             std::cout << "  ";
             for (int k=0; k<numStates; k++)
-                std::cout << std::fixed << std::setprecision(3) << transitionProbabilities[i][j][k] << " ";
+                std::cout << std::fixed << std::setprecision(3) << (*transitionProbabilities[i])(j,k) << " ";
             std::cout << std::endl;
             }
         }
@@ -550,8 +550,8 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
                 double rht = 0.0;
                 for (int k=0; k<numStates; k++)
                     {
-                    lft += fH[lftChildIdx][k] * homologousProbability[lftChildIdx] * transitionProbabilities[lftChildIdx][j][k];
-                    rht += fH[rhtChildIdx][k] * homologousProbability[rhtChildIdx] * transitionProbabilities[rhtChildIdx][j][k];
+                    lft += fH[lftChildIdx][k] * homologousProbability[lftChildIdx] * (*transitionProbabilities[lftChildIdx])(j,k);
+                    rht += fH[rhtChildIdx][k] * homologousProbability[rhtChildIdx] * (*transitionProbabilities[rhtChildIdx])(j,k);
                     }
                 fH[i][j] = lft * rht;
                 }
@@ -578,10 +578,10 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
                 double rht = extinctionProbability[inhomologousChildIdx] * fI[inhomologousChildIdx][numStates];
                 for (int k=0; k<numStates; k++)
                     {
-                    lft += fH[homologousChildIdx][k] * homologousProbability[homologousChildIdx] * transitionProbabilities[homologousChildIdx][j][k];
+                    lft += fH[homologousChildIdx][k] * homologousProbability[homologousChildIdx] * (*transitionProbabilities[homologousChildIdx])(j,k);
                     rht +=
                         (fH[inhomologousChildIdx][k] + fI[inhomologousChildIdx][k]) * (nonHomologousProbability[inhomologousChildIdx] - extinctionProbability[inhomologousChildIdx] * birthProbability[inhomologousChildIdx]) * stateEquilibriumFrequencies[k] +
-                        fI[inhomologousChildIdx][k] * homologousProbability[inhomologousChildIdx] * transitionProbabilities[inhomologousChildIdx][j][k];
+                        fI[inhomologousChildIdx][k] * homologousProbability[inhomologousChildIdx] * (*transitionProbabilities[inhomologousChildIdx])(j,k);
                     }
                 fH[i][j] = lft * rht;
                 }
@@ -599,10 +599,10 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
                 double rht2 = extinctionProbability[child2Idx] * fI[child2Idx][numStates];
                 for (int k=0; k<numStates; k++)
                     {
-                    lft1 += fH[child1Idx][k] * homologousProbability[child1Idx] * transitionProbabilities[child1Idx][j][k];
-                    lft2 += fH[child2Idx][k] * homologousProbability[child2Idx] * transitionProbabilities[child2Idx][j][k];
-                    rht1 += (fH[child1Idx][k] + fI[child1Idx][k]) * (nonHomologousProbability[child1Idx] - extinctionProbability[child1Idx] * birthProbability[child1Idx]) * stateEquilibriumFrequencies[k] + fI[child1Idx][k] * homologousProbability[child1Idx] * transitionProbabilities[child1Idx][j][k];
-                    rht2 += (fH[child2Idx][k] + fI[child2Idx][k]) * (nonHomologousProbability[child2Idx] - extinctionProbability[child2Idx] * birthProbability[child2Idx]) * stateEquilibriumFrequencies[k] + fI[child2Idx][k] * homologousProbability[child2Idx] * transitionProbabilities[child2Idx][j][k];
+                    lft1 += fH[child1Idx][k] * homologousProbability[child1Idx] * (*transitionProbabilities[child1Idx])(j,k);
+                    lft2 += fH[child2Idx][k] * homologousProbability[child2Idx] * (*transitionProbabilities[child2Idx])(j,k);
+                    rht1 += (fH[child1Idx][k] + fI[child1Idx][k]) * (nonHomologousProbability[child1Idx] - extinctionProbability[child1Idx] * birthProbability[child1Idx]) * stateEquilibriumFrequencies[k] + fI[child1Idx][k] * homologousProbability[child1Idx] * (*transitionProbabilities[child1Idx])(j,k);
+                    rht2 += (fH[child2Idx][k] + fI[child2Idx][k]) * (nonHomologousProbability[child2Idx] - extinctionProbability[child2Idx] * birthProbability[child2Idx]) * stateEquilibriumFrequencies[k] + fI[child2Idx][k] * homologousProbability[child2Idx] * (*transitionProbabilities[child2Idx])(j,k);
                     }
                 fH[i][j] = lft1 * rht2 + lft2 * rht1;  // homology pops out below iC1 + homology pops out below iC2
                 fI[i][j] = rht1 * rht2;                // no homology with j below i.

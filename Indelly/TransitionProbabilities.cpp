@@ -26,8 +26,9 @@ TransitionProbabilities::~TransitionProbabilities(void) {
         {
         for (int n=0; n<probs[s].size(); n++)
             {
-            delete [] probs[s][n][0];
-            delete [] probs[s][n];
+            delete probs[s][n];
+//            delete [] probs[s][n][0];
+//            delete [] probs[s][n];
             }
         }
 }
@@ -54,7 +55,6 @@ void TransitionProbabilities::initialize(Model* m, int nn, int ns, int sm) {
     numStates = ns;
     substitutionModel = sm;
     numRateCategories = settings.getNumRateCategories();
-    int numStatesSquared = numStates * numStates;
     std::cout << "   * Number of states = " << numStates << std::endl;
     std::cout << "   * Number of gamma rate categories = " << numRateCategories << std::endl;
         
@@ -63,13 +63,8 @@ void TransitionProbabilities::initialize(Model* m, int nn, int ns, int sm) {
         probs[s].resize(numNodes);
         for (int n=0; n<probs[s].size(); n++)
             {
-            probs[s][n] = new double*[numStates];
-            probs[s][n][0] = new double[numStatesSquared];
-            for (int i=1; i<numStates; i++)
-                probs[s][n][i] = probs[s][n][i-1] + numStates;
-            for (int i=0; i<numStates; i++)
-                for (int j=0; j<numStates; j++)
-                    probs[s][n][i][j] = 0.0;
+            probs[s][n] = new StateMatrix_t;
+            probs[s][n]->resize(numStates,numStates);
             }
         }
         
@@ -88,7 +83,7 @@ void TransitionProbabilities::print(void) {
         for (int i=0; i<numStates; i++)
             {
             for (int j=0; j<numStates; j++)
-                std::cout << probs[activeProbs][n][i][j] << " ";
+                std::cout << (*probs[activeProbs][n])(i,j) << " ";
             std::cout << std::endl;
             }
         }
@@ -125,7 +120,7 @@ void TransitionProbabilities::setTransitionProbabilitiesJc69(void) {
     for (int n=0; n<traversalSeq.size(); n++)
         {
         Node* p = traversalSeq[n];
-        double** tp = probs[activeProbs][p->getIndex()];
+        StateMatrix_t* tp = probs[activeProbs][p->getIndex()];
         double v = p->getBranchLength();
         
         double x = -((double)numStates/(numStates-1));
@@ -136,9 +131,9 @@ void TransitionProbabilities::setTransitionProbabilitiesJc69(void) {
             for (int j=0; j<numStates; j++)
                 {
                 if (i == j)
-                    tp[i][j] = pNoChange;
+                    (*tp)(i,j) = pNoChange;
                 else
-                    tp[i][j] = pChange;
+                    (*tp)(i,j) = pChange;
                 }
             }
         }
@@ -159,7 +154,7 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
     for (int n=0; n<traversalSeq.size(); n++)
         {
         Node* p = traversalSeq[n];
-        double** tp = probs[activeProbs][p->getIndex()];
+        StateMatrix_t* tp = probs[activeProbs][p->getIndex()];
         
         double v = p->getBranchLength();
         for (int s=0; s<numStates; s++)
@@ -173,7 +168,7 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
                 std::complex<double> sum = std::complex<double>(0.0, 0.0);
                 for(int s=0; s<numStates; s++)
                     sum += (*ptr++) * ceigValExp[s];
-                tp[i][j] = (sum.real() < 0.0) ? 0.0 : sum.real();
+                (*tp)(i,j) = (sum.real() < 0.0) ? 0.0 : sum.real();
                 }
             }
         }
@@ -193,15 +188,11 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
     for (int n=0; n<traversalSeq.size(); n++)
         {
         Node* p = traversalSeq[n];
-        double** tp = probs[activeProbs][p->getIndex()];
+        StateMatrix_t* tp = probs[activeProbs][p->getIndex()];
         double v = p->getBranchLength();
         
         M = Q * v;
-        P = M.exp();
-                
-        for (int i=0; i<numStates; i++)
-            for (int j=0; j<numStates; j++)
-                tp[i][j] = (P(i,j) < 0.0) ? 0.0 : P(i,j);
+        (*tp) = M.exp();
         }
         
     stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
