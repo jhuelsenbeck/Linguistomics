@@ -1,0 +1,203 @@
+﻿using Format, Style, Defs, Units;
+//======================================================================
+
+with sym {
+  theta = Span {Style.GreekFamily; "θ"};
+  i     = Classical "i";
+  ii    = Classical "ii";
+  ij    = Classical "ij";
+  j     = Classical "j";
+  r     = Classical "r";
+  n     = Classical "n";
+  e     = Classical "e";
+  q     = Extra "q";
+  qij   = sym.q sub sym.ij;
+  qii   = sym.q sub sym.ii;
+  ni    = sym.n sub sym.i;
+  D(x)  = Span {Classical Italic "d"; x};
+}
+
+Ith = Span {sym.i; "th"};
+
+Summation = Nary {
+  Operator: Tex.sum;
+};
+
+Integral = Nary {
+  Operator: Tex.int;
+};
+
+InBraces   = HBox {BracketLR: Brackets.Curly};
+InParens   = HBox {BracketLR: Brackets.Round};
+InBrackets = HBox {BracketLR: Brackets.Square};
+
+CommaList = Span {
+  Separator: ", ";
+};
+
+TextList = CommaList {
+  LastSeparator: " {0} "(Lang.And);
+};
+
+EllipsisList = CommaList {
+  LastSeparator: Span {", "; Tex.ldots; ", "};
+};
+
+ProductList = Span {
+  Separator: Times;
+  LastSeparator: Times Tex.ldots Times;
+};
+
+Arguments = InParens {
+  Separator: ", ";
+};
+
+SampledLanguages(n) = Equation {
+  NumLanguages;
+  Equals;
+  n;
+};
+
+TipLabelNumbers = Equation {
+  EllipsisList {
+    1; 2; NumLanguages;
+  }
+};
+
+TipLastLabel = Equation {
+  2 NumLanguages Minus 1;
+};
+
+TipLabelInterior = Equation {
+  EllipsisList {
+    NumLanguages Plus 1;
+    NumLanguages Plus 2;
+    TipLastLabel;
+  }
+};
+
+NodeIndex = Equation {
+  sym.i;
+};
+
+AncestorNode(i) = Equation {
+  Classical Tex.sigma;
+  InParens {
+    i;
+  };
+};
+//======================================================================
+
+with Defs {
+  Phylogeny               = new DefClass(GreekFamily Tex.Psi, "Phylogeny", "The (possibly unknown) relationship between entities resulting from an evolutionary tree");
+  Topology                = new DefClass(GreekFamily Tex.tau, "Tree topology", "Information on the relationships of the languages");
+  SubstitutionRate        = new DefClass(GreekFamily Tex.mu, "Substitution rate", "the rate at which the language changes");
+  NumLanguages            = new DefClass(Extra "N", "Sampled languages", "The number of languages in a sample");
+  ExpectedEvents          = new DefClass(GreekFamily Tex.nu, "Expected events", "The expected number of evolutionary events that occurred between two languages");
+  Time                    = new DefClass(Classical "t", "Past times", "Times of branch events");
+  PossibleRootedTrees     = new DefClass(Classical Bold "B", "Possible rooted trees", "");
+  SegmentalAlignment      = new DefClass(Bold "A", "Segmental alignment", "Constructed by combining the word segment information for the languages of interest with information on the homology of the segments");
+  SegmentalInfo           = new DefClass(Bold "S", "Segmental information", "Information on the homology of the segments");
+  Segment                 = new DefClass(Bold "s", "Segment", "Linguistic segment");
+  ISegment                = new DefClass(Segment sub sym.i, "ith segment", "");
+  HomologyMap             = new DefClass(Bold "H", "Homology map", "The map describing the alignment of the segments");
+  RateMatrix              = new DefClass(Bold Classical "Q", "Rate Matrix", "");
+  RateMatrixScale         = new DefClass(Extra Italic Tex.beta, "Rate matrix scaling factor", "Scales the rate matrix such that the average rate of segmental substitution is one");
+  StateProbability        = new DefClass(Bold "P", "Probability", "The probability the process ends in certain state");
+  MarginalLikelihood      = new DefClass(Extra "P", "Marginal Likelihood", "");
+  EquilibriumDistribution = new DefClass(GreekFamily Tex.pi, "Equilibrium distribution", "");
+  InsertionRate           = new DefClass(Classical GreekFamily Tex.lambda, "Rate of segment insertion", "");
+  DeletionRate            = new DefClass(Classical GreekFamily Tex.mu, "Rate of segment deletion", "");
+  WordLength              = new DefClass(Classical "n", "Word length", "Number of segments in a word");
+  RateParameter           = new DefClass(Classical "r", "Rate parameter", "");
+  RateMatrixParams        = new DefClass(sym.theta, "Rate parameters", "Parameters associated with the rate matrix");
+  Proposal                = new DefClass(Span {sym.theta; Tex.prime}, "Proposal", "New value proposal");
+  ProbProposal            = new DefClass(sym.q, "Proposal probability", "Probability of new proposal");
+  RandomNumber            = new DefClass(Classical "u", "Random number", "");
+  ProbOfAccepting         = new DefClass(Classical "R", "Acceptance probability", "Probability of accepting a proposed value");
+  Model                   = new DefClass(Classical "M", "Model", "Mathematical model for linguistic parameters");
+  BayesFactor             = new DefClass(Extra "BF", "Bayes Factor", "A numerical factor related to the quality of the model fit");
+  Unknown                 = new DefClass(Classical "X", "Unknown", "");
+}
+
+ExpectedEventsPerBranch = Equation {
+  ExpectedEvents;
+  Equals;
+  InParens {
+    Time sub (Tex.sigma sub sym.i);
+    Minus;
+    Time sub sym.i;
+  };
+  Tex.times;
+  SubstitutionRate sub sym.i;
+};
+
+BranchMinus(n) = Equation {2 NumLanguages Minus n};
+
+MaxBranches = BranchMinus(2);
+MaxBranch   = BranchMinus(3);
+
+BN = Equation {
+  PossibleRootedTrees;
+  InParens {
+    NumLanguages
+  };
+};
+
+BNEquation = Equation {
+  BN;
+  Equals;
+  InParens {MaxBranch};
+  "!!";
+  Equals;
+  ProductList {
+    1; 3; MaxBranch;
+  }
+};
+
+BranchFormula(n) {
+  var t = 1;
+  n = n*2 - 3;
+  while (n > 1) {
+    if (n mod 2 == 1)
+      t *= n;
+    --n;
+  }
+  return t;
+}
+
+InDelDistribution = Equation {
+  RateParameter;
+  Equals;
+  Negative;
+  Summation {
+    Lower: sym.i;
+    InParens {sym.ni; sym.qii};
+    Plus;
+    WordLength;
+    InsertionRate;
+    Plus;
+    InParens {WordLength; Minus; 1};
+    SubstitutionRate;
+  };
+};
+
+InDelProbability = Equation {
+  Negative;
+  Summation {
+    Lower: sym.i;
+    InParens {sym.ni; sym.qii};
+  };
+  Divide;
+  RateParameter;
+};
+//======================================================================
+
+with ExampleAnimals {
+  Chimpanzee = "AAGCTTCACCGGCGCAATTATCCTCATAATCGCCCACGGACTTACATCCT";
+  Gorilla    = "AAGCTTCACCGGCGCAGTTGTTCTTATAATTGCCCACGGACTTACATCAT";
+  Human      = "AAGCTTCACCGGCGCAGTCATTCTCATAATCGCCCACGGGCTTACATCCT";
+}
+//======================================================================
+
+
