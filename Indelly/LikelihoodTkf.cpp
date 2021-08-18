@@ -9,6 +9,7 @@
 #include "Model.hpp"
 #include "Node.hpp"
 #include "ParameterAlignment.hpp"
+#include "SiteLikelihood.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
@@ -33,6 +34,11 @@ LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m) {
     data = a;
     tree = t;
     model = m;
+    
+    siteProbs = data->getSiteProbs();
+    fH = siteProbs->getProbsH();
+    fI = siteProbs->getProbsI();
+    
     init();
 }
 
@@ -378,13 +384,13 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
 
     // size vectors to hold conditional probabilities, making
     // certain that they are initialized to zero
-    std::vector< std::vector<double> > fH(numNodes);
-    std::vector< std::vector<double> > fI(numNodes);
-	for (int i=0; i<numNodes; i++)
-        {
-	    fH[i].resize(numStates, 0.0);
-	    fI[i].resize(numStates + 1, 0.0);   // extra position for gap
-        }
+//    std::vector< std::vector<double> > fH(numNodes);
+//    std::vector< std::vector<double> > fI(numNodes);
+//	for (int i=0; i<numNodes; i++)
+//        {
+//	    fH[i].resize(numStates, 0.0);
+//	    fI[i].resize(numStates + 1, 0.0);   // extra position for gap
+//        }
         
     std::vector<int> nodeHomology(numNodes);                                      // Homology for every node; 0 if node need not be homologous to an emitted nucleotide
     std::vector<int> numHomologousEmissions(numNodes);                            // Number of homologous emissions accounted for by homologous nucleotide at this node
@@ -446,6 +452,8 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
         int pIdx = p->getIndex();
         if (p->getIsLeaf() == true)
             {
+            siteProbs->zeroOutH(pIdx);
+            siteProbs->zeroOutI(pIdx);
             if ( (*signature)[pIdx] == 0 )
                 {
                 // gap

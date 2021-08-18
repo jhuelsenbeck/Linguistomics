@@ -97,7 +97,7 @@ void Mcmc::openOutputFiles(void) {
     algnJsonStrm = new std::ofstream[alns.size()];
     for (int i=0; i<alns.size(); i++)
         {
-        std::string fn = outPath + alns[i]->getName() + ".aln";
+        std::string fn = outPath + "." + alns[i]->getName() + ".aln";
         algnJsonStrm[i].open( fn.c_str(), std::ios::out );
         if (!algnJsonStrm[i])
             Msg::error("Cannot open file \"" + fn + "\"");
@@ -315,7 +315,16 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         for (int i=0; i<alns.size(); i++)
             {
             algnStrm << alns[i]->getName() << '\t';
-            algnJsonStrm[i] << "{\"Samples\": [";
+            std::string stateSetsStr = modelPtr->getStateSetsJsonString();
+            if (stateSetsStr != "")
+                {
+                algnJsonStrm[i] << "{" << stateSetsStr;
+                algnJsonStrm[i] << ", \"Samples\": [\n";
+                }
+            else
+                {
+                algnJsonStrm[i] << "{\"Samples\": [\n";
+                }
             algnJsonStrm[i] << alns[i]->getJsonString() << "," << std::endl;
             }
         algnStrm << std::endl;

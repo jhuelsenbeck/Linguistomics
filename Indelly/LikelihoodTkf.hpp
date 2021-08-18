@@ -8,6 +8,7 @@
 class Model;
 class Node;
 class ParameterAlignment;
+class SiteLikelihood;
 class Tree;
 
 
@@ -46,6 +47,9 @@ class LikelihoodTkf {
         std::vector<double>                             extinctionProbability;
         std::vector<double>                             homologousProbability;
         std::vector<double>                             nonHomologousProbability;
+        SiteLikelihood*                                 siteProbs;
+        double**                                        fH;
+        double**                                        fI;
         double                                          immortalProbability;
         int                                             numStates;
         double                                          insertionRate;

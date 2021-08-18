@@ -5,13 +5,16 @@
 #include "AlignmentProposal.hpp"
 #include "Model.hpp"
 #include "ParameterAlignment.hpp"
+#include "SiteLikelihood.hpp"
 #include "TransitionProbabilities.hpp"
 
 
 
-ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n) : Parameter(r, m, n) {
+ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, SiteLikelihood* sl) : Parameter(r, m, n) {
     
     updateChangesRateMatrix = false;
+    
+    siteProbs = sl;
 
     std::string name = a->getName();
     const size_t periodIdx = name.rfind('.');
@@ -59,6 +62,7 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
 
 ParameterAlignment::~ParameterAlignment(void) {
 
+    delete siteProbs;
 }
 
 void ParameterAlignment::accept(void) {
@@ -149,10 +153,9 @@ std::string ParameterAlignment::getJsonString(void) {
             }
         jsonStr += "]}";
         if (i + 1 != alignment[0].size())
-            jsonStr += ",";
-        jsonStr += "\n";
+            jsonStr += ",\n";
         }
-    jsonStr += "]}";
+    jsonStr += "]}\n";
     
     return jsonStr;
 }

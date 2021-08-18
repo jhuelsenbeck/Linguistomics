@@ -6,6 +6,7 @@
 #include "Parameter.hpp"
 class Alignment;
 class Model;
+class SiteLikelihood;
 
 
 
@@ -14,7 +15,7 @@ class ParameterAlignment : public Parameter {
     public:
                                         ParameterAlignment(void) = delete;
                                         ParameterAlignment(const ParameterAlignment& pa) = delete;
-                                        ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n);
+                                        ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, SiteLikelihood* sl);
                                        ~ParameterAlignment(void);
         double                          update(void);
         void                            accept(void);
@@ -31,6 +32,7 @@ class ParameterAlignment : public Parameter {
         int                             getNumStates(void) { return numStates; }
         int                             getPrintWidth(void) { return printWidth; }
         std::vector<std::vector<int> >  getRawSequenceMatrix(void) { return sequences; }
+        SiteLikelihood*                 getSiteProbs(void) { return siteProbs; }
         std::string                     getString(void) { return ""; }
         std::vector<std::string>        getTaxonNames(void) { return taxonNames; }
         double                          lnPriorProbability(void);
@@ -47,6 +49,7 @@ class ParameterAlignment : public Parameter {
         int                             numStates;
         int                             gapCode;       // the gap code is simply the maximum number of states possible in any Markov model
         int                             printWidth;
+        SiteLikelihood*                 siteProbs;
 };
 
 #endif

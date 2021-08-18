@@ -17,6 +17,7 @@
 #include "RandomVariable.hpp"
 #include "RateMatrix.hpp"
 #include "RateMatrixHelper.hpp"
+#include "SiteLikelihood.hpp"
 #include "ThreadPool.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
@@ -191,6 +192,33 @@ std::string Model::getParameterString(void) {
     return str;
 }
 
+std::string Model::getStateSetsJsonString(void) {
+
+    if (stateSets.size() == 0)
+        return "";
+
+    std::string str = "\"PartitionSets\": [";
+    
+    for (std::map<std::string,std::set<int> >::iterator it = stateSets.begin(); it != stateSets.end(); it++)
+        {
+        if (it != stateSets.begin())
+            str += ",";
+        str += "{\"Name\": \"" + it->first + "\", \"Set\": [";
+        std::set<int>& ss = it->second;
+        for (std::set<int>::iterator sit = ss.begin(); sit != ss.end(); sit++)
+            {
+            if (sit != ss.begin())
+                str += ",";
+            str += std::to_string(*sit);
+            }
+        str += "]}";
+        }
+    
+    str += "]";
+    
+    return str;
+}
+
 Tree* Model::getTree(void) {
 
     Tree* t = NULL;
@@ -341,12 +369,16 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         RateMatrixHelper& helper = RateMatrixHelper::rateMatrixHelper();
         helper.initialize(numStates, jsonPart);
         helper.print();
+        
+        initializeStateSets(jsonPart);
         }
     
     // set up the tree parameter
     Parameter* pTree = new ParameterTree(rv, this, treeStr, taxonNames, settings.getInverseTreeLength());
     pTree->setProposalProbability(10.0);
     parameters.push_back(pTree);
+    ParameterTree* t = (ParameterTree*)pTree;
+    int numNodes = t->getActiveTree()->getNumNodes();
     
     // set up the indel parameter
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);
@@ -365,7 +397,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     for (int i=0; i<wordAlignments.size(); i++)
         {
         std::string alnName = wordAlignments[i]->getName();
-        Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName);
+        Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, new SiteLikelihood(numNodes,numStates));
         pAlign->setProposalProbability(1.0);
         parameters.push_back(pAlign);
         wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
@@ -432,6 +464,21 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     for (int i=0; i<parameters.size(); i++)
         parameters[i]->print();
 #   endif
+}
+
+void Model::initializeStateSets(nlohmann::json& j) {
+
+    // get the state groupings from the json object
+    int numGroups = (int)j.size();
+    for (int i=0; i<numGroups; i++)
+        {
+        std::string groupName = j[i]["Name"];
+        std::vector<int> group = j[i]["Set"];
+        std::set<int> groupSet;
+        for (int j=0; j<group.size(); j++)
+            groupSet.insert(group[j]);
+        stateSets.insert( std::make_pair(groupName,groupSet) );
+        }
 }
 
 void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) {
