@@ -244,7 +244,8 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
     auto it = j.find("Taxa");
     if (it == j.end())
         Msg::error("Could not find list of taxa in the JSON file");
-    std::vector<std::string> canonicalTaxonList = j["Taxa"];
+    std::vector<std::string> tempList = j["Taxa"];
+    canonicalTaxonList = tempList;
     std::cout << "   * Found " << canonicalTaxonList.size() << " taxa in JSON file" << std::endl;
     
     // check that there are words in the json object
@@ -273,7 +274,7 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         nlohmann::json jw = j["Words"][i];
 
         // instantiate the word alignment from the json object
-        Alignment* aln = new Alignment(jw, numStates);
+        Alignment* aln = new Alignment(jw, numStates, canonicalTaxonList);
                 
         // check if we have problems, deleting the alignment if we do
         std::vector<std::string> alnTaxonNames = aln->getTaxonNames();
@@ -379,6 +380,13 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     parameters.push_back(pTree);
     ParameterTree* t = (ParameterTree*)pTree;
     int numNodes = t->getActiveTree()->getNumNodes();
+    
+    // play with pruning
+    std::vector<bool> mask(canonicalTaxonList.size(), false);
+    mask[1] = true;
+    mask[5] = true;
+    mask[6] = true;
+    Tree pruned(*(t->getActiveTree()), mask);
     
     // set up the indel parameter
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);

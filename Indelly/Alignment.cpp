@@ -8,7 +8,7 @@
 
 
 
-Alignment::Alignment(nlohmann::json& j, int ns) {
+Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonicalTaxonList) {
     
     //std::cout << j.dump() << std::endl;
     

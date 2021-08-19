@@ -8,7 +8,7 @@ SiteLikelihood::SiteLikelihood(int nn, int ns) {
     // set dimensions
     numNodes = nn;
     numStates = ns;
-    
+        
     // allocate arrays
     zeroH = new double[numStates];
     for (int i=0; i<numStates; i++)
@@ -20,12 +20,12 @@ SiteLikelihood::SiteLikelihood(int nn, int ns) {
 
     probsH = new double*[numNodes];
     probsH[0] = new double[numNodes * numStates];
-    for (int i=0; i<numNodes; i++)
+    for (int i=1; i<numNodes; i++)
         probsH[i] = probsH[i-1] + numStates;
     
     probsI = new double*[numNodes];
     probsI[0] = new double[numNodes * (numStates + 1)];
-    for (int i=0; i<numNodes; i++)
+    for (int i=1; i<numNodes; i++)
         probsI[i] = probsI[i-1] + (numStates + 1);
                     
     // set arrays
@@ -48,7 +48,7 @@ SiteLikelihood::~SiteLikelihood(void) {
 
 void SiteLikelihood::print(void) {
 
-    std::cout << std::fixed << std::setprecision(1);
+    std::cout << std::fixed << std::setprecision(0);
     
     std::cout << "probsH vector:" << std::endl;
     for (int i=0; i<numNodes; i++)
@@ -67,4 +67,26 @@ void SiteLikelihood::print(void) {
             std::cout << probsI[i][j] << " ";
         std::cout << std::endl;
         }
+}
+
+void SiteLikelihood::zeroOutH(void) {
+
+    for (int i=0; i<numNodes; i++)
+        memcpy( probsH[i], zeroH, numStates*sizeof(double) );
+}
+
+void SiteLikelihood::zeroOutI(void) {
+
+    for (int i=0; i<numNodes; i++)
+        memcpy( probsI[i], zeroI, (numStates+1)*sizeof(double) );
+}
+
+void SiteLikelihood::zeroOutH(int idx) {
+
+    memcpy( probsH[idx], zeroH, numStates*sizeof(double) );
+}
+
+void SiteLikelihood::zeroOutI(int idx) {
+
+    memcpy( probsI[idx], zeroI, (numStates+1)*sizeof(double) );
 }

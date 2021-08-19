@@ -55,6 +55,7 @@ class Model {
         int                                     updatedParameterIdx;
         int                                     substitutionModel;
         std::map<std::string,std::set<int> >    stateSets;
+        std::vector<std::string>                canonicalTaxonList;
 };
 
 #endif

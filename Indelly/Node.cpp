@@ -7,14 +7,15 @@
 
 Node::Node(int idx) {
 
-    index      = 0;
-    isLeaf     = false;
-    name       = "";
-    ancestor   = NULL;
-    proportion = 0.0;
-    offset     = idx;
-    myTree     = NULL;
-    descendants = new NodeSet;
+    index                 = 0;
+    isLeaf                = false;
+    name                  = "";
+    ancestor              = NULL;
+    proportion            = 0.0;
+    offset                = idx;
+    myTree                = NULL;
+    descendants           = new NodeSet;
+    transitionProbability = NULL;
 }
 
 Node::~Node(void) {

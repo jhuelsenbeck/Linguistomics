@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <iostream>
 #include <istream>
+#include <map>
 #include <sstream>
 #include <vector>
 #include "Msg.hpp"
@@ -19,10 +20,13 @@ Tree::Tree(Tree& t) {
 
 Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
 
-    // clone the tree
     if (t.getNumTaxa() != taxonMask.size())
         Msg::error("Cannot create pruned tree with ill-formated taxon mask");
+
+    // clone the tree
     clone(t);
+    
+    print("Original");
     
     // mark taxa to include
     std::vector<Node*> dpSeq = this->downPassSequence;
@@ -35,21 +39,18 @@ Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
             p->setFlag(false);
         }
         
-    // mark internal nodes to include
+    // mark path from each included taxon to the root
     for (int n=0; n<dpSeq.size(); n++)
         {
         Node* p = dpSeq[n];
-        if (p->getIsLeaf() == false)
+        if (p->getIsLeaf() == true && p->getFlag() == true)
             {
-            std::set<Node*,CompNode>& des = p->getDescendants()->getNodes();
-            for (Node* nde : des)
+            Node* q = p;
+            do
                 {
-                if (nde->getFlag() == true)
-                    {
-                    p->setFlag(true);
-                    break;
-                    }
-                }
+                q->setFlag(true);
+                q = q->getAncestor();
+                } while (q != NULL);
             }
         }
         
@@ -78,8 +79,64 @@ Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
                 pAnc->addDescendant(nde);
             }
         }
-        
-    // prune nodes from the root
+
+    print("Pruned Away");
+    
+    // prune superfluous nodes
+    //initializeDownPassSequence();
+    dpSeq = this->downPassSequence;
+    std::map<int,std::vector<int> > matrixMap;
+    for (int n=(int)dpSeq.size()-1; n>=0; n--)
+        {
+        Node* p = dpSeq[n];
+        std::vector<int> tpMat;
+        tpMat.push_back(p->getIndex());
+        matrixMap.insert( std::make_pair(p->getIndex(),tpMat) );
+        }
+    for (int n=(int)dpSeq.size()-1; n>=0; n--)
+        {
+        Node* p = dpSeq[n];
+        if (p->numDescendants() == 1)
+            {
+            std::vector<Node*> des = p->getDescendantsVector();
+            Node* pDes = des[0];
+            Node* pAnc = p->getAncestor();
+            pDes->setAncestor(pAnc);
+            if (pAnc != NULL)
+                {
+                pAnc->removeDescendant(p);
+                pAnc->addDescendant(pDes);
+                }
+            pDes->setBranchProportion( p->getBranchProportion() + pDes->getBranchProportion() );
+            p->removeDescendants();
+            p->setAncestor(NULL);
+            if (root == p)
+                root = pDes;
+            
+            std::map<int,std::vector<int> >::iterator it = matrixMap.find(p->getIndex());
+            if (it == matrixMap.end())
+                Msg::error("Could not find matrices for p");
+            std::vector<int> pMatrices = it->second;
+            it = matrixMap.find(pDes->getIndex());
+            if (it == matrixMap.end())
+                Msg::error("Could not find matrices for pDes");
+            for (int i=0; i<pMatrices.size(); i++)
+                it->second.push_back(pMatrices[i]);
+            
+            }
+        }
+    
+    for (std::map<int,std::vector<int> >::iterator it = matrixMap.begin(); it != matrixMap.end(); it++)
+        {
+        std::cout << it->first << " -- ";
+        for (int i=0; i<it->second.size(); i++)
+            std::cout << it->second[i] << " ";
+        std::cout << std::endl;
+        }
+    print("PRUNED");
+    initializeDownPassSequence();
+
+#   if 0
     for (int n=(int)dpSeq.size()-1; n>=0; n--)
         {
         Node* p = dpSeq[n];
@@ -106,12 +163,7 @@ Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
             nodesDeadToMe.push_back(p);
             }
         }
-    
-    initializeDownPassSequence();
-        
-    t.print("original tree");
-    print("pruned tree");
-        
+#   endif
 }
 
 Tree::Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv) {

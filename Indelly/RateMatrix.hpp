@@ -26,8 +26,6 @@ class RateMatrix {
         int                     numStates;
         int                     activeMatrix;
         bool                    useEigenSystem;
-        int                     padeQValue;
-        double                  padeTolerance;
         StateMatrix_t           Q[2];
         std::vector<double>     equilibriumFrequencies[2];
         bool                    isInitialized;

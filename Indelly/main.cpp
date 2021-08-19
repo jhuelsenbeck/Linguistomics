@@ -10,7 +10,7 @@ void printHeader(void);
 
 
 int main(int argc, char* argv[]) {
-
+    
     printHeader();
 
     // read the user settings from the command-line arguments

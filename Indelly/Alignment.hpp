@@ -10,7 +10,7 @@ class Alignment {
 
     public:
                                         Alignment(void) = delete;
-                                        Alignment(nlohmann::json& j, int ns);
+                                        Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonicalTaxonList);
                                        ~Alignment(void);
         int                             getCharacter(size_t i, size_t j);
         int                             getGapCode(void) { return gapCode; }

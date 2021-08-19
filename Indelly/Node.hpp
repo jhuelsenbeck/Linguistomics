@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "EigenSystem.hpp"
 class NodeSet;
 class Tree;
 
@@ -29,6 +30,7 @@ class Node {
         int                 getOffset(void) { return offset; }
         int                 getOffset(void) const { return offset; }
         Node*               getSisterNode(void);
+        StateMatrix_t*      getTransitionProbability(void) { return transitionProbability; }
         bool                isDescendant(Node* p);
         size_t              numDescendants(void);
         void                print(void);
@@ -42,6 +44,7 @@ class Node {
         void                setMyTree(Tree* t) { myTree = t; }
         void                setName(std::string s) { name = s; }
         void                setOffset(int x) { offset = x; }
+        void                setTransitionProbability(StateMatrix_t* p) { transitionProbability = p; }
 
     protected:
         NodeSet*            descendants;
@@ -53,6 +56,7 @@ class Node {
         int                 offset;
         Tree*               myTree;
         bool                flag;
+        StateMatrix_t*      transitionProbability;
 };
 
 struct CompNode {

@@ -15,8 +15,10 @@ class SiteLikelihood {
         double**    getProbsI(void) { return probsI; }
         double*     getProbsI(int idx) { return probsI[idx]; }
         void        print(void);
-        void        zeroOutH(int idx) { memcpy( zeroH, probsH[idx], numStates*sizeof(double) ); }
-        void        zeroOutI(int idx) { memcpy( zeroI, probsI[idx], (numStates+1)*sizeof(double) ); }
+        void        zeroOutH(void);
+        void        zeroOutI(void);
+        void        zeroOutH(int idx);
+        void        zeroOutI(int idx);
     
     private:
         int         numNodes;
