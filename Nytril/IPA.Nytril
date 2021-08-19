@@ -109,7 +109,8 @@ class SegmentClass {
       Backness,
       Place,
       Root,
-      DiphthongRoot;
+      DiphthongRoot,
+      Frequency;
 
   Constructor(ipa, sampa, impossible=false) = {
     Ipa             = ipa;
@@ -121,7 +122,12 @@ class SegmentClass {
     Punctuation     = false;
     Diacritic       = false;
     Gap             = false;
+    Frequency       = 0.001;
     Features        = NoFeature;
+
+    var f = IPA.FrequencyDictionary.FindKey(ipa);
+    if (valid f)
+      Frequency = f.Frequency;
   };
 
   MatchVowelAny(feature, open) = Features.HasFlagMask(Vowel LongVowel Nasal, feature | Vowel) and Open == open;
@@ -263,7 +269,25 @@ class VowelClass: SegmentClass {
 }
 //======================================================================
 
+
 with IPA {
+  GetFrequencies {
+    var set = new DictionaryClass(4096);
+    foreach (var sd in SegmentFrequencyData)
+      set.Add(sd, sd.Text);
+
+    var sum = 0.0;
+    foreach (var sd in set)
+      sum += sd.Frequency;
+
+    foreach (var sd in set)
+      sd.Frequency /= sum;
+
+    return set;
+  }
+
+  FrequencyDictionary = GetFrequencies;
+
   NoSegment       = new SegmentClass(Tex.bigotimes, "!?", true);
   SpaceSegment    = new PunctuationClass(" ");
 
@@ -667,11 +691,11 @@ with IPA {
       DiphthongRoot: ahh
     };
 
-    nasal_diphthong_portuguese1   = new VowelClass(RootVowels.None, Diphthong Nasal, Opens.Mid, Backnesses.Front, "ẽj̃", "") {
+    nasal_diphthong_portuguese1   = new VowelClass(RootVowels.None, Nasal Diphthong, Opens.Mid, Backnesses.Front, "ẽj̃", "") {
       DiphthongRoot: ehn
     };
 
-    nasal_diphthong_portuguese2   = new VowelClass(RootVowels.None, Diphthong Nasal, Opens.Mid, Backnesses.Front, "ɐ̃j̃", "") {
+    nasal_diphthong_portuguese2   = new VowelClass(RootVowels.None, Nasal Diphthong, Opens.Mid, Backnesses.Front, "ɐ̃j̃", "") {
       DiphthongRoot: ahn
     };
 
@@ -682,7 +706,7 @@ with IPA {
     ej_diphthong                  = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "ej", "") {
       DiphthongRoot: ay
     };
-    eu_nasalized_diphthong        = new VowelClass(RootVowels.None, Diphthong, Opens.Mid, Backnesses.Front, "ẽu̯", "") {
+    eu_nasalized_diphthong        = new VowelClass(RootVowels.None, Nasal Diphthong, Opens.Mid, Backnesses.Front, "ẽu̯", "") {
       DiphthongRoot: ehn
     };
 

@@ -10,6 +10,7 @@ include "Rules";
 include "RevBayes";
 include "Style";
 include "References";
+include "Segment Frequencies";
 include "Concepts";
 include "Formulas";
 include "Methods";
@@ -32,9 +33,9 @@ with Main {
   }
 
   Links = {
-    LinkTypes.ViewInfo linkto ViewInfo;
-    LinkTypes.ViewAuthor linkto Authors;
-    LinkTypes.ViewReference linkto References;
+    LinkTypes.LocationInfo linkto ViewInfo;
+    LinkTypes.LocationAuthor linkto Authors;
+    LinkTypes.LocationReference linkto References;
   };
 }
 //======================================================================
@@ -98,8 +99,6 @@ class PaperViewClass: BaseViewClass {
   }
 
   override GetDocument = Style.MainDocument {
-    RefStyle: new ChicagoStyleClass;
-
     Style.PageSection {
       Header: Style.NormalHeader(Info.Journal) {
         Distance: 0.125 inches;
@@ -112,7 +111,9 @@ class PaperViewClass: BaseViewClass {
         ParAlignment: ParAlignments.Center;
         Logo;
       };
-      Style.Title(Info.Title);
+      Style.Title {
+        Info.Title;
+      };
       Style.AuthorList(Authors);
 
       Style.HeaderCentered(Abstract.Title);
@@ -149,7 +150,9 @@ class ExperimentViewClass: BaseViewClass {
 
   override GetDocument = Style.MainDocument {
     Style.PageSection {
-      Style.Title(Info.Title);
+      Style.Title {
+        Info.Title;
+      };
       Style.HeaderCentered(Lang.Appendices);
       Style.AppendixRow(each Appendices);
     };
@@ -170,18 +173,19 @@ class DiagnosticsViewClass: BaseViewClass {
 
     Appendices = [
 //      new AppendixClass("Character File", Results.CharacterFile(2)),
-      new AppendixClass("Indelly Configuration", Results.ConfigFile),
-      new AppendixClass("RevBayes Source File", Results.RevBayesSource),
-      new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),
-      new AppendixClass("Word Lists by Language", DisplayWords.ShowTable),
-      new AppendixClass("Segment Groups", MatchingConsonants.ShowTables),
+      new AppendixClass("Segment Frequenies", Results.SegmentFrequenies),
+//      new AppendixClass("Indelly Configuration", Results.ConfigFile),
+//      new AppendixClass("RevBayes Source File", Results.RevBayesSource),
+//      new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),
+//      new AppendixClass("Word Lists by Language", DisplayWords.ShowTable),
+//      new AppendixClass("Segment Groups", MatchingConsonants.ShowTables),
   //    new AppendixClass("Euler Feature Diagram", IPA.FeatureChart),
-      new AppendixClass(Lang.IPAFullName, IPA.SegmentTable),
+//      new AppendixClass(Lang.IPAFullName, IPA.SegmentTable),
 //      new AppendixClass("Feature Tree", SegmentTree.ShowTree),
 //      new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
     //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
-      new AppendixClass(Lang.Languages, Results.ShowLanguageDetails),
-      new AppendixClass("Symbols", ShowSymbols),
+//      new AppendixClass(Lang.Languages, Results.ShowLanguageDetails),
+//      new AppendixClass("Symbols", ShowSymbols),
     ];
   }
 

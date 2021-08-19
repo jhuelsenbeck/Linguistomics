@@ -418,6 +418,35 @@ class ResultsClass {
     }
   };
 
+  CompareSegments(d1, d2) = d1.Frequency.Compare(d2.Frequency);
+
+  SegmentFrequenies = Block {
+    Style.Title {
+      "Frequency of occurance of segments";
+      References.Phoible;
+    };
+
+    var sorted = Math.Sort(UniqueSegments, true, ref CompareSegments);
+    Paragraph {
+      Chart {
+        Size: Size(7 inches, 3 inches);
+        Type: ChartTypes.Column;
+        ValueLabel: "Frequency" {
+          Transform: Rotate(90 degrees);
+          TransformFit: true;
+        };
+        XAxis: ChartAxis {
+          TextHeight: 3;
+          (each sorted).ShowSegment;
+        };
+        ValueAxis: ChartAxis;
+        ChartSeries {
+          (each sorted).Frequency;
+        }
+      }
+    };
+  };
+
   AddTree = TextBlock {
     Span {
       Variable("Tree");
@@ -474,7 +503,6 @@ class ResultsClass {
     };
   };
 
-
   ConfigFile = AddScope {
     Style.MonoFamily;
     TextHeight: 9 pts;
@@ -489,6 +517,14 @@ class ResultsClass {
     ArraySpan("Taxa") {
       Separator: CommaSpace;
       ShowString(each (each Taxa).Variable);
+    };
+
+    ArraySpan("PriorFrequencies") {
+      Span {
+        TextDigits: 4;
+        Separator: ",";
+        (each UniqueSegments).Frequency;
+      };
     };
 
     ArraySpan("PartitionSets") {
