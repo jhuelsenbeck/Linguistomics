@@ -221,6 +221,29 @@ class ResultsClass {
     }
     UniqueSegments  = set.Values;
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
+    GetFrequencies;
+  }
+
+  void GetFrequencies {
+    var set = new DictionaryClass(1024);
+    foreach (var sd in SegmentFrequencyData)
+      set.Add(sd, sd.Text);
+
+    var sum = 0.0;
+    foreach (var s in UniqueSegments) {
+      if (not s.Punctuation) {
+        var f = set.FindKey(s.Ipa);
+        if (valid f)
+          s.Frequency = f.Frequency;
+        sum += s.Frequency;
+      }
+    }
+    if (sum > 0) {
+      sum = 1.0 / sum;
+
+      foreach (var s in UniqueSegments)
+        s.NormalFrequency = s.Frequency * sum;
+    }
   }
 
   void GetConcepts {
@@ -318,10 +341,11 @@ class ResultsClass {
     var taxagroup = Taxa / cols;
     var h         = 14 pts;
     var space     = 5 pts;
-    var size      = Size(DocMetrics.SlideContent.Width / cols - space, DocMetrics.SlideContent.Height / rows);
+    var size      = Size(DocMetrics.SlideContent.Width / cols - space, DocMetrics.SlideContent.Height / rows - space);
 
     foreach (var group in taxagroup) {
       HBox {
+        PaddingT: space;
         VAlign: VAligns.Top;
 
         foreach (var taxon in group) {
@@ -418,7 +442,7 @@ class ResultsClass {
     }
   };
 
-  CompareSegments(d1, d2) = d1.Frequency.Compare(d2.Frequency);
+  CompareSegments(d1, d2) = d1.NormalFrequency.Compare(d2.NormalFrequency);
 
   SegmentFrequenies = Block {
     Style.Title {
@@ -441,7 +465,7 @@ class ResultsClass {
         };
         ValueAxis: ChartAxis;
         ChartSeries {
-          (each sorted).Frequency;
+          (each sorted).NormalFrequency;
         }
       }
     };
@@ -521,9 +545,9 @@ class ResultsClass {
 
     ArraySpan("PriorFrequencies") {
       Span {
-        TextDigits: 4;
+        TextDigits: 6;
         Separator: ",";
-        (each UniqueSegments).Frequency;
+        (each UniqueSegments).NormalFrequency;
       };
     };
 

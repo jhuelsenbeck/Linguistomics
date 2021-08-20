@@ -110,7 +110,8 @@ class SegmentClass {
       Place,
       Root,
       DiphthongRoot,
-      Frequency;
+      Frequency,
+      NormalFrequency;
 
   Constructor(ipa, sampa, impossible=false) = {
     Ipa             = ipa;
@@ -122,12 +123,9 @@ class SegmentClass {
     Punctuation     = false;
     Diacritic       = false;
     Gap             = false;
-    Frequency       = 0.001;
     Features        = NoFeature;
-
-    var f = IPA.FrequencyDictionary.FindKey(ipa);
-    if (valid f)
-      Frequency = f.Frequency;
+    Frequency       = 1;
+    NormalFrequency = 1;
   };
 
   MatchVowelAny(feature, open) = Features.HasFlagMask(Vowel LongVowel Nasal, feature | Vowel) and Open == open;
@@ -176,7 +174,6 @@ class SegmentClass {
     Ipa;
     Style.IPAFamily;
     Popup: this;
-//    Link: GlobalVariablePath;
   };
 
   Display(location) = Block {
@@ -271,23 +268,6 @@ class VowelClass: SegmentClass {
 
 
 with IPA {
-  GetFrequencies {
-    var set = new DictionaryClass(4096);
-    foreach (var sd in SegmentFrequencyData)
-      set.Add(sd, sd.Text);
-
-    var sum = 0.0;
-    foreach (var sd in set)
-      sum += sd.Frequency;
-
-    foreach (var sd in set)
-      sd.Frequency /= sum;
-
-    return set;
-  }
-
-  FrequencyDictionary = GetFrequencies;
-
   NoSegment       = new SegmentClass(Tex.bigotimes, "!?", true);
   SpaceSegment    = new PunctuationClass(" ");
 
