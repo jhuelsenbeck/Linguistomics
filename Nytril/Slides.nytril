@@ -55,6 +55,11 @@ with Slides.PartitionRules {
   Title = Lang.PartitionRules;
   Body  = Results.PartitionRule.ShowPartitions;
 }
+
+with Slides.SegmentFrequencies {
+  Title = Lang.SegmentFrequencies;
+  Body  = Results.SegmentFrequencies(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height * 0.6));
+}
 //======================================================================
 
 class PresentationViewClass: BaseViewClass {
@@ -78,7 +83,7 @@ class PresentationViewClass: BaseViewClass {
       Paragraph {
         TextHeight: 40 pts;
         SpaceBefore: 1.5 inches;
-        Info.Title;
+        ViewInfo.Title;
       };
       Paragraph {
         TextHeight: 18 pts;
@@ -87,10 +92,24 @@ class PresentationViewClass: BaseViewClass {
         Space;
         Author.LastName;
       };
+      var department = Author.FindFirstFact(LinkTypes.WorkDepartment);
+      if (valid department) {
+        Paragraph {
+          TextHeight: 14 pts;
+          department.Name;
+        };
+        var org = department.FindFirstFact(LinkTypes.Department);
+        if (valid org) {
+          Paragraph {
+            TextHeight: 14 pts;
+            org.Name;
+          };
+        }
+      }
       Paragraph {
-        Seperator: ", ";
         TextHeight: 12 pts;
-        foreach (var email in Author.FindFacts(LinkTypes.WorkEmail))
+        var email = Author.FindFirstFact(LinkTypes.WorkEmail);
+        if (valid email)
           email.Value;
       };
     };
@@ -110,6 +129,7 @@ class JohnPresentationClass: PresentationViewClass {
     AddSlide(Slides.Alignment);
     AddSlide(Slides.CharacterRules);
     AddSlide(Slides.PartitionRules);
+    AddSlide(Slides.SegmentFrequencies);
     AddSlide(Slides.ShowResults);
     AddSlide(Slides.Questions);
   }
@@ -121,10 +141,10 @@ class DavidPresentationClass: PresentationViewClass {
     super.Constructor("David's Presentation", "pre-david", People.DMGoldstein);
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
-//    AddSlide(Slides.ExampleTree);
     AddSlide(Slides.ConceptsUsed);
     AddSlide(Slides.CharacterRules);
     AddSlide(Slides.PartitionRules);
+    AddSlide(Slides.SegmentFrequencies);
     AddSlide(Slides.ShowResults);
     AddSlide(Slides.Questions);
   }

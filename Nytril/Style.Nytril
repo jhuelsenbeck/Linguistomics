@@ -149,6 +149,10 @@ with Style {
   Word(w)              = Span {TextItalic: true; w};
   DoubleQuote          = Span {Begin: "“"; End: "”"};
   SingleQuote          = Span {Begin: "‘"; End: "’"};
+  AndSpace             = " and ";
+  ColonSpace           = ": ";
+  Comma                = ",";
+  CommaSpace           = ", ";
   eos                  = ". ";
 
   MainDocument = Document {
@@ -160,13 +164,130 @@ with Style {
     MainFamily;
   };
 
+  MainTitle = Paragraph {
+    TextFamily: TextFamilies.Arial;
+    TextHeight: 20 pts;
+    Bold;
+    SpaceAfter: 10 pts;
+  };
+
+  AppendixTitle = Paragraph {
+    TextFamily: TextFamilies.Arial;
+    TextHeight: 16 pts;
+    Bold;
+    SpaceAfter: 10 pts;
+  };
+
+  ShowAuthor(PersonClass person) = Span {
+    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
+    if (valid site)
+      Link: site.Value;
+    Span {
+      Bold;
+      Separator: Space;
+      person.FirstName;
+      person.MiddleName;
+      person.LastName;
+    };
+    Span {
+      Separator: Comma;
+      TextAlignment: TextAlignments.Superscript;
+      EachIndex+1;
+    };
+  };
+
+  ShowAuthorInfo(PersonClass person) {
+    var d = person.FindFirstFact(LinkTypes.WorkDepartment);
+    if (valid d) {
+      return Paragraph {
+        Span {
+          TextAlignment: TextAlignments.Superscript;
+          EachIndex+1;
+        };
+        Space;
+        d.Name;
+        var org = d.FindFirstFact(LinkTypes.Department);
+        if (valid org) {
+          CommaSpace;
+          org.Name;
+        }
+      };
+    }
+    return null;
+  }
+
+  ShowAuthorList(authors) = Block {
+    TextFamily: TextFamilies.Arial;
+    Paragraph {
+      TextHeight: 12 pts;
+      SpaceAfter: 10 pts;
+      Separator: CommaSpace;
+      LastSeparator: AndSpace;
+      ShowAuthor(each authors);
+    };
+    ShowAuthorInfo(each authors);
+  };
+
+  ShowAuthorFull(PersonClass person) = Block {
+    LeftIndent: 0.25 inches;
+    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
+
+    Paragraph {
+      LocationMark: person.GlobalVariablePath;
+      FirstIndent: -0.25 inches;
+      Span {
+        Separator: Space;
+        if (valid site)
+          Link: site.Value;
+        person.FirstName;
+        person.MiddleName;
+        person.LastName;
+      };
+    };
+
+    Paragraph {
+      var place = person.FindFirstFact(LinkTypes.WorkAddress);
+      if (valid place) {
+        place.Address;
+        if (valid place.Address)
+          CommaSpace;
+        place.City;
+        if (valid place.City)
+          CommaSpace;
+        place.State;
+        if (valid place.State)
+          Space;
+        place.PostalCode;
+        if (valid place.PostalCode)
+          Space;
+        place.Country;
+      }
+    };
+
+    var email = person.FindFirstFact(LinkTypes.WorkEmail);
+    if (valid email) {
+      Paragraph {
+        Lang.EMail;
+        ColonSpace;
+        email.Value;
+      };
+    }
+
+    if (valid site) {
+      Paragraph {
+        Seperator: CommaSpace;
+        Span {
+          Link: site.Value;
+          site.Value;
+        }
+      };
+    }
+    Empty;
+  };
+
   RowBar(i) = {
     if (i mod 2 != 0)
       Background: 95%;
-  };
-
-  NormalHeader(text) = Block {
-    Span {TextCase: TextCases.AllUpper; text}
   };
 
   PageSection = Section {
@@ -200,14 +321,6 @@ with Style {
       Separator: Space;
       text;
     }
-  };
-
-  Title = Paragraph {
-    KeepWithNext: true;
-    SpaceBefore: 12 pts;
-    SpaceAfter: 6 pts;
-    ParAlignment: ParAlignments.Center;
-    TextHeight: 18 pts;
   };
 
   HeaderCentered(text) = Paragraph {
@@ -324,7 +437,6 @@ with Style {
     MarginB: 20 pts;
     PaddingLR: 15 pts;
     Border: 0.5 pts {Color: 90%};
-//    Background: 98%;
     Paragraph {
       HAlignment: HAligns.Center;
       TextHeight: 14 pts;
@@ -356,88 +468,6 @@ with Style {
       Link: Lang.Appendix + EachIndex;
       appendix.Title
     };
-  };
-
-  ShowAuthorFull(PersonClass person) = Block {
-    LeftIndent: 0.25 inches;
-    var sites = person.FindFacts(LinkTypes.WorkWebsite);
-
-
-    Paragraph {
-      LocationMark: person.GlobalVariablePath;
-      FirstIndent: -0.25 inches;
-      Span {
-        Separator: Space;
-        if (valid sites)
-          Link: sites[0].Value;
-        person.FirstName;
-        person.MiddleName;
-        person.LastName;
-      };
-    };
-
-    Paragraph {
-      foreach (var place in person.FindFacts(LinkTypes.WorkAddress)) {
-        place.Address;
-        if (valid place.Address)
-          ", ";
-        place.City;
-        if (valid place.City)
-          ", ";
-        place.State;
-        if (valid place.State)
-          Space;
-        place.PostalCode;
-        if (valid place.PostalCode)
-          Space;
-        place.Country;
-      }
-    };
-
-    var emails = person.FindFacts(LinkTypes.WorkEmail);
-    if (valid emails) {
-      Paragraph {
-        Lang.EMail;
-        ": ";
-        Span {
-          Seperator: ", ";
-          foreach (var email in emails)
-            email.Value;
-        }
-      };
-    }
-
-    if (valid sites) {
-      Paragraph {
-        Seperator: ", ";
-        foreach (var site in sites) {
-          Span {
-            Link: site.Value;
-            site.Value;
-          }
-        }
-      };
-    }
-    Empty;
-  };
-
-  Author(PersonClass person) = Span {
-    var sites = person.FindFacts(LinkTypes.WorkWebsite);
-    if (valid sites)
-      Link: sites[0].Value;
-
-//    Popup: ref ShowAuthorFull;
-    Separator: ". ";
-    person.FirstName[0];
-    person.MiddleName[0];
-    person.LastName;
-  };
-
-  AuthorList(authors) = Paragraph {
-    ParAlignment: ParAlignments.Center;
-    Separator: ", ";
-    LastSeparator: " and ";
-    Style.Author(each authors);
   };
 
   ShowAppendix(appendix) = PageSection {
@@ -578,35 +608,6 @@ with Style {
 }
 //======================================================================
 
-Logo = Frame {
-  Size: Size(5 inches, 0.5 inches);
-  Padding: 4 pts;
-  Background: Color(51, 66, 81);
-  Table {
-    Columns: [4.3 inches, 0.6 inches];
-    Row {
-      Cell {
-        Paragraph {
-          TextColor: Color(129, 166, 207);
-          Bold;
-          TextHeight: 12 pts;
-          "Transactions of the";
-        };
-        Paragraph {
-          Bold;
-          TextHeight: 20 pts;
-          TextColor: Colors.White;
-          "Bayesian Society"
-        };
-      };
-      Cell {
-        Read(Info.ImageFolder FileName("bayes") Extensions.PNG) {Width: 0.5 inches}
-      };
-    }
-  }
-};
-//======================================================================
-
 abstract class BaseViewClass: DocumentViewClass {
   Constructor(title, key, type) {
     super.Constructor(title, key, type);
@@ -714,7 +715,7 @@ abstract class BaseViewClass: DocumentViewClass {
         HeaderBackground(slide.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
       };
       FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
-        FooterBackground(Info.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
+        FooterBackground(ViewInfo.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
       };
     };
     slide.Body;

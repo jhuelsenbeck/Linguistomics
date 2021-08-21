@@ -22,14 +22,29 @@ with Organizations {
     Name : "ASJP";
   };
 
-  UCLA = new OrganizationClass(#d11026ffba06f2438cc6142167bf3296#) {
-    Name : "UCLA";
-    LinkTypes.MainOffice linkto new PlaceClass {
-      City: "Los Angeles";
-      State: "CA";
-      PostalCode: "90095-1543";
-      Country: "USA";
-    }
+  UCLA = new OrganizationClass(#b5b0a67f34f78749a570d64e9c19535b#) {
+    Name : "University of California, Los Angeles";
+    LinkTypes.MainOffice linkto Locations.UCLA;
+  };
+
+  UCB = new OrganizationClass(#99f348500c3bd54faef8fc741d058df3#) {
+    Name : "University of California, Berkeley";
+    LinkTypes.MainOffice linkto Locations.UCB;
+  };
+
+  NytrilLLC = new OrganizationClass(#c80cac21b15ad64b9d71a7197d655e4b#) {
+    Name : "Nytril LLC";
+    LinkTypes.MainOffice linkto Locations.NytrilLLC;
+  };
+
+  UCLALinguistics = new OrganizationClass(#d11026ffba06f2438cc6142167bf3296#) {
+    Name : "Department of Linguistics";
+    LinkTypes.Department linkto UCLA;
+  };
+
+  UCBIntegrativeBiology = new OrganizationClass(#87b9d85e99d70a4ab30964dbfa1d99e8#) {
+    Name : "Department of Integrative Biology";
+    LinkTypes.Department linkto UCB;
   };
 
   PlanckInstitute = new OrganizationClass(#9bbc0e72b42aef4c8cb57aa31a443904#) {
@@ -37,192 +52,171 @@ with Organizations {
   };
 }
 
-with Places {
+with Locations {
   Jena = new PlaceClass {
-    Address: "Jena";
+    Address   : "Jena";
+  };
+
+  UCLA = new PlaceClass {
+    Name      : "University of California, Los Angeles";
+    City      : "Los Angeles";
+    State     : "CA";
+    PostalCode: "90095-1543";
+    Country   : "USA";
+  };
+
+  UCB = new PlaceClass {
+    Name      : "University of California, Berkeley";
+    City      : "Berkeley";
+    State     : "CA";
+    PostalCode: "94720";
+    Country   : "USA";
+  };
+
+  NytrilLLC = new PlaceClass {
+    Address   : "3060 San Pasqual St.";
+    City      : "Pasadena";
+    State     : "CA";
+    PostalCode: "91107";
+    Country   : "USA";
   };
 }
 //======================================================================
-
-/*
-
-AuthorPopup = Block {
-    Paragraph {
-      Bold;
-      FirstName;
-      Space;
-      MiddleName;
-      Space;
-      LastName;
-    };
-    Block {
-      Address;
-    };
-    if (exists Website) {
-      Paragraph {
-        Span {
-          TextColor: Colors.Gray;
-         "web: ";
-        };
-        Website;
-      };
-    }
-    if (exists EMail) {
-      Paragraph {
-        Span {
-          TextColor: Colors.Gray;
-          "email: ";
-        };
-        EMail;
-      };
-    }
-  };
-}
-*/
-//======================================================================
-
-Website(url)    = LinkTypes.WorkWebsite linkto new URLClass(url);
-Email(address)  = LinkTypes.WorkEmail linkto new EmailClass(address);
-
 
 with People {
   DMGoldstein = new PersonClass(#0ebaaa7b75120342aac20f4210b40f61#) {
-    FirstName  : "David";
-    MiddleName : "M.";
-    LastName   : "Goldstein";
+    FirstName : "David";
+    MiddleName: "M.";
+    LastName  : "Goldstein";
 
+    LinkTypes.WorkDepartment linkto Organizations.UCLALinguistics;
     LinkTypes.WorkAddress linkto new PlaceClass {
-      Name: "UCLA";
-      City: "Los Angeles";
-      State: "CA";
+      Name      : "UCLA";
+      City      : "Los Angeles";
+      State     : "CA";
       PostalCode: "90095-1543";
-      Country: "USA";
+      Country   : "USA";
     };
-    Website("https://linguistics.ucla.edu/person/david-goldstein");
-    Email("dgoldstein@humnet.ucla.edu");
+    LinkTypes.WorkWebsite linkto new URLClass("linguistics.ucla.edu/person/david-goldstein");
+    LinkTypes.WorkEmail linkto new EmailClass("dgoldstein@humnet.ucla.edu");
   };
 
   JPHuelsenbeck = new PersonClass(#e11bbf3b3aa9d94e89e343ca69d90c02#) {
-    FirstName  : "John";
-    MiddleName : "P.";
-    LastName   : "Huelsenbeck";
+    FirstName : "John";
+    MiddleName: "P.";
+    LastName  : "Huelsenbeck";
+
+    LinkTypes.WorkDepartment linkto Organizations.UCBIntegrativeBiology;
+    LinkTypes.WorkWebsite linkto new URLClass("vcresearch.berkeley.edu/faculty/john-huelsenbeck");
+    LinkTypes.WorkEmail linkto new EmailClass("johnh@berkeley.edu");
 
     LinkTypes.WorkAddress linkto new PlaceClass {
-      Name: "UC Berkeley";
-      Address: "3040 Valley Life Sciences Building #3140";
-      City: "Berkeley";
-      State: "CA";
+      Name      : "UC Berkeley";
+      Address   : "3040 Valley Life Sciences Building #3140";
+      City      : "Berkeley";
+      State     : "CA";
       PostalCode: "94720-3140";
-      Country: "USA";
+      Country   : "USA";
     };
-
-    Website("https://vcresearch.berkeley.edu/faculty/john-huelsenbeck");
-    Email("johnh@berkeley.edu");
   };
 
   SHMcCreight = new PersonClass(#13f9cafa3a23d143871c828ea60a96e8#) {
-    FirstName  : "Shawn";
-    MiddleName : "H.";
-    LastName   : "McCreight";
+    FirstName : "Shawn";
+    MiddleName: "H.";
+    LastName  : "McCreight";
 
-    LinkTypes.WorkAddress linkto new PlaceClass {
-      Address: "3060 San Pasqual St.";
-      City: "Pasadena";
-      State: "CA";
-      PostalCode: "91107";
-      Country: "USA";
-    };
-
-    Website("https://nytril.com");
-    Email("shawn.mccreight@gmail.com");
+    LinkTypes.WorkDepartment linkto Organizations.NytrilLLC;
+    LinkTypes.WorkWebsite linkto new URLClass("www.nytril.com");
+    LinkTypes.WorkEmail linkto new EmailClass("shawn.mccreight@gmail.com");
+    LinkTypes.WorkAddress linkto Locations.NytrilLLC;
   };
 
   SHöhna = new PersonClass(#654b7bfe5302c74493f57d3c99bfe500#) {
-    FirstName  : "Sebastian";
-    LastName   : "Höhna";
+    FirstName : "Sebastian";
+    LastName  : "Höhna";
   };
 
   TGojobori = new PersonClass(#0a9f570bf1eeda4e8d5424b931f2382c#) {
-    FirstName  : "Takashi";
-    LastName   : "Gojobori";
+    FirstName : "Takashi";
+    LastName  : "Gojobori";
   };
 
   GLunter = new PersonClass(#1743df2d69a2df4c87bba9b132261d8d#) {
-    FirstName  : "G";
-    MiddleName : "A";
-    LastName   : "Lunter";
+    FirstName : "G";
+    MiddleName: "A";
+    LastName  : "Lunter";
   };
 
   IMiklós = new PersonClass(#b18fd28a54c180419c2bb00be83b8531#) {
-    FirstName  : "I";
-    LastName   : "Miklós";
+    FirstName : "I";
+    LastName  : "Miklós";
   };
 
   YSong = new PersonClass(#846bf9a044f6d941a537de00bda6e0fa#) {
-    FirstName  : "Y";
-    MiddleName : "S";
-    LastName   : "Song";
+    FirstName : "Y";
+    MiddleName: "S";
+    LastName  : "Song";
   };
 
   JHein = new PersonClass(#487a99c8e02ea04bbc70dc9dd76c3df3#) {
-    FirstName  : "J";
-    LastName   : "Hein";
+    FirstName : "J";
+    LastName  : "Hein";
   };
 
   Landis = new PersonClass(#081cba00a01440409420c78b2a1c95e8#) {
-    LastName   : "Landis";
+    LastName  : "Landis";
   };
 
   Heath = new PersonClass(#67d17fd7e817cb42a3f8590cf6cf6796#) {
-    LastName   : "Heath";
+    LastName  : "Heath";
   };
 
   Boussau = new PersonClass(#79a5e6cf931b5342870d5b27dbfa1c47#) {
-    LastName   : "Boussau";
+    LastName  : "Boussau";
   };
 
   Lartillot = new PersonClass(#edb3519be657c44291ed7c045cef173d#) {
-    LastName   : "Lartillot";
+    LastName  : "Lartillot";
   };
 
   Moore = new PersonClass(#0ec8b1ec6514eb409989c96c144a7c6c#) {
-    FirstName  : "";
-    MiddleName : "";
-    LastName   : "Moore";
+    FirstName : "";
+    MiddleName: "";
+    LastName  : "Moore";
   };
 
   Ronquist = new PersonClass(#fe9f96acc6c56744bf259479cfb4e03f#) {
-    LastName   : "Ronquist";
+    LastName  : "Ronquist";
   };
 
   Wichmann = new PersonClass(#a922ec3be60ffb449291a99acd4eb212#) {
-    LastName   : "Wichmann";
+    LastName  : "Wichmann";
   };
 
   Søren = new PersonClass(#6bb77562155f2540920fb3354495f90c#) {
-    LastName   : "Søren";
+    LastName  : "Søren";
   };
 
   EHolman = new PersonClass(#67db4d4bbac4c94eadedf1d5ae9bc691#) {
-    FirstName  : "Eric";
-    MiddleName : "W";
-    LastName   : "Holman";
+    FirstName : "Eric";
+    MiddleName: "W";
+    LastName  : "Holman";
   };
 
   CBrown = new PersonClass(#4f69e1ac5d0c494594e40c0ad91c8a42#) {
-    FirstName  : "Cecil";
-    MiddleName : "H";
-    LastName   : "Brown";
+    FirstName : "Cecil";
+    MiddleName: "H";
+    LastName  : "Brown";
   };
 
   StevenMoran = new PersonClass(#b9e2dc400fbfbb448d3c96fd76c78f17#) {
-    FirstName: "Steven";
-    LastName:  "Moran";
+    FirstName : "Steven";
+    LastName  : "Moran";
   };
 
   DanielMcCloy = new PersonClass(#89bd017c05078b4692f4d2459bc3c228#) {
-    FirstName: "Daniel";
-    LastName:  "McCloy";
+    FirstName : "Daniel";
+    LastName  : "McCloy";
   };
 }
 //======================================================================
@@ -270,7 +264,7 @@ with References {
     LinkTypes.ReferenceURL linkto new URLClass("www.phoible.org", DateTime(2021, 8, 19));
     LinkTypes.ReferenceEditor linkto [People.StevenMoran, People.DanielMcCloy];
     LinkTypes.ReferencePublisher linkto Organizations.PlanckInstitute;
-    LinkTypes.ReferencePlace linkto Places.Jena;
+    LinkTypes.ReferencePlace linkto Locations.Jena;
   };
 
   IPAWikipedia = new ReferenceClass(ReferenceTypes.Misc) {

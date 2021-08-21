@@ -46,7 +46,7 @@ with Main {
 Results = new ResultsClass("Run1");
 
 ViewInfo = new ViewInfoClass {
-  Title: Info.Title;
+  Title: "Understanding Language Evolution Using an Event-Based Model";
 //  Description: "Test Description";
 //  Comment: "Test Comment";
 //  Subject: "Test Subject";
@@ -55,31 +55,8 @@ ViewInfo = new ViewInfoClass {
 //======================================================================
 
 with Info {
-  IncludeVerbs = true;
   Generations  = 1000;
   ImageFolder  = Folders.Source Folder("Images");
-  Journal      = "Transactions of the Beysian Society";
-  Publisher    = "The Baysian Society";
-  Title        = Lang.SimulatedSegments;
-}
-//=====================================================================
-
-with ExampleConcept {
-  Cognate            = FindSlice(Results.UsedCognates, c => c.Concept == Concepts.Star, 1)[0];
-  GetTaxon(language) = Math.FindSlice(Results.Taxa, t => t.Language == language)[0];
-
-  TaxonIndex     = 0;
-  Taxon          = Results.Taxa[TaxonIndex];
-  Callout        = Results.Taxa[3];
-  Name           = ToLower(Cognate.Name);
-  ExLanguages    = [Languages.Romanian, Languages.Catalan, Languages.Portuguese, Languages.French, Languages.Friulian];
-  TaxonList      = GetTaxon(each ExLanguages);
-  LangNames      = (each TaxonList).Language;
-  CalloutSegment = FirstLetter(Callout);
-  LangWord       = Span {(each Cognate.Words[TaxonIndex].Segments).Ipa};
-
-  FirstLetter(taxon) = Cognate.Words[taxon.Index].Segments[0].ShowSegment;
-  FirstLetters = FirstLetter(each TaxonList);
 }
 //======================================================================
 
@@ -98,23 +75,27 @@ class PaperViewClass: BaseViewClass {
     ];
   }
 
+  HeaderBlock = Block {
+    Span {
+      TextCase: TextCases.AllUpper;
+      ViewInfo.Title;
+    }
+  };
+
   override GetDocument = Style.MainDocument {
     Style.PageSection {
-      Header: Style.NormalHeader(Info.Journal) {
+      Header: HeaderBlock {
         Distance: 0.125 inches;
         MarginT: 0.125 inch;
-        Even: Style.NormalHeader(Info.Journal);
+        Even: HeaderBlock;
         First: Block;
       };
 
-      Paragraph {
-        ParAlignment: ParAlignments.Center;
-        Logo;
+      Style.MainTitle {
+        ViewInfo.Title;
       };
-      Style.Title {
-        Info.Title;
-      };
-      Style.AuthorList(Authors);
+
+      Style.ShowAuthorList(Authors);
 
       Style.HeaderCentered(Abstract.Title);
       Abstract.Body;
@@ -150,8 +131,8 @@ class ExperimentViewClass: BaseViewClass {
 
   override GetDocument = Style.MainDocument {
     Style.PageSection {
-      Style.Title {
-        Info.Title;
+      Style.AppendixTitle {
+        ViewInfo.Title;
       };
       Style.HeaderCentered(Lang.Appendices);
       Style.AppendixRow(each Appendices);
@@ -172,7 +153,7 @@ class DiagnosticsViewClass: BaseViewClass {
     super.Constructor("Diagnostics", "diag", ConfigurationClass.DocumentTypes.Normal);
 
     Appendices = [
-      new AppendixClass("Segment Frequenies", Results.SegmentFrequenies),
+      new AppendixClass(Lang.SegmentFrequencies, Results.SegmentFrequencies(Size(DocMetrics.PageContent.Width, 3 inches))),
       new AppendixClass("Tongue Twister Configuration", Results.ConfigFile),
       new AppendixClass("RevBayes Source File", Results.RevBayesSource),
       new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),

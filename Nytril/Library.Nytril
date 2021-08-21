@@ -241,8 +241,10 @@ class ResultsClass {
     if (sum > 0) {
       sum = 1.0 / sum;
 
-      foreach (var s in UniqueSegments)
-        s.NormalFrequency = s.Frequency * sum;
+      foreach (var s in UniqueSegments) {
+        s.NormalFrequency  = s.Frequency * sum;
+        s.FrequencyPercent = s.NormalFrequency*100.0;
+      }
     }
   }
 
@@ -252,7 +254,7 @@ class ResultsClass {
     TotalLength = 0;
     var clist = new ListClass(256);
     foreach (var concept in Concepts) {
-      if (exists concept.?Done and (Info.IncludeVerbs or not exists concept.?Verb)) {
+      if (exists concept.?Done) {
         foreach (var cognate in concept) {
           var vname = cognate.GlobalVariableName();
           if (vname != "Done" and vname != "Verb") {
@@ -444,28 +446,29 @@ class ResultsClass {
 
   CompareSegments(d1, d2) = d1.NormalFrequency.Compare(d2.NormalFrequency);
 
-  SegmentFrequenies = Block {
-    Style.Title {
-      "Frequency of occurance of segments";
+  SegmentFrequencies(size) = Block {
+    Style.AppendixTitle {
+      "Frequency of occurance of segments in the lexicon";
       References.Phoible;
     };
 
     var sorted = Math.Sort(UniqueSegments, true, ref CompareSegments);
     Paragraph {
       Chart {
-        Size: Size(7 inches, 3 inches);
+        Style.SansSerif;
+        Size: size;
         Type: ChartTypes.Column;
-        ValueLabel: "Frequency" {
+        ValueLabel: "Frequency %" {
           Transform: Rotate(90 degrees);
           TransformFit: true;
         };
         XAxis: ChartAxis {
-          TextHeight: 3;
+          TextHeight: 0.6 * size.Width / sorted.Length;
           (each sorted).ShowSegment;
         };
         ValueAxis: ChartAxis;
         ChartSeries {
-          (each sorted).NormalFrequency;
+          (each sorted).FrequencyPercent;
         }
       }
     };
