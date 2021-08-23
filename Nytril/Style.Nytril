@@ -9,7 +9,7 @@ with PaperSizes {
 
 with DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.Normal) {
   DocumentSize = PaperSizes.Letter;
-  PageMargin   = Margin(1 inches);
+  PageMargin   = Margin(0.8 inches, 0.9 inches, 0.8 inches, 1 inches);
 }
 
 with DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.SlideShow) {
@@ -113,6 +113,7 @@ with Style {
   ImpossibleBackground = {Background: 80%};
   CommentColor         = Color(0, 0x64, 0);
   StringColor          = Color(168, 21, 53);
+  NoteIndexIndent      = 6 pts;
   VariableColor        = Colors.DarkBlue;
   AlignBackColor       = 95%;
   Used                 = {TextColor: Colors.Red};
@@ -193,23 +194,50 @@ with Style {
       Separator: Comma;
       TextAlignment: TextAlignments.Superscript;
       EachIndex+1;
+      "+";
     };
   };
 
-  ShowAuthorInfo(PersonClass person) {
-    var d = person.FindFirstFact(LinkTypes.WorkDepartment);
-    if (valid d) {
-      return Paragraph {
-        Span {
-          TextAlignment: TextAlignments.Superscript;
-          EachIndex+1;
+  ShowAuthorDetails(PersonClass person) {
+    var department = person.FindFirstFact(LinkTypes.WorkDepartment);
+    if (valid department) {
+      return Block {
+        LeftIndent: NoteIndexIndent;
+        Paragraph {
+          FirstIndent: -NoteIndexIndent;
+          Span {
+            TextAlignment: TextAlignments.Superscript;
+            EachIndex+1;
+          };
+          Tab;
+          department.Name;
+
+          var org = department.FindFirstFact(LinkTypes.Department) ?? department;
+          if (valid org) {
+            if (org != department) {
+              CommaSpace;
+              org.Name;
+            }
+
+            var place = org.FindFirstFact(LinkTypes.MainOffice);
+            if (valid place) {
+              if (valid place.State) {
+                CommaSpace;
+                place.State;
+              }
+              if (valid place.Country) {
+                CommaSpace;
+                place.Country;
+              }
+            }
+          }
         };
-        Space;
-        d.Name;
-        var org = d.FindFirstFact(LinkTypes.Department);
-        if (valid org) {
-          CommaSpace;
-          org.Name;
+
+        var email = person.FindFirstFact(LinkTypes.WorkEmail);
+        if (valid email) {
+          Paragraph {
+            email.Value;
+          };
         }
       };
     }
@@ -225,7 +253,17 @@ with Style {
       LastSeparator: AndSpace;
       ShowAuthor(each authors);
     };
-    ShowAuthorInfo(each authors);
+    ShowAuthorDetails(each authors);
+    Paragraph {
+      LeftIndent: NoteIndexIndent;
+      FirstIndent: -NoteIndexIndent;
+      Span {
+        TextAlignment: TextAlignments.Superscript;
+        "+";
+      };
+      Tab;
+      "these authors contributed equally to this work";
+    };
   };
 
   ShowAuthorFull(PersonClass person) = Block {
