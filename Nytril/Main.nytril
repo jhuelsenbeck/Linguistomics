@@ -15,7 +15,7 @@ include "Formulas";
 include "Methods";
 include "Slides";
 include "Tables";
-include "../../nytril/deploy/citations/citations";
+include "../../nytril/deploy/citations";
 //======================================================================
 
 include "Concepts/Pronouns";
@@ -28,6 +28,7 @@ include "Concepts/Misc";
 
 with Main {
   Documents = new DocumentViewClass(null) {
+    new SubmissionViewClass;
     new PaperViewClass;
     new ExperimentViewClass;
     new DiagnosticsViewClass;
@@ -54,10 +55,6 @@ Results = new ResultsClass("Run1");
 
 ViewInfo = new ViewInfoClass {
   Title: "Understanding Language Evolution Using an Event-Based Model";
-//  Description: "Test Description";
-//  Comment: "Test Comment";
-//  Subject: "Test Subject";
-//  Keywords: "Test Keywords";
 };
 //======================================================================
 
@@ -67,19 +64,9 @@ with Info {
 }
 //======================================================================
 
-class PaperViewClass: BaseViewClass {
-  var Appendices;
-
+class SubmissionViewClass: BaseViewClass {
   Constructor {
-    super.Constructor("White Paper", "paper", ConfigurationClass.DocumentTypes.Normal);
-
-    Appendices = [
-      new AppendixClass("Program Output", Results.ShowLanguageTrees),
-      new AppendixClass("Statistics", Results.ShowStats),
-      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
-      new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
-      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
-    ];
+    super.Constructor("Submission", #3ab5559cf52bdb4484be6eea54bfade3#, ConfigurationClass.DocumentTypes.Normal);
   }
 
   HeaderBlock = Block {
@@ -105,6 +92,48 @@ class PaperViewClass: BaseViewClass {
       Style.ShowAuthorList(Authors);
 
       Style.HeaderCentered(Abstract.Title);
+    };
+    Bibliography;
+  };
+}
+//======================================================================
+
+class PaperViewClass: BaseViewClass {
+  Constructor {
+    super.Constructor("White Paper", #8c6d803a4002f2409d6d4f4697685b1d#, ConfigurationClass.DocumentTypes.Normal);
+  }
+
+  HeaderBlock = Block {
+    Span {
+      TextCase: TextCases.AllUpper;
+      ViewInfo.Title;
+    }
+  };
+
+  override GetDocument = Style.MainDocument {
+    var appendices = [
+      new AppendixClass("Program Output", Results.ShowLanguageTrees),
+      new AppendixClass("Statistics", Results.ShowStats),
+      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
+      new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
+    ];
+
+    Style.PageSection {
+      Header: HeaderBlock {
+        Distance: 0.125 inches;
+        MarginT: 0.125 inch;
+        Even: HeaderBlock;
+        First: Block;
+      };
+
+      Style.MainTitle {
+        ViewInfo.Title;
+      };
+
+      Style.ShowAuthorList(Authors);
+
+      Style.HeaderCentered(Abstract.Title);
       Abstract.Body;
 
       Style.ShowContent(each Content);
@@ -113,9 +142,9 @@ class PaperViewClass: BaseViewClass {
       Style.ShowAuthorFull(each Authors);
 
       Style.HeaderCentered(Lang.Appendices);
-      Style.AppendixRow(each Appendices);
+      Style.AppendixRow(each appendices);
     };
-    Style.ShowAppendix(each Appendices);
+    Style.ShowAppendix(each appendices);
 //    PageBreak;
     Bibliography;
   };
@@ -123,28 +152,26 @@ class PaperViewClass: BaseViewClass {
 //======================================================================
 
 class ExperimentViewClass: BaseViewClass {
-  var Appendices;
-
   Constructor {
-    super.Constructor("Experiment", "experiment", ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor("Experiment", #ee79e1d9e8467444a68c0e7a6a8c8a88#, ConfigurationClass.DocumentTypes.Normal);
+  }
 
-    Appendices = [
+  override GetDocument = Style.MainDocument {
+    var appendices = [
       new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
       new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
       new AppendixClass(Lang.Results, Results.ShowLanguageTrees),
     ];
-  }
 
-  override GetDocument = Style.MainDocument {
     Style.PageSection {
       Style.AppendixTitle {
         ViewInfo.Title;
       };
       Style.HeaderCentered(Lang.Appendices);
-      Style.AppendixRow(each Appendices);
+      Style.AppendixRow(each appendices);
     };
-    Style.ShowAppendix(each Appendices);
+    Style.ShowAppendix(each appendices);
   };
 }
 //======================================================================
@@ -154,12 +181,12 @@ ShowSymbols = Block {
 };
 
 class DiagnosticsViewClass: BaseViewClass {
-  var Appendices;
-
   Constructor {
-    super.Constructor("Diagnostics", "diag", ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor("Diagnostics", #595d071a2117fb47bd6b0ef6596666ce#, ConfigurationClass.DocumentTypes.Normal);
+  }
 
-    Appendices = [
+  override GetDocument = Style.MainDocument {
+    var appendices = [
       new AppendixClass(Lang.SegmentFrequencies, Results.SegmentFrequencies(Size(DocMetrics.PageContent.Width, 3 inches))),
       new AppendixClass("Tongue Twister Configuration", Results.ConfigFile),
       new AppendixClass("RevBayes Source File", Results.RevBayesSource),
@@ -176,10 +203,8 @@ class DiagnosticsViewClass: BaseViewClass {
     //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
 //      new AppendixClass("Symbols", ShowSymbols),
     ];
-  }
 
-  override GetDocument = Style.MainDocument {
-    Style.ShowAppendix(each Appendices);
+    Style.ShowAppendix(each appendices);
   };
 }
 //======================================================================

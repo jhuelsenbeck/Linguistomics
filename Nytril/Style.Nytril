@@ -193,7 +193,7 @@ with Style {
     Span {
       Separator: Comma;
       TextAlignment: TextAlignments.Superscript;
-      EachIndex+1;
+      EachOne;
       "+";
     };
   };
@@ -207,7 +207,7 @@ with Style {
           FirstIndent: -NoteIndexIndent;
           Span {
             TextAlignment: TextAlignments.Superscript;
-            EachIndex+1;
+            EachOne;
           };
           Tab;
           department.Name;
@@ -221,14 +221,8 @@ with Style {
 
             var place = org.FindFirstFact(LinkTypes.MainOffice);
             if (valid place) {
-              if (valid place.State) {
-                CommaSpace;
-                place.State;
-              }
-              if (valid place.Country) {
-                CommaSpace;
-                place.Country;
-              }
+              CommaSpace;
+              Punctuation.ShowPlaceSpan(place);
             }
           }
         };
@@ -283,24 +277,12 @@ with Style {
       };
     };
 
-    Paragraph {
-      var place = person.FindFirstFact(LinkTypes.WorkAddress);
-      if (valid place) {
-        place.Address;
-        if (valid place.Address)
-          CommaSpace;
-        place.City;
-        if (valid place.City)
-          CommaSpace;
-        place.State;
-        if (valid place.State)
-          Space;
-        place.PostalCode;
-        if (valid place.PostalCode)
-          Space;
-        place.Country;
+    var place = person.FindFirstFact(LinkTypes.WorkAddress);
+    if (valid place) {
+      Paragraph {
+        Punctuation.ShowPlaceSpan(place);
       }
-    };
+    }
 
     var email = person.FindFirstFact(LinkTypes.WorkEmail);
     if (valid email) {
@@ -499,7 +481,7 @@ with Style {
   AppendixRow(appendix) = Paragraph {
     LeftIndent: 20 pts;
     FirstIndent: -20 pts;
-    EachIndex + 1;
+    EachOne;
     ".";
     Tab;
     Span {
@@ -516,7 +498,7 @@ with Style {
         TextHeight: 14 pts;
         SpaceAfter: 8 pts;
         LocationMark: Lang.Appendix + EachIndex;
-        "{0} {1} - "(Lang.Appendix, EachIndex+1);
+        "{0} {1} - "(Lang.Appendix, EachOne);
         appendix.Title;
       };
     };
