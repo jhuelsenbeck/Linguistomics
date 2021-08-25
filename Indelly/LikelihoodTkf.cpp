@@ -49,8 +49,11 @@ LikelihoodTkf::~LikelihoodTkf(void) {
 
 void LikelihoodTkf::clearDpTable(void) {
 
-    for (std::map<IntVector*,double,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
+    for (std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
+        {
         delete it->first;
+        delete it->second;
+        }
     dpTable.clear();
 }
 
@@ -58,6 +61,9 @@ void LikelihoodTkf::init(void) {
 
     // initialize some useful variables
     numStates = data->getNumStates();
+    
+    // initialize the tree
+    initTree();
 
     // initialize the alignment array from the given alignment.
     initAlignment();
@@ -76,7 +82,6 @@ void LikelihoodTkf::initAlignment(void) {
             
     alignment = data->getIndelMatrix();
             
-//    printVector("Alignment", alignment);
 #   if 0
     std::cout << "Variable = alignment" << std::endl;
     std::cout << "name = " << data->getName() << std::endl;
@@ -174,14 +179,46 @@ void LikelihoodTkf::initTKF91(void) {
 #   endif
 }
 
+void LikelihoodTkf::initTree(void) {
+
+#   if 0
+    std::cout << data->getName() << std::endl;
+
+    usingSubtree = false;
+    
+    std::vector<std::string>& canonicalTaxonList = model->getCanonicalTaxonList();
+    if (data->getNumTaxa() < canonicalTaxonList.size())
+        {
+        // we have to deal with a subtree
+        
+        // get the taxon mask
+        std::vector<bool> taxonMask = data->getTaxonMask();
+        std::cout << "taxonMask[";
+        for (int i=0; i<taxonMask.size(); i++)
+            std::cout << taxonMask[i];
+        std::cout << "]" << std::endl;
+
+        // get the subtree
+        Tree* t = new Tree(*tree, taxonMask);
+        tree = t;
+
+        usingSubtree = true;
+        }
+        
+    // print
+    std::cout << "usingSubtree=" << usingSubtree << std::endl;
+    tree->print();
+#   endif
+}
+
 void LikelihoodTkf::printTable(void) {
 
     std::cout << "dpTable" << std::endl;
     std::cout << std::fixed << std::setprecision(10) << std::scientific;
     int i = 0;
-    for (std::map<IntVector*,double,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
+    for (std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
         {
-        std::cout << i++ << " -- " << *(it->first) << " -- " << it->second << std::endl;
+        std::cout << i++ << " -- " << *(it->first) << " -- " << *it->second << std::endl;
         }
 }
 
@@ -232,6 +269,10 @@ void LikelihoodTkf::printVector(std::string header, std::vector< std::vector<int
 }
 
 double LikelihoodTkf::tkfLike(void) {
+
+    // TEMP
+    if (data->getIsCompletelySampled() == false)
+        return 0.0;
     
     int len = (int)alignment.size();
     int numLeaves = (int)alignment[0].size();
@@ -242,8 +283,10 @@ double LikelihoodTkf::tkfLike(void) {
     
     // Calculate correction factor for null emissions ("wing folding", or linear equation solving.)
     double nullEmissionFactor = treeRecursion( &pos, &pos, -1 );
-    double f = immortalProbability / nullEmissionFactor;
-    dpTable.insert( std::make_pair(new IntVector(pos), f) );  
+//    double f = immortalProbability / nullEmissionFactor;
+    mpfr::mpreal* f = new mpfr::mpreal;
+    *f = immortalProbability / nullEmissionFactor;
+    dpTable.insert( std::make_pair(new IntVector(pos), f) );
     //printTable();
  
     // Array of possible vector indices, used in inner loop
@@ -309,27 +352,29 @@ double LikelihoodTkf::tkfLike(void) {
 
             if (foundNonZero)
                 {
-                std::map<IntVector*,double,CompIntVector>::iterator it = dpTable.find(&pos);
+                std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it = dpTable.find(&pos);
                 if (it == dpTable.end())
                     Msg::error("Could not find pos vector in dpTable map.");
-                double lft = it->second;
+//                double lft = it->second;
+                mpfr::mpreal lft = *it->second;
                 it = dpTable.find(&newPos);
-                double rht;
+//                double rht;
+                mpfr::mpreal* rht = new mpfr::mpreal;
                 if (it == dpTable.end())
                     {
                     unusedPos = true;
-                    rht = 0.0;
+                    *rht = 0.0;
                     }
                 else
                     {
-                    rht = it->second;
+                    *rht = *it->second;
                     unusedPos = false;
                     }
                     
 //                std::cout << "currentAlignmentColumn = " << currentAlignmentColumn << std::endl;
                 double transFac = (-treeRecursion( &signature, &pos, currentAlignmentColumn )) / nullEmissionFactor;
                 lft *= transFac;
-                rht += lft;
+                *rht += lft;
 
                 // If we are storing a value at a previously unused position, make sure we use a fresh key object
                 if (unusedPos)
@@ -339,11 +384,12 @@ double LikelihoodTkf::tkfLike(void) {
                     }
                 else
                     {
-                    std::map<IntVector*,double,CompIntVector>::iterator it2 = dpTable.find(&newPos);
+                    std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it2 = dpTable.find(&newPos);
                     if (it2 == dpTable.end())
                         Msg::error("Should have found newPos in table. What happened?");
-                    it2->second = rht;
+                    *it2->second = *rht;
                     //printTable();
+                    delete rht; // need to remember to delete rht if it's not being inserted back into the table
                     }
                 }
 
@@ -366,10 +412,22 @@ double LikelihoodTkf::tkfLike(void) {
         {
         // No more unused vectors, so we also fell through the edge loop above,
         // hence newPos contains the final position
-        std::map<IntVector*,double,CompIntVector>::iterator it = dpTable.find(&newPos);
+        std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it = dpTable.find(&newPos);
         if (it == dpTable.end())
             Msg::error("Could not find newPos in dpTable");
-        double lnL = log(it->second);
+        
+//        std::cout << std::fixed << std::setprecision(150) << it->second << std::endl;
+        mpfr::mpreal res = log(*it->second, MPFR_RNDN);
+        double lnL = res.toDouble();
+        
+        if (isinf(lnL) == true)
+            {
+            std::cout << "res = " << *it->second << std::endl;
+            data->print();
+            printTable();
+            }
+        
+
         clearDpTable();
         return lnL;
         }

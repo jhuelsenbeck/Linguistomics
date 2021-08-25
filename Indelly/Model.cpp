@@ -240,6 +240,8 @@ std::string Model::getUpdatedParameterName(void) {
 
 std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
 
+    UserSettings& settings = UserSettings::userSettings();
+    
     // get the list of taxa
     auto it = j.find("Taxa");
     if (it == j.end())
@@ -267,7 +269,6 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
     // read each word
     std::vector<Alignment*> words;
     std::vector<std::string> rejectedWords;
-    std::vector<std::string> taxonNames;
     for (size_t i=0; i<numWords; i++)
         {
         // get the json object for the word
@@ -277,32 +278,24 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         Alignment* aln = new Alignment(jw, numStates, canonicalTaxonList);
                 
         // check if we have problems, deleting the alignment if we do
-        std::vector<std::string> alnTaxonNames = aln->getTaxonNames();
-        if (canonicalTaxonList.size() != aln->numCompleteTaxa())
+        if (settings.getUseOnlyCompleteWords() == true)
             {
-            rejectedWords.push_back(aln->getName());
-            delete aln;
-            continue;
+            std::vector<std::string> alnTaxonNames = aln->getTaxonNames();
+            if (canonicalTaxonList.size() != aln->numCompleteTaxa())
+                {
+                rejectedWords.push_back(aln->getName());
+                delete aln;
+                continue;
+                }
+            else if (aln->hasAllGapColumn() == true)
+                {
+                Msg::error("Alignment " + aln->getName() + " has a column with all gaps");
+                rejectedWords.push_back(aln->getName());
+                delete aln;
+                continue;
+                }
             }
-            
-        if (taxonNames.size() == 0)
-            taxonNames = aln->getTaxonNames();
-            
-        if (taxonNames.size() != alnTaxonNames.size())
-            Msg::error("List of taxa is inconsistent across words");
-        for (int j=0; j<taxonNames.size(); j++)
-            {
-            if (taxonNames[j] != alnTaxonNames[j])
-                Msg::error("List of taxa is inconsistent across words");
-            }
-            
-        // make certain that each taxon in the alignment is in the canonical list of taxa
-        for (int j=0; j<alnTaxonNames.size(); j++)
-            {
-            if (std::find(canonicalTaxonList.begin(), canonicalTaxonList.end(), alnTaxonNames[j]) == canonicalTaxonList.end())
-                Msg::error("Could not find taxon " + alnTaxonNames[j] + " in canonical taxon list for word " + aln->getName());
-            }
-            
+                                    
         words.push_back(aln);
         }
 
@@ -310,7 +303,7 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         Msg::error("No word alignments were read!");
         
     std::cout << "   * Number of words                       = " << words.size() << std::endl;
-    std::cout << "   * Number of taxa in each word alignment = " << taxonNames.size() << std::endl;
+    std::cout << "   * Number of taxa in each word alignment = " << canonicalTaxonList.size() << std::endl;
     if (rejectedWords.size() > 0)
         {
         std::cout << "   * These words were not included because at least one " << std::endl;
@@ -357,7 +350,6 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
 
     // initialize a few important parameters
     substitutionModel = settings.getSubstitutionModel();
-    std::vector<std::string> taxonNames = wordAlignments[0]->getTaxonNames();
     
     // if the model is a custom one, make certain there is a partition of states to read
     if (substitutionModel == custom)
@@ -375,18 +367,18 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         }
     
     // set up the tree parameter
-    Parameter* pTree = new ParameterTree(rv, this, treeStr, taxonNames, settings.getInverseTreeLength());
+    Parameter* pTree = new ParameterTree(rv, this, treeStr, canonicalTaxonList, settings.getInverseTreeLength());
     pTree->setProposalProbability(10.0);
     parameters.push_back(pTree);
     ParameterTree* t = (ParameterTree*)pTree;
     int numNodes = t->getActiveTree()->getNumNodes();
     
     // play with pruning
-    std::vector<bool> mask(canonicalTaxonList.size(), false);
+    /*std::vector<bool> mask(canonicalTaxonList.size(), false);
     mask[1] = true;
     mask[5] = true;
     mask[6] = true;
-    Tree pruned(*(t->getActiveTree()), mask);
+    Tree pruned(*(t->getActiveTree()), mask);*/
     
     // set up the indel parameter
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);
@@ -413,11 +405,11 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         
     // check for consistency between alignment(s) and tree
     std::vector<std::string> treeTaxonNames = getTree()->getTaxonNames();
-    if (treeTaxonNames.size() != taxonNames.size())
+    if (treeTaxonNames.size() != canonicalTaxonList.size())
         Msg::error("Mismatch between the size of the starting tree and the alignments");
     for (int i=0; i<treeTaxonNames.size(); i++)
         {
-        if (treeTaxonNames[i] != taxonNames[i])
+        if (treeTaxonNames[i] != canonicalTaxonList[i])
             Msg::error("Taxon names in tree do not match names in the alignments");
         }
     if (getTree()->isBinary() == false)
@@ -534,6 +526,9 @@ double Model::lnLikelihood(void) {
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
         lnL += threadLnL[i];
+        
+    for (int i=0; i<wordParameterAlignments.size(); i++)
+        std::cout << i << " " << threadLnL[i] << std::endl;
         
     return lnL;
     

@@ -23,8 +23,20 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     std::cout << "   * Setting up alignment parameter for word " << name << std::endl;
 
     // initialize the alignment
-    int numTaxa = a->getNumTaxa();
+    numTaxa = a->getNumTaxa();
     int numSites = a->getNumChar();
+    taxonMask = a->getTaxonMask();
+    taxonMapKeyCanonical = a->getTaxonMap();
+    for (std::map<int,int>::iterator it = taxonMapKeyCanonical.begin(); it != taxonMapKeyCanonical.end(); it++)
+        taxonMapKeyAlignment.insert( std::make_pair(it->second,it->first) );
+        
+    completelySampled = true;
+    for (int i=0; i<taxonMask.size(); i++)
+        {
+        if (taxonMask[i] == false)
+            completelySampled = false;
+        }
+    
     printWidth = numSites * 1.8;
     gapCode = a->getGapCode();
     numStates = a->getNumStates();
@@ -167,14 +179,25 @@ double ParameterAlignment::lnPriorProbability(void) {
 
 void ParameterAlignment::print(void) {
 
+    int longestName = 0;
+    for (int i=0; i<taxonNames.size(); i++)
+        {
+        if (taxonNames[i].length() > longestName)
+            longestName = (int)taxonNames[i].length();
+        }
+                
     for (int k=0; k<2; k++)
         {
         std::cout << "alignment[" << k << "]" << std::endl;
         for (int i=0; i<alignment[k].size(); i++)
             {
-            std::cout << std::setw(3) << i << " -- ";
+            std::cout << taxonNames[i] << " ";
+            for (int j=0; j<longestName-taxonNames[i].length(); j++)
+                std::cout << " ";
+            std::map<int,int>::iterator it = taxonMapKeyAlignment.find(i);
+            std::cout << std::setw(3) << i << " [ " << it->first << "->" << it->second << "] -- ";
             for (int j=0; j<alignment[k][i].size(); j++)
-                std::cout << alignment[k][i][j] << " ";
+                std::cout << std::setw(2) << alignment[k][i][j] << " ";
             std::cout << std::endl;
             }
         }

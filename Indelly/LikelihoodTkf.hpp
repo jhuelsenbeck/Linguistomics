@@ -3,6 +3,7 @@
 
 #include <map>
 #include <vector>
+#include "mpreal.h"
 #include "IntVector.hpp"
 #include "TransitionProbabilities.hpp"
 class Model;
@@ -29,6 +30,7 @@ class LikelihoodTkf {
         void                                            initSequences(void);
         void                                            initTKF91(void);
         void                                            initTransitionProbabilities(void);
+        void                                            initTree(void);
         void                                            printTable(void);
         void                                            printVector(std::string header, std::vector<int>& v);
         void                                            printVector(std::string header, std::vector<double>& v);
@@ -40,6 +42,7 @@ class LikelihoodTkf {
         Model*                                          model;
         std::vector<std::vector<int> >                  alignment;
         std::vector<std::vector<int> >                  sequences;
+        bool                                            usingSubtree;
         std::vector<StateMatrix_t*>                     transitionProbabilities;
         std::vector<double>                             stateEquilibriumFrequencies;
         int                                             numIndelCategories;
@@ -54,7 +57,8 @@ class LikelihoodTkf {
         int                                             numStates;
         double                                          insertionRate;
         double                                          deletionRate;
-        std::map<IntVector*,double,CompIntVector>       dpTable;
+//        std::map<IntVector*,double,CompIntVector>       dpTable;
+        std::map<IntVector*,mpfr::mpreal*,CompIntVector>    dpTable;
         enum                                            StateLabels { free, possible, edgeUsed, used };
         static int                                      unalignableRegionSize;
         static int                                      maxUnalignableDimension;

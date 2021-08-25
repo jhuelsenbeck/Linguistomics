@@ -5,12 +5,17 @@
 #include "RandomVariable.hpp"
 #include "UserSettings.hpp"
 
+#include "mpreal.h"
+
 void printHeader(void);
 
 
 
 int main(int argc, char* argv[]) {
-    
+
+
+    mpfr::mpreal::set_default_prec(mpfr::digits2bits(4096));
+
     printHeader();
 
     // read the user settings from the command-line arguments

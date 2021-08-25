@@ -21,6 +21,7 @@ UserSettings::UserSettings(void) {
     numRateCategories           = 1;
     numIndelCategories          = 1;
     useEigenSystem              = true;
+    useOnlyCompleteWords        = false;
 }
 
 void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
@@ -31,15 +32,17 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 #   if defined(DEBUG_MODE)
     commands.push_back(executablePath);
     commands.push_back("-d");
-    commands.push_back("/Users/johnh/Repositories/Linguistomics/Run/Run1/config.json");
+    commands.push_back("/Users/johnh/GitHub/Linguistomics/Run/Run1/config.json");
+    commands.push_back("-c");
+    commands.push_back("yes");
     commands.push_back("-o");
     commands.push_back("/Users/johnh/Desktop/Indelly/out/test_custom");
     commands.push_back("-m");
     commands.push_back("custom");
     commands.push_back("-n");
-    commands.push_back("200000");
+    commands.push_back("250000");
     commands.push_back("-p");
-    commands.push_back("100");
+    commands.push_back("1");
     commands.push_back("-s");
     commands.push_back("100");
     commands.push_back("-l");
@@ -111,6 +114,15 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 else
                     Msg::error("Unknon option for calculating matrix exponential");
                 }
+            else if (arg == "-c")
+                {
+                if (cmd == "yes")
+                    useOnlyCompleteWords = true;
+                else if (cmd == "no")
+                    useOnlyCompleteWords = false;
+                else
+                    Msg::error("Unknon option for use of complete words");
+                }
             else if (arg == "-g")
                 numRateCategories = atoi(cmd.c_str());
             else if (arg == "-i")
@@ -131,6 +143,10 @@ void UserSettings::print(void) {
     std::cout << "   Settings" << std::endl;
     std::cout << "   * Executable path                         = " << executablePath << std::endl;
     std::cout << "   * File with initial word alignments       = \"" << dataFile << "\"" << std::endl;
+    if (useOnlyCompleteWords == true)
+        std::cout << "   * Only analyzing completely sampled words = yes" << std::endl;
+    else
+        std::cout << "   * Only analyzing completely sampled words = no" << std::endl;
     if (substitutionModel == jc69)
         std::cout << "   * Substitution model                      = JC69" << std::endl;
     else if (substitutionModel == gtr)
@@ -159,6 +175,7 @@ void UserSettings::usage(void) {
     std::cout << "   Usage" << std::endl;
     std::cout << "   * -d -- File with initial alignments of words" << std::endl;
     std::cout << "   * -m -- Substitution model (jc69/gtr/custom)" << std::endl;
+    std::cout << "   * -c -- Use only completely sampled words (no/yes)" << std::endl;
     std::cout << "   * -g -- Number of gamma rate categories (=1 is no rate variation)" << std::endl;
     std::cout << "   * -i -- Number of gamma indel categories (=1 is no indel rate variation)" << std::endl;
     std::cout << "   * -z -- Calculate marginal likelihood (no/yes)" << std::endl;
