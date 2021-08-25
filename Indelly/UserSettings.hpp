@@ -26,6 +26,7 @@ class UserSettings {
         bool                    getUseEigenSystem(void) { return useEigenSystem; }
         void                    print(void);
         void                    readCommandLineArguments(int argc, char* argv[]);
+        bool                    getUseOnlyCompleteWords(void) { return useOnlyCompleteWords; }
     
     private:
                                 UserSettings(void);
@@ -43,6 +44,7 @@ class UserSettings {
         int                     numRateCategories;
         int                     numIndelCategories;
         bool                    useEigenSystem;
+        bool                    useOnlyCompleteWords;
 };
 
 #endif

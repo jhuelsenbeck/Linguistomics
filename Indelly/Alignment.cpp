@@ -27,13 +27,20 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
         Msg::error("Could not find word name in the JSON object");
     name = j["Name"];
     
-    // read the data
+    // read the number of languages encoded for this word
     it = j.find("Data");
     if (it == j.end())
         Msg::error("Could not find word data in the JSON object");
     numTaxa = (int)j["Data"].size();
     if (numTaxa <= 0)
         Msg::error("Must have at least one taxon in the word");
+            
+    // set up the taxon mask
+    taxonMask.resize(numTaxa);
+    for (int i=0; i<taxonMask.size(); i++)
+        taxonMask[i] = false;
+        
+    // read the json data
     numChar = 0;
     for (int i=0; i<numTaxa; i++)
         {
@@ -44,6 +51,23 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
         if (it == jw.end())
             Msg::error("Could not find taxon name in the JSON object");
         std::string tName = jw["Taxon"];
+        
+        // find the index of the taxon name and set the mask accordingly
+        int taxonIdx = 0;
+        bool foundTaxon = false;
+        for (int j=0; j<canonicalTaxonList.size(); j++)
+            {
+            if (tName == canonicalTaxonList[j])
+                {
+                foundTaxon = true;
+                break;
+                }
+            taxonIdx++;
+            }
+        if (foundTaxon == false)
+            Msg::error("Could not find taxon " + tName + " in list of canonical taxa");
+        taxonMask[taxonIdx] = true;
+        taxonMap.insert( std::make_pair(taxonIdx,i) );
         taxonNames.push_back(tName);
         
         // check that there is segment information
@@ -96,6 +120,26 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
             }
         }
         
+    // check if the alignment is complete and if the taxa are in the correct order
+    bool isCompletelySampled = true;
+    for (int i=0; i<taxonMask.size(); i++)
+        {
+        if (taxonMask[i] == false)
+            isCompletelySampled = false;
+        }
+    if (isCompletelySampled == true)
+        {
+        for (int i=0; i<numTaxa; i++)
+            {
+            if (taxonNames[i] != canonicalTaxonList[i])
+                Msg::error("Taxa must be in the same order as in the canonical taxon list");
+            }
+        }
+    else
+        {
+        
+        }
+        
     // fill in the indel matrix
     for (int i=0; i<numTaxa; i++)
         {
@@ -106,7 +150,7 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
             }
         }
             
-    std::cout << "   * Word alignment \"" << name << "\" has " << numTaxa << " taxa and " << numChar << " syllables" << std::endl;
+    std::cout << "   * Word alignment \"" << name << "\" has " << numCompleteTaxa() << " taxa and " << numChar << " syllables" << std::endl;
 }
 
 
@@ -189,6 +233,22 @@ std::vector<std::vector<int> > Alignment::getRawSequenceMatrix(void) {
     return seqMat;
 }
 
+bool Alignment::hasAllGapColumn(void) {
+
+    for (int j=0; j<numChar; j++)
+        {
+        bool hasNonGapChar = false;
+        for (int i=0; i<numTaxa; i++)
+            {
+            if (matrix[i][j] != gapCode)
+                hasNonGapChar = true;
+            }
+        if (hasNonGapChar == false)
+            return true;
+        }
+    return false;
+}
+
 bool Alignment::hasBOM(std::string& str) {
 
     std::stringstream is(str);
@@ -222,6 +282,16 @@ bool Alignment::hasBOM(std::string& str) {
     return true;
 }
 
+bool Alignment::isAlignmentComplete(void) {
+
+    for (int i=0; i<taxonMask.size(); i++)
+        {
+        if (taxonMask[i] == false)
+            return false;
+        }
+    return true;
+}
+
 bool Alignment::isIndel(size_t i, size_t j) {
 
     if (matrix[i][j] == gapCode)
@@ -248,35 +318,29 @@ std::string Alignment::getTaxonName(int i) {
 
 int Alignment::getTaxonIndex(std::string ns) {
 
-	int taxonIndex = -1;
-	int i = 0;
-	for (std::vector<std::string>::iterator p=taxonNames.begin(); p != taxonNames.end(); p++)
-		{
-		if ( (*p) == ns )
-			{
-			taxonIndex = i;
-			break;
-			}
-		i++;
-		}
-	return taxonIndex;
+    for (int i=0; i<taxonNames.size(); i++)
+        {
+        if (ns == taxonNames[i])
+            return i;
+        }
+    return -1;
 }
 
 int Alignment::numCompleteTaxa(void) {
 
     int n = 0;
-    for (int i=0; i<numTaxa; i++)
+    for (int i=0; i<taxonMask.size(); i++)
         {
+        // check that the position is all gaps
         bool hasNongap = false;
         for (int j=0; j<numChar; j++)
             {
             if (isIndel(i,j) == false)
                 hasNongap = true;
             }
-        if (hasNongap == true)
+        if (taxonMask[i] == true && hasNongap == true)
             n++;
         }
-    
     return n;
 }
 

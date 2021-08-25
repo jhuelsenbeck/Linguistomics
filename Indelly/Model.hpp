@@ -25,6 +25,7 @@ class Model {
         std::string                             getLastUpdate(void);
         ParameterAlignment*                     getAlignment(int idx);
         std::vector<ParameterAlignment*>        getAlignments(void);
+        std::vector<std::string>&               getCanonicalTaxonList(void) { return canonicalTaxonList; }
         double                                  getDeletionRate(void);
         std::vector<double>&                    getEquilibriumFrequencies(void);
         std::vector<double>&                    getExchangabilityRates(void);
