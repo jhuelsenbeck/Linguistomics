@@ -116,19 +116,21 @@ with DisplayWords {
 with AllWords {
   AddCell(taxon, cognate, textheight) = Cell {
     Background: EachIndex mod 2 == 0 ? 97% : null;
-    Canvas {
-      var rh   = textheight*0.1;
-      var w    = textheight;
-      var word = cognate.Words[taxon.Index];
-      foreach (var segment in word.Aligned) {
-        var x = w * EachIndex;
-        Canvas {
-          BorderL: (0.125 pts) {Color: 80%};
-          X: x;
-          Width: w;
-          HAlign: HAligns.Center;
-          segment.ShowSegment;
-        };
+    var rh   = textheight*0.1;
+    var w    = textheight;
+    var word = cognate.Words[taxon.Index];
+    if (valid word.Padded) {
+      Canvas {
+        foreach (var segment in word.Padded) {
+          var x = w * EachIndex;
+          Canvas {
+            BorderL: (0.125 pts) {Color: 80%};
+            X: x;
+            Width: w;
+            HAlign: HAligns.Center;
+            segment.ShowSegment;
+          };
+        }
       }
     }
   };
@@ -137,7 +139,7 @@ with AllWords {
     Cell {
       Style.SansSerif;
       TextColor: Colors.DarkGray;
-      taxon.Language;
+      taxon.Variable;
     };
     AddCell(taxon, each cognates, textheight)
   };
