@@ -153,7 +153,6 @@ with Style {
   AndSpace             = " and ";
   ColonSpace           = ": ";
   Comma                = ",";
-  CommaSpace           = ", ";
   eos                  = ". ";
 
   MainDocument = Document {
@@ -180,22 +179,17 @@ with Style {
   };
 
   ShowAuthor(PersonClass person) = Span {
-    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
-    if (valid site)
-      Link: site.Value;
-    Span {
-      Bold;
-      Separator: Space;
-      person.FirstName;
-      person.MiddleName;
-      person.LastName;
-    };
+    person.GetFullName {Bold};
     Span {
       Separator: Comma;
       TextAlignment: TextAlignments.Superscript;
       EachOne;
       "+";
     };
+
+    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
+    if (valid site)
+      Link: site.Value;
   };
 
   ShowAuthorDetails(PersonClass person) {
@@ -219,10 +213,10 @@ with Style {
               org.Name;
             }
 
-            var place = org.FindFirstFact(LinkTypes.MainOffice);
-            if (valid place) {
+            var address = org.FindFirstFact(LinkTypes.MainOffice);
+            if (valid address) {
               CommaSpace;
-              Punctuation.ShowPlaceSpan(place);
+              address.ShowSpan(true);
             }
           }
         };
@@ -230,7 +224,10 @@ with Style {
         var email = person.FindFirstFact(LinkTypes.WorkEmail);
         if (valid email) {
           Paragraph {
-            email.Value;
+            Span {
+              email.Value;
+              Link: "mailto:" + email.Value;
+            }
           };
         }
       };
@@ -247,52 +244,47 @@ with Style {
       LastSeparator: AndSpace;
       ShowAuthor(each authors);
     };
-    ShowAuthorDetails(each authors);
-    Paragraph {
-      LeftIndent: NoteIndexIndent;
-      FirstIndent: -NoteIndexIndent;
-      Span {
-        TextAlignment: TextAlignments.Superscript;
-        "+";
+
+    Block {
+      TextHeight: 10 pts;
+      ShowAuthorDetails(each authors);
+      Paragraph {
+        LeftIndent: NoteIndexIndent;
+        FirstIndent: -NoteIndexIndent;
+        Span {
+          TextAlignment: TextAlignments.Superscript;
+          "+";
+        };
+        Tab;
+        "these authors contributed equally to this work";
       };
-      Tab;
-      "these authors contributed equally to this work";
     };
   };
 
   ShowAuthorFull(PersonClass person) = Block {
     LeftIndent: 0.25 inches;
-    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
 
     Paragraph {
       LocationMark: person.GlobalVariablePath;
       FirstIndent: -0.25 inches;
-      Span {
-        Separator: Space;
-        if (valid site)
-          Link: site.Value;
-        person.FirstName;
-        person.MiddleName;
-        person.LastName;
-      };
+      person.GetFullName;
     };
 
-    var place = person.FindFirstFact(LinkTypes.WorkAddress);
-    if (valid place) {
-      Paragraph {
-        Punctuation.ShowPlaceSpan(place);
-      }
-    }
+    person.FindFirstFact(LinkTypes.WorkAddress)?.ShowSpan(true);
 
     var email = person.FindFirstFact(LinkTypes.WorkEmail);
     if (valid email) {
       Paragraph {
         Lang.EMail;
         ColonSpace;
-        email.Value;
+        Span {
+          email.Value;
+          Link: "mailto:" + email.Value;
+        }
       };
     }
 
+    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
     if (valid site) {
       Paragraph {
         Seperator: CommaSpace;

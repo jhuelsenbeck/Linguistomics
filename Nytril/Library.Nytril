@@ -320,18 +320,26 @@ class ResultsClass {
 
     cognate.Words     = words.ToArray;
     cognate.MaxLength = maxlength;
-
-    foreach (var w in cognate.Words) {
-      var a = w.Aligned;
+    var count    = 0;
+    var padcount = 0;
+    foreach (var word in cognate.Words) {
+      var a = word.Aligned;
       if (a.Length > 0) {
+        ++count;
         if (a.Length < maxlength)
-          w.Padded = a + [IPA.Segments.GapSegment] * (maxlength - a.Length);
+          word.Padded = a + [IPA.Segments.GapSegment] * (maxlength - a.Length);
         else
-          w.Padded = a;
+          word.Padded = a;
+
+        if (word.Padded.LastElement == IPA.Segments.GapSegment)
+          ++padcount;
+
       }
       else
-        w.Padded = [IPA.Segments.GapSegment] * maxlength;
+        word.Padded = word.Aligned;
     }
+    System.Assert(padcount < count, "Too much padding", cognate.Cognate);
+
 
     TotalLength += maxlength;
   }
@@ -772,8 +780,6 @@ class ResultsClass {
             break;
 
           case 1:
-//            Space*4;
-//            Comment( Span{each (each taxon.AlignedList[index]).Ipa});
             break;
 
           case 2:
@@ -781,7 +787,7 @@ class ResultsClass {
               CommentFormat;
               Style.IPAFamily;
               Tab;
-              foreach (var segment in words.Aligned)
+              foreach (var segment in words.Padded)
                 segment.ShowBlock;
             };
             break;
