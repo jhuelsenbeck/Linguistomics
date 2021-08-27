@@ -1,6 +1,8 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <set>
+#include "Alignment.hpp"
 #include "Msg.hpp"
 #include "Node.hpp"
 #include "NodeSet.hpp"
@@ -53,6 +55,60 @@ ParameterTree::~ParameterTree(void) {
 void ParameterTree::accept(void) {
 
     *trees[1] = *trees[0];
+}
+
+void ParameterTree::addSubtrees(std::vector<Alignment*>& alns) {
+
+    std::cout << "original" << std::endl;
+    trees[0]->print();
+    
+    clearSubtrees();
+    
+    std::set<std::string> masks;
+    for (int i=0; i<alns.size(); i++)
+        {
+        // get the taxon mask and only proceed if the alignment is incomplete
+        std::vector<bool> mask = alns[i]->getTaxonMask();
+        if (countMaskBits(mask) == mask.size())
+            continue;
+
+        // get the taxon mask as a string, which will become the key in the map
+        std::string maskStr = alns[i]->getTaxonMaskString();
+
+        // check that we haven't already made this subtree
+        std::map<std::string,Tree*>::iterator it = subtrees.find(maskStr);
+        if (it != subtrees.end())
+            continue;
+                    
+        alns[i]->print();
+       
+        // get the pruned tree
+        Tree* t0 = new Tree(*trees[0], mask, alns[i]->getTaxonNames());
+        t0->debugPrint("t0");
+        
+        // insert the mask string and tree pair into the map of pruned trees
+        subtrees.insert( std::make_pair(maskStr, t0) );
+        }
+
+        
+}
+
+void ParameterTree::clearSubtrees(void) {
+
+    for (std::map<std::string,Tree*>::iterator it = subtrees.begin(); it != subtrees.end(); it++)
+        delete it->second;
+    subtrees.clear();
+}
+
+int ParameterTree::countMaskBits(std::vector<bool>& m) {
+
+    int n = 0;
+    for (size_t i=0; i<m.size(); i++)
+        {
+        if (m[i] == true)
+            n++;
+        }
+    return n;
 }
 
 void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
@@ -111,6 +167,14 @@ void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
     backbone.push_back(p);
     backbone.push_back(b);
     incidentNode = possibleIncidentNodes[(int)(rv->uniformRv()*2)];
+}
+
+Tree* ParameterTree::getActiveTree(std::string mask) {
+
+    std::map<std::string,Tree*>::iterator it = subtrees.find(mask);
+    if (it != subtrees.end())
+        return it->second;
+    return NULL;
 }
 
 std::string ParameterTree::getString(void) {

@@ -16,6 +16,7 @@ Node::Node(int idx) {
     myTree                = NULL;
     descendants           = new NodeSet;
     transitionProbability = NULL;
+    tpMatrices.clear();
 }
 
 Node::~Node(void) {
@@ -37,6 +38,8 @@ void Node::clean(void) {
     proportion = 0.0;
     myTree     = NULL;
     descendants->deleteAllNodes();
+    transitionProbability = NULL;
+    tpMatrices.clear();
 }
 
 double Node::getBranchLength(void) {

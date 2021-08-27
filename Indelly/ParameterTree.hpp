@@ -1,8 +1,10 @@
 #ifndef ParameterTree_hpp
 #define ParameterTree_hpp
 
+#include <map>
 #include <string>
 #include "Parameter.hpp"
+class Alignment;
 class RandomVariable;
 class Tree;
 
@@ -16,7 +18,10 @@ class ParameterTree : public Parameter {
                                         ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, double itl);
                                        ~ParameterTree(void);
         void                            accept(void);
+        void                            addSubtrees(std::vector<Alignment*>& alns);
+        void                            clearSubtrees(void);
         Tree*                           getActiveTree(void) { return trees[0]; }
+        Tree*                           getActiveTree(std::string mask);
         std::string                     getHeader(void) { return ""; }
         double                          lnPriorProbability(void);
         void                            print(void);
@@ -25,6 +30,7 @@ class ParameterTree : public Parameter {
         double                          update(void);
                 
     private:
+        int                             countMaskBits(std::vector<bool>& m);
         void                            nniArea(std::vector<Node*>& backbone, Node*& incidentNode);
         void                            normalize(std::vector<double>& vec, double minVal);
         double                          updateBrlenProportions(void);
@@ -33,8 +39,9 @@ class ParameterTree : public Parameter {
         double                          updateNni(void);
         double                          updateSpr(void);
         double                          updateTreeLength(void);
-        Tree*                           trees[2];
         double                          betaT;
+        Tree*                           trees[2];
+        std::map<std::string,Tree*>     subtrees;
 };
 
 #endif

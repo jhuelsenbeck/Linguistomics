@@ -18,16 +18,14 @@ Tree::Tree(Tree& t) {
     clone(t);
 }
 
-Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
+Tree::Tree(Tree& t, std::vector<bool> taxonMask, std::vector<std::string> tn) {
 
     if (t.getNumTaxa() != taxonMask.size())
         Msg::error("Cannot create pruned tree with ill-formated taxon mask");
 
     // clone the tree
     clone(t);
-    
-    print("Original");
-    
+        
     // mark taxa to include
     std::vector<Node*> dpSeq = this->downPassSequence;
     for (int n=0; n<dpSeq.size(); n++)
@@ -79,19 +77,14 @@ Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
                 pAnc->addDescendant(nde);
             }
         }
-
-    print("Pruned Away");
     
     // prune superfluous nodes
-    //initializeDownPassSequence();
     dpSeq = this->downPassSequence;
-    std::map<int,std::vector<int> > matrixMap;
     for (int n=(int)dpSeq.size()-1; n>=0; n--)
         {
         Node* p = dpSeq[n];
-        std::vector<int> tpMat;
-        tpMat.push_back(p->getIndex());
-        matrixMap.insert( std::make_pair(p->getIndex(),tpMat) );
+        p->clearTpMatrix();
+        p->addMatrix(p->getIndex());
         }
     for (int n=(int)dpSeq.size()-1; n>=0; n--)
         {
@@ -112,29 +105,41 @@ Tree::Tree(Tree& t, std::vector<bool> taxonMask) {
             p->setAncestor(NULL);
             if (root == p)
                 root = pDes;
-            
-            std::map<int,std::vector<int> >::iterator it = matrixMap.find(p->getIndex());
-            if (it == matrixMap.end())
-                Msg::error("Could not find matrices for p");
-            std::vector<int> pMatrices = it->second;
-            it = matrixMap.find(pDes->getIndex());
-            if (it == matrixMap.end())
-                Msg::error("Could not find matrices for pDes");
-            for (int i=0; i<pMatrices.size(); i++)
-                it->second.push_back(pMatrices[i]);
-            
+                
+            pDes->addMatrix(p->getIndex());
+                        
+            nodesDeadToMe.push_back(p);
             }
         }
     
-    for (std::map<int,std::vector<int> >::iterator it = matrixMap.begin(); it != matrixMap.end(); it++)
-        {
-        std::cout << it->first << " -- ";
-        for (int i=0; i<it->second.size(); i++)
-            std::cout << it->second[i] << " ";
-        std::cout << std::endl;
-        }
-    print("PRUNED");
+    // delete superfluous nodes
     initializeDownPassSequence();
+    std::vector<Node*> newNodes;
+    for (int i=0; i<downPassSequence.size(); i++)
+        newNodes.push_back(downPassSequence[i]);
+    for (int i=0; i<nodesDeadToMe.size(); i++)
+        delete nodesDeadToMe[i];
+    nodes = newNodes;
+    
+    // update the number of taxa and taxon names
+    taxonNames = tn;
+    numTaxa = (int)taxonNames.size();
+    
+    // reindex nodes
+    int intIdx = numTaxa;
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p->getIsLeaf() == true)
+            {
+            int tipIdx = getTaxonNameIndex(p->getName());
+            p->setIndex(tipIdx);
+            }
+        else
+            {
+            p->setIndex(intIdx++);
+            }
+        }
 
 #   if 0
     for (int n=(int)dpSeq.size()-1; n>=0; n--)
@@ -481,6 +486,27 @@ void Tree::clone(Tree& t) {
         downPassSequence.push_back( nodes[t.downPassSequence[i]->getOffset()] );
 }
 
+void Tree::debugPrint(std::string h) {
+
+    print(h);
+    
+    std::cout << "nodes: " << std::endl;;
+    for (int i=0; i<nodes.size(); i++)
+        {
+        std::cout << std::setw(4) << nodes[i]->getIndex() << " " << nodes[i] << " < ";
+        std::vector<int> mat = nodes[i]->getTpMatrices();
+        for (int j=0; j<mat.size(); j++)
+            std::cout << mat[j] << " ";
+        std::cout << ">" << std::endl;
+        }
+
+    std::cout << "root: " << root->getIndex() << " " << root << std::endl;
+    std::cout << "numTaxa: " << numTaxa << std::endl;
+    std::cout << "treeLength: " << treeLength << std::endl;
+    for (int i=0; i<taxonNames.size(); i++)
+        std::cout << i << " " << taxonNames[i] << std::endl;
+}
+
 void Tree::deleteAllNodes(void) {
 
     for (int i=0; i<nodes.size(); i++)
@@ -562,6 +588,16 @@ std::string Tree::getNewick(void) {
         }
     std::string newick = ss.str();
     return newick;
+}
+
+int Tree::getTaxonNameIndex(std::string tName) {
+
+    for (int i=0; i<taxonNames.size(); i++)
+        {
+        if (tName == taxonNames[i])
+            return i;
+        }
+    return -1;
 }
 
 bool Tree::isBinary(void) {

@@ -36,15 +36,15 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
         Msg::error("Must have at least one taxon in the word");
             
     // set up the taxon mask
-    taxonMask.resize(numTaxa);
+    taxonMask.resize(canonicalTaxonList.size());
     for (int i=0; i<taxonMask.size(); i++)
         taxonMask[i] = false;
         
     // read the json data
     numChar = 0;
-    for (int i=0; i<numTaxa; i++)
+    for (int n=0; n<numTaxa; n++)
         {
-        nlohmann::json jw = j["Data"][i];
+        nlohmann::json jw = j["Data"][n];
         
         // check that there is taxon name information
         it = jw.find("Taxon");
@@ -67,7 +67,7 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
         if (foundTaxon == false)
             Msg::error("Could not find taxon " + tName + " in list of canonical taxa");
         taxonMask[taxonIdx] = true;
-        taxonMap.insert( std::make_pair(taxonIdx,i) );
+        taxonMap.insert( std::make_pair(taxonIdx,n) );
         taxonNames.push_back(tName);
         
         // check that there is segment information
@@ -77,7 +77,7 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
         std::vector<int> segInfo = jw["Segments"];
         
         // check that the number of word segments is the same for each taxon
-        if (i == 0)
+        if (n == 0)
             {
             numChar = (int)segInfo.size();
             if (numChar <= 0)
@@ -114,9 +114,9 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
         for (int j=0; j<segInfo.size(); j++)
             {
             if (segInfo[j] == -1)
-                matrix[i][j] = gapCode;
+                matrix[n][j] = gapCode;
             else
-                matrix[i][j] = segInfo[j];
+                matrix[n][j] = segInfo[j];
             }
         }
         
@@ -152,7 +152,6 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
             
     std::cout << "   * Word alignment \"" << name << "\" has " << numCompleteTaxa() << " taxa and " << numChar << " syllables" << std::endl;
 }
-
 
 Alignment::~Alignment(void) {
 
@@ -231,6 +230,19 @@ std::vector<std::vector<int> > Alignment::getRawSequenceMatrix(void) {
         }
         
     return seqMat;
+}
+
+std::string Alignment::getTaxonMaskString(void) {
+
+    std::string str = "";
+    for (size_t i=0; i<taxonMask.size(); i++)
+        {
+        if (taxonMask[i] == false)
+            str += "0";
+        else
+            str += "1";
+        }
+    return str;
 }
 
 bool Alignment::hasAllGapColumn(void) {
@@ -329,16 +341,15 @@ int Alignment::getTaxonIndex(std::string ns) {
 int Alignment::numCompleteTaxa(void) {
 
     int n = 0;
-    for (int i=0; i<taxonMask.size(); i++)
+    for (int i=0; i<numTaxa; i++)
         {
-        // check that the position is all gaps
         bool hasNongap = false;
         for (int j=0; j<numChar; j++)
             {
             if (isIndel(i,j) == false)
                 hasNongap = true;
             }
-        if (taxonMask[i] == true && hasNongap == true)
+        if (taxonMask[i] == true)
             n++;
         }
     return n;

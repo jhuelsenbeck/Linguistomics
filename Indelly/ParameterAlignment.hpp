@@ -36,6 +36,7 @@ class ParameterAlignment : public Parameter {
         SiteLikelihood*                 getSiteProbs(void) { return siteProbs; }
         std::string                     getString(void) { return ""; }
         std::vector<bool>               getTaxonMask(void) { return taxonMask; }
+        std::string                     getTaxonMaskString(void);
         std::vector<std::string>        getTaxonNames(void) { return taxonNames; }
         double                          lnPriorProbability(void);
         void                            print(void);

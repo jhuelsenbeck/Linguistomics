@@ -36,6 +36,7 @@ class Model {
         std::string                             getParameterString(void);
         std::string                             getStateSetsJsonString(void);
         Tree*                                   getTree(void);
+        Tree*                                   getTree(std::string mask);
         std::string                             getUpdatedParameterName(void);
         double                                  lnLikelihood(void);
         double                                  lnPriorProbability(void);
