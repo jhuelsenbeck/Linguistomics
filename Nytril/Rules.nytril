@@ -1,4 +1,4 @@
-using Format, Units, FeatureSet, Math, SegmentGroups;
+﻿using Format, Units, FeatureSet, Math, SegmentGroups;
 //======================================================================
 
 class FilterClass {
@@ -448,6 +448,171 @@ class Partition1Class: RuleClass {
     Add(Consonants);
     GetFilters;
   }
+}
+//======================================================================
+
+class GroupRatesClass {
+  var PartitionRule,
+      MaxLine,
+      GapThickness,
+      GapAngle,
+      LoopRadius,
+      MaxRadius,
+      Frequencies,
+      Rates;
+
+  Constructor(ResultsClass results) {
+    PartitionRule = results.PartitionRule;
+    MaxLine       = 10;
+    MaxRadius     = 0.75 inches;
+    LoopRadius    = 0.25 inches;
+    GapThickness  = 8 pts;
+    GapAngle      = 20 degrees;
+
+    Frequencies = [0.2, 0.2, 0.3, 0.4, 0.5];
+    Rates = [
+      [1, 2, 3, 4, 10],
+      [0, 2, 3, 4, 5],
+      [0, 0, 3, 4, 5],
+      [0, 0, 0, 4, 5],
+      [0, 0, 0, 0, 5],
+    ];
+  }
+
+  ProjectAngle(center, r, angle) {
+    return Point(center.X + r * Cos(angle), center.Y + r * Sin(angle));
+  }
+
+  Adjust(center, r, angle) {
+    return center - ProjectAngle(Point(0), r, angle);
+  }
+
+  Arrow(PartitionClass p1, PartitionClass p2, size) = Figure {
+    var d      = p1.Center - p2.Center;
+    var angle  = PI/2;
+    if (d.X != 0) {
+      angle = ArcTan(d.Y / d.X);
+      if (d.X < 0)
+        angle -= PI
+    }
+
+
+    Stroke: size;
+    FigurePath {
+      Adjust(p1.Center, p1.Radius + GapThickness, angle);
+      LineTo(Adjust(p2.Center, p2.Radius + GapThickness, angle + PI));
+    }
+  };
+
+  PartitionDiagram(size) = Block {
+    var middle = Point(size.Width * 0.5, size.Height * 0.5);
+    var fmax   = MaxRadius / Max(Sqrt(each Frequencies)); // Proportional to area, so use SQRT of frequency
+    var rmax   = MaxLine / Max(Max (each Rates));
+
+    Canvas {
+      Size: size;
+
+      foreach (var partition in PartitionRule.Partitions) {
+        partition.Angle  = (2 * EachIndex *  PI / PartitionRule.Partitions.Length) - PI/2;
+        partition.Radius = Sqrt(Frequencies[EachIndex]) * fmax;
+      }
+
+      var maxradius = middle.X - MaxRadius - LoopRadius*2 - GapThickness;
+
+      foreach (var partition in PartitionRule.Partitions)
+        partition.Center = ProjectAngle(middle, maxradius, partition.Angle);
+
+      foreach (var p1 in PartitionRule.Partitions) {
+        var pi = EachIndex;
+        foreach (var p2 in PartitionRule.Partitions) {
+          var t = Rates[pi][EachIndex] * rmax;
+          if (p1 == p2) {
+            Figure {
+              Stroke: t;
+              var c  = ProjectAngle(p1.Center, p1.Radius + GapThickness + LoopRadius, p1.Angle);
+              var r  = Rect(c - LoopRadius, LoopRadius*2);
+              var a  = p1.Angle - PI;
+
+              FigurePath {
+                ProjectAngle(c, LoopRadius, a - GapAngle);
+                ArcTo(ProjectAngle(c, LoopRadius, a + GapAngle), LoopRadius, a, true);
+              };
+            };
+          }
+          else
+            Arrow(p1, p2, t);
+        }
+      }
+
+      foreach (var p1 in PartitionRule.Partitions) {
+        var pos   = p1.Center - p1.Radius;
+        var fsize = p1.Radius*2;
+
+        Figure {
+          Fill: ChartColor(EachIndex);
+          Stroke: 1 pt;
+          Ellipse(Rect(pos, fsize));
+        };
+        HBox {
+          Position: pos;
+          Height: fsize;
+          Frame {
+            VAlignment: VAligns.Center;
+            Width: fsize;
+            TextHeight: p1.Radius * 0.3;
+            ParAlignment: ParAlignments.Center;
+            Span {
+              TextHeight: 18 pts;
+              Bold;
+              EachOne;
+            };
+            p1.Filter;
+          };
+        };
+      }
+    };
+  };
+
+  FrequencyChart(size) = Chart {
+    Size: size;
+    Type: ChartTypes.Bar;
+
+    XAxis: ChartAxis {
+      TextHeight: 8 pts;
+      (each PartitionRule.Partitions).Filter;
+    };
+    ValueLabel: "Estimated Equilibrium Frequency";
+    ValueAxis: ChartAxis;
+    ChartSeries {
+      foreach (var partition in PartitionRule.Partitions)
+        new DataPointClass(EachIndex, Frequencies[EachIndex] * 100.0) {Reference: partition.Filter};
+    };
+  };
+
+  ShowGroupRates = Block {
+    Style.BodyPar {
+      "For the ‘{0}’ model, states were grouped into five sets: "(PartitionRule.Name);
+      Span {
+        Separator: CommaSpace;
+        LastSeparator: " and ";
+        foreach (var partition in PartitionRule.Partitions) {
+          Span {
+            partition.Filter.Name;
+            " (";
+            EachOne;
+            ")";
+          }
+        }
+      };
+      Style.eos;
+      "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
+      "The width of the arrows is proportional to the estimated rates. ";
+      "Note that rates are higher for transitions from one word segment to another when the word segments are in the same group.";
+    };
+
+    PartitionDiagram(Size(DocMetrics.PageContent.Width));
+    FrequencyChart(Size(DocMetrics.PageContent.Width, 30 pts + PartitionRule.Partitions.Length * (25 pts)));
+  };
 }
 //======================================================================
 
