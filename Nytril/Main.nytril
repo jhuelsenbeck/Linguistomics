@@ -77,6 +77,10 @@ class SubmissionViewClass: BaseViewClass {
   };
 
   override GetDocument = Style.MainDocument {
+    var appendices = [
+      new AppendixClass("Partition map", Results.ShowPartitionMap),
+    ];
+
     Style.PageSection {
       Header: HeaderBlock {
         Distance: 0.125 inches;
@@ -91,9 +95,15 @@ class SubmissionViewClass: BaseViewClass {
 
       Style.ShowAuthorList(Authors);
 
-      Style.HeaderCentered(Abstract.Title);
+      Style.HeaderCentered {
+        Lang.Appendices;
+      };
+      Style.AppendixRow(each appendices);
     };
-    Bibliography;
+
+    Style.Bibliography;
+
+    Style.ShowAppendix(each appendices);
   };
 }
 //======================================================================
@@ -133,20 +143,27 @@ class PaperViewClass: BaseViewClass {
 
       Style.ShowAuthorList(Authors);
 
-      Style.HeaderCentered(Abstract.Title);
+      Style.HeaderCentered {
+        Abstract.Title;
+      };
       Abstract.Body;
 
       Style.ShowContent(each Content);
 
-      Style.HeaderCentered(Lang.Authors);
+      Style.HeaderCentered {
+        Lang.Authors;
+      };
       Style.ShowAuthorFull(each Authors);
 
-      Style.HeaderCentered(Lang.Appendices);
+      Style.HeaderCentered {
+        Lang.Appendices;
+      };
       Style.AppendixRow(each appendices);
     };
+
+    Style.Bibliography;
+
     Style.ShowAppendix(each appendices);
-//    PageBreak;
-    Bibliography;
   };
 }
 //======================================================================
@@ -168,7 +185,9 @@ class ExperimentViewClass: BaseViewClass {
       Style.AppendixTitle {
         ViewInfo.Title;
       };
-      Style.HeaderCentered(Lang.Appendices);
+      Style.HeaderCentered {
+        Lang.Appendices;
+      };
       Style.AppendixRow(each appendices);
     };
     Style.ShowAppendix(each appendices);
