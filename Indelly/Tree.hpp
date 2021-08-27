@@ -15,10 +15,11 @@ class Tree {
                                     Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
                                     Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv);
                                     Tree(Tree& t);
-                                    Tree(Tree& t, std::vector<bool> taxonMask);
+                                    Tree(Tree& t, std::vector<bool> taxonMask, std::vector<std::string> tn);
                                    ~Tree(void);
         Tree&                       operator=(Tree& t);
         void                        buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
+        void                        debugPrint(std::string h);
         std::string                 getNewick(void);
         int                         getNumNodes(void) { return (int)nodes.size(); }
         int                         getNumTaxa(void) { return numTaxa; }
@@ -27,6 +28,7 @@ class Tree {
         std::vector<Node*>&         getDownPassSequence(void) { return downPassSequence; }
         Node*                       getRoot(void) { return root; }
         std::vector<std::string>&   getTaxonNames(void) { return taxonNames; }
+        int                         getTaxonNameIndex(std::string tName);
         double                      getTreeLength(void) { return treeLength; }
         void                        initializeDownPassSequence(void);
         bool                        isBinary(void);

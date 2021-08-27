@@ -172,6 +172,19 @@ std::string ParameterAlignment::getJsonString(void) {
     return jsonStr;
 }
 
+std::string ParameterAlignment::getTaxonMaskString(void) {
+
+    std::string str = "";
+    for (int i=0; i<taxonMask.size(); i++)
+        {
+        if (taxonMask[i] == false)
+            str += "0";
+        else
+            str += "1";
+        }
+    return str;
+}
+
 double ParameterAlignment::lnPriorProbability(void) {
 
     return 0.0;

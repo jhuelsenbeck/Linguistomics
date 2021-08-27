@@ -26,6 +26,7 @@ class Alignment {
         int                             getTaxonIndex(std::string ns);
         std::map<int,int>               getTaxonMap(void) { return taxonMap; }
         std::vector<bool>               getTaxonMask(void) { return taxonMask; }
+        std::string                     getTaxonMaskString(void);
         std::vector<std::string>        getTaxonNames(void);
         std::string                     getTaxonName(int i);
         bool                            hasAllGapColumn(void);

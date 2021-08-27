@@ -35,7 +35,6 @@ void Mcmc::closeOutputFiles(void) {
 
     parmStrm.close();
     treeStrm.close();
-    algnStrm.close();
 
     std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
     for (int i=0; i<alns.size(); i++)
@@ -81,7 +80,6 @@ void Mcmc::openOutputFiles(void) {
     std::string outPath = settings.getOutFile();
     std::string parmFileName = outPath + ".tsv";
     std::string treeFileName = outPath + ".tre";
-    std::string algnFileName = outPath + ".aln";
 
     parmStrm.open( parmFileName.c_str(), std::ios::out );
     if (!parmStrm)
@@ -89,9 +87,6 @@ void Mcmc::openOutputFiles(void) {
     treeStrm.open( treeFileName.c_str(), std::ios::out );
     if (!treeStrm)
         Msg::error("Cannot open file \"" + treeFileName + "\"");
-    algnStrm.open( algnFileName.c_str(), std::ios::out );
-    if (!algnStrm)
-        Msg::error("Cannot open file \"" + algnFileName + "\"");
   
     std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
     algnJsonStrm = new std::ofstream[alns.size()];
@@ -311,10 +306,8 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
             }
 
         std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
-        algnStrm << "Languages" << '\t';
         for (int i=0; i<alns.size(); i++)
             {
-            algnStrm << alns[i]->getName() << '\t';
             std::string stateSetsStr = modelPtr->getStateSetsJsonString();
             if (stateSetsStr != "")
                 {
@@ -327,7 +320,6 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
                 }
             algnJsonStrm[i] << alns[i]->getJsonString() << "," << std::endl;
             }
-        algnStrm << std::endl;
         }
         
     // output to parameter file
@@ -345,39 +337,6 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     
     // output to alignment file
     std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
-    int gapCode = alns[0]->getGapCode();
-    std::vector<std::string> taxonNames = alns[0]->getTaxonNames();
-    int longestNameLength = 0;
-    for (int i=0; i<taxonNames.size(); i++)
-        {
-        if (taxonNames[i].size() > longestNameLength)
-            longestNameLength = (int)taxonNames[i].size();
-        }
-    for (int i=0; i<taxonNames.size(); i++)
-        {
-        algnStrm << taxonNames[i];
-        for (int j=0; j<longestNameLength-taxonNames[i].size(); j++)
-            algnStrm << " ";
-        algnStrm << '\t';
-        for (int n=0; n<alns.size(); n++)
-            {
-            std::vector<std::vector<int> >& aln = alns[n]->getAlignment();
-            algnStrm << "(";
-            for (int j=0; j<aln[i].size(); j++)
-                {
-                int charCode = aln[i][j];
-                if (charCode == gapCode)
-                    algnStrm << std::setw(3) << "-";
-                else
-                    algnStrm << std::setw(3) << charCode;
-                }
-            algnStrm << ")";
-            algnStrm << '\t';
-            }
-        algnStrm << std::endl;
-        }
-    algnStrm << std::endl;
-    
     for (int i=0; i<alns.size(); i++)
         {
         algnJsonStrm[i] << alns[i]->getJsonString();

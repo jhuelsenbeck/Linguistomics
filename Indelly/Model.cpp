@@ -233,6 +233,21 @@ Tree* Model::getTree(void) {
     return t;
 }
 
+Tree* Model::getTree(std::string mask) {
+
+    Tree* t = NULL;
+    for (int i=0; i<parameters.size(); i++)
+        {
+        if (parameters[i]->getName() == "tree")
+            {
+            ParameterTree* pt = dynamic_cast<ParameterTree*>(parameters[i]);
+            return pt->getActiveTree(mask);
+            }
+        }
+    return t;
+
+}
+
 std::string Model::getUpdatedParameterName(void) {
 
     return parameters[updatedParameterIdx]->getName();
@@ -242,7 +257,7 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
 
     UserSettings& settings = UserSettings::userSettings();
     
-    // get the list of taxa
+    // get the list of taxa (the so-called canonical list of taxa)
     auto it = j.find("Taxa");
     if (it == j.end())
         Msg::error("Could not find list of taxa in the JSON file");
@@ -372,14 +387,9 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     parameters.push_back(pTree);
     ParameterTree* t = (ParameterTree*)pTree;
     int numNodes = t->getActiveTree()->getNumNodes();
-    
-    // play with pruning
-    /*std::vector<bool> mask(canonicalTaxonList.size(), false);
-    mask[1] = true;
-    mask[5] = true;
-    mask[6] = true;
-    Tree pruned(*(t->getActiveTree()), mask);*/
-    
+    if (settings.getUseOnlyCompleteWords() == false)
+        t->addSubtrees(wordAlignments); // add subtrees
+
     // set up the indel parameter
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);
     pIndel->setProposalProbability(1.0);
@@ -508,7 +518,7 @@ void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) 
 
 double Model::lnLikelihood(void) {
 
-#   if 1
+#   if 0
     // set up thread pool
     ThreadPool& workers = ThreadPool::threadPoolInstance();
     Tree* tree = getTree();
@@ -528,7 +538,9 @@ double Model::lnLikelihood(void) {
         lnL += threadLnL[i];
         
     for (int i=0; i<wordParameterAlignments.size(); i++)
-        std::cout << i << " " << threadLnL[i] << std::endl;
+        {
+        std::cout << i << " " << threadLnL[i] << " " << wordParameterAlignments[i]->getTaxonMaskString() << " " << wordParameterAlignments[i]->getName() << std::endl;
+        }
         
     return lnL;
     
@@ -542,6 +554,7 @@ double Model::lnLikelihood(void) {
         LikelihoodTkf likelihood(wordParameterAlignments[i], tree, this);
         double lnP = likelihood.tkfLike();
         lnL += lnP;
+        std::cout << i << " " << lnP << " " << wordParameterAlignments[i]->getTaxonMaskString() << " " << wordParameterAlignments[i]->getName() << std::endl;
         }
     return lnL;
     

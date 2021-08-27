@@ -34,7 +34,7 @@ LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m) {
     data = a;
     tree = t;
     model = m;
-    
+        
     siteProbs = data->getSiteProbs();
     fH = siteProbs->getProbsH();
     fI = siteProbs->getProbsI();
@@ -45,6 +45,16 @@ LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m) {
 LikelihoodTkf::~LikelihoodTkf(void) {
 
     clearDpTable();
+    
+    if (usingSubtree == true)
+        {
+        std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
+        for (int n=0; n<downPassSequence.size(); n++)
+            {
+            Node* p = downPassSequence[n];
+            delete p->getTransitionProbability();
+            }
+        }
 }
 
 void LikelihoodTkf::clearDpTable(void) {
@@ -117,11 +127,33 @@ void LikelihoodTkf::initTransitionProbabilities(void) {
     transitionProbabilities = tip.getTransitionProbabilities();
     stateEquilibriumFrequencies = tip.getStationaryFrequencies();
     
-    std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
-    for (int n=0; n<downPassSequence.size(); n++)
+    if (usingSubtree == false)
         {
-        Node* p = downPassSequence[n];
-        p->setTransitionProbability(transitionProbabilities[p->getIndex()]);
+        // we have an alignment of word segments for the complete set of canonical taxa
+        std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
+        for (int n=0; n<downPassSequence.size(); n++)
+            {
+            Node* p = downPassSequence[n];
+            p->setTransitionProbability(transitionProbabilities[p->getIndex()]);
+            }
+        }
+    else
+        {
+        // we are dealing with a subset of the complete list of canonical taxa
+        std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
+        for (int n=0; n<downPassSequence.size(); n++)
+            {
+            Node* nde = downPassSequence[n];
+            std::vector<int> matrices = nde->getTpMatrices();
+            StateMatrix_t* P = new StateMatrix_t;
+            P->resize(numStates,numStates);
+            P->setIdentity();
+            for (int i=(int)matrices.size()-1; i>=0; i--)
+                {
+                (*P) *= *(transitionProbabilities[matrices[i]]);
+                }
+            nde->setTransitionProbability(P);
+            }
         }
 }
 
@@ -181,34 +213,18 @@ void LikelihoodTkf::initTKF91(void) {
 
 void LikelihoodTkf::initTree(void) {
 
-#   if 0
-    std::cout << data->getName() << std::endl;
-
     usingSubtree = false;
     
     std::vector<std::string>& canonicalTaxonList = model->getCanonicalTaxonList();
     if (data->getNumTaxa() < canonicalTaxonList.size())
         {
-        // we have to deal with a subtree
-        
-        // get the taxon mask
-        std::vector<bool> taxonMask = data->getTaxonMask();
-        std::cout << "taxonMask[";
-        for (int i=0; i<taxonMask.size(); i++)
-            std::cout << taxonMask[i];
-        std::cout << "]" << std::endl;
-
-        // get the subtree
-        Tree* t = new Tree(*tree, taxonMask);
-        tree = t;
-
         usingSubtree = true;
+        Tree* subtree = model->getTree(data->getTaxonMaskString());
+        tree = subtree;
         }
         
     // print
-    std::cout << "usingSubtree=" << usingSubtree << std::endl;
     tree->print();
-#   endif
 }
 
 void LikelihoodTkf::printTable(void) {
@@ -269,10 +285,10 @@ void LikelihoodTkf::printVector(std::string header, std::vector< std::vector<int
 }
 
 double LikelihoodTkf::tkfLike(void) {
-
+        
     // TEMP
-    if (data->getIsCompletelySampled() == false)
-        return 0.0;
+//    if (data->getIsCompletelySampled() == false)
+//        return 0.0;
     
     int len = (int)alignment.size();
     int numLeaves = (int)alignment[0].size();
@@ -416,7 +432,6 @@ double LikelihoodTkf::tkfLike(void) {
         if (it == dpTable.end())
             Msg::error("Could not find newPos in dpTable");
         
-//        std::cout << std::fixed << std::setprecision(150) << it->second << std::endl;
         mpfr::mpreal res = log(*it->second, MPFR_RNDN);
         double lnL = res.toDouble();
         
@@ -426,7 +441,6 @@ double LikelihoodTkf::tkfLike(void) {
             data->print();
             printTable();
             }
-        
 
         clearDpTable();
         return lnL;
