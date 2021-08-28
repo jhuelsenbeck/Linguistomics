@@ -452,97 +452,98 @@ class Partition1Class: RuleClass {
 //======================================================================
 
 class GroupRatesClass {
-  var PartitionRule,
+  var Results,
+      PartitionRule,
       MaxLine,
-      GapThickness,
+      ArrowGap,
       GapAngle,
       LoopRadius,
+      LoopDistance,
       MaxRadius,
-      Frequencies,
-      Rates;
+      RateScale,
+      ArrowProportion;
 
   Constructor(ResultsClass results) {
-    PartitionRule = results.PartitionRule;
-    MaxLine       = 10;
-    MaxRadius     = 0.75 inches;
-    LoopRadius    = 0.25 inches;
-    GapThickness  = 4 pts;
-    GapAngle      = 70.0 degrees;
-
-    Frequencies = [0.2, 0.2, 0.3, 0.4, 1.0];
-    Rates = [
-      [1, 2, 3, 4, 10],
-      [0, 2, 3, 4, 5],
-      [0, 0, 3, 4, 5],
-      [0, 0, 0, 4, 5],
-      [0, 0, 0, 0, 20],
-    ];
+    Results         = results;
+    PartitionRule   = results.PartitionRule;
+    MaxLine         = 10;
+    MaxRadius       = 0.75 inches;
+    LoopRadius      = 0.35 inches;
+    LoopDistance    = LoopRadius * 0.5;
+    ArrowGap        = 10 pts;
+    GapAngle        = 80.0 degrees;
+    ArrowProportion = 1.5;
   }
 
-  Arrow(PartitionClass p1, PartitionClass p2, size) {
-    var angle  = Graphics.GetAngle(p1.Center, p2.Center);
-    var e1 = Graphics.Adjust(p1.Center, p1.Radius + GapThickness, angle);
-    var e2 = Graphics.Adjust(p2.Center, p2.Radius + GapThickness, angle + Graphics.PI);
-
-    return Graphics.TwoArrowLine(e1, e2, size);
-  }
-
-  PartitionDiagram(size) = Block {
+  void Calibrate(size) {
     var middle = Point(size.Width * 0.5, size.Height * 0.5);
-    var fmax   = MaxRadius / Max(Sqrt(each Frequencies)); // Proportional to area, so use SQRT of frequency
-    var rmax   = MaxLine / Max(Max (each Rates));
+    var fmax   = MaxRadius / Max(Sqrt(each Results.Frequencies)); // Proportional to area, so use SQRT of frequency
+    RateScale   = MaxLine / Max(Max(each Results.Rates));
 
-    Canvas {
-      Size: size;
+    foreach (var partition in PartitionRule.Partitions) {
+      partition.Angle  = (2 * EachIndex *  Graphics.OneEighty / PartitionRule.Partitions.Length) - Graphics.Ninety;
+      partition.Radius = Sqrt(Results.Frequencies[EachIndex]) * fmax;
+    }
 
-      foreach (var partition in PartitionRule.Partitions) {
-        partition.Angle  = (2 * EachIndex *  Graphics.PI / PartitionRule.Partitions.Length) - Graphics.NinetyDegrees;
-        partition.Radius = Sqrt(Frequencies[EachIndex]) * fmax;
-      }
+    var maxradius = 0.0;
+    foreach (var partition in PartitionRule.Partitions)
+      maxradius = Max([maxradius, partition.Radius + Results.Rates[EachIndex][EachIndex] * RateScale]);
+    maxradius = middle.X - maxradius - LoopRadius - LoopDistance - ArrowGap;
 
-      var maxradius = middle.X - MaxRadius - LoopRadius*2 - GapThickness;
+    foreach (var partition in PartitionRule.Partitions)
+      partition.Center = Graphics.ExtentPoint(middle, maxradius, partition.Angle);
+  }
 
-      foreach (var partition in PartitionRule.Partitions)
-        partition.Center = Graphics.ProjectAngle(middle, maxradius, partition.Angle);
+  PartitionDiagram(size) = Canvas {
+    Calibrate(size);
+    Size: size;
 
-      foreach (var p1 in PartitionRule.Partitions) {
-        var pi = EachIndex;
-        foreach (var p2 in PartitionRule.Partitions) {
-          var t = Rates[pi][EachIndex] * rmax;
-          if (p1 == p2)
-            Graphics.CircleArrow(Graphics.ProjectAngle(p1.Center, p1.Radius + GapThickness + LoopRadius, p1.Angle), LoopRadius, p1.Angle - Graphics.PI, GapAngle, t);
-          else
-            Arrow(p1, p2, t);
+    foreach (var p1 in PartitionRule.Partitions) {
+      var pi = EachIndex;
+      foreach (var p2 in PartitionRule.Partitions) {
+        var line = new LineStyleClass(Results.Rates[pi][EachIndex] * RateScale, ArrowProportion);
+        if (p1 == p2) {
+          var c = Graphics.ExtentPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
+          Graphics.CircleArrow(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
+            Fill: Colors.Black;
+          };
+        }
+        else {
+          var angle = Graphics.GetAngle(p1.Center, p2.Center);
+          var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle);
+          var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle + Graphics.OneEighty);
+
+          Graphics.TwoArrowLine(line, c1, c2) {Fill: Colors.Black};
         }
       }
+    }
 
-      foreach (var p1 in PartitionRule.Partitions) {
-        var pos   = p1.Center - p1.Radius;
-        var fsize = p1.Radius*2;
+    foreach (var p1 in PartitionRule.Partitions) {
+      var pos   = p1.Center - p1.Radius;
+      var fsize = p1.Radius*2;
 
-        Figure {
-          Fill: ChartColor(EachIndex);
-          Stroke: 0.5 pt;
-          Ellipse(Rect(pos, fsize));
-        };
-        HBox {
-          Position: pos;
-          Height: fsize;
-          Frame {
-            VAlignment: VAligns.Center;
-            Width: fsize;
-            TextHeight: p1.Radius * 0.3;
-            ParAlignment: ParAlignments.Center;
-            Span {
-              TextHeight: 18 pts;
-              Bold;
-              EachOne;
-            };
-            p1.Filter;
+      Figure {
+        Fill: ChartColor(EachIndex);
+        Stroke: 0.5 pt;
+        Ellipse(Rect(pos, fsize));
+      };
+      HBox {
+        Position: pos;
+        Height: fsize;
+        Frame {
+          VAlignment: VAligns.Center;
+          Width: fsize;
+          TextHeight: p1.Radius * 0.3;
+          ParAlignment: ParAlignments.Center;
+          Span {
+            TextHeight: 18 pts;
+            Bold;
+            EachOne;
           };
+          p1.Filter;
         };
-      }
-    };
+      };
+    }
   };
 
   FrequencyChart(size) = Chart {
@@ -557,7 +558,7 @@ class GroupRatesClass {
     ValueAxis: ChartAxis;
     ChartSeries {
       foreach (var partition in PartitionRule.Partitions)
-        new DataPointClass(EachIndex, Frequencies[EachIndex] * 100.0) {Reference: partition.Filter};
+        new DataPointClass(EachIndex, Results.Frequencies[EachIndex] * 100.0) {Reference: partition.Filter};
     };
   };
 

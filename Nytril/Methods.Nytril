@@ -179,36 +179,31 @@ with Figures.Alignment {
     content;
   };
 
-  ArrowFigure(w, h, reverse) = Canvas {
-    Size: Size(w, h);
+  ArrowFigure(size) = Canvas {
+    Size: size;
+    Figure {
+      Stroke: 1.5 {Color: ArrowColor};
+      FigurePath {
+        Point(0, 0);
+        QuadTo(Point(size.Width*0.92, size.Height*0.4), Point(size.Width - Arrowhead*0.5, size.Height - Arrowhead));
+      };
+    };
+    Figure {
+      Fill: ArrowColor;
+      FigurePath {
+        Closed: true;
+        Point(size.Width - Arrowhead, size.Height - Arrowhead);
+        LineTo(size.Width, size.Height - Arrowhead);
+        LineTo(size.Width - Arrowhead * 0.5, size.Height);
+      };
+    };
     Canvas {
-      Size: Size(w, h);
-      if (reverse)
-        Transform: Affine(-1, 0, 0, 1, w, 0);
-      Figure {
-        Stroke: 1.5 {Color: ArrowColor};
-        FigurePath {
-          Point(0, 0);
-          QuadTo(Point(w*0.92, h*0.4), Point(w - Arrowhead*0.5, h - Arrowhead));
-        };
-      };
-      Figure {
-        Fill: ArrowColor;
-        FigurePath {
-          Closed: true;
-          Point(w - Arrowhead, h - Arrowhead);
-          LineTo(w, h - Arrowhead);
-          LineTo(w - Arrowhead * 0.5, h);
-        };
-      };
-      Canvas {
-        Background: Colors.White;
-        Position: Point(w * 0.3, h * 0.25);
-        TextHeight: 20 pts;
-        TextColor: ArrowColor;
-        Bold;
-        Plus;
-      };
+      Background: Colors.White;
+      Position: Point(size.Width * 0.3, size.Height * 0.25);
+      TextHeight: 20 pts;
+      TextColor: ArrowColor;
+      Bold;
+      Plus;
     };
   };
 
@@ -249,13 +244,17 @@ with Figures.Alignment {
     HBox {
       MarginB: 4 pts;
       VAlign: VAligns.Bottom;
-      ArrowFigure(ArrowWidth, ArrowHeight, true);
+      var size = Size(ArrowWidth, ArrowHeight);
+
+      ArrowFigure(size) {
+        Transform: Affine(-1, 0, 0, 1, size.Width, 0);
+      };
       HBox {
         VAlign: VAligns.Top;
         LabelBox(SegmentalInfo);
         ContentBox(SegmentTable(false)) {MarginB: ArrowMargin; MarginR: ArrowMargin};
       };
-      ArrowFigure(ArrowWidth, ArrowHeight, false);
+      ArrowFigure(size);
     };
     HBox {
       HomBox(1, HMap1);
