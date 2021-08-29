@@ -9,6 +9,7 @@
 class Alignment;
 class Parameter;
 class ParameterAlignment;
+class ParameterTree;
 class RandomVariable;
 class Tree;
 class UserSettings;
@@ -34,6 +35,7 @@ class Model {
         int                                     getNumAlignments(void);
         std::string                             getParameterHeader(void);
         std::string                             getParameterString(void);
+        ParameterTree*                          getParameterTree(void);
         std::string                             getStateSetsJsonString(void);
         Tree*                                   getTree(void);
         Tree*                                   getTree(std::string mask);

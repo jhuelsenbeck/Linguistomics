@@ -92,7 +92,7 @@ void LikelihoodTkf::initAlignment(void) {
             
     alignment = data->getIndelMatrix();
             
-#   if 0
+#   if 1
     std::cout << "Variable = alignment" << std::endl;
     std::cout << "name = " << data->getName() << std::endl;
     for (int i=0; i<alignment.size(); i++)

@@ -6,6 +6,7 @@
 #include <vector>
 #include "Msg.hpp"
 #include "Node.hpp"
+#include "NodeFactory.hpp"
 #include "NodeSet.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
@@ -104,7 +105,10 @@ Tree::Tree(Tree& t, std::vector<bool> taxonMask, std::vector<std::string> tn) {
             p->removeDescendants();
             p->setAncestor(NULL);
             if (root == p)
+                {
                 root = pDes;
+                root->setBranchProportion(0.0);
+                }
                 
             pDes->addMatrix(p->getIndex());
                         
@@ -322,8 +326,9 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
 
 Tree::~Tree(void) {
 
+    NodeFactory& nf = NodeFactory::nodeFactory();
     for (int i=0; i<nodes.size(); i++)
-        delete nodes[i];
+        nf.returnToPool(nodes[i]);
 }
 
 Tree& Tree::operator=(Tree& t) {
@@ -335,7 +340,9 @@ Tree& Tree::operator=(Tree& t) {
 
 Node* Tree::addNode(void) {
 
-    Node* newNode = new Node( (int)nodes.size() );
+    NodeFactory& nf = NodeFactory::nodeFactory();
+    Node* newNode = nf.getNode();
+    newNode->setOffset( (int)nodes.size() );
     newNode->setMyTree(this);
     nodes.push_back(newNode);
     return newNode;
@@ -509,8 +516,9 @@ void Tree::debugPrint(std::string h) {
 
 void Tree::deleteAllNodes(void) {
 
+    NodeFactory& nf = NodeFactory::nodeFactory();
     for (int i=0; i<nodes.size(); i++)
-        delete nodes[i];
+        nf.returnToPool(nodes[i]);
     nodes.clear();
 }
 

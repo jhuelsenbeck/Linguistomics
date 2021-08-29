@@ -13,7 +13,7 @@ class Tree;
 class Node {
 
     public:
-                            Node(void) = delete;
+                            Node(void);
                             Node(int idx);
                            ~Node(void);
         void                addDescendant(Node* p);
@@ -33,7 +33,7 @@ class Node {
         int                 getOffset(void) const { return offset; }
         Node*               getSisterNode(void);
         StateMatrix_t*      getTransitionProbability(void) { return transitionProbability; }
-        std::vector<int>    getTpMatrices(void) { return tpMatrices; }
+        std::vector<int>&   getTpMatrices(void) { return tpMatrices; }
         bool                isDescendant(Node* p);
         size_t              numDescendants(void);
         void                print(void);

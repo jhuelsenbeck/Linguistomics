@@ -6,6 +6,7 @@
 #include "Model.hpp"
 #include "Msg.hpp"
 #include "Node.hpp"
+#include "ParameterTree.hpp"
 #include "RateMatrix.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
@@ -182,16 +183,38 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
     StateMatrix_t& Q = rmat.getRateMatrix();
     Eigen::MatrixXd P(numStates,numStates);
     
+    // update the main tree
     std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+    std::vector<double> branchLengths(traversalSeq.size());
     for (int n=0; n<traversalSeq.size(); n++)
         {
         Node* p = traversalSeq[n];
         StateMatrix_t* tp = probs[activeProbs][p->getIndex()];
         double v = p->getBranchLength();
+        branchLengths[p->getIndex()] = v;
         
         M = Q * v;
         (*tp) = M.exp();
         }
         
     stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
+    
+    // update branch lengths and transition probabilities for subtrees
+    ParameterTree* t = modelPtr->getParameterTree();
+    std::map<std::string,Tree*>& subtreeMap = t->getSubtrees();
+    for (std::map<std::string,Tree*>::iterator it = subtreeMap.begin(); it != subtreeMap.end(); it++)
+        {
+        Tree* st = it->second;
+        std::vector<Node*>& traversalSeq = st->getDownPassSequence();
+        for (int n=0; n<traversalSeq.size(); n++)
+            {
+            Node* p = traversalSeq[n];
+            std::vector<int>& branchComposition = p->getTpMatrices();
+            double v = 0.0;
+            for (int idx : branchComposition)
+                v += branchLengths[idx];
+            }
+        
+        }
+    
 }
