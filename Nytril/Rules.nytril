@@ -1,4 +1,4 @@
-﻿using Format, Units, FeatureSet, Math, SegmentGroups;
+﻿using Format, Units, FeatureSet, Math, SegmentGroups, Style;
 //======================================================================
 
 class FilterClass {
@@ -161,8 +161,10 @@ abstract class RuleClass {
             Span {
               Style.MonoFamily;
               HAlign: HAligns.Center;
-              if (Numbers)
+              if (Numbers) {
                 i++;
+                i;
+              }
               else if (i < Rev.CharacterList.Length)
                 Rev.CharacterList[i++];
               else
@@ -459,6 +461,7 @@ class GroupRatesClass {
       GapAngle,
       LoopRadius,
       LoopDistance,
+      MaxExtent,
       MaxRadius,
       RateScale,
       ArrowProportion;
@@ -467,9 +470,6 @@ class GroupRatesClass {
     Results         = results;
     PartitionRule   = results.PartitionRule;
     MaxLine         = 10;
-    MaxRadius       = 0.75 inches;
-    LoopRadius      = 0.35 inches;
-    LoopDistance    = LoopRadius * 0.5;
     ArrowGap        = 10 pts;
     GapAngle        = 80.0 degrees;
     ArrowProportion = 1.5;
@@ -477,8 +477,16 @@ class GroupRatesClass {
 
   void Calibrate(size) {
     var middle = Point(size.Width * 0.5, size.Height * 0.5);
+
+    MaxExtent    = Min([middle.X, middle.Y]);
+    MaxRadius    = MaxExtent * 0.25;
+    LoopRadius   = MaxRadius * 0.25;
+    LoopDistance = LoopRadius * 0.5;
+
+
     var fmax   = MaxRadius / Max(Sqrt(each Results.Frequencies)); // Proportional to area, so use SQRT of frequency
-    RateScale   = MaxLine / Max(Max(each Results.Rates));
+
+    RateScale = MaxLine / Max(Max(each Results.Rates));
 
     foreach (var partition in PartitionRule.Partitions) {
       partition.Angle  = (2 * EachIndex *  Graphics.OneEighty / PartitionRule.Partitions.Length) - Graphics.Ninety;
@@ -488,15 +496,17 @@ class GroupRatesClass {
     var maxradius = 0.0;
     foreach (var partition in PartitionRule.Partitions)
       maxradius = Max([maxradius, partition.Radius + Results.Rates[EachIndex][EachIndex] * RateScale]);
-    maxradius = middle.X - maxradius - LoopRadius - LoopDistance - ArrowGap;
+    maxradius = MaxExtent - maxradius - LoopRadius - LoopDistance - ArrowGap;
 
     foreach (var partition in PartitionRule.Partitions)
       partition.Center = Graphics.ExtentPoint(middle, maxradius, partition.Angle);
   }
 
   PartitionDiagram(size) = Canvas {
+    TransformFit: true;
+//    Border: 0.5;
     Calibrate(size);
-    Size: size;
+  //  Size: size;
 
     foreach (var p1 in PartitionRule.Partitions) {
       var pi = EachIndex;
@@ -561,30 +571,50 @@ class GroupRatesClass {
         new DataPointClass(EachIndex, Results.Frequencies[EachIndex] * 100.0) {Reference: partition.Filter};
     };
   };
+}
+//======================================================================
 
-  ShowGroupRates = Block {
-    Style.BodyPar {
-      "For the ‘{0}’ model, states were grouped into five sets: "(PartitionRule.Name);
-      Span {
-        Separator: CommaSpace;
-        LastSeparator: " and ";
-        foreach (var partition in PartitionRule.Partitions) {
-          Span {
-            partition.Filter.Name;
-            " (";
-            EachOne;
-            ")";
-          }
+with Figures.FrequencyDiagram {
+  Data = new FigureClass(Caption, Body) {
+    SlideText: {TextHeight: 5 pts};
+  };
+
+  Caption = FigureCaption {
+    "For the ‘{0}’ model, states were grouped into five sets: "(Results.PartitionRule.Name);
+    Span {
+      Separator: CommaSpace;
+      LastSeparator: " and ";
+      foreach (var partition in Results.PartitionRule.Partitions) {
+        Span {
+          partition.Filter.Name;
+          " (";
+          EachOne;
+          ")";
         }
-      };
-      Style.eos;
-      "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
-      "The width of the arrows is proportional to the estimated rates. ";
-      "Note that rates are higher for transitions from one word segment to another when the word segments are in the same group.";
+      }
     };
+    Style.eos;
+    "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
+    "The width of the arrows is proportional to the estimated rates. ";
+    "Note that rates are higher for transitions from one word segment to another when the word segments are in the same group.";
+  };
 
-    PartitionDiagram(Size(DocMetrics.PageContent.Width));
-    FrequencyChart(Size(DocMetrics.PageContent.Width, 30 pts + PartitionRule.Partitions.Length * (25 pts)));
+  Body = FigureBody {
+    new GroupRatesClass(Results).PartitionDiagram(Size(5 inches));
+  };
+}
+//======================================================================
+
+with Figures.SegmentFrequencies {
+  Data = new FigureClass(Caption, Body);
+
+  Caption = FigureCaption {
+    "Frequency of occurance of segments in the lexicon";
+    References.Phoible;
+  };
+
+  Body = FigureBody {
+    Results.FrequencyChart(Size(DocMetrics.PageContent.Width, 2 inches));
   };
 }
 //======================================================================

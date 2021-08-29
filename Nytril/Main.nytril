@@ -1,4 +1,4 @@
-using Format, Units, Math, IO;
+using Format, Units, Math, IO, Style;
 
 include "English";
 include "Spanish";
@@ -52,6 +52,12 @@ with Main {
 // No spaces in the name below!
 // RevBayes has a problem with folder names that contain spaces...
 
+Authors = [
+  People.DMGoldstein,
+  People.SHMcCreight,
+  People.JPHuelsenbeck,
+];
+
 Results = new ResultsClass("Run1");
 
 ViewInfo = new ViewInfoClass {
@@ -62,6 +68,11 @@ ViewInfo = new ViewInfoClass {
 with Info {
   Generations  = 1000;
   ImageFolder  = Folders.Source Folder("Images");
+}
+
+ReadTree(title, path) {
+  var data = IO.Read(path, FileFormats.Nexus);
+  return ShowTree(title, Lang.ChangesPerBranch, data.trees.TREE1);
 }
 //======================================================================
 
@@ -77,12 +88,8 @@ class SubmissionViewClass: BaseViewClass {
     }
   };
 
-  override GetDocument = Style.MainDocument {
-    var appendices = [
-      new AppendixClass("Transition Rates Between Groups", new GroupRatesClass(Results).ShowGroupRates),
-    ];
-
-    Style.PageSection {
+  override GetDocument = MainDocument {
+    PageSection {
       Header: HeaderBlock {
         Distance: 0.125 inches;
         MarginT: 0.125 inch;
@@ -90,21 +97,17 @@ class SubmissionViewClass: BaseViewClass {
         First: Block;
       };
 
-      Style.MainTitle {
+      MainTitle {
         ViewInfo.Title;
       };
 
-      Style.ShowAuthorList(Authors);
-
-      Style.HeaderCentered {
-        Lang.Appendices;
-      };
-      Style.AppendixRow(each appendices);
+      ShowAuthorList(Authors);
     };
-
-    Style.Bibliography;
-
-    Style.ShowAppendix(each appendices);
+    ShowBibliography;
+    PageSection {
+      ShowFigure(Figures.FrequencyDiagram.Data);
+      ShowFigure(Figures.SegmentFrequencies.Data);
+    }
   };
 }
 //======================================================================
@@ -121,7 +124,7 @@ class PaperViewClass: BaseViewClass {
     }
   };
 
-  override GetDocument = Style.MainDocument {
+  override GetDocument = MainDocument {
     var appendices = [
       new AppendixClass("Program Output", Results.ShowLanguageTrees),
       new AppendixClass("Statistics", Results.ShowStats),
@@ -130,7 +133,7 @@ class PaperViewClass: BaseViewClass {
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
     ];
 
-    Style.PageSection {
+    PageSection {
       Header: HeaderBlock {
         Distance: 0.125 inches;
         MarginT: 0.125 inch;
@@ -138,33 +141,26 @@ class PaperViewClass: BaseViewClass {
         First: Block;
       };
 
-      Style.MainTitle {
+      MainTitle {
         ViewInfo.Title;
       };
 
-      Style.ShowAuthorList(Authors);
+      ShowAuthorList(Authors);
 
-      Style.HeaderCentered {
-        Abstract.Title;
-      };
+      Header2 {Abstract.Title};
       Abstract.Body;
 
-      Style.ShowContent(each Content);
+      ShowContent(each Content);
 
-      Style.HeaderCentered {
-        Lang.Authors;
-      };
-      Style.ShowAuthorFull(each Authors);
+//      Header2 {Lang.Authors};
+//      ShowAuthorFull(each Authors);
 
-      Style.HeaderCentered {
-        Lang.Appendices;
-      };
-      Style.AppendixRow(each appendices);
+//      Header2 {Lang.Appendices};
+//      AppendixRow(each appendices);
     };
 
-    Style.Bibliography;
-
-    Style.ShowAppendix(each appendices);
+    ShowBibliography;
+    ShowAppendices(appendices);
   };
 }
 //======================================================================
@@ -174,7 +170,7 @@ class ExperimentViewClass: BaseViewClass {
     super.Constructor("Experiment", #ee79e1d9e8467444a68c0e7a6a8c8a88#, ConfigurationClass.DocumentTypes.Normal);
   }
 
-  override GetDocument = Style.MainDocument {
+  override GetDocument = MainDocument {
     var appendices = [
       new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
       new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
@@ -182,16 +178,14 @@ class ExperimentViewClass: BaseViewClass {
       new AppendixClass(Lang.Results, Results.ShowLanguageTrees),
     ];
 
-    Style.PageSection {
-      Style.AppendixTitle {
+    PageSection {
+      AppendixTitle {
         ViewInfo.Title;
       };
-      Style.HeaderCentered {
-        Lang.Appendices;
-      };
-      Style.AppendixRow(each appendices);
+      Header2 {Lang.Appendices};
+      AppendixRow(each appendices);
     };
-    Style.ShowAppendix(each appendices);
+    ShowAppendices(appendices);
   };
 }
 //======================================================================
@@ -207,7 +201,8 @@ class DiagnosticsViewClass: BaseViewClass {
 
   override GetDocument = Style.MainDocument {
     var appendices = [
-      new AppendixClass(Lang.SegmentFrequencies, Results.SegmentFrequencies(Size(DocMetrics.PageContent.Width, 3 inches))),
+      new AppendixClass(Lang.SegmentFrequencies, Results.FrequencyChart(Size(DocMetrics.PageContent.Width, 3 inches))),
+      new AppendixClass("Symbols", ShowSymbols),
       new AppendixClass("Tongue Twister Configuration", Results.ConfigFile),
       new AppendixClass("RevBayes Source File", Results.RevBayesSource),
       new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),
@@ -221,10 +216,9 @@ class DiagnosticsViewClass: BaseViewClass {
 
 //      new AppendixClass("Character File", Results.CharacterFile(2)),
     //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
-//      new AppendixClass("Symbols", ShowSymbols),
     ];
 
-    Style.ShowAppendix(each appendices);
+    ShowAppendices(appendices);
   };
 }
 //======================================================================

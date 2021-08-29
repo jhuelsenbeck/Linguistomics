@@ -21,7 +21,7 @@ with ExampleConcept {
 //======================================================================
 
 with Figures.ExampleTree {
-  Number = 1;
+  Data = new FigureClass(Caption, Body);
 
   LanguageList = [
     Latin,
@@ -70,16 +70,24 @@ with Figures.ExampleTree {
     }
   };
 
-  Body = TreeOptions {
-    Root: Nodes;
+  Caption = FigureCaption {
+    "An example tree showing the relationships of {0} languages."(SampledLanguages(LanguageList.Length));
   };
 
-  Caption = "An example tree showing the relationships of {0} languages."(SampledLanguages(LanguageList.Length));
+  Body = FigureBody {
+    TreeOptions {
+      Width: 5 inches;
+      Root: Nodes;
+    };
+  };
 }
 //======================================================================
 
 with Figures.Alignment {
-  Number      = 2;
+  Data = new FigureClass(Caption, Body) {
+    SlideText: {TextHeight: 5 pts};
+  };
+
   ArrowWidth  = 50;
   ArrowHeight = 100;
   ArrowMargin = 20 pts;
@@ -239,37 +247,39 @@ with Figures.Alignment {
 
   HomBox(i, map) = NumBox(i, MapTable(map, false), MapTable(map, true));
 
-  Body = VBox {
-    HAlign: HAligns.Center;
-    HBox {
-      MarginB: 4 pts;
-      VAlign: VAligns.Bottom;
-      var size = Size(ArrowWidth, ArrowHeight);
-
-      ArrowFigure(size) {
-        Transform: Affine(-1, 0, 0, 1, size.Width, 0);
-      };
-      HBox {
-        VAlign: VAligns.Top;
-        LabelBox(SegmentalInfo);
-        ContentBox(SegmentTable(false)) {MarginB: ArrowMargin; MarginR: ArrowMargin};
-      };
-      ArrowFigure(size);
-    };
-    HBox {
-      HomBox(1, HMap1);
-      Canvas {Width: 0.5 inches};
-      HomBox(2, HMap2);
-    }
-  };
-
-  Caption = Span {
+  Caption = FigureCaption {
     "Alignments ";
     InParens {SegmentalAlignment};
     " are formed from the observed segments ";
     InParens {SegmentalInfo};
     " and a homology map ";
     InParens {HomologyMap}; eos;
+  };
+
+  Body = FigureBody {
+    VBox {
+      HAlign: HAligns.Center;
+      HBox {
+        MarginB: 4 pts;
+        VAlign: VAligns.Bottom;
+        var size = Size(ArrowWidth, ArrowHeight);
+
+        ArrowFigure(size) {
+          Transform: Affine(-1, 0, 0, 1, size.Width, 0);
+        };
+        HBox {
+          VAlign: VAligns.Top;
+          LabelBox(SegmentalInfo);
+          ContentBox(SegmentTable(false)) {MarginB: ArrowMargin; MarginR: ArrowMargin};
+        };
+        ArrowFigure(size);
+      };
+      HBox {
+        HomBox(1, HMap1);
+        Canvas {Width: 0.25 inches};
+        HomBox(2, HMap2);
+      }
+    };
   };
 }
 //======================================================================
@@ -350,8 +360,8 @@ with Content.Introduction {
 }
 //======================================================================
 
-TreeFigure      = FigureName(Figures.ExampleTree);
-AlignmentFigure = FigureName(Figures.Alignment);
+TreeFigure      = Figures.ExampleTree.Data.ShowNumber;
+AlignmentFigure = Figures.Alignment.Data.ShowNumber;
 
 with Content.Methods {
   Title = Lang.Methods;
@@ -404,7 +414,7 @@ with Content.Methods {
       ", the branch connecting nodes 12 and 13 is assigned the label 12. ";
     };
 
-    DocumentFigure(Figures.ExampleTree);
+    ShowFigure(Figures.ExampleTree.Data);
 
     BodyPar {
       "A phylogeny is an information-rich graph. ";
@@ -456,7 +466,11 @@ with Content.Methods {
       "A linguist interested in the relationships among ";
       SampledLanguages(60);
       " languages, for example, would contend with ";
-      Span {BranchFormula(60); TextScientific: true; TextDigits: 2};
+      Span {
+        TextScientific: true;
+        TextDigits: 2;
+        BranchFormula(60);
+      };
       " possible topologies, each depicting a unique and different way the languages can be related. ";
       "For comparison, the number of atoms in the known universe is on the order of "; 10 sup 80; eos;
     };
@@ -680,7 +694,7 @@ with Content.Methods {
       " that can be formed using two different homology maps. ";
     };
 
-    DocumentFigure(Figures.Alignment, 9 pts);
+    ShowFigure(Figures.Alignment.Data);
 
     BodyPar {
       "Ultimately, the linguist observes the phonetic (in the case of contemporary languages) or graphemic (in the case of corpus languages) forms of words, on the basis of which phonemic representations are posited. ";
@@ -1228,6 +1242,9 @@ with Content.Methods {
         };
       };
     };
+
+    ShowFigure(Figures.FrequencyDiagram.Data);
+    ShowFigure(Figures.SegmentFrequencies.Data);
   };
 }
 

@@ -98,16 +98,51 @@ class DefClass {
 }
 //======================================================================
 
+class FigureClass {
+  var Caption,
+      Body,
+      Number,
+      BodyText,
+      SlideText;
+
+  Constructor(caption, body) {
+    Caption = caption;
+    Body    = body;
+  }
+
+  ShowNumber = Span {
+    Lang.Figure;
+    Space;
+    Number;
+  };
+
+  ShowSlide = Block {
+    Caption;
+    Paragraph {
+      ParAlignment: ParAlignments.Center;
+      SlideText;
+      Body;
+    }
+  };
+}
+//======================================================================
+
 Main.MathFamily = Style.MathFace; //"Linux Libertine Display O";
 
 with Style {
+  ReferenceStyle       = new APAStyleClass; // new ChicagoStyleClass; // new MLAStyleClass;
+  MainFamily           = {TextFamily: TextFamilies.TimesNewRoman};
+  SansSerif            = {TextFamily: TextFamilies.Arial};
+  MonoFamily           = {TextFamily: TextFamilies.Consolas};
+
+//  MainFamily           = {TextFamily: MathFace};
+//  SansSerif            = {TextFamily: "CMU Sans Serif"};
+//  MonoFamily           = {TextFamily: "CMU Typewriter Text"};
+
   MathFace             = "CMU Serif";
   GreekFamily          = {TextFamily: MathFace};
-  MainFamily           = {TextFamily: MathFace};
   Classical            = {TextFamily: "CMU Classical Serif"};
   Extra                = {TextFamily: "CMU Serif Extra"};
-  SansSerif            = {TextFamily: "CMU Sans Serif"};
-  MonoFamily           = {TextFamily: "CMU Typewriter Text"};
   IPAFamily            = {TextFamily: "Linux Libertine O"};
 
   ImpossibleBackground = {Background: 80%};
@@ -151,31 +186,50 @@ with Style {
   DoubleQuote          = Span {Begin: "“"; End: "”"};
   SingleQuote          = Span {Begin: "‘"; End: "’"};
   AndSpace             = " and ";
-  ColonSpace           = ": ";
-  Comma                = ",";
   eos                  = ". ";
 
   MainDocument = Document {
-    RefStyle: new ChicagoStyleClass;
-  //  RefStyle: new MLAStyleClass;
-
+    RefStyle: ReferenceStyle;
     Size: DocMetrics.DocumentSize;
     Margin: DocMetrics.PageMargin;
     MainFamily;
   };
 
   MainTitle = Paragraph {
-    TextFamily: TextFamilies.Arial;
+    SansSerif;
     TextHeight: 20 pts;
     Bold;
     SpaceAfter: 10 pts;
   };
 
   AppendixTitle = Paragraph {
-    TextFamily: TextFamilies.Arial;
+    SansSerif;
     TextHeight: 16 pts;
     Bold;
     SpaceAfter: 10 pts;
+  };
+
+  FigureBody = Paragraph {
+    ParAlignment: ParAlignments.Center;
+    SpaceAfter: 6 pts;
+  };
+
+  FigureCaption = Span;
+
+  ShowFigure(figure) = Block {
+    Paragraph {
+      SpaceBefore: 6 pts;
+      KeepWithNext: true;
+      Span {
+        Bold;
+        SansSerif;
+        figure.ShowNumber;
+        eos;
+      };
+      figure.Caption;
+    };
+
+    figure.Body {figure.BodyText};
   };
 
   ShowAuthor(PersonClass person) = Span {
@@ -311,7 +365,10 @@ with Style {
     };
   };
 
-  Bibliography = Format.Bibliography;
+  ShowBibliography = Section {
+    SectionBreak: SectionBreaks.NextPage;
+    Format.Bibliography;
+  };
 
   TableNotes = Paragraph {
     SpaceAfter: DocMetrics.TableSpace;
@@ -329,26 +386,20 @@ with Style {
     }
   };
 
-  HeaderCentered = Paragraph {
-    KeepWithNext: true;
-    SpaceBefore: 12 pts;
-    SpaceAfter: 6 pts;
-    ParAlignment: ParAlignments.Center;
-    TextCase: TextCases.SmallCaps;
-  };
-
   Header1 = Paragraph {
     KeepWithNext: true;
     SpaceBefore: 18 pts;
     SpaceAfter: 8 pts;
-    TextCase: TextCases.SmallCaps;
+    SansSerif;
   };
 
   Header2 = Paragraph {
     KeepWithNext: true;
     SpaceBefore: 12 pts;
     SpaceAfter: 6 pts;
+    SansSerif;
     TextHeight: 14 pts;
+    Bold;
   };
 
   Header3 = Paragraph {
@@ -416,16 +467,9 @@ with Style {
     Marker: i => "{0}."(i+1);
   };
 
-  ReadTree(title, path) {
-    var data = IO.Read(path, FileFormats.Nexus);
-    return Style.ShowTree(title, Lang.ChangesPerBranch, data.trees.TREE1);
-  }
-
   TreeOptions = Tree {
-    Style.SansSerif;
     TextHeight: 10 pts;
     NodeGap: 6 pts;
-    Width: 5 inches;
     Curvature: 30%;
     Bevel: 20%;
     Marker: Span {
@@ -456,7 +500,7 @@ with Style {
   };
 
   ShowContent(content) = Block {
-    Header1 {
+    Header2 {
       content.Title;
     };
     content.Body;
@@ -474,21 +518,23 @@ with Style {
     };
   };
 
-  ShowAppendix(appendix) = PageSection {
-    Header: Block {
-      Paragraph {
-        BorderB: 1 pts;
-        ParAlignment: ParAlignments.Center;
-        TextHeight: 14 pts;
-        SpaceAfter: 8 pts;
-        LocationMark: Lang.Appendix + EachIndex;
-        "{0} {1} - "(Lang.Appendix, EachOne);
-        appendix.Title;
+  ShowAppendices(appendices) = PageSection {
+    foreach (var appendix in appendices) {
+      Header: Block {
+        Paragraph {
+          BorderB: 1 pts;
+          ParAlignment: ParAlignments.Center;
+          TextHeight: 14 pts;
+          SpaceAfter: 8 pts;
+          LocationMark: Lang.Appendix + EachIndex;
+          "{0} {1} - "(Lang.Appendix, EachOne);
+          appendix.Title;
+        };
       };
-    };
-    Block {
-      appendix.Content;
-    };
+      Block {
+        appendix.Content;
+      };
+    }
   };
 
   LanguageRow(lang) = Row {
@@ -556,12 +602,6 @@ with Style {
     text;
   };
 
-  FigureBody = Paragraph {
-    KeepWithNext: true;
-    ParAlignment: ParAlignments.Center;
-    SpaceBefore: 6 pts;
-  };
-
   Equation = HBox {
     TextEquation: true;
   };
@@ -572,49 +612,14 @@ with Style {
     TextStacked: true;
     ParAlignment: ParAlignments.Center;
   };
-
-  FigureLabel = Paragraph {
-    TextHeight: 12 pts;
-    ParAlignment: ParAlignments.Center;
-    SpaceBefore: 6 pts;
-  };
-
-  FigureName(figure) = Span {
-    Lang.Figure;
-    Space;
-    figure.Number;
-  };
-
-  DocumentFigure(figure, textheight=null) = Block {
-    FigureBody {
-      TextHeight: textheight;
-      figure.Body;
-    };
-
-    FigureLabel {
-      TextHeight: 10 pts;
-      FigureName(figure);
-      ": ";
-      figure.Caption;
-    };
-  };
-
-  SlideFigure(figure, textheight=null) = Block {
-    Paragraph {
-      figure.Caption;
-    };
-    Block {
-      ParAlignment: ParAlignments.Center;
-      TextHeight: textheight;
-      figure.Body;
-    }
-  };
 }
 //======================================================================
 
 abstract class BaseViewClass: DocumentViewClass {
   Constructor(title, key, type) {
     super.Constructor(title, key, type);
+    foreach (var f in Figures)
+      f.Data.Number = EachOne;
   }
 
   FixedFrame(x, y, width, height) = Frame {

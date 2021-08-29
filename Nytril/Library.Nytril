@@ -302,7 +302,7 @@ class ResultsClass {
   ShowLanguageDetails = Block {
     foreach (var taxon in Taxa) {
       var language = taxon.Language;
-      Style.Header1 {
+      Style.Header2 {
         language.Name;
       };
       Block {
@@ -443,9 +443,9 @@ class ResultsClass {
   ShowLanguageTrees = Block {
     Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, GetTreeNodes(LanguageBranches.Romance));
     Style.ShowTree("Priors", Lang.Years, GetTreeNodes(LanguageBranches.Experiment));
-    Style.ReadTree("Consensus", OutFolder GammaConsensus);
-    Style.ReadTree("MAP", OutFolder GammaMAP);
-    Style.ReadTree(Lang.MCC, OutFolder GammaMCC);
+    ReadTree("Consensus", OutFolder GammaConsensus);
+    ReadTree("MAP", OutFolder GammaMAP);
+    ReadTree(Lang.MCC, OutFolder GammaMCC);
   };
 
   ShowStats = Block {
@@ -472,32 +472,23 @@ class ResultsClass {
 
   CompareSegments(d1, d2) = d1.NormalFrequency.Compare(d2.NormalFrequency);
 
-  SegmentFrequencies(size) = Block {
-    Style.AppendixTitle {
-      "Frequency of occurance of segments in the lexicon";
-      References.Phoible;
-    };
-
+  FrequencyChart(SizeClass size) = Chart {
     var sorted = Math.Sort(UniqueSegments, true, ref CompareSegments);
-    Paragraph {
-      Chart {
-        Style.SansSerif;
-        Size: size;
-        Type: ChartTypes.Column;
-        ValueLabel: "Frequency %" {
-          Transform: Rotate(90 degrees);
-          TransformFit: true;
-        };
-        XAxis: ChartAxis {
-          TextHeight: 0.6 * size.Width / sorted.Length;
-          (each sorted).ShowSegment;
-        };
-        ValueAxis: ChartAxis;
-        ChartSeries {
-          (each sorted).FrequencyPercent;
-        }
-      }
+    Style.SansSerif;
+    Size: size;
+    Type: ChartTypes.Column;
+    ValueLabel: "Frequency %" {
+      Transform: Rotate(90 degrees);
+      TransformFit: true;
     };
+    XAxis: ChartAxis {
+      TextHeight: 0.6 * size.Width / sorted.Length;
+      (each sorted).ShowSegment;
+    };
+    ValueAxis: ChartAxis;
+    ChartSeries {
+      (each sorted).FrequencyPercent;
+    }
   };
 
   AddTree = TextBlock {

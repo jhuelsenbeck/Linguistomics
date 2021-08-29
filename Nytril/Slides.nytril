@@ -23,17 +23,17 @@ with Slides.Introduction {
 
 with Slides.ExampleTree {
   Title = "Example Tree";
-  Body  = Style.SlideFigure(Figures.ExampleTree);
+  Body  = Figures.ExampleTree.Data.ShowSlide;
 }
 
 with Slides.Alignment {
   Title = "Alignment";
-  Body  = Style.SlideFigure(Figures.Alignment, 5 pts);
+  Body  = Figures.Alignment.Data.ShowSlide;
 }
 
 with Slides.ShowResults {
   Title = "Results";
-  Body  = Style.ReadTree(Lang.MCC, Results.OutFolder Results.GammaMCC);
+  Body  = ReadTree(Lang.MCC, Results.OutFolder Results.GammaMCC);
 }
 
 with Slides.LanguagesUsed {
@@ -58,7 +58,15 @@ with Slides.PartitionRules {
 
 with Slides.SegmentFrequencies {
   Title = Lang.SegmentFrequencies;
-  Body  = Results.SegmentFrequencies(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height * 0.6));
+  Body  = Results.FrequencyChart(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 180 pts));
+}
+
+with Slides.PartitionDiagram {
+  Title = Lang.TransitionRates;
+  Body  = Block {
+    Figures.FrequencyDiagram.Caption;
+    new GroupRatesClass(Results).PartitionDiagram(DocMetrics.SlideContent);
+  };
 }
 //======================================================================
 
@@ -122,7 +130,7 @@ class PresentationViewClass: BaseViewClass {
 
 class JohnPresentationClass: PresentationViewClass {
   Constructor {
-    super.Constructor("John's Presentation", "pre-john", People.JPHuelsenbeck);
+    super.Constructor("John's Presentation", #e8e882037e4b3a438133df5adc2eb7b6#, People.JPHuelsenbeck);
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ExampleTree);
@@ -130,6 +138,7 @@ class JohnPresentationClass: PresentationViewClass {
     AddSlide(Slides.CharacterRules);
     AddSlide(Slides.PartitionRules);
     AddSlide(Slides.SegmentFrequencies);
+    AddSlide(Slides.PartitionDiagram);
     AddSlide(Slides.ShowResults);
     AddSlide(Slides.Questions);
   }
@@ -138,13 +147,14 @@ class JohnPresentationClass: PresentationViewClass {
 
 class DavidPresentationClass: PresentationViewClass {
   Constructor {
-    super.Constructor("David's Presentation", "pre-david", People.DMGoldstein);
+    super.Constructor("David's Presentation", #a6e65a8a39890e46844d37c5125b2de9#, People.DMGoldstein);
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ConceptsUsed);
     AddSlide(Slides.CharacterRules);
     AddSlide(Slides.PartitionRules);
     AddSlide(Slides.SegmentFrequencies);
+    AddSlide(Slides.PartitionDiagram);
     AddSlide(Slides.ShowResults);
     AddSlide(Slides.Questions);
   }
