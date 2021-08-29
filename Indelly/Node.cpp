@@ -5,6 +5,20 @@
 
 
 
+Node::Node(void) {
+
+    index                 = 0;
+    isLeaf                = false;
+    name                  = "";
+    ancestor              = NULL;
+    proportion            = 0.0;
+    offset                = 0;
+    myTree                = NULL;
+    descendants           = new NodeSet;
+    transitionProbability = NULL;
+    tpMatrices.clear();
+}
+
 Node::Node(int idx) {
 
     index                 = 0;

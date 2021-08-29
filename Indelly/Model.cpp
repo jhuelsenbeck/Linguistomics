@@ -192,6 +192,17 @@ std::string Model::getParameterString(void) {
     return str;
 }
 
+ParameterTree* Model::getParameterTree(void) {
+
+    for (int i=0; i<parameters.size(); i++)
+        {
+        ParameterTree* pT = dynamic_cast<ParameterTree*>(parameters[i]);
+        if (pT != NULL)
+            return pT;
+        }
+    return NULL;
+}
+
 std::string Model::getStateSetsJsonString(void) {
 
     if (stateSets.size() == 0)
@@ -496,6 +507,8 @@ void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) 
     std::cout << "   * Initializing likelihood-calculation machinery" << std::endl;
 
     UserSettings& settings = UserSettings::userSettings();
+    TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
+    
     
     // set up the rate matrix
     RateMatrix& rmat = RateMatrix::rateMatrix();
@@ -510,7 +523,6 @@ void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) 
         rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
     
     // initialize the transition probabilities
-    TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
     tProbs.initialize( this, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();

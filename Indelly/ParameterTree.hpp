@@ -22,6 +22,7 @@ class ParameterTree : public Parameter {
         void                            clearSubtrees(void);
         Tree*                           getActiveTree(void) { return trees[0]; }
         Tree*                           getActiveTree(std::string mask);
+        std::map<std::string,Tree*>&    getSubtrees(void) { return subtrees; }
         std::string                     getHeader(void) { return ""; }
         double                          lnPriorProbability(void);
         void                            print(void);
