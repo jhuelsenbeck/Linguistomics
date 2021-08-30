@@ -140,6 +140,18 @@ abstract class RuleClass {
     }
   };
 
+  ShowFilterSegments(filter) = Frame {
+    Width: 2 inches;
+    Paragraph {
+      TextHeight: 18 pts;
+      var segments = GetSegments(Results.UniqueSegments, filter);
+      if (segments.Length > 0) {
+        Separator: Space;
+        (each segments).ShowSegment;
+      }
+    }
+  };
+
   ShowDescription = Block {
     Paragraph {
       TextHeight: 14 pts;
@@ -472,7 +484,7 @@ class GroupRatesClass {
     MaxLine         = 10;
     ArrowGap        = 10 pts;
     GapAngle        = 80.0 degrees;
-    ArrowProportion = 1.5;
+    ArrowProportion = 0.5;
   }
 
   void Calibrate(size) {
@@ -511,11 +523,14 @@ class GroupRatesClass {
     foreach (var p1 in PartitionRule.Partitions) {
       var pi = EachIndex;
       foreach (var p2 in PartitionRule.Partitions) {
-        var line = new LineStyleClass(Results.Rates[pi][EachIndex] * RateScale, ArrowProportion);
+        var  rate = Results.Rates[pi][EachIndex];
+        var  hint = "Rate: {0}"(rate);
+        var  line = new LineStyleClass(rate * RateScale, ArrowProportion);
         if (p1 == p2) {
           var c = Graphics.ExtentPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
           Graphics.CircleArrow(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
             Fill: Colors.Black;
+            Popup: hint;
           };
         }
         else {
@@ -523,7 +538,10 @@ class GroupRatesClass {
           var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle);
           var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle + Graphics.OneEighty);
 
-          Graphics.TwoArrowLine(line, c1, c2) {Fill: Colors.Black};
+          Graphics.TwoArrowLine(line, c1, c2) {
+            Fill: Colors.Black;
+            Popup: hint;
+          };
         }
       }
     }
@@ -551,6 +569,7 @@ class GroupRatesClass {
             EachOne;
           };
           p1.Filter;
+          Popup: Results.PartitionRule.ShowFilterSegments(p1.Filter);
         };
       };
     }

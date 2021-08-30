@@ -7,7 +7,7 @@ include "../../nytril/deploy/basic facts";
 with People {
   DMGoldstein = new PersonClass(#0ebaaa7b75120342aac20f4210b40f61#, "David", "M.", "Goldstein") {
     LinkTypes.WorkDepartment linkto Organizations.UCLALinguistics;
-    LinkTypes.WorkAddress linkto Addresses.UCLA;
+    LinkTypes.WorkAddress linkto Cities.LosAngeles(null, "90095-1543");
     LinkTypes.WorkWebsite linkto new URLClass("linguistics.ucla.edu/person/david-goldstein");
     LinkTypes.WorkEmail linkto new EmailClass("dgoldstein@humnet.ucla.edu");
   };
@@ -26,7 +26,6 @@ with People {
     LinkTypes.WorkDepartment linkto Organizations.NytrilLLC;
     LinkTypes.WorkWebsite linkto new URLClass("www.nytril.com");
     LinkTypes.WorkEmail linkto new EmailClass("shawn.mccreight@gmail.com");
-    LinkTypes.WorkAddress linkto Addresses.NytrilLLC;
   };
 
   SHöhna           = new PersonClass(#654b7bfe5302c74493f57d3c99bfe500#, "Sebastian", null, "Höhna");
@@ -67,16 +66,18 @@ with Organizations {
 
   UCLA = new OrganizationClass(#b5b0a67f34f78749a570d64e9c19535b#, "University of California, Los Angeles") {
     Abreviation: "UCLA";
-    LinkTypes.MainOffice linkto Addresses.UCLA;
+    LinkTypes.MainOffice linkto Cities.LosAngeles(null, "90095-1543");
   };
 
   UCLALinguistics = new OrganizationClass(#d11026ffba06f2438cc6142167bf3296#, "Department of Linguistics") {
     LinkTypes.Department linkto UCLA;
   };
 
-  UCB =  new OrganizationClass(#99f348500c3bd54faef8fc741d058df3#, "University of California, Berkeley") {
+  UCB = new OrganizationClass(#99f348500c3bd54faef8fc741d058df3#, "University of California, Berkeley") {
     Abreviation: "UC Berkeley";
-    LinkTypes.MainOffice linkto Addresses.UCB;
+    LinkTypes.MainOffice linkto new AddressClass(null, "Berkeley", "94720") {
+      LinkTypes.State linkto USStates.California;
+    };
   };
 
   UCBIntegrativeBiology = new OrganizationClass(#87b9d85e99d70a4ab30964dbfa1d99e8#, "Department of Integrative Biology") {
@@ -84,7 +85,9 @@ with Organizations {
   };
 
   NytrilLLC =  new OrganizationClass(#c80cac21b15ad64b9d71a7197d655e4b#, "Nytril LLC") {
-    LinkTypes.MainOffice linkto Addresses.NytrilLLC;
+    LinkTypes.MainOffice linkto new AddressClass("3060 San Pasqual St.", "Pasadena", "91107") {
+      LinkTypes.State linkto USStates.California;
+    };
   };
 
   PlanckInstitute = new OrganizationClass(#9bbc0e72b42aef4c8cb57aa31a443904#, "Max Planck Institute for the Science of Human History");
@@ -121,12 +124,9 @@ with Organizations {
     LinkTypes.MainOffice linkto Cities.London;
   };
 
-
   AcademicPress = new OrganizationClass(#1f170ea0ac31cd489345de11821d14d2#, "Academic Press");
 
-
   SpringerVerlag = new OrganizationClass(#9c577f5e38309c4f960a9ce015f51ae6#, "Springer Verlag");
-
 
   SystematicBiology = new OrganizationClass(#bf524c6d7d5bc74eb58477b34a909f62#, "Systematic Biology");
 
@@ -155,22 +155,6 @@ with Organizations {
   ProceedingsRoyalSocietyB  = new OrganizationClass(#56940a3401cd14488e0744ada5d0d03c#, "Proceedings of the Royal Society B");
 
   TransactionsPhilologicalSociety = new OrganizationClass(#f4748a290b57a641aaf4ca7e7f6b29ec#, "Transactions of the Philological Society");
-
-}
-//======================================================================
-
-with Addresses {
-  UCLA = new AddressClass(null, "Los Angeles", "90095-1543") {
-    LinkTypes.State linkto USStates.California;
-  };
-
-  UCB = new AddressClass(null, "Berkeley", "94720") {
-    LinkTypes.State linkto USStates.California;
-  };
-
-  NytrilLLC = new AddressClass("3060 San Pasqual St.", "Pasadena", "91107") {
-    LinkTypes.State linkto USStates.California;
-  };
 }
 //======================================================================
 
@@ -265,7 +249,7 @@ with References {
     Title  : "Improving marginal likelihood estimation for Bayesian phylogenetic model selection";
     Volume : 60;
     Number : 2;
-    Pages  : 150-160;
+    Pages  : 150..160;
     PubDate: DateTime(2010, 12);
     ISSN   : "1063-5157";
 
@@ -283,7 +267,7 @@ with References {
     Title  : "Computing Bayes factors using thermodynamic integration";
     Volume : 55;
     Number : 2;
-    Pages  : 195-207;
+    Pages  : 195..207;
     PubDate: DateTime(2006, 4);
     LinkTypes.ReferenceAuthor linkto [
       new PersonClass(#4fe1d636468f394fa6366dfb2d08fd3c#, "Nicolas", null, "Lartillot"),
@@ -339,7 +323,7 @@ with References {
   };
 
   chang2015 = new ReferenceClass(ReferenceTypes.Article) {
-    Title  : "Ancestry-constrained phylogenetic analysis supports the {Indo}-{European} steppe hypothesis";
+    Title  : "Ancestry-constrained phylogenetic analysis supports the Indo-European steppe hypothesis";
     PubDate: DateTime(2015, 3);
     DOI    : "10.1353/lan.2015.0005";
     Number : 1;
@@ -489,6 +473,7 @@ with References {
     PubDate: DateTime(1956);
     Volume : 20;
     Pages  : 249..267;
+
     LinkTypes.ReferenceAuthor linkto new PersonClass(#6814eb5f3b1b2241a3c28ad12aee2ef5#, "George", null, "Straka");
     LinkTypes.ReferenceJournal linkto Organizations.RevuedeLinguistiqueRomane;
   };
@@ -496,18 +481,20 @@ with References {
   bloomfield1933 = new ReferenceClass(ReferenceTypes.Book) {
     Title  : "Language";
     PubDate: DateTime(1933);
+
     LinkTypes.ReferenceAuthor linkto new PersonClass(#9ac5d1befd59c3408ad541e8be2569b6#, "Leonard", null, "Bloomfield");
     LinkTypes.ReferencePublisher linkto Organizations.Holt;
   };
 
   malkiel1978 = new ReferenceClass(ReferenceTypes.Article) {
-    LinkTypes.ReferenceAuthor linkto new PersonClass(#156852f0b23b124d94050dd9620a5629#, "Yakov", null, "Malkiel");
-    LinkTypes.ReferenceJournal linkto Organizations.RomancePhilology;
-    Number: 3;
-    Pages: 467..500;
     Title: "The classification of romance languages";
     Volume: 31;
-    PubDate: DateTime(1978)
+    PubDate: DateTime(1978);
+    Number: 3;
+    Pages: 467..500;
+
+    LinkTypes.ReferenceAuthor linkto new PersonClass(#156852f0b23b124d94050dd9620a5629#, "Yakov", null, "Malkiel");
+    LinkTypes.ReferenceJournal linkto Organizations.RomancePhilology;
   };
 
   ohala2003 = new ReferenceClass(ReferenceTypes.InCollection) {
@@ -518,8 +505,10 @@ with References {
     PubDate: DateTime(2003);
 
     LinkTypes.ReferenceAuthor linkto People.JohnJOhala;
-    LinkTypes.ReferenceEditor linkto new PersonClass(#fc912af7aef5984e8572a9329b87d301#, "Joseph", "D.", "Brian");
-    LinkTypes.ReferenceEditor linkto new PersonClass(#b4129111f15fd4489ae99de5812da78b#, "Richard", "D.", "Janda");
+    LinkTypes.ReferenceEditor linkto [
+      new PersonClass(#fc912af7aef5984e8572a9329b87d301#, "Joseph", "D.", "Brian"),
+      new PersonClass(#b4129111f15fd4489ae99de5812da78b#, "Richard", "D.", "Janda"),
+    ];
     LinkTypes.ReferencePublisher linkto Organizations.WileyBlackwell;
   };
 
@@ -531,76 +520,99 @@ with References {
     DOI: "10.1093/oxfordhb/9780199232819.013.015";
 
     LinkTypes.ReferencePublisher linkto Organizations.OxfordPress;
-    LinkTypes.ReferenceAuthor linkto new PersonClass(#0be266d4a812d545b84b647ef7b1e5ef#, "Betty", "S.", "Phillips");
-    LinkTypes.ReferenceEditor linkto new PersonClass(#6cc5bbaf088a2d4785a5feb897dc3dd4#, "Patrick", null, "Honeybone");
-    LinkTypes.ReferenceEditor linkto new PersonClass(#04c2cb79b32b8e4fbfe7b32304aa86aa#, "Joseph", "C.", "Salmons");
+    LinkTypes.ReferenceAuthor linkto [
+      new PersonClass(#0be266d4a812d545b84b647ef7b1e5ef#, "Betty", "S.", "Phillips"),
+      new PersonClass(#6cc5bbaf088a2d4785a5feb897dc3dd4#, "Patrick", null, "Honeybone"),
+      new PersonClass(#04c2cb79b32b8e4fbfe7b32304aa86aa#, "Joseph", "C.", "Salmons"),
+    ];
   };
 
   chen1975a = new ReferenceClass(ReferenceTypes.Article) {
-    Pages: 255..281;
-    Subtitle: "Actuation and implementation";
     Title : "Sound change";
+    PubDate: DateTime(1975);
+    Subtitle: "Actuation and implementation";
+    Pages: 255..281;
     Volume: 51;
     DOI: "10.2307/412854";
-    PubDate: DateTime(1975);
+
     LinkTypes.ReferenceJournal linkto Organizations.Language;
-    LinkTypes.ReferenceAuthor linkto new PersonClass(#d824f9abc1d8f34db9ea099855de0cfc#, "Matthew", "Y.", "Chen");
-    LinkTypes.ReferenceAuthor linkto new PersonClass(#d1fe15824765da47b57d3f327761ccb9#, "William", "S.-Y.", "Wang");
+    LinkTypes.ReferenceAuthor linkto [
+      new PersonClass(#d824f9abc1d8f34db9ea099855de0cfc#, "Matthew", "Y.", "Chen"),
+      new PersonClass(#d1fe15824765da47b57d3f327761ccb9#, "William", "S.-Y.", "Wang"),
+    ];
   };
 
   blevins2004a = new ReferenceClass(ReferenceTypes.Book) {
-    Subtitle: "The emergence of sound patterns";
     Title: "Evolutionary phonology";
-    DOI: "10.1017/CBO9780511486357";
     PubDate: DateTime(2004);
+    Subtitle: "The emergence of sound patterns";
+    DOI: "10.1017/CBO9780511486357";
+
     LinkTypes.ReferencePublisher linkto Organizations.CambridgePress;
     LinkTypes.ReferenceAuthor linkto new PersonClass(#1e6f33e234a5484684dceaf1857bb215#, "Juliette", null, "Blevins");
   };
 
   ohala2012 = new ReferenceClass(ReferenceTypes.InCollection) {
+    Title: "The listener as a source of sound change";
+    PubDate: DateTime(2012);
+    Subtitle: "An update";
     BookSubtitle: "Perception, production, and social factors";
     BookTitle: "The initiation of sound change";
     Pages: 21..36;
-    Subtitle: "An update";
-    Title: "The listener as a source of sound change";
     DOI: "10.1075/cilt.323.05oha";
-    PubDate: DateTime(2012);
+
     LinkTypes.ReferencePublisher linkto Organizations.JohnBenjamins;
     LinkTypes.ReferenceAuthor linkto People.JohnJOhala;
-    LinkTypes.ReferenceEditor linkto new PersonClass(#a79ac6e26156364dab7e732a0d047443#, "Maria-Josep", null, "Solé");
-    LinkTypes.ReferenceEditor linkto new PersonClass(#43d5861419c2094c94bd1749fb00a277#, "Daniel", null, "Recasens");
+    LinkTypes.ReferenceEditor linkto [
+      new PersonClass(#a79ac6e26156364dab7e732a0d047443#, "Maria-Josep", null, "Solé"),
+      new PersonClass(#43d5861419c2094c94bd1749fb00a277#, "Daniel", null, "Recasens"),
+    ];
   };
 
   RevBayes = new ReferenceClass(ReferenceTypes.Misc) {
-    PubDate : DateTime(2016);
     Title   : "RevBayes: Bayesian phylogenetic inference using graphical models and an interactive model-specification language";
+    PubDate : DateTime(2016);
     Pages   : "65:726-736";
 
     LinkTypes.ReferenceURL linkto new URLClass("www.revbayes.com", DateTime(2021));
     LinkTypes.ReferencePublisher linkto Organizations.SystematicBiology;
-    LinkTypes.ReferenceAuthor linkto [People.SHöhna, People.Landis, People.Heath, People.Boussau, People.Lartillot, People.Moore, People.JPHuelsenbeck, People.Ronquist];
+    LinkTypes.ReferenceAuthor linkto [
+      People.SHöhna,
+      People.Landis,
+      People.Heath,
+      People.Boussau,
+      People.Lartillot,
+      People.Moore,
+      People.JPHuelsenbeck,
+      People.Ronquist
+    ];
   };
 
   IPAInformation = new ReferenceClass(ReferenceTypes.Misc) {
-    PubDate : DateTime(2019);
     Title   : "IPA Symbols Chart Complete";
+    PubDate : DateTime(2019);
 
     LinkTypes.ReferenceURL linkto new URLClass("www.internationalphoneticalphabet.org/ipa-charts/ipa-symbols-chart-complete");
     LinkTypes.ReferencePublisher linkto Organizations.InternationalPhoneticAlphabet;
   };
 
   ASJP = new ReferenceClass(ReferenceTypes.Misc) {
-    PubDate : DateTime(2018);
     Title   : "The ASJP Database (version 18)";
+    PubDate : DateTime(2018);
 
     LinkTypes.ReferenceURL linkto new URLClass("asjp.clld.org", DateTime(2020));
     LinkTypes.ReferencePublisher linkto Organizations.ASJP;
-    LinkTypes.ReferenceAuthor linkto [People.Wichmann, People.Søren, People.EHolman, People.CBrown];
+    LinkTypes.ReferenceAuthor linkto [
+      People.Wichmann,
+      People.Søren,
+      People.EHolman,
+      People.CBrown
+    ];
   };
 
   Phoible = new ReferenceClass(ReferenceTypes.Book) {
-    PubDate : DateTime(2019);
     Title   : "PHOIBLE 2.0";
+    PubDate : DateTime(2019);
 
     LinkTypes.ReferenceURL linkto new URLClass("www.phoible.org", DateTime(2021, 8, 19));
     LinkTypes.ReferenceEditor linkto [People.StevenMoran, People.DanielMcCloy];
@@ -609,24 +621,24 @@ with References {
   };
 
   IPAWikipedia = new ReferenceClass(ReferenceTypes.Misc) {
-    PubDate : DateTime(2019);
     Title   : "International Phonetic Alphabet";
+    PubDate : DateTime(2019);
 
     LinkTypes.ReferenceURL linkto WikipediaLink("International_Phonetic_Alphabet");
     LinkTypes.ReferencePublisher linkto Organizations.Wikipedia;
   };
 
   XSAMPA = new ReferenceClass(ReferenceTypes.Book) {
-    PubDate : DateTime(2019);
     Title   : "Extended Speech Assessment Methods Phonetic Alphabet";
+    PubDate : DateTime(2019);
 
     LinkTypes.ReferenceURL linkto WikipediaLink("X-SAMPA");
     LinkTypes.ReferencePublisher linkto Organizations.Wikipedia;
   };
 
   DistinctiveFeature = new ReferenceClass(ReferenceTypes.Misc) {
-    PubDate : DateTime(2020);
     Title   : "Distinctive Feature";
+    PubDate : DateTime(2020);
 
     LinkTypes.ReferenceURL linkto WikipediaLink("Distinctive_feature");
     LinkTypes.ReferencePublisher linkto Organizations.Wikipedia;
