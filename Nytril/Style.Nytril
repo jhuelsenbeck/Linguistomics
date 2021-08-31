@@ -519,23 +519,21 @@ with Style {
     };
   };
 
-  ShowAppendices(appendices) = PageSection {
-    foreach (var appendix in appendices) {
-      Header: Block {
-        Paragraph {
-          BorderB: 1 pts;
-          ParAlignment: ParAlignments.Center;
-          TextHeight: 14 pts;
-          SpaceAfter: 8 pts;
-          LocationMark: Lang.Appendix + EachIndex;
-          "{0} {1} - "(Lang.Appendix, EachOne);
-          appendix.Title;
-        };
+  ShowAppendix(appendix) = PageSection {
+    Header: Block {
+      Paragraph {
+        BorderB: 1 pts;
+        ParAlignment: ParAlignments.Center;
+        TextHeight: 14 pts;
+        SpaceAfter: 8 pts;
+        LocationMark: Lang.Appendix + EachIndex;
+        "{0} {1} - "(Lang.Appendix, EachOne);
+        appendix.Title;
       };
-      Block {
-        appendix.Content;
-      };
-    }
+    };
+    Block {
+      appendix.Content;
+    };
   };
 
   LanguageRow(lang) = Row {
@@ -619,6 +617,8 @@ with Style {
 abstract class BaseViewClass: DocumentViewClass {
   Constructor(title, key, type) {
     super.Constructor(title, key, type);
+    Title = "Understanding Language Evolution Using an Event-Based Model";
+
     foreach (var f in Figures)
       f.Data.Number = EachOne;
   }
@@ -725,7 +725,7 @@ abstract class BaseViewClass: DocumentViewClass {
         HeaderBackground(slide.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
       };
       FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
-        FooterBackground(ViewInfo.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
+        FooterBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
       };
     };
     slide.Body;
