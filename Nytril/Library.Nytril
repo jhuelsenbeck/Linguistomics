@@ -170,6 +170,7 @@ class ResultsClass {
       GammaMCC,
       GammaConsensus,
       CharacterName,
+      WordCount,
       Frequencies,
       Rates,
       AddComma,
@@ -177,6 +178,7 @@ class ResultsClass {
 
 
   Constructor(folder) {
+    WordCount      = 0;
     Model          = Models.JC;
     OutFolder      = Folders.Repository Folder("Run") Folder(folder);
     EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
@@ -278,8 +280,10 @@ class ResultsClass {
               if (t.Length > 0)
                 ++count;
             }
-            if (count > 1)
+            if (count > 1) {
+              WordCount += count;
               clist.Add(new CognateClass(concept, cognate));
+            }
           }
         }
       }
@@ -306,11 +310,13 @@ class ResultsClass {
         language.Name;
       };
       Block {
+        Paragraph {
+          ParAlignment: ParAlignments.Center;
+          if (valid language.MapImage)
+            language.ShowMap(Size(5 inches, 3 inches));
+        };
         language.Description;
         language.Details;
-
-        if (valid language.MapImage)
-          language.ShowMap(Size(5 inches, 3 inches));
       }
     }
   };

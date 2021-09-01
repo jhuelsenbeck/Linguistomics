@@ -116,6 +116,12 @@ class FigureClass {
     Number;
   };
 
+  ShowTableNumber = Span {
+    Lang.Table;
+    Space;
+    Number;
+  };
+
   ShowSlide = Block {
     Caption;
     Paragraph {
@@ -130,7 +136,7 @@ class FigureClass {
 Main.MathFamily = Style.MathFace; //"Linux Libertine Display O";
 
 with Style {
-  ReferenceStyle       = new APAStyleClass; // new ChicagoStyleClass; // new MLAStyleClass;
+  ReferenceStyle       = new IEEEStyleClass; //new ChicagoStyleClass ; // new MLAStyleClass; // new APAStyleClass; new IEEEStyleClass
   MainFamily           = {TextFamily: TextFamilies.TimesNewRoman};
   SansSerif            = {TextFamily: TextFamilies.Arial};
   MonoFamily           = {TextFamily: TextFamilies.Consolas};
@@ -214,6 +220,11 @@ with Style {
     SpaceAfter: 6 pts;
   };
 
+  FigureTable = Table {
+    ParAlignment: ParAlignments.Center;
+    SpaceAfter: 6 pts;
+  };
+
   FigureCaption = Span;
 
   ShowFigure(figure) = Block {
@@ -232,6 +243,27 @@ with Style {
 
     FigureBody {
       figure.Body
+    };
+  };
+
+  ShowTableFigure(figure) = Block {
+    figure.Body {
+      SpaceBefore: 10 pts;
+      ParAlignment: ParAlignments.Center;
+    };
+    Paragraph {
+      ParAlignment: ParAlignments.Center;
+      SpaceBefore: 6 pts;
+      SpaceAfter: 6 pts;
+      Span {
+        Bold;
+        SansSerif;
+        Lang.Table;
+        Space;
+        figure.Number;
+        eos;
+      };
+      figure.Caption;
     };
   };
 
@@ -622,6 +654,8 @@ abstract class BaseViewClass: DocumentViewClass {
     Title = "Understanding Language Evolution Using an Event-Based Model";
 
     foreach (var f in Figures)
+      f.Data.Number = EachOne;
+    foreach (var f in TableFigures)
       f.Data.Number = EachOne;
   }
 
