@@ -29,14 +29,14 @@ include "Concepts/Misc";
 //======================================================================
 
 with Main {
-  Documents = new DocumentViewClass(null) {
-    new SubmissionViewClass;
-    new PaperViewClass;
-    new ExperimentViewClass;
-    new DiagnosticsViewClass;
-    new JohnPresentationClass;
-    new DavidPresentationClass;
-  };
+  Documents = [
+    new SubmissionViewClass,
+    new PaperViewClass,
+    new ExperimentViewClass,
+    new DiagnosticsViewClass,
+    new JohnPresentationClass,
+    new DavidPresentationClass,
+  ];
 
   void Run {
     Results.Calculate;
@@ -76,7 +76,7 @@ ReadTree(title, path) {
 
 class SubmissionViewClass: BaseViewClass {
   Constructor {
-    super.Constructor("Submission", #3ab5559cf52bdb4484be6eea54bfade3#, ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor(#3ab5559cf52bdb4484be6eea54bfade3#, "Submission");
   }
 
   HeaderBlock = Block {
@@ -101,7 +101,16 @@ class SubmissionViewClass: BaseViewClass {
 
       ShowAuthorList(Authors);
     };
+
+    Header1 {Abstract.Title};
+    Abstract.Body;
     ShowContent(PaperSections.Introduction);
+    Header1 {Lang.Results};
+
+    ShowContent(PaperSections.WordTransformation);
+    ShowContent(PaperSections.WordSegmentRelationships);
+    ShowContent(PaperSections.RomanceLanguagePhylogeny);
+    ShowContent(PaperSections.Discussion);
 
     ShowBibliography;
     PageSection {
@@ -114,7 +123,7 @@ class SubmissionViewClass: BaseViewClass {
 
 class PaperViewClass: BaseViewClass {
   Constructor {
-    super.Constructor("White Paper", #8c6d803a4002f2409d6d4f4697685b1d#, ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor(#8c6d803a4002f2409d6d4f4697685b1d#, "White Paper");
   }
 
   HeaderBlock = Block {
@@ -147,10 +156,13 @@ class PaperViewClass: BaseViewClass {
 
       ShowAuthorList(Authors);
 
-      Header2 {Abstract.Title};
+      Header1 {Abstract.Title};
       Abstract.Body;
 
-      ShowContent(each PaperSections);
+      ShowContent(PaperSections.Introduction);
+      ShowContent(PaperSections.Methods);
+      ShowContent(PaperSections.Conclusion);
+
 
 //      Header2 {Lang.Authors};
 //      ShowAuthorFull(each Authors);
@@ -167,7 +179,7 @@ class PaperViewClass: BaseViewClass {
 
 class ExperimentViewClass: BaseViewClass {
   Constructor {
-    super.Constructor("Experiment", #ee79e1d9e8467444a68c0e7a6a8c8a88#, ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor(#ee79e1d9e8467444a68c0e7a6a8c8a88#, "Experiment");
   }
 
   override GetDocument = MainDocument {
@@ -196,7 +208,7 @@ ShowSymbols = Block {
 
 class DiagnosticsViewClass: BaseViewClass {
   Constructor {
-    super.Constructor("Diagnostics", #595d071a2117fb47bd6b0ef6596666ce#, ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor(#595d071a2117fb47bd6b0ef6596666ce#, "Diagnostics");
   }
 
   override GetDocument = Style.MainDocument {

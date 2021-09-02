@@ -38,8 +38,8 @@ with Figures.ExampleTree {
 
   LangNumber(language) = Math.FindIndex(LanguageList, l => l == language)[0]+1;
 
-  Leaf(language, length) = new TreeNodeClass("{0} ({1})"(language, LangNumber(language)), length);
-  Branch(name, length)   = new TreeNodeClass(name, length);
+  Leaf(language, length) = new NodeClass("{0} ({1})"(language, LangNumber(language))) {BranchLength: length};
+  Branch(name, length)   = new NodeClass(name) {BranchLength: length};
 
   Nodes = Branch(19, 1) {
     Leaf(Latin, 7);
@@ -340,12 +340,92 @@ with StateSection {
 }
 //======================================================================
 
-with Abstract {
-  Title = Lang.Abstract;
+with PaperSections.WordTransformation {
+  ModelName = Span {TextCase: TextCases.AllLower; Results.PartitionRule.Name};
+  Title     = "Understanding Word Transformation";
+
+  Note = "Note that rates of change are much greater from one word segment to another when the change is within the word segment group than it is when the change is between word segments in different groups.";
+
   Body  = Block {
-    Style.BodyPar {
-      "Linguistically phylogenies are standardly inferred on the basis of cognate relationships, which are discrete representations of ancestry. Although inference on the basis of such datasets has yielded important results, it suffers from an obvious fault: it ignores the phylogenetic signal in the segmental form of words. In this paper, we infer the phylogeny of Romance on the basis of segmental data...";
+    BodyPar {
+      "Marginal likelihoods under the three models of word transition were approximated using the stepping-stone path-sampling method";
+      References.xie2010; eos;
+      "The marginal likelihoods were NUMBER, NUMBER, and NUMBER under the Jukes-Cantor, "; ModelName; ", and GTR models, respectively. ";
+      "Hence, the "; ModelName; " model is best supported by the data.";
     };
+
+    BodyPar {
+      "The "; ModelName; " model allows different rates for different groups of word segments, ";
+      Figures.FrequencyDiagram.Data.ShowNumber; " summarizes the estimated rates of change from one segment grouping to another. ";
+      Note;
+    };
+  };
+}
+//======================================================================
+
+with PaperSections.WordSegmentRelationships {
+  Title = "Word Segment Relationships";
+
+  Body = Block {
+    BodyPar {
+      "Our method treats the relationships of word segments from one language to another as a random variable. ";
+      "Figure [NUMBER] shows alignments for ten of the words we analyzed. ";
+      "The pictured alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
+      "Note that insertions and deletions appear to occur more frequently at the end of the words. ";
+      "Also note that the alignments tend to assign word segments from the same segment group to the same column in the alignment.";
+    };
+  };
+}
+//======================================================================
+
+with PaperSections.RomanceLanguagePhylogeny {
+  Title = "Romance Language Phylogeny";
+
+  Body = Block {
+    BodyPar {
+      Figures.ExampleTree.Body;
+    };
+  };
+}
+//======================================================================
+
+with PaperSections.Discussion {
+  Title = "Discussion";
+
+  Body = Block {
+    BodyPar {
+     "Despite a wealth of textual data from Latin and its medieval descendants, the phylogeny of Romance remains a challenge ";
+     References.hall1974;
+     References.malkiel1978;
+     References.koutna1990;
+     eos;
+     "The topology of our tree agrees with the prevailing views of the Romance phylogeny in most aspects. ";
+     "For instance, it recognizes that French and Walloon have undergone the greatest segmental change. ";
+     "In addition, it identifies the Ibero-Romance (Spanish, European Portuguese, and Brazilian Portuguese) and Gallo-Romance (French, Walloon, and Catalan) clades. ";
+     "In recent years a consensus appears to have emerged among specialists that Romanian was one of the first clades to form. ";
+     "This view has been based on studies using both cognate data ";
+     References.bouckaert2012;
+     References.chang2015;
+     " and sound changes ";
+     References.straka1956; eos;
+     "Our results suggest that Romanian did not emerge as early as is thought. ";
+     "Rather it is Italian that was the first to form. ";
+     "Furthermore, our results demonstrate that the branching of Romance languages did not take place along an East-West fault line, since Romanian, an Eastern Romance language, emerges between Ibero- and Gallo-Romance. ";
+     "Finally, our study refutes an idea that has long circulated in the linguistics literature, namely that the diversification of Romance correlates with the date of Roman colonization. ";
+     "According to this theory, Romanian would be the last language to emerge since the Roman colony of Dacia was the last to be established.";
+   };
+
+/*
+There is a long debate---known as the ``Neogrammarian controversy''---about the units involved in sound change. Leonard Bloomfield famously declared ``phonemes change'' \cite[354]{bloomfield1933}. According to this view, sound change is abrupt and affects all words at once. So a change from /a/ to /o/ would occur more or less simultaneously in all words with the input phoneme. Other scholars have emphasized the role of acoustic and auditory phonetics in sound change\cite{blevins2004a,ohala2003,ohala2012}, while yet another view contends that sound change occurs by gradually making its way through the lexicon in a process known as \textit{lexical} \textit{diffusion}.\cite{chen1975a,phillips2015} Our method cannot be located within any one of these traditions, but rather has affinities with the phonemic approach and lexical diffusion. Since our analyses are based on phonemic representations, it is phonemes that undergo transitions. Rates of change are, however, inferred from phonemes in the context of word forms. Consider again the change from /a/ to /o/. Our method does not infer a single transition in this case. It instead infers a rate of change that is based on the frequencies of /a/ and /o/ in the data and how often the former transitions to the latter.
+
+Although the rates at which linguistic phenomena change is poorly understood, one thing that is clear is that rates of change differ among different components of grammar. In general, changes in the basic vocabulary of a language take place at a slower rate than phonological change. One can compare for instance dialects of American and British English. After approximately four centuries, a number of phonological differences distinguish these two dialects, but differences in basic vocabulary are either minimal or have yet to occur. Rates inferred from lexical cognate relationships are thus going to underestimate rates of change and divergence times.
+
+
+Our event-based modeling approach to linguistic history has the power to transform the discipline by  offering an inroad into questions that were previously intractable. For instance, questions pertaining to the relationship between phonological change and the phonemic inventory of a language can now be addressed. Does the frequency of a phoneme in the words of a language affect its diachronic stability? To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? What is the role of ``natural classes'' in phonological change? This last question can be addressed in particular through comparison of models with different numbers of rate parameters. The method can also be extended in various ways, for instance, to handle more complex phonological changes (such as those involving context dependency); to estimate divergence times and diversification rates in addition to topology; or to model the history of words along a phylogenetic tree.
+
+
+- maybe conclude on something that talks about a more -omics approach to linguistics, perhaps by combining automatic cognate discovery with the more event-based modeling approach we pursue here. Also, might mention that this framework does allow for more complicated questions to be addressed, such as context dependence of segment change.
+*/
   };
 }
 //======================================================================

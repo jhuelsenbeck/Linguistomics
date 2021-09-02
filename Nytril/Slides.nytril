@@ -18,7 +18,10 @@ with Slides.Questions {
 
 with Slides.Introduction {
   Title = PaperSections.Introduction.Title;
-  Body  = PaperSections.Introduction.Body;
+  Body  = Block {
+    PaperSections.Introduction.Slide;
+    Style.ShowTableFigure(TableFigures.Cognates.Data);
+  };
 }
 
 with Slides.ExampleTree {
@@ -74,10 +77,11 @@ class PresentationViewClass: BaseViewClass {
   var SlideList,
       Author;
 
-  Constructor(title, key, author) {
-    super.Constructor(title, key, ConfigurationClass.DocumentTypes.SlideShow);
-    Author    = author;
-    SlideList = new ListClass(64);
+  Constructor(id, title, author) {
+    super.Constructor(id, title);
+    DocumentType = ConfigurationClass.DocumentTypes.SlideShow;
+    Author       = author;
+    SlideList    = new ListClass(64);
   }
 
   void AddSlide(slide) {
@@ -130,7 +134,7 @@ class PresentationViewClass: BaseViewClass {
 
 class JohnPresentationClass: PresentationViewClass {
   Constructor {
-    super.Constructor("John's Presentation", #e8e882037e4b3a438133df5adc2eb7b6#, People.JPHuelsenbeck);
+    super.Constructor(#e8e882037e4b3a438133df5adc2eb7b6#, "John's Presentation", People.JPHuelsenbeck);
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ExampleTree);
@@ -147,7 +151,7 @@ class JohnPresentationClass: PresentationViewClass {
 
 class DavidPresentationClass: PresentationViewClass {
   Constructor {
-    super.Constructor("David's Presentation", #a6e65a8a39890e46844d37c5125b2de9#, People.DMGoldstein);
+    super.Constructor(#a6e65a8a39890e46844d37c5125b2de9#, "David's Presentation", People.DMGoldstein);
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ConceptsUsed);
