@@ -91,17 +91,18 @@ class WordClass {
       Padded;
 
   Constructor(language, cognate, text) {
+    // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
+    Text     = text.GetString(NormalizationForms.FormC);
     Language = language;
     Cognate  = cognate;
-    Text     = text;
-    if (text.Length > 0) {
-      var segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
+    if (Text.Length > 0) {
+      var segments = IPA.SegmentDictionary.FindTokens(Text, IPA.NoSegment);
       Aligned  = Math.FindSlice(segments, s => s.Gap or (not s.Punctuation));
       Segments = Math.FindSlice(segments, s => not s.Punctuation);
 
       // Test that the word's text is the same as the segments converted back into text
-      var view = String(Span {(each segments).Ipa});
-      System.Assert(text == view, "Round-trip error with text {0}-{1}"(text, view), text);
+      var view = Span {(each segments).Ipa};
+      System.Assert(Text == view.GetString(), "Round-trip error with text {0}-{1}"(Text, view), Text);
     }
     else {
       Segments = [];
