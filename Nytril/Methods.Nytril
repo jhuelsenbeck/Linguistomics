@@ -1,4 +1,4 @@
-﻿using Format, Units, Math, IO, Style, Defs, Languages;
+﻿using Format, Units, Math, IO, Style, Defs, Languages, References;
 //=====================================================================
 
 with ExampleConcept {
@@ -347,9 +347,9 @@ with PaperSections.WordTransformation {
   Note = "Note that rates of change are much greater from one word segment to another when the change is within the word segment group than it is when the change is between word segments in different groups.";
 
   Body  = Block {
-    BodyPar {
+    FirstPar {
       "Marginal likelihoods under the three models of word transition were approximated using the stepping-stone path-sampling method";
-      References.xie2010; eos;
+      Citation {References.xie2010}; eos;
       "The marginal likelihoods were NUMBER, NUMBER, and NUMBER under the Jukes-Cantor, "; ModelName; ", and GTR models, respectively. ";
       "Hence, the "; ModelName; " model is best supported by the data.";
     };
@@ -367,7 +367,7 @@ with PaperSections.WordSegmentRelationships {
   Title = "Word Segment Relationships";
 
   Body = Block {
-    BodyPar {
+    FirstPar {
       "Our method treats the relationships of word segments from one language to another as a random variable. ";
       "Figure [NUMBER] shows alignments for ten of the words we analyzed. ";
       "The pictured alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
@@ -395,21 +395,18 @@ with PaperSections.Discussion {
   SoundChange(to=null) = Span {textipa{"a"}; to ?? " to "; textipa{"o"}};
 
   Body = Block {
-    BodyPar {
+    FirstPar {
      "Despite a wealth of textual data from Latin and its medieval descendants, the phylogeny of Romance remains a challenge ";
-     References.hall1974;
-     References.malkiel1978;
-     References.koutna1990;
+     Citation {hall1974; malkiel1978; koutna1990};
      eos;
      "The topology of our tree agrees with the prevailing views of the Romance phylogeny in most aspects. ";
      "For instance, it recognizes that French and Walloon have undergone the greatest segmental change. ";
      "In addition, it identifies the Ibero-Romance (Spanish, European Portuguese, and Brazilian Portuguese) and Gallo-Romance (French, Walloon, and Catalan) clades. ";
      "In recent years a consensus appears to have emerged among specialists that Romanian was one of the first clades to form. ";
      "This view has been based on studies using both cognate data ";
-     References.bouckaert2012;
-     References.chang2015;
+     Citation {bouckaert2012; chang2015};
      " and sound changes ";
-     References.straka1956; eos;
+     Citation {straka1956}; eos;
      "Our results suggest that Romanian did not emerge as early as is thought. ";
      "Rather it is Italian that was the first to form. ";
      "Furthermore, our results demonstrate that the branching of Romance languages did not take place along an East-West fault line, since Romanian, an Eastern Romance language, emerges between Ibero- and Gallo-Romance. ";
@@ -418,22 +415,21 @@ with PaperSections.Discussion {
    };
 
    BodyPar {
-     "There is a long debate—known as the "; DoubleQuote{"Neogrammarian controversy"}; "—about the units involved in sound change. ";
-     "Leonard Bloomfield famously declared ";
-     DoubleQuote{"phonemes change"}; References.bloomfield1933 {Pages: 354}; eos;
+     "There is a long debate—known as the “Neogrammarian controversy”—about the units involved in sound change. ";
+     "Leonard Bloomfield famously declared “phonemes change”"; Citation {bloomfield1933; Pages: 354}; eos;
      "According to this view, sound change is abrupt and affects all words at once. ";
      "So a change from "; SoundChange; " would occur more or less simultaneously in all words with the input phoneme. ";
      "Other scholars have emphasized the role of acoustic and auditory phonetics in sound change";
-     [References.blevins2004a, References.ohala2003, References.ohala2012];
+     Citation {blevins2004a; ohala2003; ohala2012};
      ", while yet another view contends that sound change occurs by gradually making its way through the lexicon in a process known as ";
-     textit{"lexical diffusion"}; eos;
-     [References.chen1975a, References.phillips2015]; Space;
+     textit{"lexical diffusion"}; eos; Citation {chen1975a; phillips2015}; Space;
      "Our method cannot be located within any one of these traditions, but rather has affinities with the phonemic approach and lexical diffusion. ";
      "Since our analyses are based on phonemic representations, it is phonemes that undergo transitions. ";
      "Rates of change are, however, inferred from phonemes in the context of word forms. ";
      "Consider again the change from "; SoundChange; eos;
      "Our method does not infer a single transition in this case. ";
-     "It instead infers a rate of change that is based on the frequencies of "; SoundChange(" and ");
+     "It instead infers a rate of change that is based on the frequencies of ";
+     SoundChange(" and ");
      " in the data and how often the former transitions to the latter.";
    };
 
@@ -449,8 +445,8 @@ with PaperSections.Discussion {
      "Our event-based modeling approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. ";
      "For instance, questions pertaining to the relationship between phonological change and the phonemic inventory of a language can now be addressed. ";
      "Does the frequency of a phoneme in the words of a language affect its diachronic stability? ";
-     "To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? What is the role of ";
-     DoubleQuote{"natural classes"}; " in phonological change? ";
+     "To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? ";
+     "What is the role of “natural classes” in phonological change? ";
      "This last question can be addressed in particular through comparison of models with different numbers of rate parameters. ";
      "The method can also be extended in various ways, for instance, to handle more complex phonological changes (such as those involving context dependency); ";
      "to estimate divergence times and diversification rates in addition to topology; ";
@@ -462,6 +458,18 @@ with PaperSections.Discussion {
      "- maybe conclude on something that talks about a more -omics approach to linguistics, perhaps by combining automatic cognate discovery with the more event-based modeling approach we pursue here. ";
      "Also, might mention that this framework does allow for more complicated questions to be addressed, such as context dependence of segment change.";
    };
+  };
+}
+//======================================================================
+
+with PaperSections.MethodsSummary {
+  Title = Lang.Methods;
+
+  Body = Block {
+    BodyPar {
+      "A detailed description of the model and analyses can be found in the supplemental material, [reference]. ";
+      "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
+    };
   };
 }
 //======================================================================
@@ -656,7 +664,7 @@ with PaperSections.Methods {
     };
 
     BodyPar {
-      "These are partial mitochondrial sequences from Gojobori88"; References.Gojobori88; eos;
+      "These are partial mitochondrial sequences from Gojobori88"; Citation {Gojobori88}; eos;
       "In the original paper, the complete data had ";
       SampledLanguages(12);
       " primate species and the sequences were each ";
@@ -938,7 +946,7 @@ with PaperSections.Methods {
     };
 
     BodyPar {
-      References.thorne91; " described a model of DNA sequence evolution that allowed single nucleotides to be inserted and deleted at rates ";
+      "TKF91"; Citation {thorne91}; " described a model of DNA sequence evolution that allowed single nucleotides to be inserted and deleted at rates ";
       InsertDelete(" and "); eos;
       "They introduced a convention for thinking about a DNA sequence in which nucleotides were connected by invisible links. ";
       "Each nucleotide paired with the link to its right. ";
@@ -947,12 +955,12 @@ with PaperSections.Methods {
       "Deletions removed a nucleotide and the paired link. Importantly, the immortal link is never deleted. ";
       "So, in the event that "; InsertDelete(" < "); ", the process does not actually go extinct. ";
       "Rather, a nucleotide (and its link) can be inserted to to the right of the immortal link. ";
-      "In the model described by "; References.thorne91; " they constrain the insertion rate to be less than the deletion rate ";
+      "In the model described by TKF91 they constrain the insertion rate to be less than the deletion rate ";
       InsertDelete(" < "); eos;
       "The equilibrium distribution of a sequence length is then geometrically-distributed with parameter ";
       InsertDelete(" / "); eos;
-      "We follow the convention of "; References.thorne91; " in this study. ";
-      "In fact, the model we use is precisely the same as the "; References.thorne91; " model, but with a different continuous-time Markov model used to describe segmental transitions (instead of the four-state process describing nucleotide substitutions used by Throne et al., 1991)."
+      "We follow the convention of TKF91 in this study. ";
+      "In fact, the model we use is precisely the same as the TKF91 model, but with a different continuous-time Markov model used to describe segmental transitions (instead of the four-state process describing nucleotide substitutions used by Throne et al., 1991)."
     };
 
     BodyPar {
@@ -1133,9 +1141,9 @@ with PaperSections.Methods {
       BodyTitle {"Markov chain Monte Carlo"}; eos;
       "The aim with Markov chain Monte Carlo (MCMC) is to construct a Markov chain that has as its possible states the parameter values of the statistical model and a stationary distribution that is the posterior probability distribution of the parameters. ";
       "Metropolis et al. (1953)";
-      References.metropolis53;
+      Citation {metropolis53};
       " and Hastings (1970)";
-      References.hastings70;
+      Citation {hastings70};
       " described rules that allow the scientist to construct such a chain. ";
       "When at stationarity, samples from this chain form valid, albeit dependent, samples from the posterior probability distribution. ";
       "The Metropolis-Hastings algorithm constructs the Markov chain using the following algorithm:";
