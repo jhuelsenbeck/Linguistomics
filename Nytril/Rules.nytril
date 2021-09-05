@@ -1,4 +1,4 @@
-﻿using Format, Units, FeatureSet, Math, SegmentGroups, Style;
+using Format, Units, FeatureSet, Math, SegmentGroups, Style;
 //======================================================================
 
 class FilterClass {
@@ -10,7 +10,12 @@ class FilterClass {
 
   virtual Matches(segment) = true;
 
-  override GetLayout = Name;
+  override GetPopup = Results.PartitionRule.ShowFilterSegments(this);
+
+  override GetLayout = Span {
+    Popup: this;
+    Name;
+  };
 }
 //======================================================================
 
@@ -118,7 +123,7 @@ abstract class RuleClass {
     Paragraph {
       TextHeight: 16 pts;
       "Model: ";
-      Style.DoubleQuote {Name};
+      Style.DQuote {Name};
     };
 
     foreach (var partition in Partitions) {
@@ -603,10 +608,10 @@ with Figures.FrequencyDiagram {
   };
 
   Caption = FigureCaption {
-    "For the ‘{0}’ model, states were grouped into five sets: "(Results.PartitionRule.Name);
+    "For the "; Quote{Results.PartitionRule.Name}; " model, states were grouped into five sets: ";
     Span {
       Separator: CommaSpace;
-      LastSeparator: " and ";
+      LastSeparator: Style.AndSpace;
       foreach (var partition in Results.PartitionRule.Partitions) {
         Span {
           partition.Filter.Name;

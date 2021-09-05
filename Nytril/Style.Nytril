@@ -146,10 +146,10 @@ with Style {
 //  MonoFamily           = {TextFamily: "CMU Typewriter Text"};
 
   MathFace             = "CMU Serif";
-  GreekFamily          = {TextFamily: MathFace};
+  IPAFamily            = {TextFamily: "Linux Libertine O"};
+  GreekFamily          = IPAFamily;
   Classical            = {TextFamily: "CMU Classical Serif"};
   Extra                = {TextFamily: "CMU Serif Extra"};
-  IPAFamily            = {TextFamily: "Linux Libertine O"};
 
   ImpossibleBackground = {Background: 80%};
   CommentColor         = Color(0, 0x64, 0);
@@ -188,31 +188,21 @@ with Style {
   HeaderRightBar       = (99%)..(90%);
   FooterLeftBar        = FooterBar1..FooterBar2;
   FooterRightBar       = FooterBar2..FooterBar1;
-  Word(w)              = Span {TextItalic: true; w};
-  DoubleQuote          = Span {Begin: "“"; End: "”"};
-  SingleQuote          = Span {Begin: "‘"; End: "’"};
   AndSpace             = " and ";
   eos                  = ". ";
-
-  textit = Span {
-    Italic;
-  };
-
-  it = Span {
-    Italic;
-  };
-
-  textipa = Span {
-    Begin:"/";
-    IPAFamily;
-    End:"/";
-  };
+  Quote                = Span {Begin: "‘"; End: "’"};
+  QuoteEnd             = Span {Begin: "‘"; End: ".’ "};
+  DQuote               = Span {Begin: "“"; End: "”"};
+  DQuoteEnd            = Span {Begin: "“"; End: ".” "};
+  textit               = Span {Italic};
+  textipa              = Span {IPAFamily; Begin:"/"; End:"/"};
 
   MainDocument = Document {
     RefStyle: ReferenceStyle;
     Size: DocMetrics.DocumentSize;
     Margin: DocMetrics.PageMargin;
     MainFamily;
+    TextHeight: 9 pts;
   };
 
   MainTitle = Paragraph {
@@ -629,16 +619,31 @@ with Style {
   };
 
   FirstPar = Paragraph {
-    TextHeight: 9 pts;
     ParAlignment: ParAlignments.Justify;
     SpaceBefore: 6 pts;
   };
 
   BodyPar = Paragraph {
-    TextHeight: 9 pts;
     FirstIndent: 0.25 inches;
     ParAlignment: ParAlignments.Justify;
     SpaceBefore: 6 pts;
+  };
+
+  SourcePar(concept) = FirstPar {
+    MonoFamily;
+    TextHeight: 8 pts;
+
+    var selection = null;
+    foreach (var c in concept.RefArray) {
+      var s = SourceSelection(c, true);
+      if (valid selection)
+        selection |= s;
+      else
+        selection = s;
+    }
+    Span {
+      selection;
+    }
   };
 
   BodyTable = Table {
@@ -664,6 +669,7 @@ with Style {
     TextEquation: true;
     TextStacked: true;
     ParAlignment: ParAlignments.Center;
+    TextHeight: 12 pts;
   };
 }
 //======================================================================

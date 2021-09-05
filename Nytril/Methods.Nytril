@@ -415,8 +415,8 @@ with PaperSections.Discussion {
    };
 
    BodyPar {
-     "There is a long debate—known as the “Neogrammarian controversy”—about the units involved in sound change. ";
-     "Leonard Bloomfield famously declared “phonemes change”"; Citation {bloomfield1933; Pages: 354}; eos;
+     "There is a long debate—known as the "; DQuote{"Neogrammarian controversy"}; "—about the units involved in sound change. ";
+     "Leonard Bloomfield famously declared "; DQuote{"phonemes change"}; Citation {bloomfield1933; Pages: 354}; eos;
      "According to this view, sound change is abrupt and affects all words at once. ";
      "So a change from "; SoundChange; " would occur more or less simultaneously in all words with the input phoneme. ";
      "Other scholars have emphasized the role of acoustic and auditory phonetics in sound change";
@@ -429,7 +429,7 @@ with PaperSections.Discussion {
      "Consider again the change from "; SoundChange; eos;
      "Our method does not infer a single transition in this case. ";
      "It instead infers a rate of change that is based on the frequencies of ";
-     SoundChange(" and ");
+     SoundChange(AndSpace);
      " in the data and how often the former transitions to the latter.";
    };
 
@@ -446,7 +446,7 @@ with PaperSections.Discussion {
      "For instance, questions pertaining to the relationship between phonological change and the phonemic inventory of a language can now be addressed. ";
      "Does the frequency of a phoneme in the words of a language affect its diachronic stability? ";
      "To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? ";
-     "What is the role of “natural classes” in phonological change? ";
+     "What is the role of "; DQuote{"natural classes"}; " in phonological change? ";
      "This last question can be addressed in particular through comparison of models with different numbers of rate parameters. ";
      "The method can also be extended in various ways, for instance, to handle more complex phonological changes (such as those involving context dependency); ";
      "to estimate divergence times and diversification rates in addition to topology; ";
@@ -489,7 +489,7 @@ with PaperSections.DataSummary {
       "The initial set of data was downloaded from Wiktionary"; Citation{References.Wictionary}; ", which was then manually checked for accuracy and augmented. ";
       "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
-      "For instance, the Latin adjective "; textit{"gravis"}; " means ‘heavy’, but its French descendant "; textit{"grave"}; " has lost this sense and now means ‘serious.’";
+      "For instance, the Latin adjective "; textit{"gravis"}; " means "; Quote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; QuoteEnd{"serious"};
       "They are assigned to the same cognate set because segmentally French "; textit{"grave"}; " descends from Latin "; textit{"gravis"}; eos;
       "There are in total "; Results.ConceptCount; " cognate sets, "; Results.WordCount; " word forms, and "; Results.UniqueSegments.Length; " segments. ";
       "Each word is represented phonemically with the IPA alphabet. ";
@@ -534,7 +534,7 @@ with PaperSections.DataSummary {
 
 with TableFigures.ManualAlignment {
   Cognate     = Results.GetConcept(Concepts.What);
-  WordDisplay = SingleQuote{TextCase: TextCases.AllLower; Cognate.Name};
+  WordDisplay = Quote{TextCase: TextCases.AllLower; Cognate.Name};
 
   Data = new FigureClass(Caption, Body);
 
@@ -608,20 +608,20 @@ with PaperSections.ModelInference {
 
     BodyPar {
       "We examined three models of segmental transition. ";
-      "The first (denoted ‘JC69’) is isomorphic to the Jukes-Cantor"; Citation{jukes69}; " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate; ";
-      "the second ("; SingleQuote{Results.PartitionRule.Name}; ") model allows different rates among five groups of word segments (";
+      "The first (denoted "; Quote{"JC69"}") is isomorphic to the Jukes-Cantor"; Citation{jukes69};
+      " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate; ";
+      "the second ("; Quote{Results.PartitionRule.Name}; ") model allows different rates among five groups of word segments (";
       Span {
         Separator: CommaSpace;
-        LastSeparator: " and ";
-        (each Results.PartitionRule.Filters).Name;
+        LastSeparator: AndSpace;
+        Results.PartitionRule.Filters;
       };
-//      nasal vowels, vowels, nasal consonants, non-syllabic sonorants, and consonants
       ") and has an intermediate number of parameters (";
       Results.UniqueSegments.Length;
       " parameters for the equilibrium distribution and ";
       (Results.PartitionRule.Filters.Length-1)^2-1;
       " parameters describing rates among word segment groups); ";
-      "and the third (‘GTR’) is a model isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
+      "and the third ("; Quote{"GTR"}; ") is a model isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
       ", and has a large number of parameters (";
       Results.UniqueSegments.Length;
       " parameters for the equilibrium distribution and ";
@@ -637,16 +637,46 @@ with PaperSections.ModelInference {
 with PaperSections.DataCuration {
   Title = "Data Curation and Analyses";
 
+  Example = Concepts.Dog;
+
   Body = Block {
     FirstPar {
-      "All analyses and typeset output for this experiment were coordinated using a single program written in the Nytril programming language"; Citation {nytrilprogram}; eos;
-      "Specifically, words segments from the ";
-      Results.Taxa.Length;
-      " different human languages were organized into data structures in various source files. ";
-      "Another part of the program created source files for input into a C++ program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
-      "Finally, another part of the program read the results of the completed analysis and created the typeset materials, including this one. ";
-      "MCMC analyses were run for one million cycles and repeated to check for convergence. ";
-      "Samples taken during the first 10% of the chain were discarded as the burn-in phase.";
+      "Our analyses is coordinated using a program written in the Nytril programming language"; Citation {nytrilprogram}; eos;
+      "We created an automated framework for the experiment that comprises a reusable IPA library, word data, ";
+      "quality tests, external MCMC software (written in C++), and typeset output for papers and presentations. ";
+    };
+
+    BodyPar {
+      "Words segments from the "; Results.Taxa.Length; " different human languages, coded in standard unicode IPA, are organized into data structures. ";
+      "For example, the concept "; Quote{TextCase: TextCases.AllLower; Example.GlobalVariableName}; " is coded in the following way:";
+    };
+
+    SourcePar(Example.Primary);
+
+    BodyPar {
+      "Here, the comments following the "; Quote{"//"}; " are meant to be read by a reviewer, but have no effect on the analysis. ";
+      "A challenge for programmers working in linguistics is that the IPA representation of words are in Unicode (UCS), not ANSI. ";
+      "This requires care with structures, file formats, text encodings and diacritic compositional form. ";
+      "Furthermore, each text string can comprise several UCS code-points, so that there is not a one-to-one mapping between string elements and segments. ";
+      "For instance the the following segment uses 4 unicode code-points to represent a single sound. ";
+    };
+
+    FigureBody {
+      IPA.Segments.au_diphthong_nasal.GetPopup;
+    };
+
+    BodyPar {
+      "Since our analysis requires each word to be seperated into segments, a parser converts word strings into arrays of objects that facilitate the manipulation of segments at a high level. ";
+      "A library of of such objects endows each segment with linguistic features that can be used for analysis. ";
+      "For instance, the partition models are coded using properties such as "; Quote{"consonant"}; " and "; Quote{"vowel"}; ", rather than working with strings of characters directly.";
+    };
+
+    BodyPar {
+      "After the raw input is coded, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
+      "The MCMC analyses runs for one million cycles and repeats to check for convergence. ";
+      "Samples taken during the first 10% of the chain are discarded as the burn-in phase. ";
+      "When the analysis is complete, the results are read back into the control program. ";
+      "The resulting tables, trees and graphical figures are combined with narrative elements created by the authors to make the final paper and presentation materials. ";
     }
   };
 }
@@ -670,7 +700,7 @@ with PaperSections.Contributions {
 
   Body = Block {
     FirstPar {
-      "D.M.G. collected data, S.H.M. curated data and developed control software, and J.P.H. developed the MCMC software. All authors wrote the manuscript. ";
+      "D.M.G. collected data, S.H.M. developed the control software, and J.P.H. developed the MCMC software. All authors wrote the manuscript. ";
     }
   };
 }
@@ -683,14 +713,14 @@ AlignmentFigure = Figures.Alignment.Data.ShowNumber;
 with PaperSections.Methods {
   Title = Lang.Methods;
   Body  = Block {
-    BodyPar {
+    FirstPar {
       "We use ancestral classes, in which the descendant forms are segmentally aligned. ";
       "It is important to note that our definition of cognate refers only to segmental descent. ";
       "It takes no account of semantics whatsoever. ";
-      "So the lexical items for ‘ear’ in Romance are paired with the Latin word "; Word("auricula"); " which is the diminute form of ‘ear’. ";
+      "So the lexical items for "; Quote{"ear"}; " in Romance are paired with the Latin word "; textit{"auricula"}; " which is the diminute form of "; QuoteEnd{"ear"};
     };
 
-    BodyPar {
+    FirstPar {
       "Other things we have to mention: "
     };
 
@@ -706,16 +736,15 @@ with PaperSections.Methods {
     BodyPar {
       BodyTitle {"Phylogeny relating languages"}; eos;
       "We assume that modern-day languages are related by an unknown evolutionary tree, called a ";
-      SingleQuote {Phylogeny.Name};
-      " and denoted "; Phylogeny; eos;
+      Quote {Phylogeny.Name}; " and denoted "; Phylogeny; eos;
       "The phylogeny contains information on the topological relationships among "; NumLanguages;
       " sampled languages as well as information on the divergence times of the languages or on the amount of change that occurred between the languages. ";
     };
 
     BodyPar {
       TreeFigure; " shows an example of a phylogeny for "; SampledLanguages(Results.Taxa.Length); " languages. ";
-      "In the terminology of evolutionary biology, the tree is composed of ‘nodes’ and ‘branches.’ ";
-      "(By contrast, mathematicians call nodes and branches ‘vertices’ and ‘edges,’ respectively.) ";
+      "In the terminology of evolutionary biology, the tree is composed of "; Quote{"nodes"}; " and "; QuoteEnd{"branches"};
+      "(By contrast, mathematicians call nodes and branches "; Quote{"vertices"} " and "; Quote{"edges,"}; " respectively.) ";
       "The nodes represent the tips of the tree, each of which is assigned a language, and the points on the tree where the languages diverge from one another. ";
       "Each language-assigned tip node is labeled "; (TipLabelNumbers); ". ";
       "The interior nodes are labeled "; TipLabelInterior; " in preorder sequence (i.e., ordered sequentially from the tips to the root). ";
@@ -738,27 +767,13 @@ with PaperSections.Methods {
       "For one, it contains information on the relationships of the languages. ";
       "This topological information is denoted "; Topology; eos;
       TreeFigure;
-      " for example, suggests that ";
-      French;
-      " and ";
-      Walloon;
-      " are each others’ closest relatives. ";
+      " for example, suggests that "; French; " and ";  Walloon; " are each others’ closest relatives. ";
       "They are more closely related to each other than they are to any another language on the tree because they share a more recent common ancestor with each other than they do with any other language. ";
       "This common ancestor is the node numbered 15 in "; TreeFigure; eos;
-      French;
-      " and ";
-      Walloon;
-      ", together, are more closely related to ";
-      Friulian;
-      " in the tree of "; TreeFigure; eos;
-      "Both French and Walloon are equally related to ";
-      Friulian;
-      " because they both share the same common ancestor with ";
-      Friulian;
-      ", at the node numbered ";
-      Figures.ExampleTree.LangNumber(Friulian);
-      " in ";
-      TreeFigure; eos;
+      French; " and "; Walloon; ", together, are more closely related to "; Friulian; " in the tree of "; TreeFigure; eos;
+      "Both French and Walloon are equally related to "; Friulian; " because they both share the same common ancestor with ";
+      Friulian; ", at the node numbered ";
+      Figures.ExampleTree.LangNumber(Friulian); " in "; TreeFigure; eos;
       "It is important to realize that there are many possible ways in which the languages can be related to one another, with the tree of ";
       TreeFigure;
       " depicting only one of the possibilities. ";
@@ -878,7 +893,7 @@ with PaperSections.Methods {
       "each column of the alignment is considered to be homologous. ";
       "So, for example, the first column of the alignment which happens to be the nucleotide A in all three species is assumed to be homologous; ";
       "it is assumed that the common ancestor of gorillas, chimpanzees, and humans had the same gene that also had a position that was homologous to the first column in the alignment. ";
-      "Fine-scale homology is established using computer programs in a process called ‘alignment.’ ";
+      "Fine-scale homology is established using computer programs in a process called "; QuoteEnd{"alignment"};
       "Importantly, phylogenetic methods assume that the homology established by the alignment program is correct.";
     };
 
@@ -892,7 +907,7 @@ with PaperSections.Methods {
 
     BodyPar {
       "In this study, we take a different approach. ";
-      "Like others, we concentrate on the so-called ‘basic vocabulary’ of a language "
+      "Like others, we concentrate on the so-called "; Quote{"basic vocabulary"}; " of a language "
       NeedsReview("SWADESH REFERENCE");
       ", since the lexical items that instantiate concepts in this domain are less prone to horizontal transmission (i.e., linguistic borrowing). ";
       "In contrast to every study of linguistic phylogenetics that we are aware of, however, our investigation draws inferences from segmental information. ";
@@ -901,7 +916,7 @@ with PaperSections.Methods {
       "The word forms within each cognate class are phonemic representations based on the International Phonetic Alphabet (IPA) ";
       NeedsReview("IPA REFERENCE"); eos;
       "Consider the following word forms for one of the cognate classes for the concept ";
-      SingleQuote {ExampleConcept.Name};
+      Quote {ExampleConcept.Name};
     };
 
     BodyPar {
@@ -911,10 +926,10 @@ with PaperSections.Methods {
     };
 
     BodyPar {
-      "The word for "; SingleQuote {ExampleConcept.Name};  " in "; ExampleConcept.Taxon.Language; ", for example, is "
+      "The word for "; Quote {ExampleConcept.Name};  " in "; ExampleConcept.Taxon.Language; ", for example, is "
       "/"; ExampleConcept.LangWord; "/. ";
       "The matrix for the word "; ExampleConcept.Name; " also assumes that the fine-scale homology of the segments has been established. ";
-      "For example, the above matrix for the concept "; SingleQuote {ExampleConcept.Name};  " assumes that the first segment of the ";
+      "For example, the above matrix for the concept "; Quote {ExampleConcept.Name};  " assumes that the first segment of the ";
       TextList {ExampleConcept.LangNames};
       " languages (respectively, ";
       TextList {
@@ -930,10 +945,8 @@ with PaperSections.Methods {
       TextList {ExampleConcept.LangNames};
       "? ";
       "In this case, the alignment program chose the alignment that did not consider ";
-      SingleQuote {ExampleConcept.CalloutSegment};
-      " of "; ExampleConcept.Callout.Language; " as homologous to the ";
-      SingleQuote {ExampleConcept.CalloutSegment};
-      " of French based on the settings chosen by the user. ";
+      Quote {ExampleConcept.CalloutSegment}; " of "; ExampleConcept.Callout.Language; " as homologous to the ";
+      Quote {ExampleConcept.CalloutSegment}; " of French based on the settings chosen by the user. ";
       "It may be that other alignments are nearly as good as the one that is illustrated. ";
       AlignmentFigure;
       " shows two possible alignments of the word "
@@ -967,8 +980,7 @@ with PaperSections.Methods {
       "The segmental information for the ";
       SampledLanguages(Results.Taxa.Length);
       " languages for the cognate class above for ";
-      SingleQuote {ExampleConcept.Name};
-      " is:";
+      Quote {ExampleConcept.Name}; " is:";
     };
 
     BodyPar {
@@ -1272,7 +1284,7 @@ with PaperSections.Methods {
         ExpectedEvents;
         RateMatrixParams;
         InsertionRate;
-        Span {DeletionRate; Tex.vert; SegmentalInfo};
+        Condition(DeletionRate, SegmentalInfo);
       });
       Equals;
       Fraction {
@@ -1296,7 +1308,7 @@ with PaperSections.Methods {
         Lower: HomologyMap;
         ProbVar(SegmentalAlignment);
         Space;
-        Prob(CommaList {Span {SegmentalAlignment; Tex.vert; HomologyMap}; SegmentalInfo});
+        Prob(CommaList {Condition(SegmentalAlignment, HomologyMap); SegmentalInfo});
         Space;
         Prob(HomologyMap);
       };
@@ -1355,15 +1367,14 @@ with PaperSections.Methods {
       };
 
       Paragraph {
-        "Propose a new value for "; RateMatrixParams; " denoted "; Proposal; eos;
+        "Propose a new value for "; RateMatrixParams; " denoted "; NewValueProposal; eos;
         "The proposal mechanism is up to the programmer, but must involve the generation of random numbers ";
         RandomNumber;
         " such that the proposed value is a function of the current value and the random numbers, ";
         Equation {
-          Proposal;
+          NewValueProposal;
           Equals;
-          "h";
-          Arguments {
+          "h"; Arguments {
             RateMatrixParams;
             RandomNumber;
           };
@@ -1372,7 +1383,7 @@ with PaperSections.Methods {
         "The probability of proposing the new value is ";
         NewProposal(RateMatrixParams, RateMatrixParams);
         "whereas the probability of the imagined reverse move, not actually made in computer memory, is ";
-        NewProposal(Proposal, RateMatrixParams);
+        NewProposal(NewValueProposal, RateMatrixParams);
       };
 
       Paragraph {
@@ -1386,18 +1397,21 @@ with PaperSections.Methods {
           InParens {
             "1, ";
             Fraction {
-              Fof(Span {Unknown; Tex.vert; Proposal});
-              Fof(Span {Unknown; Tex.vert; RateMatrixParams});
+              FunctionF; Arguments {
+                Condition(Unknown, NewValueProposal)
+              };
+
+              FunctionF; Arguments {Condition(Unknown, RateMatrixParams)};
             };
             Times;
             Fraction {
-              Fof(Span {Proposal});
-              Fof(Span {RateMatrixParams});
+              FunctionF; Arguments {NewValueProposal};
+              FunctionF; Arguments {RateMatrixParams};
             };
             Times;
             Fraction {
-              NewProposal(Proposal, RateMatrixParams);
-              NewProposal(RateMatrixParams, Proposal);
+              NewProposal(NewValueProposal, RateMatrixParams);
+              NewProposal(RateMatrixParams, NewValueProposal);
             };
           };
         };
@@ -1420,7 +1434,7 @@ with PaperSections.Methods {
         Equation {
           RateMatrixParams;
           Equals;
-          Proposal;
+          NewValueProposal;
         }; eos;
         "Otherwise, the proposed state is said to be rejected and the chain remains in state ";
         Equation {
@@ -1525,8 +1539,7 @@ with PaperSections.Methods {
       "In this study, we compare two models. ";
       "The first model is the simplest one we could devise, assuming that the rate of change between all segments is equal. ";
       "Our first model is isomorphic to the earliest model of DNA substitution, called the Jukes and Cantor model in molecular evolution (Jukes and Cantor, 1969)";
-      References.jukes69;
-      eos;
+      Citation{jukes69}; eos;
       "The second model assumes that the rate of change to ";
       NeedsReview("something");
       " is potentially different than the rate of change to ";
@@ -1584,19 +1597,10 @@ ParamList(v) = Equation {EllipsisList {v sub 1; v sub BN}};
 
 D(x) = HBox {Extra " d"; x};
 
-Fof(x) = Equation {
-  Span {Italic; "f"};
-  InParens {
-    x;
-  }
-};
-
 PSM(n) = Equation {
   MarginalLikelihood;
   InParens {
-    SegmentalInfo;
-    Tex.vert;
-    Model sub n;
+    Condition(SegmentalInfo, Model sub n);
   }
 };
 
@@ -1612,7 +1616,7 @@ NewProposal(start, end) = Equation {
 };
 
 ProbVar(x) = Prob(CommaList {
-  Span {x; Tex.vert; Topology};
+  Condition(x, Topology);
   ExpectedEvents;
   RateMatrixParams;
   InsertionRate;
