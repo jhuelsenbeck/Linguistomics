@@ -2,7 +2,7 @@
 //=====================================================================
 
 with ExampleConcept {
-  Cognate            = FindSlice(Results.UsedCognates, c => c.Concept == Concepts.Star, 1)[0];
+  Cognate            = Results.GetConcept(Concepts.Star);
   GetTaxon(language) = Math.FindSlice(Results.Taxa, t => t.Language == language)[0];
 
   TaxonIndex     = 0;
@@ -466,12 +466,100 @@ with PaperSections.MethodsSummary {
   Title = Lang.Methods;
 
   Body = Block {
-    BodyPar {
+    FirstPar {
       "A detailed description of the model and analyses can be found in the supplemental material, [reference]. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
     };
   };
 }
+//======================================================================
+
+with PaperSections.DataSummary {
+  Title = Lang.Data;
+
+  K = textipa {"k"};
+  W = textipa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
+
+  Body = Block {
+    FirstPar {
+      "We selected ";
+      Results.ConceptCount;
+      " concepts from the 200-word Swadesh list of basic vocabulary. ";
+      "The initial set of data was downloaded from Wiktionary"; Citation{References.Wictionary}; ", which was then manually checked for accuracy and augmented. ";
+      "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
+      "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
+      "For instance, the Latin adjective "; textit{"gravis"}; " means ‘heavy’, but its French descendant "; textit{"grave"}; " has lost this sense and now means ‘serious.’";
+      "They are assigned to the same cognate set because segmentally French "; textit{"grave"}; " descends from Latin "; textit{"gravis"}; eos;
+      "There are in total "; Results.ConceptCount; " cognate sets, "; Results.WordCount; " word forms, and "; Results.UniqueSegments.Length; " segments. ";
+      "Each word is represented phonemically with the IPA alphabet. ";
+      "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by and for ancient languages such as Latin non-existent. ";
+    };
+
+    BodyPar {
+      "Latin is a highly inflectional language, which means that there are multiple word forms for verbs, nouns, and adjectives. ";
+      "For verbs, infinitive forms were selected. ";
+      "For nouns, singular forms were used in either the nominative or the accusative case, since these are the two case forms that were most often ancestral to Romance descendants. ";
+      "For adjectives, masculine singular nominative forms were typically used. ";
+      "The selection of word forms is not without consequences, since it impacts the rates of phonological change. ";
+      "For instance, most masculine singular nominative adjectives in Latin end in -"; textit{"us"}; eos;
+      "By contrast, feminine singular nominative adjectives end in -"; textit{"a"}; eos;
+      "Use of the feminine forms would increase the number of transitions originating in this vowel.";
+    };
+
+    BodyPar {
+      "In addition to being collected and classified, the data were also manually aligned, so that putatively historically related segments belong to the same column. ";
+      "The manual alignments served as the starting point for the MCMC sampling procedure (see below), so our analyses did not condition on any particular alignment of word segments being correct. ";
+      TableFigures.ManualAlignment.Data.ShowTableNumber; " provides an illustrative example of the alignment for the concept "; TableFigures.ManualAlignment.WordDisplay; eos;
+      "The ancestral Latin form "; textipa{Concepts.What.Primary.Latin}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
+      "In all of the descendant languages, the secondary articulation is lost. ";
+      "In some languages, it becomes a consonant in its own right (i.e., the "; IPA.Segments.kw.ShowSegment; " of French and Walloon). ";
+      "To accommodate this change, the Latin form has two segmental slots before the vowel (i.e., ";
+      IPA.Segments.kw.ShowSegment; "-id), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
+    };
+
+    ShowTableFigure(TableFigures.ManualAlignment.Data);
+
+    BodyPar {
+      "Our method models insertions, deletions, and transitions among segments. ";
+      "An effort was made to exclude word forms that involve changes of sets of segments (such as occur in morphological change). ";
+      "Metathesis, a change in which two segments swap positions, is modeled as separate transitions from the input and output segments. ";
+      "For instance, the Latin verb "; textit{"exprimere"}; " begins with a string "; textipa{"eks"}; ", which in Romanian has become "; textipa{"sk"}; eos;
+      "The initial vowel has been lost and "; textipa{"k"}; " and "; textipa{"s"}; " have undergone metathesis. ";
+      "Under our model, this change is treated as two separate transitions, one from "; textipa{"k"}; " to "; textipa{"s"}; " and another from "; textipa{"s"}; " to "; textipa{"k"}; eos;
+    };
+  };
+}
+//======================================================================
+
+with TableFigures.ManualAlignment {
+  Cognate     = Results.GetConcept(Concepts.What);
+  WordDisplay = SingleQuote{TextCase: TextCases.AllLower; Cognate.Name};
+
+  Data = new FigureClass(Caption, Body);
+
+  Caption = FigureCaption {
+    "Manual alignment of the words for the concept "; WordDisplay; eos;
+  };
+
+  Body = Table {
+    Columns: [2 inch, 2.2 inch, 1 inches];
+    Row {
+      EdgeB: 0.5 pts;
+      "Language";
+      "Phonemic Representation";
+      "Alignment";
+    };
+
+    foreach (var word in Cognate.Words) {
+      Row {
+        word.Language;
+        textipa {word};
+        word.ShowPaddedBlocks(16 pts);
+      };
+    }
+  };
+}
+
 //======================================================================
 
 TreeFigure      = Figures.ExampleTree.Data.ShowNumber;

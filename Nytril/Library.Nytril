@@ -123,6 +123,19 @@ class WordClass {
     }
   };
 
+  ShowPaddedBlocks(w) = Canvas {
+    foreach (var segment in Padded) {
+      var x = w * EachIndex;
+      Canvas {
+        BorderL: (0.125 pts) {Color: 80%};
+        X: x;
+        Width: w;
+        HAlign: HAligns.Center;
+        segment.ShowSegment;
+      };
+    }
+  };
+
   override GetPopup = Frame {
     AllWords.ShowConceptTable(Cognate);
   };
@@ -161,6 +174,7 @@ class ResultsClass {
       DisplaySegments,
       UniqueSegments,
       UniqueCharacters,
+      ConceptCount,
       TotalLength,
       OutFolder,
       EXEName,
@@ -201,7 +215,7 @@ class ResultsClass {
       [0, 0, 0, 0, 20],
     ];
 
-    GetConcepts;
+    InitConcepts;
     foreach (var cognate in UsedCognates)
       ComputeCognate(cognate);
 
@@ -240,6 +254,8 @@ class ResultsClass {
     GetFrequencies;
   }
 
+  GetConcept(concept) = FindSlice(UsedCognates, c => c.Concept == concept, 1)[0];
+
   void GetFrequencies {
     var set = new DictionaryClass(1024);
     foreach (var sd in SegmentFrequencyData)
@@ -264,13 +280,16 @@ class ResultsClass {
     }
   }
 
-  void GetConcepts {
+  void InitConcepts {
     var set = new DictionaryClass(256);
 
-    TotalLength = 0;
+    TotalLength  = 0;
+    ConceptCount = 0;
+
     var clist = new ListClass(256);
     foreach (var concept in Concepts) {
       if (exists concept.?Done) {
+        ++ConceptCount;
         foreach (var cognate in concept) {
           var vname = cognate.GlobalVariableName();
           if (vname != "Done" and vname != "Verb") {
