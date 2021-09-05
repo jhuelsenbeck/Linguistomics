@@ -35,6 +35,7 @@ abstract class RuleClass {
   var Name,
       FilterList,
       Filters,
+      FiltersPlus,
       Partitions,
       Matrix,
       Numbers;
@@ -50,7 +51,7 @@ abstract class RuleClass {
   }
 
   MatchesRule(filter, segment) {
-    foreach (var f in Filters) {
+    foreach (var f in FiltersPlus) {
       if (f == filter)
         return f.Matches(segment);
       if (f.Matches(segment))
@@ -61,7 +62,7 @@ abstract class RuleClass {
 
   virtual GetFilterIndex(segment) {
     var c = 0;
-    foreach (var filter in Filters) {
+    foreach (var filter in FiltersPlus) {
       if (MatchesRule(filter, segment))
         return c;
       ++c;
@@ -80,8 +81,9 @@ abstract class RuleClass {
   }
 
   void GetFilters {
-    Add(Residue);
     Filters = FilterList.ToArray;
+    Add(Residue);
+    FiltersPlus = FilterList.ToArray;
   }
 
   virtual void AssignCharacters(segments) {
@@ -98,7 +100,7 @@ abstract class RuleClass {
   virtual void AssignPartitions(segments) {
     var list = new ListClass(segments.Length);
     var i    = 0;
-    foreach (var filter in Filters) {
+    foreach (var filter in FiltersPlus) {
       var find = GetSegments(segments, filter);
       if (valid find) {
         list.Add(new PartitionClass(i, filter, find));
@@ -164,7 +166,7 @@ abstract class RuleClass {
       Separator: Space*2;
 
       var i = 0;
-      foreach (var filter in Filters) {
+      foreach (var filter in FiltersPlus) {
         var segments = GetSegments(Results.UniqueSegments, filter);
         if (segments.Length > 0) {
           HBox {

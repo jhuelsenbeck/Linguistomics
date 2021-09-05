@@ -118,7 +118,64 @@ with Defs {
   Model                   = new DefClass(Classical "M", "Model", "Mathematical model for linguistic parameters");
   BayesFactor             = new DefClass(Extra "BF", "Bayes Factor", "A numerical factor related to the quality of the model fit");
   Unknown                 = new DefClass(Classical "X", "Unknown", "");
+  EstimationFunction      = new DefClass(Classical "f", "Estimation function", "");
 }
+
+UnknownTree = Equation {
+   Phylogeny;
+   Equals;
+   Arguments {
+     Topology;
+     ExpectedEvents;
+   }
+};
+
+LiklihoodFunction = Equation {
+  EstimationFunction;
+  Arguments {
+    Span {SegmentalInfo; Tex.vert; Phylogeny};
+    InsertionRate;
+    DeletionRate;
+    RateMatrixParams;
+  };
+};
+
+MarginalLiklihood = Equation {
+  EstimationFunction;
+  Arguments {
+    SegmentalInfo;
+  };
+};
+
+BayesianEstimation = Equation {
+  EstimationFunction;
+  Arguments {
+    Phylogeny;
+    InsertionRate;
+    DeletionRate;
+    Span {RateMatrixParams; Tex.vert; SegmentalInfo};
+  };
+  Equals;
+  Fraction {
+    LiklihoodFunction;
+    Span {
+      EstimationFunction;
+      Arguments {
+        Phylogeny;
+        InsertionRate;
+        DeletionRate;
+        RateMatrixParams;
+      };
+    };
+
+    Span {
+      EstimationFunction;
+      Arguments {
+        SegmentalInfo;
+      };
+    };
+  };
+};
 
 ExpectedEventsPerBranch = Equation {
   ExpectedEvents;

@@ -477,7 +477,8 @@ with PaperSections.MethodsSummary {
 with PaperSections.DataSummary {
   Title = Lang.Data;
 
-  K = textipa {"k"};
+  K = textipa {IPA.Segments.k.ShowSegment};
+  S = textipa {IPA.Segments.s.ShowSegment};
   W = textipa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
 
   Body = Block {
@@ -524,8 +525,8 @@ with PaperSections.DataSummary {
       "An effort was made to exclude word forms that involve changes of sets of segments (such as occur in morphological change). ";
       "Metathesis, a change in which two segments swap positions, is modeled as separate transitions from the input and output segments. ";
       "For instance, the Latin verb "; textit{"exprimere"}; " begins with a string "; textipa{"eks"}; ", which in Romanian has become "; textipa{"sk"}; eos;
-      "The initial vowel has been lost and "; textipa{"k"}; " and "; textipa{"s"}; " have undergone metathesis. ";
-      "Under our model, this change is treated as two separate transitions, one from "; textipa{"k"}; " to "; textipa{"s"}; " and another from "; textipa{"s"}; " to "; textipa{"k"}; eos;
+      "The initial vowel has been lost and "; K; " and "; S; " have undergone metathesis. ";
+      "Under our model, this change is treated as two separate transitions, one from "; K; " to "; S; " and another from "; S; " to "; K; eos;
     };
   };
 }
@@ -545,9 +546,7 @@ with TableFigures.ManualAlignment {
     Columns: [2 inch, 2.2 inch, 1 inches];
     Row {
       EdgeB: 0.5 pts;
-      "Language";
-      "Phonemic Representation";
-      "Alignment";
+      Lang.Language; Lang.PhonemicRep; Lang.Alignment;
     };
 
     foreach (var word in Cognate.Words) {
@@ -556,6 +555,122 @@ with TableFigures.ManualAlignment {
         textipa {word};
         word.ShowPaddedBlocks(16 pts);
       };
+    }
+  };
+}
+
+//======================================================================
+
+with PaperSections.ModelInference {
+  Title = "Model and Statistical Inference";
+
+  InsertionLessThanDeletion = Span {InsertionRate; " < "; DeletionRate};
+
+  Body = Block {
+    FirstPar {
+      "We assume that modern languages are related to one another through an  unknown phylogenetic tree, ";
+      UnknownTree;
+      ", that contains information on the relatedness of the languages (";
+      Topology;
+      ") and the expected number of sound substitutions "; ExpectedEvents; " that occur along each branch of the tree. ";
+      "Language evolves along the branches of the tree according to the TKF91 model"; Citation {thorne91}; " which allows either a word segment transition, insertion, or deletion to occur in an instant of time. ";
+      "Insertions and deletions occur at rates "; InsertionRate; " and "; DeletionRate; " respectively, with "; InsertionLessThanDeletion; eos;
+      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  Results.UniqueSegments.Length; " word segments). ";
+      "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters "; Span {Bold; RateMatrixParams}; eos;
+    };
+
+    BodyPar {
+      "We perform estimation in a Bayesian framework, basing parameter estimates on the joint posterior probability distribution, ";
+    };
+
+    EquationPar {
+      BayesianEstimation;
+    };
+
+    BodyPar {
+      "where "; SegmentalInfo; " are the observed word segments for the cognate words. ";
+      "The likelihood function, "; LiklihoodFunction;
+      ", is calculated using the algorithm described by Lunter "; textit{"et al."}; Citation {lunter2003}; eos;
+      "We use priors for the model parameters that are standard in phylogenetics, with the exception of the rate parameters for the insertions and deletions, ";
+      "which are assumed to follow independent and identically distributed exponential distributions with "; InsertionLessThanDeletion; eos;
+      "We numerically approximate the posterior distribution of the parameters using MCMC. ";
+      "Specifically, we constructed a Markov chain that has as its states the parameters of the model and a stationary distribution that is the posterior distribution of interest. ";
+      "Samples from this chain when at stationarity are valid, albeit dependent, samples from the posterior distribution. ";
+      "Besides sampling the phylogenetic parameters of the model, the chain also samples word segment alignments"; Citation{lunter04}; eos;
+    };
+
+    BodyPar {
+      "The marginal likelihood, ";
+      MarginalLiklihood;
+      ", plays the key role in choosing among models. ";
+      "We numerically approximate the marginal probability for a model using path sampling techniques"; Citation{Lartillot2006; xie2010}; eos;
+    };
+
+    BodyPar {
+      "We examined three models of segmental transition. ";
+      "The first (denoted ‘JC69’) is isomorphic to the Jukes-Cantor"; Citation{jukes69}; " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate; ";
+      "the second ("; SingleQuote{Results.PartitionRule.Name}; ") model allows different rates among five groups of word segments (";
+      Span {
+        Separator: CommaSpace;
+        LastSeparator: " and ";
+        (each Results.PartitionRule.Filters).Name;
+      };
+//      nasal vowels, vowels, nasal consonants, non-syllabic sonorants, and consonants
+      ") and has an intermediate number of parameters (";
+      Results.UniqueSegments.Length;
+      " parameters for the equilibrium distribution and ";
+      (Results.PartitionRule.Filters.Length-1)^2-1;
+      " parameters describing rates among word segment groups); ";
+      "and the third (‘GTR’) is a model isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
+      ", and has a large number of parameters (";
+      Results.UniqueSegments.Length;
+      " parameters for the equilibrium distribution and ";
+      3402; // how is this calculated?
+      " exchangability parameters). ";
+      "For both the second and third models, we consider the equilibrium frequencies of the model to be random variables with a flat Dirichlet prior distribution."
+    };
+  };
+}
+
+//======================================================================
+
+with PaperSections.DataCuration {
+  Title = "Data Curation and Analyses";
+
+  Body = Block {
+    FirstPar {
+      "All analyses and typeset output for this experiment were coordinated using a single program written in the Nytril programming language"; Citation {nytrilprogram}; eos;
+      "Specifically, words segments from the ";
+      Results.Taxa.Length;
+      " different human languages were organized into data structures in various source files. ";
+      "Another part of the program created source files for input into a C++ program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
+      "Finally, another part of the program read the results of the completed analysis and created the typeset materials, including this one. ";
+      "MCMC analyses were run for one million cycles and repeated to check for convergence. ";
+      "Samples taken during the first 10% of the chain were discarded as the burn-in phase.";
+    }
+  };
+}
+
+//======================================================================
+
+with PaperSections.Acknowledgements {
+  Title = "Acknowledgements";
+
+  Body = Block {
+    FirstPar {
+      "J.P.H. was supported through NSF (1759909) and the Koret Foundation. We thank Gerton Lunter for help with the TKF91 model.";
+    }
+  };
+}
+
+//======================================================================
+
+with PaperSections.Contributions {
+  Title = "Author contributions statement";
+
+  Body = Block {
+    FirstPar {
+      "D.M.G. collected data, S.H.M. curated data and developed control software, and J.P.H. developed the MCMC software. All authors wrote the manuscript. ";
     }
   };
 }
@@ -725,14 +840,7 @@ with PaperSections.Methods {
     BodyPar {
       "To summarize, we assume languages only diverge from one another, ignoring events such as word assimilation. ";
       "We represent the divergence as a phylogeny containing information on both the topology and branch lengths, together denoted ";
-      Equation {
-         Phylogeny;
-         Equals;
-         Arguments {
-           Topology;
-           ExpectedEvents;
-         }
-      };
+      UnknownTree;
       eos;
       "One of the goals of this study is to estimate these parameters from the data collected from each language."
     };
