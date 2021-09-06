@@ -79,19 +79,17 @@ class SubmissionViewClass: BaseViewClass {
     super.Constructor(#3ab5559cf52bdb4484be6eea54bfade3#, "Submission");
   }
 
-  HeaderBlock = Block {
-    Span {
-      TextCase: TextCases.AllUpper;
-      Title;
+  FooterBlock = Block {
+    Paragraph {
+      ParAlignment: ParAlignments.Right;
+      PageNumber; "/"; PageCount;
     }
   };
 
   override GetDocument = MainDocument {
     PageSection {
-      Header: HeaderBlock {
-        Distance: 0.125 inches;
-        MarginT: 0.125 inch;
-        Even: HeaderBlock;
+      Footer: FooterBlock {
+        Even: FooterBlock;
         First: Block;
       };
 
@@ -100,28 +98,27 @@ class SubmissionViewClass: BaseViewClass {
       };
 
       ShowAuthorList(Authors);
+
+      Header1 {Abstract.Title};
+      Abstract.Body;
+      ShowContent(PaperSections.Introduction);
+      Header1 {Lang.Results};
+
+      ShowContent(PaperSections.WordTransformation);
+      ShowContent(PaperSections.WordSegmentRelationships);
+      ShowContent(PaperSections.RomanceLanguagePhylogeny);
+      ShowContent(PaperSections.Discussion);
+      ShowContent(PaperSections.MethodsSummary);
+      ShowContent(PaperSections.DataSummary);
+      ShowContent(PaperSections.ModelInference);
+      ShowContent(PaperSections.DataCuration);
+      ShowContent(PaperSections.Acknowledgements);
+      ShowContent(PaperSections.Contributions);
     };
-
-    Header1 {Abstract.Title};
-    Abstract.Body;
-    ShowContent(PaperSections.Introduction);
-    Header1 {Lang.Results};
-
-    ShowContent(PaperSections.WordTransformation);
-    ShowContent(PaperSections.WordSegmentRelationships);
-    ShowContent(PaperSections.RomanceLanguagePhylogeny);
-    ShowContent(PaperSections.Discussion);
-    ShowContent(PaperSections.MethodsSummary);
-    ShowContent(PaperSections.DataSummary);
-    ShowContent(PaperSections.ModelInference);
-    ShowContent(PaperSections.DataCuration);
-    ShowContent(PaperSections.Acknowledgements);
-    ShowContent(PaperSections.Contributions);
 
     ShowBibliography;
     PageSection {
       ShowFigure(Figures.FrequencyDiagram.Data);
-      ShowFigure(Figures.SegmentFrequencies.Data);
     }
   };
 }

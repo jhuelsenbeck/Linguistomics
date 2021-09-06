@@ -101,7 +101,6 @@ class DefClass {
 class FigureClass {
   var Caption,
       Body,
-      Number,
       BodyText,
       SlideText;
 
@@ -110,16 +109,16 @@ class FigureClass {
     Body    = body;
   }
 
-  ShowNumber = Span {
+  ShowFigureNumber = Span {
     Lang.Figure;
     Space;
-    Number;
+    RefCounter("figure", GlobalVariablePath);
   };
 
   ShowTableNumber = Span {
     Lang.Table;
     Space;
-    Number;
+    RefCounter("table", GlobalVariablePath);
   };
 
   ShowSlide = Block {
@@ -197,7 +196,7 @@ with Style {
   DQuote               = Span {Begin: "“"; End: "”"};
   DQuoteEnd            = Span {Begin: "“"; End: ".” "};
   textit               = Span {Italic};
-  textipa              = Span {IPAFamily; Begin:"/"; End:"/"};
+  TextIpa              = Span {IPAFamily; Begin:"/"; End:"/"};
 
   MainDocument = Document {
     RefStyle: ReferenceStyle;
@@ -241,7 +240,7 @@ with Style {
       Span {
         Bold;
         SansSerif;
-        figure.ShowNumber;
+        figure.ShowFigureNumber;
         eos;
       };
       figure.Caption;
@@ -252,8 +251,8 @@ with Style {
     };
   };
 
-  ShowTableFigure(figure) = Block {
-    figure.Body {
+  ShowTable(table) = Block {
+    table.Body {
       SpaceBefore: 10 pts;
       ParAlignment: ParAlignments.Center;
     };
@@ -264,12 +263,10 @@ with Style {
       Span {
         Bold;
         SansSerif;
-        Lang.Table;
-        Space;
-        figure.Number;
+        table.ShowTableNumber;
         eos;
       };
-      figure.Caption;
+      table.Caption;
     };
   };
 
@@ -633,19 +630,9 @@ with Style {
 
   SourcePar(concept) = FirstPar {
     MonoFamily;
+    LeftIndent: 0.25 inches;
     TextHeight: 8 pts;
-
-    var selection = null;
-    foreach (var c in concept.RefArray) {
-      var s = SourceSelection(c, true);
-      if (valid selection)
-        selection |= s;
-      else
-        selection = s;
-    }
-    Span {
-      selection;
-    }
+    SourceSelection(concept, SourceSelectOptions.Line SourceSelectOptions.Children);
   };
 
   BodyTable = Table {
@@ -680,11 +667,6 @@ abstract class BaseViewClass: DocumentViewClass {
   Constructor(id, name) {
     super.Constructor(id, name);
     Title = "Understanding Language Evolution Using an Event-Based Model";
-
-    foreach (var f in Figures)
-      f.Data.Number = EachOne;
-    foreach (var f in TableFigures)
-      f.Data.Number = EachOne;
   }
 
   FixedFrame(x, y, width, height) = Frame {

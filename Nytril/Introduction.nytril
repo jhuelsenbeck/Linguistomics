@@ -53,7 +53,7 @@ with PaperSections.Introduction {
        "Such decisions, even when well-informed, can significantly influence the results of a phylogenetic analysis.";
     };
 
-    ShowTableFigure(TableFigures.Cognates.Data);
+    ShowTable(TableFigures.Cognates.Data);
 
     BodyPar {
       "The coding procedure forces the linguist to treat the cognate word data in the same way biologists treat morphological characters in a phylogenetic analysis"; Citation {lewis01}; eos;
@@ -70,8 +70,8 @@ with PaperSections.Introduction {
       "When a set of languages share the same cognate state, phylogenetic inference is not possible. ";
       "The differing states in "; TableFigures.Cognates.Data.ShowTableNumber; " will distinguish the Romance languages (French, Spanish, and Italian) from the Slavic languages (Russian and Polish), but they have nothing to say about the relationships between the languages in these two clades. ";
       "The segmental form of the words for "; Quote{"hand"}; " does, however, contain a phylogenetic signal. ";
-      "French "; textipa {Concepts.Hand.Primary.French} " has, for instance, undergone more change than either the Spanish or Italian cognate form ";
-       textipa{Concepts.Hand.Primary.Spanish}; eos;
+      "French "; TextIpa {Concepts.Hand.Primary.French} " has, for instance, undergone more change than either the Spanish or Italian cognate form ";
+       TextIpa{Concepts.Hand.Primary.Spanish}; eos;
     };
 
     BodyPar {
@@ -126,7 +126,11 @@ with TableFigures.Cognates {
   };
 
   Line(language, text, code) = Row {
-    language; textipa{text}; code;
+    language;
+    TextIpa {
+      Math.FindSlice(text, c => c != IPA.Segments.PrimaryStress.Ipa);
+    };
+    code;
   };
 
   Body = Table {

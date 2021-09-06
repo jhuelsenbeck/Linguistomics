@@ -356,7 +356,7 @@ with PaperSections.WordTransformation {
 
     BodyPar {
       "The "; ModelName; " model allows different rates for different groups of word segments, ";
-      Figures.FrequencyDiagram.Data.ShowNumber; " summarizes the estimated rates of change from one segment grouping to another. ";
+      Figures.FrequencyDiagram.Data.ShowFigureNumber; " summarizes the estimated rates of change from one segment grouping to another. ";
       Note;
     };
   };
@@ -392,7 +392,7 @@ with PaperSections.RomanceLanguagePhylogeny {
 with PaperSections.Discussion {
   Title = "Discussion";
 
-  SoundChange(to=null) = Span {textipa{"a"}; to ?? " to "; textipa{"o"}};
+  SoundChange(to=null) = Span {TextIpa{"a"}; to ?? " to "; TextIpa{"o"}};
 
   Body = Block {
     FirstPar {
@@ -474,9 +474,9 @@ with PaperSections.MethodsSummary {
 with PaperSections.DataSummary {
   Title = Lang.Data;
 
-  K = textipa {IPA.Segments.k.ShowSegment};
-  S = textipa {IPA.Segments.s.ShowSegment};
-  W = textipa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
+  K = TextIpa {IPA.Segments.k.ShowSegment};
+  S = TextIpa {IPA.Segments.s.ShowSegment};
+  W = TextIpa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
 
   Body = Block {
     FirstPar {
@@ -488,7 +488,7 @@ with PaperSections.DataSummary {
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; Quote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; QuoteEnd{"serious"};
       "They are assigned to the same cognate set because segmentally French "; textit{"grave"}; " descends from Latin "; textit{"gravis"}; eos;
-      "There are in total "; Results.ConceptCount; " cognate sets, "; Results.WordCount; " word forms, and "; Results.UniqueSegments.Length; " segments. ";
+      "There are in total "; Results.ConceptCount; " cognate sets, "; Results.WordCount; " word forms, using "; Results.UniqueSegments.Length; " unique segments. ";
       "Each word is represented phonemically with the IPA alphabet. ";
       "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by and for ancient languages such as Latin non-existent. ";
     };
@@ -507,21 +507,22 @@ with PaperSections.DataSummary {
     BodyPar {
       "In addition to being collected and classified, the data were also manually aligned, so that putatively historically related segments belong to the same column. ";
       "The manual alignments served as the starting point for the MCMC sampling procedure (see below), so our analyses did not condition on any particular alignment of word segments being correct. ";
-      TableFigures.ManualAlignment.Data.ShowTableNumber; " provides an illustrative example of the alignment for the concept "; TableFigures.ManualAlignment.WordDisplay; eos;
-      "The ancestral Latin form "; textipa{Concepts.What.Primary.Latin}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
+      TableFigures.ManualAlignment.Data.ShowTableNumber; " provides an illustrative example of the alignment for the concept ";
+      TableFigures.ManualAlignment.WordDisplay; eos;
+      "The ancestral Latin form "; TextIpa{Concepts.What.Primary.Latin}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
       "In all of the descendant languages, the secondary articulation is lost. ";
       "In some languages, it becomes a consonant in its own right (i.e., the "; IPA.Segments.kw.ShowSegment; " of French and Walloon). ";
       "To accommodate this change, the Latin form has two segmental slots before the vowel (i.e., ";
       IPA.Segments.kw.ShowSegment; "-id), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
     };
 
-    ShowTableFigure(TableFigures.ManualAlignment.Data);
+    ShowTable(TableFigures.ManualAlignment.Data);
 
     BodyPar {
       "Our method models insertions, deletions, and transitions among segments. ";
       "An effort was made to exclude word forms that involve changes of sets of segments (such as occur in morphological change). ";
       "Metathesis, a change in which two segments swap positions, is modeled as separate transitions from the input and output segments. ";
-      "For instance, the Latin verb "; textit{"exprimere"}; " begins with a string "; textipa{"eks"}; ", which in Romanian has become "; textipa{"sk"}; eos;
+      "For instance, the Latin verb "; textit{"exprimere"}; " begins with a string "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
       "The initial vowel has been lost and "; K; " and "; S; " have undergone metathesis. ";
       "Under our model, this change is treated as two separate transitions, one from "; K; " to "; S; " and another from "; S; " to "; K; eos;
     };
@@ -530,10 +531,9 @@ with PaperSections.DataSummary {
 //======================================================================
 
 with TableFigures.ManualAlignment {
+  Data        = new FigureClass(Caption, Body);
   Cognate     = Results.GetConcept(Concepts.What);
   WordDisplay = Quote{TextCase: TextCases.AllLower; Cognate.Name};
-
-  Data = new FigureClass(Caption, Body);
 
   Caption = FigureCaption {
     "Manual alignment of the words for the concept "; WordDisplay; eos;
@@ -549,7 +549,7 @@ with TableFigures.ManualAlignment {
     foreach (var word in Cognate.Words) {
       Row {
         word.Language;
-        textipa {word};
+        TextIpa {word};
         word.ShowPaddedBlocks(16 pts);
       };
     }
@@ -640,22 +640,23 @@ with PaperSections.DataCuration {
     FirstPar {
       "Our analyses is coordinated using a program written in the Nytril programming language"; Citation {nytrilprogram}; eos;
       "We created an automated framework for the experiment that comprises a reusable IPA library, word data, ";
-      "quality tests, external MCMC software (written in C++), and typeset output for papers and presentations. ";
+      "data quality checks, typeset output and input files for the MCMC software (written in C++). ";
     };
 
     BodyPar {
-      "Words segments from the "; Results.Taxa.Length; " different human languages, coded in standard unicode IPA, are organized into data structures. ";
+      "Words for the "; Results.Taxa.Length; " different human languages in our study, coded in standard unicode IPA, are organized into groups by concept, and then by cognate class. ";
       "For example, the concept "; Quote{TextCase: TextCases.AllLower; Example.GlobalVariableName}; " is coded in the following way:";
     };
 
-    SourcePar(Example.Primary);
+    SourcePar(Example);
 
     BodyPar {
-      "Here, the comments following the "; Quote{"//"}; " are meant to be read by a reviewer, but have no effect on the analysis. ";
-      "A challenge for programmers working in linguistics is that the IPA representation of words are in Unicode (UCS), not ANSI. ";
-      "This requires care with structures, file formats, text encodings and diacritic compositional form. ";
-      "Furthermore, each text string can comprise several UCS code-points, so that there is not a one-to-one mapping between string elements and segments. ";
-      "For instance the the following segment uses 4 unicode code-points to represent a single sound. ";
+      "The comments following the "; Quote{"//"}; " are meant to be read by a reviewer, but have no effect on the analysis. ";
+      "The dashes ("; Quote{"-"}; ") are used to indicate a preliminary alignment for the analysis. ";
+      "A challenge for programmers working in linguistics is that the IPA representation of words are expressed in Unicode (UCS), not ASCII or ANSI. ";
+      "This requires care with file formats, text encodings and diacritic compositional form. ";
+      "Each text string can comprise several UCS code-points, so that there is not a one-to-one mapping between string characters and segments. ";
+      "Below is a an example of a more complex encoding. The numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
     };
 
     FigureBody {
@@ -663,13 +664,13 @@ with PaperSections.DataCuration {
     };
 
     BodyPar {
-      "Since our analysis requires each word to be seperated into segments, a parser converts word strings into arrays of objects that facilitate the manipulation of segments at a high level. ";
-      "A library of of such objects endows each segment with linguistic features that can be used for analysis. ";
-      "For instance, the partition models are coded using properties such as "; Quote{"consonant"}; " and "; Quote{"vowel"}; ", rather than working with strings of characters directly.";
+      "Since our analysis requires each word to be seperated into segments, a parser converts word strings into arrays of segment objects that facilitate the manipulation of segments at a high level. ";
+      "A reusable library of such objects endows each segment with linguistic features that can be used for analysis. ";
+      "After the input step, all steps are coded using properties such as "; Quote{"vowel"}; " and "; Quote{"nasal"}; ", rather than working with strings of characters directly.";
     };
 
     BodyPar {
-      "After the raw input is coded, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
+      "After the raw input is parsed, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
       "The MCMC analyses runs for one million cycles and repeats to check for convergence. ";
       "Samples taken during the first 10% of the chain are discarded as the burn-in phase. ";
       "When the analysis is complete, the results are read back into the control program. ";
