@@ -123,17 +123,17 @@ class WordClass {
     }
   };
 
-  ShowPaddedBlocks(w) = Canvas {
-    foreach (var segment in Padded) {
-      var x = w * EachIndex;
-      Canvas {
-        BorderL: (0.125 pts) {Color: 80%};
-        X: x;
-        Width: w;
-        HAlign: HAligns.Center;
-        segment.ShowSegment;
-      };
-    }
+  ShowPaddedBlocks(w) = Table {
+    Columns: [w]*Padded.Length;
+    Row {
+      foreach (var segment in Padded) {
+        Cell {
+          EdgeL: (0.125 pts) {Color: 80%};
+          ParAlignment: ParAlignments.Center;
+          segment.ShowSegment;
+        };
+      }
+    };
   };
 
   override GetPopup = Frame {
@@ -464,6 +464,9 @@ class ResultsClass {
 //    var results = p.Run;
 //    if (results.ExitCode != 0)
 //      System.Assert(false, results.StandardOutput, p);
+
+    Write(new SubmissionViewClass.GetDocument, OutFolder Folder("Nytril") FileName("Submission.docx"), FileFormats.Word);
+
   }
 
   ShowLanguageTrees = Block {

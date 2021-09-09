@@ -135,24 +135,31 @@ with AllWords {
       Style.IPAFamily;
       Edge: 0.5;
       Columns: [first] + [w] * wordsperline;
+
       Row {
         Style.TitleBackground;
         Style.SansSerif;
         Empty;
         (each cognates).Title;
       };
-      AddRow(each Results.Taxa, cognates, textheight)
+
+      AddRow(each Results.Taxa, cognates, textheight);
     };
     Paragraph;
   };
 
-  ShowConceptTable(concepts) = ConceptTable(10 pts, 7, [concepts]);
+  ShowConceptTable(concepts) = ConceptTable(10 pts, 7, [concepts], 1000000);
 
-  ShowTable = Block {
+  ShowTable(max=1000000) = Block {
     var textheight = 9 pts;
     TextHeight: textheight;
     var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * ((textheight into pixels) / pixels)));
-    ConceptTable(textheight, wordsperline, each (Results.UsedCognates / wordsperline))
+
+    foreach (var group in (Results.UsedCognates / wordsperline)) {
+      if (EachIndex >= max)
+        break;
+      ConceptTable(textheight, wordsperline, group);
+    }
   };
 }
 //======================================================================

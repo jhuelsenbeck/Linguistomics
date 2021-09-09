@@ -98,40 +98,6 @@ class DefClass {
 }
 //======================================================================
 
-class FigureClass {
-  var Caption,
-      Body,
-      BodyText,
-      SlideText;
-
-  Constructor(caption, body) {
-    Caption = caption;
-    Body    = body;
-  }
-
-  ShowFigureNumber = Span {
-    Lang.Figure;
-    Space;
-    RefCounter("figure", GlobalVariablePath);
-  };
-
-  ShowTableNumber = Span {
-    Lang.Table;
-    Space;
-    RefCounter("table", GlobalVariablePath);
-  };
-
-  ShowSlide = Block {
-    Caption;
-    Paragraph {
-      ParAlignment: ParAlignments.Center;
-      SlideText;
-      Body;
-    }
-  };
-}
-//======================================================================
-
 Main.MathFamily = Style.MathFace; //"Linux Libertine Display O";
 
 with Style {
@@ -232,15 +198,36 @@ with Style {
 
   FigureCaption = Span;
 
-  ShowFigure(figure) = Block {
+  ShowFigureNumber(figure) = Span {
+    Lang.Figure;
+    Space;
+    RefCounter("figure", figure.GlobalVariablePath);
+  };
+
+  ShowTableNumber(figure) = Span {
+    Lang.Table;
+    Space;
+    RefCounter("table", figure.GlobalVariablePath);
+  };
+
+  ShowFigureSlide(figure, format=null) = Block {
+    figure.Caption;
     Paragraph {
-      SpaceBefore: 6 pts;
+      ParAlignment: ParAlignments.Center;
+      format;
+      figure.Body;
+    }
+  };
+
+  ShowFigureDoc(figure) = Block {
+    Paragraph {
+      SpaceBefore: 10 pts;
       SpaceAfter: 6 pts;
       KeepWithNext: true;
       Span {
         Bold;
         SansSerif;
-        figure.ShowFigureNumber;
+        ShowFigureNumber(figure);
         eos;
       };
       figure.Caption;
@@ -263,7 +250,7 @@ with Style {
       Span {
         Bold;
         SansSerif;
-        table.ShowTableNumber;
+        ShowTableNumber(table);
         eos;
       };
       table.Caption;
@@ -628,8 +615,10 @@ with Style {
     SpaceBefore: 6 pts;
   };
 
-  SourcePar(concept) = FirstPar {
+  SourcePar(concept) = Paragraph {
     MonoFamily;
+    ParAlignment: ParAlignments.Left;
+    SpaceBefore: 6 pts;
     LeftIndent: 0.25 inches;
     TextHeight: 8 pts;
     SourceSelection(concept, SourceSelectOptions.Line SourceSelectOptions.Children);

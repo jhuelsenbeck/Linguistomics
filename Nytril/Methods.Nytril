@@ -21,8 +21,6 @@ with ExampleConcept {
 //======================================================================
 
 with Figures.ExampleTree {
-  Data = new FigureClass(Caption, Body);
-
   LanguageList = [
     Latin,
     Romanian,
@@ -84,10 +82,6 @@ with Figures.ExampleTree {
 //======================================================================
 
 with Figures.Alignment {
-  Data = new FigureClass(Caption, Body) {
-    SlideText: {TextHeight: 5 pts};
-  };
-
   ArrowWidth  = 50;
   ArrowHeight = 100;
   ArrowMargin = 20 pts;
@@ -356,7 +350,7 @@ with PaperSections.WordTransformation {
 
     BodyPar {
       "The "; ModelName; " model allows different rates for different groups of word segments, ";
-      Figures.FrequencyDiagram.Data.ShowFigureNumber; " summarizes the estimated rates of change from one segment grouping to another. ";
+      ShowFigureNumber(Figures.FrequencyDiagram); " summarizes the estimated rates of change from one segment grouping to another. ";
       Note;
     };
   };
@@ -507,7 +501,7 @@ with PaperSections.DataSummary {
     BodyPar {
       "In addition to being collected and classified, the data were also manually aligned, so that putatively historically related segments belong to the same column. ";
       "The manual alignments served as the starting point for the MCMC sampling procedure (see below), so our analyses did not condition on any particular alignment of word segments being correct. ";
-      TableFigures.ManualAlignment.Data.ShowTableNumber; " provides an illustrative example of the alignment for the concept ";
+      ShowTableNumber(TableFigures.ManualAlignment); " provides an illustrative example of the alignment for the concept ";
       TableFigures.ManualAlignment.WordDisplay; eos;
       "The ancestral Latin form "; TextIpa{Concepts.What.Primary.Latin}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
       "In all of the descendant languages, the secondary articulation is lost. ";
@@ -516,7 +510,7 @@ with PaperSections.DataSummary {
       IPA.Segments.kw.ShowSegment; "-id), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
     };
 
-    ShowTable(TableFigures.ManualAlignment.Data);
+    ShowTable(TableFigures.ManualAlignment);
 
     BodyPar {
       "Our method models insertions, deletions, and transitions among segments. ";
@@ -531,7 +525,6 @@ with PaperSections.DataSummary {
 //======================================================================
 
 with TableFigures.ManualAlignment {
-  Data        = new FigureClass(Caption, Body);
   Cognate     = Results.GetConcept(Concepts.What);
   WordDisplay = Quote{TextCase: TextCases.AllLower; Cognate.Name};
 
@@ -540,9 +533,10 @@ with TableFigures.ManualAlignment {
   };
 
   Body = Table {
-    Columns: [1.5 inch, 1.75 inch, 1 inches];
+    Columns: [1.5 inches, 1.75 inches, 1.5 inch];
     Row {
-      EdgeB: 0.25 pts;
+      Padding: 0.5 pt;
+      EdgeB: 0.5 pts;
       Lang.Language; Lang.PhonemicRep; Lang.Alignment;
     };
 
@@ -550,7 +544,9 @@ with TableFigures.ManualAlignment {
       Row {
         word.Language;
         TextIpa {word};
-        word.ShowPaddedBlocks(16 pts);
+        Cell {
+          word.ShowPaddedBlocks(20 pts);
+        }
       };
     }
   };
@@ -705,8 +701,8 @@ with PaperSections.Contributions {
 
 //======================================================================
 
-TreeFigure      = Figures.ExampleTree.Data.ShowFigureNumber;
-AlignmentFigure = Figures.Alignment.Data.ShowFigureNumber;
+TreeFigure      = ShowFigureNumber(Figures.ExampleTree);
+AlignmentFigure = ShowFigureNumber(Figures.Alignment);
 
 with PaperSections.Methods {
   Title = Lang.Methods;
@@ -758,7 +754,7 @@ with PaperSections.Methods {
       ", the branch connecting nodes 12 and 13 is assigned the label 12. ";
     };
 
-    ShowFigure(Figures.ExampleTree.Data);
+    ShowFigureDoc(Figures.ExampleTree);
 
     BodyPar {
       "A phylogeny is an information-rich graph. ";
@@ -1014,7 +1010,7 @@ with PaperSections.Methods {
       " that can be formed using two different homology maps. ";
     };
 
-    ShowFigure(Figures.Alignment.Data);
+    ShowFigureDoc(Figures.Alignment);
 
     BodyPar {
       "Ultimately, the linguist observes the phonetic (in the case of contemporary languages) or graphemic (in the case of corpus languages) forms of words, on the basis of which phonemic representations are posited. ";
@@ -1570,8 +1566,8 @@ with PaperSections.Methods {
       };
     };
     PageBreak;
-    ShowFigure(Figures.FrequencyDiagram.Data);
-    ShowFigure(Figures.SegmentFrequencies.Data);
+    ShowFigureDoc(Figures.FrequencyDiagram);
+    ShowFigureDoc(Figures.SegmentFrequencies);
   };
 }
 
@@ -1593,7 +1589,7 @@ IntegrateOver(v) = Integral {
 
 ParamList(v) = Equation {EllipsisList {v sub 1; v sub BN}};
 
-D(x) = HBox {Extra " d"; x};
+D(x) = HBox {Span {Classical; " d"}; x};
 
 PSM(n) = Equation {
   MarginalLikelihood;
