@@ -258,7 +258,7 @@ with Style {
   };
 
   ShowAuthor(PersonClass person) = Span {
-    person.GetFullName {Bold};
+    PersonLib.GetFullName(person) {Bold};
     Span {
       Separator: Comma;
       TextAlignment: TextAlignments.Superscript;
@@ -266,13 +266,13 @@ with Style {
       "+";
     };
 
-    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
+    var site = person.FindFirstFact(LinkTypes.Website);
     if (valid site)
       Link: site.Value;
   };
 
   ShowAuthorDetails(PersonClass person) {
-    var department = person.FindFirstFact(LinkTypes.WorkDepartment);
+    var department = person.FindFirstFact(LinkTypes.Department);
     if (valid department) {
       return Block {
         LeftIndent: NoteIndexIndent;
@@ -292,7 +292,7 @@ with Style {
               org.Name;
             }
 
-            var address = org.FindFirstFact(LinkTypes.MainOffice);
+            var address = org.FindFirstFact(LinkTypes.Office);
             if (valid address) {
               CommaSpace;
               address.ShowSpan(true);
@@ -349,7 +349,7 @@ with Style {
       person.GetFullName;
     };
 
-    person.FindFirstFact(LinkTypes.WorkAddress)?.ShowSpan(true);
+    person.FindFirstFact(LinkTypes.Address)?.ShowSpan(true);
 
     var email = person.FindFirstFact(LinkTypes.WorkEmail);
     if (valid email) {
@@ -363,7 +363,7 @@ with Style {
       };
     }
 
-    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
+    var site = person.FindFirstFact(LinkTypes.Website);
     if (valid site) {
       Paragraph {
         Seperator: CommaSpace;
