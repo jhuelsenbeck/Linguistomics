@@ -324,6 +324,69 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
     //print();
 }
 
+Tree::Tree(RbBitSet& taxonMask, std::map<RbBitSet*,double,CompBitSet>& partitions, std::vector<std::string>& tn) {
+
+    // get the number of taxa and taxon names and
+    // set the initial tree with just tip nodes
+    int partSize = (int)taxonMask.size();
+    numTaxa = 0;
+    std::map<RbBitSet*,Node*,CompBitSet> growingTreeMap;
+    for (size_t i=0; i<partSize; i++)
+        {
+        if (taxonMask[i] == true)
+            {
+            Node* p = addNode();
+            p->setIndex(numTaxa);
+            RbBitSet* newBitset = new RbBitSet(taxonMask.size());
+            newBitset->set(i);
+            growingTreeMap.insert( std::make_pair(newBitset, p) );
+
+            taxonNames.push_back(tn[i]);
+            numTaxa++;
+            }
+        }
+    root = addNode();
+    RbBitSet* rootBitset = new RbBitSet(taxonMask.size());
+    for (std::map<RbBitSet*,Node*,CompBitSet>::iterator it = growingTreeMap.begin(); it != growingTreeMap.end(); it++)
+        {
+        *rootBitset |= *(it->first);
+        it->second->setAncestor(root);
+        root->addDescendant(it->second);
+        }
+    growingTreeMap.insert( std::make_pair(rootBitset, root) );
+            
+    double sum = 0.0;
+    RbBitSet key(partSize);
+    for (std::map<RbBitSet*,double,CompBitSet>::iterator it = partitions.begin(); it != partitions.end(); it++)
+        {
+        sum += it->second;
+        std::cout << *(it->first) << " -- " << it->second << " " << sum << std::endl;
+        
+        // find the bitset for this partition
+        std::map<RbBitSet*,Node*,CompBitSet>::iterator it2 = growingTreeMap.find(it->first);
+        if (it2 == growingTreeMap.end())
+            {
+            // new partition, we rely on all the nodes in the partition having the
+            // same ancestor
+            Node* partAnc = NULL;
+            for (size_t i=0; i<partSize; i++)
+                {
+                key.clear();
+                key.set(i);
+                std::map<RbBitSet*,Node*,CompBitSet>::iterator it3 = growingTreeMap.find(&key);
+                }
+            }
+        else
+            {
+            // already present, set branch proportion
+            it2->second->setBranchProportion(it->second);
+            }
+        }
+            
+            
+    // delete the temporary map
+}
+
 Tree::~Tree(void) {
 
     NodeFactory& nf = NodeFactory::nodeFactory();
@@ -522,6 +585,47 @@ void Tree::deleteAllNodes(void) {
     nodes.clear();
 }
 
+std::map<RbBitSet*,double,CompBitSet> Tree::getTaxonBipartitions(void) {
+
+    std::map<RbBitSet*,double,CompBitSet> partitions;
+    
+    for (size_t n=0; n<downPassSequence.size(); n++)
+        {
+        Node* p = downPassSequence[n];
+        RbBitSet* part = p->getPartition();
+        if (part->size() != numTaxa)
+            part->resize(numTaxa);
+            
+        if (p->getIsLeaf() == true)
+            {
+            part->set(p->getIndex());
+            }
+        else
+            {
+            std::set<Node*,CompNode>& pDes = p->getDescendants()->getNodes();
+            part->unset();
+            for (Node* d : pDes)
+                {
+                RbBitSet* dPart = d->getPartition();
+                *part |= *dPart;
+                }
+            }
+        
+        partitions.insert( std::make_pair(part,p->getBranchProportion()) );
+        }
+        
+#   if 1
+    double sum = 0.0;
+    for (std::map<RbBitSet*,double,CompBitSet>::iterator it = partitions.begin(); it != partitions.end(); it++)
+        {
+        sum += it->second;
+        std::cout << *(it->first) << " -- " << it->second << " " << sum << std::endl;
+        }
+#   endif
+        
+    return partitions;
+}
+
 void Tree::initializeDownPassSequence(void) {
 
     downPassSequence.clear();
@@ -656,7 +760,7 @@ void Tree::listNodes(Node* p, size_t indent) {
             {
             std::cout << n->getIndex() << " ";
             }
-        std::cout << ") " << std::fixed << std::setprecision(5) << p->getBranchLength() << " ";
+        std::cout << ") " << std::fixed << std::setprecision(5) << p->getBranchProportion() << " " << p->getBranchLength() << " ";
     
         if (p->getIsLeaf() == true)
             std::cout << " (" << p->getName() << ")";

@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Node.hpp"
 #include "NodeSet.hpp"
+#include "RbBitSet.h"
 #include "Tree.hpp"
 
 
@@ -15,6 +16,7 @@ Node::Node(void) {
     offset                = 0;
     myTree                = NULL;
     descendants           = new NodeSet;
+    partition             = new RbBitSet;
     transitionProbability = NULL;
     tpMatrices.clear();
 }
@@ -29,6 +31,7 @@ Node::Node(int idx) {
     offset                = idx;
     myTree                = NULL;
     descendants           = new NodeSet;
+    partition             = new RbBitSet;
     transitionProbability = NULL;
     tpMatrices.clear();
 }
@@ -36,6 +39,7 @@ Node::Node(int idx) {
 Node::~Node(void) {
 
     delete descendants;
+    delete partition;
 }
 
 void Node::addDescendant(Node* p) {
@@ -54,6 +58,7 @@ void Node::clean(void) {
     descendants->deleteAllNodes();
     transitionProbability = NULL;
     tpMatrices.clear();
+    partition->unset();
 }
 
 double Node::getBranchLength(void) {
