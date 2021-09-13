@@ -1,4 +1,4 @@
-﻿using Format, Units, FeatureSet, Math, SegmentGroups, Style;
+using Format, Units, FeatureSet, Math, SegmentGroups, Style;
 //======================================================================
 
 class FilterClass {
@@ -10,7 +10,12 @@ class FilterClass {
 
   virtual Matches(segment) = true;
 
-  override GetLayout = Name;
+  override GetPopup = Results.PartitionRule.ShowFilterSegments(this);
+
+  override GetLayout = Span {
+    Popup: this;
+    Name;
+  };
 }
 //======================================================================
 
@@ -35,6 +40,7 @@ abstract class RuleClass {
   var Name,
       FilterList,
       Filters,
+      FiltersPlus,
       Partitions,
       Matrix,
       Numbers;
@@ -50,7 +56,7 @@ abstract class RuleClass {
   }
 
   MatchesRule(filter, segment) {
-    foreach (var f in Filters) {
+    foreach (var f in FiltersPlus) {
       if (f == filter)
         return f.Matches(segment);
       if (f.Matches(segment))
@@ -61,7 +67,7 @@ abstract class RuleClass {
 
   virtual GetFilterIndex(segment) {
     var c = 0;
-    foreach (var filter in Filters) {
+    foreach (var filter in FiltersPlus) {
       if (MatchesRule(filter, segment))
         return c;
       ++c;
@@ -80,8 +86,9 @@ abstract class RuleClass {
   }
 
   void GetFilters {
-    Add(Residue);
     Filters = FilterList.ToArray;
+    Add(Residue);
+    FiltersPlus = FilterList.ToArray;
   }
 
   virtual void AssignCharacters(segments) {
@@ -98,7 +105,7 @@ abstract class RuleClass {
   virtual void AssignPartitions(segments) {
     var list = new ListClass(segments.Length);
     var i    = 0;
-    foreach (var filter in Filters) {
+    foreach (var filter in FiltersPlus) {
       var find = GetSegments(segments, filter);
       if (valid find) {
         list.Add(new PartitionClass(i, filter, find));
@@ -114,16 +121,18 @@ abstract class RuleClass {
 
   ShowPartitions = Block {
     Paragraph {
-      TextHeight: 14 pts;
-      Name;
+      TextHeight: 16 pts;
+      "Model: ";
+      Style.DQuote {Name};
     };
 
     foreach (var partition in Partitions) {
       Paragraph {
-        BorderB: 0.5;
+        SpaceBefore: 12 pts;
+        BorderB: 0.25 pts;
         TabStops: [0.25 inch];
 
-        partition.Index+1;
+        EachOne;
         Tab;
         Span {partition.Filter.Name; Bold};
       };
@@ -140,6 +149,18 @@ abstract class RuleClass {
     }
   };
 
+  ShowFilterSegments(filter) = Frame {
+    Width: 2 inches;
+    Paragraph {
+      TextHeight: 18 pts;
+      var segments = GetSegments(Results.UniqueSegments, filter);
+      if (segments.Length > 0) {
+        Separator: Space;
+        (each segments).ShowSegment;
+      }
+    }
+  };
+
   ShowDescription = Block {
     Paragraph {
       TextHeight: 14 pts;
@@ -150,7 +171,7 @@ abstract class RuleClass {
       Separator: Space*2;
 
       var i = 0;
-      foreach (var filter in Filters) {
+      foreach (var filter in FiltersPlus) {
         var segments = GetSegments(Results.UniqueSegments, filter);
         if (segments.Length > 0) {
           HBox {
@@ -440,7 +461,7 @@ class SingletonRuleClass: RuleClass {
 
 class Partition1Class: RuleClass {
   Constructor {
-    super.Constructor("Basic Rules");
+    super.Constructor("Linguistically Informed");
     Numbers = true;
 
     Add(NasalVowels);
@@ -472,7 +493,7 @@ class GroupRatesClass {
     MaxLine         = 10;
     ArrowGap        = 10 pts;
     GapAngle        = 80.0 degrees;
-    ArrowProportion = 1.5;
+    ArrowProportion = 0.5;
   }
 
   void Calibrate(size) {
@@ -499,7 +520,7 @@ class GroupRatesClass {
     maxradius = MaxExtent - maxradius - LoopRadius - LoopDistance - ArrowGap;
 
     foreach (var partition in PartitionRule.Partitions)
-      partition.Center = Graphics.ExtentPoint(middle, maxradius, partition.Angle);
+      partition.Center = Graphics.ExtendPoint(middle, maxradius, partition.Angle);
   }
 
   PartitionDiagram(size) = Canvas {
@@ -511,11 +532,14 @@ class GroupRatesClass {
     foreach (var p1 in PartitionRule.Partitions) {
       var pi = EachIndex;
       foreach (var p2 in PartitionRule.Partitions) {
-        var line = new LineStyleClass(Results.Rates[pi][EachIndex] * RateScale, ArrowProportion);
+        var  rate = Results.Rates[pi][EachIndex];
+        var  hint = "Rate: {0}"(rate);
+        var  line = new LineStyleClass(rate * RateScale, ArrowProportion);
         if (p1 == p2) {
-          var c = Graphics.ExtentPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
+          var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
           Graphics.CircleArrow(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
             Fill: Colors.Black;
+            Popup: hint;
           };
         }
         else {
@@ -523,7 +547,10 @@ class GroupRatesClass {
           var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle);
           var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle + Graphics.OneEighty);
 
-          Graphics.TwoArrowLine(line, c1, c2) {Fill: Colors.Black};
+          Graphics.TwoArrowLine(line, c1, c2) {
+            Fill: Colors.Black;
+            Popup: hint;
+          };
         }
       }
     }
@@ -551,6 +578,7 @@ class GroupRatesClass {
             EachOne;
           };
           p1.Filter;
+          Popup: Results.PartitionRule.ShowFilterSegments(p1.Filter);
         };
       };
     }
@@ -575,28 +603,22 @@ class GroupRatesClass {
 //======================================================================
 
 with Figures.FrequencyDiagram {
-  Data = new FigureClass(Caption, Body) {
-    SlideText: {TextHeight: 5 pts};
-  };
-
   Caption = FigureCaption {
-    "For the ‘{0}’ model, states were grouped into five sets: "(Results.PartitionRule.Name);
+    "For the "; Quote{Results.PartitionRule.Name}; " model, states were grouped into five sets: ";
     Span {
       Separator: CommaSpace;
-      LastSeparator: " and ";
+      LastSeparator: Style.AndSpace;
       foreach (var partition in Results.PartitionRule.Partitions) {
         Span {
           partition.Filter.Name;
-          " (";
-          EachOne;
-          ")";
+          " ("; EachOne; ")";
         }
       }
     };
     Style.eos;
     "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
     "The width of the arrows is proportional to the estimated rates. ";
-    "Note that rates are higher for transitions from one word segment to another when the word segments are in the same group.";
+    PaperSections.WordTransformation.Note;
   };
 
   Body = FigureBody {
@@ -606,11 +628,9 @@ with Figures.FrequencyDiagram {
 //======================================================================
 
 with Figures.SegmentFrequencies {
-  Data = new FigureClass(Caption, Body);
-
   Caption = FigureCaption {
     "Frequency of occurance of segments in the lexicon";
-    References.Phoible;
+    Citation {References.Phoible};
   };
 
   Body = FigureBody {

@@ -116,23 +116,7 @@ with DisplayWords {
 with AllWords {
   AddCell(taxon, cognate, textheight) = Cell {
     Background: EachIndex mod 2 == 0 ? 97% : null;
-    var rh   = textheight*0.1;
-    var w    = textheight;
-    var word = cognate.Words[taxon.Index];
-    if (valid word.Padded) {
-      Canvas {
-        foreach (var segment in word.Padded) {
-          var x = w * EachIndex;
-          Canvas {
-            BorderL: (0.125 pts) {Color: 80%};
-            X: x;
-            Width: w;
-            HAlign: HAligns.Center;
-            segment.ShowSegment;
-          };
-        }
-      }
-    }
+    cognate.Words[taxon.Index].ShowPaddedBlocks(textheight);
   };
 
   AddRow(taxon, cognates, textheight) = Row {
@@ -151,24 +135,31 @@ with AllWords {
       Style.IPAFamily;
       Edge: 0.5;
       Columns: [first] + [w] * wordsperline;
+
       Row {
         Style.TitleBackground;
         Style.SansSerif;
         Empty;
         (each cognates).Title;
       };
-      AddRow(each Results.Taxa, cognates, textheight)
+
+      AddRow(each Results.Taxa, cognates, textheight);
     };
     Paragraph;
   };
 
-  ShowConceptTable(concepts) = ConceptTable(10 pts, 7, [concepts]);
+  ShowConceptTable(concepts) = ConceptTable(10 pts, 7, [concepts], 1000000);
 
-  ShowTable = Block {
+  ShowTable(max=1000000) = Block {
     var textheight = 9 pts;
     TextHeight: textheight;
     var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * ((textheight into pixels) / pixels)));
-    ConceptTable(textheight, wordsperline, each (Results.UsedCognates / wordsperline))
+
+    foreach (var group in (Results.UsedCognates / wordsperline)) {
+      if (EachIndex >= max)
+        break;
+      ConceptTable(textheight, wordsperline, group);
+    }
   };
 }
 //======================================================================
@@ -477,7 +468,7 @@ with MatchingOther {
 //======================================================================
 
 with SegmentTree {
-  AddNode(name) = new TreeNodeClass(name) {
+  AddNode(name) = new NodeClass(name) {
     Bevel: 20%;
     Curvature: 20%;
   };
@@ -505,7 +496,7 @@ with SegmentTree {
           }
         }
       };
-      return new TreeNodeClass(label);
+      return new NodeClass(label);
     }
     else
       return null;
@@ -523,7 +514,7 @@ with SegmentTree {
     AddConsonants(set, Lang.Voiceless, all Voiced, features);
   };
 
-  GetNodes = new TreeNodeClass() {
+  GetNodes = new NodeClass() {
     var set1 = new DictionaryClass(256);
     var set2 = new DictionaryClass(256);
     var all  = Vowel Pulmonic Affricate;

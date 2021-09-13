@@ -2,7 +2,6 @@
 //======================================================================
 
 with sym {
-  theta = Span {Style.GreekFamily; "θ"};
   i     = Classical "i";
   ii    = Classical "ii";
   ij    = Classical "ij";
@@ -15,6 +14,7 @@ with sym {
   qii   = sym.q sub sym.ii;
   ni    = sym.n sub sym.i;
   D(x)  = Span {Classical Italic "d"; x};
+  theta = Span {Style.GreekFamily; "θ"};
 }
 
 Ith = Span {sym.i; "th"};
@@ -32,24 +32,26 @@ InParens   = HBox {BracketLR: Brackets.Round};
 InBrackets = HBox {BracketLR: Brackets.Square};
 
 CommaList = Span {
-  Separator: ", ";
+  Separator: CommaSpace;
 };
+
+Arguments = InParens {
+  Separator: CommaSpace;
+};
+
+FunctionF = Span {Classical "f"};
 
 TextList = CommaList {
   LastSeparator: " {0} "(Lang.And);
 };
 
 EllipsisList = CommaList {
-  LastSeparator: Span {", "; Tex.ldots; ", "};
+  LastSeparator: Span {CommaSpace; Tex.ldots; CommaSpace};
 };
 
 ProductList = Span {
   Separator: Times;
   LastSeparator: Times Tex.ldots Times;
-};
-
-Arguments = InParens {
-  Separator: ", ";
 };
 
 SampledLanguages(n) = Equation {
@@ -111,7 +113,7 @@ with Defs {
   WordLength              = new DefClass(Classical "n", "Word length", "Number of segments in a word");
   RateParameter           = new DefClass(Classical "r", "Rate parameter", "");
   RateMatrixParams        = new DefClass(sym.theta, "Rate parameters", "Parameters associated with the rate matrix");
-  Proposal                = new DefClass(Span {sym.theta; Tex.prime}, "Proposal", "New value proposal");
+  NewValueProposal        = new DefClass(Span {sym.theta; Tex.prime}, "Proposal", "New value proposal");
   ProbProposal            = new DefClass(sym.q, "Proposal probability", "Probability of new proposal");
   RandomNumber            = new DefClass(Classical "u", "Random number", "");
   ProbOfAccepting         = new DefClass(Classical "R", "Acceptance probability", "Probability of accepting a proposed value");
@@ -119,6 +121,65 @@ with Defs {
   BayesFactor             = new DefClass(Extra "BF", "Bayes Factor", "A numerical factor related to the quality of the model fit");
   Unknown                 = new DefClass(Classical "X", "Unknown", "");
 }
+
+Condition(x, y) = Span {
+  x; "|"; y;
+};
+
+UnknownTree = Equation {
+   Phylogeny;
+   Equals;
+   Arguments {
+     Topology;
+     ExpectedEvents;
+   }
+};
+
+LiklihoodFunction = Equation {
+  FunctionF;
+  Arguments {
+    Condition(SegmentalInfo, Phylogeny);
+    InsertionRate;
+    DeletionRate;
+    RateMatrixParams;
+  };
+};
+
+MarginalLiklihood = Equation {
+  FunctionF;
+  Arguments {
+    SegmentalInfo;
+  };
+};
+
+BayesianEstimation = Equation {
+  FunctionF; Arguments {
+    Phylogeny;
+    InsertionRate;
+    DeletionRate;
+    Condition(RateMatrixParams, SegmentalInfo);
+  };
+  Equals;
+  Fraction {
+    LiklihoodFunction;
+    Span {
+      FunctionF;
+      Arguments {
+        Phylogeny;
+        InsertionRate;
+        DeletionRate;
+        RateMatrixParams;
+      };
+    };
+
+    Span {
+      FunctionF;
+      Arguments {
+        SegmentalInfo;
+      };
+    };
+  };
+};
 
 ExpectedEventsPerBranch = Equation {
   ExpectedEvents;

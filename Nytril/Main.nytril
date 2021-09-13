@@ -13,6 +13,7 @@ include "References";
 include "Segment Frequencies";
 include "Formulas";
 include "Methods";
+include "Introduction";
 include "Slides";
 include "Tables";
 include "../../nytril/deploy/citations";
@@ -28,41 +29,38 @@ include "Concepts/Misc";
 //======================================================================
 
 with Main {
-  Documents = new DocumentViewClass(null) {
-    new SubmissionViewClass;
-    new PaperViewClass;
-    new ExperimentViewClass;
-    new DiagnosticsViewClass;
-    new JohnPresentationClass;
-    new DavidPresentationClass;
-  };
+  Documents = [
+    new SubmissionViewClass,
+    new PaperViewClass,
+    new ExperimentViewClass,
+    new DiagnosticsViewClass,
+    new JohnPresentationClass,
+    new DavidPresentationClass,
+  ];
 
   void Run {
     Results.Calculate;
   }
 
   Links = {
-    LinkTypes.ViewReference linkto References;
-    LinkTypes.ViewInfo linkto ViewInfo;
-    LinkTypes.ViewAuthor linkto Authors;
+    linkto References;
+    LinkTypes.Author linkto Authors;
   };
 }
 //======================================================================
-
-// No spaces in the name below!
-// RevBayes has a problem with folder names that contain spaces...
 
 Authors = [
   People.DMGoldstein,
   People.SHMcCreight,
   People.JPHuelsenbeck,
 ];
+//======================================================================
+
+// No spaces in the name below!
+// RevBayes has a problem with folder names that contain spaces...
 
 Results = new ResultsClass("Run1");
 
-ViewInfo = new ViewInfoClass {
-  Title: "Understanding Language Evolution Using an Event-Based Model";
-};
 //======================================================================
 
 with Info {
@@ -78,35 +76,49 @@ ReadTree(title, path) {
 
 class SubmissionViewClass: BaseViewClass {
   Constructor {
-    super.Constructor("Submission", #3ab5559cf52bdb4484be6eea54bfade3#, ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor(#3ab5559cf52bdb4484be6eea54bfade3#, "Submission");
   }
 
-  HeaderBlock = Block {
-    Span {
-      TextCase: TextCases.AllUpper;
-      ViewInfo.Title;
+  FooterBlock = Block {
+    Paragraph {
+      ParAlignment: ParAlignments.Right;
+      PageNumber; "/"; PageCount;
     }
   };
 
   override GetDocument = MainDocument {
     PageSection {
-      Header: HeaderBlock {
-        Distance: 0.125 inches;
-        MarginT: 0.125 inch;
-        Even: HeaderBlock;
+      Footer: FooterBlock {
+        Even: FooterBlock;
         First: Block;
       };
 
       MainTitle {
-        ViewInfo.Title;
+        Title;
       };
 
       ShowAuthorList(Authors);
+
+      Header1 {Abstract.Title};
+      Abstract.Body;
+      ShowContent(PaperSections.Introduction);
+      Header1 {Lang.Results};
+
+      ShowContent(PaperSections.WordTransformation);
+      ShowContent(PaperSections.WordSegmentRelationships);
+      ShowContent(PaperSections.RomanceLanguagePhylogeny);
+      ShowContent(PaperSections.Discussion);
+      ShowContent(PaperSections.MethodsSummary);
+      ShowContent(PaperSections.DataSummary);
+      ShowContent(PaperSections.ModelInference);
+      ShowContent(PaperSections.DataCuration);
+      ShowContent(PaperSections.Acknowledgements);
+      ShowContent(PaperSections.Contributions);
     };
+
     ShowBibliography;
     PageSection {
-      ShowFigure(Figures.FrequencyDiagram.Data);
-      ShowFigure(Figures.SegmentFrequencies.Data);
+      ShowFigureDoc(Figures.FrequencyDiagram);
     }
   };
 }
@@ -114,13 +126,13 @@ class SubmissionViewClass: BaseViewClass {
 
 class PaperViewClass: BaseViewClass {
   Constructor {
-    super.Constructor("White Paper", #8c6d803a4002f2409d6d4f4697685b1d#, ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor(#8c6d803a4002f2409d6d4f4697685b1d#, "White Paper");
   }
 
   HeaderBlock = Block {
     Span {
       TextCase: TextCases.AllUpper;
-      ViewInfo.Title;
+      Title;
     }
   };
 
@@ -142,15 +154,18 @@ class PaperViewClass: BaseViewClass {
       };
 
       MainTitle {
-        ViewInfo.Title;
+        Title;
       };
 
       ShowAuthorList(Authors);
 
-      Header2 {Abstract.Title};
+      Header1 {Abstract.Title};
       Abstract.Body;
 
-      ShowContent(each Content);
+      ShowContent(PaperSections.Introduction);
+      ShowContent(PaperSections.Methods);
+      ShowContent(PaperSections.Conclusion);
+
 
 //      Header2 {Lang.Authors};
 //      ShowAuthorFull(each Authors);
@@ -160,14 +175,14 @@ class PaperViewClass: BaseViewClass {
     };
 
     ShowBibliography;
-    ShowAppendices(appendices);
+    ShowAppendix(each appendices);
   };
 }
 //======================================================================
 
 class ExperimentViewClass: BaseViewClass {
   Constructor {
-    super.Constructor("Experiment", #ee79e1d9e8467444a68c0e7a6a8c8a88#, ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor(#ee79e1d9e8467444a68c0e7a6a8c8a88#, "Experiment");
   }
 
   override GetDocument = MainDocument {
@@ -180,12 +195,12 @@ class ExperimentViewClass: BaseViewClass {
 
     PageSection {
       AppendixTitle {
-        ViewInfo.Title;
+        Title;
       };
       Header2 {Lang.Appendices};
       AppendixRow(each appendices);
     };
-    ShowAppendices(appendices);
+    ShowAppendix(each appendices);
   };
 }
 //======================================================================
@@ -196,15 +211,15 @@ ShowSymbols = Block {
 
 class DiagnosticsViewClass: BaseViewClass {
   Constructor {
-    super.Constructor("Diagnostics", #595d071a2117fb47bd6b0ef6596666ce#, ConfigurationClass.DocumentTypes.Normal);
+    super.Constructor(#595d071a2117fb47bd6b0ef6596666ce#, "Diagnostics");
   }
 
   override GetDocument = Style.MainDocument {
     var appendices = [
       new AppendixClass(Lang.SegmentFrequencies, Results.FrequencyChart(Size(DocMetrics.PageContent.Width, 3 inches))),
       new AppendixClass("Symbols", ShowSymbols),
-      new AppendixClass("Tongue Twister Configuration", Results.ConfigFile),
-      new AppendixClass("RevBayes Source File", Results.RevBayesSource),
+//      new AppendixClass("Tongue Twister Configuration", Results.ConfigFile),
+//      new AppendixClass("RevBayes Source File", Results.RevBayesSource),
       new AppendixClass("Segments used in the word list", DisplayCharacters.ShowTable),
       new AppendixClass("Word Lists by Language", DisplayWords.ShowTable),
       new AppendixClass("Segment Groups", MatchingConsonants.ShowTables),
@@ -218,7 +233,7 @@ class DiagnosticsViewClass: BaseViewClass {
     //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
     ];
 
-    ShowAppendices(appendices);
+    ShowAppendix(each appendices);
   };
 }
 //======================================================================

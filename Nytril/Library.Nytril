@@ -91,17 +91,18 @@ class WordClass {
       Padded;
 
   Constructor(language, cognate, text) {
+    // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
+    Text     = text.GetString(NormalizationForms.FormC);
     Language = language;
     Cognate  = cognate;
-    Text     = text;
-    if (text.Length > 0) {
-      var segments = IPA.SegmentDictionary.FindTokens(text, IPA.NoSegment);
+    if (Text.Length > 0) {
+      var segments = IPA.SegmentDictionary.FindTokens(Text, IPA.NoSegment);
       Aligned  = Math.FindSlice(segments, s => s.Gap or (not s.Punctuation));
       Segments = Math.FindSlice(segments, s => not s.Punctuation);
 
       // Test that the word's text is the same as the segments converted back into text
-      var view = String(Span {(each segments).Ipa});
-      System.Assert(text == view, "Round-trip error with text {0}-{1}"(text, view), text);
+      var view = Span {(each segments).Ipa};
+      System.Assert(Text == view.GetString(), "Round-trip error with text {0}-{1}"(Text, view), Text);
     }
     else {
       Segments = [];
@@ -120,6 +121,19 @@ class WordClass {
       if (!s.Punctuation)
         s.Ipa;
     }
+  };
+
+  ShowPaddedBlocks(w) = Table {
+    Columns: [w]*Padded.Length;
+    Row {
+      foreach (var segment in Padded) {
+        Cell {
+          EdgeL: (0.125 pts) {Color: 80%};
+          ParAlignment: ParAlignments.Center;
+          segment.ShowSegment;
+        };
+      }
+    };
   };
 
   override GetPopup = Frame {
@@ -160,6 +174,7 @@ class ResultsClass {
       DisplaySegments,
       UniqueSegments,
       UniqueCharacters,
+      ConceptCount,
       TotalLength,
       OutFolder,
       EXEName,
@@ -170,6 +185,7 @@ class ResultsClass {
       GammaMCC,
       GammaConsensus,
       CharacterName,
+      WordCount,
       Frequencies,
       Rates,
       AddComma,
@@ -177,6 +193,7 @@ class ResultsClass {
 
 
   Constructor(folder) {
+    WordCount      = 0;
     Model          = Models.JC;
     OutFolder      = Folders.Repository Folder("Run") Folder(folder);
     EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
@@ -198,7 +215,7 @@ class ResultsClass {
       [0, 0, 0, 0, 20],
     ];
 
-    GetConcepts;
+    InitConcepts;
     foreach (var cognate in UsedCognates)
       ComputeCognate(cognate);
 
@@ -237,6 +254,8 @@ class ResultsClass {
     GetFrequencies;
   }
 
+  GetConcept(concept) = FindSlice(UsedCognates, c => c.Concept == concept, 1)[0];
+
   void GetFrequencies {
     var set = new DictionaryClass(1024);
     foreach (var sd in SegmentFrequencyData)
@@ -261,13 +280,16 @@ class ResultsClass {
     }
   }
 
-  void GetConcepts {
+  void InitConcepts {
     var set = new DictionaryClass(256);
 
-    TotalLength = 0;
+    TotalLength  = 0;
+    ConceptCount = 0;
+
     var clist = new ListClass(256);
     foreach (var concept in Concepts) {
       if (exists concept.?Done) {
+        ++ConceptCount;
         foreach (var cognate in concept) {
           var vname = cognate.GlobalVariableName();
           if (vname != "Done" and vname != "Verb") {
@@ -278,8 +300,10 @@ class ResultsClass {
               if (t.Length > 0)
                 ++count;
             }
-            if (count > 1)
+            if (count > 1) {
+              WordCount += count;
               clist.Add(new CognateClass(concept, cognate));
+            }
           }
         }
       }
@@ -306,11 +330,13 @@ class ResultsClass {
         language.Name;
       };
       Block {
+        Paragraph {
+          ParAlignment: ParAlignments.Center;
+          if (valid language.MapImage)
+            language.ShowMap(Size(5 inches, 3 inches));
+        };
         language.Description;
         language.Details;
-
-        if (valid language.MapImage)
-          language.ShowMap(Size(5 inches, 3 inches));
       }
     }
   };
@@ -416,6 +442,8 @@ class ResultsClass {
     }
     IO.Write(RunBatchFile, OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
     IO.Write(ConfigFile, OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
+    Write(new SubmissionViewClass.GetDocument, OutFolder Folder("Nytril") FileName("Submission.docx"), FileFormats.Word);
+
 
 
     var p = new RevProcessClass(EXEName, OutFolder RevSourceName) {

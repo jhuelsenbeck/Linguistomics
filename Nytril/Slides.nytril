@@ -17,18 +17,21 @@ with Slides.Questions {
 }
 
 with Slides.Introduction {
-  Title = Content.Introduction.Title;
-  Body  = Content.Introduction.Body;
+  Title = PaperSections.Introduction.Title;
+  Body  = Block {
+    PaperSections.Introduction.Slide;
+    Style.ShowTable(TableFigures.Cognates);
+  };
 }
 
 with Slides.ExampleTree {
   Title = "Example Tree";
-  Body  = Figures.ExampleTree.Data.ShowSlide;
+  Body  = Style.ShowFigureSlide(Figures.ExampleTree);
 }
 
 with Slides.Alignment {
-  Title = "Alignment";
-  Body  = Figures.Alignment.Data.ShowSlide;
+  Title = Lang.Alignment;
+  Body  = Style.ShowFigureSlide(Figures.Alignment, TextHeight: 5 pts);
 }
 
 with Slides.ShowResults {
@@ -42,8 +45,8 @@ with Slides.LanguagesUsed {
 }
 
 with Slides.ConceptsUsed {
-  Title = Lang.ConceptsUsed;
-  Body  = AllWords.ShowTable;
+  Title = Lang.ConceptsExamples;
+  Body  = AllWords.ShowTable(3);
 }
 
 with Slides.CharacterRules {
@@ -74,10 +77,11 @@ class PresentationViewClass: BaseViewClass {
   var SlideList,
       Author;
 
-  Constructor(title, key, author) {
-    super.Constructor(title, key, ConfigurationClass.DocumentTypes.SlideShow);
-    Author    = author;
-    SlideList = new ListClass(64);
+  Constructor(id, title, author) {
+    super.Constructor(id, title);
+    DocumentType = ConfigurationClass.DocumentTypes.SlideShow;
+    Author       = author;
+    SlideList    = new ListClass(64);
   }
 
   void AddSlide(slide) {
@@ -91,16 +95,16 @@ class PresentationViewClass: BaseViewClass {
       Paragraph {
         TextHeight: 40 pts;
         SpaceBefore: 1.5 inches;
-        ViewInfo.Title;
+        Title;
       };
       Paragraph {
         TextHeight: 18 pts;
         SpaceBefore: 1.5 inches;
-        Author.FirstName;
+        Author.First;
         Space;
-        Author.LastName;
+        Author.Last;
       };
-      var department = Author.FindFirstFact(LinkTypes.WorkDepartment);
+      var department = Author.FindFirstFact(LinkTypes.Department);
       if (valid department) {
         Paragraph {
           TextHeight: 14 pts;
@@ -130,7 +134,7 @@ class PresentationViewClass: BaseViewClass {
 
 class JohnPresentationClass: PresentationViewClass {
   Constructor {
-    super.Constructor("John's Presentation", #e8e882037e4b3a438133df5adc2eb7b6#, People.JPHuelsenbeck);
+    super.Constructor(#e8e882037e4b3a438133df5adc2eb7b6#, "John's Presentation", People.JPHuelsenbeck);
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ExampleTree);
@@ -147,7 +151,7 @@ class JohnPresentationClass: PresentationViewClass {
 
 class DavidPresentationClass: PresentationViewClass {
   Constructor {
-    super.Constructor("David's Presentation", #a6e65a8a39890e46844d37c5125b2de9#, People.DMGoldstein);
+    super.Constructor(#a6e65a8a39890e46844d37c5125b2de9#, "David's Presentation", People.DMGoldstein);
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ConceptsUsed);

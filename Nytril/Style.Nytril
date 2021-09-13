@@ -9,7 +9,7 @@ with PaperSizes {
 
 with DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.Normal) {
   DocumentSize = PaperSizes.Letter;
-  PageMargin   = Margin(0.8 inches, 0.9 inches, 0.8 inches, 1 inches);
+  PageMargin   = Margin(0.75 inches, 0.9 inches, 0.75 inches, 1 inches);
 }
 
 with DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.SlideShow) {
@@ -98,40 +98,13 @@ class DefClass {
 }
 //======================================================================
 
-class FigureClass {
-  var Caption,
-      Body,
-      Number,
-      BodyText,
-      SlideText;
-
-  Constructor(caption, body) {
-    Caption = caption;
-    Body    = body;
-  }
-
-  ShowNumber = Span {
-    Lang.Figure;
-    Space;
-    Number;
-  };
-
-  ShowSlide = Block {
-    Caption;
-    Paragraph {
-      ParAlignment: ParAlignments.Center;
-      SlideText;
-      Body;
-    }
-  };
-}
-//======================================================================
-
 Main.MathFamily = Style.MathFace; //"Linux Libertine Display O";
 
 with Style {
-  ReferenceStyle       = new APAStyleClass; // new ChicagoStyleClass; // new MLAStyleClass;
+  ReferenceStyle       = new NatureStyleClass;
   MainFamily           = {TextFamily: TextFamilies.TimesNewRoman};
+//  MainFamily           = {TextFamily: TextFamilies.Cambria};
+
   SansSerif            = {TextFamily: TextFamilies.Arial};
   MonoFamily           = {TextFamily: TextFamilies.Consolas};
 
@@ -140,10 +113,10 @@ with Style {
 //  MonoFamily           = {TextFamily: "CMU Typewriter Text"};
 
   MathFace             = "CMU Serif";
-  GreekFamily          = {TextFamily: MathFace};
+  IPAFamily            = {TextFamily: "Linux Libertine O"};
+  GreekFamily          = IPAFamily;
   Classical            = {TextFamily: "CMU Classical Serif"};
   Extra                = {TextFamily: "CMU Serif Extra"};
-  IPAFamily            = {TextFamily: "Linux Libertine O"};
 
   ImpossibleBackground = {Background: 80%};
   CommentColor         = Color(0, 0x64, 0);
@@ -182,17 +155,21 @@ with Style {
   HeaderRightBar       = (99%)..(90%);
   FooterLeftBar        = FooterBar1..FooterBar2;
   FooterRightBar       = FooterBar2..FooterBar1;
-  Word(w)              = Span {TextItalic: true; w};
-  DoubleQuote          = Span {Begin: "“"; End: "”"};
-  SingleQuote          = Span {Begin: "‘"; End: "’"};
   AndSpace             = " and ";
   eos                  = ". ";
+  Quote                = Span {Begin: "‘"; End: "’"};
+  QuoteEnd             = Span {Begin: "‘"; End: ".’ "};
+  DQuote               = Span {Begin: "“"; End: "”"};
+  DQuoteEnd            = Span {Begin: "“"; End: ".” "};
+  textit               = Span {Italic};
+  TextIpa              = Span {IPAFamily; Begin:"/"; End:"/"};
 
   MainDocument = Document {
     RefStyle: ReferenceStyle;
     Size: DocMetrics.DocumentSize;
     Margin: DocMetrics.PageMargin;
     MainFamily;
+    TextHeight: 9 pts;
   };
 
   MainTitle = Paragraph {
@@ -214,26 +191,74 @@ with Style {
     SpaceAfter: 6 pts;
   };
 
+  FigureTable = Table {
+    ParAlignment: ParAlignments.Center;
+    SpaceAfter: 6 pts;
+  };
+
   FigureCaption = Span;
 
-  ShowFigure(figure) = Block {
+  ShowFigureNumber(figure) = Span {
+    Lang.Figure;
+    Space;
+    RefCounter("figure", figure.GlobalVariablePath);
+  };
+
+  ShowTableNumber(figure) = Span {
+    Lang.Table;
+    Space;
+    RefCounter("table", figure.GlobalVariablePath);
+  };
+
+  ShowFigureSlide(figure, format=null) = Block {
+    figure.Caption;
     Paragraph {
-      SpaceBefore: 6 pts;
+      ParAlignment: ParAlignments.Center;
+      format;
+      figure.Body;
+    }
+  };
+
+  ShowFigureDoc(figure) = Block {
+    Paragraph {
+      SpaceBefore: 10 pts;
+      SpaceAfter: 6 pts;
       KeepWithNext: true;
       Span {
         Bold;
         SansSerif;
-        figure.ShowNumber;
+        ShowFigureNumber(figure);
         eos;
       };
       figure.Caption;
     };
 
-    figure.Body {figure.BodyText};
+    FigureBody {
+      figure.Body
+    };
+  };
+
+  ShowTable(table) = Block {
+    table.Body {
+      SpaceBefore: 10 pts;
+      ParAlignment: ParAlignments.Center;
+    };
+    Paragraph {
+      ParAlignment: ParAlignments.Center;
+      SpaceBefore: 6 pts;
+      SpaceAfter: 6 pts;
+      Span {
+        Bold;
+        SansSerif;
+        ShowTableNumber(table);
+        eos;
+      };
+      table.Caption;
+    };
   };
 
   ShowAuthor(PersonClass person) = Span {
-    person.GetFullName {Bold};
+    CitationLib.GetFullName(person) {Bold};
     Span {
       Separator: Comma;
       TextAlignment: TextAlignments.Superscript;
@@ -241,13 +266,13 @@ with Style {
       "+";
     };
 
-    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
+    var site = person.FindFirstFact(URLClass);
     if (valid site)
       Link: site.Value;
   };
 
   ShowAuthorDetails(PersonClass person) {
-    var department = person.FindFirstFact(LinkTypes.WorkDepartment);
+    var department = person.FindFirstFact(LinkTypes.Department);
     if (valid department) {
       return Block {
         LeftIndent: NoteIndexIndent;
@@ -266,12 +291,7 @@ with Style {
               CommaSpace;
               org.Name;
             }
-
-            var address = org.FindFirstFact(LinkTypes.MainOffice);
-            if (valid address) {
-              CommaSpace;
-              address.ShowSpan(true);
-            }
+            CitationLib.ShowLocation(org, CommaSpace, true);
           }
         };
 
@@ -324,7 +344,7 @@ with Style {
       person.GetFullName;
     };
 
-    person.FindFirstFact(LinkTypes.WorkAddress)?.ShowSpan(true);
+    CitationLib.ShowLocation(person, CommaSpace, true);
 
     var email = person.FindFirstFact(LinkTypes.WorkEmail);
     if (valid email) {
@@ -338,7 +358,7 @@ with Style {
       };
     }
 
-    var site = person.FindFirstFact(LinkTypes.WorkWebsite);
+    var site = person.FindFirstFact(LinkTypes.Website);
     if (valid site) {
       Paragraph {
         Seperator: CommaSpace;
@@ -391,15 +411,14 @@ with Style {
     SpaceBefore: 18 pts;
     SpaceAfter: 8 pts;
     SansSerif;
+    TextHeight: 16 pts;
+    Bold;
   };
 
-  Header2 = Paragraph {
-    KeepWithNext: true;
+  Header2 = Header1 {
     SpaceBefore: 12 pts;
     SpaceAfter: 6 pts;
-    SansSerif;
     TextHeight: 14 pts;
-    Bold;
   };
 
   Header3 = Paragraph {
@@ -518,23 +537,21 @@ with Style {
     };
   };
 
-  ShowAppendices(appendices) = PageSection {
-    foreach (var appendix in appendices) {
-      Header: Block {
-        Paragraph {
-          BorderB: 1 pts;
-          ParAlignment: ParAlignments.Center;
-          TextHeight: 14 pts;
-          SpaceAfter: 8 pts;
-          LocationMark: Lang.Appendix + EachIndex;
-          "{0} {1} - "(Lang.Appendix, EachOne);
-          appendix.Title;
-        };
+  ShowAppendix(appendix) = PageSection {
+    Header: Block {
+      Paragraph {
+        BorderB: 1 pts;
+        ParAlignment: ParAlignments.Center;
+        TextHeight: 14 pts;
+        SpaceAfter: 8 pts;
+        LocationMark: Lang.Appendix + EachIndex;
+        "{0} {1} - "(Lang.Appendix, EachOne);
+        appendix.Title;
       };
-      Block {
-        appendix.Content;
-      };
-    }
+    };
+    Block {
+      appendix.Content;
+    };
   };
 
   LanguageRow(lang) = Row {
@@ -582,10 +599,24 @@ with Style {
     FirstIndent: -16 pts;
   };
 
-  BodyPar = Paragraph {
-    TextHeight: 10.5 pts;
+  FirstPar = Paragraph {
     ParAlignment: ParAlignments.Justify;
     SpaceBefore: 6 pts;
+  };
+
+  BodyPar = Paragraph {
+    FirstIndent: 0.25 inches;
+    ParAlignment: ParAlignments.Justify;
+    SpaceBefore: 6 pts;
+  };
+
+  SourcePar(concept) = Paragraph {
+    MonoFamily;
+    ParAlignment: ParAlignments.Left;
+    SpaceBefore: 6 pts;
+    LeftIndent: 0.25 inches;
+    TextHeight: 8 pts;
+    SourceSelection(concept, SourceSelectOptions.Line SourceSelectOptions.Children);
   };
 
   BodyTable = Table {
@@ -611,15 +642,15 @@ with Style {
     TextEquation: true;
     TextStacked: true;
     ParAlignment: ParAlignments.Center;
+    TextHeight: 12 pts;
   };
 }
 //======================================================================
 
 abstract class BaseViewClass: DocumentViewClass {
-  Constructor(title, key, type) {
-    super.Constructor(title, key, type);
-    foreach (var f in Figures)
-      f.Data.Number = EachOne;
+  Constructor(id, name) {
+    super.Constructor(id, name);
+    Title = "Understanding Language Evolution Using an Event-Based Model";
   }
 
   FixedFrame(x, y, width, height) = Frame {
@@ -724,7 +755,7 @@ abstract class BaseViewClass: DocumentViewClass {
         HeaderBackground(slide.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
       };
       FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
-        FooterBackground(ViewInfo.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
+        FooterBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
       };
     };
     slide.Body;

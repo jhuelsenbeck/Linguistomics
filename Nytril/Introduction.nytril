@@ -1,0 +1,154 @@
+﻿using Format, Style, Units, References;
+
+//======================================================================
+
+with Abstract {
+  Title = Lang.Abstract;
+  Body  = Block {
+    Style.FirstPar {
+      "Linguistically phylogenies are standardly inferred on the basis of cognate relationships, which are discrete representations of ancestry. ";
+      "Although inference on the basis of such datasets has yielded important results, it suffers from an obvious fault: ";
+      "it ignores the phylogenetic signal in the segmental form of words. ";
+      "In this paper, we infer the phylogeny of Romance on the basis of segmental data...";
+    };
+  };
+}
+//======================================================================
+
+with PaperSections.Introduction {
+  Title = Lang.Introduction;
+
+  Slide = FirstPar {
+    "Modern languages are related to one another through a complicated history of divergence and word borrowing. ";
+    "The divergence of languages is caused by the slow change in spoken language as it is passed from parents to offspring. ";
+    "Over time, divergence causes languages to become increasingly different from one another, ultimately to the point where they are mutually unintelligible. ";
+    "Languages that were spoken by the same human group more recently in time are considered to be more closely related to each other than they are to groups that spoke the language more distantly in time; ";
+    "this relatedness information can be depicted by a tree-like diagram called a "; QuoteEnd{"phylogeny"};
+    "Linguistic borrowing, by contrast, causes languages to become more similar to one another.";
+  };
+
+  Body = Block {
+    Slide;
+    BodyPar {
+      "The phylogenetic relationships of languages are inferred from cognate words";
+      Citation {gray2000; holden2002; ringe2002; gray2003; bouckaert2012; bowern2012; chang2015};
+      "— words that descend from a common ancestor, such as French ";
+      textit{"quatre"}", Spanish "; textit{"cuatro"}; " and Romanian "; textit{"patru"};
+      ", all of which mean "; QuoteEnd{"four"};
+      "The cognates that are used in a phylogenetic analysis of language are ones considered by linguists to be resistant to borrowing from other languages; ";
+      "words such as "; Quote{"mother,"}; " "; Quote{"father,"}; " and "; Quote{"stone"};
+      " are not commonly borrowed from other languages whereas words such as "; Quote{"computer"}; " or "; Quote{"wi-fi"}; " are more readily shared.";
+    };
+
+    BodyPar {
+      "The study of language phylogeny depends critically not only on the choice of cognate words to use but also on the "; textit{"coding"};
+      " of these cognates so they can be read into software that was originally developed by biologists for the study of species phylogeny. ";
+      "As an example, consider how different words for the concept "; textit{"hand"};
+       " have been coded"; Citation {ringe2002};
+       " (see "; ShowTableNumber(TableFigures.Cognates); ", which are presented with phonemic IPA representations). ";
+       "Spanish "; textit{"mano"}; ", French "; textit{"main"}; ", and Italian "; textit{"mano"}; " all descend from a Latin ancestor "; textit{"manus"}; eos;
+       "Words assigned the same state on the basis of shared segmental correspondences among words in a set of languages (which is part of a process linguists call the comparative method";
+       Citation {weiss2015}; "). ";
+       "On the basis of such correspondences historical linguists identify words that descend from a common ancestor. ";
+       "Such decisions, even when well-informed, can significantly influence the results of a phylogenetic analysis.";
+    };
+
+    ShowTable(TableFigures.Cognates);
+
+    BodyPar {
+      "The coding procedure forces the linguist to treat the cognate word data in the same way biologists treat morphological characters in a phylogenetic analysis"; Citation {lewis01}; eos;
+      "Consequently, linguistic phylogenetic analyses share the limitations of morphological phylogenetic analyses in biology. ";
+      "For one, because the state labels (0, 1, 2, "; textit{"etc."};
+      ") are arbitrary, the linguist is limited to models that have a certain symmetry, so the probability of the observations will be the same regardless of the state label assignment. ";
+      "Moreover, the linguist is unlikely to include cognate words coded such that all of the languages have the same state. ";
+      "For this reason, one must condition on such words not finding their way into the data set in the first place. ";
+      "Finally, the state labels from one word to another have different inherent meanings. ";
+      "The state 0 from one cognate word is not equivalent to the state 0 from another word. ";
+      "For this reason, linguistic phylogenetic analysis is limited to estimating the language tree, and to some extent the divergence times between languages. ";
+      "Traditional phylogenetic analysis of linguistic clades provides little insight into how sounds change over time; ";
+      "it only models changes in the basic vocabulary of a language. ";
+      "When a set of languages share the same cognate state, phylogenetic inference is not possible. ";
+      "The differing states in "; ShowTableNumber(TableFigures.Cognates); " will distinguish the Romance languages (French, Spanish, and Italian) from the Slavic languages (Russian and Polish), but they have nothing to say about the relationships between the languages in these two clades. ";
+      "The segmental form of the words for "; Quote{"hand"}; " does, however, contain a phylogenetic signal. ";
+      "French "; TextIpa {Concepts.Hand.Primary.French} " has, for instance, undergone more change than either the Spanish or Italian cognate form ";
+       TextIpa{Concepts.Hand.Primary.Spanish}; eos;
+    };
+
+    BodyPar {
+      "In this study, we treat the observations as the individual segments of words";
+      Citation {BouchardCote2013}; eos;
+      "Specifically, we use phonemic representations coded with the International Phonetic Alphabet (IPA). ";
+      "We analyze the IPA information using a continuous-time Markov model that allows one of three events to occur in an instant of time";
+      Citation {thorne91}; Space;
+      "(1) a transition from one word segment to another; ";
+      "(2) the insertion of a single word segment; or ";
+      "(3) the deletion of a word segment. ";
+      "Our treatment allows us to analyze data in a manner more akin to molecular phylogenetic analyses in biology. ";
+      "Just as nucleotides are considered equivalent states regardless of their position in the genome, here we consider word segments to be equivalent across words. ";
+      "This means that we can learn about the rates of individual events by pooling information across different words. ";
+      "Moreover, our analysis allows us to use a richer set of models, none of which are limited by considerations of the labeling assigned to the states. ";
+    };
+
+    BodyPar {
+      "Our treatment of cognate words introduces several challenges, the most serious of which is establishing how individual word segments for a cognate are related. ";
+      "In a molecular phylogenetic analysis, the fine-scale homology of nucleotides sampled from different species is established using sequence alignment programs. ";
+      "However, even for molecular data in which long nucleotide sequences are used, there can be substantial uncertainty in the alignment";
+      Citation {wong08};
+      "; alignment uncertainty is exacerbated for the cognate data because words typically have only a handful of word segments. ";
+      "We address this problem by marginalizing over word segment alignments. ";
+      "(That is, we consider all word alignments, weighting each by its probability under the model.) ";
+      "We do this by performing parameter estimation in a Bayesian framework, using Markov chain Monte Carlo";
+      Citation {metropolis53; hastings70};
+      " (MCMC) to sample model parameters, including word segment alignments, in proportion to their posterior probabilities.";
+    };
+
+    BodyPar {
+      "The framework we develop allows the linguist to not only understand the phylogenetic relationships of languages, but to also learn about how words transform over time. ";
+      "We illustrate these points using a data set of ";
+      Results.UsedCognates.Length;
+      " cognate classes comprising ";
+      Results.WordCount;
+      " individual words from the Romance languages. ";
+      "Our approach lends itself to the study of large data sets; ";
+      "frees the linguist from the onerous and potentially error-laden task of coding states; ";
+      "and treats the observations in a manner that is more faithful to how the languages are spoken.";
+    };
+  };
+}
+
+//======================================================================
+
+with TableFigures.Cognates {
+  Caption = FigureCaption {
+    "Coding of lexical cognates for the word "; textit{"hand"}; eos;
+  };
+
+  Line(language, text, code) = Row {
+    language;
+    TextIpa {
+      Math.FindSlice(text, c => c != IPA.Segments.PrimaryStress.Ipa);
+    };
+    code;
+  };
+
+  Body = Table {
+    Columns: [1 inch, 1 inch, 0.6 inches];
+    Row {
+      EdgeB: 0.5 pts;
+      "Language";
+      "IPA";
+      "Coding";
+    };
+    Line("English", "hænd", 0);
+    Line("German", "hant", 0);
+    Line("French", Concepts.Hand.Primary.French, 1);
+    Line("Spanish", Concepts.Hand.Primary.Spanish, 1);
+    Line("Italian", Concepts.Hand.Primary.Italian, 1);
+    Line("Russian", "rʊka", 2);
+    Line("Polish", "rɛŋka", 2);
+  };
+}
+
+//======================================================================
+
+
