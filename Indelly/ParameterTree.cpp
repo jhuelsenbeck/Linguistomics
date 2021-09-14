@@ -62,35 +62,82 @@ void ParameterTree::addSubtrees(std::vector<Alignment*>& alns) {
     std::cout << "original" << std::endl;
     trees[0]->print();
     
+    // get the taxon bipartitions for the full tree
+    std::map<RbBitSet*,double,CompBitSet> fullTreeBipartitions = trees[0]->getTaxonBipartitions();
+    
+    // and remove all of the current subtrees
     clearSubtrees();
     
+    // loop over all of the alignments, finding those that require subtrees
     std::set<std::string> masks;
     for (int i=0; i<alns.size(); i++)
         {
+        std::cout << "NAME: " << alns[i]->getName() << std::endl;
+        
         // get the taxon mask and only proceed if the alignment is incomplete
-        std::vector<bool> mask = alns[i]->getTaxonMask();
-        if (countMaskBits(mask) == mask.size())
+        std::vector<bool> m = alns[i]->getTaxonMask();
+        if (countMaskBits(m) == m.size())
             continue;
-
+        RbBitSet mask(m);
+        std::cout << "mask = " << mask << std::endl;
+        
+        // get the bipartitions for the subtree using the mask
+        std::map<RbBitSet*,double,CompBitSet> subTreeBipartitions;
+        for (std::map<RbBitSet*,double,CompBitSet>::iterator it = fullTreeBipartitions.begin(); it != fullTreeBipartitions.end(); it++)
+            {
+            RbBitSet* fullBitSet = it->first;
+            RbBitSet* bitSet = new RbBitSet(*fullBitSet);
+            std::cout << *bitSet << " -> ";
+            *bitSet &= mask;
+            std::cout << *bitSet << " " << it->second << " ";
+            size_t numOn = bitSet->getNumberSetBits();
+            if (numOn > 0)
+                {
+                double v = it->second;
+                std::map<RbBitSet*,double,CompBitSet>::iterator it2 = subTreeBipartitions.find(bitSet);
+                if (it2 == subTreeBipartitions.end())
+                    {
+                    subTreeBipartitions.insert( std::make_pair(bitSet,v) );
+                    std::cout << "inserted";
+                    }
+                else
+                    {
+                    std::cout << "added " << std::to_string(it2->second) << " + " << std::to_string(v);
+                    it2->second += v;
+                    delete bitSet;
+                    }
+                }
+            std::cout << std::endl;
+            }
+            
+        // build the tree using the taxon bipartitions for the subtree
+        Tree* subTree = new Tree(mask, subTreeBipartitions, trees[0]->getTaxonNames());
+        
+        
+        
+        
+        
+        
+        
         // get the taxon mask as a string, which will become the key in the map
-        std::string maskStr = alns[i]->getTaxonMaskString();
+        //std::string maskStr = alns[i]->getTaxonMaskString();
 
         // check that we haven't already made this subtree
-        std::map<std::string,Tree*>::iterator it = subtrees.find(maskStr);
-        if (it != subtrees.end())
-            continue;
+        //std::map<std::string,Tree*>::iterator it = subtrees.find(maskStr);
+        //if (it != subtrees.end())
+        //    continue;
                     
-        alns[i]->print();
+        //alns[i]->print();
        
         // get the pruned tree
-        Tree* t0 = new Tree(*trees[0], mask, alns[i]->getTaxonNames());
-        t0->debugPrint("t0");
+        //Tree* t0 = new Tree(*trees[0], m, alns[i]->getTaxonNames());
+        //t0->debugPrint("t0");
         
         // insert the mask string and tree pair into the map of pruned trees
-        subtrees.insert( std::make_pair(maskStr, t0) );
+        //subtrees.insert( std::make_pair(maskStr, t0) );
         }
 
-        
+    exit(1);
 }
 
 void ParameterTree::clearSubtrees(void) {

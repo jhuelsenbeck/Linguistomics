@@ -6,12 +6,12 @@
 StateMatrixFactory::StateMatrixFactory(void) {
 
     // get the number of states from the configuration file
-    auto it = j.find("NumberOfStates");
-    if (it == j.end())
-        Msg::error("Could not the number of states in the JSON file");
-    int numStates = j["NumberOfStates"];
-    if (numStates <= 1)
-        Msg::error("There must be at least two states in the model");
+//    auto it = j.find("NumberOfStates");
+//    if (it == j.end())
+//        Msg::error("Could not the number of states in the JSON file");
+//    int numStates = j["NumberOfStates"];
+//    if (numStates <= 1)
+//        Msg::error("There must be at least two states in the model");
 }
 
 StateMatrixFactory::~StateMatrixFactory(void) {
