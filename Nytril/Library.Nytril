@@ -86,6 +86,7 @@ class WordClass {
   var Language,
       Cognate,
       Text,
+      Plain,
       Segments,
       Aligned,
       Padded;
@@ -93,6 +94,7 @@ class WordClass {
   Constructor(language, cognate, text) {
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
     Text     = text.GetString(NormalizationForms.FormC);
+    Plain    = Math.FindSlice(Text, c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
     Language = language;
     Cognate  = cognate;
     if (Text.Length > 0) {
