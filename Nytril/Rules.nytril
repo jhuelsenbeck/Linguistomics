@@ -484,16 +484,14 @@ class GroupRatesClass {
       LoopDistance,
       MaxExtent,
       MaxRadius,
-      RateScale,
-      ArrowProportion;
+      RateScale;
 
   Constructor(ResultsClass results) {
-    Results         = results;
-    PartitionRule   = results.PartitionRule;
-    MaxLine         = 10;
-    ArrowGap        = 10 pts;
-    GapAngle        = 80.0 degrees;
-    ArrowProportion = 0.5;
+    Results       = results;
+    PartitionRule = results.PartitionRule;
+    MaxLine       = 10;
+    ArrowGap      = 10 pts;
+    GapAngle      = 80.0 degrees;
   }
 
   void Calibrate(size) {
@@ -525,16 +523,15 @@ class GroupRatesClass {
 
   PartitionDiagram(size) = Canvas {
     TransformFit: true;
-//    Border: 0.5;
     Calibrate(size);
-  //  Size: size;
+    Size: size;
 
     foreach (var p1 in PartitionRule.Partitions) {
       var pi = EachIndex;
       foreach (var p2 in PartitionRule.Partitions) {
         var  rate = Results.Rates[pi][EachIndex];
         var  hint = "Rate: {0}"(rate);
-        var  line = new LineStyleClass(rate * RateScale, ArrowProportion);
+        var  line = new LineStyleClass(rate * RateScale, 0.7, 2);
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
           Graphics.CircleArrow(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
