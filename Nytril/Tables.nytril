@@ -165,13 +165,14 @@ with AllWords {
 //======================================================================
 
 with DisplayCharacters {
-  CompleteWord(def)    = Math.FindAny(Results.UsedCognates, cognate => cognate == def.Cognate);
-  GetWordList(cognate) = Math.FindSlice(cognate.Words, def => CompleteWord(def));
+  CompleteWord(ResultsClass results, def) = Math.FindAny(results.UsedCognates, cognate => cognate == def.Cognate);
+  GetWordList(ResultsClass results, cognate) = Math.FindSlice(cognate.Words, def => CompleteWord(results, def));
 
-  WordsWithSegment(segment) {
-    var set = new DictionaryClass(256);
-    foreach (var cognate in Results.UsedCognates) {
-      foreach (var word in GetWordList(cognate)) {
+  WordsWithSegment(ResultsClass results, DictionaryClass set, segment) {
+    set.Clear();
+
+    foreach (var cognate in results.UsedCognates) {
+      foreach (var word in GetWordList(results, cognate)) {
         if (Math.FindAny(word.Segments, s => s == segment))
           set.Add(word, word.Text);
       }
@@ -179,7 +180,7 @@ with DisplayCharacters {
     return set.Values;
   }
 
-  CharacterRow(segment) = Row {
+  CharacterRow(ResultsClass results, DictionaryClass set, segment) = Row {
     Cell {
       HAlign: HAligns.Center;
       Style.TitleBackground;
@@ -192,13 +193,13 @@ with DisplayCharacters {
     Cell {
       Style.IPAFamily;
       Span {
-        Separator: ", ";
-        (each WordsWithSegment(segment)).Plain;
+        Separator: CommaSpace;
+        (each WordsWithSegment(results, set, segment)).Plain;
       }
     }
   };
 
-  ShowTable = Block {
+  ShowTable(ResultsClass results) = Block {
     Table {
       Style.TableEdge;
       Columns: [0.5 inches, 0.7 inches, DocMetrics.PageContent.Width - 1.2 inches];
@@ -207,9 +208,11 @@ with DisplayCharacters {
         Style.HeaderCell(Lang.Segment, HAligns.Center);
         Style.HeaderCell("Words containing this segment")
       };
-      CharacterRow(each Results.UniqueSegments);
+
+      var set = new DictionaryClass(1024);
+      CharacterRow(results, set, each results.UniqueSegments);
     };
-    Style.TableNotes
+    Style.TableNotes;
   };
 }
 //======================================================================
