@@ -8,7 +8,7 @@ class FilterClass {
     Name = name;
   }
 
-  virtual Matches(segment) = true;
+  virtual Matches(SegmentClass segment) = true;
 
   override GetPopup = Results.PartitionRule.ShowFilterSegments(this);
 
@@ -20,15 +20,15 @@ class FilterClass {
 //======================================================================
 
 class PartitionClass {
-  var Index,
-      Filter,
-      Segments,
-      Center,
-      Radius,
-      Angle,
-      Outer;
+  var         Index,
+              Segments,
+              Center,
+              Radius,
+              Angle,
+              Outer;
+  FilterClass Filter;
 
-  Constructor(index, filter, segments) {
+  Constructor(index, FilterClass filter, segments) {
     Index    = index;
     Filter   = filter;
     Segments = segments;
@@ -206,14 +206,14 @@ abstract class RuleClass {
 //======================================================================
 
 class SingleFilterClass: FilterClass {
-  var Segment;
+  SegmentClass Segment;
 
-  Constructor(segment) {
+  Constructor(SegmentClass segment) {
     super.Constructor(segment.Ipa);
     Segment = segment;
   }
 
-  override Matches(segment) = segment == Segment;
+  override Matches(SegmentClass segment) = segment == Segment;
 }
 //======================================================================
 
@@ -227,7 +227,7 @@ class FeatureMaskClass: FilterClass {
     Flags = flag;
   }
 
-  override Matches(segment) = segment.Features.HasFlagMask(Mask, Flags);
+  override Matches(SegmentClass segment) = segment.Features.HasFlagMask(Mask, Flags);
 }
 //======================================================================
 
@@ -236,7 +236,7 @@ class LabiovelarFilterClass: FilterClass {
     super.Constructor("Labiovelar");
   }
 
-  override Matches(segment) = segment.Features.HasFlagMask(Vowel, NoFeature) and segment.Place == Places.LabialVelar;
+  override Matches(SegmentClass segment) = segment.Features.HasFlagMask(Vowel, NoFeature) and segment.Place == Places.LabialVelar;
 }
 //======================================================================
 
@@ -247,7 +247,7 @@ class DiphthongClass: FilterClass {
     super.Constructor("Diphthong " + diphthong);
   }
 
-  override Matches(segment) = segment.Features.HasFlagMask(Vowel, NoFeature) and segment.Place == Places.LabialVelar;
+  override Matches(SegmentClass segment) = segment.Features.HasFlagMask(Vowel, NoFeature) and segment.Place == Places.LabialVelar;
 }
 //======================================================================
 
@@ -259,7 +259,7 @@ class LongShortClass: FilterClass {
     super.Constructor("Long & Short " + root.Name);
   }
 
-  override Matches(segment) = segment.Root == Root and segment.Features.HasFlagMask(Vowel Nasal, Vowel);
+  override Matches(SegmentClass segment) = segment.Root == Root and segment.Features.HasFlagMask(Vowel Nasal, Vowel);
 }
 //======================================================================
 
@@ -271,7 +271,7 @@ class RootMaskClass: FeatureMaskClass {
     Root = root;
   }
 
-  override Matches(segment) = segment.Root == Root and segment.Features.HasFlagMask(Mask, Flags);
+  override Matches(SegmentClass segment) = segment.Root == Root and segment.Features.HasFlagMask(Mask, Flags);
 }
 //======================================================================
 
@@ -280,7 +280,7 @@ class RootVowelClass: FilterClass {
     super.Constructor("Root vowel");
   }
 
-  override Matches(segment) = segment.Features.HasFlag(Vowel) and segment.Root != RootVowels.None;
+  override Matches(SegmentClass segment) = segment.Features.HasFlag(Vowel) and segment.Root != RootVowels.None;
 }
 //======================================================================
 
@@ -292,7 +292,7 @@ class DiphthongFilterClass: FilterClass {
     Root = root;
   }
 
-  override Matches(segment) = segment == Root or segment.DiphthongRoot == Root;
+  override Matches(SegmentClass segment) = segment == Root or segment.DiphthongRoot == Root;
 }
 //======================================================================
 
@@ -304,7 +304,7 @@ class SegmentListClass: FilterClass {
     List = list;
   }
 
-  override Matches(segment) = FindAny(List, s => s == segment);
+  override Matches(SegmentClass segment) = FindAny(List, s => s == segment);
 }
 //======================================================================
 
