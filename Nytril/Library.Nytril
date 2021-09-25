@@ -27,9 +27,11 @@ class LanguageClass {
       TextHeight: 14 pts;
       Name;
     };
-    Description {
-      RightIndent: 3.5 inches;
-    };
+    if (valid Description) {
+      Description {
+        RightIndent: 3.5 inches;
+      };
+    }
     ShowMap(Size(5 inches, 3 inches));
   };
 
@@ -61,12 +63,12 @@ class LanguageClass {
 //======================================================================
 
 class CognateClass {
-  var Name,
-      Title,
-      Words,
-      Concept,
-      Cognate,
-      MaxLength;
+  var          Name,
+               Title,
+               Words,
+               MaxLength,
+               Concept,
+               Cognate;
 
   Constructor(concept, cognate) {
     Name = concept.GlobalVariableName;
@@ -75,23 +77,23 @@ class CognateClass {
       Title = Name;
     else
       Title = Name + '-' + n;
-    Concept    = concept;
-    Cognate    = cognate;
-    MaxLength  = 0;
+    Concept   = concept;
+    Cognate   = cognate;
+    MaxLength = 0;
   }
 }
 //======================================================================
 
 class WordClass {
-  var Language,
-      Cognate,
-      Text,
-      Plain,
-      Segments,
-      Aligned,
-      Padded;
+  var           Text,
+                Plain,
+                Segments,
+                Aligned,
+                Padded;
+  LanguageClass Language;
+  CognateClass  Cognate;
 
-  Constructor(language, cognate, text) {
+  Constructor(LanguageClass language, CognateClass cognate, text) {
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
     Text     = text.GetString(NormalizationForms.FormC);
     Plain    = Math.FindSlice(Text, c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
@@ -145,14 +147,14 @@ class WordClass {
 //======================================================================
 
 class TaxonClass {
-  var Variable,
-      Language,
-      Index;
+  var           Variable,
+                Index;
+  LanguageClass Language;
 
-  Constructor(lang) {
+  Constructor(LanguageClass language) {
     Index    = EachIndex;
-    Language = lang;
-    Variable = lang.GlobalVariableName;
+    Language = language;
+    Variable = language.GlobalVariableName;
   }
 
   override GetLayout = Span {
@@ -169,29 +171,29 @@ enum Models {
 }
 
 class ResultsClass {
-  var CharacterRule,
-      PartitionRule,
-      UsedCognates,
-      Taxa,
-      DisplaySegments,
-      UniqueSegments,
-      UniqueCharacters,
-      ConceptCount,
-      TotalLength,
-      OutFolder,
-      EXEName,
-      RevSourceName,
-      GammaTrees,
-      GammaLog,
-      GammaMAP,
-      GammaMCC,
-      GammaConsensus,
-      CharacterName,
-      WordCount,
-      Frequencies,
-      Rates,
-      AddComma,
-      Model;
+  PartitionClass CharacterRule;
+  PartitionClass PartitionRule;
+  var            UsedCognates,
+                 Taxa,
+                 DisplaySegments,
+                 UniqueSegments,
+                 UniqueCharacters,
+                 ConceptCount,
+                 TotalLength,
+                 OutFolder,
+                 EXEName,
+                 RevSourceName,
+                 GammaTrees,
+                 GammaLog,
+                 GammaMAP,
+                 GammaMCC,
+                 GammaConsensus,
+                 CharacterName,
+                 WordCount,
+                 Frequencies,
+                 Rates,
+                 AddComma,
+                 Model;
 
 
   Constructor(folder) {
@@ -316,11 +318,11 @@ class ResultsClass {
     var tlist   = new ListClass(nameset.Length);
 
     foreach (var ln in nameset) {
-      var lang = Languages.GetField(ln);
-      if (valid lang)
-        tlist.Add(new TaxonClass(lang));
+      var language = Languages.GetField(ln);
+      if (valid language)
+        tlist.Add(new TaxonClass(language));
       else
-        System.Assert("Invalid language", lang);
+        System.Assert("Invalid language", language);
     }
     Taxa = tlist.ToArray;
   }
@@ -343,7 +345,7 @@ class ResultsClass {
     }
   };
 
-  void ComputeCognate(cognate) {
+  void ComputeCognate(CognateClass cognate) {
     var words     = new ListClass(Taxa.Length);
     var maxlength = 0;
 
