@@ -192,6 +192,7 @@ with DisplayCharacters {
       segment.ShowSegment;
     };
     Cell {
+      PaddingL: 1 pt;
       Style.IPAFamily;
       Span {
         Separator: CommaSpace;
@@ -203,11 +204,10 @@ with DisplayCharacters {
   ShowTable(ResultsClass results) = Block {
     Table {
       Style.TableEdge;
-      Columns: [0.5 inches, 0.7 inches, DocMetrics.PageContent.Width - 1.2 inches];
+      Columns: [0.25 inches, 0.25 inches {EdgeR: 0.25}, DocMetrics.PageContent.Width - 0.5 inches];
       Row {
-        Style.HeaderCell("Char.", HAligns.Center);
-        Style.HeaderCell(Lang.Segment, HAligns.Center);
-        Style.HeaderCell("Words containing this segment")
+        Style.HeaderCell(null, HAligns.Center) {ColSpan: 2};
+        Style.HeaderCell("Words containing this segment") {HAlign: HAligns.Center};
       };
 
       var set = new DictionaryClass(1024);
@@ -227,9 +227,9 @@ with MatchingOptions {
 
   AnyManners(manner, features, options) = CheckFlags(features, manner | options.All, options);
 
-  SamePlace(segment, place)             = segment.?Place and place and segment.Place == place;
+  SamePlace(SegmentClass segment, place) = segment.?Place and place and segment.Place == place;
 
-  MatchInclude(segment, place, options) = SamePlace(segment, place) and
+  MatchInclude(SegmentClass segment, place, options) = SamePlace(segment, place) and
                                           segment.Features.NotFlag(options.Exclude) and
                                           segment.Features.HasFlag(options.Include) and
                                           Math.FindAny(options.Manners, manner => AnyManners(manner, segment.Features, options));
@@ -238,7 +238,7 @@ with MatchingOptions {
   GetPlaces(options) = Math.FindSlice(Places, place => MatchPlace(place, options));
 
 
-  SegmentText(segments, segment) {
+  SegmentText(segments, SegmentClass segment) {
     if (not segment.Impossible) {
       segments.Add(segment);
       return segment.ShowSegment;
@@ -246,7 +246,7 @@ with MatchingOptions {
     return null;
   }
 
-  SegmentBox(segments, segment, color) = Canvas {
+  SegmentBox(segments, SegmentClass segment, color) = Canvas {
     HAlign: HAligns.Center;
     Size: DocMetrics.BoxSize;
     if (exists segment.?Ipa) {
@@ -258,7 +258,7 @@ with MatchingOptions {
       Style.ImpossibleBackground;
   };
 
-  ShowBox(segments, segment, color) = SegmentBox(segments, segment, color) {
+  ShowBox(segments, SegmentClass segment, color) = SegmentBox(segments, segment, color) {
     if (segment.Features.HasFlag(Voiced))
       X: DocMetrics.BoxSize.Width;
   };
@@ -439,7 +439,7 @@ with MatchingDiacritics {
 with MatchingOther {
   ColumnDiv = 2;
 
-  AddCell(segment) = {
+  AddCell(SegmentClass segment) = {
     Cell {
       VAlign: VAligns.Center;
       HAlign: HAligns.Center;

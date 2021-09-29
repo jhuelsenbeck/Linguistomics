@@ -15,7 +15,7 @@ with ExampleConcept {
   CalloutSegment = FirstLetter(Callout);
   LangWord       = Span {(each Cognate.Words[TaxonIndex].Segments).Ipa};
 
-  FirstLetter(taxon) = Cognate.Words[taxon.Index].Segments[0].ShowSegment;
+  FirstLetter(TaxonClass taxon) = Cognate.Words[taxon.Index].Segments[0].ShowSegment;
   FirstLetters = FirstLetter(each TaxonList);
 }
 //======================================================================
@@ -34,9 +34,9 @@ with Figures.ExampleTree {
     Italian,
   ];
 
-  LangNumber(language) = Math.FindIndex(LanguageList, l => l == language)[0]+1;
+  LangNumber(LanguageClass language) = Math.FindIndex(LanguageList, l => l == language)[0]+1;
 
-  Leaf(language, length) = new NodeClass("{0} ({1})"(language, LangNumber(language))) {BranchLength: length};
+  Leaf(LanguageClass language, length) = new NodeClass("{0} ({1})"(language, LangNumber(language))) {BranchLength: length};
   Branch(name, length)   = new NodeClass(name) {BranchLength: length};
 
   Nodes = Branch(19, 1) {
@@ -114,7 +114,7 @@ with Figures.Alignment {
     "000111111",
   ];
 
-  TName(taxon) = Cell {
+  TName(TaxonClass taxon) = Cell {
     Style.SansSerif;
     taxon.Language;
   };
