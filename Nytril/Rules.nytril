@@ -474,6 +474,49 @@ class Partition1Class: RuleClass {
 }
 //======================================================================
 
+class PartitionHintClass {
+  var            Rate;
+  PartitionClass P1,
+                 P2;
+
+  Constructor(rate, PartitionClass p1, PartitionClass p2) {
+    Rate = rate;
+    P1   = p1;
+    P2   = p2;
+  }
+
+  AddGroup(PartitionClass p) = VBox {
+    HAlign: HAligns.Center;
+    Span {
+      Bold;
+      p.Filter.Name;
+    };
+    Results.PartitionRule.ShowFilterSegments(p.Filter);
+  };
+
+  override GetPopup = HBox {
+    VAlign: VAligns.Center;
+    if (P1 != P2)
+      AddGroup(P1);
+    HBox {
+      Margin: 5;
+      Padding: 5;
+      Background: 90%;
+      VBox {
+        HAlign: HAligns.Center;
+        "Rate";
+        Span {
+          Bold;
+          TextHeight: 14 pts;
+          Rate;
+        }
+      };
+    };
+    AddGroup(P2);
+  };
+}
+//======================================================================
+
 class GroupRatesClass {
   ResultsClass Results;
 
@@ -531,7 +574,7 @@ class GroupRatesClass {
       var pi = EachIndex;
       foreach (var p2 in PartitionRule.Partitions) {
         var  rate = Results.Rates[pi][EachIndex];
-        var  hint = "Rate: {0}"(rate);
+        var  hint = new PartitionHintClass(rate, p1, p2);
         var  line = new LineStyleClass(rate * RateScale, 0.7, 2);
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);

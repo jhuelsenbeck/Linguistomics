@@ -182,6 +182,7 @@ with DisplayCharacters {
   }
 
   CharacterRow(ResultsClass results, DictionaryClass set, SegmentClass segment) = Row {
+    var words = each WordsWithSegment(results, set, segment);
     Cell {
       HAlign: HAligns.Center;
       Style.TitleBackground;
@@ -196,7 +197,7 @@ with DisplayCharacters {
       Style.IPAFamily;
       Span {
         Separator: CommaSpace;
-        (each WordsWithSegment(results, set, segment)).Plain;
+        (words).Plain;
       }
     }
   };
@@ -210,7 +211,7 @@ with DisplayCharacters {
         Style.HeaderCell("Words containing this segment") {HAlign: HAligns.Center};
       };
 
-      var set = new DictionaryClass(1024);
+      var set = new DictionaryClass(4096);
       CharacterRow(results, set, each results.UniqueSegments);
     };
     Style.TableNotes;
@@ -250,7 +251,7 @@ with MatchingOptions {
     HAlign: HAligns.Center;
     Size: DocMetrics.BoxSize;
     if (exists segment.?Ipa) {
-      TextHeight: DocMetrics.BoxSize.Height - 4 pts;
+      TextHeight: DocMetrics.BoxSize.Height - 6 pts;
       TextColor: color;
       SegmentText(segments, segment)
     }
