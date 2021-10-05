@@ -1,5 +1,7 @@
+#include <fstream>
 #include <iostream>
 #include <vector>
+#include "json.hpp"
 #include "Msg.hpp"
 #include "UserSettings.hpp"
 
@@ -55,7 +57,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     for (int i=0; i<argc; i++)
         commands.push_back(argv[i]);
 #   endif
-
+    
+    // check that we have an odd number of commands
     if (commands.size() % 2 == 0 || commands.size() == 1)
         {
         usage();
@@ -135,6 +138,36 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
             
             arg = "";
             }
+        }
+        
+    // check if the data file contains the commands. If so, we will use those, overwriting what we
+    // just parsed (excepting the path/name to the configuration file
+    std::string fn = getDataFile();
+    std::ifstream ifs(fn);
+    nlohmann::json j;
+    try
+        {
+        j = nlohmann::json::parse(ifs);
+        }
+    catch (nlohmann::json::parse_error& ex)
+        {
+        Msg::error("Error parsing JSON file at byte " + std::to_string(ex.byte));
+        }
+    auto it = j.find("McmcSettings");
+    if (it != j.end())
+        {
+        // reading settings from program
+        nlohmann::json jsonSettings = j["McmcSettings"];
+        // output file (FileOutput)
+        // only analyze complete words yes/no (OnlyCompleteWords)
+        // substitution model JC69/Custom/GTR (Model)
+        // calculate marginal likelihood yes/no (CalcMarginal)
+        // use eigen system for matrix exponential yes/no (UseEigenSystem)
+        // number of mcmc cycles (NumCycles)
+        // print to screen frequency (PrintFreq)
+        // sample frequency (SampleFreq)
+        // tree-length prior parameter value (TreeLengthPriorVal)
+        
         }
 }
 

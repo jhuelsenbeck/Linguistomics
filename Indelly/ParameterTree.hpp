@@ -4,9 +4,15 @@
 #include <map>
 #include <string>
 #include "Parameter.hpp"
+#include "RbBitSet.h"
 class Alignment;
 class RandomVariable;
 class Tree;
+
+struct TreePair {
+
+    Tree*   trees[2];
+};
 
 
 
@@ -15,14 +21,13 @@ class ParameterTree : public Parameter {
     public:
                                         ParameterTree(void) = delete;
                                         ParameterTree(const ParameterTree& pt) = delete;
-                                        ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, double itl);
+                                        ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, std::vector<Alignment*>& wordAlignments, double itl);
                                        ~ParameterTree(void);
         void                            accept(void);
-        void                            addSubtrees(std::vector<Alignment*>& alns);
         void                            clearSubtrees(void);
-        Tree*                           getActiveTree(void) { return trees[0]; }
-        Tree*                           getActiveTree(std::string mask);
-        std::map<std::string,Tree*>&    getSubtrees(void) { return subtrees; }
+        Tree*                           getActiveTree(void) { return fullTree.trees[0]; }
+        Tree*                           getActiveTree(RbBitSet& mask);
+        std::map<RbBitSet,TreePair>&    getSubtrees(void) { return subTrees; }
         std::string                     getHeader(void) { return ""; }
         double                          lnPriorProbability(void);
         void                            print(void);
@@ -32,6 +37,7 @@ class ParameterTree : public Parameter {
                 
     private:
         int                             countMaskBits(std::vector<bool>& m);
+        void                            initializeSubtrees(std::vector<Alignment*>& alns);
         void                            nniArea(std::vector<Node*>& backbone, Node*& incidentNode);
         void                            normalize(std::vector<double>& vec, double minVal);
         double                          updateBrlenProportions(void);
@@ -41,8 +47,8 @@ class ParameterTree : public Parameter {
         double                          updateSpr(void);
         double                          updateTreeLength(void);
         double                          betaT;
-        Tree*                           trees[2];
-        std::map<std::string,Tree*>     subtrees;
+        TreePair                        fullTree;
+        std::map<RbBitSet,TreePair>     subTrees;
 };
 
 #endif

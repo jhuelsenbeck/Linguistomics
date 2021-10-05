@@ -32,7 +32,6 @@ class Node {
         std::string         getName(void) { return name; }
         int                 getOffset(void) { return offset; }
         int                 getOffset(void) const { return offset; }
-        RbBitSet*           getPartition(void) { return partition; }
         Node*               getSisterNode(void);
         StateMatrix_t*      getTransitionProbability(void) { return transitionProbability; }
         std::vector<int>&   getTpMatrices(void) { return tpMatrices; }
@@ -63,7 +62,6 @@ class Node {
         bool                flag;
         StateMatrix_t*      transitionProbability;
         std::vector<int>    tpMatrices;
-        RbBitSet*           partition;
 };
 
 struct CompNode {

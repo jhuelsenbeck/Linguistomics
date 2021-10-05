@@ -244,7 +244,7 @@ Tree* Model::getTree(void) {
     return t;
 }
 
-Tree* Model::getTree(std::string mask) {
+Tree* Model::getTree(RbBitSet mask) {
 
     Tree* t = NULL;
     for (int i=0; i<parameters.size(); i++)
@@ -393,13 +393,10 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         }
     
     // set up the tree parameter
-    Parameter* pTree = new ParameterTree(rv, this, treeStr, canonicalTaxonList, settings.getInverseTreeLength());
+    Parameter* pTree = new ParameterTree(rv, this, treeStr, canonicalTaxonList, wordAlignments, settings.getInverseTreeLength());
     pTree->setProposalProbability(10.0);
     parameters.push_back(pTree);
-    ParameterTree* t = (ParameterTree*)pTree;
-    int numNodes = t->getActiveTree()->getNumNodes();
-    if (settings.getUseOnlyCompleteWords() == false)
-        t->addSubtrees(wordAlignments); // add subtrees
+    int numNodes = ((ParameterTree*)pTree)->getActiveTree()->getNumNodes();
 
     // set up the indel parameter
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);

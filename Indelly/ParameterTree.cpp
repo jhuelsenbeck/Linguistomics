@@ -16,10 +16,9 @@
 
 
 
-ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, double itl) : Parameter(r, m, "tree") {
+ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, std::vector<Alignment*>& wordAlignments, double itl) : Parameter(r, m, "tree") {
 
     updateChangesRateMatrix = false;
-    
     betaT = itl;
     
     if (treeStr != "")
@@ -28,10 +27,13 @@ ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, s
         std::cout << "   * Setting up the tree parameter with randomly chosen tree" << std::endl;
         
     if (treeStr != "")
-        trees[0] = new Tree(treeStr, tNames, betaT, rv);
+        fullTree.trees[0] = new Tree(treeStr, tNames, betaT, rv);
     else
-        trees[0] = new Tree(tNames, betaT, rv);
-    trees[1] = new Tree(*trees[0]);
+        fullTree.trees[0] = new Tree(tNames, betaT, rv);
+    fullTree.trees[1] = new Tree(*fullTree.trees[0]);
+    
+    // initialize the subtrees
+    initializeSubtrees(wordAlignments);
     
     //trees[0]->print("trees[0]");
     //trees[1]->print("trees[1]");
@@ -48,103 +50,23 @@ ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, s
 
 ParameterTree::~ParameterTree(void) {
 
-    delete trees[0];
-    delete trees[1];
+    delete fullTree.trees[0];
+    delete fullTree.trees[1];
 }
 
 void ParameterTree::accept(void) {
 
-    *trees[1] = *trees[0];
-}
-
-void ParameterTree::addSubtrees(std::vector<Alignment*>& alns) {
-
-    std::cout << "original" << std::endl;
-    trees[0]->print();
-    
-    // get the taxon bipartitions for the full tree
-    std::map<RbBitSet*,double,CompBitSet> fullTreeBipartitions = trees[0]->getTaxonBipartitions();
-    
-    // and remove all of the current subtrees
-    clearSubtrees();
-    
-    // loop over all of the alignments, finding those that require subtrees
-    std::set<std::string> masks;
-    for (int i=0; i<alns.size(); i++)
-        {
-        std::cout << "NAME: " << alns[i]->getName() << std::endl;
-        
-        // get the taxon mask and only proceed if the alignment is incomplete
-        std::vector<bool> m = alns[i]->getTaxonMask();
-        if (countMaskBits(m) == m.size())
-            continue;
-        RbBitSet mask(m);
-        std::cout << "mask = " << mask << std::endl;
-        
-        // get the bipartitions for the subtree using the mask
-        std::map<RbBitSet*,double,CompBitSet> subTreeBipartitions;
-        for (std::map<RbBitSet*,double,CompBitSet>::iterator it = fullTreeBipartitions.begin(); it != fullTreeBipartitions.end(); it++)
-            {
-            RbBitSet* fullBitSet = it->first;
-            RbBitSet* bitSet = new RbBitSet(*fullBitSet);
-            std::cout << *bitSet << " -> ";
-            *bitSet &= mask;
-            std::cout << *bitSet << " " << it->second << " ";
-            size_t numOn = bitSet->getNumberSetBits();
-            if (numOn > 0)
-                {
-                double v = it->second;
-                std::map<RbBitSet*,double,CompBitSet>::iterator it2 = subTreeBipartitions.find(bitSet);
-                if (it2 == subTreeBipartitions.end())
-                    {
-                    subTreeBipartitions.insert( std::make_pair(bitSet,v) );
-                    std::cout << "inserted";
-                    }
-                else
-                    {
-                    std::cout << "added " << std::to_string(it2->second) << " + " << std::to_string(v);
-                    it2->second += v;
-                    delete bitSet;
-                    }
-                }
-            std::cout << std::endl;
-            }
-            
-        // build the tree using the taxon bipartitions for the subtree
-        Tree* subTree = new Tree(mask, subTreeBipartitions, trees[0]->getTaxonNames());
-        
-        
-        
-        
-        
-        
-        
-        // get the taxon mask as a string, which will become the key in the map
-        //std::string maskStr = alns[i]->getTaxonMaskString();
-
-        // check that we haven't already made this subtree
-        //std::map<std::string,Tree*>::iterator it = subtrees.find(maskStr);
-        //if (it != subtrees.end())
-        //    continue;
-                    
-        //alns[i]->print();
-       
-        // get the pruned tree
-        //Tree* t0 = new Tree(*trees[0], m, alns[i]->getTaxonNames());
-        //t0->debugPrint("t0");
-        
-        // insert the mask string and tree pair into the map of pruned trees
-        //subtrees.insert( std::make_pair(maskStr, t0) );
-        }
-
-    exit(1);
+    *fullTree.trees[1] = *fullTree.trees[0];
 }
 
 void ParameterTree::clearSubtrees(void) {
 
-    for (std::map<std::string,Tree*>::iterator it = subtrees.begin(); it != subtrees.end(); it++)
-        delete it->second;
-    subtrees.clear();
+    for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
+        {
+        delete it->second.trees[0];
+        delete it->second.trees[1];
+        }
+    subTrees.clear();
 }
 
 int ParameterTree::countMaskBits(std::vector<bool>& m) {
@@ -160,7 +82,7 @@ int ParameterTree::countMaskBits(std::vector<bool>& m) {
 
 void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
 
-    Tree* t = trees[0];
+    Tree* t = fullTree.trees[0];
     Node* r = t->getRoot();
     Node* p = NULL;
     bool goodNode = true;
@@ -216,18 +138,57 @@ void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
     incidentNode = possibleIncidentNodes[(int)(rv->uniformRv()*2)];
 }
 
-Tree* ParameterTree::getActiveTree(std::string mask) {
+Tree* ParameterTree::getActiveTree(RbBitSet& mask) {
 
-    std::map<std::string,Tree*>::iterator it = subtrees.find(mask);
-    if (it != subtrees.end())
-        return it->second;
+    std::map<RbBitSet,TreePair>::iterator it = subTrees.find(mask);
+    if (it != subTrees.end())
+        return it->second.trees[0];
     return NULL;
 }
 
 std::string ParameterTree::getString(void) {
 
-    std::string str = trees[0]->getNewick();
+    std::string str = fullTree.trees[0]->getNewick();
     return str;
+}
+
+void ParameterTree::initializeSubtrees(std::vector<Alignment*>& alns) {
+        
+    // remove all of the current subtrees
+    clearSubtrees();
+    
+    // loop over all of the alignments, finding those that require subtrees because they only have a subset of the
+    // full canonical list of taxa
+    std::set<std::string> masks;
+    for (int i=0; i<alns.size(); i++)
+        {
+        // get the taxon mask and only proceed if the taxon list is incomplete
+        std::vector<bool> m = alns[i]->getTaxonMask();
+        if (countMaskBits(m) == m.size())
+            continue;
+        RbBitSet mask(m);
+
+        std::map<RbBitSet,TreePair>::iterator it = subTrees.find(mask);
+        if (it == subTrees.end())
+            {
+            // build the subtree
+            TreePair pair;
+            pair.trees[0] = new Tree(*fullTree.trees[0], mask);
+            pair.trees[1] = new Tree(*pair.trees[0]);
+            subTrees.insert( std::make_pair(mask,pair) );
+            }
+        }
+        
+#   if 1
+    int i = 0;
+    for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
+        {
+        std::cout << "Subtree: " << i << " (" << it->first << ")" << std::endl;
+        it->second.trees[0]->print();
+        i++;
+        }
+#   endif
+    exit(1);
 }
 
 double ParameterTree::lnPriorProbability(void) {
@@ -239,13 +200,13 @@ double ParameterTree::lnPriorProbability(void) {
     // with C = 1.0 and alpha = 1.0.
 
     // joint prior on tree length and branch lengths from
-    Tree* t = trees[0];
+    Tree* t = fullTree.trees[0];
     double alphaT = 1.0;
     double s = (double)t->getNumTaxa();
 
     // get a vector with the branch lengths
     double treeLength = t->getTreeLength();
-    std::vector<Node*>& dpSeq = trees[0]->getDownPassSequence();
+    std::vector<Node*>& dpSeq = fullTree.trees[0]->getDownPassSequence();
     std::vector<double> branchLengths;
     for (int i=0; i<dpSeq.size(); i++)
         {
@@ -312,12 +273,12 @@ void ParameterTree::normalize(std::vector<double>& vec, double minVal) {
 
 void ParameterTree::print(void) {
 
-    trees[0]->print();
+    fullTree.trees[0]->print();
 }
 
 void ParameterTree::reject(void) {
 
-    *trees[0] = *trees[1];
+    *fullTree.trees[0] = *fullTree.trees[1];
 }
 
 double ParameterTree::update(void) {
@@ -460,7 +421,7 @@ double ParameterTree::updateNni(void) {
     lastUpdateType = "local";
 
     double tuning = log(4.0);
-    Tree* t = trees[0];
+    Tree* t = fullTree.trees[0];
 #   if defined(DEBUG_LOCAL)
     t->print("BEFORE");
 #   endif

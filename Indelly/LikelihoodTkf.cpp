@@ -219,7 +219,7 @@ void LikelihoodTkf::initTree(void) {
     if (data->getNumTaxa() < canonicalTaxonList.size())
         {
         usingSubtree = true;
-        Tree* subtree = model->getTree(data->getTaxonMaskString());
+        Tree* subtree = model->getTree(data->getTaxonMask());
         tree = subtree;
         }
         

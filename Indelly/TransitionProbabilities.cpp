@@ -201,10 +201,10 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
     
     // update branch lengths and transition probabilities for subtrees
     ParameterTree* t = modelPtr->getParameterTree();
-    std::map<std::string,Tree*>& subtreeMap = t->getSubtrees();
-    for (std::map<std::string,Tree*>::iterator it = subtreeMap.begin(); it != subtreeMap.end(); it++)
+    std::map<RbBitSet,TreePair>& subtreeMap = t->getSubtrees();
+    for (std::map<RbBitSet,TreePair>::iterator it = subtreeMap.begin(); it != subtreeMap.end(); it++)
         {
-        Tree* st = it->second;
+        Tree* st = it->second.trees[0];
         std::vector<Node*>& traversalSeq = st->getDownPassSequence();
         for (int n=0; n<traversalSeq.size(); n++)
             {

@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include "IntVector.hpp"
 #include "Mcmc.hpp"
 #include "Model.hpp"
 #include "Msg.hpp"
@@ -12,7 +13,6 @@
 #include "UpdateInfo.hpp"
 #include "UserSettings.hpp"
 
-#include "IntVector.hpp"
 
 
 

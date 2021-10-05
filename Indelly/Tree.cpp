@@ -193,6 +193,7 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
     for (int i=0; i<tokens.size(); i++)
         {
         std::string token = tokens[i];
+        //std::cout << "token = " << token << std::endl;
         if (token == "(")
             {
             if (p == NULL)
@@ -320,71 +321,111 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
         for (int i=0; i<nodes.size(); i++)
             nodes[i]->setBranchProportion( nodes[i]->getBranchProportion()/treeLength );
         }
-        
-    //print();
 }
 
-Tree::Tree(RbBitSet& taxonMask, std::map<RbBitSet*,double,CompBitSet>& partitions, std::vector<std::string>& tn) {
+Tree::Tree(Tree& t, RbBitSet& taxonMask) {
 
-    // get the number of taxa and taxon names and
-    // set the initial tree with just tip nodes
-    int partSize = (int)taxonMask.size();
-    numTaxa = 0;
-    std::map<RbBitSet*,Node*,CompBitSet> growingTreeMap;
-    for (size_t i=0; i<partSize; i++)
+    // first, clone the current tree
+    clone(t);
+#   if 0
+    print("original tree");
+#   endif
+    
+    // prune unsampled taxa
+    // 1. mark all nodes that are part of the subtree
+    setAllFlags(false);
+    std::map<int,int> tipMap;
+    for (int i=0, k=0; i<taxonMask.size(); i++)
         {
         if (taxonMask[i] == true)
             {
-            Node* p = addNode();
-            p->setIndex(numTaxa);
-            RbBitSet* newBitset = new RbBitSet(taxonMask.size());
-            newBitset->set(i);
-            growingTreeMap.insert( std::make_pair(newBitset, p) );
-
-            taxonNames.push_back(tn[i]);
-            numTaxa++;
+            Node* p = getLeafIndexed(i);
+            if (p == NULL)
+                Msg::error("Could not find leaf to mark path to root");
+            while (p != NULL)
+                {
+                p->setFlag(true);
+                p = p->getAncestor();
+                }
+            tipMap.insert( std::make_pair(i,k) );
+            k++;
             }
         }
-    root = addNode();
-    RbBitSet* rootBitset = new RbBitSet(taxonMask.size());
-    for (std::map<RbBitSet*,Node*,CompBitSet>::iterator it = growingTreeMap.begin(); it != growingTreeMap.end(); it++)
+    // 2. remove nodes that are not part of the subtree
+    for (int i=0; i<downPassSequence.size(); i++)
         {
-        *rootBitset |= *(it->first);
-        it->second->setAncestor(root);
-        root->addDescendant(it->second);
-        }
-    growingTreeMap.insert( std::make_pair(rootBitset, root) );
-            
-    double sum = 0.0;
-    RbBitSet key(partSize);
-    for (std::map<RbBitSet*,double,CompBitSet>::iterator it = partitions.begin(); it != partitions.end(); it++)
-        {
-        sum += it->second;
-        std::cout << *(it->first) << " -- " << it->second << " " << sum << std::endl;
-        
-        // find the bitset for this partition
-        std::map<RbBitSet*,Node*,CompBitSet>::iterator it2 = growingTreeMap.find(it->first);
-        if (it2 == growingTreeMap.end())
+        Node* p = downPassSequence[i];
+        if (p->getFlag() == false)
             {
-            // new partition, we rely on all the nodes in the partition having the
-            // same ancestor
-            Node* partAnc = NULL;
-            for (size_t i=0; i<partSize; i++)
+            p->removeDescendants();
+            Node* a = p->getAncestor();
+            if (a != NULL)
+                a->removeDescendant(p);
+            p->setAncestor(NULL);
+            }
+        }
+    // 3. remove superfluous nodes from the tree
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p->getFlag() == true)
+            {
+            if (p->numDescendants() == 1)
                 {
-                key.clear();
-                key.set(i);
-                std::map<RbBitSet*,Node*,CompBitSet>::iterator it3 = growingTreeMap.find(&key);
+                std::vector<Node*> des = p->getDescendantsVector();
+                Node* d = des[0];
+                Node* a = p->getAncestor();
+                if (a != NULL)
+                    {
+                    d->setAncestor(a);
+                    a->removeDescendant(p);
+                    a->addDescendant(d);
+                    d->setBranchProportion( d->getBranchProportion() + p->getBranchProportion() );
+                    }
+                else
+                    {
+                    d->setAncestor(NULL);
+                    d->setBranchProportion(0.0);
+                    if (p == root)
+                        root = d;
+                    }
+                p->removeDescendants();
+                p->setAncestor(NULL);
                 }
+            }
+        }
+    // 4. reinitialize down pass sequence
+    initializeDownPassSequence();
+    // 5. reindex nodes
+    int intIdx = (int)taxonMask.getNumberSetBits();
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p->getIsLeaf() == true)
+            {
+            std::map<int,int>::iterator it = tipMap.find(p->getIndex());
+            if (it == tipMap.end())
+                Msg::error("Could not find tip index in tipMat for tip reindexing");
+            p->setIndex(it->second);
             }
         else
             {
-            // already present, set branch proportion
-            it2->second->setBranchProportion(it->second);
+            p->setIndex(intIdx++);
             }
         }
-            
-            
-    // delete the temporary map
+    // 6. take care of other tree variables
+    std::vector<std::string> tempTaxonNames = taxonNames;
+    taxonNames.clear();
+    for (int i=0; i<tempTaxonNames.size(); i++)
+        {
+        if (taxonMask[i] == true)
+            taxonNames.push_back(tempTaxonNames[i]);
+        }
+    numTaxa = (int)taxonNames.size();
+
+#   if 0
+    print("pruned tree");
+#   endif
 }
 
 Tree::~Tree(void) {
@@ -510,6 +551,8 @@ void Tree::buildRandomTree(std::vector<std::string> tNames, double betaT, Random
         
     // set the tree length from a gamma
     treeLength = Probability::Gamma::rv(rv, 1.0, betaT);
+    
+    print();
 }
 
 void Tree::clone(Tree& t) {
@@ -585,45 +628,17 @@ void Tree::deleteAllNodes(void) {
     nodes.clear();
 }
 
-std::map<RbBitSet*,double,CompBitSet> Tree::getTaxonBipartitions(void) {
+Node* Tree::getLeafIndexed(int idx) {
 
-    std::map<RbBitSet*,double,CompBitSet> partitions;
-    
-    for (size_t n=0; n<downPassSequence.size(); n++)
+    for (int i=0; i<nodes.size(); i++)
         {
-        Node* p = downPassSequence[n];
-        RbBitSet* part = p->getPartition();
-        if (part->size() != numTaxa)
-            part->resize(numTaxa);
-            
-        if (p->getIsLeaf() == true)
+        if (nodes[i]->getIndex() == idx)
             {
-            part->set(p->getIndex());
+            if (nodes[i]->getIsLeaf() == true)
+                return nodes[i];
             }
-        else
-            {
-            std::set<Node*,CompNode>& pDes = p->getDescendants()->getNodes();
-            part->unset();
-            for (Node* d : pDes)
-                {
-                RbBitSet* dPart = d->getPartition();
-                *part |= *dPart;
-                }
-            }
-        
-        partitions.insert( std::make_pair(part,p->getBranchProportion()) );
         }
-        
-#   if 1
-    double sum = 0.0;
-    for (std::map<RbBitSet*,double,CompBitSet>::iterator it = partitions.begin(); it != partitions.end(); it++)
-        {
-        sum += it->second;
-        std::cout << *(it->first) << " -- " << it->second << " " << sum << std::endl;
-        }
-#   endif
-        
-    return partitions;
+    return NULL;
 }
 
 void Tree::initializeDownPassSequence(void) {
@@ -804,6 +819,12 @@ void Tree::passDown(Node* p) {
 Node* Tree::randomNode(RandomVariable* rv) {
 
     return nodes[(int)(rv->uniformRv()*nodes.size())];
+}
+
+void Tree::setAllFlags(bool tf) {
+
+    for (int i=0; i<nodes.size(); i++)
+        nodes[i]->setFlag(tf);
 }
 
 std::vector<std::string> Tree::tokenizeTreeString(std::string ls) {

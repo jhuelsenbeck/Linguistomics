@@ -172,15 +172,21 @@ std::string ParameterAlignment::getJsonString(void) {
     return jsonStr;
 }
 
+RbBitSet ParameterAlignment::getTaxonMask(void) {
+
+    RbBitSet bs(taxonMask);
+    return bs;
+}
+
 std::string ParameterAlignment::getTaxonMaskString(void) {
 
     std::string str = "";
     for (int i=0; i<taxonMask.size(); i++)
         {
-        if (taxonMask[i] == false)
-            str += "0";
-        else
+        if (taxonMask[i] == true)
             str += "1";
+        else
+            str += "0";
         }
     return str;
 }

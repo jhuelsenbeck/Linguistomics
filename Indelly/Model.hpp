@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "json.hpp"
+#include "RbBitSet.h"
 class Alignment;
 class Parameter;
 class ParameterAlignment;
@@ -38,7 +39,7 @@ class Model {
         ParameterTree*                          getParameterTree(void);
         std::string                             getStateSetsJsonString(void);
         Tree*                                   getTree(void);
-        Tree*                                   getTree(std::string mask);
+        Tree*                                   getTree(RbBitSet mask);
         std::string                             getUpdatedParameterName(void);
         double                                  lnLikelihood(void);
         double                                  lnPriorProbability(void);

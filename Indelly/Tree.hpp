@@ -18,7 +18,7 @@ class Tree {
                                     Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv);
                                     Tree(Tree& t);
                                     Tree(Tree& t, std::vector<bool> taxonMask, std::vector<std::string> tn);
-                                    Tree(RbBitSet& taxonMask, std::map<RbBitSet*,double,CompBitSet>& partitions, std::vector<std::string>& tn);
+                                    Tree(Tree& t, RbBitSet& taxonMask);
                                    ~Tree(void);
         Tree&                       operator=(Tree& t);
         void                        buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
@@ -29,7 +29,7 @@ class Tree {
         std::vector<int>            getAncestorIndices(void);
         std::vector<double>         getBranchLengthVector(void);
         std::vector<Node*>&         getDownPassSequence(void) { return downPassSequence; }
-        std::map<RbBitSet*,double,CompBitSet>  getTaxonBipartitions(void);
+        Node*                       getLeafIndexed(int idx);
         Node*                       getRoot(void) { return root; }
         std::vector<std::string>&   getTaxonNames(void) { return taxonNames; }
         int                         getTaxonNameIndex(std::string tName);
@@ -41,6 +41,7 @@ class Tree {
         void                        print(void);
         void                        print(std::string header);
         Node*                       randomNode(RandomVariable* rv);
+        void                        setAllFlags(bool tf);
         void                        setTreeLength(double x) { treeLength = x; }
                 
     private:
