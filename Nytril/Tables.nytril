@@ -170,8 +170,6 @@ with DisplayCharacters {
   GetWordList(ResultsClass results, cognate) = Math.FindSlice(cognate.Words, def => CompleteWord(results, def));
 
   WordsWithSegment(ResultsClass results, DictionaryClass set, SegmentClass segment) {
-    set.Clear();
-
     foreach (var cognate in results.UsedCognates) {
       foreach (var word in GetWordList(results, cognate)) {
         if (Math.FindAny(word.Segments, s => s == segment))
@@ -181,40 +179,31 @@ with DisplayCharacters {
     return set.Values;
   }
 
-  CharacterRow(ResultsClass results, DictionaryClass set, SegmentClass segment) = Row {
-    var words = each WordsWithSegment(results, set, segment);
-    Cell {
-      HAlign: HAligns.Center;
-      Style.TitleBackground;
-      segment.ShowCharacter;
-    };
-    Cell {
-      HAlign: HAligns.Center;
-      segment.ShowSegment;
-    };
-    Cell {
-      PaddingL: 1 pt;
-      Style.IPAFamily;
-      Span {
-        Separator: CommaSpace;
-        (words).Plain;
-      }
-    }
-  };
-
   ShowTable(ResultsClass results) = Block {
-    Table {
-      Style.TableEdge;
-      Columns: [0.25 inches, 0.25 inches {EdgeR: 0.25}, DocMetrics.PageContent.Width - 0.5 inches];
-      Row {
-        Style.HeaderCell(null, HAligns.Center) {ColSpan: 2};
-        Style.HeaderCell("Words containing this segment") {HAlign: HAligns.Center};
+    var set = new DictionaryClass(4096, WordClass);
+    foreach (var segment in results.UniqueSegments) {
+      set.Clear();
+      var words = WordsWithSegment(results, set, segment);
+      Paragraph {
+        KeepWithNext: true;
+        TextHeight: 16 pts;
+        ParBackground: 90%;
+        segment.ShowCharacter;
+        ") ";
+        Span {
+          segment.ShowSegment;
+        }
       };
-
-      var set = new DictionaryClass(4096);
-      CharacterRow(results, set, each results.UniqueSegments);
-    };
-    Style.TableNotes;
+      Paragraph {
+        ParAlignment: ParAlignments.Justify;
+        Style.IPAFamily;
+        SpaceAfter: 10 pts;
+        Span {
+          Separator: "  ";
+          (each words).Plain;
+        }
+      };
+    }
   };
 }
 //======================================================================
@@ -222,18 +211,22 @@ with DisplayCharacters {
 //======================================================================
 
 with MatchingOptions {
-  CheckFlags(sflags, rflags, options)   = sflags.NotFlag(options.Exclude) and
-                                          sflags.HasFlag(options.Include) and
-                                          sflags.HasFlagMask(options.RowMask | rflags, rflags);
+  CheckFlags(sflags, rflags, options) {
+    return sflags.NotFlag(options.Exclude) and
+           sflags.HasFlag(options.Include) and
+           sflags.HasFlagMask(options.RowMask | rflags, rflags);
+  }
 
   AnyManners(manner, features, options) = CheckFlags(features, manner | options.All, options);
 
   SamePlace(SegmentClass segment, place) = segment.?Place and place and segment.Place == place;
 
-  MatchInclude(SegmentClass segment, place, options) = SamePlace(segment, place) and
-                                          segment.Features.NotFlag(options.Exclude) and
-                                          segment.Features.HasFlag(options.Include) and
-                                          Math.FindAny(options.Manners, manner => AnyManners(manner, segment.Features, options));
+  MatchInclude(SegmentClass segment, place, options) {
+    return SamePlace(segment, place) and
+           segment.Features.NotFlag(options.Exclude) and
+           segment.Features.HasFlag(options.Include) and
+           Math.FindAny(options.Manners, manner => AnyManners(manner, segment.Features, options));
+  }
 
   MatchPlace(place, options) = Math.FindAny(AllSegments, segment => MatchInclude(segment, place, options));
   GetPlaces(options) = Math.FindSlice(Places, place => MatchPlace(place, options));

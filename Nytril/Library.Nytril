@@ -63,12 +63,12 @@ class LanguageClass {
 //======================================================================
 
 class CognateClass {
-  var          Name,
-               Title,
-               Words,
-               MaxLength,
-               Concept,
-               Cognate;
+  WordClass[] Words;
+  var         Name,
+              Title,
+              MaxLength,
+              Concept,
+              Cognate;
 
   Constructor(concept, cognate) {
     Name = concept.GlobalVariableName;
@@ -171,12 +171,12 @@ enum Models {
 }
 
 class ResultsClass {
-  PartitionClass CharacterRule,
+  RuleClass      CharacterRule,
                  PartitionRule;
-  var            UsedCognates,
-                 Taxa,
-                 DisplaySegments,
-                 UniqueSegments,
+  SegmentClass[] UniqueSegments;
+  CognateClass[] UsedCognates;
+  TaxonClass[]   Taxa;
+  var            DisplaySegments,
                  UniqueCharacters,
                  ConceptCount,
                  TotalLength,
@@ -244,7 +244,7 @@ class ResultsClass {
   }
 
   void GetUniqueSegments {
-    var set = new DictionaryClass(256);
+    var set = new DictionaryClass(256, SegmentClass);
     foreach (var cognate in UsedCognates) {
       foreach (var word in cognate.Words) {
         foreach (var segment in word.Segments) {
