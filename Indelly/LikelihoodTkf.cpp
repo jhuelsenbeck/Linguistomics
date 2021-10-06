@@ -29,10 +29,10 @@ int LikelihoodTkf::maxUnalignableDimension = 10;
 
 
 
-LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m) {
+LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Model* m) {
 
     data = a;
-    tree = t;
+    tree = NULL;
     model = m;
         
     siteProbs = data->getSiteProbs();
@@ -45,16 +45,6 @@ LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m) {
 LikelihoodTkf::~LikelihoodTkf(void) {
 
     clearDpTable();
-    
-    if (usingSubtree == true)
-        {
-        std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
-        for (int n=0; n<downPassSequence.size(); n++)
-            {
-            Node* p = downPassSequence[n];
-            delete p->getTransitionProbability();
-            }
-        }
 }
 
 void LikelihoodTkf::clearDpTable(void) {
@@ -71,6 +61,7 @@ void LikelihoodTkf::init(void) {
 
     // initialize some useful variables
     numStates = data->getNumStates();
+    taxonMask = data->getTaxonMask();
     
     // initialize the tree
     initTree();
@@ -109,7 +100,7 @@ void LikelihoodTkf::initSequences(void) {
     
     sequences = data->getRawSequenceMatrix();
 
-#   if 0
+#   if 1
     std::cout << "Variable = sequences" << std::endl;
     for (int i=0; i<sequences.size(); i++)
         {
@@ -124,36 +115,16 @@ void LikelihoodTkf::initSequences(void) {
 void LikelihoodTkf::initTransitionProbabilities(void) {
         
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    transitionProbabilities = tip.getTransitionProbabilities();
+    RbBitSet bs = data->getTaxonMask();
+    transitionProbabilities = tip.getTransitionProbabilities(bs);
     stateEquilibriumFrequencies = tip.getStationaryFrequencies();
     
-    if (usingSubtree == false)
+    // we have an alignment of word segments for the complete set of canonical taxa
+    std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
+    for (int n=0; n<downPassSequence.size(); n++)
         {
-        // we have an alignment of word segments for the complete set of canonical taxa
-        std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
-        for (int n=0; n<downPassSequence.size(); n++)
-            {
-            Node* p = downPassSequence[n];
-            p->setTransitionProbability(transitionProbabilities[p->getIndex()]);
-            }
-        }
-    else
-        {
-        // we are dealing with a subset of the complete list of canonical taxa
-        std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
-        for (int n=0; n<downPassSequence.size(); n++)
-            {
-            Node* nde = downPassSequence[n];
-            std::vector<int> matrices = nde->getTpMatrices();
-            StateMatrix_t* P = new StateMatrix_t;
-            P->resize(numStates,numStates);
-            P->setIdentity();
-            for (int i=(int)matrices.size()-1; i>=0; i--)
-                {
-                (*P) *= *(transitionProbabilities[matrices[i]]);
-                }
-            nde->setTransitionProbability(P);
-            }
+        Node* p = downPassSequence[n];
+        p->setTransitionProbability( transitionProbabilities[p->getIndex()] );
         }
 }
 
@@ -213,17 +184,7 @@ void LikelihoodTkf::initTKF91(void) {
 
 void LikelihoodTkf::initTree(void) {
 
-    usingSubtree = false;
-    
-    std::vector<std::string>& canonicalTaxonList = model->getCanonicalTaxonList();
-    if (data->getNumTaxa() < canonicalTaxonList.size())
-        {
-        usingSubtree = true;
-        Tree* subtree = model->getTree(data->getTaxonMask());
-        tree = subtree;
-        }
-        
-    // print
+    tree = model->getTree(taxonMask);
     tree->print();
 }
 

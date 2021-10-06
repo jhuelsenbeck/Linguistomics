@@ -69,7 +69,7 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     exponent = 1.5;
     gapPenalty = -10.0;
  
-    //print();
+    print();
 }
 
 ParameterAlignment::~ParameterAlignment(void) {

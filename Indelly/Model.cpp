@@ -41,8 +41,12 @@ Model::Model(RandomVariable* r) {
     initializeParameters(wordAlignments, j);
     
     // initialize transition probabilities
-    initializeTransitionProbabilities(wordAlignments[0]->getNumStates(), j);
-        
+    initializeTransitionProbabilities(wordAlignments, j);
+
+    // delete the alignments
+    for (int i=0; i<wordAlignments.size(); i++)
+        delete wordAlignments[i];
+
     std::cout << std::endl;
 }
 
@@ -460,12 +464,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         pEquil->setProposalProbability(5.0);
         parameters.push_back(pEquil);
         }
-    
-    // delete the alignment objects, leaving behind only the alignment parameters
-    for (int i=0; i<wordAlignments.size(); i++)
-        delete wordAlignments[i];
-    wordAlignments.clear();
-    
+        
     // set proposal probabilities
     double sum = 0.0;
     for (int i=0; i<parameters.size(); i++)
@@ -478,7 +477,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     for (int i=0; i<wordParameterAlignments.size(); i++)
         threadLnL[i] = 0.0;
         
-#   if 0
+#   if 1
     for (int i=0; i<parameters.size(); i++)
         parameters[i]->print();
 #   endif
@@ -499,13 +498,12 @@ void Model::initializeStateSets(nlohmann::json& j) {
         }
 }
 
-void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) {
+void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlignments, nlohmann::json& j) {
 
     std::cout << "   * Initializing likelihood-calculation machinery" << std::endl;
-
-    UserSettings& settings = UserSettings::userSettings();
-    TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
     
+    int numStates = wordAlignments[0]->getNumStates();
+    UserSettings& settings = UserSettings::userSettings();
     
     // set up the rate matrix
     RateMatrix& rmat = RateMatrix::rateMatrix();
@@ -520,7 +518,8 @@ void Model::initializeTransitionProbabilities(int numStates, nlohmann::json& j) 
         rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
     
     // initialize the transition probabilities
-    tProbs.initialize( this, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
+    TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
+    tProbs.initialize( this, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();
 }
@@ -556,11 +555,10 @@ double Model::lnLikelihood(void) {
 #   else
 
     // calculate likelihood under TKF91 model
-    Tree* tree = getTree();
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
         {
-        LikelihoodTkf likelihood(wordParameterAlignments[i], tree, this);
+        LikelihoodTkf likelihood(wordParameterAlignments[i], this);
         double lnP = likelihood.tkfLike();
         lnL += lnP;
         std::cout << i << " " << lnP << " " << wordParameterAlignments[i]->getTaxonMaskString() << " " << wordParameterAlignments[i]->getName() << std::endl;
@@ -642,8 +640,8 @@ double Model::update(void) {
     return 0.0;
 }
 
-void Model::wordLnLike(int i, ParameterAlignment* aln, Tree* t) {
+void Model::wordLnLike(int i, ParameterAlignment* aln) {
 
-    LikelihoodTkf likelihood(aln, t, this);
+    LikelihoodTkf likelihood(aln, this);
     threadLnL[i] = likelihood.tkfLike();
 }

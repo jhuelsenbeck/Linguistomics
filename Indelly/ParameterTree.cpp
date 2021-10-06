@@ -140,6 +140,9 @@ void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
 
 Tree* ParameterTree::getActiveTree(RbBitSet& mask) {
 
+    if (mask.getNumberSetBits() == mask.size())
+        return fullTree.trees[0];
+        
     std::map<RbBitSet,TreePair>::iterator it = subTrees.find(mask);
     if (it != subTrees.end())
         return it->second.trees[0];
@@ -159,7 +162,6 @@ void ParameterTree::initializeSubtrees(std::vector<Alignment*>& alns) {
     
     // loop over all of the alignments, finding those that require subtrees because they only have a subset of the
     // full canonical list of taxa
-    std::set<std::string> masks;
     for (int i=0; i<alns.size(); i++)
         {
         // get the taxon mask and only proceed if the taxon list is incomplete
@@ -188,7 +190,6 @@ void ParameterTree::initializeSubtrees(std::vector<Alignment*>& alns) {
         i++;
         }
 #   endif
-    exit(1);
 }
 
 double ParameterTree::lnPriorProbability(void) {

@@ -5,6 +5,7 @@
 #include <vector>
 #include "mpreal.h"
 #include "IntVector.hpp"
+#include "RbBitSet.h"
 #include "TransitionProbabilities.hpp"
 class Model;
 class Node;
@@ -19,7 +20,7 @@ class LikelihoodTkf {
     public:
                                                             LikelihoodTkf(void) = delete;
                                                             LikelihoodTkf(LikelihoodTkf& lkf) = delete;
-                                                            LikelihoodTkf(ParameterAlignment* a, Tree* t, Model* m);
+                                                            LikelihoodTkf(ParameterAlignment* a, Model* m);
                                                            ~LikelihoodTkf(void);
         double                                              tkfLike(void);
         
@@ -42,7 +43,6 @@ class LikelihoodTkf {
         Model*                                              model;
         std::vector<std::vector<int> >                      alignment;
         std::vector<std::vector<int> >                      sequences;
-        bool                                                usingSubtree;
         std::vector<StateMatrix_t*>                         transitionProbabilities;
         std::vector<double>                                 stateEquilibriumFrequencies;
         int                                                 numIndelCategories;
@@ -57,6 +57,7 @@ class LikelihoodTkf {
         int                                                 numStates;
         double                                              insertionRate;
         double                                              deletionRate;
+        RbBitSet                                            taxonMask;
 //        std::map<IntVector*,double,CompIntVector>         dpTable;
         std::map<IntVector*,mpfr::mpreal*,CompIntVector>    dpTable;
         enum                                                StateLabels { free, possible, edgeUsed, used };

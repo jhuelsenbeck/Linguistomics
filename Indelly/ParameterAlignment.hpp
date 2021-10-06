@@ -36,7 +36,6 @@ class ParameterAlignment : public Parameter {
         std::vector<std::vector<int> >  getRawSequenceMatrix(void) { return sequences; }
         SiteLikelihood*                 getSiteProbs(void) { return siteProbs; }
         std::string                     getString(void) { return ""; }
-      //std::vector<bool>               getTaxonMask(void) { return taxonMask; }
         RbBitSet                        getTaxonMask(void);
         std::string                     getTaxonMaskString(void);
         std::vector<std::string>        getTaxonNames(void) { return taxonNames; }

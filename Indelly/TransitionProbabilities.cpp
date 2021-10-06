@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include <unsupported/Eigen/MatrixFunctions>
+#include "Alignment.hpp"
 #include "EigenSystem.hpp"
 #include "Model.hpp"
 #include "Msg.hpp"
@@ -23,11 +24,14 @@ TransitionProbabilities::TransitionProbabilities(void) {
 
 TransitionProbabilities::~TransitionProbabilities(void) {
 
-    for (int s=0; s<2; s++)
+    for (std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.begin(); it != transProbs.end(); it++)
         {
-        for (int n=0; n<probs[s].size(); n++)
+        for (int s=0; s<2; s++)
             {
-            delete probs[s][n];
+            for (int n=0; n<it->second.probs[s].size(); n++)
+                {
+                delete it->second.probs[s][n];
+                }
             }
         }
 }
@@ -40,14 +44,30 @@ void TransitionProbabilities::flipActive(void) {
         activeProbs = 0;
 }
 
-void TransitionProbabilities::initialize(Model* m, int nn, int ns, int sm) {
+std::vector<StateMatrix_t*> TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs) {
+
+    std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.find(bs);
+    if (it == transProbs.end())
+        Msg::error("Could not find transition probability vector for mask " + bs.bitString());
+    return it->second.probs[activeProbs];
+}
+
+StateMatrix_t* TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs, int nodeIdx) {
+
+    std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.find(bs);
+    if (it == transProbs.end())
+        Msg::error("Could not find transition probability vector for mask " + bs.bitString());
+    return it->second.probs[activeProbs][nodeIdx];
+}
+
+void TransitionProbabilities::initialize(Model* m, std::vector<Alignment*>& alns, int nn, int ns, int sm) {
 
     if (isInitialized == true)
         {
         Msg::warning("Transition probabilities can only be initialized once");
         return;
         }
-        
+                
     UserSettings& settings = UserSettings::userSettings();
     modelPtr = m;
     numNodes = nn;
@@ -56,14 +76,31 @@ void TransitionProbabilities::initialize(Model* m, int nn, int ns, int sm) {
     numRateCategories = settings.getNumRateCategories();
     std::cout << "   * Number of states = " << numStates << std::endl;
     std::cout << "   * Number of gamma rate categories = " << numRateCategories << std::endl;
-        
-    for (int s=0; s<2; s++)
+
+    for (int i=0; i<alns.size(); i++)
         {
-        probs[s].resize(numNodes);
-        for (int n=0; n<probs[s].size(); n++)
+        // get the taxon mask
+        std::vector<bool> m = alns[i]->getTaxonMask();
+        RbBitSet mask(m);
+
+        // if the mask is not found in the map, insert it
+        std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.find(mask);
+        if (it == transProbs.end())
             {
-            probs[s][n] = new StateMatrix_t;
-            probs[s][n]->resize(numStates,numStates);
+            Tree* t = modelPtr->getTree(mask);
+            if (t == NULL)
+                Msg::error("Could not find tree for mask " + mask.bitString() + " when initializing transition probabilities");
+            TransitionProbabilitiesPair pair;
+            for (int s=0; s<2; s++)
+                {
+                pair.probs[s].resize(t->getNumNodes());
+                for (int n=0; n<pair.probs[s].size(); n++)
+                    {
+                    pair.probs[s][n] = new StateMatrix_t;
+                    pair.probs[s][n]->resize(numStates,numStates);
+                    }
+                }
+            transProbs.insert( std::make_pair(mask,pair) );
             }
         }
         
@@ -71,19 +108,24 @@ void TransitionProbabilities::initialize(Model* m, int nn, int ns, int sm) {
     stationaryFreqs[1].resize(numStates);
         
     isInitialized = true;
+    
+    //print();
 }
 
 void TransitionProbabilities::print(void) {
 
     std::cout << std::fixed << std::setprecision(5);
-    for (int n=0; n<probs[activeProbs].size(); n++)
+    for (std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.begin(); it != transProbs.end(); it++)
         {
-        std::cout << "Transition probabilities for node " << n << std::endl;
-        for (int i=0; i<numStates; i++)
+        for (int n=0; n<it->second.probs[activeProbs].size(); n++)
             {
-            for (int j=0; j<numStates; j++)
-                std::cout << (*probs[activeProbs][n])(i,j) << " ";
-            std::cout << std::endl;
+            std::cout << "Transition probabilities for node " << n << " (" << it->first.bitString() << ")" << std::endl;
+            for (int i=0; i<numStates; i++)
+                {
+                for (int j=0; j<numStates; j++)
+                    std::cout << (*it->second.probs[activeProbs][n])(i,j) << " ";
+                std::cout << std::endl;
+                }
             }
         }
 }
@@ -115,26 +157,36 @@ void TransitionProbabilities::setTransitionProbabilities(void) {
 void TransitionProbabilities::setTransitionProbabilitiesJc69(void) {
 
     // calculate transition probabilities under the Jukes-Cantor (1969) model
-    std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
-    for (int n=0; n<traversalSeq.size(); n++)
+    for (std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.begin(); it != transProbs.end(); it++)
         {
-        Node* p = traversalSeq[n];
-        StateMatrix_t* tp = probs[activeProbs][p->getIndex()];
-        double v = p->getBranchLength();
+        Tree* t = modelPtr->getTree(it->first);
+        if (t == NULL)
+            Msg::error("Could not find tree for mask " + it->first.bitString());
+                
+        std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
         
-        double x = -((double)numStates/(numStates-1));
-        double pChange = (1.0/numStates) - (1.0/numStates) * exp(x * v);
-        double pNoChange = (1.0/numStates) + ((double)(numStates-1)/numStates) * exp(x * v);
-        for (int i=0; i<numStates; i++)
+        std::vector<Node*>& traversalSeq = t->getDownPassSequence();
+        for (int n=0; n<traversalSeq.size(); n++)
             {
-            for (int j=0; j<numStates; j++)
+            Node* p = traversalSeq[n];
+            StateMatrix_t* tp = probs[p->getIndex()];
+            double v = p->getBranchLength();
+            
+            double x = -((double)numStates/(numStates-1));
+            double pChange = (1.0/numStates) - (1.0/numStates) * exp(x * v);
+            double pNoChange = (1.0/numStates) + ((double)(numStates-1)/numStates) * exp(x * v);
+            for (int i=0; i<numStates; i++)
                 {
-                if (i == j)
-                    (*tp)(i,j) = pNoChange;
-                else
-                    (*tp)(i,j) = pChange;
+                for (int j=0; j<numStates; j++)
+                    {
+                    if (i == j)
+                        (*tp)(i,j) = pNoChange;
+                    else
+                        (*tp)(i,j) = pChange;
+                    }
                 }
             }
+        
         }
             
         double sf = 1.0 / numStates;
@@ -149,27 +201,37 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
     std::complex<double>* ccIjk = eigs.getCijk();
     std::vector<std::complex<double> > ceigValExp(numStates);
 
-    std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
-    for (int n=0; n<traversalSeq.size(); n++)
+    for (std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.begin(); it != transProbs.end(); it++)
         {
-        Node* p = traversalSeq[n];
-        StateMatrix_t* tp = probs[activeProbs][p->getIndex()];
+        Tree* t = modelPtr->getTree(it->first);
+        if (t == NULL)
+            Msg::error("Could not find tree for mask " + it->first.bitString());
+                
+        std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
         
-        double v = p->getBranchLength();
-        for (int s=0; s<numStates; s++)
-            ceigValExp[s] = exp(ceigenvalue[s] * v);
-
-        std::complex<double>* ptr = ccIjk;
-        for (int i=0; i<numStates; i++)
+        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+        for (int n=0; n<traversalSeq.size(); n++)
             {
-            for (int j=0; j<numStates; j++)
+            Node* p = traversalSeq[n];
+            StateMatrix_t* tp = probs[p->getIndex()];
+            
+            double v = p->getBranchLength();
+            for (int s=0; s<numStates; s++)
+                ceigValExp[s] = exp(ceigenvalue[s] * v);
+
+            std::complex<double>* ptr = ccIjk;
+            for (int i=0; i<numStates; i++)
                 {
-                std::complex<double> sum = std::complex<double>(0.0, 0.0);
-                for(int s=0; s<numStates; s++)
-                    sum += (*ptr++) * ceigValExp[s];
-                (*tp)(i,j) = (sum.real() < 0.0) ? 0.0 : sum.real();
+                for (int j=0; j<numStates; j++)
+                    {
+                    std::complex<double> sum = std::complex<double>(0.0, 0.0);
+                    for(int s=0; s<numStates; s++)
+                        sum += (*ptr++) * ceigValExp[s];
+                    (*tp)(i,j) = (sum.real() < 0.0) ? 0.0 : sum.real();
+                    }
                 }
             }
+            
         }
         
     RateMatrix& rmat = RateMatrix::rateMatrix();
@@ -181,40 +243,30 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
     RateMatrix& rmat = RateMatrix::rateMatrix();
     Eigen::MatrixXd M(numStates,numStates);
     StateMatrix_t& Q = rmat.getRateMatrix();
-    Eigen::MatrixXd P(numStates,numStates);
     
     // update the main tree
-    std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
-    std::vector<double> branchLengths(traversalSeq.size());
-    for (int n=0; n<traversalSeq.size(); n++)
+    for (std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.begin(); it != transProbs.end(); it++)
         {
-        Node* p = traversalSeq[n];
-        StateMatrix_t* tp = probs[activeProbs][p->getIndex()];
-        double v = p->getBranchLength();
-        branchLengths[p->getIndex()] = v;
+        Tree* t = modelPtr->getTree(it->first);
+        if (t == NULL)
+            Msg::error("Could not find tree for mask " + it->first.bitString());
+                
+        std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
         
-        M = Q * v;
-        (*tp) = M.exp();
-        }
-        
-    stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
-    
-    // update branch lengths and transition probabilities for subtrees
-    ParameterTree* t = modelPtr->getParameterTree();
-    std::map<RbBitSet,TreePair>& subtreeMap = t->getSubtrees();
-    for (std::map<RbBitSet,TreePair>::iterator it = subtreeMap.begin(); it != subtreeMap.end(); it++)
-        {
-        Tree* st = it->second.trees[0];
-        std::vector<Node*>& traversalSeq = st->getDownPassSequence();
+        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+        std::vector<double> branchLengths(traversalSeq.size());
         for (int n=0; n<traversalSeq.size(); n++)
             {
             Node* p = traversalSeq[n];
-            std::vector<int>& branchComposition = p->getTpMatrices();
-            double v = 0.0;
-            for (int idx : branchComposition)
-                v += branchLengths[idx];
+            StateMatrix_t* tp = probs[p->getIndex()];
+            double v = p->getBranchLength();
+            branchLengths[p->getIndex()] = v;
+            
+            M = Q * v;
+            (*tp) = M.exp();
             }
-        
+            
         }
-    
+        
+    stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
 }

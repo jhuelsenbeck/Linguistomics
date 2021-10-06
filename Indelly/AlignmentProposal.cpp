@@ -328,7 +328,8 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
     
     /* dynamic programming algorithm for the proposal */
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    std::vector<StateMatrix_t*> tiProbs = tip.getTransitionProbabilities();
+    RbBitSet bs = alignmentParm->getTaxonMask();
+    std::vector<StateMatrix_t*> tiProbs = tip.getTransitionProbabilities(bs);
     std::vector<double> stationaryFrequencies = tip.getStationaryFrequencies();
     int numStates = tip.getNumStates();
     std::vector<std::vector<double> > scoring;
