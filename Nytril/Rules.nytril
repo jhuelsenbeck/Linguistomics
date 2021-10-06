@@ -20,15 +20,15 @@ class FilterClass {
 //======================================================================
 
 class PartitionClass {
-  var         Index,
-              Segments,
-              Center,
-              Radius,
-              Angle,
-              Outer;
-  FilterClass Filter;
+  SegmentClass[] Segments;
+  var            Index,
+                 Center,
+                 Radius,
+                 Angle,
+                 Outer;
+  FilterClass    Filter;
 
-  Constructor(index, FilterClass filter, segments) {
+  Constructor(index, FilterClass filter, SegmentClass[] segments) {
     Index    = index;
     Filter   = filter;
     Segments = segments;
@@ -37,13 +37,13 @@ class PartitionClass {
 //======================================================================
 
 abstract class RuleClass {
-  var Name,
-      FilterList,
-      Filters,
-      FiltersPlus,
-      Partitions,
-      Matrix,
-      Numbers;
+  ListClass        FilterList;
+  FilterClass[]    Filters,
+                   FiltersPlus;
+  PartitionClass[] Partitions;
+  var              Name,
+                   Matrix,
+                   Numbers;
 
   Constructor(name) {
     Name       = name;
@@ -51,11 +51,11 @@ abstract class RuleClass {
     FilterList = new ListClass(128);
   }
 
-  void Add(filter) {
+  void Add(FilterClass filter) {
     FilterList.Add(filter);
   }
 
-  MatchesRule(filter, segment) {
+  MatchesRule(FilterClass filter, SegmentClass segment) {
     foreach (var f in FiltersPlus) {
       if (f == filter)
         return f.Matches(segment);
@@ -65,7 +65,7 @@ abstract class RuleClass {
     return false;
   }
 
-  virtual GetFilterIndex(segment) {
+  virtual GetFilterIndex(SegmentClass segment) {
     var c = 0;
     foreach (var filter in FiltersPlus) {
       if (MatchesRule(filter, segment))
@@ -91,7 +91,7 @@ abstract class RuleClass {
     FiltersPlus = FilterList.ToArray;
   }
 
-  virtual void AssignCharacters(segments) {
+  virtual void AssignCharacters(SegmentClass[] segments) {
     var last = Rev.CharacterList.Length-1;
     foreach (var segment in segments) {
       var index = GetFilterIndex(segment);
@@ -102,7 +102,7 @@ abstract class RuleClass {
     GetFilters;
   }
 
-  virtual void AssignPartitions(segments) {
+  virtual void AssignPartitions(SegmentClass[] segments) {
     var list = new ListClass(segments.Length);
     var i    = 0;
     foreach (var filter in FiltersPlus) {
@@ -117,7 +117,7 @@ abstract class RuleClass {
     Partitions = list.ToArray;
   }
 
-  GetSegments(segments, filter) = FindSlice(segments, segment => MatchesRule(filter, segment));
+  GetSegments(SegmentClass[] segments, FilterClass filter) = FindSlice(segments, segment => MatchesRule(filter, segment));
 
   ShowPartitions = Block {
     Paragraph {
@@ -297,9 +297,9 @@ class DiphthongFilterClass: FilterClass {
 //======================================================================
 
 class SegmentListClass: FilterClass {
-  var List;
+  SegmentClass[] List;
 
-  Constructor(name, list) {
+  Constructor(name, SegmentClass[] list) {
     super.Constructor(name);
     List = list;
   }
@@ -394,7 +394,7 @@ class DiphthongRuleClass: RuleClass {
     Add(Diphthongs);
   }
 
-  override GetFilterIndex(segment) {
+  override GetFilterIndex(SegmentClass segment) {
     var c = FilterList.Length;
     if (segment.Features.HasFlag(Diphthong))
       return c;
@@ -409,7 +409,7 @@ class DiphthongPairRuleClass: RuleClass {
     super.Constructor("Diphthongs Paired with Vowels");
   }
 
-  override void AssignCharacters(segments) {
+  override void AssignCharacters(SegmentClass[] segments) {
     var count = 0;
     foreach (var segment in segments) {
       var dr = segment.DiphthongRoot;
@@ -446,10 +446,10 @@ class DiphthongPairRuleClass: RuleClass {
 class SingletonRuleClass: RuleClass {
   Constructor {
     super.Constructor("Each segment gets a different number");
-    Numbers    = true;
+    Numbers = true;
   }
 
-  override void AssignCharacters(segments) {
+  override void AssignCharacters(SegmentClass[] segments) {
     foreach (var segment in segments) {
       SetSegmentCharacter(segment, EachIndex);
       Add(new SingleFilterClass(segment));
