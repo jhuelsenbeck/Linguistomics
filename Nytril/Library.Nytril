@@ -62,36 +62,14 @@ class LanguageClass {
 }
 //======================================================================
 
-class CognateClass {
-  WordClass[] Words;
-  var         Name,
-              Title,
-              MaxLength,
-              Concept,
-              Cognate;
-
-  Constructor(concept, cognate) {
-    Name = concept.GlobalVariableName;
-    var n = cognate.GlobalVariableName;
-    if (n[..6] == "Primary")
-      Title = Name;
-    else
-      Title = Name + '-' + n;
-    Concept   = concept;
-    Cognate   = cognate;
-    MaxLength = 0;
-  }
-}
-//======================================================================
-
 class WordClass {
-  var           Text,
-                Plain,
-                Segments,
-                Aligned,
-                Padded;
-  LanguageClass Language;
-  CognateClass  Cognate;
+  LanguageClass  Language;
+  CognateClass   Cognate;
+  SegmentClass[] Segments,
+                 Aligned,
+                 Padded;
+  var            Text,
+                 Plain;
 
   Constructor(LanguageClass language, CognateClass cognate, text) {
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
@@ -140,9 +118,51 @@ class WordClass {
     };
   };
 
-  override GetPopup = Frame {
-    AllWords.ShowConceptTable(Cognate);
+  FieldPar(name) = Paragraph {
+    TabStops: [0.5 inches];
+    Bold name;
+    Tab;
   };
+
+  override GetPopup = Block {
+    FieldPar(Lang.Language) {
+      Language;
+    };
+    FieldPar(Lang.Concept) {
+      Cognate.Title;
+    };
+    FieldPar(Lang.Segments) {
+      Frame {
+        Border: 0.5;
+        TextHeight: 16 pts;
+        ShowPaddedBlocks(20 pts);
+      }
+    }
+  };
+}
+//======================================================================
+
+class CognateClass {
+  WordClass[] Words;
+  var         Name,
+              Title,
+              MaxLength,
+              Concept,
+              Cognate;
+
+  Constructor(concept, cognate) {
+    Name = concept.GlobalVariableName;
+    var n = cognate.GlobalVariableName;
+    if (n[..6] == "Primary")
+      Title = Name;
+    else
+      Title = Name + '-' + n;
+    Concept   = concept;
+    Cognate   = cognate;
+    MaxLength = 0;
+  }
+
+  override GetPopup = AllWords.ShowConceptTable(Results, this);
 }
 //======================================================================
 
@@ -312,7 +332,7 @@ class ResultsClass {
 //        }
       }
     }
-    UsedCognates = clist.ToArray;
+    UsedCognates = clist.Values;
 
     var nameset = set.Values;
     var tlist   = new ListClass(nameset.Length);
@@ -324,7 +344,7 @@ class ResultsClass {
       else
         System.Assert("Invalid language", language);
     }
-    Taxa = tlist.ToArray;
+    Taxa = tlist.Values;
   }
 
   ShowLanguageDetails = Block {
@@ -363,7 +383,7 @@ class ResultsClass {
       words.Add(word);
     }
 
-    cognate.Words     = words.ToArray;
+    cognate.Words     = words.Values;
     cognate.MaxLength = maxlength;
     foreach (var word in cognate.Words) {
       var a = word.Aligned;
@@ -837,6 +857,41 @@ class ResultsClass {
       };
     }
   };
+
+  ShowSegmentGroups = Block {
+    foreach (var segment in UniqueSegments) {
+      Paragraph {
+        TabStops: [DocMetrics.PageContent.Width {Type: TabTypes.Right}];
+        KeepWithNext: true;
+        TextHeight: 16 pts;
+        ParBackground: 90%;
+
+        segment.ShowSegment;
+        Tab;
+        segment.ShowCharacter;
+      };
+
+      Paragraph {
+        ParAlignment: ParAlignments.Justify;
+        Style.IPAFamily;
+        SpaceAfter: 10 pts;
+        Span {
+          Separator: Space*2;
+          foreach (var cognate in UsedCognates) {
+            foreach (var word in cognate.Words) {
+              if (Math.FindAny(word.Segments, segment)) {
+                Span {
+                  Popup: word;
+                  word.Plain;
+                }
+              }
+            }
+          }
+        };
+      };
+    }
+  };
+}
 }
 //======================================================================
 
