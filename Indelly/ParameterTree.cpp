@@ -57,6 +57,8 @@ ParameterTree::~ParameterTree(void) {
 void ParameterTree::accept(void) {
 
     *fullTree.trees[1] = *fullTree.trees[0];
+    for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
+        *(it->second.trees[1]) = *(it->second.trees[0]);
 }
 
 void ParameterTree::clearSubtrees(void) {
@@ -280,6 +282,8 @@ void ParameterTree::print(void) {
 void ParameterTree::reject(void) {
 
     *fullTree.trees[0] = *fullTree.trees[1];
+    for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
+        *(it->second.trees[0]) = *(it->second.trees[1]);
 }
 
 double ParameterTree::update(void) {
@@ -393,6 +397,9 @@ double ParameterTree::updateBrlenProportions(void) {
     double lnH  = Probability::Dirichlet::lnPdf(alphaReverse, oldProportions) - Probability::Dirichlet::lnPdf(alphaForward, newProportions); // Hastings Ratio
     lnH += (n - 2) * log(newProportions[1] / oldProportions[1]); // Jacobian (check this)
 
+    // update the subtrees (before updating transition probabilities)
+    updateSubtrees();
+    
     // update the transition probabilities
     updateChangesTransitionProbabilities = true;
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
@@ -554,6 +561,9 @@ double ParameterTree::updateNni(void) {
     double rBrlenSum = rDes[0]->getBranchProportion() + rDes[1]->getBranchProportion();
     rDes[0]->setBranchProportion(rBrlenSum*0.5);
     rDes[1]->setBranchProportion(rBrlenSum*0.5);
+    
+    // update the subtrees (before updating transition probabilities)
+    updateSubtrees();
 
     // update the transition probabilities
     updateChangesTransitionProbabilities = true;
@@ -647,4 +657,15 @@ double ParameterTree::updateBranchlengthsFromPrior(void) {
     double lnP2 = lnPriorProbability();
 
     return lnP1 - lnP2;
+}
+
+void ParameterTree::updateSubtrees(void) {
+
+    Tree* t = fullTree.trees[0];
+    for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
+        {
+        Tree* st = it->second.trees[0];
+        RbBitSet bs = RbBitSet(it->first);
+        st->makeSubtree(*t, bs);
+        }
 }

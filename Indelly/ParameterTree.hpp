@@ -34,6 +34,7 @@ class ParameterTree : public Parameter {
         std::string                     getString(void);
         void                            reject(void);
         double                          update(void);
+        void                            updateSubtrees(void);
                 
     private:
         int                             countMaskBits(std::vector<bool>& m);

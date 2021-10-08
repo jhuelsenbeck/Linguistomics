@@ -17,7 +17,6 @@ class Tree {
                                     Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
                                     Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv);
                                     Tree(Tree& t);
-                                    Tree(Tree& t, std::vector<bool> taxonMask, std::vector<std::string> tn);
                                     Tree(Tree& t, RbBitSet& taxonMask);
                                    ~Tree(void);
         Tree&                       operator=(Tree& t);
@@ -38,6 +37,7 @@ class Tree {
         bool                        isBinary(void);
         bool                        isRoot(Node* p) { return ((p == root) ? true : false); }
         bool                        isTaxonPresent(std::string tn);
+        void                        makeSubtree(Tree& t, RbBitSet& taxonMask);
         void                        print(void);
         void                        print(std::string header);
         Node*                       randomNode(RandomVariable* rv);
