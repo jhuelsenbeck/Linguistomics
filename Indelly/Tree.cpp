@@ -19,162 +19,6 @@ Tree::Tree(Tree& t) {
     clone(t);
 }
 
-Tree::Tree(Tree& t, std::vector<bool> taxonMask, std::vector<std::string> tn) {
-
-    if (t.getNumTaxa() != taxonMask.size())
-        Msg::error("Cannot create pruned tree with ill-formated taxon mask");
-
-    // clone the tree
-    clone(t);
-        
-    // mark taxa to include
-    std::vector<Node*> dpSeq = this->downPassSequence;
-    for (int n=0; n<dpSeq.size(); n++)
-        {
-        Node* p = dpSeq[n];
-        if (p->getIsLeaf() == true && taxonMask[p->getIndex()] == true)
-            p->setFlag(true);
-        else
-            p->setFlag(false);
-        }
-        
-    // mark path from each included taxon to the root
-    for (int n=0; n<dpSeq.size(); n++)
-        {
-        Node* p = dpSeq[n];
-        if (p->getIsLeaf() == true && p->getFlag() == true)
-            {
-            Node* q = p;
-            do
-                {
-                q->setFlag(true);
-                q = q->getAncestor();
-                } while (q != NULL);
-            }
-        }
-        
-    // collect nodes to remove
-    std::vector<Node*> nodesDeadToMe;
-    for (int n=0; n<dpSeq.size(); n++)
-        {
-        Node* p = dpSeq[n];
-        if (p->getFlag() == false)
-            nodesDeadToMe.push_back(p);
-        }
-        
-    // perform reconnections for nodes to be removed
-    for (int i=0; i<nodesDeadToMe.size(); i++)
-        {
-        Node* p = nodesDeadToMe[i];
-        Node* pAnc = p->getAncestor();
-        if (pAnc != NULL)
-            pAnc->removeDescendant(p);
-        std::set<Node*,CompNode>& des = p->getDescendants()->getNodes();
-        for (Node* nde : des)
-            {
-            nde->setAncestor(pAnc);
-            nde->setBranchProportion( nde->getBranchProportion() + p->getBranchProportion() );
-            if (pAnc != NULL)
-                pAnc->addDescendant(nde);
-            }
-        }
-    
-    // prune superfluous nodes
-    dpSeq = this->downPassSequence;
-    for (int n=(int)dpSeq.size()-1; n>=0; n--)
-        {
-        Node* p = dpSeq[n];
-        p->clearTpMatrix();
-        p->addMatrix(p->getIndex());
-        }
-    for (int n=(int)dpSeq.size()-1; n>=0; n--)
-        {
-        Node* p = dpSeq[n];
-        if (p->numDescendants() == 1)
-            {
-            std::vector<Node*> des = p->getDescendantsVector();
-            Node* pDes = des[0];
-            Node* pAnc = p->getAncestor();
-            pDes->setAncestor(pAnc);
-            if (pAnc != NULL)
-                {
-                pAnc->removeDescendant(p);
-                pAnc->addDescendant(pDes);
-                }
-            pDes->setBranchProportion( p->getBranchProportion() + pDes->getBranchProportion() );
-            p->removeDescendants();
-            p->setAncestor(NULL);
-            if (root == p)
-                {
-                root = pDes;
-                root->setBranchProportion(0.0);
-                }
-                
-            pDes->addMatrix(p->getIndex());
-                        
-            nodesDeadToMe.push_back(p);
-            }
-        }
-    
-    // delete superfluous nodes
-    initializeDownPassSequence();
-    std::vector<Node*> newNodes;
-    for (int i=0; i<downPassSequence.size(); i++)
-        newNodes.push_back(downPassSequence[i]);
-    for (int i=0; i<nodesDeadToMe.size(); i++)
-        delete nodesDeadToMe[i];
-    nodes = newNodes;
-    
-    // update the number of taxa and taxon names
-    taxonNames = tn;
-    numTaxa = (int)taxonNames.size();
-    
-    // reindex nodes
-    int intIdx = numTaxa;
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        if (p->getIsLeaf() == true)
-            {
-            int tipIdx = getTaxonNameIndex(p->getName());
-            p->setIndex(tipIdx);
-            }
-        else
-            {
-            p->setIndex(intIdx++);
-            }
-        }
-
-#   if 0
-    for (int n=(int)dpSeq.size()-1; n>=0; n--)
-        {
-        Node* p = dpSeq[n];
-        if (p->numDescendants() == 1)
-            {
-            Node* pAnc = p->getAncestor();
-            std::set<Node*,CompNode>& des = p->getDescendants()->getNodes();
-            std::set<Node*,CompNode>::iterator it = des.begin();
-            if (pAnc == NULL)
-                {
-                (*it)->setAncestor(NULL);
-                (*it)->setBranchProportion(0.0);
-                root = (*it);
-                }
-            else
-                {
-                pAnc->removeDescendant(p);
-                pAnc->addDescendant((*it));
-                (*it)->setAncestor(pAnc);
-                (*it)->setBranchProportion( (*it)->getBranchProportion() + p->getBranchProportion() );
-                }
-            p->removeDescendants();
-            p->setAncestor(NULL);
-            nodesDeadToMe.push_back(p);
-            }
-        }
-#   endif
-}
-
 Tree::Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
 
     buildRandomTree(tNames, betaT, rv);
@@ -325,107 +169,7 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
 
 Tree::Tree(Tree& t, RbBitSet& taxonMask) {
 
-    // first, clone the current tree
-    clone(t);
-#   if 0
-    print("original tree");
-#   endif
-    
-    // prune unsampled taxa
-    // 1. mark all nodes that are part of the subtree
-    setAllFlags(false);
-    std::map<int,int> tipMap;
-    for (int i=0, k=0; i<taxonMask.size(); i++)
-        {
-        if (taxonMask[i] == true)
-            {
-            Node* p = getLeafIndexed(i);
-            if (p == NULL)
-                Msg::error("Could not find leaf to mark path to root");
-            while (p != NULL)
-                {
-                p->setFlag(true);
-                p = p->getAncestor();
-                }
-            tipMap.insert( std::make_pair(i,k) );
-            k++;
-            }
-        }
-    // 2. remove nodes that are not part of the subtree
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        if (p->getFlag() == false)
-            {
-            p->removeDescendants();
-            Node* a = p->getAncestor();
-            if (a != NULL)
-                a->removeDescendant(p);
-            p->setAncestor(NULL);
-            }
-        }
-    // 3. remove superfluous nodes from the tree
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        if (p->getFlag() == true)
-            {
-            if (p->numDescendants() == 1)
-                {
-                std::vector<Node*> des = p->getDescendantsVector();
-                Node* d = des[0];
-                Node* a = p->getAncestor();
-                if (a != NULL)
-                    {
-                    d->setAncestor(a);
-                    a->removeDescendant(p);
-                    a->addDescendant(d);
-                    d->setBranchProportion( d->getBranchProportion() + p->getBranchProportion() );
-                    }
-                else
-                    {
-                    d->setAncestor(NULL);
-                    d->setBranchProportion(0.0);
-                    if (p == root)
-                        root = d;
-                    }
-                p->removeDescendants();
-                p->setAncestor(NULL);
-                }
-            }
-        }
-    // 4. reinitialize down pass sequence
-    initializeDownPassSequence();
-    // 5. reindex nodes
-    int intIdx = (int)taxonMask.getNumberSetBits();
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        if (p->getIsLeaf() == true)
-            {
-            std::map<int,int>::iterator it = tipMap.find(p->getIndex());
-            if (it == tipMap.end())
-                Msg::error("Could not find tip index in tipMat for tip reindexing");
-            p->setIndex(it->second);
-            }
-        else
-            {
-            p->setIndex(intIdx++);
-            }
-        }
-    // 6. take care of other tree variables
-    std::vector<std::string> tempTaxonNames = taxonNames;
-    taxonNames.clear();
-    for (int i=0; i<tempTaxonNames.size(); i++)
-        {
-        if (taxonMask[i] == true)
-            taxonNames.push_back(tempTaxonNames[i]);
-        }
-    numTaxa = (int)taxonNames.size();
-
-#   if 0
-    print("pruned tree");
-#   endif
+    makeSubtree(t, taxonMask);
 }
 
 Tree::~Tree(void) {
@@ -792,6 +536,110 @@ void Tree::listNodes(Node* p, size_t indent) {
         }
 }
 
+void Tree::makeSubtree(Tree& t, RbBitSet& taxonMask) {
+
+    clone(t);
+#   if 0
+    print("original tree");
+#   endif
+    
+    // prune unsampled taxa
+    // 1. mark all nodes that are part of the subtree
+    setAllFlags(false);
+    std::map<int,int> tipMap;
+    for (int i=0, k=0; i<taxonMask.size(); i++)
+        {
+        if (taxonMask[i] == true)
+            {
+            Node* p = getLeafIndexed(i);
+            if (p == NULL)
+                Msg::error("Could not find leaf to mark path to root");
+            while (p != NULL)
+                {
+                p->setFlag(true);
+                p = p->getAncestor();
+                }
+            tipMap.insert( std::make_pair(i,k) );
+            k++;
+            }
+        }
+    // 2. remove nodes that are not part of the subtree
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p->getFlag() == false)
+            {
+            p->removeDescendants();
+            Node* a = p->getAncestor();
+            if (a != NULL)
+                a->removeDescendant(p);
+            p->setAncestor(NULL);
+            }
+        }
+    // 3. remove superfluous nodes from the tree
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p->getFlag() == true)
+            {
+            if (p->numDescendants() == 1)
+                {
+                std::vector<Node*> des = p->getDescendantsVector();
+                Node* d = des[0];
+                Node* a = p->getAncestor();
+                if (a != NULL)
+                    {
+                    d->setAncestor(a);
+                    a->removeDescendant(p);
+                    a->addDescendant(d);
+                    d->setBranchProportion( d->getBranchProportion() + p->getBranchProportion() );
+                    }
+                else
+                    {
+                    d->setAncestor(NULL);
+                    d->setBranchProportion(0.0);
+                    if (p == root)
+                        root = d;
+                    }
+                p->removeDescendants();
+                p->setAncestor(NULL);
+                }
+            }
+        }
+    // 4. reinitialize down pass sequence
+    initializeDownPassSequence();
+    // 5. reindex nodes
+    int intIdx = (int)taxonMask.getNumberSetBits();
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p->getIsLeaf() == true)
+            {
+            std::map<int,int>::iterator it = tipMap.find(p->getIndex());
+            if (it == tipMap.end())
+                Msg::error("Could not find tip index in tipMat for tip reindexing");
+            p->setIndex(it->second);
+            }
+        else
+            {
+            p->setIndex(intIdx++);
+            }
+        }
+    // 6. take care of other tree variables
+    std::vector<std::string> tempTaxonNames = taxonNames;
+    taxonNames.clear();
+    for (int i=0; i<tempTaxonNames.size(); i++)
+        {
+        if (taxonMask[i] == true)
+            taxonNames.push_back(tempTaxonNames[i]);
+        }
+    numTaxa = (int)taxonNames.size();
+
+#   if 0
+    print("pruned tree");
+#   endif
+
+}
 void Tree::print(void) {
 
     listNodes(root, 3);
