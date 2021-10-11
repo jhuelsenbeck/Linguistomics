@@ -34,10 +34,16 @@ with Figures.ExampleTree {
     Italian,
   ];
 
-  LangNumber(LanguageClass language) = Math.FindIndex(LanguageList, l => l == language)[0]+1;
+  LangNumber(LanguageClass language) = Math.FindFirstIndex(LanguageList, language)+1;
 
-  Leaf(LanguageClass language, length) = new NodeClass("{0} ({1})"(language, LangNumber(language))) {BranchLength: length};
-  Branch(name, length)   = new NodeClass(name) {BranchLength: length};
+  Leaf(LanguageClass language, length) = new NodeClass("{0} ({1})"(language, LangNumber(language))) {
+    BranchLength: length
+  };
+
+  Branch(name, length) = new NodeClass(name) {
+    Marker      : Style.BranchMarker;
+    BranchLength: length
+  };
 
   Nodes = Branch(19, 1) {
     Leaf(Latin, 7);
@@ -82,9 +88,9 @@ with Figures.ExampleTree {
 //======================================================================
 
 with Figures.Alignment {
-  ArrowWidth  = 50;
+  ArrowWidth  = 40;
   ArrowHeight = 100;
-  ArrowMargin = 20 pts;
+  ArrowMargin = 10 pts;
   Arrowhead   = 8 pts;
   ArrowColor  = 80%;
 
@@ -252,6 +258,7 @@ with Figures.Alignment {
 
   Body = FigureBody {
     VBox {
+      Margin: 5 pts;
       HAlign: HAligns.Center;
       HBox {
         MarginB: 4 pts;

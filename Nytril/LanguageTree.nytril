@@ -2,19 +2,20 @@ using Format, Languages;
 //======================================================================
 
 class LanguageNodeClass: NodeClass {
-  var Language;
+  LanguageClass Language;
 
-  Constructor(language, branch) {
+  Constructor(LanguageClass language, branch, marker) {
     super.Constructor(language?.GlobalVariableName);
     BranchLength = branch;
     Language     = language;
+    Marker       = marker;
   }
 }
 //======================================================================
 
 with LanguageBranches {
-  Branch(branch=1.0)         = new LanguageNodeClass(null, branch);
-  Leaf(language, branch=1.0) = new LanguageNodeClass(language, branch);
+  Branch(branch=1.0)         = new LanguageNodeClass(null, branch, Style.BranchMarker);
+  Leaf(language, branch=1.0) = new LanguageNodeClass(language, branch, null);
 
   Experiment = Branch {
     Leaf(Latin);

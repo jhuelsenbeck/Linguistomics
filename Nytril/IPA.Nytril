@@ -129,7 +129,7 @@ class SegmentClass {
     NormalFrequency = 1;
   };
 
-  MatchVowelAny(feature, open) = Features.HasFlagMask(Vowel LongVowel Nasal, feature | Vowel) and Open == open;
+  MatchVowelAny(feature, open) = Features.HasFlagMask(Vowel LongVowel Nasal, feature) and Open == open;
 
   MatchVowelPair(feature, open, backness) = MatchVowelAny(feature, open) and Backness == backness;
 
@@ -881,14 +881,12 @@ with IPA {
     AdvancedTongueRoot           = new DiacriticClass("Advanced tongue root ", "\u0318", "_A");
     Apical                       = new DiacriticClass("Apical", "\u033A", "_a");
     ExtraLowTone                 = new DiacriticClass("Extra low tone", "\u030F", "_B");
-    LowRisingTone                = new DiacriticClass("Low rising tone", "\u1DC5", "_B_L");
     LessRounded                  = new DiacriticClass("Less rounded", "\u031C", "_c");
     Dental                       = new DiacriticClass("Dental", "\u032A", "_d");
     VelarizedOrPharyngealized    = new DiacriticClass("Velarized or Pharyngealized", "\u0334", "_e");
     GlobalFall                   = new DiacriticClass("Global fall", "\u2198", "<F>");
     Velarized                    = new DiacriticClass("Velarized", "\u02E0", "_G");
     HighTone                     = new DiacriticClass("High tone", "\u0301", "_H");
-    HighRisingTone               = new DiacriticClass("High rising tone", "\u1DC4", "_H_T");
     Aspirated                    = new DiacriticClass("Aspirated", "\u02B0", "_h");
     Palatalized                  = new DiacriticClass("Palatalized", "\u02B2", "_j");
     CreakyVoiced                 = new DiacriticClass("Creaky voiced", "\u0330", "_k");
@@ -902,7 +900,6 @@ with IPA {
     Lowered                      = new DiacriticClass("Lowered", "\u031E", "_o");
     RetractedTongueRoot          = new DiacriticClass("Retracted tongue root", "\u0319", "_q");
     GlobalRise                   = new DiacriticClass("Global rise", "\u2197", "<R>");
-    RisingFallingTone            = new DiacriticClass("Rising falling tone", "\u1DC8", "_R_F");
     Raised                       = new DiacriticClass("Raised", "\u031D", "_r");
     ExtraHighTone                = new DiacriticClass("Extra high tone", "\u030B", "_T");
     BreathyVoiced                = new DiacriticClass("Breathy voiced", "\u0324", "_t");
@@ -924,7 +921,6 @@ with IPA {
     MajorGroup                   = new DiacriticClass("Major group", "‖", " |  | ");
     Alveolarlateralclick         = new DiacriticClass("Alveolar lateral click", "ǁ", " | \\ | \\");
     Palatalclick                 = new DiacriticClass("Palatal click", "ǂ", "");
-//    Linkingmark                = new DiacriticClass("Linking Mark", "\u203f", "-\\");
     VoicelessDescender           = new DiacriticClass("Voiceless descender", "\u030A", "");
     CombiningMacron              = new DiacriticClass("Combining macron", "\u0331", "");
     TieBarBelow                  = new DiacriticClass("Tie-bar below", "\u035C", "");
@@ -932,6 +928,12 @@ with IPA {
     ReadyMadeCombination         = new DiacriticClass("Ready made combination", "\u026B", "");
     Becomes                      = new DiacriticClass("Becomes", "→", "");
     Separator                    = new DiacriticClass("Separator", "", "-");
+
+// Glyphs are not in the font
+//    Linkingmark                = new DiacriticClass("Linking Mark", "\u203f", "-\\");
+//    LowRisingTone                = new DiacriticClass("Low rising tone", "\u1DC5", "_B_L");
+//    HighRisingTone               = new DiacriticClass("High rising tone", "\u1DC4", "_H_T");
+//    RisingFallingTone            = new DiacriticClass("Rising falling tone", "\u1DC8", "_R_F");
   }
   //======================================================================
 
@@ -952,7 +954,7 @@ with IPA {
     var c      = DocMetrics.SegmentColumns;
     var sorted = Math.Sort(Results.DisplaySegments, false, ref AlphaOrder);
 
-    Style.TitleBar(Lang.IPAListing);
+    Style.TitleBar {Lang.IPAListing};
     Table {
       Columns: [DocMetrics.PageContent.Width / c] * c;
       foreach (var segments in (sorted / c)) {

@@ -103,7 +103,7 @@ abstract class RuleClass {
   }
 
   virtual void AssignPartitions(SegmentClass[] segments) {
-    var list = new ListClass(segments.Length);
+    var list = new ListClass(segments.Length, PartitionClass);
     var i    = 0;
     foreach (var filter in FiltersPlus) {
       var find = GetSegments(segments, filter);
@@ -117,7 +117,7 @@ abstract class RuleClass {
     Partitions = list.Values;
   }
 
-  GetSegments(SegmentClass[] segments, FilterClass filter) = FindSlice(segments, segment => MatchesRule(filter, segment));
+  GetSegments(SegmentClass[] segments, FilterClass filter) = Math.FindSlice(segments, segment => MatchesRule(filter, segment));
 
   ShowPartitions = Block {
     Paragraph {
@@ -168,7 +168,7 @@ abstract class RuleClass {
     };
 
     Paragraph {
-      Separator: Space*2;
+      Separator: Space;
 
       var i = 0;
       foreach (var filter in FiltersPlus) {
@@ -518,8 +518,6 @@ class PartitionHintClass {
 //======================================================================
 
 class GroupRatesClass {
-  ResultsClass Results;
-
   var PartitionRule,
       MaxLine,
       ArrowGap,
@@ -530,9 +528,8 @@ class GroupRatesClass {
       MaxRadius,
       RateScale;
 
-  Constructor(ResultsClass results) {
-    Results       = results;
-    PartitionRule = results.PartitionRule;
+  Constructor {
+    PartitionRule = Results.PartitionRule;
     MaxLine       = 10;
     ArrowGap      = 10 pts;
     GapAngle      = 80.0 degrees;
@@ -663,7 +660,7 @@ with Figures.FrequencyDiagram {
   };
 
   Body = FigureBody {
-    new GroupRatesClass(Results).PartitionDiagram(Size(5 inches));
+    new GroupRatesClass.PartitionDiagram(Size(5 inches));
   };
 }
 //======================================================================

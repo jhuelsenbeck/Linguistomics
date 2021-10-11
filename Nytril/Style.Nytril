@@ -99,21 +99,13 @@ class DefClass {
 }
 //======================================================================
 
-Main.MathFamily = Style.MathFace; //"Linux Libertine Display O";
+Main.MathFamily = "Linux Libertine O";
 
 with Style {
   ReferenceStyle       = new NatureStyleClass;
   MainFamily           = {TextFamily: TextFamilies.TimesNewRoman};
-//  MainFamily           = {TextFamily: TextFamilies.Cambria};
-
   SansSerif            = {TextFamily: TextFamilies.Arial};
   MonoFamily           = {TextFamily: TextFamilies.Consolas};
-
-//  MainFamily           = {TextFamily: MathFace};
-//  SansSerif            = {TextFamily: "CMU Sans Serif"};
-//  MonoFamily           = {TextFamily: "CMU Typewriter Text"};
-
-  MathFace             = "CMU Serif";
   IPAFamily            = {TextFamily: "Linux Libertine O"};
   GreekFamily          = IPAFamily;
   Classical            = {TextFamily: "CMU Classical Serif"};
@@ -198,6 +190,12 @@ with Style {
   };
 
   FigureCaption = Span;
+
+  BranchMarker = Figure {
+    Stroke: 1 pt {Color: Colors.Gray};
+    Fill: Colors.White;
+    Ellipse(Rect(Point(0), Size(3 pts, 2 pts)))
+  };
 
   ShowFigureNumber(figure) = Span {
     Lang.Figure;
@@ -285,12 +283,13 @@ with Style {
           };
           Tab;
           department.Name;
+          CommaSpace;
 
           var org = department.FindFirstFact(LinkTypes.Department) ?? department;
           if (valid org) {
             if (org != department) {
-              CommaSpace;
               org.Name;
+              CommaSpace;
             }
             CitationLib.ShowLocation(org, CommaSpace, true);
           }
@@ -494,12 +493,6 @@ with Style {
     NodeGap: 6 pts;
     Curvature: 30%;
     Bevel: 20%;
-    Marker: Span {
-      Style.IPAFamily;
-      TextHeight: 4 pts;
-      TextColor: Colors.Gray;
-      Tex.blackcirc;
-    };
   };
 
   ShowTree(title, axis, root) = VBox {
@@ -584,10 +577,10 @@ with Style {
     d
   };
 
-  TitleBar(name) = Paragraph {
+  TitleBar = Paragraph {
+    KeepWithNext: true;
     Background: 40%;
     TextHeight: 16 pts;
-    name
   };
 
   BulletList = ListBlock {
