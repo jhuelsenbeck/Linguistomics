@@ -1,76 +1,149 @@
 ﻿using Format, Units, IPA, FeatureSet, Math;
 //======================================================================
-// Consonants
-//======================================================================
 
-class TabOptionsClass {
-   var Title,
-       ColWidth,
-       Exclude,
-       Include,
-       All,
-       Manners,
-       RowMask,
-       Notes,
-       RowLabels;
+class EulerDiagramClass {
+  Constructor {
+  }
 
-   Constructor(title) {
-     Title = title;
-   }
-}
+  TitleStyle = {TextColor: 70%};
+  ChartSize  = 6 inches;
+  EX(x)      = ChartSize * x * 0.01;
+  EY(y)      = ChartSize * y * 0.01;
 
-with MatchingConsonants {
-  PulmonicTable = new TabOptionsClass(Lang.PConsonants) {
-    ColWidth: 45 pts;
-    Exclude: Affricate Ejective;
-    Include: Pulmonic;
-    All: NoFeature;
-    Manners: [Nasal, Stop, Sibilant Fricative, Fricative, Approximant, TapFlap, Trill, Lateral Fricative, Lateral Approximant, Lateral TapFlap];
-    RowMask: Nasal Stop Sibilant Fricative Approximant TapFlap Trill Lateral Velarized;
-    Notes: Lang.SymbolPairVoiced
+  Enclosure(x, y, w, h, color) = Canvas {
+    BorderStroke: 1 pts;
+    Corner: 6 pts;
+    Background: color;
+    X: EX(x);
+    Y: EY(y);
+    Size: Size(EX(w), EY(h));
   };
 
-  NonPulmonicTable = new TabOptionsClass(Lang.NPConsonants) {
-    ColWidth: 80 pts;
-    Exclude: Vowel Pulmonic Central;
-    Include: Ejective Click Implosive;
-    All: NoFeature;
-    Manners: [Ejective Stop, Ejective Fricative, Ejective Lateral Fricative, Click Tenuis, Click Nasal, Click Tenuis Lateral, Implosive];
-    RowMask: Lateral;
-    Notes: Lang.SymbolPairVoiced
+  NameBox(name, angle=0) = Paragraph {
+    TitleStyle;
+    Transform: Rotate(angle);
+    TransformFit: true;
+    Space;
+    name;
+    Space;
   };
 
-  PulmonicAffricatesTable = new TabOptionsClass(Lang.PulmonicAffricates) {
-    ColWidth: 50 pts;
-    Exclude: Vowel;
-    Include: Affricate Sibilant Lateral;
-    All: Pulmonic Affricate;
-    RowLabels: [Lang.Sibilant, Lang.NonSibilant, Lang.Lateral];
-    Manners: [Sibilant, NoFeature, Lateral];
-    RowMask: Pulmonic Affricate Sibilant Fricative Lateral;
+  VNameFrame(name, x, y, width, height, color) = Enclosure(x, y, width, height, color) {
+    VAlign: VAligns.Center;
+    NameBox(name, 90 degrees)
   };
 
-  EjectiveAffricatesTable = new TabOptionsClass(Lang.EjectiveAffricates) {
-    ColWidth: 50 pts;
-    Exclude: Vowel Click Implosive Pulmonic;
-    Include: Ejective Affricate Central Lateral;
-    All: Ejective Affricate;
-    Manners: [Central, Lateral];
-    RowMask: Pulmonic Approximant Central Lateral;
+  FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
+
+  FeatureSegments(features) = Math.FindSlice(Results.DisplaySegments, segment => segment.Features.HasFlagMask(FeatureMask, features));
+
+  FeatureFrame(x, y, width, name, features) = Canvas {
+    X: EX(x);
+    Y: EY(y);
+    Frame {
+      Width: EX(width);
+      ParAlignment: ParAlignments.Center;
+      if (exists name)
+        Span {TitleStyle; name};
+      Paragraph {
+        Separator: Space;
+        (each FeatureSegments(features)).ShowSegment;
+      }
+    }
   };
 
-  ShowTables = Block {
-    var set = new HashSetClass(256, SegmentClass);
-    MatchingOptions.ShowTable(set, each [PulmonicTable, NonPulmonicTable]);
-    PageBreak;
-    MatchingVowels.ShowTable(set);
-    MatchingOptions.ShowTable(set, each [PulmonicAffricatesTable, EjectiveAffricatesTable]);
-    MatchingOther.ShowTable(set);
+  FeatureChart = Canvas {
+    TextHeight: 16 pts;
+
+    VNameFrame(Lang.Occlusive, 10, 0, 90, 34, Color(255, 238, 238)) {
+      HAlign: HAligns.Right;
+    };
+    VNameFrame(Lang.Continuant, 10, 35, 90, 37, Color(229, 255, 255)) {
+      HAlign: HAligns.Right;
+    };
+    VNameFrame(Lang.Obstruent, 0, 11, 94, 40, Color(238, 238, 255, 50%));
+    VNameFrame(Lang.Vocoid, 0, 52, 78, 21, Color(238, 255, 238, 50%));
+    VNameFrame(Lang.Vibrant, 20, 74, 65, 17, Color(238, 238, 255));
+
+    Enclosure(11, 1, 83, 9, Color(255, 246, 246));   // Nasals
+    Enclosure(31, 12, 62, 21, Color(246, 242, 250));  // Affricates
+    Enclosure(11, 12, 19, 21, Color(246, 243, 250));  // Plosives
+    Enclosure(11, 36, 80, 14, Color(240, 247, 255));  // Fricatives
+
+    Enclosure(25, 75, 59, 7, Color(247, 247, 255)) {
+      HAlign: HAligns.Left;
+      VAlign: VAligns.Center;
+      NameBox(Lang.TapFlap);
+    };
+    Enclosure(25, 83, 53, 7, Color(247, 247, 255)) {
+      HAlign: HAligns.Left;
+      VAlign: VAligns.Center;
+      NameBox(Lang.Trill);
+    };
+
+    Enclosure(53, 13, 39, 36, Color(233, 248, 235, 50%)) {
+      HAlign: HAligns.Center;
+      NameBox(Lang.Strident);
+    };
+
+    Enclosure(62, 18, 25, 24, Color(245, 252, 220, 50%)); // Sibilants
+    Enclosure(11, 53, 21, 18, Color(240, 255, 247));      // Vowels
+    Enclosure(33, 53, 61, 18, Color(240, 255, 247, 50%)) {
+      HAlign: HAligns.Left;
+      NameBox(Lang.Approximant);
+    };
+
+    Enclosure(35, 59, 21, 11, Color(248, 255, 225)); // Semivowels
+
+    Enclosure(64, 43, 26, 59, Color(255, 238, 238, 50%)) {
+      HAlign: HAligns.Center;
+      VAlign: VAligns.Bottom;
+      NameBox(Lang.Liquid);
+    };
+
+    Enclosure(65, 44, 14, 52, Color(255, 247, 221, 50%)) {
+      HAlign: HAligns.Center;
+      VAlign: VAligns.Bottom;
+      NameBox(Lang.Rhotic);
+    };
+
+    Enclosure(80, 44, 9, 44, Color(238, 247, 230, 70%)) {
+      HAlign: HAligns.Right;
+      VAlign: VAligns.Bottom;
+      NameBox(Lang.Lateral, 90 degrees);
+    };
+
+    FeatureFrame(11, 1, 84, Lang.Nasal, Nasal Occlusive);
+    FeatureFrame(12, 14, 17, Lang.Plosive, Stop Occlusive);
+    FeatureFrame(32, 14, 20, Lang.Affricate, Affricate Occlusive);
+    FeatureFrame(54, 20, 7, null, Affricate Occlusive Strident);
+    FeatureFrame(65, 18, 18, Lang.Sibilant, Affricate Occlusive Strident Sibilant);
+    FeatureFrame(14, 38, 22, Lang.Fricative, Fricative Obstruent Continuant);
+    FeatureFrame(54, 38, 6, null, Fricative Obstruent Continuant Strident);
+    FeatureFrame(64, 36, 20, null, Fricative Obstruent Continuant Strident Sibilant);
+    FeatureFrame(66, 44, 10, null, Fricative Obstruent Continuant Strident Rhotic Liquid);
+    FeatureFrame(80, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid);
+    FeatureFrame(12, 53, 19, Lang.Vowel, Vowel Vocoid Continuant);
+    FeatureFrame(36, 60, 19, Lang.SemiVowel, Vocoid Semivowel Approximant Continuant);
+    FeatureFrame(57, 62, 5, null, Vocoid Approximant);
+    FeatureFrame(66, 60, 10, null, Vocoid Approximant Rhotic Liquid);
+    FeatureFrame(82, 58, 5, null, Vocoid Approximant Rhotic Liquid Lateral);
+    FeatureFrame(54, 76, 10, null, Vibrant TapFlap);
+    FeatureFrame(66, 76, 10, null, Vibrant TapFlap Rhotic Liquid);
+    FeatureFrame(77, 77, 10, null, Vibrant TapFlap Rhotic Liquid Lateral);
+    FeatureFrame(54, 84, 10, null, Vibrant Trill);
+    FeatureFrame(66, 84, 10, null, Vibrant Trill Rhotic Liquid);
   };
 }
 //======================================================================
 
 with DisplayWords {
+  SegmentSound(segment) {
+//    if (segment == SpaceSegment)
+//      return Space;
+    return segment.GlobalVariableName
+  }
+
   WordRow(word, index) = Row {
     Style.RowBar(index);
     Cell {
@@ -99,7 +172,7 @@ with DisplayWords {
     Style.TitleBar {taxon.Language};
     Table {
       Edge: 0.5;
-      Columns: [2.1 inches, 1.5 inches, DocMetrics.PageContent.Width - 3.6 inches];
+      Columns: [2.1 inches, 1 inches, DocMetrics.PageContent.Width - 3.1 inches];
       Row {
         HeaderCell(Lang.Cognate);
         HeaderCell(Lang.IPA);
@@ -173,32 +246,8 @@ with AllWords {
     }
   };
 }
-//======================================================================
-// Consonants
-//======================================================================
 
-with MatchingOptions {
-  MatchInclude(SegmentClass segment, place, options) {
-    return SamePlace(segment, place) and
-           segment.Features.NotFlag(options.Exclude) and
-           segment.Features.HasFlag(options.Include) and
-           Math.FindAny(options.Manners, manner => AnyManners(manner, segment.Features, options));
-  }
-
-  CheckFlags(sflags, rflags, options) {
-    return sflags.NotFlag(options.Exclude) and
-           sflags.HasFlag(options.Include) and
-           sflags.HasFlagMask(options.RowMask | rflags, rflags);
-  }
-
-  AnyManners(manner, features, options) = CheckFlags(features, manner | options.All, options);
-
-  SamePlace(SegmentClass segment, place) = segment.?Place and place and segment.Place == place;
-
-  MatchPlace(place, options) = Math.FindAny(AllSegments, segment => MatchInclude(segment, place, options));
-  GetPlaces(options) = Math.FindSlice(Places, place => MatchPlace(place, options));
-
-
+with MatchCell {
   SegmentText(HashSetClass set, SegmentClass segment) {
     if (not segment.Impossible) {
       set.Add(segment);
@@ -224,6 +273,35 @@ with MatchingOptions {
       X: DocMetrics.BoxSize.Width;
   };
 
+  ErrorMatches(HashSetClass set, matches) = Span {
+    Separator: CommaSpace;
+    TextColor: Colors.Red;
+    MatchCell.SegmentText(set, each matches);
+  };
+}
+//======================================================================
+
+class TabOptionsClass {
+   var Title,
+       ColWidth,
+       Exclude,
+       Include,
+       All,
+       Manners,
+       RowMask,
+       Notes,
+       RowLabels;
+
+  Constructor(title) {
+    Title = title;
+  }
+
+  CheckFlags(sflags, rflags) {
+    return sflags.NotFlag(Exclude) and
+           sflags.HasFlag(Include) and
+           sflags.HasFlagMask(RowMask | rflags, rflags);
+  }
+
   MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Features.HasFlag(Voiced) == matches[1].Features.HasFlag(Voiced));
 
   SegmentBlock(HashSetClass set, matches) = Cell {
@@ -232,23 +310,33 @@ with MatchingOptions {
       if (matches.Length == 1 and matches[0].Impossible)
         Style.ImpossibleBackground;
       else {
-        TextHeight: 1 pts;
         Span {
-          Canvas {
-            Size: DocMetrics.CellSize;
-            ShowBox(set, each matches, MatchError(matches) ? Colors.Red : Colors.Black)
+          if (MatchError(matches))
+            MatchCell.ErrorMatches(set, matches);
+          else {
+            Canvas {
+              Size: DocMetrics.CellSize;
+              MatchCell.ShowBox(set, each matches, Colors.Black)
+            }
           }
         }
       }
     }
   };
 
-  AddCell(HashSetClass set, options, place, features) {
-    return SegmentBlock(set, Math.FindSlice(AllSegments, s => SamePlace(s, place) and CheckFlags(s.Features, features, options)));
+  MatchInclude(SegmentClass segment, place) {
+    return segment.?Place == place and
+           segment.Features.NotFlag(Exclude) and
+           segment.Features.HasFlag(Include) and
+           FindAny(Manners, manner => CheckFlags(segment.Features, manner | All));
   }
 
-  AddRow(HashSetClass set, TabOptionsClass options, places, f) = Row {
-    var allflags = f | options.All;
+  MatchPlace(place) {
+    return FindAny(Results.UniqueSegments, segment => MatchInclude(segment, place));
+  }
+
+  AddRow(HashSetClass set, places, f) = Row {
+    var features = f | All;
     Cell {
       VAlign: VAligns.Center;
       EdgeR: 0.5 pts;
@@ -256,81 +344,129 @@ with MatchingOptions {
       PaddingLR: 2 pts;
       TextHeight: 7 pts;
 
-      if (exists options.RowLabels)
-        options.RowLabels[EachIndex];
+      if (exists RowLabels)
+        RowLabels[EachIndex];
       else
         f;
     };
-    AddCell(set, options, each places, allflags)
+
+    var all = Results.DisplaySegments;// + IPA.ImpossibleSegments;
+    foreach (var place in places)
+      SegmentBlock(set, FindSlice(all, s => s.?Place == place and CheckFlags(s.Features, features)));
   };
 
-  PlaceHeader(place) = Style.HeaderCell(place.Name, HAligns.Center);
-
-  ShowTable(HashSetClass set, TabOptionsClass options) = Block {
-    var places = GetPlaces(options);
-    Style.TitleBar {options.Title};
+  ShowTable(HashSetClass set) = Block {
+    var places = FindSlice(Places, place => MatchPlace(place));
+    Style.TitleBar {Title};
     Table {
       Style.TableEdge;
-      Columns: [options.ColWidth {EdgeR: 0.5 pts}] +
+      Columns: [ColWidth {EdgeR: 0.5 pts}] +
                [DocMetrics.CellSize.Width {HAlign: HAligns.Center; EdgeR: 0.25 pts}] * places.Length;
 
       Row {
         TextHeight: 6 pts;
         Style.HeaderCell(Bold Lang.Manner);
-        PlaceHeader(each places)
+        foreach (var place in places)
+          Style.HeaderCell(place.Name, HAligns.Center);
       };
-      AddRow(set, options, places, each options.Manners);
+      AddRow(set, places, each Manners);
     };
+
     Style.TableNotes {
       Lang.ImpossibleShaded;
       Space;
-      options.?Notes
+      Notes;
     };
   };
 }
 //======================================================================
-// Vowels
+
+with MatchingConsonants {
+  PulmonicTable = new TabOptionsClass(Lang.PConsonants) {
+    ColWidth: 45 pts;
+    Exclude: Affricate Ejective;
+    Include: Pulmonic;
+    All: NoFeature;
+    Manners: [Nasal Stop, Nasal, Stop, Sibilant Fricative, Fricative, Approximant, TapFlap, Trill, Lateral Fricative, Lateral Approximant, Lateral TapFlap];
+    RowMask: Nasal Stop Sibilant Fricative Approximant TapFlap Trill Lateral Velarized;
+    Notes: Lang.SymbolPairVoiced
+  };
+
+  NonPulmonicTable = new TabOptionsClass(Lang.NPConsonants) {
+    ColWidth: 80 pts;
+    Exclude: Vowel Pulmonic Central;
+    Include: Ejective Click Implosive Palatalized Implosive Lateral Approximant;
+    All: NoFeature;
+    Manners: [Stop, Ejective Stop, Ejective Fricative, Ejective Lateral Fricative, Click Tenuis, Click Nasal, Click Tenuis Lateral, Implosive, Lateral Approximant];
+    RowMask: Lateral;
+    Notes: Lang.SymbolPairVoiced
+  };
+
+  PulmonicAffricatesTable = new TabOptionsClass(Lang.PulmonicAffricates) {
+    ColWidth: 50 pts;
+    Exclude: Vowel;
+    Include: Affricate Sibilant Lateral;
+    All: Pulmonic Affricate;
+    RowLabels: [Lang.Sibilant, Lang.Lateral, "Voiced", Lang.NonSibilant];
+    Manners: [Sibilant, Lateral, Voiced, NoFeature];
+    RowMask: Pulmonic Affricate Sibilant Fricative Lateral;
+  };
+
+  EjectiveAffricatesTable = new TabOptionsClass(Lang.EjectiveAffricates) {
+    ColWidth: 50 pts;
+    Exclude: Vowel Click Implosive Pulmonic;
+    Include: Ejective Affricate Central Lateral;
+    All: Ejective Affricate;
+    Manners: [Central, Lateral];
+    RowMask: Pulmonic Approximant Central Lateral;
+  };
+}
 //======================================================================
 
 with MatchingVowels {
-  AddCell(HashSetClass set, features, open, backness) = Cell {
+  FeatureMask = Vowel LongVowel Nasal Diphthong NonSylabic;
+
+  AddCell(HashSetClass set, open, backness, features) = Cell {
     Style.SegmentBottom;
     HAlign: HAligns.Center;
     TextHeight: DocMetrics.BoxSize.Height;
 
-    var matches = FindSlice(Results.DisplaySegments, segment => segment.MatchVowelPair(features, open, backness));
+    var filter  = segment => segment.Backness == backness and segment.Open == open and segment.Features.HasFlagMask(FeatureMask, features);
+    var matches = FindSlice(Results.DisplaySegments, filter);
     switch (matches.Length) {
+      case 0:
+        break;
+
       case 1:
-        MatchingOptions.SegmentText(set, matches[0]);
+        MatchCell.SegmentText(set, matches[0]);
         break;
 
       case 2:
         Span {
-          MatchingOptions.SegmentText(set, matches[0]);
+          MatchCell.SegmentText(set, matches[0]);
           "•" {TextColor: Colors.LightGray};
-          MatchingOptions.SegmentText(set, matches[1]);
+          MatchCell.SegmentText(set, matches[1]);
         };
+        break;
+
+      default:
+        MatchCell.ErrorMatches(set, matches);
         break;
     }
   };
 
-  AddRow(HashSetClass set, features, open) {
-    if (FindAny(Results.DisplaySegments, segment => segment.MatchVowelAny(features, open))) {
-      return Row {
-        Cell {
-          VAlign: VAligns.Center;
-          Style.TitleBackground;
-          open.Name
-        };
-        AddCell(set, features, open, each Backnesses)
-      };
-    }
-    else
-      return null;
-  }
+  AddRow(HashSetClass set, open, features) = Row {
+    Height: 16 pts;
+    Cell {
+      VAlign: VAligns.Center;
+      Style.TitleBackground;
+      open.Name;
+    };
+    AddCell(set, open, each Backnesses, features)
+  };
 
-  ShowVowelTable(HashSetClass set, features, title) = Block {
-    Style.TitleBar {title};
+  ShowVowelTable(HashSetClass set, features) = Block {
+    Style.TitleBar {Separator: "-"; each features};
     Table {
       HAlign: HAligns.Center;
       Style.TableEdge;
@@ -340,21 +476,24 @@ with MatchingVowels {
         Style.HeaderCell(Empty);
         Style.HeaderCell(each Backnesses, HAligns.Center)
       };
-      AddRow(set, features, each Opens);
-    }
+      AddRow(set, each Opens, features);
+    };
   };
 
   ShowTable(HashSetClass set) = Block {
-    ShowVowelTable(set, Vowel, Lang.Vowels);
-    Style.TableNotes {
-      Lang.SymbolPairRounded;
-    };
-    ShowVowelTable(set, Vowel LongVowel, Lang.LongVowels);
-    Paragraph;
-    ShowVowelTable(set, Vowel Nasal, "Nasal Vowels");
-    Paragraph;
-    ShowVowelTable(set, LongVowel Vowel Nasal, "Long Nasal Vowels");
-    Paragraph;
+    var features = [
+      Vowel,
+      Vowel LongVowel,
+      Vowel Nasal,
+      Vowel LongVowel Nasal,
+      Vowel Diphthong,
+      Vowel Nasal Diphthong,
+      Vowel NonSylabic,
+      Vowel NonSylabic Diphthong,
+    ];
+
+    Lang.SymbolPairRounded;
+    ShowVowelTable(set, each features);
   };
 }
 //======================================================================
@@ -364,15 +503,15 @@ with MatchingVowels {
 with MatchingDiacritics {
   ColumnDiv = 3;
 
-  AddCell(segment) = Cell {
+  AddCell(SegmentClass segment) = Cell {
     Paragraph {
-      LeftIndent: 0.5 inches;
-      FirstIndent: -0.5 inches;
+      LeftIndent: 30 pts;
+      FirstIndent: -30 pts;
       LocationMark: segment.GlobalVariablePath;
       segment.ShowSegment {
         TextHeight: 18 pts;
-        Tab;
       };
+      Tab;
       segment.Description
     }
   };
@@ -386,7 +525,7 @@ with MatchingDiacritics {
     Table {
       Style.TableEdge;
       Columns: [DocMetrics.PageContent.Width / ColumnDiv] * ColumnDiv;
-      AddRow(each DiacriticModifiers / ColumnDiv);
+      AddRow(each (DiacriticModifiers / ColumnDiv));
     };
     Style.TableNotes;
   };

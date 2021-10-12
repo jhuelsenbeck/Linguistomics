@@ -10,7 +10,7 @@ class FilterClass {
 
   virtual Matches(SegmentClass segment) = true;
 
-  override GetPopup = Results.PartitionRule.ShowFilterSegments(this);
+  override GetPopup = Results.ShowFilterSegments(this);
 
   override GetLayout = Span {
     Popup: this;
@@ -91,9 +91,9 @@ abstract class RuleClass {
     FiltersPlus = FilterList.Values;
   }
 
-  virtual void AssignCharacters(SegmentClass[] segments) {
+  virtual void AssignCharacters {
     var last = Rev.CharacterList.Length-1;
-    foreach (var segment in segments) {
+    foreach (var segment in Results.UniqueSegments) {
       var index = GetFilterIndex(segment);
       if (index > last)
         index = last;
@@ -102,11 +102,11 @@ abstract class RuleClass {
     GetFilters;
   }
 
-  virtual void AssignPartitions(SegmentClass[] segments) {
-    var list = new ListClass(segments.Length, PartitionClass);
+  virtual void AssignPartitions {
+    var list = new ListClass(Results.UniqueSegments.Length, PartitionClass);
     var i    = 0;
     foreach (var filter in FiltersPlus) {
-      var find = GetSegments(segments, filter);
+      var find = GetSegments(filter);
       if (valid find) {
         list.Add(new PartitionClass(i, filter, find));
         foreach (var s in find)
@@ -117,7 +117,7 @@ abstract class RuleClass {
     Partitions = list.Values;
   }
 
-  GetSegments(SegmentClass[] segments, FilterClass filter) = Math.FindSlice(segments, segment => MatchesRule(filter, segment));
+  GetSegments(FilterClass filter) = Math.FindSlice(Results.UniqueSegments, segment => MatchesRule(filter, segment));
 
   ShowPartitions = Block {
     Paragraph {
@@ -149,18 +149,6 @@ abstract class RuleClass {
     }
   };
 
-  ShowFilterSegments(FilterClass filter) = Frame {
-    Width: 2 inches;
-    Paragraph {
-      TextHeight: 18 pts;
-      var segments = GetSegments(Results.UniqueSegments, filter);
-      if (segments.Length > 0) {
-        Separator: Space;
-        (each segments).ShowSegment;
-      }
-    }
-  };
-
   ShowDescription = Block {
     Paragraph {
       TextHeight: 14 pts;
@@ -172,7 +160,7 @@ abstract class RuleClass {
 
       var i = 0;
       foreach (var filter in FiltersPlus) {
-        var segments = GetSegments(Results.UniqueSegments, filter);
+        var segments = GetSegments(filter);
         if (segments.Length > 0) {
           HBox {
             VAlign: VAligns.Center;
@@ -339,7 +327,6 @@ with SegmentGroups {
 }
 //======================================================================
 
-
 class VowelsSeparatedRuleClass: RuleClass {
   Constructor {
     super.Constructor("Vowels Separated");
@@ -409,9 +396,9 @@ class DiphthongPairRuleClass: RuleClass {
     super.Constructor("Diphthongs Paired with Vowels");
   }
 
-  override void AssignCharacters(SegmentClass[] segments) {
+  override void AssignCharacters {
     var count = 0;
-    foreach (var segment in segments) {
+    foreach (var segment in Results.UniqueSegments) {
       var dr = segment.DiphthongRoot;
       if (valid dr) {
         var fi = -1;
@@ -432,7 +419,7 @@ class DiphthongPairRuleClass: RuleClass {
       }
     }
 
-    foreach (var segment in segments) {
+    foreach (var segment in Results.UniqueSegments) {
       if (segment.CharacterIndex < 0) {
         SetSegmentCharacter(segment, count++);
         Add(new SingleFilterClass(segment));
@@ -444,13 +431,13 @@ class DiphthongPairRuleClass: RuleClass {
 //======================================================================
 
 class SingletonRuleClass: RuleClass {
-  Constructor {
+  Constructor() {
     super.Constructor("Each segment gets a different number");
     Numbers = true;
   }
 
-  override void AssignCharacters(SegmentClass[] segments) {
-    foreach (var segment in segments) {
+  override void AssignCharacters {
+    foreach (var segment in Results.UniqueSegments) {
       SetSegmentCharacter(segment, EachIndex);
       Add(new SingleFilterClass(segment));
     }
@@ -491,7 +478,7 @@ class PartitionHintClass {
       Bold;
       p.Filter.Name;
     };
-    Results.PartitionRule.ShowFilterSegments(p.Filter);
+    Results.ShowFilterSegments(p.Filter);
   };
 
   override GetPopup = HBox {
@@ -518,17 +505,17 @@ class PartitionHintClass {
 //======================================================================
 
 class GroupRatesClass {
-  var PartitionRule,
-      MaxLine,
-      ArrowGap,
-      GapAngle,
-      LoopRadius,
-      LoopDistance,
-      MaxExtent,
-      MaxRadius,
-      RateScale;
+  var          PartitionRule,
+               MaxLine,
+               ArrowGap,
+               GapAngle,
+               LoopRadius,
+               LoopDistance,
+               MaxExtent,
+               MaxRadius,
+               RateScale;
 
-  Constructor {
+  Constructor() {
     PartitionRule = Results.PartitionRule;
     MaxLine       = 10;
     ArrowGap      = 10 pts;
@@ -616,7 +603,7 @@ class GroupRatesClass {
             EachOne;
           };
           p1.Filter;
-          Popup: Results.PartitionRule.ShowFilterSegments(p1.Filter);
+          Popup: Results.ShowFilterSegments(p1.Filter);
         };
       };
     }
@@ -642,11 +629,13 @@ class GroupRatesClass {
 
 with Figures.FrequencyDiagram {
   Caption = FigureCaption {
-    "For the "; Quote{Results.PartitionRule.Name}; " model, states were grouped into five sets: ";
+    var rule = Results.PartitionRule;
+
+    "For the "; Quote{rule.Name}; " model, states were grouped into five sets: ";
     Span {
       Separator: CommaSpace;
       LastSeparator: Style.AndSpace;
-      foreach (var partition in Results.PartitionRule.Partitions) {
+      foreach (var partition in rule.Partitions) {
         Span {
           partition.Filter.Name;
           " ("; EachOne; ")";

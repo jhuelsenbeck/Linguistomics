@@ -71,14 +71,14 @@ class WordClass {
   var            Text,
                  Plain;
 
-  Constructor(LanguageClass language, CognateClass cognate, text) {
+  Constructor(dictionary, LanguageClass language, CognateClass cognate, text) {
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
     Text     = text.GetString(NormalizationForms.FormC);
     Plain    = Math.FindSlice(Text, c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
     Language = language;
     Cognate  = cognate;
     if (Text.Length > 0) {
-      var segments = IPA.SegmentDictionary.FindTokens(Text, IPA.NoSegment);
+      var segments = dictionary.FindTokens(Text, IPA.NoSegment);
       Aligned  = Math.FindSlice(segments, s => s.Gap or (not s.Punctuation));
       Segments = Math.FindSlice(segments, s => not s.Punctuation);
 
@@ -193,7 +193,8 @@ enum Models {
 class ResultsClass {
   RuleClass      CharacterRule,
                  PartitionRule;
-  SegmentClass[] UniqueSegments;
+  SegmentClass[] UniqueSegments,
+                 SortedSegments;
   CognateClass[] UsedCognates;
   TaxonClass[]   Taxa;
   var            DisplaySegments,
@@ -239,21 +240,28 @@ class ResultsClass {
       [0, 0, 0, 0, 20],
     ];
 
-    InitConcepts;
-    foreach (var cognate in UsedCognates)
-      ComputeCognate(cognate);
-
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
     CharacterRule = new SingletonRuleClass;
     PartitionRule = new Partition1Class;
+  }
 
-//    Rule = new DiphthongRuleClass;
-//    Rule = new VowelsSeparatedRuleClass;
-//    Rule = new SegmentTypesRuleClass;
+  void Calculate {
+    // Build a dictionary with IPA text as the key
+    var dictionary = new DictionaryClass(256, SegmentClass);
+    foreach (var segment in IPA.Segments) {
+      if (segment.Ipa.Length > 0)
+        dictionary.Add(segment, segment.Ipa);
+    }
+    InitConcepts;
 
-    GetUniqueSegments;
-    CharacterRule.AssignCharacters(UniqueSegments);
-    PartitionRule.AssignPartitions(UniqueSegments);
+    foreach (var cognate in UsedCognates)
+      ComputeCognate(dictionary, cognate);
+
+    UniqueSegments  = GetUniqueSegments;
+    DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
+    SortedSegments  = Sort(UniqueSegments, true, ref AlphaOrder);
+
+    GetFrequencies;
 
     var max = 0;
     foreach (var segment in UniqueSegments) {
@@ -261,47 +269,22 @@ class ResultsClass {
         max = segment.CharacterIndex;
     }
     UniqueCharacters = max+1;
+
+    CharacterRule.AssignCharacters;
+    PartitionRule.AssignPartitions;
   }
 
-  void GetUniqueSegments {
-    var set = new DictionaryClass(256, SegmentClass);
+  SegmentClass[] GetUniqueSegments {
+    var set = new HashSetClass(512, SegmentClass);
     foreach (var cognate in UsedCognates) {
       foreach (var word in cognate.Words) {
         foreach (var segment in word.Segments) {
           if (!segment.Punctuation)
-            set.Add(segment, segment.Ipa);
+            set.Add(segment);
         }
       }
     }
-    UniqueSegments  = set.Values;
-    DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
-    GetFrequencies;
-  }
-
-  GetConcept(concept) = FindSlice(UsedCognates, c => c.Concept == concept, 1)[0];
-
-  void GetFrequencies {
-    var set = new DictionaryClass(1024);
-    foreach (var sd in SegmentFrequencyData)
-      set.Add(sd, sd.Text);
-
-    var sum = 0.0;
-    foreach (var s in UniqueSegments) {
-      if (not s.Punctuation) {
-        var f = set.FindKey(s.Ipa);
-        if (valid f)
-          s.Frequency = f.Frequency;
-        sum += s.Frequency;
-      }
-    }
-    if (sum > 0) {
-      sum = 1.0 / sum;
-
-      foreach (var s in UniqueSegments) {
-        s.NormalFrequency  = s.Frequency * sum;
-        s.FrequencyPercent = s.NormalFrequency*100.0;
-      }
-    }
+    return set.Values;
   }
 
   void InitConcepts {
@@ -319,7 +302,7 @@ class ResultsClass {
           if (vname != "Done" and vname != "Verb") {
             var count = 0;
             foreach (var t in cognate) {
-              var tn = t.GlobalVariableName();
+              var tn = t.GlobalVariableName;
               set.Add(tn, tn);
               if (t.Length > 0)
                 ++count;
@@ -347,25 +330,7 @@ class ResultsClass {
     Taxa = tlist.Values;
   }
 
-  ShowLanguageDetails = Block {
-    foreach (var taxon in Taxa) {
-      var language = taxon.Language;
-      Style.Header2 {
-        language.Name;
-      };
-      Block {
-        Paragraph {
-          ParAlignment: ParAlignments.Center;
-          if (valid language.MapImage)
-            language.ShowMap(Size(5 inches, 3 inches));
-        };
-        language.Description;
-        language.Details;
-      }
-    }
-  };
-
-  void ComputeCognate(CognateClass cognate) {
+  void ComputeCognate(DictionaryClass dictionary, CognateClass cognate) {
     var words     = new ListClass(Taxa.Length);
     var maxlength = 0;
 
@@ -373,13 +338,13 @@ class ResultsClass {
       var word = null;
       foreach (var langword in cognate.Cognate) {
         if (langword.GlobalVariableName == taxon.Variable) {
-          word      = new WordClass(taxon.Language, cognate, langword);
+          word      = new WordClass(dictionary, taxon.Language, cognate, langword);
           maxlength = Math.Max([maxlength, word.Aligned.Length]);
           break;
         }
       }
       if (word == null)
-        word = new WordClass(taxon.Language, cognate, Empty);
+        word = new WordClass(dictionary, taxon.Language, cognate, Empty);
       words.Add(word);
     }
 
@@ -412,6 +377,120 @@ class ResultsClass {
 
     TotalLength += maxlength;
   }
+
+  ShowWord(SegmentClass segment) = Block{
+    Paragraph {
+      SpaceBefore: 10 pts;
+      TextHeight: 14;
+      BorderB: 1;
+      "Words containing \"{0}\""(segment.Ipa);
+    };
+    Paragraph {
+      Separator: Space;
+      foreach (var cognate in UsedCognates) {
+        foreach (var word in cognate.Words) {
+          if (FindAny(word.Segments, segment))
+            word.Plain;
+        }
+      }
+    };
+  };
+
+  GG = Block {
+    ShowWord(IPA.Segments.g);
+    ShowWord(IPA.Segments.j);
+
+    foreach (var cognate in UsedCognates) {
+      foreach (var word in cognate.Words) {
+        if (FindAny(word.Segments, IPA.Segments.g) and FindAny(word.Segments, IPA.Segments.j))
+          word.Plain;
+      }
+    }
+  };
+
+  GetConcept(concept) = FindFirst(UsedCognates, c => c.Concept == concept);
+
+  void GetFrequencies {
+    var set = new DictionaryClass(1024);
+    foreach (var sd in SegmentFrequencyData)
+      set.Add(sd, sd.Text);
+
+    var sum = 0.0;
+    foreach (var s in UniqueSegments) {
+      if (not s.Punctuation) {
+        var f = set.FindKey(s.Ipa);
+        if (valid f)
+          s.Frequency = f.Frequency;
+        sum += s.Frequency;
+      }
+    }
+    if (sum > 0) {
+      sum = 1.0 / sum;
+
+      foreach (var s in UniqueSegments) {
+        s.NormalFrequency  = s.Frequency * sum;
+        s.FrequencyPercent = s.NormalFrequency*100.0;
+      }
+    }
+  }
+
+  AlphaOrder(SegmentClass x, SegmentClass y) {
+    var cl = x.Ipa.Length.Compare(y.Ipa.Length);
+    if (cl == 0)
+      cl = -x.Ipa.Compare(y.Ipa);
+    return cl;
+  }
+
+  SegmentCell(SegmentClass segment) = Cell {
+    Edge: 0.25 pts {Color: Colors.LightGray};
+    Padding: 2 pts;
+    segment.Display(segment.GlobalVariablePath, 16 pts)
+  };
+
+  SegmentTable = Block {
+    var c = DocMetrics.SegmentColumns;
+
+    Style.TitleBar {Lang.IPAListing};
+    Table {
+      Columns: [DocMetrics.PageContent.Width / c] * c;
+      foreach (var s in (SortedSegments / c)) {
+        Row {
+          SegmentCell(each s);
+        }
+      }
+    };
+    Style.TableNotes;
+  };
+
+  ShowFilterSegments(FilterClass filter) = Frame {
+    Width: 2 inches;
+    Paragraph {
+      TextHeight: 18 pts;
+      var segments = PartitionRule.GetSegments(filter);
+      if (segments.Length > 0) {
+        Separator: Space;
+        (each segments).ShowSegment;
+      }
+    }
+  };
+
+  ShowLanguageDetails = Block {
+    foreach (var taxon in Taxa) {
+      var language = taxon.Language;
+      Style.Header2 {
+        language.Name;
+      };
+      Block {
+        Paragraph {
+          ParAlignment: ParAlignments.Center;
+          if (valid language.MapImage)
+            language.ShowMap(Size(5 inches, 3 inches));
+        };
+        language.Description;
+        language.Details;
+      }
+    }
+  };
 
   ShowLanguages = Block {
     var rows      = 2;
@@ -458,7 +537,7 @@ class ResultsClass {
     }
   };
 
-  void Calculate {
+  void InitSource {
     CreateFolder(OutFolder);
     if (not CharacterRule.Numbers) {
       IO.Write(CharacterFile(1), OutFolder CharacterName);
@@ -467,8 +546,6 @@ class ResultsClass {
     IO.Write(RunBatchFile, OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
     IO.Write(ConfigFile, OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
     Write(new SubmissionViewClass.GetDocument, OutFolder Folder("Nytril") FileName("Submission.docx"), FileFormats.Word);
-
-
 
     var p = new RevProcessClass(EXEName, OutFolder RevSourceName) {
 /*      CacheName: "RevBayes";
@@ -522,9 +599,11 @@ class ResultsClass {
     }
   };
 
-  CompareSegments(d1, d2) = d1.NormalFrequency.Compare(d2.NormalFrequency);
+  CompareSegments(SegmentClass d1, SegmentClass d2) = d1.NormalFrequency.Compare(d2.NormalFrequency);
 
   FrequencyChart(SizeClass size) = Chart {
+    TextHeight: 11 pts;
+
     var sorted = Math.Sort(UniqueSegments, true, ref CompareSegments);
     Style.SansSerif;
     Size: size;
@@ -858,8 +937,8 @@ class ResultsClass {
     }
   };
 
-  ShowSegmentGroups = Block {
-    foreach (var segment in UniqueSegments) {
+  ShowWordsForEachSegment = Block {
+    foreach (var segment in SortedSegments) {
       Paragraph {
         TabStops: [DocMetrics.PageContent.Width {Type: TabTypes.Right}];
         KeepWithNext: true;
@@ -879,7 +958,7 @@ class ResultsClass {
           Separator: Space*2;
           foreach (var cognate in UsedCognates) {
             foreach (var word in cognate.Words) {
-              if (Math.FindAny(word.Segments, segment)) {
+              if (FindAny(word.Segments, segment)) {
                 Span {
                   Popup: word;
                   word.Plain;

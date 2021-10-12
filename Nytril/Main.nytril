@@ -39,7 +39,7 @@ with Main {
   ];
 
   void Run {
-    Results.Calculate;
+    Results.InitSource;
   }
 
   Links = {
@@ -59,7 +59,7 @@ Authors = [
 // No spaces in the name below!
 // RevBayes has a problem with folder names that contain spaces...
 
-Results = new ResultsClass("Run1");
+ResultsClass Results = new ResultsClass("Run1");
 
 //======================================================================
 
@@ -87,6 +87,8 @@ class SubmissionViewClass: BaseViewClass {
   };
 
   override GetDocument = MainDocument {
+    Results.Calculate;
+
     PageSection {
       Footer: FooterBlock {
         Even: FooterBlock;
@@ -137,6 +139,8 @@ class PaperViewClass: BaseViewClass {
   };
 
   override GetDocument = MainDocument {
+    Results.Calculate;
+
     var appendices = [
       new AppendixClass("Program Output", Results.ShowLanguageTrees),
       new AppendixClass("Statistics", Results.ShowStats),
@@ -186,6 +190,8 @@ class ExperimentViewClass: BaseViewClass {
   }
 
   override GetDocument = MainDocument {
+    Results.Calculate;
+
     var appendices = [
       new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
       new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
@@ -205,30 +211,38 @@ class ExperimentViewClass: BaseViewClass {
 }
 //======================================================================
 
-ShowSymbols = Block {
-  (each Defs).Appendix;
-};
-
 class DiagnosticsViewClass: BaseViewClass {
   Constructor {
     super.Constructor(#595d071a2117fb47bd6b0ef6596666ce#, "Diagnostics");
   }
 
+  ShowSegmentTables = Block {
+    var set = new HashSetClass(512, SegmentClass);
+    MatchingVowels.ShowTable(set);
+    MatchingConsonants.PulmonicTable.ShowTable(set);
+    MatchingConsonants.NonPulmonicTable.ShowTable(set);
+    MatchingConsonants.PulmonicAffricatesTable.ShowTable(set);
+    MatchingConsonants.EjectiveAffricatesTable.ShowTable(set);
+    MatchingOther.ShowTable(set);
+  };
+
   override GetDocument = Style.MainDocument {
+    Results.Calculate;
+
     var appendices = [
+//      new AppendixClass("g vs g", Results.GG),
       new AppendixClass(Lang.SegmentFrequencies, Results.FrequencyChart(Size(DocMetrics.PageContent.Width, 3 inches))),
       new AppendixClass("Symbols", ShowSymbols),
-//      new AppendixClass("Tongue Twister Configuration", Results.ConfigFile),
-//      new AppendixClass("RevBayes Source File", Results.RevBayesSource),
-      new AppendixClass("Segments used in the word list", Results.ShowSegmentGroups),
+      new AppendixClass("Words containing each segment", Results.ShowWordsForEachSegment),
       new AppendixClass("Word Lists by Language", DisplayWords.ShowTable),
-      new AppendixClass("Segment Groups", MatchingConsonants.ShowTables),
-      new AppendixClass("Euler Feature Diagram", IPA.FeatureChart),
-      new AppendixClass(Lang.IPAFullName, IPA.SegmentTable),
+      new AppendixClass("Segment Groups", ShowSegmentTables),
+      new AppendixClass("Euler Feature Diagram", new EulerDiagramClass.FeatureChart),
+      new AppendixClass(Lang.IPAFullName, Results.SegmentTable),
       new AppendixClass("Feature Tree", SegmentTree.ShowTree),
       new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
       new AppendixClass(Lang.Languages, Results.ShowLanguageDetails),
-
+//      new AppendixClass("Tongue Twister Configuration", Results.ConfigFile),
+//      new AppendixClass("RevBayes Source File", Results.RevBayesSource),
 //      new AppendixClass("Character File", Results.CharacterFile(2)),
     //  new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
     ];
