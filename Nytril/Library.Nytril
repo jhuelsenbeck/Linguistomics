@@ -396,18 +396,6 @@ class ResultsClass {
     };
   };
 
-  GG = Block {
-    ShowWord(IPA.Segments.g);
-    ShowWord(IPA.Segments.j);
-
-    foreach (var cognate in UsedCognates) {
-      foreach (var word in cognate.Words) {
-        if (FindAny(word.Segments, IPA.Segments.g) and FindAny(word.Segments, IPA.Segments.j))
-          word.Plain;
-      }
-    }
-  };
-
   GetConcept(concept) = FindFirst(UsedCognates, c => c.Concept == concept);
 
   void GetFrequencies {
@@ -940,12 +928,14 @@ class ResultsClass {
   ShowWordsForEachSegment = Block {
     foreach (var segment in SortedSegments) {
       Paragraph {
-        TabStops: [DocMetrics.PageContent.Width {Type: TabTypes.Right}];
+        TabStops: [0.5 inches, DocMetrics.PageContent.Width {Type: TabTypes.Right}];
         KeepWithNext: true;
         TextHeight: 16 pts;
         ParBackground: 90%;
 
         segment.ShowSegment;
+        Tab;
+        segment.ShowCodePoint
         Tab;
         segment.ShowCharacter;
       };
