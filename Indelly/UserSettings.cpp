@@ -42,7 +42,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     commands.push_back("-m");
     commands.push_back("custom");
     commands.push_back("-n");
-    commands.push_back("2");
+    commands.push_back("100");
     commands.push_back("-p");
     commands.push_back("1");
     commands.push_back("-s");

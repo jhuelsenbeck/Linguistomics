@@ -77,13 +77,15 @@ void LikelihoodTkf::init(void) {
 
     // initialise TKF91 probabilities
     initTKF91();
+    
+    //initPrint();
 }
 
 void LikelihoodTkf::initAlignment(void) {
             
     alignment = data->getIndelMatrix();
             
-#   if 1
+#   if 0
     std::cout << "Variable = alignment" << std::endl;
     std::cout << "name = " << data->getName() << std::endl;
     for (int i=0; i<alignment.size(); i++)
@@ -96,11 +98,57 @@ void LikelihoodTkf::initAlignment(void) {
 #   endif
 }
 
+void LikelihoodTkf::initPrint(void) {
+
+    for (int i=0; i<60; i++)
+        std::cout << "-";
+    std::cout << std::endl;
+    std::cout << "data-.getName() = " << data->getName() << std::endl;
+    std::cout << "taxonMask = " << taxonMask.bitString() << std::endl;
+    std::cout << "numNodes = " << siteProbs->getNumNodes() << std::endl;
+    data->print();
+    tree->print();
+    std::cout << "alignment" << std::endl;
+    data->print();
+    for (int i=0; i<alignment.size(); i++)
+        {
+        std::cout << std::setw(3) << i << " -- ";
+        for (int j=0; j<alignment[i].size(); j++)
+            std::cout << alignment[i][j] << " ";
+        std::cout << std::endl;
+        }
+    std::cout << "sequences" << std::endl;
+    for (int i=0; i<sequences.size(); i++)
+        {
+        std::cout << std::setw(3) << i << " -- ";
+        for (int j=0; j<sequences[i].size(); j++)
+            std::cout << std::setw(2) << sequences[i][j] << " ";
+        std::cout << std::endl;
+        }
+    std::cout << "numStates = " << numStates << std::endl;
+    std::cout << "numIndelCategories = " << numIndelCategories << std::endl;
+
+//        std::vector<double>                                 stateEquilibriumFrequencies;
+//        std::vector<double>                                 birthProbability;
+//        std::vector<double>                                 extinctionProbability;
+//        std::vector<double>                                 homologousProbability;
+//        std::vector<double>                                 nonHomologousProbability;
+//        SiteLikelihood*                                     siteProbs;
+//        double**                                            fH;
+//        double**                                            fI;
+//        double                                              immortalProbability;
+//        double                                              insertionRate;
+//        double                                              deletionRate;
+////        std::map<IntVector*,double,CompIntVector>         dpTable;
+//        std::map<IntVector*,mpfr::mpreal*,CompIntVector>    dpTable;
+
+}
+
 void LikelihoodTkf::initSequences(void) {
     
     sequences = data->getRawSequenceMatrix();
 
-#   if 1
+#   if 0
     std::cout << "Variable = sequences" << std::endl;
     for (int i=0; i<sequences.size(); i++)
         {
@@ -185,7 +233,7 @@ void LikelihoodTkf::initTKF91(void) {
 void LikelihoodTkf::initTree(void) {
 
     tree = model->getTree(taxonMask);
-    tree->print();
+    //tree->print();
 }
 
 void LikelihoodTkf::printTable(void) {

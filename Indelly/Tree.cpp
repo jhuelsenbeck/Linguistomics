@@ -400,7 +400,7 @@ void Tree::initializeDownPassSequence(void) {
 
 std::vector<int> Tree::getAncestorIndices(void) {
 
-    std::vector<int> ancIndices(nodes.size());
+    std::vector<int> ancIndices(downPassSequence.size());
     
     for (int i=0; i<downPassSequence.size(); i++)
         {
@@ -643,6 +643,10 @@ void Tree::makeSubtree(Tree& t, RbBitSet& taxonMask) {
 void Tree::print(void) {
 
     listNodes(root, 3);
+    std::cout << "DPS: ";
+    for (int i=0; i<downPassSequence.size(); i++)
+        std::cout << downPassSequence[i]->getIndex() << " ";
+    std::cout << std::endl;
 }
 
 void Tree::print(std::string header) {

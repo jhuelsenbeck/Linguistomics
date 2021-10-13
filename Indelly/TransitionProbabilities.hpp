@@ -44,7 +44,6 @@ class TransitionProbabilities {
         int                                             numNodes;
         int                                             numStates;
         int                                             activeProbs;
-      //std::vector<StateMatrix_t*>                     probs[2];
         std::map<RbBitSet,TransitionProbabilitiesPair>  transProbs;
         std::vector<double>                             stationaryFreqs[2];
         Model*                                          modelPtr;

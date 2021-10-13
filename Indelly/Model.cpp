@@ -310,6 +310,7 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         // check if we have problems, deleting the alignment if we do
         if (settings.getUseOnlyCompleteWords() == true)
             {
+            // we only use the completely-sampled words
             std::vector<std::string> alnTaxonNames = aln->getTaxonNames();
             if (canonicalTaxonList.size() != aln->numCompleteTaxa())
                 {
@@ -320,6 +321,16 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
             else if (aln->hasAllGapColumn() == true)
                 {
                 Msg::error("Alignment " + aln->getName() + " has a column with all gaps");
+                rejectedWords.push_back(aln->getName());
+                delete aln;
+                continue;
+                }
+            }
+        else
+            {
+            // we use all of the cognates, except those with fewer than two languages sampled
+            if (aln->numCompleteTaxa() < 3)
+                {
                 rejectedWords.push_back(aln->getName());
                 delete aln;
                 continue;
@@ -477,7 +488,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     for (int i=0; i<wordParameterAlignments.size(); i++)
         threadLnL[i] = 0.0;
         
-#   if 1
+#   if 0
     for (int i=0; i<parameters.size(); i++)
         parameters[i]->print();
 #   endif
@@ -526,15 +537,14 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
 
 double Model::lnLikelihood(void) {
 
-#   if 0
+#   if 1
     // set up thread pool
     ThreadPool& workers = ThreadPool::threadPoolInstance();
-    Tree* tree = getTree();
 
     for (int i=0; i<wordParameterAlignments.size(); i++)
         {
         workers.post([=] {
-            wordLnLike(i, wordParameterAlignments[i], tree);
+            wordLnLike(i, wordParameterAlignments[i]);
             });
         }
 
@@ -544,12 +554,6 @@ double Model::lnLikelihood(void) {
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
         lnL += threadLnL[i];
-        
-    for (int i=0; i<wordParameterAlignments.size(); i++)
-        {
-        std::cout << i << " " << threadLnL[i] << " " << wordParameterAlignments[i]->getTaxonMaskString() << " " << wordParameterAlignments[i]->getName() << std::endl;
-        }
-        
     return lnL;
     
 #   else
@@ -561,7 +565,6 @@ double Model::lnLikelihood(void) {
         LikelihoodTkf likelihood(wordParameterAlignments[i], this);
         double lnP = likelihood.tkfLike();
         lnL += lnP;
-        std::cout << i << " " << lnP << " " << wordParameterAlignments[i]->getTaxonMaskString() << " " << wordParameterAlignments[i]->getName() << std::endl;
         }
     return lnL;
     

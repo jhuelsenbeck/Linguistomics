@@ -69,7 +69,7 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     exponent = 1.5;
     gapPenalty = -10.0;
  
-    print();
+    //print();
 }
 
 ParameterAlignment::~ParameterAlignment(void) {
@@ -241,7 +241,8 @@ double ParameterAlignment::update(void) {
     lastUpdateType = "alignment for " + parmName;
 
     // update the alignment
-    AlignmentProposal alignmentProposal(this, modelPtr->getTree(), rv, 1.5, -5.0);
+    RbBitSet mask(taxonMask);
+    AlignmentProposal alignmentProposal(this, modelPtr->getTree(mask), rv, 1.5, -5.0);
     std::vector<std::vector<int> > newAlignment;
     double lnProposalRatio = alignmentProposal.propose(newAlignment, 0.5);
     alignment[0] = newAlignment;

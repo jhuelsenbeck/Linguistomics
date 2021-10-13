@@ -34,29 +34,18 @@ ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, s
     
     // initialize the subtrees
     initializeSubtrees(wordAlignments);
-    
-    //trees[0]->print("trees[0]");
-    //trees[1]->print("trees[1]");
-    
-    /*std::vector<bool> tMask(tNames.size());
-    for (int i=0; i<tMask.size(); i++)
-        tMask[i] = false;
-    tMask[2] = true;
-    tMask[6] = true;
-    tMask[7] = true;
-    Tree t = Tree(*trees[0], tMask);*/
-    
 }
 
 ParameterTree::~ParameterTree(void) {
 
     delete fullTree.trees[0];
     delete fullTree.trees[1];
+    clearSubtrees();
 }
 
 void ParameterTree::accept(void) {
 
-    *fullTree.trees[1] = *fullTree.trees[0];
+    *(fullTree.trees[1]) = *(fullTree.trees[0]);
     for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
         *(it->second.trees[1]) = *(it->second.trees[0]);
 }
@@ -183,7 +172,7 @@ void ParameterTree::initializeSubtrees(std::vector<Alignment*>& alns) {
             }
         }
         
-#   if 1
+#   if 0
     int i = 0;
     for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
         {
@@ -281,7 +270,7 @@ void ParameterTree::print(void) {
 
 void ParameterTree::reject(void) {
 
-    *fullTree.trees[0] = *fullTree.trees[1];
+    *(fullTree.trees[0]) = *(fullTree.trees[1]);
     for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
         *(it->second.trees[0]) = *(it->second.trees[1]);
 }
