@@ -243,7 +243,7 @@ void AlignmentProposal::print(std::string s, int*** x, int a, int b, int c) {
 }
 
 double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, double extensionProb) {
-
+    
     // check that the extenstion probability is between 0 and 1
     if (extensionProb <= 0.0 || extensionProb > 1.0)
         Msg::error("Extension parameter must be in the range (0,1]");

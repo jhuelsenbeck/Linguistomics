@@ -209,7 +209,7 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
                 
         std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
         
-        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+        std::vector<Node*>& traversalSeq = modelPtr->getTree(it->first)->getDownPassSequence();
         for (int n=0; n<traversalSeq.size(); n++)
             {
             Node* p = traversalSeq[n];
@@ -253,7 +253,7 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
                 
         std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
         
-        std::vector<Node*>& traversalSeq = modelPtr->getTree()->getDownPassSequence();
+        std::vector<Node*>& traversalSeq = modelPtr->getTree(it->first)->getDownPassSequence();
         std::vector<double> branchLengths(traversalSeq.size());
         for (int n=0; n<traversalSeq.size(); n++)
             {

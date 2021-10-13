@@ -28,6 +28,7 @@ class LikelihoodTkf {
         void                                                clearDpTable(void);
         void                                                init(void);
         void                                                initAlignment(void);
+        void                                                initPrint(void);
         void                                                initSequences(void);
         void                                                initTKF91(void);
         void                                                initTransitionProbabilities(void);
