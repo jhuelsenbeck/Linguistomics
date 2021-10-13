@@ -5,19 +5,14 @@
 #include "RandomVariable.hpp"
 #include "UserSettings.hpp"
 
-
 void printHeader(void);
 
 
 
 int main(int argc, char* argv[]) {
 
-    /*
-    To do: 1. Set settings using JSON file.
-           2. Speed up likelihood calculations for alignment proposals by only
-              updating likelihoods that need to be updated.
-           3. Speed up transition probability calculations using threading.
-     */
+    /* To do: 1. Speed up transition probability calculations using threading.
+              2. Check subtrees */
 
     printHeader();
 

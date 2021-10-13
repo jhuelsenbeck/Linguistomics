@@ -163,6 +163,7 @@ std::vector<int> ParameterExchangabilityRates::randomlyChooseIndices(int k, int 
 void ParameterExchangabilityRates::reject(void) {
 
     rates[0] = rates[1];
+    modelPtr->flipActiveLikelihood();
 }
 
 double ParameterExchangabilityRates::update(void) {
@@ -290,6 +291,9 @@ double ParameterExchangabilityRates::update(void) {
     tip.setNeedsUpdate(true);
     tip.setTransitionProbabilities();
     
+    modelPtr->setUpdateLikelihood();
+    modelPtr->flipActiveLikelihood();
+
     // and it also changes the eigen system
 
     return lnP;

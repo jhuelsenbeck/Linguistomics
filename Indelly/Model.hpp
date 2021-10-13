@@ -24,6 +24,8 @@ class Model {
                                                 Model(RandomVariable* rj);
                                                ~Model(void);
         void                                    accept(void);
+        void                                    flipActiveLikelihood(void);
+        void                                    flipActiveLikelihood(int idx);
         std::string                             getLastUpdate(void);
         ParameterAlignment*                     getAlignment(int idx);
         std::vector<ParameterAlignment*>        getAlignments(void);
@@ -44,8 +46,10 @@ class Model {
         double                                  lnLikelihood(void);
         double                                  lnPriorProbability(void);
         void                                    reject(void);
+        void                                    setUpdateLikelihood(void);
+        void                                    setUpdateLikelihood(int idx);
         double                                  update(void);
-    
+            
     private:
         std::vector<Alignment*>                 initializeAlignments(nlohmann::json& j);
         void                                    initializeParameters(std::vector<Alignment*>& wordAlignments, nlohmann::json& j);
@@ -55,6 +59,9 @@ class Model {
         void                                    wordLnLike(int i, ParameterAlignment* aln);
         RandomVariable*                         rv;
         double*                                 threadLnL;
+        std::vector<bool>                       updateLikelihood;
+        std::vector<int>                        activeLikelihood;
+        std::vector<double>                     wordLnLikelihoods[2];
         std::vector<Parameter*>                 parameters;
         std::vector<ParameterAlignment*>        wordParameterAlignments;
         int                                     updatedParameterIdx;

@@ -129,6 +129,8 @@ std::vector<int> ParameterEquilibirumFrequencies::randomlyChooseIndices(int k, i
 void ParameterEquilibirumFrequencies::reject(void) {
 
     freqs[0] = freqs[1];
+    modelPtr->flipActiveLikelihood();
+
 }
 
 double ParameterEquilibirumFrequencies::update(void) {
@@ -255,7 +257,10 @@ double ParameterEquilibirumFrequencies::update(void) {
     tip.flipActive();
     tip.setNeedsUpdate(true);
     tip.setTransitionProbabilities();
-    
+
+    modelPtr->setUpdateLikelihood();
+    modelPtr->flipActiveLikelihood();
+
     return lnP;
 }
 

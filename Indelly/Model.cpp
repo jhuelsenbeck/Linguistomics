@@ -62,6 +62,25 @@ void Model::accept(void) {
     parameters[updatedParameterIdx]->accept();
 }
 
+void Model::flipActiveLikelihood(void) {
+
+    for (int i=0; i<activeLikelihood.size(); i++)
+        {
+        if (activeLikelihood[i] == 0)
+            activeLikelihood[i] = 1;
+        else
+            activeLikelihood[i] = 0;
+        }
+}
+
+void Model::flipActiveLikelihood(int idx) {
+
+    if (activeLikelihood[idx] == 0)
+        activeLikelihood[idx] = 1;
+    else
+        activeLikelihood[idx] = 0;
+}
+
 ParameterAlignment* Model::getAlignment(int idx) {
 
     int n = 0;
@@ -430,7 +449,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     for (int i=0; i<wordAlignments.size(); i++)
         {
         std::string alnName = wordAlignments[i]->getName();
-        Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, new SiteLikelihood(numNodes,numStates));
+        Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, new SiteLikelihood(numNodes,numStates), i);
         pAlign->setProposalProbability(1.0);
         parameters.push_back(pAlign);
         wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
@@ -488,6 +507,19 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     for (int i=0; i<wordParameterAlignments.size(); i++)
         threadLnL[i] = 0.0;
         
+    // set up vectors for the likelihood calculations
+    updateLikelihood.resize(wordParameterAlignments.size());
+    activeLikelihood.resize(wordParameterAlignments.size());
+    wordLnLikelihoods[0].resize(wordParameterAlignments.size());
+    wordLnLikelihoods[1].resize(wordParameterAlignments.size());
+    for (int i=0; i<wordParameterAlignments.size(); i++)
+        {
+        updateLikelihood[i] = false;
+        activeLikelihood[i] = 0;
+        wordLnLikelihoods[0][i] = 0.0;
+        wordLnLikelihoods[1][i] = 0.0;
+        }
+
 #   if 0
     for (int i=0; i<parameters.size(); i++)
         parameters[i]->print();
@@ -543,9 +575,17 @@ double Model::lnLikelihood(void) {
 
     for (int i=0; i<wordParameterAlignments.size(); i++)
         {
-        workers.post([=] {
-            wordLnLike(i, wordParameterAlignments[i]);
-            });
+        if (updateLikelihood[i] == true)
+            {
+            workers.post([=] {
+                wordLnLike(i, wordParameterAlignments[i]);
+                });
+            }
+        else
+            {
+            threadLnL[i] = wordLnLikelihoods[ activeLikelihood[i] ][i];
+            }
+        updateLikelihood[i] = false;
         }
 
     workers.wait();
@@ -626,6 +666,17 @@ void Model::reject(void) {
         }
 }
 
+void Model::setUpdateLikelihood(void) {
+
+    for (int i=0; i<updateLikelihood.size(); i++)
+        updateLikelihood[i] = true;
+}
+
+void Model::setUpdateLikelihood(int idx) {
+
+    updateLikelihood[idx] = true;
+}
+
 double Model::update(void) {
 
     double u = rv->uniformRv();
@@ -647,4 +698,5 @@ void Model::wordLnLike(int i, ParameterAlignment* aln) {
 
     LikelihoodTkf likelihood(aln, this);
     threadLnL[i] = likelihood.tkfLike();
+    wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
 }

@@ -252,7 +252,6 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
             Msg::error("Could not find tree for mask " + it->first.bitString());
                 
         std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
-        
         std::vector<Node*>& traversalSeq = modelPtr->getTree(it->first)->getDownPassSequence();
         std::vector<double> branchLengths(traversalSeq.size());
         for (int n=0; n<traversalSeq.size(); n++)

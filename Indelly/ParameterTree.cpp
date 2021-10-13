@@ -3,6 +3,7 @@
 #include <iostream>
 #include <set>
 #include "Alignment.hpp"
+#include "Model.hpp"
 #include "Msg.hpp"
 #include "Node.hpp"
 #include "NodeSet.hpp"
@@ -273,6 +274,7 @@ void ParameterTree::reject(void) {
     *(fullTree.trees[0]) = *(fullTree.trees[1]);
     for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
         *(it->second.trees[0]) = *(it->second.trees[1]);
+    modelPtr->flipActiveLikelihood();
 }
 
 double ParameterTree::update(void) {
@@ -395,6 +397,9 @@ double ParameterTree::updateBrlenProportions(void) {
     tip.flipActive();
     tip.setNeedsUpdate(true);
     tip.setTransitionProbabilities();
+
+    modelPtr->setUpdateLikelihood();
+    modelPtr->flipActiveLikelihood();
 
 #   if 0
     std::vector<double> proposedBrlens;
@@ -561,6 +566,9 @@ double ParameterTree::updateNni(void) {
     tip.setNeedsUpdate(true);
     tip.setTransitionProbabilities();
 
+    modelPtr->setUpdateLikelihood();
+    modelPtr->flipActiveLikelihood();
+
 #   if defined(DEBUG_LOCAL)
     t->print("AFTER");
     std::cout << "backbone[0]  = " << backbone[0]->getIndex() << std::endl;
@@ -594,6 +602,9 @@ double ParameterTree::updateTreeLength(void) {
     tip.flipActive();
     tip.setNeedsUpdate(true);
     tip.setTransitionProbabilities();
+
+    modelPtr->setUpdateLikelihood();
+    modelPtr->flipActiveLikelihood();
 
     return log(newL) - log(oldL);
 }
