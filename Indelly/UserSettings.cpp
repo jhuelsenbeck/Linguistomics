@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -89,7 +90,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 else if (cmd == "custom")
                     substitutionModel = custom;
                 else
-                    Msg::error("Unknon substitution model " + cmd);
+                    Msg::error("Unknown substitution model " + cmd);
                 }
             else if (arg == "-n")
                 numMcmcCycles = atoi(cmd.c_str());
@@ -106,7 +107,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 else if (cmd == "no")
                     calculateMarginalLikelihood = false;
                 else
-                    Msg::error("Unknon option for calculating marginal likelihood");
+                    Msg::error("Unknown option for calculating marginal likelihood");
                 }
             else if (arg == "-e")
                 {
@@ -115,7 +116,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 else if (cmd == "no")
                     useEigenSystem = false;
                 else
-                    Msg::error("Unknon option for calculating matrix exponential");
+                    Msg::error("Unknown option for calculating matrix exponential");
                 }
             else if (arg == "-c")
                 {
@@ -124,7 +125,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 else if (cmd == "no")
                     useOnlyCompleteWords = false;
                 else
-                    Msg::error("Unknon option for use of complete words");
+                    Msg::error("Unknown option for use of complete words");
                 }
             else if (arg == "-g")
                 numRateCategories = atoi(cmd.c_str());
@@ -141,7 +142,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         }
         
     // check if the data file contains the commands. If so, we will use those, overwriting what we
-    // just parsed (excepting the path/name to the configuration file
+    // just parsed (excepting the path/name to the configuration file)
     std::string fn = getDataFile();
     std::ifstream ifs(fn);
     nlohmann::json j;
@@ -151,23 +152,86 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         }
     catch (nlohmann::json::parse_error& ex)
         {
-        Msg::error("Error parsing JSON file at byte " + std::to_string(ex.byte));
+        Msg::error("Error parsing JSON file \"" + fn + "\" at byte " + std::to_string(ex.byte));
         }
     auto it = j.find("McmcSettings");
     if (it != j.end())
         {
-        // reading settings from program
         nlohmann::json jsonSettings = j["McmcSettings"];
-        // output file (FileOutput)
-        // only analyze complete words yes/no (OnlyCompleteWords)
-        // substitution model JC69/Custom/GTR (Model)
-        // calculate marginal likelihood yes/no (CalcMarginal)
-        // use eigen system for matrix exponential yes/no (UseEigenSystem)
-        // number of mcmc cycles (NumCycles)
-        // print to screen frequency (PrintFreq)
-        // sample frequency (SampleFreq)
-        // tree-length prior parameter value (TreeLengthPriorVal)
-        
+
+        auto it2 = jsonSettings.find("FileOutput");
+        if (it2 != jsonSettings.end())
+            outFile = jsonSettings["FileOutput"];
+
+        it2 = jsonSettings.find("OnlyCompleteWords");
+        if (it2 != jsonSettings.end())
+            {
+            std::string res = jsonSettings["OnlyCompleteWords"];
+            std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (res == "no")
+                useOnlyCompleteWords = false;
+            else if (res == "yes")
+                useOnlyCompleteWords = true;
+            else
+                Msg::error("Unknown option" + res);
+            }
+
+        it2 = jsonSettings.find("Model");
+        if (it2 != jsonSettings.end())
+            {
+            std::string res = jsonSettings["Model"];
+            std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (res == "jc69")
+                substitutionModel = jc69;
+            else if (res == "gtr")
+                substitutionModel = gtr;
+            else if (res == "custom")
+                substitutionModel = custom;
+            else
+                Msg::error("Unknown substitution model " + res);
+            }
+
+        it2 = jsonSettings.find("CalcMarginal");
+        if (it2 != jsonSettings.end())
+            {
+            std::string res = jsonSettings["CalcMarginal"];
+            std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (res == "no")
+                calculateMarginalLikelihood = false;
+            else if (res == "yes")
+                calculateMarginalLikelihood = true;
+            else
+                Msg::error("Unknown option" + res);
+            }
+
+        it2 = jsonSettings.find("UseEigenSystem");
+        if (it2 != jsonSettings.end())
+            {
+            std::string res = jsonSettings["UseEigenSystem"];
+            std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (res == "no")
+                useEigenSystem = false;
+            else if (res == "yes")
+                useEigenSystem = true;
+            else
+                Msg::error("Unknown option" + res);
+            }
+
+        it2 = jsonSettings.find("NumCycles");
+        if (it2 != jsonSettings.end())
+            numMcmcCycles = jsonSettings["NumCycles"];
+
+        it2 = jsonSettings.find("PrintFreq");
+        if (it2 != jsonSettings.end())
+            printFrequency = jsonSettings["PrintFreq"];
+
+        it2 = jsonSettings.find("SampleFreq");
+        if (it2 != jsonSettings.end())
+            sampleFrequency = jsonSettings["SampleFreq"];
+
+        it2 = jsonSettings.find("TreeLengthPriorVal");
+        if (it2 != jsonSettings.end())
+            inverseTreeLength = jsonSettings["TreeLengthPriorVal"];
         }
 }
 
@@ -176,6 +240,7 @@ void UserSettings::print(void) {
     std::cout << "   Settings" << std::endl;
     std::cout << "   * Executable path                         = " << executablePath << std::endl;
     std::cout << "   * File with initial word alignments       = \"" << dataFile << "\"" << std::endl;
+    std::cout << "   * File name for output                    = \"" << outFile << "\"" << std::endl;
     if (useOnlyCompleteWords == true)
         std::cout << "   * Only analyzing completely sampled words = yes" << std::endl;
     else
@@ -206,16 +271,18 @@ void UserSettings::print(void) {
 void UserSettings::usage(void) {
 
     std::cout << "   Usage" << std::endl;
-    std::cout << "   * -d -- File with initial alignments of words" << std::endl;
-    std::cout << "   * -m -- Substitution model (jc69/gtr/custom)" << std::endl;
-    std::cout << "   * -c -- Use only completely sampled words (no/yes)" << std::endl;
-    std::cout << "   * -g -- Number of gamma rate categories (=1 is no rate variation)" << std::endl;
-    std::cout << "   * -i -- Number of gamma indel categories (=1 is no indel rate variation)" << std::endl;
-    std::cout << "   * -z -- Calculate marginal likelihood (no/yes)" << std::endl;
-    std::cout << "   * -n -- Number of MCMC cycles" << std::endl;
-    std::cout << "   * -p -- Print-to-screen frequency" << std::endl;
-    std::cout << "   * -s -- Chain sample frequency" << std::endl;
-    std::cout << "   * -e -- Use the Eigen system when calculating the matrix exponential (no/yes)" << std::endl;
-    std::cout << "   * -l -- Inverse of the tree length prior" << std::endl;
+    std::cout << "   * -d                      -- File with initial alignments of words" << std::endl;
+    std::cout << "   * -o / FileOutput         -- File name for output" << std::endl;
+    std::cout << "   * -m / Model              -- Substitution model (jc69/gtr/custom)" << std::endl;
+    std::cout << "   * -c / OnlyCompleteWords  -- Use only completely sampled words (no/yes)" << std::endl;
+    std::cout << "   * -g                      -- Number of gamma rate categories (=1 is no rate variation)" << std::endl;
+    std::cout << "   * -i                      -- Number of gamma indel categories (=1 is no indel rate variation)" << std::endl;
+    std::cout << "   * -z / CalcMarginal       -- Calculate marginal likelihood (no/yes)" << std::endl;
+    std::cout << "   * -n / NumCycles          -- Number of MCMC cycles" << std::endl;
+    std::cout << "   * -p / PrintFreq          -- Print-to-screen frequency" << std::endl;
+    std::cout << "   * -s / SampleFreq         -- Chain sample frequency" << std::endl;
+    std::cout << "   * -e / UseEigenSystem     -- Use the Eigen system when calculating the matrix exponential (no/yes)" << std::endl;
+    std::cout << "   * -l / TreeLengthPriorVal -- Inverse of the tree length prior" << std::endl;
     std::cout << std::endl;
 }
+
