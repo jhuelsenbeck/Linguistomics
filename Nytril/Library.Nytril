@@ -625,7 +625,7 @@ class ResultsClass {
     End: "}";
   };
 
-  AddWord(word, last) = Span {
+  AddWord(WordClass word, last) = Span {
     "  {";
     Variable("Taxon");
     ShowString(word.Language.GlobalVariableName);
@@ -662,7 +662,7 @@ class ResultsClass {
     Span {
       "]}";
       if (not last)
-        ",";
+        Comma;
     };
   };
 
@@ -671,10 +671,20 @@ class ResultsClass {
     TextHeight: 9 pts;
 
     AddTree;
-    Span {
-      Variable("NumberOfStates");
-      UniqueCharacters;
-      CommaSpace;
+    TextBlock {
+      Span {Variable("NumberOfStates"); UniqueCharacters; CommaSpace};
+
+      Span {Variable("McmcSettings"); "{"};
+        Span {Variable("FileOutput"); ShowString("/Users/johnh/Desktop/Indelly/out/test_custom"); Comma};
+        Span {Variable("OnlyCompleteWords"); ShowString("No"); Comma};
+        Span {Variable("Model"); ShowString("Custom"); Comma};
+        Span {Variable("CalcMarginal"); ShowString("No"); Comma};
+        Span {Variable("UseEigenSystem"); ShowString("No"); Comma};
+        Span {Variable("NumCycles"); 1000000; Comma};
+        Span {Variable("PrintFreq"); 10; Comma};
+        Span {Variable("SampleFreq"); 100; Comma};
+        Span {Variable("TreeLengthPriorVal"); 0.15};
+      "},";
     };
 
     ArraySpan("Taxa") {
@@ -685,14 +695,14 @@ class ResultsClass {
     ArraySpan("PriorFrequencies") {
       Span {
         TextDigits: 6;
-        Separator: ",";
+        Separator: Comma;
         (each UniqueSegments).NormalFrequency;
       };
     };
 
     ArraySpan("PartitionSets") {
       Span {
-        Separator: ",";
+        Separator: Comma;
         foreach (var partition in PartitionRule.Partitions) {
           Span {
             "{";
