@@ -299,6 +299,49 @@ void Tree::buildRandomTree(std::vector<std::string> tNames, double betaT, Random
     print();
 }
 
+double Tree::calculateDistance(std::string t1, std::string t2) {
+
+    setAllFlags(false);
+    Node* n1 = getLeafNamed(t1);
+    Node* p = n1;
+    while(p->getAncestor() != NULL)
+        {
+        p->setFlag(true);
+        p = p->getAncestor();
+        }
+    Node* n2 = getLeafNamed(t2);
+    p = n2;
+    while(p->getAncestor() != NULL)
+        {
+        p->setFlag(true);
+        p = p->getAncestor();
+        }
+        
+    double d = 0.0;
+    bool foundCommonAncestor = false;
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        p = downPassSequence[i];
+        if (p->getFlag() == true)
+            {
+            std::set<Node*,CompNode>& des = p->getDescendants()->getNodes();
+            int numFlagged = 0;
+            for (Node* n : des)
+                {
+                if (n->getFlag() == true)
+                    numFlagged++;
+                }
+            if (numFlagged > 1)
+                foundCommonAncestor = true;
+            
+            if (foundCommonAncestor == false)
+                d += p->getBranchProportion();
+            }
+        }
+    
+    return d;
+}
+
 void Tree::clone(Tree& t) {
 
     // copy some instance variables
@@ -377,6 +420,19 @@ Node* Tree::getLeafIndexed(int idx) {
     for (int i=0; i<nodes.size(); i++)
         {
         if (nodes[i]->getIndex() == idx)
+            {
+            if (nodes[i]->getIsLeaf() == true)
+                return nodes[i];
+            }
+        }
+    return NULL;
+}
+
+Node* Tree::getLeafNamed(std::string n) {
+
+    for (int i=0; i<nodes.size(); i++)
+        {
+        if (nodes[i]->getName() == n)
             {
             if (nodes[i]->getIsLeaf() == true)
                 return nodes[i];
@@ -640,6 +696,30 @@ void Tree::makeSubtree(Tree& t, RbBitSet& taxonMask) {
 #   endif
 
 }
+
+std::map<TaxonPair,double,CompTaxonPair> Tree::pairwiseDistances(void) {
+
+    // find all of the taxon pairs for this tree
+    std::map<TaxonPair,double,CompTaxonPair> d;
+    for (int i=0; i<taxonNames.size(); i++)
+        {
+        for (int j=i+1; j<taxonNames.size(); j++)
+            {
+            TaxonPair pair(taxonNames[i], taxonNames[j]);
+            d.insert( std::make_pair(pair,0.0) );
+            }
+        }
+        
+    // calculate the distances between each pair
+    for (std::map<TaxonPair,double,CompTaxonPair>::iterator it = d.begin(); it != d.end(); it++)
+        {
+        double distance = calculateDistance(it->first.getTaxon1(), it->first.getTaxon2());
+        it->second = distance;
+        }
+    
+    return d;
+}
+
 void Tree::print(void) {
 
     listNodes(root, 3);
@@ -719,6 +799,7 @@ void Tree::writeTree(Node* p, std::stringstream& ss) {
         if (p->getIsLeaf() == true)
             {
             ss << p->getIndex()+1;
+            //ss << p->getName();
             ss << ":" << std::fixed << std::setprecision(5) << p->getBranchLength();
             }
         else

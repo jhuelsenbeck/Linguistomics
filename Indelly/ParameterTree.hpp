@@ -31,12 +31,14 @@ class ParameterTree : public Parameter {
         std::string                     getHeader(void) { return ""; }
         double                          lnPriorProbability(void);
         void                            print(void);
+        void                            printNewick(void);
         std::string                     getString(void);
         void                            reject(void);
         double                          update(void);
         void                            updateSubtrees(void);
                 
     private:
+        bool                            checkSubtreeCompatibility(double tolerance);
         int                             countMaskBits(std::vector<bool>& m);
         void                            initializeSubtrees(std::vector<Alignment*>& alns);
         void                            nniArea(std::vector<Node*>& backbone, Node*& incidentNode);

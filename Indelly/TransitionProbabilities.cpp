@@ -9,6 +9,7 @@
 #include "Node.hpp"
 #include "ParameterTree.hpp"
 #include "RateMatrix.hpp"
+#include "ThreadPool.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
@@ -189,9 +190,9 @@ void TransitionProbabilities::setTransitionProbabilitiesJc69(void) {
         
         }
             
-        double sf = 1.0 / numStates;
-        for (int i=0; i<numStates; i++)
-            stationaryFreqs[activeProbs][i] = sf;
+    double sf = 1.0 / numStates;
+    for (int i=0; i<numStates; i++)
+        stationaryFreqs[activeProbs][i] = sf;
 }
 
 void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
@@ -240,6 +241,34 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
 
 void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
 
+#   if 1
+
+    // threaded version
+    RateMatrix& rmat = RateMatrix::rateMatrix();
+    Eigen::MatrixXd M(numStates,numStates);
+    const StateMatrix_t& Q = rmat.getRateMatrix();
+    ThreadPool& workers = ThreadPool::threadPoolInstance();
+    
+    // update the main tree
+    for (std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.begin(); it != transProbs.end(); it++)
+        {
+        Tree* t = modelPtr->getTree(it->first);
+        if (t == NULL)
+            Msg::error("Could not find tree for mask " + it->first.bitString());
+        const std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
+        
+        //padeTransitionProbabilities(t, Q, probs);
+        workers.post([=] {
+            padeTransitionProbabilities(t, Q, probs);
+            });
+        }
+        
+    workers.wait();
+    workers.reset();
+   
+#   else
+
+    // serial version
     RateMatrix& rmat = RateMatrix::rateMatrix();
     Eigen::MatrixXd M(numStates,numStates);
     StateMatrix_t& Q = rmat.getRateMatrix();
@@ -250,9 +279,9 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
         Tree* t = modelPtr->getTree(it->first);
         if (t == NULL)
             Msg::error("Could not find tree for mask " + it->first.bitString());
-                
         std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
-        std::vector<Node*>& traversalSeq = modelPtr->getTree(it->first)->getDownPassSequence();
+        
+        std::vector<Node*>& traversalSeq = t->getDownPassSequence();
         std::vector<double> branchLengths(traversalSeq.size());
         for (int n=0; n<traversalSeq.size(); n++)
             {
@@ -264,8 +293,28 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
             M = Q * v;
             (*tp) = M.exp();
             }
-            
         }
+
+#   endif
         
     stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
+}
+
+void TransitionProbabilities::padeTransitionProbabilities(Tree* t, const StateMatrix_t& Q, const std::vector<StateMatrix_t*>& probs) {
+
+    Eigen::MatrixXd M(numStates,numStates);
+
+    std::vector<Node*>& traversalSeq = t->getDownPassSequence();
+    std::vector<double> branchLengths(traversalSeq.size());
+    for (int n=0; n<traversalSeq.size(); n++)
+        {
+        Node* p = traversalSeq[n];
+        StateMatrix_t* tp = probs[p->getIndex()];
+        double v = p->getBranchLength();
+        branchLengths[p->getIndex()] = v;
+        
+        M = Q * v;
+        (*tp) = M.exp();
+        }
+
 }

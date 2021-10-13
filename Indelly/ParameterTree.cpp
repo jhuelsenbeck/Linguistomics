@@ -35,6 +35,9 @@ ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, s
     
     // initialize the subtrees
     initializeSubtrees(wordAlignments);
+    
+    if (checkSubtreeCompatibility(0.0001) == false)
+        Msg::error("Subtrees are not compatible with the canonical tree");
 }
 
 ParameterTree::~ParameterTree(void) {
@@ -49,6 +52,41 @@ void ParameterTree::accept(void) {
     *(fullTree.trees[1]) = *(fullTree.trees[0]);
     for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
         *(it->second.trees[1]) = *(it->second.trees[0]);
+}
+
+bool ParameterTree::checkSubtreeCompatibility(double tolerance) {
+
+    std::map<TaxonPair,double,CompTaxonPair> fullTreeDistances = fullTree.trees[0]->pairwiseDistances();
+    int n = (int)fullTree.trees[0]->getTaxonNames().size();
+    if (fullTreeDistances.size() != n * (n-1) / 2)
+        Msg::error("Incomplete pairwise distance map for full tree");
+    
+    for (std::map<RbBitSet,TreePair>::iterator i = subTrees.begin(); i != subTrees.end(); i++)
+        {
+        std::map<TaxonPair,double,CompTaxonPair> subTreeDistances = i->second.trees[0]->pairwiseDistances();
+        n = (int)i->second.trees[0]->getTaxonNames().size();
+        if (subTreeDistances.size() != n * (n-1) / 2)
+            Msg::error("Incomplete pairwise distance map for sub tree");
+        
+        for (std::map<TaxonPair,double,CompTaxonPair>::iterator j = subTreeDistances.begin(); j != subTreeDistances.end(); j++)
+            {
+            double stD = j->second;
+            
+            std::map<TaxonPair,double,CompTaxonPair>::iterator it = fullTreeDistances.find(j->first);
+            if (it != fullTreeDistances.end())
+                {
+                double ftD = it->second;
+                double diff = fabs(stD - ftD);
+                if (diff > tolerance)
+                    return false;
+                }
+            else
+                {
+                Msg::error("Could not find taxon pair");
+                }
+            }
+        }
+    return true;
 }
 
 void ParameterTree::clearSubtrees(void) {
@@ -267,6 +305,13 @@ void ParameterTree::normalize(std::vector<double>& vec, double minVal) {
 void ParameterTree::print(void) {
 
     fullTree.trees[0]->print();
+}
+
+void ParameterTree::printNewick(void) {
+
+    std::cout << fullTree.trees[0]->getNewick() << ";" << std::endl;
+    for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
+        std::cout << it->second.trees[0]->getNewick() << ";" << std::endl;
 }
 
 void ParameterTree::reject(void) {
@@ -575,6 +620,11 @@ double ParameterTree::updateNni(void) {
     std::cout << "backbone[1]  = " << backbone[1]->getIndex() << std::endl;
     std::cout << "backbone[2]  = " << backbone[2]->getIndex() << std::endl;
     std::cout << "incidentNode = " << incidentNode->getIndex() << std::endl;
+#   endif
+
+#   if 0
+    if (checkSubtreeCompatibility(0.0001) == false)
+        Msg::error("Subtrees are not compatible with the canonical tree");
 #   endif
 
     return 3.0 * log(factor);

@@ -9,11 +9,14 @@
 #include "UserSettings.hpp"
 class Alignment;
 class Model;
+class Tree;
 
 struct TransitionProbabilitiesPair {
 
     std::vector<StateMatrix_t*> probs[2];
 };
+
+
 
 class TransitionProbabilities {
 
@@ -37,6 +40,7 @@ class TransitionProbabilities {
                                                         TransitionProbabilities(void);
                                                        ~TransitionProbabilities(void);
                                                         TransitionProbabilities(const TransitionProbabilities& tp) = delete;
+        void                                            padeTransitionProbabilities(Tree* t, const StateMatrix_t& Q, const std::vector<StateMatrix_t*>& probs);
         void                                            setTransitionProbabilitiesJc69(void);
         void                                            setTransitionProbabilitiesUsingEigenSystem(void);
         void                                            setTransitionProbabilitiesUsingPadeMethod(void);

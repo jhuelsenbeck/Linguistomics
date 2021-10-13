@@ -11,9 +11,6 @@ void printHeader(void);
 
 int main(int argc, char* argv[]) {
 
-    /* To do: 1. Speed up transition probability calculations using threading.
-              2. Check subtrees */
-
     printHeader();
 
     // read the user settings from the command-line arguments
