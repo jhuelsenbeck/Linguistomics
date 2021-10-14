@@ -2,10 +2,11 @@
 #define Tree_H
 
 #include <map>
-#include "RbBitSet.h"
 #include <sstream>
 #include <string>
 #include <vector>
+#include "RbBitSet.h"
+#include "TaxonPair.hpp"
 class Node;
 class RandomVariable;
 
@@ -14,51 +15,54 @@ class RandomVariable;
 class Tree {
 
     public:
-                                    Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
-                                    Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv);
-                                    Tree(Tree& t);
-                                    Tree(Tree& t, RbBitSet& taxonMask);
-                                   ~Tree(void);
-        Tree&                       operator=(Tree& t);
-        void                        buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
-        void                        debugPrint(std::string h);
-        std::string                 getNewick(void);
-        int                         getNumNodes(void) { return (int)nodes.size(); }
-        int                         getNumTaxa(void) { return numTaxa; }
-        std::vector<int>            getAncestorIndices(void);
-        std::vector<double>         getBranchLengthVector(void);
-        std::vector<Node*>&         getDownPassSequence(void) { return downPassSequence; }
-        Node*                       getLeafIndexed(int idx);
-        Node*                       getRoot(void) { return root; }
-        std::vector<std::string>&   getTaxonNames(void) { return taxonNames; }
-        int                         getTaxonNameIndex(std::string tName);
-        double                      getTreeLength(void) { return treeLength; }
-        void                        initializeDownPassSequence(void);
-        bool                        isBinary(void);
-        bool                        isRoot(Node* p) { return ((p == root) ? true : false); }
-        bool                        isTaxonPresent(std::string tn);
-        void                        makeSubtree(Tree& t, RbBitSet& taxonMask);
-        void                        print(void);
-        void                        print(std::string header);
-        Node*                       randomNode(RandomVariable* rv);
-        void                        setAllFlags(bool tf);
-        void                        setTreeLength(double x) { treeLength = x; }
+                                                    Tree(void) = delete;
+                                                    Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
+                                                    Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv);
+                                                    Tree(Tree& t);
+                                                    Tree(Tree& t, RbBitSet& taxonMask);
+                                                   ~Tree(void);
+        Tree&                                       operator=(Tree& t);
+        void                                        buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
+        void                                        debugPrint(std::string h);
+        std::string                                 getNewick(void);
+        int                                         getNumNodes(void) { return (int)nodes.size(); }
+        int                                         getNumTaxa(void) { return numTaxa; }
+        std::vector<int>                            getAncestorIndices(void);
+        std::vector<double>                         getBranchLengthVector(void);
+        std::vector<Node*>&                         getDownPassSequence(void) { return downPassSequence; }
+        Node*                                       getLeafIndexed(int idx);
+        Node*                                       getLeafNamed(std::string n);
+        Node*                                       getRoot(void) { return root; }
+        std::vector<std::string>&                   getTaxonNames(void) { return taxonNames; }
+        int                                         getTaxonNameIndex(std::string tName);
+        double                                      getTreeLength(void) { return treeLength; }
+        void                                        initializeDownPassSequence(void);
+        bool                                        isBinary(void);
+        bool                                        isRoot(Node* p) { return ((p == root) ? true : false); }
+        bool                                        isTaxonPresent(std::string tn);
+        void                                        makeSubtree(Tree& t, RbBitSet& taxonMask);
+        std::map<TaxonPair,double,CompTaxonPair>    pairwiseDistances(void);
+        void                                        print(void);
+        void                                        print(std::string header);
+        Node*                                       randomNode(RandomVariable* rv);
+        void                                        setAllFlags(bool tf);
+        void                                        setTreeLength(double x) { treeLength = x; }
                 
     private:
-                                    Tree(void) {}
-        Node*                       addNode(void);
-        void                        clone(Tree& t);
-        void                        deleteAllNodes(void);
-        void                        listNodes(Node* p, size_t indent);
-        void                        passDown(Node* p);
-        std::vector<std::string>    tokenizeTreeString(std::string ls);
-        void                        writeTree(Node* p, std::stringstream& ss);
-        std::vector<Node*>          nodes;
-        std::vector<Node*>          downPassSequence;
-        Node*                       root;
-        int                         numTaxa;
-        std::vector<std::string>    taxonNames;
-        double                      treeLength;
+        Node*                                       addNode(void);
+        double                                      calculateDistance(std::string t1, std::string t2);
+        void                                        clone(Tree& t);
+        void                                        deleteAllNodes(void);
+        void                                        listNodes(Node* p, size_t indent);
+        void                                        passDown(Node* p);
+        std::vector<std::string>                    tokenizeTreeString(std::string ls);
+        void                                        writeTree(Node* p, std::stringstream& ss);
+        std::vector<Node*>                          nodes;
+        std::vector<Node*>                          downPassSequence;
+        Node*                                       root;
+        int                                         numTaxa;
+        std::vector<std::string>                    taxonNames;
+        double                                      treeLength;
 };
 
 #endif

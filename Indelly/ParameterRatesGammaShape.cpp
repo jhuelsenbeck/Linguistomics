@@ -1,6 +1,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include "Model.hpp"
 #include "ParameterRatesGammaShape.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
@@ -61,6 +62,7 @@ void ParameterRatesGammaShape::reject(void) {
 
     alpha[0] = alpha[1];
     rates[0] = rates[1];
+    modelPtr->flipActiveLikelihood();
 }
 
 double ParameterRatesGammaShape::update(void) {
@@ -80,6 +82,9 @@ double ParameterRatesGammaShape::update(void) {
     tip.flipActive();
     tip.setNeedsUpdate(true);
     tip.setTransitionProbabilities();
+
+    modelPtr->setUpdateLikelihood();
+    modelPtr->flipActiveLikelihood();
 
     return lnP;
 }

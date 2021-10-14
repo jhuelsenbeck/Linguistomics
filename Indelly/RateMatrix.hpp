@@ -15,6 +15,7 @@ class RateMatrix {
                                 }
         std::vector<double>&    getEquilibriumFrequencies(void) { return equilibriumFrequencies[activeMatrix]; }
         StateMatrix_t&          getRateMatrix(void) { return Q[activeMatrix]; }
+        const StateMatrix_t&    getRateMatrix(void) const { return Q[activeMatrix]; }
         bool                    getUseEigenSystem(void) { return useEigenSystem; }
         void                    flipActiveValues(void);
         void                    initialize(int d, bool useEigens);

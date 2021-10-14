@@ -1,6 +1,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include "Model.hpp"
 #include "ParameterIndelRates.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
@@ -147,6 +148,7 @@ void ParameterIndelRates::reject(void) {
 
     epsilon[0] = epsilon[1];
     rho[0] = rho[1];
+    modelPtr->flipActiveLikelihood();
 }
 
 double ParameterIndelRates::update(void) {    
@@ -191,6 +193,9 @@ double ParameterIndelRates::update(void) {
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
     tip.setNeedsUpdate(false);
     updateChangesTransitionProbabilities = false;
+
+    modelPtr->setUpdateLikelihood();
+    modelPtr->flipActiveLikelihood();
 
     return lnProposalProbability;
 }

@@ -16,7 +16,7 @@ class ParameterAlignment : public Parameter {
     public:
                                         ParameterAlignment(void) = delete;
                                         ParameterAlignment(const ParameterAlignment& pa) = delete;
-                                        ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, SiteLikelihood* sl);
+                                        ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, SiteLikelihood* sl, int idx);
                                        ~ParameterAlignment(void);
         void                            accept(void);
         std::vector<std::vector<int> >& getAlignment(void) { return alignment[0]; }
@@ -27,6 +27,7 @@ class ParameterAlignment : public Parameter {
         std::vector<std::vector<int> >  getIndelMatrix(void);
         std::vector<std::vector<int> >  getIndelMatrix(int idx);
         std::vector<std::vector<int> >  getIndelMatrix(std::vector<std::vector<int> >& aln);
+        int                             getIndex(void) { return index; }
         bool                            getIsCompletelySampled(void) { return completelySampled; }
         std::string                     getJsonString(void);
         int                             getNumSites(void) { return (int)alignment[0][0].size(); }
@@ -55,6 +56,7 @@ class ParameterAlignment : public Parameter {
         int                             gapCode;       // the gap code is simply the maximum number of states possible in any Markov model
         int                             numTaxa;
         int                             printWidth;
+        int                             index;
         SiteLikelihood*                 siteProbs;
         std::vector<std::string>        taxonNames;
         std::vector<bool>               taxonMask;

@@ -10,11 +10,12 @@
 
 
 
-ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, SiteLikelihood* sl) : Parameter(r, m, n) {
+ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, SiteLikelihood* sl, int idx) : Parameter(r, m, n) {
     
     updateChangesRateMatrix = false;
     
     siteProbs = sl;
+    index = idx;
 
     std::string name = a->getName();
     const size_t periodIdx = name.rfind('.');
@@ -234,6 +235,7 @@ void ParameterAlignment::print(void) {
 void ParameterAlignment::reject(void) {
 
     alignment[0] = alignment[1];
+    modelPtr->flipActiveLikelihood(index);
 }
 
 double ParameterAlignment::update(void) {
@@ -251,6 +253,9 @@ double ParameterAlignment::update(void) {
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
     tip.setNeedsUpdate(false);
     updateChangesTransitionProbabilities = false;
+    
+    modelPtr->setUpdateLikelihood(index);
+    modelPtr->flipActiveLikelihood(index);
 
     return lnProposalRatio;
 }
