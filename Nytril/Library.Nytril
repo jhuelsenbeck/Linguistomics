@@ -74,13 +74,13 @@ class WordClass {
   Constructor(dictionary, LanguageClass language, CognateClass cognate, text) {
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
     Text     = text.GetString(NormalizationForms.FormC);
-    Plain    = Math.FindSlice(Text, c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
+    Plain    = Text.FindSlice(c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
     Language = language;
     Cognate  = cognate;
     if (Text.Length > 0) {
       var segments = dictionary.FindTokens(Text, IPA.NoSegment);
-      Aligned  = Math.FindSlice(segments, s => s.Gap or (not s.Punctuation));
-      Segments = Math.FindSlice(segments, s => not s.Punctuation);
+      Aligned  = segments.FindSlice(s => s.Gap or (not s.Punctuation));
+      Segments = segments.FindSlice(s => not s.Punctuation);
 
       // Test that the word's text is the same as the segments converted back into text
       var view = Span {(each segments).Ipa};
@@ -259,7 +259,7 @@ class ResultsClass {
 
     UniqueSegments  = GetUniqueSegments;
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
-    SortedSegments  = Sort(UniqueSegments, true, ref AlphaOrder);
+    SortedSegments  = UniqueSegments.Sort(true, ref AlphaOrder);
 
     GetFrequencies;
     CharacterRule.AssignCharacters;
@@ -388,14 +388,14 @@ class ResultsClass {
       Separator: Space;
       foreach (var cognate in UsedCognates) {
         foreach (var word in cognate.Words) {
-          if (FindAny(word.Segments, segment))
+          if (word.Segments.FindAny(segment))
             word.Plain;
         }
       }
     };
   };
 
-  GetConcept(concept) = FindFirst(UsedCognates, c => c.Concept == concept);
+  GetConcept(concept) = UsedCognates.FindFirst(c => c.Concept == concept);
 
   void GetFrequencies {
     var set = new DictionaryClass(1024);
@@ -591,7 +591,7 @@ class ResultsClass {
   FrequencyChart(SizeClass size) = Chart {
     TextHeight: 11 pts;
 
-    var sorted = Math.Sort(UniqueSegments, true, ref CompareSegments);
+    var sorted = UniqueSegments.Sort(true, ref CompareSegments);
     Style.SansSerif;
     Size: size;
     Type: ChartTypes.Column;
@@ -652,7 +652,7 @@ class ResultsClass {
     };
 
     TextBlock {
-      var good = FindSlice(cognate.Words, w => valid w.Aligned);
+      var good = cognate.Words.FindSlice(w => valid w.Aligned);
       var lg   = good.Length-1;
       foreach (var word in good)
         AddWord(word, EachIndex == lg);
@@ -957,7 +957,7 @@ class ResultsClass {
           Separator: Space*2;
           foreach (var cognate in UsedCognates) {
             foreach (var word in cognate.Words) {
-              if (FindAny(word.Segments, segment)) {
+              if (word.Segments.FindAny(segment)) {
                 Span {
                   Popup: word;
                   word.Plain;

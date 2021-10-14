@@ -35,7 +35,7 @@ class EulerDiagramClass {
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
 
-  FeatureSegments(features) = Math.FindSlice(Results.DisplaySegments, segment => segment.Features.HasFlagMask(FeatureMask, features));
+  FeatureSegments(features) = Results.DisplaySegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
 
   FeatureFrame(x, y, width, name, features) = Canvas {
     X: EX(x);
@@ -328,11 +328,11 @@ class TabOptionsClass {
     return segment.?Place == place and
            segment.Features.NotFlag(Exclude) and
            segment.Features.HasFlag(Include) and
-           FindAny(Manners, manner => CheckFlags(segment.Features, manner | All));
+           Manners.FindAny(manner => CheckFlags(segment.Features, manner | All));
   }
 
   MatchPlace(place) {
-    return FindAny(Results.UniqueSegments, segment => MatchInclude(segment, place));
+    return Results.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
   }
 
   AddRow(HashSetClass set, places, f) = Row {
@@ -352,11 +352,11 @@ class TabOptionsClass {
 
     var all = Results.DisplaySegments;// + IPA.ImpossibleSegments;
     foreach (var place in places)
-      SegmentBlock(set, FindSlice(all, s => s.?Place == place and CheckFlags(s.Features, features)));
+      SegmentBlock(set, all.FindSlice(s => s.?Place == place and CheckFlags(s.Features, features)));
   };
 
   ShowTable(HashSetClass set) = Block {
-    var places = FindSlice(Places, place => MatchPlace(place));
+    var places = Places.FindSlice(place => MatchPlace(place));
     Style.TitleBar {Title};
     Table {
       Style.TableEdge;
@@ -432,7 +432,7 @@ with MatchingVowels {
     TextHeight: DocMetrics.BoxSize.Height;
 
     var filter  = segment => segment.Backness == backness and segment.Open == open and segment.Features.HasFlagMask(FeatureMask, features);
-    var matches = FindSlice(Results.DisplaySegments, filter);
+    var matches = Results.DisplaySegments.FindSlice(filter);
     switch (matches.Length) {
       case 0:
         break;
@@ -560,7 +560,7 @@ with MatchingOther {
     Table {
       Style.TableEdge;
       Columns: [DocMetrics.CellSize.Width, DocMetrics.PageContent.Width * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv;
-      var segments = FindSlice(Results.DisplaySegments, segment => not set.Contains(segment));
+      var segments = Results.DisplaySegments.FindSlice(segment => not set.Contains(segment));
       AddRow(each (segments / ColumnDiv));
     };
     Style.TableNotes;
@@ -576,8 +576,8 @@ with SegmentTree {
     Curvature: 20%;
   };
 
-  AddSegments(set, name, predicate, width=3 inches) {
-    var segments = FindSlice(Results.DisplaySegments, predicate);
+  AddSegments(DictionaryClass set, name, predicate, width=3 inches) {
+    var segments = Results.DisplaySegments.FindSlice(predicate);
     if (segments.Length > 0) {
       var label = Frame {
         Width: width;
@@ -605,14 +605,19 @@ with SegmentTree {
       return null;
   }
 
-  AddVowels(set, backness)           = AddSegments(set, backness.Name, s => s.Features.HasFlag(Vowel) and s.Backness == backness);
-  AddFlag(set, all, features, other) = AddSegments(set, other.Name, s => not FindAny(set, s) and s.Features.HasFlagMask(all, features) and s.Features.HasFlagMask(other, other));
+  AddVowels(DictionaryClass set, backness) {
+    return AddSegments(set, backness.Name, s => s.Features.HasFlag(Vowel) and s.Backness == backness);
+  }
 
-  AddConsonants(set, name, all, features) = AddNode(name) {
+  AddFlag(DictionaryClass set, all, features, other) {
+    return AddSegments(set, other.Name, s => (not set.Contains(s)) and s.Features.HasFlagMask(all, features) and s.Features.HasFlagMask(other, other));
+  }
+
+  AddConsonants(DictionaryClass set, name, all, features) = AddNode(name) {
     AddFlag(set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]);
   };
 
-  AddVoicedPairs(set, name, all, features) = AddNode(name) {
+  AddVoicedPairs(DictionaryClass set, name, all, features) = AddNode(name) {
     AddConsonants(set, Lang.Voiced, all Voiced, features Voiced);
     AddConsonants(set, Lang.Voiceless, all Voiced, features);
   };
@@ -639,7 +644,7 @@ with SegmentTree {
   ShowTree = Paragraph {
     Tree {
       Width: 7 inches;
-      LabelGap: 2 pts;
+      LabelGap: 4 pts;
       Root: GetNodes;
     }
   };

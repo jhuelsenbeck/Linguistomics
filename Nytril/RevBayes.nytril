@@ -141,7 +141,7 @@ class RevProcessClass: ProcessClass {
 
   override void OutputLine(line) {
     System.WriteLine(line);
-    var l = FindSlice(line[..5], c => c >= '0' and c <= '9');
+    var l = line[..5].FindSlice(c => c >= '0' and c <= '9');
     if (l.Length > 1) {
       var i = Integer(l);
       if (not i.IsError())
@@ -189,7 +189,7 @@ class LogSchemaClass: SchemaClass {
     var x    = min;
     foreach (var i in 0..<bins) {
       var xd = x + d;
-      data.Add(new BinClass(xd, FindCount(list, v => v >= x and v < xd), Span {x; TextDigits: 1}));
+      data.Add(new BinClass(xd, list.FindCount(v => v >= x and v < xd), Span {x; TextDigits: 1}));
       x = xd;
     }
     return data.Values;
