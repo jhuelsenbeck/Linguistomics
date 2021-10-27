@@ -303,6 +303,7 @@ with SegmentGroups {
   ShortVowels         = new FeatureMaskClass("Short Vowel", Vowel LongVowel, Vowel);
   AllRootVowels       = new RootVowelClass;
   Vowels              = new FeatureMaskClass("Vowel", Vowel, Vowel);
+  Vowels1             = new SegmentListClass("O and U", [IPA.Segments.o, IPA.Segments.u]);
   VoicelessStops      = new FeatureMaskClass("Voiceless Stop", Voiced Stop, Stop);
   VoicedStops         = new FeatureMaskClass("Voiced Stop", Voiced Stop, Voiced Stop);
   VoicedAffricates    = new FeatureMaskClass("Voiced Affricate", Voiced Affricate, Voiced Affricate);
@@ -451,6 +452,7 @@ class Partition1Class: RuleClass {
     super.Constructor("Linguistically Informed");
     Numbers = true;
 
+    Add(Vowels1);
     Add(NasalVowels);
     Add(Vowels);
     Add(NasalConsonants);
@@ -495,6 +497,7 @@ class PartitionHintClass {
         Span {
           Bold;
           TextHeight: 14 pts;
+          TextDigits: 3;
           Rate;
         }
       };
@@ -517,7 +520,6 @@ class GroupRatesClass {
 
   Constructor() {
     PartitionRule = Results.PartitionRule;
-    MaxLine       = 10;
     ArrowGap      = 10 pts;
     GapAngle      = 80.0 degrees;
   }
@@ -526,7 +528,8 @@ class GroupRatesClass {
     var middle = Point(size.Width * 0.5, size.Height * 0.5);
 
     MaxExtent    = Min([middle.X, middle.Y]);
-    MaxRadius    = MaxExtent * 0.25;
+    MaxRadius    = MaxExtent * 0.2;
+    MaxLine      = MaxRadius * 0.15;
     LoopRadius   = MaxRadius * 0.25;
     LoopDistance = LoopRadius * 0.5;
 
@@ -559,7 +562,7 @@ class GroupRatesClass {
       foreach (var p2 in PartitionRule.Partitions) {
         var  rate = Results.Rates[pi][EachIndex];
         var  hint = new PartitionHintClass(rate, p1, p2);
-        var  line = new LineStyleClass(rate * RateScale, 0.7, 2);
+        var  line = new LineStyleClass(rate * RateScale, 0, 1);
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
           Graphics.CircleArrow(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {

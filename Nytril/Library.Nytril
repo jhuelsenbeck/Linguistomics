@@ -230,19 +230,28 @@ class ResultsClass {
     GammaMCC       = FileName("Gamma_MCC") Extensions.Tree;
     GammaConsensus = FileName("Gamma_Consensus") Extensions.Tree;
 
-
-    Frequencies = [0.2, 0.2, 0.3, 0.4, 1.0];
-    Rates = [
-      [1, 2, 3, 4, 10],
-      [0, 2, 3, 4, 5],
-      [0, 0, 3, 4, 5],
-      [0, 0, 0, 4, 5],
-      [0, 0, 0, 0, 20],
-    ];
-
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
     CharacterRule = new SingletonRuleClass;
     PartitionRule = new Partition1Class;
+
+    ReadFrequencies;
+  }
+
+  RandomArray(max) {
+    var list = new ListClass(PartitionRule.Filters.Length);
+    foreach (var f in PartitionRule.Filters)
+      list.Add(Math.Random(0..1));
+    return list.Values;
+  }
+
+  void ReadFrequencies {
+    // This is temporary until we get actual data
+
+    Frequencies = RandomArray(1);
+    var list = new ListClass(PartitionRule.Filters.Length);
+    foreach (var f in PartitionRule.Filters)
+      list.Add(RandomArray(10));
+    Rates = list.Values;
   }
 
   void Calculate {
