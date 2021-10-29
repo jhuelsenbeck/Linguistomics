@@ -128,17 +128,18 @@ abstract class RuleClass {
 
     foreach (var partition in Partitions) {
       Paragraph {
-        SpaceBefore: 12 pts;
+        TextHeight: 11 pts;
+        SpaceBefore: 3 pts;
         BorderB: 0.25 pts;
         TabStops: [0.25 inch];
 
         EachOne;
         Tab;
-        Span {partition.Filter.Name; Bold};
+        partition.Filter.Name;
       };
 
       Paragraph {
-        TextHeight: 16 pts;
+        TextHeight: 12 pts;
         LeftIndent: 0.25 inches;
 
         Span {
@@ -296,6 +297,15 @@ class SegmentListClass: FilterClass {
 }
 //======================================================================
 
+class VowelListClass: SegmentListClass {
+  Constructor(SegmentClass[] list) {
+    super.Constructor(list.FirstElement.Ipa, list);
+  }
+
+  override Matches(SegmentClass segment) = List.FindAny(segment);
+}
+//======================================================================
+
 with SegmentGroups {
   NasalVowels         = new FeatureMaskClass("Nasal Vowel", Vowel Nasal, Vowel Nasal);
   RoundedVowels       = new FeatureMaskClass("Rounded Vowel", Vowel Rounded, Vowel Rounded);
@@ -303,7 +313,6 @@ with SegmentGroups {
   ShortVowels         = new FeatureMaskClass("Short Vowel", Vowel LongVowel, Vowel);
   AllRootVowels       = new RootVowelClass;
   Vowels              = new FeatureMaskClass("Vowel", Vowel, Vowel);
-  Vowels1             = new SegmentListClass("O and U", [IPA.Segments.o, IPA.Segments.u]);
   VoicelessStops      = new FeatureMaskClass("Voiceless Stop", Voiced Stop, Stop);
   VoicedStops         = new FeatureMaskClass("Voiced Stop", Voiced Stop, Voiced Stop);
   VoicedAffricates    = new FeatureMaskClass("Voiced Affricate", Voiced Affricate, Voiced Affricate);
@@ -452,7 +461,29 @@ class Partition1Class: RuleClass {
     super.Constructor("Linguistically Informed");
     Numbers = true;
 
-    Add(Vowels1);
+    Add(NasalVowels);
+    Add(Vowels);
+    Add(NasalConsonants);
+    Add(NonSylabicSonorants);
+    Add(Consonants);
+    GetFilters;
+  }
+}
+//======================================================================
+
+class Partition2Class: RuleClass {
+  Constructor {
+    super.Constructor("Linguistically Informed");
+    Numbers = true;
+
+    Add(new VowelListClass([IPA.Segments.ay, IPA.Segments.ai]));
+    Add(new VowelListClass([IPA.Segments.e, IPA.Segments.E]));
+    Add(new VowelListClass([IPA.Segments.ah, IPA.Segments.A]));
+    Add(new VowelListClass([IPA.Segments.u, IPA.Segments.U]));
+    Add(new VowelListClass([IPA.Segments.oh, IPA.Segments.O]));
+    Add(new VowelListClass([IPA.Segments.euh, IPA.Segments.LongOpenMidBackRounded]));
+    Add(new VowelListClass([IPA.Segments.eh, IPA.Segments.Eh]));
+    Add(new VowelListClass([IPA.Segments.uu, IPA.Segments.o]));
     Add(NasalVowels);
     Add(Vowels);
     Add(NasalConsonants);
@@ -508,15 +539,15 @@ class PartitionHintClass {
 //======================================================================
 
 class GroupRatesClass {
-  var          PartitionRule,
-               MaxLine,
-               ArrowGap,
-               GapAngle,
-               LoopRadius,
-               LoopDistance,
-               MaxExtent,
-               MaxRadius,
-               RateScale;
+  var PartitionRule,
+      MaxLine,
+      ArrowGap,
+      GapAngle,
+      LoopRadius,
+      LoopDistance,
+      MaxExtent,
+      MaxRadius,
+      RateScale;
 
   Constructor() {
     PartitionRule = Results.PartitionRule;
@@ -528,13 +559,13 @@ class GroupRatesClass {
     var middle = Point(size.Width * 0.5, size.Height * 0.5);
 
     MaxExtent    = Min([middle.X, middle.Y]);
-    MaxRadius    = MaxExtent * 0.2;
+    MaxRadius    = MaxExtent * 0.11;
     MaxLine      = MaxRadius * 0.15;
     LoopRadius   = MaxRadius * 0.25;
     LoopDistance = LoopRadius * 0.5;
 
 
-    var fmax   = MaxRadius / Max(Sqrt(each Results.Frequencies)); // Proportional to area, so use SQRT of frequency
+    var fmax = MaxRadius / Max(Sqrt(each Results.Frequencies)); // Proportional to area, so use SQRT of frequency
 
     RateScale = MaxLine / Max(Max(each Results.Rates));
 
@@ -601,7 +632,7 @@ class GroupRatesClass {
           TextHeight: p1.Radius * 0.3;
           ParAlignment: ParAlignments.Center;
           Span {
-            TextHeight: 18 pts;
+            TextHeight: 10 pts;
             Bold;
             EachOne;
           };
