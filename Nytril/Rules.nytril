@@ -10,7 +10,7 @@ class FilterClass {
 
   virtual Matches(SegmentClass segment) = true;
 
-  override GetPopup = Results.ShowFilterSegments(this);
+  override GetPopup = Results.ShowFilterSegments(this, ParAlignments.Center);
 
   override GetLayout = Span {
     Popup: this;
@@ -124,24 +124,21 @@ abstract class RuleClass {
       TextHeight: 16 pts;
       "Model: ";
       Style.DQuote {Name};
+      BorderB: 1;
     };
 
     foreach (var partition in Partitions) {
       Paragraph {
-        TextHeight: 11 pts;
-        SpaceBefore: 3 pts;
-        BorderB: 0.25 pts;
-        TabStops: [0.25 inch];
-
+        TextHeight: 14 pts;
+        SpaceBefore: 6 pts;
+        TabStops: [0.35 inch];
+        LeftIndent: 2.85 inches;
+        FirstIndent: -2.85 inches;
         EachOne;
+        ")"
         Tab;
         partition.Filter.Name;
-      };
-
-      Paragraph {
-        TextHeight: 12 pts;
-        LeftIndent: 0.25 inches;
-
+        Tab;
         Span {
           Separator: Space;
           (each partition.Segments).ShowSegment;
@@ -229,17 +226,6 @@ class LabiovelarFilterClass: FilterClass {
 }
 //======================================================================
 
-class DiphthongClass: FilterClass {
-  var Diphthong;
-
-  Constructor(diphthong) {
-    super.Constructor("Diphthong " + diphthong);
-  }
-
-  override Matches(SegmentClass segment) = segment.Features.HasFlagMask(Vowel, NoFeature) and segment.Place == Places.LabialVelar;
-}
-//======================================================================
-
 class LongShortClass: FilterClass {
   var Root;
 
@@ -269,7 +255,7 @@ class RootVowelClass: FilterClass {
     super.Constructor("Root vowel");
   }
 
-  override Matches(SegmentClass segment) = segment.Features.HasFlag(Vowel) and segment.Root != RootVowels.None;
+  override Matches(SegmentClass segment) = segment.Features.HasFlag(Vowel) and valid segment.Root;
 }
 //======================================================================
 
@@ -281,7 +267,7 @@ class DiphthongFilterClass: FilterClass {
     Root = root;
   }
 
-  override Matches(SegmentClass segment) = segment == Root or segment.DiphthongRoot == Root;
+  override Matches(SegmentClass segment) = segment == Root or (segment.Features.HasFlag(Diphthong) and segment.Root == Root);
 }
 //======================================================================
 
@@ -328,10 +314,10 @@ with SegmentGroups {
   Diphthongs          = new FeatureMaskClass("Diphthong", Diphthong, Diphthong);
   Consonants          = new FeatureMaskClass("Consonant", Vowel, NoFeature);
   Labiovelars         = new LabiovelarFilterClass;
-  LongShortRoot       = new LongShortClass(each RootVowels[1..]);
-  NasalRoot           = new RootMaskClass("Nasal", Vowel Nasal LongVowel, Vowel Nasal, each RootVowels[1..]);
-  LongRoot            = new RootMaskClass("Long", Vowel Nasal LongVowel, Vowel LongVowel, each RootVowels[1..]);
-  ShortRoot           = new RootMaskClass("Short", Vowel Nasal LongVowel, Vowel, each RootVowels[1..]);
+  LongShortRoot       = new LongShortClass(each IPA.ParentVowels);
+  NasalRoot           = new RootMaskClass("Nasal", Vowel Nasal LongVowel, Vowel Nasal, each IPA.ParentVowels);
+  LongRoot            = new RootMaskClass("Long", Vowel Nasal LongVowel, Vowel LongVowel, each IPA.ParentVowels);
+  ShortRoot           = new RootMaskClass("Short", Vowel Nasal LongVowel, Vowel, each IPA.ParentVowels);
   NonSylabicSonorants = new SegmentListClass("Non Sylabic Sonorant", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]);
   Residue             = new FilterClass("Residue");
 }
@@ -409,8 +395,8 @@ class DiphthongPairRuleClass: RuleClass {
   override void AssignCharacters {
     var count = 0;
     foreach (var segment in Results.UniqueSegments) {
-      var dr = segment.DiphthongRoot;
-      if (valid dr) {
+      var dr = segment.Root;
+      if (valid dr and segment.Features.HasFlag(Diphthong)) {
         var fi = -1;
         foreach (var f in FilterList) {
           if (f.Matches(segment)) {
@@ -507,24 +493,28 @@ class PartitionHintClass {
 
   AddGroup(PartitionClass p) = VBox {
     HAlign: HAligns.Center;
-    Span {
-      Bold;
-      p.Filter.Name;
+    HBox {
+      TextBackground: 90%;
+      Span {
+        p.Filter.Name;
+      };
     };
-    Results.ShowFilterSegments(p.Filter);
+    HBox {
+      Results.ShowFilterSegments(p.Filter, ParAlignments.Center);
+    };
   };
 
   override GetPopup = HBox {
-    VAlign: VAligns.Center;
+    VAlign: VAligns.Top;
     if (P1 != P2)
       AddGroup(P1);
     HBox {
-      Margin: 5;
-      Padding: 5;
+      MarginLR: 5;
+      PaddingLR: 5;
       Background: 90%;
       VBox {
         HAlign: HAligns.Center;
-        "Rate";
+        Lang.Rate;
         Span {
           Bold;
           TextHeight: 14 pts;
@@ -583,7 +573,7 @@ class GroupRatesClass {
       partition.Center = Graphics.ExtendPoint(middle, maxradius, partition.Angle);
   }
 
-  PartitionDiagram(size) = Canvas {
+  PartitionDiagram(SizeClass size) = Canvas {
     TransformFit: true;
     Calibrate(size);
     Size: size;
@@ -607,7 +597,7 @@ class GroupRatesClass {
           var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle + Graphics.OneEighty);
 
           Graphics.TwoArrowLine(line, c1, c2) {
-            Fill: Colors.Black;
+            Fill: Color(0, 0, 0, rate * RateScale / MaxLine * 255.0);
             Popup: hint;
           };
         }
@@ -632,18 +622,18 @@ class GroupRatesClass {
           TextHeight: p1.Radius * 0.3;
           ParAlignment: ParAlignments.Center;
           Span {
-            TextHeight: 10 pts;
+            TextHeight: 8 pts;
             Bold;
             EachOne;
           };
           p1.Filter;
-          Popup: Results.ShowFilterSegments(p1.Filter);
+          Popup: Results.ShowFilterSegments(p1.Filter, ParAlignments.Left);
         };
       };
     }
   };
 
-  FrequencyChart(size) = Chart {
+  FrequencyChart(SizeClass size) = Chart {
     Size: size;
     Type: ChartTypes.Bar;
 
@@ -665,7 +655,7 @@ with Figures.FrequencyDiagram {
   Caption = FigureCaption {
     var rule = Results.PartitionRule;
 
-    "For the "; Quote{rule.Name}; " model, states were grouped into five sets: ";
+    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets: ";
     Span {
       Separator: CommaSpace;
       LastSeparator: Style.AndSpace;
