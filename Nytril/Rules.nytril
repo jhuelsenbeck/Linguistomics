@@ -555,19 +555,33 @@ class TransitionClass {
   }
 
   void StaticFrequencies {
+    var list  = new ListClass(Rule.Filters.Length);
+
     var flist = new ListClass(Rule.Filters.Length);
-    foreach (var filter in Rule.Filters) {
-      var segments = Rule.GetSegments(filter);
-      var sum      = Math.Sum((each segments).UsedCount);
+    foreach (var f0 in Rule.Filters) {
+      var s0  = Rule.GetSegments(f0);
+      var sum = Math.Sum((each s0).UsedCount);
 
       flist.Add(Real(sum / Results.SegmentCount));
+
+      var t  = Results.TransitionCount;
+      var l1 = new ListClass(Rule.Filters.Length);
+      foreach (var f1 in Rule.Filters) {
+        var s1 = Rule.GetSegments(f1);
+
+        var count = 0;
+        foreach (var s0i in s0) {
+          foreach (var s1i in s1) {
+            count += t.GetValue(s0i.Index, s1i.Index);
+          }
+        }
+
+        l1.Add(count);
+      }
+      list.Add(l1.Values);
     }
     Frequencies = flist.Values;
-
-    var list = new ListClass(Rule.Filters.Length);
-    foreach (var f in Rule.Filters)
-      list.Add(RandomArray(10));
-    Rates = list.Values;
+    Rates       = list.Values;
   }
 }
 //======================================================================

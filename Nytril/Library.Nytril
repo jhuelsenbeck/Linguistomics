@@ -198,6 +198,7 @@ class ResultsClass {
   SegmentClass[]  UniqueSegments,
                   SortedSegments;
   CognateClass[]  UsedCognates;
+  MatrixClass     TransitionCount;
   TaxonClass[]    Taxa;
   var             DisplaySegments,
                   UniqueCharacters,
@@ -254,19 +255,19 @@ class ResultsClass {
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
     SortedSegments  = UniqueSegments.Sort(true, ref AlphaOrder);
 
-    TransitionExperiment.ReadFrequencies;
-    TransitionStatic.StaticFrequencies;
-
-    GetFrequencies;
-    CharacterRule.AssignCharacters;
-    PartitionRule.AssignPartitions;
-
     var max = 0;
     foreach (var segment in UniqueSegments) {
+      segment.Index = EachIndex;
       if (segment.CharacterIndex > max)
         max = segment.CharacterIndex;
     }
     UniqueCharacters = max+1;
+
+    GetFrequencies;
+    TransitionExperiment.ReadFrequencies;
+    TransitionStatic.StaticFrequencies;
+    CharacterRule.AssignCharacters;
+    PartitionRule.AssignPartitions;
   }
 
   SegmentClass[] GetUniqueSegments {
@@ -365,6 +366,7 @@ class ResultsClass {
     for (var i = 0; i < maxlength; ++i) {
       var count    = 0;
       var gapcount = 0;
+
       foreach (var word in cognate.Words) {
         if (valid word.Aligned) {
           ++count;
@@ -398,7 +400,36 @@ class ResultsClass {
 
   GetConcept(concept) = UsedCognates.FindFirst(c => c.Concept == concept);
 
+  CountTransitions {
+    var t = Math.MatrixInit(0, UniqueSegments.Length, UniqueSegments.Length);
+
+    foreach (var cognate in UsedCognates) {
+      var length = cognate.Words.Length;
+      for (var i = 0; i < length; ++i) {
+        var p0 = cognate.Words[i].Padded;
+        if (p0.Length == length) {
+          for (var j = i+1; j < length; ++j) {
+            var p1 = cognate.Words[j].Padded;
+            if (p1.Length == length) {
+              for (var index = 0; index < cognate.MaxLength; ++index) {
+                var s0 = p0[index];
+                var s1 = p1[index];
+                if (not s0.Punctuation and not s1.Punctuation and s0.Index != s1.Index) {
+                  var v = t.GetValue(s0.Index, s1.Index);
+                  t.SetValue(s0.Index, s1.Index, v + 1);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return t;
+  }
+
   void GetFrequencies {
+    TransitionCount = CountTransitions;
+
     var set = new DictionaryClass(1024);
     foreach (var sd in SegmentFrequencyData)
       set.Add(sd, sd.Text);
