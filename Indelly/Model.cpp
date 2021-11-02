@@ -431,7 +431,6 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     pTree->setProposalProbability(10.0);
     parameters.push_back(pTree);
     int numNodes = ((ParameterTree*)pTree)->getActiveTree()->getNumNodes();
-    ((ParameterTree*)pTree)->printNewick();
 
     // set up the indel parameter
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);

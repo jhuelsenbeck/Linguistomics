@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     settings.print();
         
     // instantiate the random number generator
-    RandomVariable rv;
+    RandomVariable rv(1);
         
     // set up the phylogenetic model
     Model model(&rv);
