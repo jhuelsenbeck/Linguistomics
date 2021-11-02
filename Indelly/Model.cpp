@@ -450,7 +450,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         {
         std::string alnName = wordAlignments[i]->getName();
         Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, new SiteLikelihood(numNodes,numStates), i);
-        pAlign->setProposalProbability(1.0);
+        pAlign->setProposalProbability(0.0); // JPH TEMP
         parameters.push_back(pAlign);
         wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
         }
