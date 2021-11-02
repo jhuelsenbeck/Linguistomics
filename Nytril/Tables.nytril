@@ -212,7 +212,7 @@ with AllWords {
     AddCell(taxon, each cognates, textheight)
   };
 
-  ConceptTable(ResultsClass results, textheight, wordsperline, cognates) = HBox {
+  ConceptTable(textheight, wordsperline, cognates) = HBox {
     var first = 84 pts;
     var w     = (DocMetrics.PageContent.Width - first) / wordsperline;
     Table {
@@ -227,22 +227,22 @@ with AllWords {
         (each cognates).Title;
       };
 
-      AddRow(each results.Taxa, cognates, textheight);
+      AddRow(each Results.Taxa, cognates, textheight);
     };
     Paragraph;
   };
 
-  ShowConceptTable(ResultsClass results, CognateClass cognate) = ConceptTable(results, 10 pts, 7, [cognate]);
+  ShowConceptTable(CognateClass cognate) = ConceptTable(10 pts, 7, [cognate]);
 
-  ShowTable(ResultsClass results, max=1000000) = Block {
+  ShowTable(max=1000000) = Block {
     var textheight = 10 pts;
     TextHeight: textheight;
     var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * (textheight intu pixels)));
 
-    foreach (var cognates in (results.UsedCognates / wordsperline)) {
+    foreach (var cognates in (Results.UsedCognates / wordsperline)) {
       if (EachIndex >= max)
         break;
-      ConceptTable(results, textheight, wordsperline, cognates);
+      ConceptTable(textheight, wordsperline, cognates);
     }
   };
 }

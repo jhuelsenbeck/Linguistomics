@@ -528,21 +528,65 @@ class PartitionHintClass {
 }
 //======================================================================
 
-class GroupRatesClass {
-  var PartitionRule,
-      MaxLine,
-      ArrowGap,
-      GapAngle,
-      LoopRadius,
-      LoopDistance,
-      MaxExtent,
-      MaxRadius,
-      RateScale;
+class TransitionClass {
+  var       Frequencies,
+            Rates;
+  RuleClass Rule;
 
-  Constructor() {
-    PartitionRule = Results.PartitionRule;
-    ArrowGap      = 10 pts;
-    GapAngle      = 80.0 degrees;
+  Constructor(RuleClass rule) {
+    Rule = rule;
+  }
+
+  RandomArray(max) {
+    var list = new ListClass(Rule.Filters.Length);
+    foreach (var f in Rule.Filters)
+      list.Add(Math.Random(0..1));
+    return list.Values;
+  }
+
+  void ReadFrequencies {
+    // This is temporary until we get actual data
+
+    Frequencies = RandomArray(1);
+    var list = new ListClass(Rule.Filters.Length);
+    foreach (var f in Rule.Filters)
+      list.Add(RandomArray(10));
+    Rates = list.Values;
+  }
+
+  void StaticFrequencies {
+    var flist = new ListClass(Rule.Filters.Length);
+    foreach (var filter in Rule.Filters) {
+      var segments = Rule.GetSegments(filter);
+      var sum      = Math.Sum((each segments).UsedCount);
+
+      flist.Add(Real(sum / Results.SegmentCount));
+    }
+    Frequencies = flist.Values;
+
+    var list = new ListClass(Rule.Filters.Length);
+    foreach (var f in Rule.Filters)
+      list.Add(RandomArray(10));
+    Rates = list.Values;
+  }
+}
+//======================================================================
+
+class GroupRatesClass {
+  TransitionClass Transition;
+  var             MaxLine,
+                  ArrowGap,
+                  GapAngle,
+                  LoopRadius,
+                  LoopDistance,
+                  MaxExtent,
+                  MaxRadius,
+                  RateScale;
+
+  Constructor(TransitionClass transition) {
+    Transition = transition;
+    ArrowGap   = 10 pts;
+    GapAngle   = 80.0 degrees;
   }
 
   void Calibrate(size) {
@@ -555,33 +599,37 @@ class GroupRatesClass {
     LoopDistance = LoopRadius * 0.5;
 
 
-    var fmax = MaxRadius / Max(Sqrt(each Results.Frequencies)); // Proportional to area, so use SQRT of frequency
+    var fmax = MaxRadius / Max(Sqrt(each Transition.Frequencies)); // Proportional to area, so use SQRT of frequency
 
-    RateScale = MaxLine / Max(Max(each Results.Rates));
+    RateScale = MaxLine / Max(Max(each Transition.Rates));
 
-    foreach (var partition in PartitionRule.Partitions) {
-      partition.Angle  = (2 * EachIndex *  Graphics.OneEighty / PartitionRule.Partitions.Length) - Graphics.Ninety;
-      partition.Radius = Sqrt(Results.Frequencies[EachIndex]) * fmax;
+    var rule = Transition.Rule;
+    foreach (var partition in rule.Partitions) {
+      partition.Angle  = (2 * EachIndex *  Graphics.OneEighty / rule.Partitions.Length) - Graphics.Ninety;
+      partition.Radius = Sqrt(Transition.Frequencies[EachIndex]) * fmax;
     }
 
     var maxradius = 0.0;
-    foreach (var partition in PartitionRule.Partitions)
-      maxradius = Max([maxradius, partition.Radius + Results.Rates[EachIndex][EachIndex] * RateScale]);
+    foreach (var partition in rule.Partitions)
+      maxradius = Max([maxradius, partition.Radius + Transition.Rates[EachIndex][EachIndex] * RateScale]);
     maxradius = MaxExtent - maxradius - LoopRadius - LoopDistance - ArrowGap;
 
-    foreach (var partition in PartitionRule.Partitions)
+    foreach (var partition in rule.Partitions)
       partition.Center = Graphics.ExtendPoint(middle, maxradius, partition.Angle);
   }
 
-  PartitionDiagram(SizeClass size) = Canvas {
+  private MainDiagram(min) = Canvas {
+    var size = Size(min, min);
+
     TransformFit: true;
     Calibrate(size);
     Size: size;
 
-    foreach (var p1 in PartitionRule.Partitions) {
+    var rule = Transition.Rule;
+    foreach (var p1 in rule.Partitions) {
       var pi = EachIndex;
-      foreach (var p2 in PartitionRule.Partitions) {
-        var  rate = Results.Rates[pi][EachIndex];
+      foreach (var p2 in rule.Partitions) {
+        var  rate = Transition.Rates[pi][EachIndex];
         var  hint = new PartitionHintClass(rate, p1, p2);
         var  line = new LineStyleClass(rate * RateScale, 0, 1);
         if (p1 == p2) {
@@ -604,7 +652,7 @@ class GroupRatesClass {
       }
     }
 
-    foreach (var p1 in PartitionRule.Partitions) {
+    foreach (var p1 in rule.Partitions) {
       var pos   = p1.Center - p1.Radius;
       var fsize = p1.Radius*2;
 
@@ -621,11 +669,6 @@ class GroupRatesClass {
           Width: fsize;
           TextHeight: p1.Radius * 0.3;
           ParAlignment: ParAlignments.Center;
-          Span {
-            TextHeight: 8 pts;
-            Bold;
-            EachOne;
-          };
           p1.Filter;
           Popup: Results.ShowFilterSegments(p1.Filter, ParAlignments.Left);
         };
@@ -633,47 +676,68 @@ class GroupRatesClass {
     }
   };
 
-  FrequencyChart(SizeClass size) = Chart {
-    Size: size;
-    Type: ChartTypes.Bar;
+  PartitionDiagram(SizeClass wholesize) = VBox {
+    Width: wholesize.Width;
+    HAlign: HAligns.Center;
 
-    XAxis: ChartAxis {
-      TextHeight: 8 pts;
-      (each PartitionRule.Partitions).Filter;
-    };
-    ValueLabel: "Estimated Equilibrium Frequency";
-    ValueAxis: ChartAxis;
-    ChartSeries {
-      foreach (var partition in PartitionRule.Partitions)
-        new DataPointClass(EachIndex, Results.Frequencies[EachIndex] * 100.0) {Reference: partition.Filter};
+    HBox {
+      VAlign: VAligns.Center;
+
+      VBox {
+        TextHeight: 10 pts;
+
+        foreach (var partition in Transition.Rule.Partitions) {
+          Paragraph {
+            LeftIndent: 20 pts;
+            FirstIndent: -20 pts;
+            EachOne;
+            ". ";
+            Tab;
+            Figure {
+              Fill: ChartColor(EachIndex);
+              Ellipse(Rect(0, 10 pts));
+            };
+            Space;
+            partition.Filter.Name;
+          }
+        }
+      };
+
+      MainDiagram(Min([wholesize.Width, wholesize.Height]));
     };
   };
 }
 //======================================================================
 
-with Figures.FrequencyDiagram {
+with Figures.FrequencyDiagramExperiment {
   Caption = FigureCaption {
-    var rule = Results.PartitionRule;
+    var rule = Results.TransitionExperiment.Rule;
 
-    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets: ";
-    Span {
-      Separator: CommaSpace;
-      LastSeparator: Style.AndSpace;
-      foreach (var partition in rule.Partitions) {
-        Span {
-          partition.Filter.Name;
-          " ("; EachOne; ")";
-        }
-      }
-    };
-    Style.eos;
+    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
     "The width of the arrows is proportional to the estimated rates. ";
     PaperSections.WordTransformation.Note;
   };
 
   Body = FigureBody {
-    new GroupRatesClass.PartitionDiagram(Size(5 inches));
+    var gr = new GroupRatesClass(Results.TransitionExperiment);
+    gr.PartitionDiagram(Size(6.6 inches, 5 inches));
+  };
+}
+//======================================================================
+
+with Figures.FrequencyDiagramStatic {
+  Caption = FigureCaption {
+    var rule = Results.TransitionStatic.Rule;
+
+    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
+    "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
+    "The width of the arrows is proportional to the rates of transition between the each group in the word data. ";
+  };
+
+  Body = FigureBody {
+    var gr = new GroupRatesClass(Results.TransitionStatic);
+    gr.PartitionDiagram(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================

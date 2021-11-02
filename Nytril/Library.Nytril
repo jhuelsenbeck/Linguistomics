@@ -162,7 +162,7 @@ class CognateClass {
     MaxLength = 0;
   }
 
-  override GetPopup = AllWords.ShowConceptTable(Results, this);
+  override GetPopup = AllWords.ShowConceptTable(this);
 }
 //======================================================================
 
@@ -191,34 +191,35 @@ enum Models {
 }
 
 class ResultsClass {
-  RuleClass      CharacterRule,
-                 PartitionRule;
-  SegmentClass[] UniqueSegments,
-                 SortedSegments;
-  CognateClass[] UsedCognates;
-  TaxonClass[]   Taxa;
-  var            DisplaySegments,
-                 UniqueCharacters,
-                 ConceptCount,
-                 TotalLength,
-                 OutFolder,
-                 EXEName,
-                 RevSourceName,
-                 GammaTrees,
-                 GammaLog,
-                 GammaMAP,
-                 GammaMCC,
-                 GammaConsensus,
-                 CharacterName,
-                 WordCount,
-                 Frequencies,
-                 Rates,
-                 AddComma,
-                 Model;
-
+  RuleClass       CharacterRule,
+                  PartitionRule;
+  TransitionClass TransitionExperiment,
+                  TransitionStatic;
+  SegmentClass[]  UniqueSegments,
+                  SortedSegments;
+  CognateClass[]  UsedCognates;
+  TaxonClass[]    Taxa;
+  var             DisplaySegments,
+                  UniqueCharacters,
+                  ConceptCount,
+                  TotalLength,
+                  OutFolder,
+                  EXEName,
+                  RevSourceName,
+                  GammaTrees,
+                  GammaLog,
+                  GammaMAP,
+                  GammaMCC,
+                  GammaConsensus,
+                  CharacterName,
+                  WordCount,
+                  SegmentCount,
+                  AddComma,
+                  Model;
 
   Constructor(folder) {
     WordCount      = 0;
+    SegmentCount   = 0;
     Model          = Models.JC;
     OutFolder      = Folders.Repository Folder("Run") Folder(folder);
     EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
@@ -231,27 +232,10 @@ class ResultsClass {
     GammaConsensus = FileName("Gamma_Consensus") Extensions.Tree;
 
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
-    CharacterRule = new SingletonRuleClass;
-    PartitionRule = new Partition2Class;
-
-    ReadFrequencies;
-  }
-
-  RandomArray(max) {
-    var list = new ListClass(PartitionRule.Filters.Length);
-    foreach (var f in PartitionRule.Filters)
-      list.Add(Math.Random(0..1));
-    return list.Values;
-  }
-
-  void ReadFrequencies {
-    // This is temporary until we get actual data
-
-    Frequencies = RandomArray(1);
-    var list = new ListClass(PartitionRule.Filters.Length);
-    foreach (var f in PartitionRule.Filters)
-      list.Add(RandomArray(10));
-    Rates = list.Values;
+    CharacterRule        = new SingletonRuleClass;
+    PartitionRule        = new Partition2Class;
+    TransitionExperiment = new TransitionClass(PartitionRule);
+    TransitionStatic     = new TransitionClass(PartitionRule);
   }
 
   void Calculate {
@@ -269,6 +253,9 @@ class ResultsClass {
     UniqueSegments  = GetUniqueSegments;
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
     SortedSegments  = UniqueSegments.Sort(true, ref AlphaOrder);
+
+    TransitionExperiment.ReadFrequencies;
+    TransitionStatic.StaticFrequencies;
 
     GetFrequencies;
     CharacterRule.AssignCharacters;
@@ -346,14 +333,19 @@ class ResultsClass {
       var word = null;
       foreach (var langword in cognate.Cognate) {
         if (langword.GlobalVariableName == taxon.Variable) {
-          word      = new WordClass(dictionary, taxon.Language, cognate, langword);
-          maxlength = Math.Max([maxlength, word.Aligned.Length]);
+          var w     = new WordClass(dictionary, taxon.Language, cognate, langword);
+          maxlength = Math.Max([maxlength, w.Aligned.Length]);
+
+          foreach (var s in w.Segments) {
+            ++SegmentCount;
+            ++s.UsedCount;
+          }
+
+          word = w;
           break;
         }
       }
-      if (word == null)
-        word = new WordClass(dictionary, taxon.Language, cognate, Empty);
-      words.Add(word);
+      words.Add(word ?? new WordClass(dictionary, taxon.Language, cognate, Empty));
     }
 
     cognate.Words     = words.Values;
@@ -424,8 +416,8 @@ class ResultsClass {
       sum = 1.0 / sum;
 
       foreach (var s in UniqueSegments) {
-        s.NormalFrequency  = s.Frequency * sum;
-        s.FrequencyPercent = s.NormalFrequency*100.0;
+        s.NormalFrequency = s.Frequency * sum * 100.0;
+        s.UsedFrequency   = s.UsedCount / SegmentCount * 100.0;
       }
     }
   }
@@ -597,7 +589,7 @@ class ResultsClass {
     }
   };
 
-  CompareSegments(SegmentClass d1, SegmentClass d2) = d1.NormalFrequency.Compare(d2.NormalFrequency);
+  CompareSegments(SegmentClass s1, SegmentClass s2) = s1.UsedCount.Compare(s2.UsedCount);
 
   FrequencyChart(SizeClass size) = Chart {
     TextHeight: 11 pts;
@@ -606,6 +598,7 @@ class ResultsClass {
     Style.SansSerif;
     Size: size;
     Type: ChartTypes.Column;
+    Legend: ChartLegend {Placement: Placements.Bottom};
     ValueLabel: "Frequency %" {
       Transform: Rotate(90 degrees);
       TransformFit: true;
@@ -616,8 +609,13 @@ class ResultsClass {
     };
     ValueAxis: ChartAxis;
     ChartSeries {
-      (each sorted).FrequencyPercent;
-    }
+      Label: "All Languages";
+      (each sorted).NormalFrequency;
+    };
+    ChartSeries {
+      Label: "Experiment";
+      (each sorted).UsedFrequency;
+    };
   };
 
   AddTree = TextBlock {
