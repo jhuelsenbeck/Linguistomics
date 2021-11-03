@@ -10,7 +10,16 @@ class FilterClass {
 
   virtual Matches(SegmentClass segment) = true;
 
-  override GetPopup = Results.ShowFilterSegments(this, ParAlignments.Center);
+  override GetPopup = Frame {
+    Width: 2 inches;
+    Paragraph {
+      ParAlignment: ParAlignments.Center;
+      TextHeight: 16 pts;
+      Name;
+      BorderB: 1;
+    };
+    Results.ShowFilterSegments(this, ParAlignments.Left);
+  };
 
   override GetLayout = Span {
     Popup: this;
@@ -33,6 +42,8 @@ class PartitionClass {
     Filter   = filter;
     Segments = segments;
   }
+
+  override GetPopup = Filter.GetPopup;
 }
 //======================================================================
 
@@ -562,7 +573,7 @@ class TransitionClass {
       var s0  = Rule.GetSegments(f0);
       var sum = Math.Sum((each s0).UsedCount);
 
-      flist.Add(Real(sum / Results.SegmentCount));
+      flist.Add(sum);
 
       var t  = Results.TransitionCount;
       var l1 = new ListClass(Rule.Filters.Length);
@@ -573,6 +584,7 @@ class TransitionClass {
         foreach (var s0i in s0) {
           foreach (var s1i in s1) {
             count += t.GetValue(s0i.Index, s1i.Index);
+            count += t.GetValue(s1i.Index, s0i.Index);
           }
         }
 
@@ -608,19 +620,19 @@ class GroupRatesClass {
 
     MaxExtent    = Min([middle.X, middle.Y]);
     MaxRadius    = MaxExtent * 0.13;
-    MaxLine      = MaxRadius * 0.2;
+    MaxLine      = MaxRadius * 0.3;
     LoopRadius   = MaxRadius * 0.25;
     LoopDistance = LoopRadius * 0.5;
 
 
-    var fmax = MaxRadius / Max(Sqrt(each Transition.Frequencies)); // Proportional to area, so use SQRT of frequency
+    var fmax = MaxRadius / Sqrt(Real(Max(Transition.Frequencies))); // Proportional to area, so use SQRT of frequency
 
     RateScale = MaxLine / Max(Max(each Transition.Rates));
 
     var rule = Transition.Rule;
     foreach (var partition in rule.Partitions) {
       partition.Angle  = (2 * EachIndex *  Graphics.OneEighty / rule.Partitions.Length) - Graphics.Ninety;
-      partition.Radius = Sqrt(Transition.Frequencies[EachIndex]) * fmax;
+      partition.Radius = Sqrt(Real(Transition.Frequencies[EachIndex])) * fmax;
     }
 
     var maxradius = 0.0;
@@ -645,7 +657,7 @@ class GroupRatesClass {
       foreach (var p2 in rule.Partitions) {
         var  rate = Transition.Rates[pi][EachIndex];
         var  hint = new PartitionHintClass(rate, p1, p2);
-        var  line = new LineStyleClass(rate * RateScale, 0, 1);
+        var  line = new LineStyleClass(rate * RateScale, 0.25, 1);
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
           Graphics.CircleArrow(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
@@ -659,7 +671,7 @@ class GroupRatesClass {
           var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle + Graphics.OneEighty);
 
           Graphics.TwoArrowLine(line, c1, c2) {
-            Fill: Color(0, 0, 0/*, rate * RateScale / MaxLine * 255.0*/);
+            Fill: Color(0, 0, 0/*, Integer(128 + rate * RateScale / MaxLine * 127.0)*/);
             Popup: hint;
           };
         }
@@ -674,20 +686,29 @@ class GroupRatesClass {
         Fill: ChartColor(EachIndex);
         Stroke: 0.5 pt;
         Ellipse(Rect(pos, fsize));
+        Popup: p1;
       };
-      HBox {
-        Position: pos;
-        Height: fsize;
-        Frame {
-          VAlignment: VAligns.Center;
-          Width: fsize;
-          TextHeight: p1.Radius * 0.3;
-          ParAlignment: ParAlignments.Center;
-          p1.Filter;
-          Popup: Results.ShowFilterSegments(p1.Filter, ParAlignments.Left);
-        };
-      };
+
+      var c = LayoutSize(TestText(p1)).Width;
+      CircleText(p1, pos, fsize, p1.Radius * 16 / c);
     }
+  };
+
+  TestText(PartitionClass p) = Paragraph {
+    TextHeight: 10 pts;
+    p.Filter;
+  };
+
+  CircleText(PartitionClass p, pos, fsize, textheight) = HBox {
+    Position: pos;
+    Height: fsize;
+    Frame {
+      VAlignment: VAligns.Center;
+      Width: fsize;
+      TextHeight: textheight;
+      ParAlignment: ParAlignments.Center;
+      p.Filter;
+    };
   };
 
   PartitionDiagram(SizeClass wholesize) = VBox {
@@ -698,23 +719,29 @@ class GroupRatesClass {
       VAlign: VAligns.Center;
 
       VBox {
-        TextHeight: 10 pts;
+        Table {
+          TextHeight: 10 pts;
+          Columns: [20 pts, 1 inch];
 
-        foreach (var partition in Transition.Rule.Partitions) {
-          Paragraph {
-            LeftIndent: 20 pts;
-            FirstIndent: -20 pts;
-            EachOne;
-            ". ";
-            Tab;
-            Figure {
-              Fill: ChartColor(EachIndex);
-              Ellipse(Rect(0, 10 pts));
-            };
-            Space;
-            partition.Filter.Name;
+          foreach (var partition in Transition.Rule.Partitions) {
+            Row {
+              Span {
+                EachOne;
+                ". ";
+              };
+              Paragraph {
+                LeftIndent: 15 pts;
+                FirstIndent: -15 pts;
+                Figure {
+                  Fill: ChartColor(EachIndex);
+                  Ellipse(Rect(0, 10 pts));
+                };
+                Tab;
+                partition.Filter.Name;
+              }
+            }
           }
-        }
+        };
       };
 
       MainDiagram(Min([wholesize.Width, wholesize.Height]));
@@ -729,7 +756,7 @@ with Figures.FrequencyDiagramExperiment {
 
     "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
-    "The width of the arrows is proportional to the estimated rates. ";
+    "The width of the lines is proportional to the estimated rates. ";
     PaperSections.WordTransformation.Note;
   };
 
@@ -746,7 +773,7 @@ with Figures.FrequencyDiagramStatic {
 
     "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
-    "The width of the arrows is proportional to the rates of transition between the each group in the word data. ";
+    "The width of the lines is proportional to the rates of transition between the each partitions. ";
   };
 
   Body = FigureBody {

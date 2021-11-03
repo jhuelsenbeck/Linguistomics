@@ -210,7 +210,7 @@ class ResultsClass {
                   GammaTrees,
                   GammaLog,
                   GammaMAP,
-                  GammaMCC,
+                  ConsensusTree,
                   GammaConsensus,
                   CharacterName,
                   WordCount,
@@ -228,9 +228,9 @@ class ResultsClass {
     CharacterName  = FileName("Characters") Extensions.Nexus;
     GammaTrees     = FileName("Gamma.trees");
     GammaLog       = FileName("Gamma.log");
-    GammaMAP       = FileName("Gamma_MAP") Extensions.Tree;
-    GammaMCC       = FileName("Gamma_MCC") Extensions.Tree;
-    GammaConsensus = FileName("Gamma_Consensus") Extensions.Tree;
+    GammaMAP       = FileName("Gamma_MAP.tree");
+    ConsensusTree  = FileName("test.con.tre");
+    GammaConsensus = FileName("Gamma_Consensus.tree");
 
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
     CharacterRule        = new SingletonRuleClass;
@@ -417,6 +417,9 @@ class ResultsClass {
                 if (not s0.Punctuation and not s1.Punctuation and s0.Index != s1.Index) {
                   var v = t.GetValue(s0.Index, s1.Index);
                   t.SetValue(s0.Index, s1.Index, v + 1);
+
+                  v = t.GetValue(s1.Index, s0.Index);
+                  t.SetValue(s1.Index, s0.Index, v + 1);
                 }
               }
             }
@@ -593,9 +596,8 @@ class ResultsClass {
   ShowLanguageTrees = Block {
     Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, GetTreeNodes(LanguageBranches.Romance));
     Style.ShowTree("Priors", Lang.Years, GetTreeNodes(LanguageBranches.Experiment));
-    ReadTree("Consensus", OutFolder GammaConsensus);
-    ReadTree("MAP", OutFolder GammaMAP);
-    ReadTree(Lang.MCC, OutFolder GammaMCC);
+//    ReadTree("MAP", OutFolder GammaMAP);
+    ReadTree("Consensus", OutFolder ConsensusTree);
   };
 
   ShowStats = Block {
@@ -892,7 +894,7 @@ class ResultsClass {
     BlockComment("Post processing");
     "treetrace      = readTreeTrace(gammapath, outgroup=out_group)";
     "map_tree       = mapTree(treetrace, {0})"(PathPlus(GammaMAP));
-    "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(GammaMCC));
+    "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(ConsensusTree));
     "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(GammaConsensus));
 
     LineComment("Exit the program");
