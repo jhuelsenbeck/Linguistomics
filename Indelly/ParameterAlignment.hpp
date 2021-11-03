@@ -19,6 +19,7 @@ class ParameterAlignment : public Parameter {
                                         ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, SiteLikelihood* sl, int idx);
                                        ~ParameterAlignment(void);
         void                            accept(void);
+        bool                            areAlignmentsIdentical(void);
         std::vector<std::vector<int> >& getAlignment(void) { return alignment[0]; }
         std::vector<std::vector<int> >& getAlignment(int idx) { return alignment[idx]; }
         char                            getCharFromCode(int code);

@@ -431,7 +431,6 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     pTree->setProposalProbability(10.0);
     parameters.push_back(pTree);
     int numNodes = ((ParameterTree*)pTree)->getActiveTree()->getNumNodes();
-    ((ParameterTree*)pTree)->printNewick();
 
     // set up the indel parameter
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);
@@ -451,7 +450,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         {
         std::string alnName = wordAlignments[i]->getName();
         Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, new SiteLikelihood(numNodes,numStates), i);
-        pAlign->setProposalProbability(1.0);
+        pAlign->setProposalProbability(0.0); // JPH TEMP
         parameters.push_back(pAlign);
         wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
         }

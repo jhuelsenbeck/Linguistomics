@@ -83,6 +83,18 @@ void ParameterAlignment::accept(void) {
     alignment[1] = alignment[0];
 }
 
+bool ParameterAlignment::areAlignmentsIdentical(void) {
+
+        std::vector<std::vector<int> >  alignment[2];  // numTaxa X numSites
+    
+    if (alignment[0].size() != alignment[1].size())
+        return false;
+    if (alignment[0][0].size() != alignment[1][0].size())
+        return false;
+        
+    return true;
+}
+
 std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(void) {
 
     return getIndelMatrix(0);
