@@ -205,6 +205,7 @@ class ResultsClass {
                   ConceptCount,
                   TotalLength,
                   OutFolder,
+                  ResultsFolder,
                   EXEName,
                   RevSourceName,
                   GammaTrees,
@@ -216,13 +217,15 @@ class ResultsClass {
                   WordCount,
                   SegmentCount,
                   AddComma,
-                  Model;
+                  Model,
+                  TransitionMax;
 
   Constructor(folder) {
     WordCount      = 0;
     SegmentCount   = 0;
     Model          = Models.JC;
     OutFolder      = Folders.Repository Folder("Run") Folder(folder);
+    ResultsFolder  = OutFolder Folder("results");
     EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName  = FileName("Program") Extensions.RevBayes;
     CharacterName  = FileName("Characters") Extensions.Nexus;
@@ -401,6 +404,7 @@ class ResultsClass {
   GetConcept(concept) = UsedCognates.FindFirst(c => c.Concept == concept);
 
   CountTransitions {
+    TransitionMax = 0;
     var t = Math.MatrixInit(0, UniqueSegments.Length, UniqueSegments.Length);
 
     foreach (var cognate in UsedCognates) {
@@ -418,8 +422,10 @@ class ResultsClass {
                   var v = t.GetValue(s0.Index, s1.Index);
                   t.SetValue(s0.Index, s1.Index, v + 1);
 
-                  v = t.GetValue(s1.Index, s0.Index);
-                  t.SetValue(s1.Index, s0.Index, v + 1);
+                  v = t.GetValue(s1.Index, s0.Index)+1;
+                  if (v > TransitionMax)
+                    TransitionMax = v;
+                  t.SetValue(s1.Index, s0.Index, v);
                 }
               }
             }
@@ -597,7 +603,7 @@ class ResultsClass {
     Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, GetTreeNodes(LanguageBranches.Romance));
     Style.ShowTree("Priors", Lang.Years, GetTreeNodes(LanguageBranches.Experiment));
 //    ReadTree("MAP", OutFolder GammaMAP);
-    ReadTree("Consensus", OutFolder ConsensusTree);
+    ReadTree("Consensus", ResultsFolder ConsensusTree);
   };
 
   ShowStats = Block {

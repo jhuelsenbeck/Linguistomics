@@ -567,7 +567,6 @@ class TransitionClass {
 
   void StaticFrequencies {
     var list  = new ListClass(Rule.Filters.Length);
-
     var flist = new ListClass(Rule.Filters.Length);
     foreach (var f0 in Rule.Filters) {
       var s0  = Rule.GetSegments(f0);
@@ -582,10 +581,8 @@ class TransitionClass {
 
         var count = 0;
         foreach (var s0i in s0) {
-          foreach (var s1i in s1) {
+          foreach (var s1i in s1)
             count += t.GetValue(s0i.Index, s1i.Index);
-            count += t.GetValue(s1i.Index, s0i.Index);
-          }
         }
 
         l1.Add(count);
@@ -595,6 +592,23 @@ class TransitionClass {
     Frequencies = flist.Values;
     Rates       = list.Values;
   }
+}
+//======================================================================
+
+class TranClass {
+  var Value,
+      Percent;
+
+  Constructor(value, percent) {
+    Value = value;
+  }
+
+  override GetPopup = Frame {
+    Width: 2 inches;
+    Paragraph {
+      Value; " transitions";
+    };
+  };
 }
 //======================================================================
 
@@ -747,6 +761,70 @@ class GroupRatesClass {
       MainDiagram(Min([wholesize.Width, wholesize.Height]));
     };
   };
+
+  PartitionBox(SizeClass size) = Paragraph {
+    Canvas {
+      Border: 0.1;
+      Size: size;
+
+      var segments = Results.UniqueSegments.Length;
+      var d        = size / (segments+1);
+      Canvas {
+        Height: size.Height;
+        Width: d.Width;
+        Background: 90%;
+        TextHeight: d.Height * 0.8;
+
+        var y = d.Height;
+        foreach (var s in Results.UniqueSegments) {
+          Canvas {
+            HAlignment: HAligns.Center;
+            Y: y;
+            s.ShowSegment;
+          };
+          y += d.Height;
+        }
+      };
+
+      Canvas {
+        Height: d.Height;
+        Width: size.Width;
+        Background: 90%;
+        TextHeight: d.Height * 0.8;
+
+        var x = d.Width;
+        foreach (var s in Results.UniqueSegments) {
+          Canvas {
+            Width: d.Width;
+            HAlign: HAligns.Center;
+            X : x;
+            s.ShowSegment;
+          };
+          x += d.Width;
+        }
+      };
+
+      var t   = Results.TransitionCount;
+      var max = 1.0 / Results.TransitionMax;
+      var x = d.Width;
+      foreach (var s0 in Results.UniqueSegments) {
+        var y = d.Height;
+        foreach (var s1 in Results.UniqueSegments) {
+          var tran = t.GetValue(s0.Index, s1.Index);
+          var f    = (1.0 - tran * max) * 255.0;
+          Canvas {
+            X: x;
+            Y: y;
+            Size: d;
+            Background: Color(255, f, f); // Use the compliment of red
+            Popup: new TranClass(tran, tran*max);
+          };
+          y += d.Height;
+        }
+        x += d.Width;
+      }
+    };
+  };
 }
 //======================================================================
 
@@ -777,8 +855,18 @@ with Figures.FrequencyDiagramStatic {
   };
 
   Body = FigureBody {
-    var gr = new GroupRatesClass(Results.TransitionStatic);
-    gr.PartitionDiagram(Size(6.6 inches, 5 inches));
+    new GroupRatesClass(Results.TransitionStatic).PartitionDiagram(Size(6.6 inches, 5 inches));
+  };
+}
+//======================================================================
+
+with Figures.FrequencyBoxStatic {
+  Caption = FigureCaption {
+    "Raw transition rates";
+  };
+
+  Body = FigureBody {
+    new GroupRatesClass(Results.TransitionStatic).PartitionBox(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
