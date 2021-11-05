@@ -185,6 +185,31 @@ class TaxonClass {
 }
 //======================================================================
 
+class WordPairClass {
+  var       Index;
+  WordClass Word1,
+            Word2;
+
+  Constructor(index, WordClass w1, WordClass w2) {
+    Index = index;
+    Word1 = w1;
+    Word2 = w2;
+  }
+
+  ShowDescription(textheight) = Frame {
+    Border: 0.25 pts;
+    TextHeight: textheight;
+    Span {Bold; Word1.Cognate.Title};
+
+    textheight += 2 pts;
+    Word1.ShowPaddedBlocks(textheight);
+    Word2.ShowPaddedBlocks(textheight);
+  };
+
+  override GetLayout = ShowDescription(12 pts);
+}
+//======================================================================
+
 enum Models {
   JC,
   MK,
@@ -194,7 +219,8 @@ class ResultsClass {
   RuleClass       CharacterRule,
                   PartitionRule;
   SegmentClass[]  UniqueSegments,
-                  SortedSegments;
+                  SortedSegments,
+                  PartSegments;
   CognateClass[]  UsedCognates;
   MatrixClass     TransitionCount;
   TaxonClass[]    Taxa;
@@ -266,6 +292,8 @@ class ResultsClass {
     CharacterRule.AssignCharacters;
     PartitionRule.AssignPartitions;
 
+    PartSegments = Results.UniqueSegments.Sort(true, ref ComparePartSegments);
+
     GetFrequencies;
     var texperiment = new TransitionClass(PartitionRule);
     var tstatic     = new TransitionClass(PartitionRule);
@@ -286,6 +314,14 @@ class ResultsClass {
       }
     }
     return set.Values;
+  }
+
+  ComparePartSegments(SegmentClass s0, SegmentClass s1) {
+    var i = s1.PartitionIndex - s0.PartitionIndex;
+    if (i == 0)
+      return s0.UsedCount - s1.UsedCount;
+    else
+      return i;
   }
 
   void InitConcepts {
@@ -407,7 +443,7 @@ class ResultsClass {
 
   GetTransitionsCount {
     TransitionMax = 1;
-    var t = MatrixInit(0, UniqueSegments.Length, UniqueSegments.Length);
+    var t = MatrixInit(null, UniqueSegments.Length, UniqueSegments.Length);
 
     foreach (var cognate in UsedCognates) {
       var length = cognate.Words.Length;
@@ -421,10 +457,15 @@ class ResultsClass {
               var s0 = p0[index];
               var s1 = p1[index];
               if (s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation) {
-                var v = t.GetValue(s0.Index, s1.Index) + 1;
-                if (v > TransitionMax)
-                  TransitionMax = v;
-                t.SetValue(s0.Index, s1.Index, v);
+                var list = t.GetValue(s0.Index, s1.Index);
+                var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
+                if (not exists list) {
+                  list = new ListClass(16);
+                  t.SetValue(s0.Index, s1.Index, list);
+                }
+                list.Add(p);
+                if (list.Length > TransitionMax)
+                  TransitionMax = list.Length;
               }
             }
           }
@@ -432,6 +473,31 @@ class ResultsClass {
       }
     }
     return t;
+  }
+
+
+  WordPairClass[] GetTransitions(SegmentClass segment0, SegmentClass segment1) {
+    var list = new ListClass(TransitionMax, WordPairClass);
+
+    foreach (var cognate in UsedCognates) {
+      var length = cognate.Words.Length;
+      for (var i = 0; i < length; ++i) {
+        var p0 = cognate.Words[i].Padded;
+        for (var j = 0; j < length; ++j) {
+          if (i != j) {
+            var p1 = cognate.Words[j].Padded;
+            var ml = Min([p0.Length, p1.Length]);
+            for (var index = 0; index < ml; ++index) {
+              var s0 = p0[index];
+              var s1 = p1[index];
+              if (s0 == segment0 and s1 == segment1 && s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation)
+                list.Add();
+            }
+          }
+        }
+      }
+    }
+    return list.Values;
   }
 
   void GetFrequencies {

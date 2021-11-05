@@ -581,8 +581,11 @@ class TransitionClass {
 
         var count = 0;
         foreach (var s0i in s0) {
-          foreach (var s1i in s1)
-            count += t.GetValue(s0i.Index, s1i.Index);
+          foreach (var s1i in s1) {
+            var tl = t.GetValue(s0i.Index, s1i.Index);
+            if (valid tl)
+              count += tl.Length;
+          }
         }
 
         l1.Add(count);
@@ -596,32 +599,41 @@ class TransitionClass {
 //======================================================================
 
 class TranClass {
-  SegmentClass Left,
-               Right;
-  var          Value,
-               Percent;
+  var List,
+      Percent;
 
-  Constructor(SegmentClass left, SegmentClass right, value, percent) {
-    Left    = left;
-    Right   = right;
-    Value   = value;
+  Constructor(list, percent) {
+    List    = list;
     Percent = percent;
   }
 
   override GetPopup = Frame {
-    Width: 1 inches;
+    var first = List.FirstElement;
     Paragraph {
-      Left.ShowSegment;
+      first.Word1.Padded[first.Index].ShowSegment;
       Tex.to;
-      Right.ShowSegment;
+      first.Word2.Padded[first.Index].ShowSegment;
     };
     Paragraph {
-      Value; " transitions";
+      List.Length; " transitions";
     };
     Paragraph {
       TextDigits: 1;
       Percent * 100.0; "% of max";
     };
+
+    var count = Math.Min([List.Length, 30]);
+
+    Width: Min([count*3, 6]) inches;
+
+    Paragraph {
+      Separator: Space;
+      foreach (var p in List[0..count])
+        p.ShowDescription(10 pts);
+    };
+
+    if (count < List.Length)
+      "More...";
   };
 }
 //======================================================================
@@ -776,17 +788,58 @@ class CalcRatesClass {
     };
   };
 
-  CompareSegments(SegmentClass s0, SegmentClass s1) {
-    var i = s1.PartitionIndex - s0.PartitionIndex;
-    if (i == 0)
-      return s0.UsedCount - s1.UsedCount;
-    else
-      return i;
-  }
-
   GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);// * 30%;
 
-  PartitionBox(SizeClass framesize) = Paragraph {
+  TranLink(i0, i1) = "Tran{0}:{1}"(i0, i1);
+
+  TranPar(list) = Block {
+    var first = list.FirstElement;
+    Paragraph {
+      list.Length; " transitions: ";
+
+      var s0 = first.Word1.Padded[first.Index];
+      s0.ShowSegment;
+
+      Tex.to;
+      var s1 = first.Word2.Padded[first.Index];
+      s1.ShowSegment;
+
+      LocationMark: TranLink(s0.Index, s1.Index);
+    };
+
+    Paragraph {
+      Separator: Space;
+      foreach (var p in list)
+        p.ShowDescription(9 pts);
+    };
+    Paragraph {
+      SpaceBefore: 4 pts;
+      SpaceAfter: 4 pts;
+      BorderT: 1 {Color: 80%};
+    }
+  };
+
+  PartitionBlock = Block {
+    PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.PageContent.Height * 0.8), true);
+    PageBreak;
+
+    Block {
+      TextHeight: 9 pts;
+
+      var t = Results.TransitionCount;
+      foreach (var s0 in Results.PartSegments) {
+        foreach (var s1 in Results.PartSegments) {
+          if (s0.Index != s1.Index) {
+            var tlist = t.GetValue(s0.Index, s1.Index);
+            if (exists tlist && tlist.Length < Info.LinkMin)
+              TranPar(tlist);
+          }
+        }
+      }
+    }
+  };
+
+  PartitionBox(SizeClass framesize, link) = Paragraph {
     var grid   = 0.125 pts;
     var gcolor = 65%;
 
@@ -796,20 +849,19 @@ class CalcRatesClass {
       Border: border;
       Size: framesize;
 
-      var segarray = Results.UniqueSegments.Sort(true, ref CompareSegments);
-      var d        = size / (segarray.Length+1);
-      TextHeight: d.Height * 0.8;
+      var d = size / (Results.PartSegments.Length+1);
+      TextHeight: d.Width * 0.5;
 
       var t   = Results.TransitionCount;
       var max = 1.0 / Results.TransitionMax;
       var y   = d.Height;
-      foreach (var s0 in segarray) {
+      foreach (var s0 in Results.PartSegments) {
         var x = d.Width;
-        foreach (var s1 in segarray) {
+        foreach (var s1 in Results.PartSegments) {
           if (s0.Index != s1.Index) {
-            var tran = t.GetValue(s0.Index, s1.Index);
-            if (tran > 0) {
-              var f = Integer((1.0 - tran * max) * 255.0);
+            var tlist = t.GetValue(s0.Index, s1.Index);
+            if (exists tlist) {
+              var f = Integer((1.0 - tlist.Length * max) * 255.0);
               Canvas {
                 HAlign: HAligns.Center;
                 VAlign: VAligns.Center;
@@ -818,11 +870,14 @@ class CalcRatesClass {
                 Size: d;
                 if (f > 0)
                   Background: Color(255, f, f);
-  //              else
-  //                Background: GetColor(s0);
 
-                Popup: new TranClass(s0, s1, tran, tran*max);
-                tran;
+                Popup: new TranClass(tlist, tlist.Length*max);
+
+                Span {
+                  tlist.Length;
+                  if (link && tlist.Length < Info.LinkMin)
+                    Link: TranLink(s0.Index, s1.Index);
+                }
               };
             }
           }
@@ -833,7 +888,7 @@ class CalcRatesClass {
 
       y = d.Height;
       var p = 0;
-      foreach (var s in segarray) {
+      foreach (var s in Results.PartSegments) {
         Canvas {
           Size: d;
           Background: GetColor(s);
@@ -859,7 +914,7 @@ class CalcRatesClass {
 
         var x = d.Width;
         p = 0;
-        foreach (var s in segarray) {
+        foreach (var s in Results.PartSegments) {
           Canvas {
             Size: d;
             Background: GetColor(s);
@@ -925,7 +980,7 @@ with Figures.FrequencyBoxStatic {
   };
 
   Body = FigureBody {
-    Results.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches));
+    Results.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches), true);
   };
 }
 //======================================================================
