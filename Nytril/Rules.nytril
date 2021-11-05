@@ -788,7 +788,7 @@ class CalcRatesClass {
 
   PartitionBox(SizeClass framesize) = Paragraph {
     var grid   = 0.125 pts;
-    var gcolor = 95%;
+    var gcolor = 65%;
 
     var border = 0.5 pts;
     var size   = framesize - border;
@@ -800,7 +800,38 @@ class CalcRatesClass {
       var d        = size / (segarray.Length+1);
       TextHeight: d.Height * 0.8;
 
-      var y = d.Height;
+      var t   = Results.TransitionCount;
+      var max = 1.0 / Results.TransitionMax;
+      var y   = d.Height;
+      foreach (var s0 in segarray) {
+        var x = d.Width;
+        foreach (var s1 in segarray) {
+          if (s0.Index != s1.Index) {
+            var tran = t.GetValue(s0.Index, s1.Index);
+            if (tran > 0) {
+              var f = Integer((1.0 - tran * max) * 255.0);
+              Canvas {
+                HAlign: HAligns.Center;
+                VAlign: VAligns.Center;
+                X: x;
+                Y: y;
+                Size: d;
+                if (f > 0)
+                  Background: Color(255, f, f);
+  //              else
+  //                Background: GetColor(s0);
+
+                Popup: new TranClass(s0, s1, tran, tran*max);
+                tran;
+              };
+            }
+          }
+          x += d.Width;
+        }
+        y += d.Height;
+      }
+
+      y = d.Height;
       var p = 0;
       foreach (var s in segarray) {
         Canvas {
@@ -847,36 +878,6 @@ class CalcRatesClass {
           x += d.Width;
         }
       };
-
-      var t   = Results.TransitionCount;
-      var max = 1.0 / Results.TransitionMax;
-      y       = d.Height;
-      foreach (var s0 in segarray) {
-        var x = d.Width;
-        foreach (var s1 in segarray) {
-          if (s0.Index != s1.Index) {
-            var tran = t.GetValue(s0.Index, s1.Index);
-            if (tran > 0) {
-              var f = Integer((1.0 - tran * max) * 255.0);
-              Canvas {
-                HAlign: HAligns.Center;
-                VAlign: VAligns.Center;
-                X: x;
-                Y: y;
-                Size: d;
-                Background: Color(255, f, f);
-  //              else
-  //                Background: GetColor(s0);
-
-                Popup: new TranClass(s0, s1, tran, tran*max);
-                tran;
-              };
-            }
-          }
-          x += d.Width;
-        }
-        y += d.Height;
-      }
     };
   };
 }
@@ -904,7 +905,7 @@ with Figures.FrequencyDiagramStatic {
 
     "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
-    "The width of the lines is proportional to the rates of transition between the each partitions. ";
+    "The width of the lines is proportional to the rates of transition between the each partition. ";
   };
 
   Body = FigureBody {
@@ -917,7 +918,7 @@ with Figures.FrequencyBoxStatic {
   Caption = FigureCaption {
     "This chart shows the number of times that each segment (on the left vertical bar) differs from any other other segment in the same cognate set at the same aligned segment position. ";
     "The rates of transitions to gaps and from gaps are ignored. ";
-    "The segments are grouped into partitions, represented by the  sections divided by horizontal lines. ";
+    "The segments are grouped into partitions, represented by the  sections divided by lines. ";
     "Within each partition, the segments are ordered from highest to lowest frequency of occurrance. ";
     "Transition counts are shown with the number in a red box, where the darker reds are larger numbers. ";
     "The chart has diagonal symmetry.";
