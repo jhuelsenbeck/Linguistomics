@@ -113,7 +113,7 @@ abstract class RuleClass {
     GetFilters;
   }
 
-  virtual void AssignPartitions {
+  void AssignPartitions {
     var list = new ListClass(Results.UniqueSegments.Length, PartitionClass);
     var i    = 0;
     foreach (var filter in FiltersPlus) {
@@ -596,24 +596,39 @@ class TransitionClass {
 //======================================================================
 
 class TranClass {
-  var Value,
-      Percent;
+  SegmentClass Left,
+               Right;
+  var          Value,
+               Percent;
 
-  Constructor(value, percent) {
-    Value = value;
+  Constructor(SegmentClass left, SegmentClass right, value, percent) {
+    Left    = left;
+    Right   = right;
+    Value   = value;
+    Percent = percent;
   }
 
   override GetPopup = Frame {
-    Width: 2 inches;
+    Width: 1 inches;
+    Paragraph {
+      Left.ShowSegment;
+      Tex.to;
+      Right.ShowSegment;
+    };
     Paragraph {
       Value; " transitions";
+    };
+    Paragraph {
+      TextDigits: 1;
+      Percent * 100.0; "% of max";
     };
   };
 }
 //======================================================================
 
-class GroupRatesClass {
+class CalcRatesClass {
   TransitionClass Transition;
+  RuleClass       Rule;
   var             MaxLine,
                   ArrowGap,
                   GapAngle,
@@ -624,6 +639,7 @@ class GroupRatesClass {
                   RateScale;
 
   Constructor(TransitionClass transition) {
+    Rule       = transition.Rule;
     Transition = transition;
     ArrowGap   = 10 pts;
     GapAngle   = 80.0 degrees;
@@ -643,18 +659,17 @@ class GroupRatesClass {
 
     RateScale = MaxLine / Max(Max(each Transition.Rates));
 
-    var rule = Transition.Rule;
-    foreach (var partition in rule.Partitions) {
-      partition.Angle  = (2 * EachIndex *  Graphics.OneEighty / rule.Partitions.Length) - Graphics.Ninety;
+    foreach (var partition in Rule.Partitions) {
+      partition.Angle  = (2 * EachIndex *  Graphics.OneEighty / Rule.Partitions.Length) - Graphics.Ninety;
       partition.Radius = Sqrt(Real(Transition.Frequencies[EachIndex])) * fmax;
     }
 
     var maxradius = 0.0;
-    foreach (var partition in rule.Partitions)
+    foreach (var partition in Rule.Partitions)
       maxradius = Max([maxradius, partition.Radius + Transition.Rates[EachIndex][EachIndex] * RateScale]);
     maxradius = MaxExtent - maxradius - LoopRadius - LoopDistance - ArrowGap;
 
-    foreach (var partition in rule.Partitions)
+    foreach (var partition in Rule.Partitions)
       partition.Center = Graphics.ExtendPoint(middle, maxradius, partition.Angle);
   }
 
@@ -665,10 +680,9 @@ class GroupRatesClass {
     Calibrate(size);
     Size: size;
 
-    var rule = Transition.Rule;
-    foreach (var p1 in rule.Partitions) {
+    foreach (var p1 in Rule.Partitions) {
       var pi = EachIndex;
-      foreach (var p2 in rule.Partitions) {
+      foreach (var p2 in Rule.Partitions) {
         var  rate = Transition.Rates[pi][EachIndex];
         var  hint = new PartitionHintClass(rate, p1, p2);
         var  line = new LineStyleClass(rate * RateScale, 0.25, 1);
@@ -692,7 +706,7 @@ class GroupRatesClass {
       }
     }
 
-    foreach (var p1 in rule.Partitions) {
+    foreach (var p1 in Rule.Partitions) {
       var pos   = p1.Center - p1.Radius;
       var fsize = p1.Radius*2;
 
@@ -737,7 +751,7 @@ class GroupRatesClass {
           TextHeight: 10 pts;
           Columns: [20 pts, 1 inch];
 
-          foreach (var partition in Transition.Rule.Partitions) {
+          foreach (var partition in Rule.Partitions) {
             Row {
               Span {
                 EachOne;
@@ -762,66 +776,106 @@ class GroupRatesClass {
     };
   };
 
-  PartitionBox(SizeClass size) = Paragraph {
+  CompareSegments(SegmentClass s0, SegmentClass s1) {
+    var i = s1.PartitionIndex - s0.PartitionIndex;
+    if (i == 0)
+      return s0.UsedCount - s1.UsedCount;
+    else
+      return i;
+  }
+
+  GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);// * 30%;
+
+  PartitionBox(SizeClass framesize) = Paragraph {
+    var grid   = 0.125 pts;
+    var gcolor = 95%;
+
+    var border = 0.5 pts;
+    var size   = framesize - border;
     Canvas {
-      Border: 0.1;
-      Size: size;
+      Border: border;
+      Size: framesize;
 
-      var segments = Results.UniqueSegments.Length;
-      var d        = size / (segments+1);
-      Canvas {
-        Height: size.Height;
-        Width: d.Width;
-        Background: 90%;
-        TextHeight: d.Height * 0.8;
+      var segarray = Results.UniqueSegments.Sort(true, ref CompareSegments);
+      var d        = size / (segarray.Length+1);
+      TextHeight: d.Height * 0.8;
 
-        var y = d.Height;
-        foreach (var s in Results.UniqueSegments) {
+      var y = d.Height;
+      var p = 0;
+      foreach (var s in segarray) {
+        Canvas {
+          Size: d;
+          Background: GetColor(s);
+          Width: d.Width;
+          HAlign: HAligns.Center;
+          Y: y;
+          s.ShowSegment;
+        };
+        if (p != s.PartitionIndex) {
           Canvas {
-            HAlignment: HAligns.Center;
             Y: y;
-            s.ShowSegment;
+            Size: Size(size.Width, grid);
+            Background: gcolor;
           };
-          y += d.Height;
+          p = s.PartitionIndex;
         }
-      };
+        y += d.Height;
+      }
 
       Canvas {
         Height: d.Height;
         Width: size.Width;
-        Background: 90%;
-        TextHeight: d.Height * 0.8;
 
         var x = d.Width;
-        foreach (var s in Results.UniqueSegments) {
+        p = 0;
+        foreach (var s in segarray) {
           Canvas {
-            Width: d.Width;
+            Size: d;
+            Background: GetColor(s);
             HAlign: HAligns.Center;
             X : x;
             s.ShowSegment;
           };
+          if (p != s.PartitionIndex) {
+            Canvas {
+              X: x;
+              Size: Size(grid, size.Height);
+              Background: gcolor;
+            };
+            p = s.PartitionIndex;
+          }
           x += d.Width;
         }
       };
 
       var t   = Results.TransitionCount;
       var max = 1.0 / Results.TransitionMax;
-      var x = d.Width;
-      foreach (var s0 in Results.UniqueSegments) {
-        var y = d.Height;
-        foreach (var s1 in Results.UniqueSegments) {
-          var tran = t.GetValue(s0.Index, s1.Index);
-          var f    = (1.0 - tran * max) * 255.0;
-          Canvas {
-            X: x;
-            Y: y;
-            Size: d;
-            Background: Color(255, f, f); // Use the compliment of red
-            Popup: new TranClass(tran, tran*max);
-          };
-          y += d.Height;
+      y       = d.Height;
+      foreach (var s0 in segarray) {
+        var x = d.Width;
+        foreach (var s1 in segarray) {
+          if (s0.Index != s1.Index) {
+            var tran = t.GetValue(s0.Index, s1.Index);
+            if (tran > 0) {
+              var f = Integer((1.0 - tran * max) * 255.0);
+              Canvas {
+                HAlign: HAligns.Center;
+                VAlign: VAligns.Center;
+                X: x;
+                Y: y;
+                Size: d;
+                Background: Color(255, f, f);
+  //              else
+  //                Background: GetColor(s0);
+
+                Popup: new TranClass(s0, s1, tran, tran*max);
+                tran;
+              };
+            }
+          }
+          x += d.Width;
         }
-        x += d.Width;
+        y += d.Height;
       }
     };
   };
@@ -830,7 +884,7 @@ class GroupRatesClass {
 
 with Figures.FrequencyDiagramExperiment {
   Caption = FigureCaption {
-    var rule = Results.TransitionExperiment.Rule;
+    var rule = Results.CalcExperiment.Rule;
 
     "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
@@ -839,15 +893,14 @@ with Figures.FrequencyDiagramExperiment {
   };
 
   Body = FigureBody {
-    var gr = new GroupRatesClass(Results.TransitionExperiment);
-    gr.PartitionDiagram(Size(6.6 inches, 5 inches));
+    Results.CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
 
 with Figures.FrequencyDiagramStatic {
   Caption = FigureCaption {
-    var rule = Results.TransitionStatic.Rule;
+    var rule = Results.CalcStatic.Rule;
 
     "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
@@ -855,18 +908,23 @@ with Figures.FrequencyDiagramStatic {
   };
 
   Body = FigureBody {
-    new GroupRatesClass(Results.TransitionStatic).PartitionDiagram(Size(6.6 inches, 5 inches));
+    Results.CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
 
 with Figures.FrequencyBoxStatic {
   Caption = FigureCaption {
-    "Raw transition rates";
+    "This chart shows the number of times that each segment (on the left vertical bar) differs from any other other segment in the same cognate set at the same aligned segment position. ";
+    "The rates of transitions to gaps and from gaps are ignored. ";
+    "The segments are grouped into partitions, represented by the  sections divided by horizontal lines. ";
+    "Within each partition, the segments are ordered from highest to lowest frequency of occurrance. ";
+    "Transition counts are shown with the number in a red box, where the darker reds are larger numbers. ";
+    "The chart has diagonal symmetry.";
   };
 
   Body = FigureBody {
-    new GroupRatesClass(Results.TransitionStatic).PartitionBox(Size(6.6 inches, 5 inches));
+    Results.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================

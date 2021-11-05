@@ -193,8 +193,6 @@ enum Models {
 class ResultsClass {
   RuleClass       CharacterRule,
                   PartitionRule;
-  TransitionClass TransitionExperiment,
-                  TransitionStatic;
   SegmentClass[]  UniqueSegments,
                   SortedSegments;
   CognateClass[]  UsedCognates;
@@ -219,6 +217,8 @@ class ResultsClass {
                   AddComma,
                   Model,
                   TransitionMax;
+  CalcRatesClass  CalcExperiment,
+                  CalcStatic;
 
   Constructor(folder) {
     WordCount      = 0;
@@ -236,10 +236,8 @@ class ResultsClass {
     GammaConsensus = FileName("Gamma_Consensus.tree");
 
     // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
-    CharacterRule        = new SingletonRuleClass;
-    PartitionRule        = new Partition2Class;
-    TransitionExperiment = new TransitionClass(PartitionRule);
-    TransitionStatic     = new TransitionClass(PartitionRule);
+    CharacterRule = new SingletonRuleClass;
+    PartitionRule = new Partition2Class;
   }
 
   void Calculate {
@@ -265,12 +263,16 @@ class ResultsClass {
         max = segment.CharacterIndex;
     }
     UniqueCharacters = max+1;
-
-    GetFrequencies;
-    TransitionExperiment.ReadFrequencies;
-    TransitionStatic.StaticFrequencies;
     CharacterRule.AssignCharacters;
     PartitionRule.AssignPartitions;
+
+    GetFrequencies;
+    var texperiment = new TransitionClass(PartitionRule);
+    var tstatic     = new TransitionClass(PartitionRule);
+    texperiment.ReadFrequencies;
+    tstatic.StaticFrequencies;
+    CalcExperiment = new CalcRatesClass(texperiment);
+    CalcStatic     = new CalcRatesClass(tstatic);
   }
 
   SegmentClass[] GetUniqueSegments {
@@ -403,30 +405,26 @@ class ResultsClass {
 
   GetConcept(concept) = UsedCognates.FindFirst(c => c.Concept == concept);
 
-  CountTransitions {
-    TransitionMax = 0;
-    var t = Math.MatrixInit(0, UniqueSegments.Length, UniqueSegments.Length);
+  GetTransitionsCount {
+    TransitionMax = 1;
+    var t = MatrixInit(0, UniqueSegments.Length, UniqueSegments.Length);
 
     foreach (var cognate in UsedCognates) {
       var length = cognate.Words.Length;
       for (var i = 0; i < length; ++i) {
         var p0 = cognate.Words[i].Padded;
-        if (p0.Length == length) {
-          for (var j = i+1; j < length; ++j) {
+        for (var j = 0; j < length; ++j) {
+          if (i != j) {
             var p1 = cognate.Words[j].Padded;
-            if (p1.Length == length) {
-              for (var index = 0; index < cognate.MaxLength; ++index) {
-                var s0 = p0[index];
-                var s1 = p1[index];
-                if (not s0.Punctuation and not s1.Punctuation and s0.Index != s1.Index) {
-                  var v = t.GetValue(s0.Index, s1.Index);
-                  t.SetValue(s0.Index, s1.Index, v + 1);
-
-                  v = t.GetValue(s1.Index, s0.Index)+1;
-                  if (v > TransitionMax)
-                    TransitionMax = v;
-                  t.SetValue(s1.Index, s0.Index, v);
-                }
+            var ml = Min([p0.Length, p1.Length]);
+            for (var index = 0; index < ml; ++index) {
+              var s0 = p0[index];
+              var s1 = p1[index];
+              if (s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation) {
+                var v = t.GetValue(s0.Index, s1.Index) + 1;
+                if (v > TransitionMax)
+                  TransitionMax = v;
+                t.SetValue(s0.Index, s1.Index, v);
               }
             }
           }
@@ -437,7 +435,7 @@ class ResultsClass {
   }
 
   void GetFrequencies {
-    TransitionCount = CountTransitions;
+    TransitionCount = GetTransitionsCount;
 
     var set = new DictionaryClass(1024);
     foreach (var sd in SegmentFrequencyData)
