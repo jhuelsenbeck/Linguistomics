@@ -803,19 +803,35 @@ class CalcRatesClass {
       s1.ShowSegment;
 
       LocationMark: TranLink(s0.Index, s1.Index);
+      KeepWithNext: true;
     };
 
     Paragraph {
+      SpaceBefore: 4 pts;
+      SpaceAfter: 6 pts;
       Separator: Space;
       foreach (var p in list)
         p.ShowDescription(9 pts);
-    };
-    Paragraph {
-      SpaceBefore: 4 pts;
-      SpaceAfter: 4 pts;
-      BorderT: 1 {Color: 80%};
     }
   };
+
+  CompareLength(l1, l2) = l2.Length - l1.Length;
+
+  GetSorted {
+    var all  = new ListClass(128);
+    var t    = Results.TransitionCount;
+    foreach (var s0 in Results.PartSegments) {
+      foreach (var s1 in Results.PartSegments) {
+        if (s0.Index != s1.Index) {
+          var tlist = t.GetValue(s0.Index, s1.Index);
+          if (exists tlist && tlist.Length < Info.LinkMin)
+            all.Add(tlist);
+        }
+      }
+    }
+
+    return all.Sort(true, ref CompareLength);
+  }
 
   PartitionBlock = Block {
     PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.PageContent.Height * 0.8), true);
@@ -823,24 +839,13 @@ class CalcRatesClass {
 
     Block {
       TextHeight: 9 pts;
-
-      var t = Results.TransitionCount;
-      foreach (var s0 in Results.PartSegments) {
-        foreach (var s1 in Results.PartSegments) {
-          if (s0.Index != s1.Index) {
-            var tlist = t.GetValue(s0.Index, s1.Index);
-            if (exists tlist && tlist.Length < Info.LinkMin)
-              TranPar(tlist);
-          }
-        }
-      }
+      TranPar(each GetSorted);
     }
   };
 
   PartitionBox(SizeClass framesize, link) = Paragraph {
     var grid   = 0.125 pts;
     var gcolor = 65%;
-
     var border = 0.5 pts;
     var size   = framesize - border;
     var d      = size / (Results.PartSegments.Length+1);
@@ -858,15 +863,29 @@ class CalcRatesClass {
           if (s0.Index != s1.Index) {
             var tlist = t.GetValue(s0.Index, s1.Index);
             if (exists tlist) {
-              var f = Integer((1.0 - tlist.Length * max) * 255.0);
               Canvas {
                 HAlign: HAligns.Center;
                 VAlign: VAligns.Center;
                 X: x;
                 Y: y;
                 Size: d;
-                if (f > 0)
+
+                var count = 0;
+                foreach (var e in tlist) {
+                  var c0 = e.Word1.Padded[e.Index];
+                  var c1 = e.Word2.Padded[e.Index];
+                  if (c0.Features.HasFlag(FeatureSet.Vowel) != c1.Features.HasFlag(FeatureSet.Vowel))
+                    ++count;
+                }
+
+                if (count > 0) {
+                  var f = Integer(255.0 * (1.0 - count / tlist.Length));
+                  Background: Color(f, 255, f);
+                }
+                else {
+                  var f = Integer((1.0 - tlist.Length * max) * 255.0);
                   Background: Color(255, f, f);
+                }
 
                 Span {
                   Popup: new TranClass(tlist, tlist.Length*max);

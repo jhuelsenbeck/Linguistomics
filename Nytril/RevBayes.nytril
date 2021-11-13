@@ -171,15 +171,15 @@ class LogSchemaClass: SchemaClass {
     super.Constructor("log");
   }
 
-  GetFieldList(view, field) {
+  GetFieldList(view, f) {
     var list = new ListClass(view.Length);
     foreach (var row in view)
-      list.Add(row.FindValue(field));
+      list.Add(row.FindValue(f));
     return list.Values;
   }
 
-  ReadHistogramData(view, field) {
-    var list = GetFieldList(view, field);
+  ReadHistogramData(view, f) {
+    var list = GetFieldList(view, f);
     var min  = Floor(Min(list));
     var max  = Ceiling(Max(list));
     var d    = 0.125;
@@ -201,13 +201,13 @@ class LogSchemaClass: SchemaClass {
     name;
   };
 
-  GetHistogram(view, field) = VBox {
-    TitleBox(field " Histogram");
+  GetHistogram(view, f) = VBox {
+    TitleBox(f " Histogram");
     Chart {
       Size: Size(DocMetrics.TreeWidth, 3.5 inches);
       Type: ChartTypes.Column;
 
-      var data = ReadHistogramData(view, field);
+      var data = ReadHistogramData(view, f);
 
       XAxis: ChartAxis {
 //        Rotation: -60 degrees;
@@ -220,15 +220,15 @@ class LogSchemaClass: SchemaClass {
     };
   };
 
-  LineChart(view, name, field=null) = Paragraph {
+  LineChart(view, name, f=null) = Paragraph {
     SpaceBefore: 20 pts;
     VBox {
-      TitleBox(name ?? field);
+      TitleBox(name ?? f);
       Chart {
         Size: Size(DocMetrics.TreeWidth, 2.5 inches);
         Type: ChartTypes.Line;
 
-        var list = GetFieldList(view, field ?? name);
+        var list = GetFieldList(view, f ?? name);
 
         XAxis: ChartAxis {
           each 0..<list.Length;
