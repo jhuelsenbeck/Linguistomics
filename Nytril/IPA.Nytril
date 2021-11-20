@@ -81,29 +81,30 @@ flags FeatureSet {
 }
 //======================================================================
 
-class SegmentClass {
-  var Ipa,
-      Index,
-      CharacterIndex,
-      CharacterLetter,
-      PartitionIndex,
-      Sampa,
-      Impossible,
-      Punctuation,
-      Gap,
-      Description,
-      Features,
-      Diacritic,
-      Open,
-      Backness,
-      Place,
-      Root,
-      UsedCount,
-      Frequency,
-      NormalFrequency,
-      UsedFrequency;
+class SegmentClass: FactClass {
+  field Ipa,
+        UsedCount,
+        UsedFrequency,
+        Index;
+  var   Frequency,
+        NormalFrequency,
+        CharacterIndex,
+        CharacterLetter,
+        PartitionIndex,
+        Sampa,
+        Impossible,
+        Punctuation,
+        Gap,
+        Description,
+        Features,
+        Diacritic,
+        Open,
+        Backness,
+        Place,
+        Root;
 
-  Constructor(ipa, sampa, impossible=false) = {
+  Constructor(ipa, sampa, impossible=false) {
+    super.Constructor(GlobalVariablePath);
     Ipa             = ipa?.GetString(NormalizationForms.FormC);
     CharacterLetter = Ipa;
     CharacterIndex  = -1;
@@ -118,7 +119,7 @@ class SegmentClass {
     Frequency       = 1;
     NormalFrequency = 1;
     UsedFrequency   = 0;
-  };
+  }
 
   SegmentName = Span {
     if (Features.HasFlag(Vowel)) {
@@ -139,7 +140,7 @@ class SegmentClass {
   };
 
   ShowCharacter = Span {
-    Popup: this;
+    Tip: this;
     CharacterLetter;
   };
 
@@ -160,11 +161,11 @@ class SegmentClass {
     if (Diacritic)
       Space*2;
     Ipa;
-    Popup: this;
+    Tip: this;
   };
 
   ShowDoc = Style.TextIpa {
-    Popup: this;
+    Tip: this;
     Ipa
   };
 
@@ -211,7 +212,14 @@ class SegmentClass {
       "Separator";
   };
 
-  override GetPopup = ShowFrame(2 inches, DocMetrics.SegmentSize);
+  override GetLayoutTip = ShowFrame(2 inches, DocMetrics.SegmentSize);
+
+  override GetLayoutFact = Block {
+    ShowFrame(2 inches, 14 pts) {Border: 0.5};
+    Paragraph {
+      super.GetLayoutFact;
+    };
+  };
 }
 //======================================================================
 

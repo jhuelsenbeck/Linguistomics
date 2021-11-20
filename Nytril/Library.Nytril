@@ -1,14 +1,15 @@
 using Format, Units, Math, IO, Rev;
 //======================================================================
 
-class LanguageClass {
-  var Name,
-      Cases,
-      Variable,
-      MapImage,
-      MapAttribution;
+class LanguageClass: FactClass {
+  field Name,
+        Cases;
+  var   Variable,
+        MapImage,
+        MapAttribution;
 
   Constructor(name, cases=0) {
+    super.Constructor(Name);
     Name  = name;
     Cases = cases;
   }
@@ -16,12 +17,12 @@ class LanguageClass {
   virtual Description = null;
   virtual Details = null;
 
-  override GetLayout = Span {
-    Popup: this;
+  override GetLayoutDoc = Span {
+    Tip: this;
     Name;
   };
 
-  override GetPopup = Block {
+  override GetLayoutTip = Block {
     Paragraph {
       Bold;
       TextHeight: 14 pts;
@@ -53,7 +54,7 @@ class LanguageClass {
           TextHeight: h;
           TextColor: 80%;
           Lang.Credit;
-          Popup: MapAttribution;
+          Tip: MapAttribution;
         }
       };
     }
@@ -62,21 +63,24 @@ class LanguageClass {
 }
 //======================================================================
 
-class WordClass {
+class WordClass: FactClass {
+  var            Plain,
+                 Text;
   LanguageClass  Language;
   CognateClass   Cognate;
   SegmentClass[] Segments,
                  Aligned,
                  Padded;
-  var            Text,
-                 Plain;
 
   Constructor(dictionary, LanguageClass language, CognateClass cognate, text) {
+    super.Constructor(cognate.Name+cognate.Title+language.Name);
+
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
     Text     = text.GetString(NormalizationForms.FormC);
     Plain    = Text.FindSlice(c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
     Language = language;
     Cognate  = cognate;
+
     if (Text.Length > 0) {
       var segments = dictionary.FindTokens(Text, IPA.NoSegment);
       Aligned  = segments.FindSlice(s => s.Gap or (not s.Punctuation));
@@ -90,15 +94,17 @@ class WordClass {
       Segments = [];
       Aligned  = [];
     }
+
+    linkto Segments;
   }
 
   ShowConcept = Span {
     Style.SansSerif;
-    Popup: this;
+    Tip: this;
     Cognate.Title;
   };
 
-  override GetLayout = Span {
+  override GetLayoutDoc = Span {
     foreach (var s in Segments) {
       if (!s.Punctuation)
         s.Ipa;
@@ -126,11 +132,11 @@ class WordClass {
     Tab;
   };
 
-  override GetPopup = Block {
+  override GetLayoutTip = Block {
     FieldPar(Lang.Language) {
       Language;
     };
-    FieldPar(Lang.Concept) {
+    FieldPar(Lang.Cognate) {
       Cognate.Title;
     };
     FieldPar(Lang.Segments) {
@@ -141,18 +147,34 @@ class WordClass {
       }
     }
   };
+
+  override GetLayoutFact = Block {
+    Paragraph {
+      TabStops: [1 inch, 2, inch, 3 inch, 4 inch];
+      Quote;
+      Plain;
+      Quote;
+      Tab;
+      Language;
+      ColonSpace;
+      Cognate.Title;
+    };
+    super.GetLayoutFact;
+  };
 }
 //======================================================================
 
-class CognateClass {
-  WordClass[] Words;
-  var         Name,
-              Title,
-              MaxLength,
+class CognateClass: FactClass {
+  field       Name,
+              Title;
+  var         MaxLength,
               Concept,
               Cognate;
+  WordClass[] Words;
 
   Constructor(concept, cognate) {
+    super.Constructor(concept.GlobalVariablePath);
+
     Name = concept.GlobalVariableName;
     var n = cognate.GlobalVariableName;
     if (n[..6] == "Primary")
@@ -164,25 +186,26 @@ class CognateClass {
     MaxLength = 0;
   }
 
-  override GetPopup = AllWords.ShowConceptTable(this);
+  override GetLayoutTip = AllWords.ShowConceptTable(this);
 }
 //======================================================================
 
-class TaxonClass {
+class TaxonClass: FactClass {
   var           Variable,
                 Index;
   LanguageClass Language;
 
   Constructor(LanguageClass language) {
+    super.Constructor(language.Name);
     Index    = EachIndex;
     Language = language;
     Variable = language.GlobalVariableName;
   }
 
-  override GetLayout = Span {
+  override GetLayoutTip = Span {
     TaxonFormat;
     Variable;
-    Popup: Language;
+    Tip: Language;
   };
 }
 //======================================================================
@@ -211,7 +234,7 @@ class WordPairClass {
     Word2.ShowPaddedBlocks(textheight, Index);
   };
 
-  override GetLayout = ShowDescription(12 pts);
+  override GetLayoutTip = ShowDescription(12 pts);
 }
 //======================================================================
 
@@ -330,12 +353,14 @@ class ResultsClass {
   }
 
   void InitConcepts {
-    var set = new DictionaryClass(256);
+    var set = new DictionaryClass(1024);
 
     TotalLength  = 0;
     ConceptCount = 0;
 
     var clist = new ListClass(256);
+    var tlist = new ListClass(128);
+
     foreach (var concept in Concepts) {
       if (exists concept.?Confidence and concept.Confidence > 0) {
         ++ConceptCount;
@@ -343,10 +368,16 @@ class ResultsClass {
           var vname = cognate.GlobalVariableName();
           if (vname != "Confidence" and vname != "Verb") {
             var count = 0;
-            foreach (var t in cognate) {
-              var tn = t.GlobalVariableName;
-              set.Add(tn, tn);
-              if (t.Length > 0)
+            foreach (var word in cognate) {
+              var n = word.GlobalVariableName;
+              if (set.Add(n, n)) {
+                var language = Languages.GetField(n);
+                if (valid language)
+                  tlist.Add(new TaxonClass(language));
+                else
+                  System.Assert(false, "Invalid language: " + n);
+              }
+              if (word.Length > 0)
                 ++count;
             }
             if (count > 1) {
@@ -358,18 +389,7 @@ class ResultsClass {
       }
     }
     UsedCognates = clist.Values;
-
-    var nameset = set.Values;
-    var tlist   = new ListClass(nameset.Length);
-
-    foreach (var ln in nameset) {
-      var language = Languages.GetField(ln);
-      if (valid language)
-        tlist.Add(new TaxonClass(language));
-      else
-        System.Assert(false, "Invalid language", language);
-    }
-    Taxa = tlist.Values;
+    Taxa         = tlist.Values;
   }
 
   void ComputeCognate(DictionaryClass dictionary, CognateClass cognate) {
@@ -397,6 +417,10 @@ class ResultsClass {
 
     cognate.Words     = words.Values;
     cognate.MaxLength = maxlength;
+
+
+    cognate linkto cognate.Words;
+
     foreach (var word in cognate.Words) {
       var a = word.Aligned;
       if (a.Length > 0) {
@@ -626,7 +650,7 @@ class ResultsClass {
               BorderClip: true;
 
               Span {
-                Popup: taxon.Language;
+                Tip: taxon.Language;
                 taxon.Language.ShowMap(s);
               }
             };
@@ -1076,7 +1100,7 @@ class ResultsClass {
             foreach (var word in cognate.Words) {
               if (word.Segments.FindAny(segment)) {
                 Span {
-                  Popup: word;
+                  Tip: word;
                   word.Plain;
                 }
               }

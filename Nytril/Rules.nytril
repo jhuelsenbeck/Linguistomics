@@ -10,7 +10,12 @@ class FilterClass {
 
   virtual Matches(SegmentClass segment) = true;
 
-  override GetPopup = Frame {
+  override GetLayoutDoc = Span {
+    Tip: this;
+    Name;
+  };
+
+  override GetLayoutTip = Frame {
     Width: 2 inches;
     Paragraph {
       ParAlignment: ParAlignments.Center;
@@ -19,11 +24,6 @@ class FilterClass {
       BorderB: 1;
     };
     Results.ShowFilterSegments(this, ParAlignments.Left);
-  };
-
-  override GetLayout = Span {
-    Popup: this;
-    Name;
   };
 }
 //======================================================================
@@ -43,7 +43,7 @@ class PartitionClass {
     Segments = segments;
   }
 
-  override GetPopup = Filter.GetPopup;
+  override GetLayoutTip = Filter.GetLayoutTip;
 }
 //======================================================================
 
@@ -515,7 +515,7 @@ class PartitionHintClass {
     };
   };
 
-  override GetPopup = HBox {
+  override GetLayoutTip = HBox {
     VAlign: VAligns.Top;
     if (P1 != P2)
       AddGroup(P1);
@@ -607,7 +607,7 @@ class TranClass {
     Percent = percent;
   }
 
-  override GetPopup = Frame {
+  override GetLayoutTip = Frame {
     var first = List.FirstElement;
     Paragraph {
       first.Word1.Padded[first.Index].ShowSegment;
@@ -702,7 +702,7 @@ class CalcRatesClass {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
           Graphics.CircleArrow(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
             Fill: Colors.Black;
-            Popup: hint;
+            Tip: hint;
           };
         }
         else {
@@ -712,7 +712,7 @@ class CalcRatesClass {
 
           Graphics.TwoArrowLine(line, c1, c2) {
             Fill: Color(0, 0, 0/*, Integer(128 + rate * RateScale / MaxLine * 127.0)*/);
-            Popup: hint;
+            Tip: hint;
           };
         }
       }
@@ -726,7 +726,7 @@ class CalcRatesClass {
         Fill: ChartColor(EachIndex);
         Stroke: 0.5 pt;
         Ellipse(Rect(pos, fsize));
-        Popup: p1;
+        Tip: p1;
       };
 
       var c = LayoutSize(TestText(p1)).Width;
@@ -888,7 +888,7 @@ class CalcRatesClass {
                 }
 
                 Span {
-                  Popup: new TranClass(tlist, tlist.Length*max);
+                  Tip: new TranClass(tlist, tlist.Length*max);
 
                   tlist.Length;
                   if (link && tlist.Length < Info.LinkMin)
