@@ -274,11 +274,11 @@ class ResultsClass {
   CalcRatesClass  CalcExperiment,
                   CalcStatic;
 
-  Constructor(folder) {
+  Constructor {
     WordCount      = 0;
     SegmentCount   = 0;
     Model          = Models.JC;
-    OutFolder      = Folders.Repository Folder("Run") Folder(folder);
+    OutFolder      = Folders.Repository Folder("Run") Folder(Info.RunFolder);
     ResultsFolder  = OutFolder Folder("results");
     EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
     RevSourceName  = FileName("Program") Extensions.RevBayes;
@@ -289,12 +289,6 @@ class ResultsClass {
     ConsensusTree  = FileName("test.con.tre");
     GammaConsensus = FileName("Gamma_Consensus.tree");
 
-    // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
-    CharacterRule = new SingletonRuleClass;
-    PartitionRule = new Partition2Class;
-  }
-
-  void Calculate {
     // Build a dictionary with IPA text as the key
     var dictionary = new DictionaryClass(256, SegmentClass);
     foreach (var segment in IPA.Segments) {
@@ -317,8 +311,14 @@ class ResultsClass {
         max = segment.CharacterIndex;
     }
     UniqueCharacters = max+1;
-    CharacterRule.AssignCharacters;
-    PartitionRule.AssignPartitions;
+
+    // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
+    CharacterRule = new SingletonRuleClass(this);
+    PartitionRule = new Partition2Class(this);
+
+
+    CharacterRule.AssignCharacters(UniqueSegments);
+    PartitionRule.AssignPartitions(UniqueSegments);
 
     PartSegments = UniqueSegments.Sort(true, ref ComparePartSegments);
 
@@ -326,9 +326,9 @@ class ResultsClass {
     var texperiment = new TransitionClass(PartitionRule);
     var tstatic     = new TransitionClass(PartitionRule);
     texperiment.ReadFrequencies;
-    tstatic.StaticFrequencies;
-    CalcExperiment = new CalcRatesClass(texperiment);
-    CalcStatic     = new CalcRatesClass(tstatic);
+    tstatic.StaticFrequencies(UniqueSegments, TransitionCount);
+    CalcExperiment = new CalcRatesClass(this, texperiment);
+    CalcStatic     = new CalcRatesClass(this, tstatic);
   }
 
   SegmentClass[] GetUniqueSegments {
@@ -583,16 +583,16 @@ class ResultsClass {
     Style.TableNotes;
   };
 
-  ShowFilterSegments(FilterClass filter, align) = Frame {
+  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame {
     Width: 2 inches;
     Paragraph {
       ParAlignment: align;
 
       TextHeight: 18 pts;
-      var segments = PartitionRule.GetSegments(filter);
-      if (valid segments) {
+      var matching = PartitionRule.GetMatching(segments, filter);
+      if (valid matching) {
         Separator: Space;
-        (each segments).ShowSegment;
+        (each matching).ShowSegment;
       }
     }
   };

@@ -40,7 +40,6 @@ with Main {
   ];
 
   void Run {
-    Results.Calculate;
     Results.InitSource;
   }
 }
@@ -53,10 +52,7 @@ Authors = [
 ];
 //======================================================================
 
-// No spaces in the name below!
-// RevBayes has a problem with folder names that contain spaces...
-
-ResultsClass Results = new ResultsClass("Run2");
+ResultsClass Results = new ResultsClass;
 
 //======================================================================
 
@@ -64,6 +60,7 @@ with Info {
   Generations  = 1_000_000;
   LinkMin      = 5;
   ImageFolder  = Folders.Source Folder("Images");
+  RunFolder    = "Run2"; // No spaces in the name; RevBayes has a problem with folder names that contain spaces
 }
 
 ReadTree(title, path) {
@@ -138,7 +135,7 @@ class PaperViewClass: BaseViewClass {
     var appendices = [
       new AppendixClass("Program Output", Results.ShowLanguageTrees),
       new AppendixClass("Statistics", Results.ShowStats),
-      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
+      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription(Results.UniqueSegments)),
       new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
     ];
@@ -185,7 +182,7 @@ class ExperimentViewClass: BaseViewClass {
 
   override GetMainDocument = MainDocument {
     var appendices = [
-      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription),
+      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription(Results.UniqueSegments)),
       new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
       new AppendixClass(Lang.Results, Results.ShowLanguageTrees),

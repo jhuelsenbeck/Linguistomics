@@ -1,11 +1,13 @@
-using Format, Units, FeatureSet, Math, SegmentGroups, Style;
+using Format, Units, FeatureSet, Math, Style;
 //======================================================================
 
 class FilterClass {
-  var Name;
+  ResultsClass Results;
+  var          Name;
 
-  Constructor(name) {
-    Name = name;
+  Constructor(ResultsClass results, name) {
+    Results = results;
+    Name    = name;
   }
 
   virtual Matches(SegmentClass segment) = true;
@@ -23,7 +25,7 @@ class FilterClass {
       Name;
       BorderB: 1;
     };
-    Results.ShowFilterSegments(this, ParAlignments.Left);
+    Results.ShowFilterSegments(Results.UniqueSegments, this, ParAlignments.Left);
   };
 }
 //======================================================================
@@ -48,6 +50,7 @@ class PartitionClass {
 //======================================================================
 
 abstract class RuleClass {
+  ResultsClass     Results;
   ListClass        FilterList;
   FilterClass[]    Filters,
                    FiltersPlus;
@@ -56,7 +59,8 @@ abstract class RuleClass {
                    Matrix,
                    Numbers;
 
-  Constructor(name) {
+  Constructor(ResultsClass results, name) {
+    Results    = results;
     Name       = name;
     Numbers    = false;
     FilterList = new ListClass(128);
@@ -98,13 +102,13 @@ abstract class RuleClass {
 
   void GetFilters {
     Filters = FilterList.Values;
-    Add(Residue);
+    Add(new FilterClass(Results, "Residue"));
     FiltersPlus = FilterList.Values;
   }
 
-  virtual void AssignCharacters {
+  virtual void AssignCharacters(SegmentClass[] segments) {
     var last = Rev.CharacterList.Length-1;
-    foreach (var segment in Results.UniqueSegments) {
+    foreach (var segment in segments) {
       var index = GetFilterIndex(segment);
       if (index > last)
         index = last;
@@ -113,11 +117,11 @@ abstract class RuleClass {
     GetFilters;
   }
 
-  void AssignPartitions {
-    var list = new ListClass(Results.UniqueSegments.Length, PartitionClass);
+  void AssignPartitions(SegmentClass[] segments) {
+    var list = new ListClass(segments.Length, PartitionClass);
     var i    = 0;
     foreach (var filter in FiltersPlus) {
-      var find = GetSegments(filter);
+      var find = GetMatching(segments, filter);
       if (valid find) {
         list.Add(new PartitionClass(i, filter, find));
         foreach (var s in find)
@@ -128,7 +132,7 @@ abstract class RuleClass {
     Partitions = list.Values;
   }
 
-  GetSegments(FilterClass filter) = Results.UniqueSegments.FindSlice(segment => MatchesRule(filter, segment));
+  GetMatching(SegmentClass[] segments, FilterClass filter) = segments.FindSlice(segment => MatchesRule(filter, segment));
 
   ShowPartitions = Block {
     Paragraph {
@@ -158,7 +162,7 @@ abstract class RuleClass {
     }
   };
 
-  ShowDescription = Block {
+  ShowDescription(SegmentClass[] segments) = Block {
     Paragraph {
       TextHeight: 14 pts;
       Name;
@@ -169,8 +173,8 @@ abstract class RuleClass {
 
       var i = 0;
       foreach (var filter in FiltersPlus) {
-        var segments = GetSegments(filter);
-        if (valid segments) {
+        var matching = GetMatching(segments, filter);
+        if (valid matching) {
           HBox {
             VAlign: VAligns.Center;
             Margin: 2;
@@ -192,7 +196,7 @@ abstract class RuleClass {
             Span {
               TextHeight: 18 pts;
               Separator: Space;
-              (each segments).ShowSegment;
+              (each matching).ShowSegment;
             };
           }
         }
@@ -205,8 +209,8 @@ abstract class RuleClass {
 class SingleFilterClass: FilterClass {
   SegmentClass Segment;
 
-  Constructor(SegmentClass segment) {
-    super.Constructor(segment.Ipa);
+  Constructor(ResultsClass results, SegmentClass segment) {
+    super.Constructor(results, segment.Ipa);
     Segment = segment;
   }
 
@@ -218,8 +222,8 @@ class FeatureMaskClass: FilterClass {
   var Mask,
       Flags;
 
-  Constructor(name, mask, flag) {
-    super.Constructor(name);
+  Constructor(ResultsClass results, name, mask, flag) {
+    super.Constructor(results, name);
     Mask  = mask;
     Flags = flag;
   }
@@ -228,42 +232,9 @@ class FeatureMaskClass: FilterClass {
 }
 //======================================================================
 
-class LabiovelarFilterClass: FilterClass {
-  Constructor {
-    super.Constructor("Labiovelar");
-  }
-
-  override Matches(SegmentClass segment) = segment.Features.HasFlagMask(Vowel, NoFeature) and segment.Place == Places.LabialVelar;
-}
-//======================================================================
-
-class LongShortClass: FilterClass {
-  var Root;
-
-  Constructor(root) {
-    super.Constructor("Long & Short " + root.Name);
-    Root = root;
-  }
-
-  override Matches(SegmentClass segment) = segment.Root == Root and segment.Features.HasFlagMask(Vowel Nasal, Vowel);
-}
-//======================================================================
-
-class RootMaskClass: FeatureMaskClass {
-  var Root;
-
-  Constructor(name, mask, flag, root) {
-    super.Constructor(name + Space + root, mask, flag);
-    Root = root;
-  }
-
-  override Matches(SegmentClass segment) = segment.Root == Root and segment.Features.HasFlagMask(Mask, Flags);
-}
-//======================================================================
-
 class RootVowelClass: FilterClass {
-  Constructor() {
-    super.Constructor("Root vowel");
+  Constructor(ResultsClass results) {
+    super.Constructor(results, "Root vowel");
   }
 
   override Matches(SegmentClass segment) = segment.Features.HasFlag(Vowel) and valid segment.Root;
@@ -273,8 +244,8 @@ class RootVowelClass: FilterClass {
 class DiphthongFilterClass: FilterClass {
   var Root;
 
-  Constructor(root) {
-    super.Constructor("Root+Diphthongs");
+  Constructor(ResultsClass results, root) {
+    super.Constructor(results, "Root+Diphthongs");
     Root = root;
   }
 
@@ -285,8 +256,8 @@ class DiphthongFilterClass: FilterClass {
 class SegmentListClass: FilterClass {
   SegmentClass[] List;
 
-  Constructor(name, SegmentClass[] list) {
-    super.Constructor(name);
+  Constructor(ResultsClass results, name, SegmentClass[] list) {
+    super.Constructor(results, name);
     List = list;
   }
 
@@ -295,97 +266,18 @@ class SegmentListClass: FilterClass {
 //======================================================================
 
 class VowelListClass: SegmentListClass {
-  Constructor(SegmentClass[] list) {
-    super.Constructor(list.FirstElement.Ipa, list);
+  Constructor(ResultsClass results, SegmentClass[] list) {
+    super.Constructor(results, list.FirstElement.Ipa, list);
   }
 
   override Matches(SegmentClass segment) = List.FindAny(segment);
 }
 //======================================================================
 
-with SegmentGroups {
-  NasalVowels         = new FeatureMaskClass("Nasal Vowel", Vowel Nasal, Vowel Nasal);
-  RoundedVowels       = new FeatureMaskClass("Rounded Vowel", Vowel Rounded, Vowel Rounded);
-  LongVowels          = new FeatureMaskClass("Long Vowel", Vowel LongVowel, Vowel LongVowel);
-  ShortVowels         = new FeatureMaskClass("Short Vowel", Vowel LongVowel, Vowel);
-  AllRootVowels       = new RootVowelClass;
-  Vowels              = new FeatureMaskClass("Vowel", Vowel, Vowel);
-  VoicelessStops      = new FeatureMaskClass("Voiceless Stop", Voiced Stop, Stop);
-  VoicedStops         = new FeatureMaskClass("Voiced Stop", Voiced Stop, Voiced Stop);
-  VoicedAffricates    = new FeatureMaskClass("Voiced Affricate", Voiced Affricate, Voiced Affricate);
-  VoicelessAffricates = new FeatureMaskClass("Voiceless Affricate", Voiced Affricate, Affricate);
-  NasalConsonants     = new FeatureMaskClass("Nasal Consonant", Nasal, Nasal);
-  Rhotics             = new FeatureMaskClass("Rhotic", Rhotic, Rhotic);
-  Sibilants           = new FeatureMaskClass("Sibilant", Sibilant, Sibilant);
-  Approximants        = new FeatureMaskClass("Approximant", Approximant, Approximant);
-  Pulmonics           = new FeatureMaskClass("Pulmonic", Pulmonic, Pulmonic);
-  VoicedFricatives    = new FeatureMaskClass("Voiced Fricative", Pulmonic Voiced Fricative, Pulmonic Voiced Fricative);
-  VoicelessFricatives = new FeatureMaskClass("Voiceless Fricative", Pulmonic, Pulmonic Fricative);
-  Laterals            = new FeatureMaskClass("Lateral", Lateral, Lateral);
-  Diphthongs          = new FeatureMaskClass("Diphthong", Diphthong, Diphthong);
-  Consonants          = new FeatureMaskClass("Consonant", Vowel, NoFeature);
-  Labiovelars         = new LabiovelarFilterClass;
-  LongShortRoot       = new LongShortClass(each IPA.ParentVowels);
-  NasalRoot           = new RootMaskClass("Nasal", Vowel Nasal LongVowel, Vowel Nasal, each IPA.ParentVowels);
-  LongRoot            = new RootMaskClass("Long", Vowel Nasal LongVowel, Vowel LongVowel, each IPA.ParentVowels);
-  ShortRoot           = new RootMaskClass("Short", Vowel Nasal LongVowel, Vowel, each IPA.ParentVowels);
-  NonSylabicSonorants = new SegmentListClass("Non Sylabic Sonorant", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]);
-  Residue             = new FilterClass("Residue");
-}
-//======================================================================
-
-class VowelsSeparatedRuleClass: RuleClass {
-  Constructor {
-    super.Constructor("Vowels Separated");
-
-    Add(LongRoot);
-    Add(ShortRoot);
-    Add(NasalRoot);
-    Add(NasalVowels);
-    Add(RoundedVowels)
-    Add(Vowels);
-    Add(Labiovelars);
-    Add(VoicelessStops);
-    Add(VoicedStops);
-    Add(VoicedAffricates);
-    Add(VoicelessAffricates);
-    Add(NasalConsonants);
-    Add(Laterals);
-    Add(Rhotics);
-    Add(Sibilants);
-    Add(Approximants);
-    Add(VoicedFricatives);
-    Add(VoicelessFricatives);
-  }
-}
-//======================================================================
-
-// This produces a tree with Catalan and Spanish in the same clade
-class SegmentTypesRuleClass: RuleClass {
-  Constructor {
-    super.Constructor("Segment Types");
-
-    Add(NasalVowels);
-    Add(RoundedVowels);
-    Add(LongVowels);
-    Add(AllRootVowels);
-    Add(Vowels);
-    Add(VoicelessStops);
-    Add(VoicedStops);
-    Add(VoicedAffricates);
-    Add(VoicelessAffricates);
-    Add(NasalConsonants);
-    Add(Rhotics);
-    Add(Sibilants);
-    Add(Pulmonics);
-  }
-}
-//======================================================================
-
 class DiphthongRuleClass: RuleClass {
-  Constructor {
-    super.Constructor("Diphthongs Separated");
-    Add(Diphthongs);
+  Constructor(ResultsClass results) {
+    super.Constructor(results, "Diphthongs Separated");
+    Add(new FeatureMaskClass(results, "Diphthong", Diphthong, Diphthong));
   }
 
   override GetFilterIndex(SegmentClass segment) {
@@ -399,13 +291,13 @@ class DiphthongRuleClass: RuleClass {
 //======================================================================
 
 class DiphthongPairRuleClass: RuleClass {
-  Constructor {
-    super.Constructor("Diphthongs Paired with Vowels");
+  Constructor(ResultsClass results) {
+    super.Constructor(results, "Diphthongs Paired with Vowels");
   }
 
-  override void AssignCharacters {
+  override void AssignCharacters(SegmentClass[] segments) {
     var count = 0;
-    foreach (var segment in Results.UniqueSegments) {
+    foreach (var segment in segments) {
       var dr = segment.Root;
       if (valid dr and segment.Features.HasFlag(Diphthong)) {
         var fi = -1;
@@ -426,7 +318,7 @@ class DiphthongPairRuleClass: RuleClass {
       }
     }
 
-    foreach (var segment in Results.UniqueSegments) {
+    foreach (var segment in segments) {
       if (segment.CharacterIndex < 0) {
         SetSegmentCharacter(segment, count++);
         Add(new SingleFilterClass(segment));
@@ -438,54 +330,39 @@ class DiphthongPairRuleClass: RuleClass {
 //======================================================================
 
 class SingletonRuleClass: RuleClass {
-  Constructor() {
-    super.Constructor("Each segment gets a different number");
+  Constructor(ResultsClass results) {
+    super.Constructor(results, "Each segment gets a different number");
     Numbers = true;
   }
 
-  override void AssignCharacters {
-    foreach (var segment in Results.UniqueSegments) {
+  override void AssignCharacters(SegmentClass[] segments) {
+    foreach (var segment in segments) {
       SetSegmentCharacter(segment, EachIndex);
-      Add(new SingleFilterClass(segment));
+      Add(new SingleFilterClass(Results, segment));
     }
     GetFilters;
   }
 }
 //======================================================================
 
-class Partition1Class: RuleClass {
-  Constructor {
-    super.Constructor("Linguistically Informed");
-    Numbers = true;
-
-    Add(NasalVowels);
-    Add(Vowels);
-    Add(NasalConsonants);
-    Add(NonSylabicSonorants);
-    Add(Consonants);
-    GetFilters;
-  }
-}
-//======================================================================
-
 class Partition2Class: RuleClass {
-  Constructor {
-    super.Constructor("Linguistically Informed");
+  Constructor(ResultsClass results) {
+    super.Constructor(results, "Linguistically Informed");
     Numbers = true;
 
-    Add(new VowelListClass([IPA.Segments.ay, IPA.Segments.ai]));
-    Add(new VowelListClass([IPA.Segments.e, IPA.Segments.E]));
-    Add(new VowelListClass([IPA.Segments.ah, IPA.Segments.A]));
-    Add(new VowelListClass([IPA.Segments.u, IPA.Segments.U]));
-    Add(new VowelListClass([IPA.Segments.oh, IPA.Segments.O]));
-    Add(new VowelListClass([IPA.Segments.euh, IPA.Segments.LongOpenMidBackRounded]));
-    Add(new VowelListClass([IPA.Segments.eh, IPA.Segments.Eh]));
-    Add(new VowelListClass([IPA.Segments.uu, IPA.Segments.o]));
-    Add(NasalVowels);
-    Add(Vowels);
-    Add(NasalConsonants);
-    Add(NonSylabicSonorants);
-    Add(Consonants);
+    Add(new VowelListClass(results, [IPA.Segments.ay, IPA.Segments.ai]));
+    Add(new VowelListClass(results, [IPA.Segments.e, IPA.Segments.E]));
+    Add(new VowelListClass(results, [IPA.Segments.ah, IPA.Segments.A]));
+    Add(new VowelListClass(results, [IPA.Segments.u, IPA.Segments.U]));
+    Add(new VowelListClass(results, [IPA.Segments.oh, IPA.Segments.O]));
+    Add(new VowelListClass(results, [IPA.Segments.euh, IPA.Segments.LongOpenMidBackRounded]));
+    Add(new VowelListClass(results, [IPA.Segments.eh, IPA.Segments.Eh]));
+    Add(new VowelListClass(results, [IPA.Segments.uu, IPA.Segments.o]));
+    Add(new FeatureMaskClass(results, "Nasal Vowel", Vowel Nasal, Vowel Nasal));
+    Add(new FeatureMaskClass(results, "Vowel", Vowel, Vowel));
+    Add(new FeatureMaskClass(results, "Nasal Consonant", Nasal, Nasal));
+    Add(new SegmentListClass(results, "Non Sylabic Sonorant", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]));
+    Add(new FeatureMaskClass(results, "Consonant", Vowel, NoFeature));
     GetFilters;
   }
 }
@@ -495,11 +372,13 @@ class PartitionHintClass {
   var            Rate;
   PartitionClass P1,
                  P2;
+  ResultsClass   Results;
 
-  Constructor(rate, PartitionClass p1, PartitionClass p2) {
-    Rate = rate;
-    P1   = p1;
-    P2   = p2;
+  Constructor(ResultsClass results, rate, PartitionClass p1, PartitionClass p2) {
+    Results = results;
+    Rate    = rate;
+    P1      = p1;
+    P2      = p2;
   }
 
   AddGroup(PartitionClass p) = VBox {
@@ -511,7 +390,7 @@ class PartitionHintClass {
       };
     };
     HBox {
-      Results.ShowFilterSegments(p.Filter, ParAlignments.Center);
+      Results.ShowFilterSegments(Results.UniqueSegments, p.Filter, ParAlignments.Center);
     };
   };
 
@@ -565,24 +444,23 @@ class TransitionClass {
     Rates = list.Values;
   }
 
-  void StaticFrequencies {
+  void StaticFrequencies(SegmentClass[] segments, MatrixClass tcount) {
     var list  = new ListClass(Rule.Filters.Length);
     var flist = new ListClass(Rule.Filters.Length);
     foreach (var f0 in Rule.Filters) {
-      var s0  = Rule.GetSegments(f0);
+      var s0  = Rule.GetMatching(segments, f0);
       var sum = Math.Sum((each s0).UsedCount);
 
       flist.Add(sum);
 
-      var t  = Results.TransitionCount;
       var l1 = new ListClass(Rule.Filters.Length);
       foreach (var f1 in Rule.Filters) {
-        var s1 = Rule.GetSegments(f1);
+        var s1 = Rule.GetMatching(segments, f1);
 
         var count = 0;
         foreach (var s0i in s0) {
           foreach (var s1i in s1) {
-            var tl = t.GetValue(s0i.Index, s1i.Index);
+            var tl = tcount.GetValue(s0i.Index, s1i.Index);
             if (valid tl)
               count += tl.Length;
           }
@@ -639,6 +517,7 @@ class TranClass {
 //======================================================================
 
 class CalcRatesClass {
+  ResultsClass    Results;
   TransitionClass Transition;
   RuleClass       Rule;
   var             MaxLine,
@@ -650,7 +529,8 @@ class CalcRatesClass {
                   MaxRadius,
                   RateScale;
 
-  Constructor(TransitionClass transition) {
+  Constructor(ResultsClass results, TransitionClass transition) {
+    Results    = results;
     Rule       = transition.Rule;
     Transition = transition;
     ArrowGap   = 10 pts;
@@ -696,7 +576,7 @@ class CalcRatesClass {
       var pi = EachIndex;
       foreach (var p2 in Rule.Partitions) {
         var  rate = Transition.Rates[pi][EachIndex];
-        var  hint = new PartitionHintClass(rate, p1, p2);
+        var  hint = new PartitionHintClass(Results, rate, p1, p2);
         var  line = new LineStyleClass(rate * RateScale, 0.25, 1);
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
@@ -777,7 +657,7 @@ class CalcRatesClass {
                   Ellipse(Rect(0, 10 pts));
                 };
                 Tab;
-                partition.Filter.Name;
+                partition.Filter;
               }
             }
           }
