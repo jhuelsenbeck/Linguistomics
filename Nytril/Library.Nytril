@@ -81,7 +81,7 @@ class WordClass: FactClass {
     Language = language;
     Cognate  = cognate;
 
-    if (Text.Length > 0) {
+    if (valid Text) {
       var segments = dictionary.FindTokens(Text, IPA.NoSegment);
       Aligned  = segments.FindSlice(s => s.Gap or (not s.Punctuation));
       Segments = segments.FindSlice(s => not s.Punctuation);
@@ -298,7 +298,7 @@ class ResultsClass {
     // Build a dictionary with IPA text as the key
     var dictionary = new DictionaryClass(256, SegmentClass);
     foreach (var segment in IPA.Segments) {
-      if (segment.Ipa.Length > 0)
+      if (valid segment.Ipa)
         dictionary.Add(segment, segment.Ipa);
     }
     InitConcepts;
@@ -320,7 +320,7 @@ class ResultsClass {
     CharacterRule.AssignCharacters;
     PartitionRule.AssignPartitions;
 
-    PartSegments = Results.UniqueSegments.Sort(true, ref ComparePartSegments);
+    PartSegments = UniqueSegments.Sort(true, ref ComparePartSegments);
 
     GetFrequencies;
     var texperiment = new TransitionClass(PartitionRule);
@@ -377,7 +377,7 @@ class ResultsClass {
                 else
                   System.Assert(false, "Invalid language: " + n);
               }
-              if (word.Length > 0)
+              if (valid word)
                 ++count;
             }
             if (count > 1) {
@@ -423,7 +423,7 @@ class ResultsClass {
 
     foreach (var word in cognate.Words) {
       var a = word.Aligned;
-      if (a.Length > 0) {
+      if (valid a) {
         if (a.Length < maxlength)
           word.Padded = a + [IPA.Segments.GapSegment] * (maxlength - a.Length);
         else
@@ -590,7 +590,7 @@ class ResultsClass {
 
       TextHeight: 18 pts;
       var segments = PartitionRule.GetSegments(filter);
-      if (segments.Length > 0) {
+      if (valid segments) {
         Separator: Space;
         (each segments).ShowSegment;
       }
@@ -702,8 +702,8 @@ class ResultsClass {
   ShowStats = Block {
     var schema = new LogSchemaClass();
     var view   = schema.ReadTextFile(OutFolder GammaLog, true, DB.ValueTypes.Double);
-    schema.GetHistogram(view, "alpha");
 
+    schema.GetHistogram(view, "alpha");
     schema.LineChart(view, "Prior");
     schema.LineChart(view, "Likelihood");
     schema.LineChart(view, "Posterior");

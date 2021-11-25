@@ -178,14 +178,13 @@ class LogSchemaClass: SchemaClass {
     return list.Values;
   }
 
-  ReadHistogramData(view, f) {
+  BinClass[] ReadHistogramData(view, f) {
     var list = GetFieldList(view, f);
     var min  = Floor(Min(list));
     var max  = Ceiling(Max(list));
     var d    = 0.125;
     var bins = Round((max - min) / d);
-
-    var data = new ListClass(bins);
+    var data = new ListClass(bins, BinClass);
     var x    = min;
     foreach (var i in 0..<bins) {
       var xd = x + d;
@@ -202,7 +201,7 @@ class LogSchemaClass: SchemaClass {
   };
 
   GetHistogram(view, f) = VBox {
-    TitleBox(f " Histogram");
+    TitleBox(f + " Histogram");
     Chart {
       Size: Size(DocMetrics.TreeWidth, 3.5 inches);
       Type: ChartTypes.Column;
@@ -210,7 +209,6 @@ class LogSchemaClass: SchemaClass {
       var data = ReadHistogramData(view, f);
 
       XAxis: ChartAxis {
-//        Rotation: -60 degrees;
         (each data).Name;
       };
       ChartSeries {
