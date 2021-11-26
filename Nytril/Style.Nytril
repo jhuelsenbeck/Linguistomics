@@ -203,23 +203,14 @@ with Style {
     RefCounter("figure", figure.GlobalVariablePath);
   };
 
-  ShowTableNumber(figure) = Span {
-    Lang.Table;
-    Space;
-    RefCounter("table", figure.GlobalVariablePath);
-  };
-
-  ShowFigureSlide(figure, format=null) = Block {
-    figure.Caption;
-    Paragraph {
-      ParAlignment: ParAlignments.Center;
-      format;
-      figure.Body;
-    }
+  FigureReference(figure) = ShowFigureNumber(figure) {
+    Tip: new FigureTipClass(figure);
+    Link: figure.GlobalVariablePath;
   };
 
   ShowFigureDoc(figure) = Block {
     Paragraph {
+      LocationMark: figure.GlobalVariablePath;
       SpaceBefore: 10 pts;
       SpaceAfter: 6 pts;
       KeepWithNext: true;
@@ -235,6 +226,21 @@ with Style {
     FigureBody {
       figure.Body
     };
+  };
+
+  ShowTableNumber(figure) = Span {
+    Lang.Table;
+    Space;
+    RefCounter("table", figure.GlobalVariablePath);
+  };
+
+  ShowFigureSlide(figure, format=null) = Block {
+    figure.Caption;
+    Paragraph {
+      ParAlignment: ParAlignments.Center;
+      format;
+      figure.Body;
+    }
   };
 
   ShowTable(table) = Block {
@@ -773,5 +779,17 @@ abstract class BaseViewClass: DocumentViewClass {
     slide.Body;
   };
 }
+//======================================================================
+
+class FigureTipClass {
+  var Figure;
+
+  Constructor(figure) {
+    Figure = figure;
+  }
+
+  override GetLayoutTip = Style.ShowFigureDoc(Figure);
+}
+
 //======================================================================
 

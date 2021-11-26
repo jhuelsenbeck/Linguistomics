@@ -1,4 +1,79 @@
 ﻿using Format, Units, Math, IO, Style, Defs, Languages, References;
+//======================================================================
+
+with Figures.FrequencyDiagramExperiment {
+  Caption = FigureCaption {
+    var rule = Results.CalcExperiment.Rule;
+
+    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
+    "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
+    "The width of the lines is proportional to the estimated rates. ";
+    PaperSections.WordTransformation.Note;
+  };
+
+  Body = FigureBody {
+    Results.CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
+  };
+}
+//======================================================================
+
+with Figures.FrequencyDiagramStatic {
+  Caption = FigureCaption {
+    var rule = Results.CalcStatic.Rule;
+
+    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
+    "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
+    "The width of the lines is proportional to the rates of transition between the each partition. ";
+  };
+
+  Body = FigureBody {
+    Results.CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
+  };
+}
+//======================================================================
+
+with Figures.FrequencyBoxStatic {
+  Caption = FigureCaption {
+    "This chart shows the number of times that each segment (on the left vertical bar) differs from any other other segment in the same cognate set at the same aligned segment position. ";
+    "The rates of transitions to gaps and from gaps are ignored. ";
+    "The segments are grouped into partitions, represented by the  sections divided by lines. ";
+    "Within each partition, the segments are ordered from highest to lowest frequency of occurrance. ";
+    "Transition counts are shown with the number in a red box, where the darker reds are larger numbers. ";
+    "The chart has diagonal symmetry.";
+  };
+
+  Body = FigureBody {
+    Results.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches), true);
+  };
+}
+//======================================================================
+
+with Figures.SegmentFrequencies {
+  Caption = FigureCaption {
+    "Frequency of occurance of segments in the lexicon";
+    Citation {References.Phoible};
+  };
+
+  Body = FigureBody {
+    Results.FrequencyChart(Size(DocMetrics.PageContent.Width, 2 inches));
+  };
+}
+
+//======================================================================
+
+with Figures.ConsensusTree {
+  Caption = FigureCaption {
+    "The majority rule consensus tree from the MCMC analysis";
+  };
+
+  Body = FigureBody {
+    Style.TreeOptions {
+      Width: DocMetrics.TreeWidth - 30 pts;
+      Root: Info.ConsensusTree;
+    }
+  };
+}
+
 //=====================================================================
 
 with ExampleConcept {
@@ -357,7 +432,7 @@ with PaperSections.WordTransformation {
 
     BodyPar {
       "The "; ModelName; " model allows different rates for different groups of word segments, ";
-      ShowFigureNumber(Figures.FrequencyDiagramExperiment); " summarizes the estimated rates of change from one segment grouping to another. ";
+      FigureReference(Figures.FrequencyDiagramExperiment); " summarizes the estimated rates of change from one segment grouping to another. ";
       Note;
     };
   };
@@ -384,8 +459,9 @@ with PaperSections.RomanceLanguagePhylogeny {
 
   Body = Block {
     BodyPar {
-      Figures.ExampleTree.Body;
+      "The results of the MCMC analysis are shown below.";
     };
+    ShowFigureDoc(Figures.ConsensusTree);
   };
 }
 //======================================================================
@@ -399,7 +475,7 @@ with PaperSections.Discussion {
     FirstPar {
      "Despite a wealth of textual data from Latin and its medieval descendants, the phylogeny of Romance remains a challenge";
      Citation {hall1974; malkiel1978; koutna1990}; eos;
-     "The topology of our tree agrees with the prevailing views of the Romance phylogeny in most aspects. ";
+     "The topology of our tree in "; FigureReference(Figures.ConsensusTree); " agrees with the prevailing views of the Romance phylogeny in most aspects. ";
      "For instance, it recognizes that French and Walloon have undergone the greatest segmental change. ";
      "In addition, it identifies the Ibero-Romance (Spanish, European Portuguese, and Brazilian Portuguese) and Gallo-Romance (French, Walloon, and Catalan) clades. ";
      "In recent years a consensus appears to have emerged among specialists that Romanian was one of the first clades to form. ";
@@ -708,8 +784,8 @@ with PaperSections.Contributions {
 
 //======================================================================
 
-TreeFigure      = ShowFigureNumber(Figures.ExampleTree);
-AlignmentFigure = ShowFigureNumber(Figures.Alignment);
+TreeFigure      = FigureReference(Figures.ExampleTree);
+AlignmentFigure = FigureReference(Figures.Alignment);
 
 with PaperSections.Methods {
   Title = Lang.Methods;

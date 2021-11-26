@@ -256,16 +256,7 @@ class ResultsClass {
                   UniqueCharacters,
                   ConceptCount,
                   TotalLength,
-                  OutFolder,
-                  ResultsFolder,
                   EXEName,
-                  RevSourceName,
-                  GammaTrees,
-                  GammaLog,
-                  GammaMAP,
-                  ConsensusTree,
-                  GammaConsensus,
-                  CharacterName,
                   WordCount,
                   SegmentCount,
                   AddComma,
@@ -275,19 +266,10 @@ class ResultsClass {
                   CalcStatic;
 
   Constructor {
-    WordCount      = 0;
-    SegmentCount   = 0;
-    Model          = Models.JC;
-    OutFolder      = Folders.Repository Folder("Run") Folder(Info.RunFolder);
-    ResultsFolder  = OutFolder Folder("results");
-    EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
-    RevSourceName  = FileName("Program") Extensions.RevBayes;
-    CharacterName  = FileName("Characters") Extensions.Nexus;
-    GammaTrees     = FileName("Gamma.trees");
-    GammaLog       = FileName("Gamma.log");
-    GammaMAP       = FileName("Gamma_MAP.tree");
-    ConsensusTree  = FileName("test.con.tre");
-    GammaConsensus = FileName("Gamma_Consensus.tree");
+    WordCount     = 0;
+    SegmentCount  = 0;
+    Model         = Models.JC;
+    EXEName       = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
 
     // Build a dictionary with IPA text as the key
     var dictionary = new DictionaryClass(256, SegmentClass);
@@ -661,16 +643,16 @@ class ResultsClass {
   };
 
   void InitSource {
-    CreateFolder(OutFolder);
+    CreateFolder(Info.OutFolder);
     if (not CharacterRule.Numbers) {
-      IO.Write(CharacterFile(1), OutFolder CharacterName);
-      IO.Write(RevBayesSource, OutFolder RevSourceName);
+      IO.Write(CharacterFile(1), Info.OutFolder Info.CharacterName);
+      IO.Write(RevBayesSource, Info.OutFolder Info.RevSourceName);
     }
-    IO.Write(RunBatchFile, OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
-    IO.Write(ConfigFile, OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
-    Write(new SubmissionViewClass.GetMainDocument, OutFolder Folder("Nytril") FileName("Submission.docx"), FileFormats.Word);
+    IO.Write(RunBatchFile, Info.OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
+    IO.Write(ConfigFile, Info.OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
+    Write(new SubmissionViewClass.GetMainDocument, Info.OutFolder Folder("Nytril") FileName("Submission.docx"), FileFormats.Word);
 
-    var p = new RevProcessClass(EXEName, OutFolder RevSourceName) {
+    var p = new RevProcessClass(EXEName, Info.OutFolder Info.RevSourceName) {
 /*      CacheName: "RevBayes";
       CacheInput: [
         OutFolder CharacterName,
@@ -684,7 +666,7 @@ class ResultsClass {
         OutFolder GammaLog,
       ];
 */
-      Directory: OutFolder;
+      Directory: Info.OutFolder;
     };
 
 //    var results = p.Run;
@@ -695,13 +677,12 @@ class ResultsClass {
   ShowLanguageTrees = Block {
     Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, GetTreeNodes(LanguageBranches.Romance));
     Style.ShowTree("Priors", Lang.Years, GetTreeNodes(LanguageBranches.Experiment));
-//    ReadTree("MAP", OutFolder GammaMAP);
-    ReadTree("Consensus", ResultsFolder ConsensusTree);
+    Style.ShowTree("Results", "Branches", Info.ConsensusTree);
   };
 
   ShowStats = Block {
     var schema = new LogSchemaClass();
-    var view   = schema.ReadTextFile(OutFolder GammaLog, true, DB.ValueTypes.Double);
+    var view   = schema.ReadTextFile(Info.OutFolder Info.GammaLog, true, DB.ValueTypes.Double);
 
     schema.GetHistogram(view, "alpha");
     schema.LineChart(view, "Prior");
@@ -716,7 +697,7 @@ class ResultsClass {
   RunBatchFile = TextBlock {
     Span {
       "\"../../revbayes/rb.exe\" \"";
-      OutFolder RevSourceName;
+      Info.OutFolder Info.RevSourceName;
       "\"";
     }
   };
@@ -878,12 +859,12 @@ class ResultsClass {
 
     "clear()";
 //    "setwd({0})"(ShowString(folder));
-    "path = " ShowString(OutFolder Folder("/"));
-    "gammapath = {0}"(PathPlus(GammaTrees));
+    "path = " ShowString(Info.OutFolder Folder("/"));
+    "gammapath = {0}"(PathPlus(Info.GammaTrees));
 
 
     LineComment("Read in discrete character data");
-    "data = readDiscreteCharacterData({0})"(PathPlus(CharacterName));
+    "data = readDiscreteCharacterData({0})"(PathPlus(Info.CharacterName));
 
     LineComment("Get some useful variables from the data. We need these later on");
     "num_taxa <- data.ntaxa()";
@@ -979,7 +960,7 @@ class ResultsClass {
     "monitors.append(mnFile(psi, filename=gammapath, printgen=n_gen))";
 
     LineComment("Model monitor");
-    "monitors.append(mnModel(filename={0}, printgen=n_gen))"(PathPlus(GammaLog));
+    "monitors.append(mnModel(filename={0}, printgen=n_gen))"(PathPlus(Info.GammaLog));
 
     "mymcmc = mcmc(mymodel, moves, monitors, nruns=1, combine={0})"(ShowString("mixed"));
 
@@ -992,9 +973,9 @@ class ResultsClass {
 
     BlockComment("Post processing");
     "treetrace      = readTreeTrace(gammapath, outgroup=out_group)";
-    "map_tree       = mapTree(treetrace, {0})"(PathPlus(GammaMAP));
-    "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(ConsensusTree));
-    "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(GammaConsensus));
+    "map_tree       = mapTree(treetrace, {0})"(PathPlus(Info.GammaMAP));
+//    "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(Info.ConsensusTreeFile));
+    "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(Info.GammaConsensus));
 
     LineComment("Exit the program");
     "q()";

@@ -427,20 +427,20 @@ class TransitionClass {
     Rule = rule;
   }
 
-  RandomArray(max) {
+  RandomArray {
     var list = new ListClass(Rule.Filters.Length);
     foreach (var f in Rule.Filters)
-      list.Add(Math.Random(0..1));
+      list.Add(Math.Random(0..1000));
     return list.Values;
   }
 
   void ReadFrequencies {
     // This is temporary until we get actual data
 
-    Frequencies = RandomArray(1);
+    Frequencies = RandomArray;
     var list = new ListClass(Rule.Filters.Length);
     foreach (var f in Rule.Filters)
-      list.Add(RandomArray(10));
+      list.Add(RandomArray);
     Rates = list.Values;
   }
 
@@ -830,65 +830,6 @@ class CalcRatesClass {
         }
       };
     };
-  };
-}
-//======================================================================
-
-with Figures.FrequencyDiagramExperiment {
-  Caption = FigureCaption {
-    var rule = Results.CalcExperiment.Rule;
-
-    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
-    "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
-    "The width of the lines is proportional to the estimated rates. ";
-    PaperSections.WordTransformation.Note;
-  };
-
-  Body = FigureBody {
-    Results.CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
-  };
-}
-//======================================================================
-
-with Figures.FrequencyDiagramStatic {
-  Caption = FigureCaption {
-    var rule = Results.CalcStatic.Rule;
-
-    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
-    "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
-    "The width of the lines is proportional to the rates of transition between the each partition. ";
-  };
-
-  Body = FigureBody {
-    Results.CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
-  };
-}
-//======================================================================
-
-with Figures.FrequencyBoxStatic {
-  Caption = FigureCaption {
-    "This chart shows the number of times that each segment (on the left vertical bar) differs from any other other segment in the same cognate set at the same aligned segment position. ";
-    "The rates of transitions to gaps and from gaps are ignored. ";
-    "The segments are grouped into partitions, represented by the  sections divided by lines. ";
-    "Within each partition, the segments are ordered from highest to lowest frequency of occurrance. ";
-    "Transition counts are shown with the number in a red box, where the darker reds are larger numbers. ";
-    "The chart has diagonal symmetry.";
-  };
-
-  Body = FigureBody {
-    Results.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches), true);
-  };
-}
-//======================================================================
-
-with Figures.SegmentFrequencies {
-  Caption = FigureCaption {
-    "Frequency of occurance of segments in the lexicon";
-    Citation {References.Phoible};
-  };
-
-  Body = FigureBody {
-    Results.FrequencyChart(Size(DocMetrics.PageContent.Width, 2 inches));
   };
 }
 //======================================================================
