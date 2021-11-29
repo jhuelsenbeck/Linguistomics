@@ -66,7 +66,7 @@ class DefClass {
   }
 
   override GetLayoutDoc = Span {
-    Tip: this;
+    Hover: new HoverClass(this, HoverTypes.Tip);
     Symbol;
   };
 
@@ -204,8 +204,7 @@ with Style {
   };
 
   FigureReference(figure) = ShowFigureNumber(figure) {
-    Tip: new FigureTipClass(figure);
-    Link: figure.GlobalVariablePath;
+    Hover: new HoverClass(figure.GlobalVariablePath, HoverTypes.LocationMark, new FigureTipClass(figure));
   };
 
   ShowFigureDoc(figure) = Block {
@@ -274,47 +273,38 @@ with Style {
 
     var site = person.FindFirstFact(URLClass);
     if (valid site)
-      Link: site.Value;
+      Hover: new HoverClass(site.Value, HoverTypes.WebSecure);
   };
 
-  ShowAuthorDetails(PersonClass person) {
+  ShowAuthorDetails(PersonClass person) = Block {
     var department = person.FindFirstFact(LinkTypes.Department);
     if (valid department) {
-      return Block {
-        LeftIndent: NoteIndexIndent;
-        Paragraph {
-          FirstIndent: -NoteIndexIndent;
-          Span {
-            TextAlignment: TextAlignments.Superscript;
-            EachOne;
-          };
-          Tab;
-          department.Name;
-          CommaSpace;
-
-          var org = department.FindFirstFact(LinkTypes.Department) ?? department;
-          if (valid org) {
-            if (org != department) {
-              org.Name;
-              CommaSpace;
-            }
-            CitationLib.ShowLocation(org, CommaSpace, true);
-          }
+      LeftIndent: NoteIndexIndent;
+      Paragraph {
+        FirstIndent: -NoteIndexIndent;
+        Span {
+          TextAlignment: TextAlignments.Superscript;
+          EachOne;
         };
+        Tab;
+        department.Name;
+        CommaSpace;
 
-        var email = person.FindFirstFact(LinkTypes.WorkEmail);
-        if (valid email) {
-          Paragraph {
-            Span {
-              email.Value;
-              Link: "mailto:" + email.Value;
-            }
-          };
+        var org = department.FindFirstFact(LinkTypes.Department) ?? department;
+        if (valid org) {
+          if (org != department) {
+            org.Name;
+            CommaSpace;
+          }
+          CitationLib.ShowLocation(org, CommaSpace, true);
         }
       };
     }
-    return null;
-  }
+
+    var email = person.FindFirstFact(LinkTypes.WorkEmail);
+    if (valid email)
+      new HoverClass(email.Value, HoverTypes.Email);
+  };
 
   ShowAuthorList(authors) = Block {
     TextFamily: TextFamilies.Arial;
@@ -358,21 +348,14 @@ with Style {
       Paragraph {
         Lang.EMail;
         ColonSpace;
-        Span {
-          email.Value;
-          Link: "mailto:" + email.Value;
-        }
+        new HoverClass(email.Value, HoverTypes.Email);
       };
     }
 
     var site = person.FindFirstFact(LinkTypes.Website);
     if (valid site) {
       Paragraph {
-        Seperator: CommaSpace;
-        Span {
-          Link: site.Value;
-          site.Value;
-        }
+        new HoverClass(site.Value, HoverTypes.WebSecure);
       };
     }
     Empty;
@@ -536,7 +519,7 @@ with Style {
     ".";
     Tab;
     Span {
-      Link: Lang.Appendix + EachIndex;
+      Hover: new HoverClass(Lang.Appendix + EachIndex, HoverTypes.LocationMark);
       appendix.Title
     };
   };

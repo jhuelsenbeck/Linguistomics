@@ -18,7 +18,7 @@ class LanguageClass: FactClass {
   virtual Details = null;
 
   override GetLayoutDoc = Span {
-    Tip: this;
+    Hover: new HoverClass(this, HoverTypes.Tip);
     Name;
   };
 
@@ -54,7 +54,7 @@ class LanguageClass: FactClass {
           TextHeight: h;
           TextColor: 80%;
           Lang.Credit;
-          Tip: MapAttribution;
+          Hover: new HoverClass(MapAttribution, HoverTypes.Tip);
         }
       };
     }
@@ -64,7 +64,7 @@ class LanguageClass: FactClass {
 //======================================================================
 
 class WordClass: FactClass {
-  var            Plain,
+  field          Plain,
                  Text;
   LanguageClass  Language;
   CognateClass   Cognate;
@@ -89,18 +89,19 @@ class WordClass: FactClass {
       // Test that the word's text is the same as the segments converted back into text
       var view = Span {(each segments).Ipa};
       System.Assert(Text == view.GetString(), "Round-trip error with text {0}-{1}"(Text, view), Text);
+
+      linkto Language;
+      linkto Segments;
     }
     else {
       Segments = [];
       Aligned  = [];
     }
-
-    linkto Segments;
-  }
+ }
 
   ShowConcept = Span {
     Style.SansSerif;
-    Tip: this;
+    Hover: new HoverClass(this, HoverTypes.Tip);
     Cognate.Title;
   };
 
@@ -205,7 +206,7 @@ class TaxonClass: FactClass {
   override GetLayoutTip = Span {
     TaxonFormat;
     Variable;
-    Tip: Language;
+    Hover: new HoverClass(Language, HoverTypes.Tip);
   };
 }
 //======================================================================
@@ -632,7 +633,7 @@ class ResultsClass {
               BorderClip: true;
 
               Span {
-                Tip: taxon.Language;
+                Hover: new HoverClass(taxon.Language, HoverTypes.Tip);
                 taxon.Language.ShowMap(s);
               }
             };
@@ -1081,7 +1082,7 @@ class ResultsClass {
             foreach (var word in cognate.Words) {
               if (word.Segments.FindAny(segment)) {
                 Span {
-                  Tip: word;
+                  Hover: new HoverClass(word, HoverTypes.Tip);
                   word.Plain;
                 }
               }

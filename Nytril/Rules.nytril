@@ -13,7 +13,7 @@ class FilterClass {
   virtual Matches(SegmentClass segment) = true;
 
   override GetLayoutDoc = Span {
-    Tip: this;
+    Hover: new HoverClass(this, HoverTypes.Tip);
     Name;
   };
 
@@ -22,8 +22,8 @@ class FilterClass {
     Paragraph {
       ParAlignment: ParAlignments.Center;
       TextHeight: 16 pts;
-      Name;
       BorderB: 1;
+      Name;
     };
     Results.ShowFilterSegments(Results.UniqueSegments, this, ParAlignments.Left);
   };
@@ -582,7 +582,7 @@ class CalcRatesClass {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
           Graphics.CircleArrow(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
             Fill: Colors.Black;
-            Tip: hint;
+            Hover: new HoverClass(hint, HoverTypes.Tip);
           };
         }
         else {
@@ -592,7 +592,7 @@ class CalcRatesClass {
 
           Graphics.TwoArrowLine(line, c1, c2) {
             Fill: Color(0, 0, 0/*, Integer(128 + rate * RateScale / MaxLine * 127.0)*/);
-            Tip: hint;
+            Hover: new HoverClass(hint, HoverTypes.Tip);
           };
         }
       }
@@ -606,7 +606,7 @@ class CalcRatesClass {
         Fill: ChartColor(EachIndex);
         Stroke: 0.5 pt;
         Ellipse(Rect(pos, fsize));
-        Tip: p1;
+        Hover: new HoverClass(p1, HoverTypes.Tip);
       };
 
       var c = LayoutSize(TestText(p1)).Width;
@@ -768,11 +768,12 @@ class CalcRatesClass {
                 }
 
                 Span {
-                  Tip: new TranClass(tlist, tlist.Length*max);
-
                   tlist.Length;
+                  var tip = new TranClass(tlist, tlist.Length*max);
                   if (link && tlist.Length < Info.LinkMin)
-                    Link: TranLink(s0.Index, s1.Index);
+                    Hover: new HoverClass(TranLink(s0.Index, s1.Index), HoverTypes.LocationMark, tip);
+                  else
+                    Hover: new HoverClass(tip, HoverTypes.Tip);
                 }
               };
             }
