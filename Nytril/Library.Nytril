@@ -384,6 +384,9 @@ class ResultsClass {
       foreach (var langword in cognate.Cognate) {
         if (langword.GlobalVariableName == taxon.Variable) {
           var w = new WordClass(dictionary, taxon.Language, cognate, langword);
+
+
+
           maxlength = Math.Max([maxlength, w.Aligned.Length]);
 
           foreach (var s in w.Segments) {
@@ -401,9 +404,6 @@ class ResultsClass {
     cognate.Words     = words.Values;
     cognate.MaxLength = maxlength;
 
-
-    cognate linkto cognate.Words;
-
     foreach (var word in cognate.Words) {
       var a = word.Aligned;
       if (valid a) {
@@ -411,6 +411,7 @@ class ResultsClass {
           word.Padded = a + [IPA.Segments.GapSegment] * (maxlength - a.Length);
         else
           word.Padded = a;
+        cognate linkto words;
       }
       else
         word.Padded = a;
@@ -652,7 +653,7 @@ class ResultsClass {
     }
     IO.Write(RunBatchFile, Info.OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
     IO.Write(ConfigFile, Info.OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
-    Write(new SubmissionViewClass.GetMainDocument, Info.OutFolder Folder("Nytril") FileName("Submission.docx"), FileFormats.Word);
+    Write(new SubmissionViewClass.GetMainDocument(this), Info.OutFolder Folder("Nytril") FileName("Submission.docx"), FileFormats.Word);
 
     var p = new RevProcessClass(EXEName, Info.OutFolder Info.RevSourceName) {
 /*      CacheName: "RevBayes";
