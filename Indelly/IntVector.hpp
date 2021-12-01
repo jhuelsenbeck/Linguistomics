@@ -55,22 +55,39 @@ class IntVector {
 
 struct CompIntVector {
 
-    bool operator()(const IntVector* v1, const IntVector* v2) const {
+    bool operator()(const IntVector& v1, const IntVector& v2) const {
         
-        if (v1->size() > v2->size())
+        if (v1.size() > v2.size())
             return true;
-        else if ( v1->size() == v2->size())
+        else if ( v1.size() == v2.size())
             {
-            for (int i=0; i<v1->size(); i++)
+            for (int i=0; i<v1.size(); i++)
                 {
-                if ((*v1)[i] > (*v2)[i])
+                if (v1[i] > v2[i])
                     return true;
-                else if ((*v1)[i] < (*v2)[i])
+                else if (v1[i] < v2[i])
                     return false;
                 }
             }
         return false;
         }
+
+//    bool operator()(const IntVector* v1, const IntVector* v2) const {
+//
+//        if (v1->size() > v2->size())
+//            return true;
+//        else if ( v1->size() == v2->size())
+//            {
+//            for (int i=0; i<v1->size(); i++)
+//                {
+//                if ((*v1)[i] > (*v2)[i])
+//                    return true;
+//                else if ((*v1)[i] < (*v2)[i])
+//                    return false;
+//                }
+//            }
+//        return false;
+//        }
 };
 
 #endif

@@ -33,10 +33,10 @@ AlignmentProposal::AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVaria
     maxUnalignDimension = 17;
 }
 
-void AlignmentProposal::cleanTable(std::map<IntVector*,int,CompIntVector>& m) {
+void AlignmentProposal::cleanTable(std::map<IntVector,int,CompIntVector>& m) {
 
-    for (std::map<IntVector*,int,CompIntVector>::iterator it = m.begin(); it != m.end(); it++)
-        delete it->first;
+//    for (std::map<IntVector,int,CompIntVector>::iterator it = m.begin(); it != m.end(); it++)
+//        delete it->first;
     m.clear();
 }
 
@@ -50,9 +50,9 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
     std::vector<std::vector<int> > alignment = alignmentParm->getIndelMatrix(inputAlignment);
 
     // Enter first count into DP table
-    std::map<IntVector*,int,CompIntVector> dpTable;
+    std::map<IntVector,int,CompIntVector> dpTable;
     IntVector pos(numLeaves);
-    dpTable.insert( std::make_pair( new IntVector(pos), 1) );  // copy of the pos object is inserted
+    dpTable.insert( std::make_pair( IntVector(pos), 1) );  // copy of the pos object is inserted
 		
     // Array of possible vector indices, used in inner loop
     std::vector<int> possibles(maxUnalignDimension);
@@ -117,7 +117,7 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
         
             if (foundNonZero)
                 {
-                std::map<IntVector*, int>::iterator it = dpTable.find(&pos);
+                std::map<IntVector, int, CompIntVector>::iterator it = dpTable.find(pos);
                 if (it == dpTable.end())
                     {
                     cleanTable(dpTable);
@@ -125,7 +125,7 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                     }
                 int left = it->second;
                 int right;
-                it = dpTable.find(&newPos);
+                it = dpTable.find(newPos);
                 if (it == dpTable.end())
                     {
                     right = 0;
@@ -143,12 +143,12 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                 // If we are storing a value at a previously unused position, make sure we use a fresh key object
                 if (unusedPos)
                     {
-                    IntVector* v = new IntVector(newPos);
-                    dpTable.insert( std::make_pair(v, right) );
+//                    IntVector v = new IntVector(newPos);
+                    dpTable.insert( std::make_pair(IntVector(newPos), right) );
                     }
                 else
                     {
-                    std::map<IntVector*, int>::iterator it2 = dpTable.find(&newPos);
+                    std::map<IntVector, int, CompIntVector>::iterator it2 = dpTable.find(newPos);
                     if (it2 == dpTable.end())
                         Msg::error("We should have found newPos in dpTable for the alignment proposal!");
                     it2->second = right;
@@ -174,7 +174,7 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
             {
             // No more unused vectors, so we also fell through the edge loop above,
             // hence iNewPos contains the final position
-            std::map<IntVector*, int>::iterator it = dpTable.find(&newPos);
+            std::map<IntVector, int, CompIntVector>::iterator it = dpTable.find(newPos);
             if (it == dpTable.end())
                 {
                 cleanTable(dpTable);
@@ -305,6 +305,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
         for (int j=1; j<numNodes; j++)
             profile[i][j] = profile[i][j-1] + maxlength;
         }
+
     std::vector<std::vector<int> > profileNumber;
     profileNumber.resize(numNodes);
     for (int i=0; i<numNodes; i++)

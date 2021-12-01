@@ -49,11 +49,11 @@ LikelihoodTkf::~LikelihoodTkf(void) {
 
 void LikelihoodTkf::clearDpTable(void) {
 
-    for (std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
-        {
-        delete it->first;
-        delete it->second;
-        }
+//    for (std::map<IntVector,mpfr::mpreal,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
+//        {
+//        delete it->first;
+//        delete it->second;
+//        }
     dpTable.clear();
 }
 
@@ -241,9 +241,9 @@ void LikelihoodTkf::printTable(void) {
     std::cout << "dpTable" << std::endl;
     std::cout << std::fixed << std::setprecision(10) << std::scientific;
     int i = 0;
-    for (std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
+    for (TkfLookup::iterator it = dpTable.begin(); it != dpTable.end(); it++)
         {
-        std::cout << i++ << " -- " << *(it->first) << " -- " << *it->second << std::endl;
+        std::cout << i++ << " -- " << (it->first) << " -- " << it->second << std::endl;
         }
 }
 
@@ -308,10 +308,10 @@ double LikelihoodTkf::tkfLike(void) {
     
     // Calculate correction factor for null emissions ("wing folding", or linear equation solving.)
     double nullEmissionFactor = treeRecursion( &pos, &pos, -1 );
-//    double f = immortalProbability / nullEmissionFactor;
-    mpfr::mpreal* f = new mpfr::mpreal;
-    *f = immortalProbability / nullEmissionFactor;
-    dpTable.insert( std::make_pair(new IntVector(pos), f) );
+    double f = immortalProbability / nullEmissionFactor;
+//    mpfr::mpreal f = new mpfr::mpreal;
+//    mpfr::mpreal  f = immortalProbability / nullEmissionFactor;
+    dpTable.insert( std::make_pair(IntVector(pos), f) );
     //printTable();
  
     // Array of possible vector indices, used in inner loop
@@ -377,44 +377,45 @@ double LikelihoodTkf::tkfLike(void) {
 
             if (foundNonZero)
                 {
-                std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it = dpTable.find(&pos);
+                TkfLookup::iterator it = dpTable.find(pos);
                 if (it == dpTable.end())
                     Msg::error("Could not find pos vector in dpTable map.");
-//                double lft = it->second;
-                mpfr::mpreal lft = *it->second;
-                it = dpTable.find(&newPos);
-//                double rht;
-                mpfr::mpreal* rht = new mpfr::mpreal;
+                double lft = it->second;
+//                mpfr::mpreal lft = it->second;
+                it = dpTable.find(newPos);
+                double rht = 0.0;
+                //mpfr::mpreal* rht = new mpfr::mpreal;
+//                mpfr::mpreal rht = 0.0;
                 if (it == dpTable.end())
                     {
                     unusedPos = true;
-                    *rht = 0.0;
+                    rht = 0.0;
                     }
                 else
                     {
-                    *rht = *it->second;
+                    rht = it->second;
                     unusedPos = false;
                     }
                     
 //                std::cout << "currentAlignmentColumn = " << currentAlignmentColumn << std::endl;
                 double transFac = (-treeRecursion( &signature, &pos, currentAlignmentColumn )) / nullEmissionFactor;
                 lft *= transFac;
-                *rht += lft;
+                rht += lft;
 
                 // If we are storing a value at a previously unused position, make sure we use a fresh key object
                 if (unusedPos)
                     {
-                    dpTable.insert( std::make_pair(new IntVector(newPos), rht) );
+                    dpTable.insert( std::make_pair(IntVector(newPos), rht) );
                     //printTable();
                     }
                 else
                     {
-                    std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it2 = dpTable.find(&newPos);
+                    TkfLookup::iterator it2 = dpTable.find(newPos);
                     if (it2 == dpTable.end())
                         Msg::error("Should have found newPos in table. What happened?");
-                    *it2->second = *rht;
+                    it2->second = rht;
                     //printTable();
-                    delete rht; // need to remember to delete rht if it's not being inserted back into the table
+                    //delete rht; // need to remember to delete rht if it's not being inserted back into the table
                     }
                 }
 
@@ -437,16 +438,17 @@ double LikelihoodTkf::tkfLike(void) {
         {
         // No more unused vectors, so we also fell through the edge loop above,
         // hence newPos contains the final position
-        std::map<IntVector*,mpfr::mpreal*,CompIntVector>::iterator it = dpTable.find(&newPos);
+        TkfLookup::iterator it = dpTable.find(newPos);
         if (it == dpTable.end())
             Msg::error("Could not find newPos in dpTable");
         
-        mpfr::mpreal res = log(*it->second, MPFR_RNDN);
-        double lnL = res.toDouble();
+//        mpfr::mpreal res = log(it->second, MPFR_RNDN);
+//        double lnL = res.toDouble();
+        double lnL = log(it->second);
         
         if (isinf(lnL) == true)
             {
-            std::cout << "res = " << *it->second << std::endl;
+            std::cout << "res = " << it->second << std::endl;
             data->print();
             printTable();
             }

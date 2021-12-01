@@ -13,7 +13,7 @@ class ParameterAlignment;
 class SiteLikelihood;
 class Tree;
 
-
+typedef std::map<IntVector,double,CompIntVector> TkfLookup;
 
 class LikelihoodTkf {
 
@@ -59,8 +59,7 @@ class LikelihoodTkf {
         double                                              insertionRate;
         double                                              deletionRate;
         RbBitSet                                            taxonMask;
-//        std::map<IntVector*,double,CompIntVector>         dpTable;
-        std::map<IntVector*,mpfr::mpreal*,CompIntVector>    dpTable;
+        TkfLookup                                           dpTable;
         enum                                                StateLabels { free, possible, edgeUsed, used };
         static int                                          unalignableRegionSize;
         static int                                          maxUnalignableDimension;
