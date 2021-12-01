@@ -49,11 +49,6 @@ LikelihoodTkf::~LikelihoodTkf(void) {
 
 void LikelihoodTkf::clearDpTable(void) {
 
-//    for (std::map<IntVector,mpfr::mpreal,CompIntVector>::iterator it = dpTable.begin(); it != dpTable.end(); it++)
-//        {
-//        delete it->first;
-//        delete it->second;
-//        }
     dpTable.clear();
 }
 
@@ -127,21 +122,6 @@ void LikelihoodTkf::initPrint(void) {
         }
     std::cout << "numStates = " << numStates << std::endl;
     std::cout << "numIndelCategories = " << numIndelCategories << std::endl;
-
-//        std::vector<double>                                 stateEquilibriumFrequencies;
-//        std::vector<double>                                 birthProbability;
-//        std::vector<double>                                 extinctionProbability;
-//        std::vector<double>                                 homologousProbability;
-//        std::vector<double>                                 nonHomologousProbability;
-//        SiteLikelihood*                                     siteProbs;
-//        double**                                            fH;
-//        double**                                            fI;
-//        double                                              immortalProbability;
-//        double                                              insertionRate;
-//        double                                              deletionRate;
-////        std::map<IntVector*,double,CompIntVector>         dpTable;
-//        std::map<IntVector*,mpfr::mpreal*,CompIntVector>    dpTable;
-
 }
 
 void LikelihoodTkf::initSequences(void) {

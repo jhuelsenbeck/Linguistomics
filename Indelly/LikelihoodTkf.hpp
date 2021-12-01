@@ -1,9 +1,13 @@
 #ifndef LikelihoodTkf_H
 #define LikelihoodTkf_H
 
+#define USE_MPREAL
+
+#ifdef USE_MPREAL
+#include "mpreal.h"
+#endif
 #include <map>
 #include <vector>
-#include "mpreal.h"
 #include "IntVector.hpp"
 #include "RbBitSet.h"
 #include "TransitionProbabilities.hpp"
