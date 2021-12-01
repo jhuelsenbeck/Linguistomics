@@ -8,8 +8,8 @@ class LanguageClass: FactClass {
         MapImage,
         MapAttribution;
 
-  Constructor(name, cases=0) {
-    super.Constructor(Name);
+  Constructor(id, name, cases=0) {
+    super.Constructor(id);
     Name  = name;
     Cases = cases;
   }
@@ -191,13 +191,12 @@ class CognateClass: FactClass {
 }
 //======================================================================
 
-class TaxonClass: FactClass {
+class TaxonClass {
   var           Variable,
                 Index;
   LanguageClass Language;
 
   Constructor(LanguageClass language) {
-    super.Constructor(language.Name);
     Index    = EachIndex;
     Language = language;
     Variable = language.GlobalVariableName;
@@ -272,20 +271,7 @@ class ResultsClass {
     Model         = Models.JC;
     EXEName       = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
 
-    // Build a dictionary with IPA text as the key
-    var dictionary = new DictionaryClass(256, SegmentClass);
-    foreach (var segment in IPA.Segments) {
-      if (valid segment.Ipa)
-        dictionary.Add(segment, segment.Ipa);
-    }
     InitConcepts;
-
-    foreach (var cognate in UsedCognates)
-      ComputeCognate(dictionary, cognate);
-
-    UniqueSegments  = GetUniqueSegments;
-    DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
-    SortedSegments  = UniqueSegments.Sort(true, ref AlphaOrder);
 
     var max = 0;
     foreach (var segment in UniqueSegments) {
@@ -336,13 +322,20 @@ class ResultsClass {
   }
 
   void InitConcepts {
+    // Build a dictionary with IPA text as the key
+    var dictionary = new DictionaryClass(256, SegmentClass);
+    foreach (var segment in IPA.Segments) {
+      if (valid segment.Ipa)
+        dictionary.Add(segment, segment.Ipa);
+    }
+
     var set = new DictionaryClass(1024);
 
     TotalLength  = 0;
     ConceptCount = 0;
 
-    var clist = new ListClass(256);
-    var tlist = new ListClass(128);
+    var clist = new ListClass(256, CognateClass);
+    var tlist = new ListClass(128, TaxonClass);
 
     foreach (var concept in Concepts) {
       if (exists concept.?Confidence and concept.Confidence > 0) {
@@ -373,6 +366,13 @@ class ResultsClass {
     }
     UsedCognates = clist.Values;
     Taxa         = tlist.Values;
+
+    foreach (var cognate in UsedCognates)
+      ComputeCognate(dictionary, cognate);
+
+    UniqueSegments  = GetUniqueSegments;
+    DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
+    SortedSegments  = UniqueSegments.Sort(true, ref AlphaOrder);
   }
 
   void ComputeCognate(DictionaryClass dictionary, CognateClass cognate) {
@@ -383,7 +383,7 @@ class ResultsClass {
       var word = null;
       foreach (var langword in cognate.Cognate) {
         if (langword.GlobalVariableName == taxon.Variable) {
-          var w     = new WordClass(dictionary, taxon.Language, cognate, langword);
+          var w = new WordClass(dictionary, taxon.Language, cognate, langword);
           maxlength = Math.Max([maxlength, w.Aligned.Length]);
 
           foreach (var s in w.Segments) {
@@ -455,7 +455,8 @@ class ResultsClass {
 
   GetTransitionsCount {
     TransitionMax = 1;
-    var t = MatrixInit(null, UniqueSegments.Length, UniqueSegments.Length);
+    var size = UniqueSegments.Length;
+    var t = MatrixInit(null, size, size);
 
     foreach (var cognate in UsedCognates) {
       var length = cognate.Words.Length;
