@@ -273,6 +273,13 @@ class ResultsClass {
 
     InitConcepts;
 
+    // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
+    CharacterRule = new SingletonRuleClass(this);
+    PartitionRule = new Partition2Class(this);
+
+
+    CharacterRule.AssignCharacters(UniqueSegments);
+
     var max = 0;
     foreach (var segment in UniqueSegments) {
       segment.Index = EachIndex;
@@ -281,12 +288,7 @@ class ResultsClass {
     }
     UniqueCharacters = max+1;
 
-    // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
-    CharacterRule = new SingletonRuleClass(this);
-    PartitionRule = new Partition2Class(this);
 
-
-    CharacterRule.AssignCharacters(UniqueSegments);
     PartitionRule.AssignPartitions(UniqueSegments);
 
     PartSegments = UniqueSegments.Sort(true, ref ComparePartSegments);
