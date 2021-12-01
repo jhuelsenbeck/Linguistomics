@@ -59,7 +59,7 @@ class DefClass {
       Name,
       Description;
 
-  Constructor(symbol, name, description) {
+  Constructor(symbol, name, description=null) {
     Symbol      = symbol;
     Name        = name;
     Description = description;
@@ -78,9 +78,7 @@ class DefClass {
     Paragraph {
       Bold; Name;
     };
-    Paragraph {
-      Description;
-    };
+    Description;
   };
 
   Appendix = Block {
@@ -90,11 +88,13 @@ class DefClass {
       Tab;
       Name;
     };
-    Paragraph {
-      LeftIndent: 0.5 inches;
-      SpaceAfter: 6 pts;
-      Description;
-    };
+    if (valid Description) {
+      Paragraph {
+        LeftIndent: 0.5 inches;
+        SpaceAfter: 6 pts;
+        Description;
+      };
+    }
   };
 }
 //======================================================================
@@ -458,7 +458,7 @@ namespace Style {
 
   ByYear(x, y) = x.BranchLength.Compare(y.BranchLength);
 
-  TimelineNodes = GetTimes(Info.LanguageTree).Sort(true, ByYear);
+//  TimelineNodes = GetTimes(Info.LanguageTree).Sort(true, ByYear);
 
   TimelineRow(options, node) = HBox {
     X: options.Width - options.Width * node.BranchLength / options.MaxYear;
@@ -640,14 +640,14 @@ abstract class BaseViewClass: DocumentViewClass {
     Title = "Understanding Language Evolution Using an Event-Based Model";
   }
 
-  abstract GetMainDocument;
+  abstract GetMainDocument(ResultsClass results);
 
   override GetDocument {
     linkto References;
     LinkTypes.Author linkto Authors;
     linkto Results.UniqueSegments;
 
-    return GetMainDocument;
+    return GetMainDocument(Results);
   }
 
   ShowSymbols = Block {

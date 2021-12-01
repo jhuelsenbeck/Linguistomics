@@ -28,20 +28,18 @@ include "Concepts/Numbers";
 include "Concepts/Misc";
 //======================================================================
 
-namespace Main {
-  Documents = [
-    new SubmissionViewClass,
-    new PaperViewClass,
-    new ExperimentViewClass,
-    new DiagnosticsViewClass,
-    new SourceViewClass,
-    new JohnPresentationClass,
-    new DavidPresentationClass,
-  ];
+Main.Documents = [
+  new SubmissionViewClass,
+  new PaperViewClass,
+  new ExperimentViewClass,
+  new DiagnosticsViewClass,
+  new SourceViewClass,
+  new JohnPresentationClass,
+  new DavidPresentationClass,
+];
 
-  void Run {
-    Results.InitSource;
-  }
+void Main.Run {
+  Results.InitSource;
 }
 //======================================================================
 
@@ -88,7 +86,7 @@ class SubmissionViewClass: BaseViewClass {
     }
   };
 
-  override GetMainDocument = MainDocument {
+  override GetMainDocument(ResultsClass results) = MainDocument {
     PageSection {
       Footer: FooterBlock {
         Even: FooterBlock;
@@ -138,12 +136,12 @@ class PaperViewClass: BaseViewClass {
     }
   };
 
-  override GetMainDocument = MainDocument {
+  override GetMainDocument(ResultsClass results) = MainDocument {
     var appendices = [
-      new AppendixClass("Program Output", Results.ShowLanguageTrees),
-      new AppendixClass("Statistics", Results.ShowStats),
-      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription(Results.UniqueSegments)),
-      new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
+      new AppendixClass("Program Output", results.ShowLanguageTrees),
+      new AppendixClass("Statistics", results.ShowStats),
+      new AppendixClass(Lang.CharacterRules, results.CharacterRule.ShowDescription(results.UniqueSegments)),
+      new AppendixClass(Lang.PartitionRules, results.PartitionRule.ShowPartitions),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
     ];
 
@@ -187,12 +185,12 @@ class ExperimentViewClass: BaseViewClass {
     super.Constructor(#971c3e2a-d5f9-457e-871b-465ce475a150#, "Experiment");
   }
 
-  override GetMainDocument = MainDocument {
+  override GetMainDocument(ResultsClass results) = MainDocument {
     var appendices = [
-      new AppendixClass(Lang.CharacterRules, Results.CharacterRule.ShowDescription(Results.UniqueSegments)),
-      new AppendixClass(Lang.PartitionRules, Results.PartitionRule.ShowPartitions),
+      new AppendixClass(Lang.CharacterRules, results.CharacterRule.ShowDescription(results.UniqueSegments)),
+      new AppendixClass(Lang.PartitionRules, results.PartitionRule.ShowPartitions),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
-      new AppendixClass(Lang.Results, Results.ShowLanguageTrees),
+      new AppendixClass(Lang.Results, results.ShowLanguageTrees),
     ];
 
     PageSection {
@@ -222,19 +220,19 @@ class DiagnosticsViewClass: BaseViewClass {
     MatchingOther.ShowTable(set);
   };
 
-  override GetMainDocument = Style.MainDocument {
+  override GetMainDocument(ResultsClass results) = Style.MainDocument {
     var appendices = [
-      new AppendixClass(Lang.SegmentFrequencies, Results.FrequencyChart(Size(DocMetrics.PageContent.Width, 3 inches))),
-      new AppendixClass("Prior Frequencies", Results.CalcStatic.PartitionBlock),
+      new AppendixClass(Lang.SegmentFrequencies, results.FrequencyChart(Size(DocMetrics.PageContent.Width, 3 inches))),
+      new AppendixClass("Prior Frequencies", results.CalcStatic.PartitionBlock),
       new AppendixClass("Symbols", ShowSymbols),
-      new AppendixClass("Words containing each segment", Results.ShowWordsForEachSegment),
+      new AppendixClass("Words containing each segment", results.ShowWordsForEachSegment),
       new AppendixClass("Word Lists by Language", DisplayWords.ShowTable),
       new AppendixClass("Segment Groups", ShowSegmentTables),
       new AppendixClass("Euler Feature Diagram", new EulerDiagramClass.FeatureChart),
-      new AppendixClass(Lang.IPAFullName, Results.SegmentTable),
+      new AppendixClass(Lang.IPAFullName, results.SegmentTable),
       new AppendixClass("Feature Tree", SegmentTree.ShowTree),
       new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
-      new AppendixClass(Lang.Languages, Results.ShowLanguageDetails),
+      new AppendixClass(Lang.Languages, results.ShowLanguageDetails),
     ];
 
     ShowAppendix(each appendices);
@@ -247,11 +245,11 @@ class SourceViewClass: BaseViewClass {
     super.Constructor(#7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Source");
   }
 
-  override GetMainDocument = Style.MainDocument {
+  override GetMainDocument(ResultsClass results) = Style.MainDocument {
     var appendices = [
-      new AppendixClass("Tongue Twister Configuration", Results.ConfigFile),
-      new AppendixClass("RevBayes Source File", Results.RevBayesSource),
-      new AppendixClass("Character File", Results.CharacterFile(2)),
+      new AppendixClass("Tongue Twister Configuration", results.ConfigFile),
+      new AppendixClass("RevBayes Source File", results.RevBayesSource),
+      new AppendixClass("Character File", results.CharacterFile(2)),
 //      new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
     ];
 
