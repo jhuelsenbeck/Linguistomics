@@ -1,7 +1,7 @@
 #ifndef LikelihoodTkf_H
 #define LikelihoodTkf_H
 
-#define USE_MPREAL
+#undef USE_MPREAL
 
 #ifdef USE_MPREAL
 #include "mpreal.h"
