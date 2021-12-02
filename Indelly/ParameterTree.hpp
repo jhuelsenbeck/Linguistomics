@@ -10,7 +10,8 @@ class RandomVariable;
 class Tree;
 
 struct TreePair {
-
+            TreePair(void) { trees[0] = NULL; trees[1] = NULL; }
+            TreePair(Tree* t1, Tree* t2) { trees[0] = t1; trees[1] = t2; }
     Tree*   trees[2];
 };
 

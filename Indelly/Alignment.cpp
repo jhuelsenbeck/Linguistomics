@@ -8,7 +8,7 @@
 
 
 
-Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonicalTaxonList) {
+Alignment::Alignment(nlohmann::json& js, int ns, std::vector<std::string> canonicalTaxonList) {
     
     //std::cout << j.dump() << std::endl;
     
@@ -22,16 +22,16 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
         Msg::error("There must be at least two states in the model");
 
     // read the word name
-    auto it = j.find("Name");
-    if (it == j.end())
+    auto it = js.find("Name");
+    if (it == js.end())
         Msg::error("Could not find word name in the JSON object");
-    name = j["Name"];
+    name = js["Name"];
     
     // read the number of languages encoded for this word
-    it = j.find("Data");
-    if (it == j.end())
+    it = js.find("Data");
+    if (it == js.end())
         Msg::error("Could not find word data in the JSON object");
-    numTaxa = (int)j["Data"].size();
+    numTaxa = (int)js["Data"].size();
     if (numTaxa <= 0)
         Msg::error("Must have at least one taxon in the word");
             
@@ -44,7 +44,7 @@ Alignment::Alignment(nlohmann::json& j, int ns, std::vector<std::string> canonic
     numChar = 0;
     for (int n=0; n<numTaxa; n++)
         {
-        nlohmann::json jw = j["Data"][n];
+        nlohmann::json jw = js["Data"][n];
         
         // check that there is taxon name information
         it = jw.find("Taxon");

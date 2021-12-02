@@ -251,12 +251,6 @@ double ParameterExchangabilityRates::update(void) {
         // Hastings ratio
         lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         lnP += (numRates - k - 1) * log(factor); // Jacobian
-//        std::cout << "lnP 2 = " << lnP << std::endl;
-//        std::cout << std::fixed << std::setprecision(10);
-//        std::cout << "factor = " << factor << std::endl;
-//        std::cout << "log(factor) = " << log(factor) << std::endl;
-//        for (int i=0; i<k+1; i++)
-//            std::cout << alphaForward[i] << " " << oldValues[i] << " -> " << newValues[i] << " " << alphaReverse[i] << std::endl;
         }
     else
         {

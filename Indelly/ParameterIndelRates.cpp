@@ -185,9 +185,6 @@ double ParameterIndelRates::update(void) {
         lnProposalProbability = log(newRho) - log(rho[0]);
         rho[0] = newRho;
         }
-        
-//    std::cout << "1. rho = " << rho[0] << " epsilon = " << epsilon[0][0] << std::endl;
-//    std::cout << "2. rho = " << getInsertionRate() + getDeletionRate() << " epsilon = " << getInsertionRate() / getDeletionRate() << std::endl;
 
     // set flags indicating the transition probabilities are not affected
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();

@@ -146,6 +146,7 @@ void Mcmc::runPathSampling(void) {
     
     // initialize the chain
     openOutputFiles();
+    modelPtr->setUpdateLikelihood();
     double curLnL = modelPtr->lnLikelihood();
     double curLnP = modelPtr->lnPriorProbability();
     UpdateInfo& updateInfo = UpdateInfo::updateInfo();

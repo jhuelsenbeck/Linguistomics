@@ -204,9 +204,9 @@ void ParameterTree::initializeSubtrees(std::vector<Alignment*>& alns) {
         if (it == subTrees.end())
             {
             // build the subtree
-            TreePair pair;
-            pair.trees[0] = new Tree(*fullTree.trees[0], mask);
-            pair.trees[1] = new Tree(*pair.trees[0]);
+            Tree* t0 = new Tree(*fullTree.trees[0], mask);
+            Tree* t1 = new Tree(*t0);
+            TreePair pair(t0, t1);
             subTrees.insert( std::make_pair(mask,pair) );
             }
         }
@@ -669,9 +669,19 @@ double ParameterTree::updateTopologyFromPrior(void) {
     for (int i=0; i<tNamesToCopy.size(); i++)
         tNames.push_back(tNamesToCopy[i]);
         
+    // update the topology and calculate proposal probability
     double lnP1 = lnPriorProbability();
     t->buildRandomTree(tNames, betaT, rv);
     double lnP2 = lnPriorProbability();
+
+    // update the transition probabilities
+    updateChangesTransitionProbabilities = true;
+    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
+    tip.flipActive();
+    tip.setNeedsUpdate(true);
+    tip.setTransitionProbabilities();
+    modelPtr->setUpdateLikelihood();
+    modelPtr->flipActiveLikelihood();
 
     return lnP1 - lnP2;
 }

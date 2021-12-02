@@ -6,8 +6,6 @@
 #include "Msg.hpp"
 #include "UserSettings.hpp"
 
-#define DEBUG_MODE
-
 
 
 UserSettings::UserSettings(void) {
@@ -32,32 +30,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     // move the command-line arguments to a good-ol' C++ STL vector of strings
     std::vector<std::string> commands;
     executablePath = argv[0];
-#   if defined(DEBUG_MODE)
-    commands.push_back(executablePath);
-    commands.push_back("-d");
-    commands.push_back("/Users/johnh/GitHub/Linguistomics/Run/Run1/config.json");
-    commands.push_back("-c");
-    commands.push_back("no");
-    commands.push_back("-o");
-    commands.push_back("/Users/johnh/Desktop/Indelly/out/test_custom");
-    commands.push_back("-m");
-    commands.push_back("custom");
-    commands.push_back("-n");
-    commands.push_back("100");
-    commands.push_back("-p");
-    commands.push_back("1");
-    commands.push_back("-s");
-    commands.push_back("100");
-    commands.push_back("-l");
-    commands.push_back("0.15");
-    commands.push_back("-z");
-    commands.push_back("no");
-    commands.push_back("-e");
-    commands.push_back("no");
-#   else
     for (int i=0; i<argc; i++)
         commands.push_back(argv[i]);
-#   endif
     
     // check that we have an odd number of commands
     if (commands.size() % 2 == 0 || commands.size() == 1)
@@ -161,7 +135,10 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 
         auto it2 = jsonSettings.find("FileOutput");
         if (it2 != jsonSettings.end())
-            outFile = jsonSettings["FileOutput"];
+            {
+            //outFile = jsonSettings["FileOutput"];
+            Msg::warning("Setting output file path via the configuration file is no longer supported");
+            }
 
         it2 = jsonSettings.find("OnlyCompleteWords");
         if (it2 != jsonSettings.end())
