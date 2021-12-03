@@ -256,6 +256,7 @@ class ResultsClass {
                   UniqueCharacters,
                   ConceptCount,
                   TotalLength,
+                  MaxLanguageName,
                   EXEName,
                   WordCount,
                   SegmentCount,
@@ -266,10 +267,11 @@ class ResultsClass {
                   CalcStatic;
 
   Constructor {
-    WordCount     = 0;
-    SegmentCount  = 0;
-    Model         = Models.JC;
-    EXEName       = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
+    WordCount       = 0;
+    SegmentCount    = 0;
+    MaxLanguageName = 0;
+    Model           = Models.JC;
+    EXEName         = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
 
     InitConcepts;
 
@@ -344,19 +346,60 @@ class ResultsClass {
         ++ConceptCount;
         foreach (var cognate in concept) {
           var vname = cognate.GlobalVariableName();
-          if (vname != "Confidence" and vname != "Verb") {
+          var inc   = true;
+
+          switch (vname) {
+            case "Confidence":
+            case "Verb":
+              inc = false;
+              break;
+          }
+          /*
+           From the Romanian purge
+
+          if (inc) {
+            var cname = concept.GlobalVariableName();
+
+            if (vname == "Primary") {
+              switch (cname) {
+                case "Woman":
+                case "Rope":
+                case "Thin":
+                  inc = false;
+                  break;
+              }
+            }
+            if (cname == "Breast" && vname == "Pectus")
+              inc = false;
+            if (cname == "ToSpit" && vname == "Exconspuere")
+              inc = false;
+            if (cname == "Narrow" && vname == "Strictus")
+              inc = false;
+            if (cname == "Two" && vname == "Duae")
+              inc = false;
+            if (cname == "Who" && vname == "Quem")
+              inc = false;
+          }
+          */
+
+          if (inc) {
             var count = 0;
             foreach (var word in cognate) {
               var n = word.GlobalVariableName;
-              if (set.Add(n, n)) {
-                var language = Languages.GetField(n);
-                if (valid language)
-                  tlist.Add(new TaxonClass(language));
-                else
-                  System.Assert(false, "Invalid language: " + n);
-              }
-              if (valid word)
-                ++count;
+//              if (n != Languages.Romanian.Name) {
+                if (set.Add(n, n)) {
+                  var language = Languages.GetField(n);
+                  if (valid language) {
+                    if (n.Length > MaxLanguageName)
+                      MaxLanguageName = n.Length;
+                    tlist.Add(new TaxonClass(language));
+                  }
+                  else
+                    System.Assert(false, "Invalid language: {0}"(n));
+                }
+                if (valid word)
+                  ++count;
+  //            }
             }
             if (count > 1) {
               WordCount += count;
@@ -655,7 +698,6 @@ class ResultsClass {
     }
     IO.Write(RunBatchFile, Info.OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
     IO.Write(ConfigFile, Info.OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
-    Write(new SubmissionViewClass.GetMainDocument(this), Info.OutFolder Folder("Nytril") FileName("Submission.docx"), FileFormats.Word);
 
     var p = new RevProcessClass(EXEName, Info.OutFolder Info.RevSourceName) {
 /*      CacheName: "RevBayes";
@@ -754,8 +796,10 @@ class ResultsClass {
   AddWord(WordClass word, last) = Span {
     "  {";
     Variable("Taxon");
-    ShowString(word.Language.GlobalVariableName);
+    var n = word.Language.GlobalVariableName;
+    ShowString(n);
     CommaSpace;
+    Space*(MaxLanguageName - n.Length);
     Variable("Segments");
     "[";
     Span {
@@ -801,7 +845,6 @@ class ResultsClass {
       Span {Variable("NumberOfStates"); UniqueCharacters; CommaSpace};
 
       Span {Variable("McmcSettings"); "{"};
-        Span {Variable("FileOutput"); ShowString("/Users/johnh/Desktop/Indelly/out/test_custom"); Comma};
         Span {Variable("OnlyCompleteWords"); ShowString("No"); Comma};
         Span {Variable("Model"); ShowString("Custom"); Comma};
         Span {Variable("CalcMarginal"); ShowString("No"); Comma};
