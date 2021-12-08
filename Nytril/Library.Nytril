@@ -260,6 +260,7 @@ class ResultsClass {
                   EXEName,
                   WordCount,
                   SegmentCount,
+                  UniqueCount,
                   AddComma,
                   Model,
                   TransitionMax;
@@ -418,6 +419,7 @@ class ResultsClass {
     UniqueSegments  = GetUniqueSegments;
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
     SortedSegments  = UniqueSegments.Sort(true, ref AlphaOrder);
+    UniqueCount     = UniqueSegments.Length;
   }
 
   void ComputeCognate(DictionaryClass dictionary, CognateClass cognate) {
@@ -429,9 +431,6 @@ class ResultsClass {
       foreach (var langword in cognate.Cognate) {
         if (langword.GlobalVariableName == taxon.Variable) {
           var w = new WordClass(dictionary, taxon.Language, cognate, langword);
-
-
-
           maxlength = Math.Max([maxlength, w.Aligned.Length]);
 
           foreach (var s in w.Segments) {
@@ -501,8 +500,7 @@ class ResultsClass {
 
   GetTransitionsCount {
     TransitionMax = 1;
-    var size = UniqueSegments.Length;
-    var t = MatrixInit(null, size, size);
+    var t = MatrixInit(null, UniqueCount, UniqueCount);
 
     foreach (var cognate in UsedCognates) {
       var length = cognate.Words.Length;

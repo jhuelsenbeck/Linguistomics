@@ -565,7 +565,7 @@ namespace PaperSections.DataSummary {
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; Quote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; QuoteEnd{"serious"};
       "They are assigned to the same cognate set because segmentally French "; textit{"grave"}; " descends from Latin "; textit{"gravis"}; eos;
-      "There are in total "; Results.UsedCognates.Length; " cognate sets, "; Results.WordCount; " word forms, using "; Results.UniqueSegments.Length; " unique segments. ";
+      "There are in total "; Results.UsedCognates.Length; " cognate sets, "; Results.WordCount; " word forms, using "; Results.UniqueCount; " unique segments. ";
       "Each word is represented phonemically with the IPA alphabet. ";
       "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by and for ancient languages such as Latin non-existent. ";
     };
@@ -651,7 +651,7 @@ namespace PaperSections.ModelInference {
       ") and the expected number of sound substitutions "; ExpectedEvents; " that occur along each branch of the tree. ";
       "Language evolves along the branches of the tree according to the TKF91 model"; Citation {thorne91}; " which allows either a word segment transition, insertion, or deletion to occur in an instant of time. ";
       "Insertions and deletions occur at rates "; InsertionRate; " and "; DeletionRate; " respectively, with "; InsertionLessThanDeletion; eos;
-      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  Results.UniqueSegments.Length; " word segments). ";
+      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  Results.UniqueCount; " word segments). ";
       "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters "; Span {Bold; RateMatrixParams}; eos;
     };
 
@@ -686,22 +686,26 @@ namespace PaperSections.ModelInference {
       "We examined three models of segmental transition. ";
       "The first (denoted "; Quote{"JC69"}") is isomorphic to the Jukes-Cantor"; Citation{jukes69};
       " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate; ";
-      "the second ("; Quote{Results.PartitionRule.Name}; ") model allows different rates among five groups of word segments (";
+      "the second ("; Quote{Results.PartitionRule.Name}; ") model allows different rates among ";
+      Cardinal(Results.PartitionRule.Filters.Length); " groups of word segments (";
       Span {
         Separator: CommaSpace;
         LastSeparator: AndSpace;
         Results.PartitionRule.Filters;
       };
       ") and has an intermediate number of parameters (";
-      Results.UniqueSegments.Length;
+      Results.UniqueCount;
       " parameters for the equilibrium distribution and ";
       (Results.PartitionRule.Filters.Length-1)^2-1;
       " parameters describing rates among word segment groups); ";
       "and the third ("; Quote{"GTR"}; ") is a model isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
       ", and has a large number of parameters (";
-      Results.UniqueSegments.Length;
+      Results.UniqueCount;
       " parameters for the equilibrium distribution and ";
-      3402; // how is this calculated?
+      Span {
+        Results.UniqueCount^2 div 2;// verify this calculation
+        TextColor: Colors.Red;
+      };
       " exchangability parameters). ";
       "For both the second and third models, we consider the equilibrium frequencies of the model to be random variables with a flat Dirichlet prior distribution."
     };
@@ -1756,7 +1760,7 @@ namespace PaperSections.Conclusion {
   Body = Block {
     AddVariable("Languages", Results.Taxa.Length);
     AddVariable("Concepts", Results.UsedCognates.Length);
-    AddVariable("Unique Segments", Results.UniqueSegments.Length);
+    AddVariable("Unique Segments", Results.UniqueCount);
   };
 }
 //======================================================================
