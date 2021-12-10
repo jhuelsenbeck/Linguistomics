@@ -5,6 +5,7 @@
 #include <mutex>
 #include "Alignment.hpp"
 #include "EigenSystem.hpp"
+#include "LikelihoodCalculator.hpp"
 #include "LikelihoodTkf.hpp"
 #include "Model.hpp"
 #include "Msg.hpp"
@@ -55,6 +56,8 @@ Model::~Model(void) {
     delete [] threadLnL;
     for (int i=0; i<parameters.size(); i++)
         delete parameters[i];
+    for (int i=0; i<wordLikelihoodCalculators.size(); i++)
+        delete wordLikelihoodCalculators[i];
 }
 
 void Model::accept(void) {
@@ -453,6 +456,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         pAlign->setProposalProbability(1.0);
         parameters.push_back(pAlign);
         wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
+        wordLikelihoodCalculators.push_back( new LikelihoodCalculator(dynamic_cast<ParameterAlignment*>(pAlign), this) );
         }
         
     // check for consistency between alignment(s) and tree
@@ -602,11 +606,19 @@ double Model::lnLikelihood(void) {
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
         {
-        LikelihoodTkf likelihood(wordParameterAlignments[i], this);
-        double lnP = likelihood.tkfLike();
+        double lnP = wordLikelihoodCalculators[i]->lnLikelihood();
         lnL += lnP;
         }
     return lnL;
+    
+//    double lnL = 0.0;
+//    for (int i=0; i<wordParameterAlignments.size(); i++)
+//        {
+//        LikelihoodTkf likelihood(wordParameterAlignments[i], this);
+//        double lnP = likelihood.tkfLike();
+//        lnL += lnP;
+//        }
+//    return lnL;
     
 #   endif
 }
@@ -696,7 +708,10 @@ double Model::update(void) {
 
 void Model::wordLnLike(int i, ParameterAlignment* aln) {
 
-    LikelihoodTkf likelihood(aln, this);
-    threadLnL[i] = likelihood.tkfLike();
+    threadLnL[i] = wordLikelihoodCalculators[i]->lnLikelihood();
     wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
+    
+//    LikelihoodTkf likelihood(aln, this);
+//    threadLnL[i] = likelihood.tkfLike();
+//    wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
 }

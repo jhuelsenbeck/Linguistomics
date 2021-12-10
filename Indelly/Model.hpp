@@ -8,6 +8,7 @@
 #include "json.hpp"
 #include "RbBitSet.h"
 class Alignment;
+class LikelihoodCalculator;
 class Parameter;
 class ParameterAlignment;
 class ParameterTree;
@@ -64,6 +65,7 @@ class Model {
         std::vector<double>                     wordLnLikelihoods[2];
         std::vector<Parameter*>                 parameters;
         std::vector<ParameterAlignment*>        wordParameterAlignments;
+        std::vector<LikelihoodCalculator*>      wordLikelihoodCalculators;
         int                                     updatedParameterIdx;
         int                                     substitutionModel;
         std::map<std::string,std::set<int> >    stateSets;

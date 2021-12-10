@@ -1,309 +1,168 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include "EigenSystem.hpp"
 #include "IntVector.hpp"
-#include "Msg.hpp"
-#include "LikelihoodTkf.hpp"
+#include "LikelihoodCalculator.hpp"
 #include "Model.hpp"
+#include "Msg.hpp"
 #include "Node.hpp"
 #include "ParameterAlignment.hpp"
-#include "SiteLikelihood.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
-#include "UserSettings.hpp"
+
+#undef DEBUG_LIKELIHOOD
+
+int LikelihoodCalculator::maxUnalignableDimension = 10;
 
 
 
-#undef DEBUG_TKF91
-int LikelihoodTkf::unalignableRegionSize = 0;
-int LikelihoodTkf::maxUnalignableDimension = 10;
+LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
 
-/* This is code from Beast (now defunct in Beast) for calculating the likelihood
-   under the TKF91 model. The main changes were made in the hash map called iTable
-   in the original code and called dpTable here. I use a map, sorting on the vector
-   contents for the key. The original code hashes the vectors by the vector elements,
-   so both should be equivalent, here. I also use a high performance arbitrary
-   precision double in place of the roll-it-yourself class (BFloat) used in Beast. */
-
-
-
-LikelihoodTkf::LikelihoodTkf(ParameterAlignment* a, Model* m) {
-
+    // memory addresses of important objects
     data = a;
-    tree = NULL;
     model = m;
-        
-    siteProbs = data->getSiteProbs();
-    fH = siteProbs->getProbsH();
-    fI = siteProbs->getProbsI();
-    
-    init();
-}
-
-LikelihoodTkf::~LikelihoodTkf(void) {
-
-    clearDpTable();
-}
-
-void LikelihoodTkf::clearDpTable(void) {
-
-    dpTable.clear();
-}
-
-void LikelihoodTkf::init(void) {
-
-    // initialize some useful variables
-    numStates = data->getNumStates();
-    taxonMask = data->getTaxonMask();
-    
-    // initialize the tree
-    initTree();
-
-    // initialize the alignment array from the given alignment.
-    initAlignment();
-
-    // initialize the sequences array from the given alignment.
-    initSequences();
-
-    // initialize the transitionProbabilities array from the substitution model
-    initTransitionProbabilities();
-
-    // initialise TKF91 probabilities
-    initTKF91();
-    
-    //initPrint();
-}
-
-void LikelihoodTkf::initAlignment(void) {
-            
-    alignment = data->getIndelMatrix();
-            
-#   if 0
-    std::cout << "Variable = alignment" << std::endl;
-    std::cout << "name = " << data->getName() << std::endl;
-    for (int i=0; i<alignment.size(); i++)
-        {
-        std::cout << std::setw(3) << i << " -- ";
-        for (int j=0; j<alignment[i].size(); j++)
-            std::cout << alignment[i][j] << " ";
-        std::cout << std::endl;
-        }
-#   endif
-}
-
-void LikelihoodTkf::initPrint(void) {
-
-    for (int i=0; i<60; i++)
-        std::cout << "-";
-    std::cout << std::endl;
-    std::cout << "data-.getName() = " << data->getName() << std::endl;
-    std::cout << "taxonMask = " << taxonMask.bitString() << std::endl;
-    std::cout << "numNodes = " << siteProbs->getNumNodes() << std::endl;
-    data->print();
-    tree->print();
-    std::cout << "alignment" << std::endl;
-    data->print();
-    for (int i=0; i<alignment.size(); i++)
-        {
-        std::cout << std::setw(3) << i << " -- ";
-        for (int j=0; j<alignment[i].size(); j++)
-            std::cout << alignment[i][j] << " ";
-        std::cout << std::endl;
-        }
-    std::cout << "sequences" << std::endl;
-    for (int i=0; i<sequences.size(); i++)
-        {
-        std::cout << std::setw(3) << i << " -- ";
-        for (int j=0; j<sequences[i].size(); j++)
-            std::cout << std::setw(2) << sequences[i][j] << " ";
-        std::cout << std::endl;
-        }
-    std::cout << "numStates = " << numStates << std::endl;
-    std::cout << "numIndelCategories = " << numIndelCategories << std::endl;
-}
-
-void LikelihoodTkf::initSequences(void) {
-    
+    TransitionProbabilities& tp = TransitionProbabilities::transitionProbabilties();
+    transitionProbabilityFactory = &tp;
     sequences = data->getRawSequenceMatrix();
 
-#   if 0
-    std::cout << "Variable = sequences" << std::endl;
-    for (int i=0; i<sequences.size(); i++)
-        {
-        std::cout << std::setw(3) << i << " -- ";
-        for (int j=0; j<sequences[i].size(); j++)
-            std::cout << std::setw(2) << sequences[i][j] << " ";
-        std::cout << std::endl;
-        }
-#   endif
+    numStates = data->getNumStates();
+    taxonMask = data->getTaxonMask();
+    numTaxa = (int)taxonMask.getNumberSetBits();
+    numNodes = 2 * numTaxa - 1;
+    
+    beta.resize(numNodes, 0.0);
+    birthProbability.resize(numNodes, 0.0);
+    extinctionProbability.resize(numNodes, 0.0);
+    homologousProbability.resize(numNodes, 0.0);
+    nonHomologousProbability.resize(numNodes, 0.0);
+
+    fH = new double*[numNodes];
+    fH[0] = new double[numNodes * numStates];
+    for (int i=1; i<numNodes; i++)
+        fH[i] = fH[i-1] + numStates;
+    
+    fI = new double*[numNodes];
+    fI[0] = new double[numNodes * (numStates + 1)];
+    for (int i=1; i<numNodes; i++)
+        fI[i] = fI[i-1] + (numStates + 1);
+
+    zeroH = new double[numStates];
+    for (int i=0; i<numStates; i++)
+        zeroH[i] = 0.0;
+        
+    zeroI = new double[numStates + 1];
+    for (int i=0; i<numStates+1; i++)
+        zeroI[i] = 0.0;
 }
 
-void LikelihoodTkf::initTransitionProbabilities(void) {
-        
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    RbBitSet bs = data->getTaxonMask();
-    transitionProbabilities = tip.getTransitionProbabilities(bs);
-    stateEquilibriumFrequencies = tip.getStationaryFrequencies();
+LikelihoodCalculator::~LikelihoodCalculator(void) {
+
+    drainPool();
+    delete [] fH[0];
+    delete [] fH;
+    delete [] fI[0];
+    delete [] fI;
+    delete [] zeroH;
+    delete [] zeroI;
+}
+
+void LikelihoodCalculator::clearPpTable(void) {
+
+    for (PartialProbabilitiesLookup::iterator it = partialProbabilities.begin(); it != partialProbabilities.end(); it++)
+        returnToPool(it->first);
+    partialProbabilities.clear();
+}
+
+
+void LikelihoodCalculator::drainPool(void) {
+
+    for (std::vector<IntVector*>::iterator v=pool.begin(); v != pool.end(); v++)
+        {
+        allocated.erase(*v);
+        delete (*v);
+        }
+}
+
+IntVector* LikelihoodCalculator::getVector(void) {
+
+    if (pool.empty() == true)
+        {
+        /* If the vector pool is empty, we allocate a new vector and return it. We
+           do not need to add it to the vector pool. */
+        IntVector* v = new IntVector(numTaxa);
+        allocated.insert(v);
+        return v;
+        }
     
-    // we have an alignment of word segments for the complete set of canonical taxa
+    // Return a vector from the vector pool, remembering to remove it from the pool.
+    IntVector* v = pool.back();
+    pool.pop_back();
+    return v;
+}
+
+IntVector* LikelihoodCalculator::getVector(IntVector& vec) {
+
+    if (pool.empty() == true)
+        {
+        IntVector* v = new IntVector(numTaxa);
+        allocated.insert(v);
+        for (int i=0; i<vec.size(); ++i)
+            (*v)[i] = vec[i];
+        return v;
+        }
+    IntVector* v = pool.back();
+    pool.pop_back();
+    for (int i=0; i<vec.size(); ++i)
+        (*v)[i] = vec[i];
+    return v;
+}
+
+void LikelihoodCalculator::initialize(void) {
+
+    alignment = data->getIndelMatrix();
+    unalignableRegionSize = 0;
+    tree = model->getTree(taxonMask);
+
+    RbBitSet bs = data->getTaxonMask();
+    transitionProbabilities = transitionProbabilityFactory->getTransitionProbabilities(bs);
     std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
     for (int n=0; n<downPassSequence.size(); n++)
         {
         Node* p = downPassSequence[n];
         p->setTransitionProbability( transitionProbabilities[p->getIndex()] );
         }
+    stateEquilibriumFrequencies = transitionProbabilityFactory->getStationaryFrequencies();
+    setBirthDeathProbabilities();
 }
 
-void LikelihoodTkf::initTKF91(void) {
+double LikelihoodCalculator::lnLikelihood(void) {
 
-    // initialize lambda and mu
-    insertionRate = model->getInsertionRate();
-    deletionRate  = model->getDeletionRate();
+    initialize();
     
-    // initialize parameters of TKF91 model
-    UserSettings& settings = UserSettings::userSettings();
-    numIndelCategories = settings.getNumIndelCategories();
-
-    // size the vectors for the indel portion of the process
-    int numNodes = tree->getNumNodes();
-    std::vector<double> beta(numNodes);
-    birthProbability.resize(numNodes);
-    extinctionProbability.resize(numNodes);
-    homologousProbability.resize(numNodes);
-    nonHomologousProbability.resize(numNodes);
-        
-    immortalProbability= 1.0;
-    std::vector<Node*> dpSequence = tree->getDownPassSequence();
-    for (int n=0; n<dpSequence.size(); n++)
-        {
-        Node* p = dpSequence[n];
-        int pIdx = p->getIndex();
-        double v = p->getBranchLength();
-        if (p->getAncestor() == NULL)
-            {
-            // root
-            beta[pIdx] = 1.0 / deletionRate;
-            homologousProbability[pIdx] = 0.0;
-            }
-        else
-            {
-            // internal node or tip
-            beta[pIdx] = exp( (insertionRate - deletionRate) * v );
-            beta[pIdx] = (1.0 - beta[pIdx]) / (deletionRate - insertionRate * beta[pIdx]);
-            homologousProbability[pIdx] = exp( -deletionRate * v) * (1.0 - insertionRate * beta[pIdx] );
-            }
-        birthProbability[pIdx]         = insertionRate * beta[pIdx];
-        extinctionProbability[pIdx]    = deletionRate * beta[pIdx];
-        nonHomologousProbability[pIdx] = (1.0 - deletionRate * beta[pIdx]) * (1.0 - birthProbability[pIdx]) - homologousProbability[pIdx];
-        immortalProbability *= (1.0 - birthProbability[pIdx]);
-        }
-        
-#   if defined(DEBUG_TKF91)
-    std::cout << "TKF91 event probabilties" << std::endl;
-    std::cout << std::fixed << std::setprecision(10);
-    for (int i=0; i<numNodes; i++)
-        {
-        std::cout << i << " -- " << birthProbability[i] << " " << extinctionProbability[i] << " " << homologousProbability[i] << " " << nonHomologousProbability[i] << std::endl;
-        }
-#   endif
-}
-
-void LikelihoodTkf::initTree(void) {
-
-    tree = model->getTree(taxonMask);
-    //tree->print();
-}
-
-void LikelihoodTkf::printTable(void) {
-
-    std::cout << "dpTable" << std::endl;
-    std::cout << std::fixed << std::setprecision(10) << std::scientific;
-    int i = 0;
-    for (TkfLookup::iterator it = dpTable.begin(); it != dpTable.end(); it++)
-        {
-        std::cout << i++ << " -- " << (it->first) << " -- " << it->second << std::endl;
-        }
-}
-
-void LikelihoodTkf::printVector(std::string header, std::vector<int>& v) {
-
-    if (header != "")
-        std::cout << header << std::endl;
-    for (int i=0; i<v.size(); i++)
-        std::cout << v[i] << " ";
-    std::cout << std::endl;
-}
-
-void LikelihoodTkf::printVector(std::string header, std::vector<double>& v) {
-
-    std::cout << std::fixed << std::setprecision(10);
-    
-    if (header != "")
-        std::cout << header << std::endl;
-    for (int i=0; i<v.size(); i++)
-        std::cout << v[i] << " ";
-    std::cout << std::endl;
-}
-
-void LikelihoodTkf::printVector(std::string header, std::vector< std::vector<double> >& v) {
-
-    std::cout << std::fixed << std::setprecision(10);
-
-    if (header != "")
-        std::cout << header << std::endl;
-    for (int i=0; i<v.size(); i++)
-        {
-        for (int j=0; j<v[i].size(); j++)
-            std::cout << v[i][j] << " ";
-        std::cout << std::endl;
-        }
-}
-
-void LikelihoodTkf::printVector(std::string header, std::vector< std::vector<int> >& v) {
-
-    if (header != "")
-        std::cout << header << std::endl;
-    for (int i=0; i<v.size(); i++)
-        {
-        for (int j=0; j<v[i].size(); j++)
-            std::cout << std::setw(2) << v[i][j] << " ";
-        std::cout << std::endl;
-        }
-}
-
-double LikelihoodTkf::tkfLike(void) {
-            
-    int len = (int)alignment.size();
-    int numLeaves = (int)alignment[0].size();
-    int firstNotUsed = 0;                                    // First not-'used' alignment vector (for efficiency)
-    std::vector<int> state(len);                             // Helper array, to traverse the region in the DP table corresp. to the alignment
-	IntVector pos(numLeaves);                                // Current position; sum of all used vectors
-    int currentAlignmentColumn = 0;                          // Keep track of which alignment column is being calculated
-    
-    // Calculate correction factor for null emissions ("wing folding", or linear equation solving.)
-    double nullEmissionFactor = treeRecursion( &pos, &pos, -1 );
+    // null emissions probability
+	IntVector* pos = getVector();
+    double nullEmissionFactor = partialProbability(pos, pos);
     double f = immortalProbability / nullEmissionFactor;
-//    mpfr::mpreal f = new mpfr::mpreal;
-//    mpfr::mpreal  f = immortalProbability / nullEmissionFactor;
-    dpTable.insert( std::make_pair(IntVector(pos), f) );
-    //printTable();
- 
-    // Array of possible vector indices, used in inner loop
-    std::vector<int> possibleVectorIndices(maxUnalignableDimension, 0);
+    partialProbabilities.insert( std::make_pair(pos, f) );
 
+    // array of possible vector indices, used in inner loop
+    std::vector<int> possibleVectorIndices(maxUnalignableDimension, 0);
+    int firstNotUsed = 0;
+    int len = (int)alignment.size();
+    int currentAlignmentColumn = 0;
+    std::vector<int> state(len);
     do
         {
         // Find all possible vectors from current position, pos
-	    IntVector mask(numLeaves);
         int ptr;
         int numPossible = 0;
-	    for (ptr=firstNotUsed; mask.zeroEntry() && ptr<len; ptr++)
+        IntVector* mask = getVector();
+	    for (ptr=firstNotUsed; mask->zeroEntry() && ptr<len; ptr++)
             {
             if (state[ ptr ] != used)
                 {
-                if (mask.innerProduct( alignment[ptr] ) == 0)
+                if (mask->innerProduct( alignment[ptr] ) == 0)
                     {
                     state[ ptr ] = possible;
                     if (numPossible == maxUnalignableDimension)
@@ -315,14 +174,17 @@ double LikelihoodTkf::tkfLike(void) {
                         }
                     possibleVectorIndices[numPossible++] = ptr;
                     }
-                mask.add( alignment[ptr] );
+                mask->add( alignment[ptr] );
                 }
             }
+        returnToPool(mask);
 
         // Loop over all combinations of possible vectors, which define edges from
         // pos to another possible position, by ordinary binary counting.
-	    IntVector newPos(pos);
-	    IntVector signature(pos.size());
+	    //IntVector newPos(*pos);
+	    //IntVector signature(pos->size());
+        IntVector* newPos = getVector(*pos);
+        IntVector* signature = getVector();
 	    bool unusedPos, foundNonZero;
         do
             {
@@ -335,9 +197,9 @@ double LikelihoodTkf::tkfLike(void) {
                 if (state[ curPtr ] == possible)
                     {
                     state[ curPtr ] = edgeUsed;
-					newPos.add( alignment[ curPtr ] );
+					newPos->add( alignment[ curPtr ] );
                     // Compute signature vector
-					signature.addMultiple( alignment[ curPtr ], posPtr+1 );
+					signature->addMultiple( alignment[ curPtr ], posPtr + 1 );
                     // Signal: non-zero combination found, and stop
                     foundNonZero = true;
                     posPtr = 0;
@@ -346,23 +208,20 @@ double LikelihoodTkf::tkfLike(void) {
                     {
                     // It was edgeUsed (i.e., digit == 1), so reset digit and continue
 					state[ curPtr ] = possible;
-					newPos.subtract( alignment[ curPtr ] );
-					signature.addMultiple( alignment[ curPtr ], -posPtr-1 );
+					newPos->subtract( alignment[ curPtr ] );
+					signature->addMultiple( alignment[ curPtr ], -posPtr - 1 );
                     }
                 }
 
             if (foundNonZero)
                 {
-                TkfLookup::iterator it = dpTable.find(pos);
-                if (it == dpTable.end())
+                PartialProbabilitiesLookup::iterator it = partialProbabilities.find(pos);
+                if (it == partialProbabilities.end())
                     Msg::error("Could not find pos vector in dpTable map.");
                 double lft = it->second;
-//                mpfr::mpreal lft = it->second;
-                it = dpTable.find(newPos);
+                it = partialProbabilities.find(newPos);
                 double rht = 0.0;
-                //mpfr::mpreal* rht = new mpfr::mpreal;
-//                mpfr::mpreal rht = 0.0;
-                if (it == dpTable.end())
+                if (it == partialProbabilities.end())
                     {
                     unusedPos = true;
                     rht = 0.0;
@@ -373,38 +232,38 @@ double LikelihoodTkf::tkfLike(void) {
                     unusedPos = false;
                     }
                     
-//                std::cout << "currentAlignmentColumn = " << currentAlignmentColumn << std::endl;
-                double transFac = (-treeRecursion( &signature, &pos, currentAlignmentColumn )) / nullEmissionFactor;
+                double transFac = (-partialProbability(signature, pos)) / nullEmissionFactor;
                 lft *= transFac;
                 rht += lft;
 
                 // If we are storing a value at a previously unused position, make sure we use a fresh key object
                 if (unusedPos)
                     {
-                    dpTable.insert( std::make_pair(IntVector(newPos), rht) );
-                    //printTable();
+                    IntVector* newPosCopy = getVector(*newPos);
+                    partialProbabilities.insert( std::make_pair(newPosCopy, rht) );
                     }
                 else
                     {
-                    TkfLookup::iterator it2 = dpTable.find(newPos);
-                    if (it2 == dpTable.end())
+                    PartialProbabilitiesLookup::iterator it2 = partialProbabilities.find(newPos);
+                    if (it2 == partialProbabilities.end())
                         Msg::error("Should have found newPos in table. What happened?");
                     it2->second = rht;
-                    //printTable();
                     //delete rht; // need to remember to delete rht if it's not being inserted back into the table
                     }
                 }
 
             } while (foundNonZero);
 
-    // Now find next entry in DP table.  Use farthest unused vector
+    returnToPool(signature);
+
+    // Now find next entry in partial probability table.  Use farthest unused vector
     --ptr;
     while (ptr >= 0 && state[ptr] != possible)
         {
         // Undo any possible used vector that we encounter
         if (state[ptr] == used)
             {
-            pos.subtract( alignment[ptr] );
+            pos->subtract( alignment[ptr] );
             state[ptr] = free;
             }
         --ptr;
@@ -414,48 +273,50 @@ double LikelihoodTkf::tkfLike(void) {
         {
         // No more unused vectors, so we also fell through the edge loop above,
         // hence newPos contains the final position
-        TkfLookup::iterator it = dpTable.find(newPos);
-        if (it == dpTable.end())
-            Msg::error("Could not find newPos in dpTable");
-        
-//        mpfr::mpreal res = log(it->second, MPFR_RNDN);
-//        double lnL = res.toDouble();
+        PartialProbabilitiesLookup::iterator it = partialProbabilities.find(newPos);
+        if (it == partialProbabilities.end())
+            {
+            printTable();
+            Msg::error("Could not find newPos in partialProbabilities");
+            }
         double lnL = log(it->second);
-        
         if (isinf(lnL) == true)
             {
             std::cout << "res = " << it->second << std::endl;
             data->print();
             printTable();
             }
-
-        clearDpTable();
+        clearPpTable();
+        returnToPool(newPos);
+        if (pool.size() - allocated.size() != 0)
+            Msg::warning("Some IntVectors were not returned to the pool");
         return lnL;
         }
-    
+
+    returnToPool(newPos);
+
     // Now use this farthest-out possible vector
     state[ptr] = used;
-    pos.add( alignment[ptr] );
+    pos->add( alignment[ptr] );
     if (ptr <= firstNotUsed)
         firstNotUsed++;
             
     } while (true);
 }
 
-double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int siteColumn) {
-
-    int numLeaves = (int)signature->size();
-    int numNodes = tree->getNumNodes();
+double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector* pos) {
 
     // make certain that the conditional probabilities for all
     // nodes are zero before we start
-    siteProbs->zeroOutH();
-    siteProbs->zeroOutI();
+    for (int i=0; i<numNodes; i++)
+        memcpy( fH[i], zeroH, numStates*sizeof(double) );
+    for (int i=0; i<numNodes; i++)
+        memcpy( fI[i], zeroI, (numStates+1)*sizeof(double) );
         
-    std::vector<int> nodeHomology(numNodes);                                      // Homology for every node; 0 if node need not be homologous to an emitted nucleotide
-    std::vector<int> numHomologousEmissions(numNodes);                            // Number of homologous emissions accounted for by homologous nucleotide at this node
-    std::vector<int> numHomologousEmissionsForClass(maxUnalignableDimension + 1); // Number of emissions for each class of homologous nucleotides
-    for (int i=0; i<numLeaves; i++)
+    std::vector<int> nodeHomology(numNodes);
+    std::vector<int> numHomologousEmissions(numNodes);
+    std::vector<int> numHomologousEmissionsForClass(maxUnalignableDimension + 1);
+    for (int i=0; i<numTaxa; i++)
         {
         numHomologousEmissionsForClass[ (*signature)[ i ] ]++;
         nodeHomology[ i ] = (*signature)[ i ];
@@ -479,7 +340,7 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
             
             if ((numHomologousEmissions[pIdx] == numHomologousEmissionsForClass[ nodeHomology[pIdx] ]) || (nodeHomology[pIdx] == 0))
                 {
-                // This node is the MRCA of the homologous nucleotides iHom[i], or a gap - do nothing
+                // This node is the MRCA of the homologous nucleotides iHom[i], or a gap --- do nothing
                 }
             else
                 {
@@ -498,13 +359,10 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
                 }
             }
         }
-
-    // argh
     if (isHomologyClashing)
         return 0.0;
+ 
 
-//    std::cout << *signature << std::endl;
-    
     // pruning algorithm
     for (int n=0; n<dpSequence.size(); n++)
         {
@@ -552,7 +410,6 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
                         }
                     fH[pIdx][i] = lft * rht;
                     }
-                    // Others: 0.0
                 }
             else if (nodeHomology[pIdx] != 0)
                 {
@@ -589,7 +446,6 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
                         }
                     fH[pIdx][i] = lft * rht;
                     }
-                // Others: 0.0
                 }
             else
                 {
@@ -620,7 +476,7 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
                     rht -= birthProbability[rhtChildIdx] * (fI[rhtChildIdx][j] + fH[rhtChildIdx][j]) * stateEquilibriumFrequencies[j];
                     }
                 fI[pIdx][numStates] = lft * rht;
-                }
+               }
             
             }
         }
@@ -633,4 +489,60 @@ double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int si
     return res;
 }
 
+void LikelihoodCalculator::printTable(void) {
 
+    std::cout << "Table" << std::endl;
+    std::cout << std::fixed << std::setprecision(10) << std::scientific;
+    int i = 0;
+    for (PartialProbabilitiesLookup::iterator it = partialProbabilities.begin(); it != partialProbabilities.end(); it++)
+        {
+        std::cout << i++ << " -- " << *(it->first) << " -- " << it->second << std::endl;
+        }
+}
+
+void LikelihoodCalculator::returnToPool(IntVector* v) {
+
+    v->clean();
+    pool.push_back(v);
+}
+
+void LikelihoodCalculator::setBirthDeathProbabilities(void) {
+
+    insertionRate = model->getInsertionRate();
+    deletionRate  = model->getDeletionRate();
+
+    immortalProbability= 1.0;
+    std::vector<Node*>& dpSequence = tree->getDownPassSequence();
+    for (int n=0; n<dpSequence.size(); n++)
+        {
+        Node* p = dpSequence[n];
+        int pIdx = p->getIndex();
+        double v = p->getBranchLength();
+        if (p->getAncestor() == NULL)
+            {
+            // root
+            beta[pIdx] = 1.0 / deletionRate;
+            homologousProbability[pIdx] = 0.0;
+            }
+        else
+            {
+            // internal node or tip
+            beta[pIdx] = exp( (insertionRate - deletionRate) * v );
+            beta[pIdx] = (1.0 - beta[pIdx]) / (deletionRate - insertionRate * beta[pIdx]);
+            homologousProbability[pIdx] = exp( -deletionRate * v) * (1.0 - insertionRate * beta[pIdx] );
+            }
+        birthProbability[pIdx]         = insertionRate * beta[pIdx];
+        extinctionProbability[pIdx]    = deletionRate * beta[pIdx];
+        nonHomologousProbability[pIdx] = (1.0 - deletionRate * beta[pIdx]) * (1.0 - birthProbability[pIdx]) - homologousProbability[pIdx];
+        immortalProbability *= (1.0 - birthProbability[pIdx]);
+        }
+        
+#   if defined(DEBUG_LIKELIHOOD)
+    std::cout << "TKF91 event probabilties" << std::endl;
+    std::cout << std::fixed << std::setprecision(10);
+    for (int i=0; i<numNodes; i++)
+        {
+        std::cout << i << " -- " << birthProbability[i] << " " << extinctionProbability[i] << " " << homologousProbability[i] << " " << nonHomologousProbability[i] << std::endl;
+        }
+#   endif
+}

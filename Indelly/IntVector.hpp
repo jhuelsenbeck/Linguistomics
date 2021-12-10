@@ -38,6 +38,8 @@ class IntVector {
         void                    add(std::vector<int>& iVec);
         void                    addMultiple(IntVector& iVec, int iMultiple);
         void                    addMultiple(std::vector<int>& iVec, int iMultiple);
+        void                    clean(void);
+        void                    clean(void) const;
         int                     innerProduct(IntVector& iVec);
         int                     innerProduct(std::vector<int>& iVec);
         size_t                  size(void) { return dim; }
@@ -72,22 +74,22 @@ struct CompIntVector {
         return false;
         }
 
-//    bool operator()(const IntVector* v1, const IntVector* v2) const {
-//
-//        if (v1->size() > v2->size())
-//            return true;
-//        else if ( v1->size() == v2->size())
-//            {
-//            for (int i=0; i<v1->size(); i++)
-//                {
-//                if ((*v1)[i] > (*v2)[i])
-//                    return true;
-//                else if ((*v1)[i] < (*v2)[i])
-//                    return false;
-//                }
-//            }
-//        return false;
-//        }
+    bool operator()(const IntVector* v1, const IntVector* v2) const {
+
+        if (v1->size() > v2->size())
+            return true;
+        else if ( v1->size() == v2->size())
+            {
+            for (int i=0; i<v1->size(); i++)
+                {
+                if ((*v1)[i] > (*v2)[i])
+                    return true;
+                else if ((*v1)[i] < (*v2)[i])
+                    return false;
+                }
+            }
+        return false;
+        }
 };
 
 #endif

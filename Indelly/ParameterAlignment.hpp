@@ -1,6 +1,7 @@
 #ifndef ParameterAlignment_hpp
 #define ParameterAlignment_hpp
 
+#include <map>
 #include <string>
 #include <vector>
 #include "Parameter.hpp"
