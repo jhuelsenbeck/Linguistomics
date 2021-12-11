@@ -92,6 +92,18 @@ void IntVector::allocateVector(size_t n) {
         Msg::error("Cannot initialize a vector of zero length");
 }
 
+void IntVector::clean(void) {
+
+    for (int i=0; i<dim; i++)
+        v[i] = 0;
+}
+
+void IntVector::clean(void) const {
+
+    for (int i=0; i<dim; i++)
+        v[i] = 0;
+}
+
 void IntVector::freeVector(void) {
 
     if (v != NULL)
