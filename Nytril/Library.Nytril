@@ -1,4 +1,4 @@
-using Format, Units, Math, IO, Rev;
+using Format, Units, Math, IO, Rev, LinkTypes;
 //======================================================================
 
 class LanguageClass: FactClass {
@@ -73,7 +73,7 @@ class WordClass: FactClass {
                  Padded;
 
   Constructor(dictionary, LanguageClass language, CognateClass cognate, text) {
-    super.Constructor(cognate.Name+cognate.Title+language.Name);
+    super.Constructor(cognate.Concept.Name+cognate.Name+language.Name);
 
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
     Text     = text.GetString(NormalizationForms.FormC);
@@ -90,19 +90,19 @@ class WordClass: FactClass {
       var view = Span {(each segments).Ipa};
       System.Assert(Text == view.GetString(), "Round-trip error with text {0}-{1}"(Text, view), Text);
 
-      LinkTo(Language);
-      LinkTo(Segments);
+      Link.Connect(this, Segments);
+      Link.Connect(this, cognate);
     }
     else {
       Segments = [];
       Aligned  = [];
     }
- }
+  }
 
   ShowConcept = Span {
     Style.SansSerif;
     Hover: new HoverClass(this, HoverTypes.Tip);
-    Cognate.Title;
+    Cognate.GetTitle;
   };
 
   override GetLayoutDoc = Span {
@@ -165,26 +165,41 @@ class WordClass: FactClass {
 }
 //======================================================================
 
+class ConceptClass: FactClass {
+  field Name,
+        Confidence;
+  var   Variable;
+
+  Constructor(variable, confidence) {
+    super.Constructor(variable.GlobalVariablePath);
+    Name       = variable.GlobalVariableName;
+    Confidence = confidence;
+    Variable   = variable;
+  }
+
+  override GetLayoutTip = Span {Name; "-"; Confidence};
+}
+//======================================================================
+
 class CognateClass: FactClass {
-  field       Name,
-              Title;
-  var         MaxLength,
-              Concept,
-              Cognate;
-  WordClass[] Words;
+  field        Name;
+  ConceptClass Concept;
+  WordClass[]  Words;
+  var          MaxLength,
+               Variable;
 
-  Constructor(concept, cognate) {
-    super.Constructor(concept.GlobalVariablePath);
+  Constructor(ConceptClass concept, variable) {
+    super.Constructor(variable.GlobalVariablePath);
 
-    Name = concept.GlobalVariableName;
-    var n = cognate.GlobalVariableName;
-    if (n[..6] == "Primary")
-      Title = Name;
-    else
-      Title = Name + '-' + n;
+    Name      = variable.GlobalVariableName;
     Concept   = concept;
-    Cognate   = cognate;
+    Variable  = variable;
     MaxLength = 0;
+    Link.Connect(this, concept);
+  }
+
+  GetTitle {
+    return Concept.Name + '-' + Name;
   }
 
   override GetLayoutTip = AllWords.ShowConceptTable(this);
@@ -226,7 +241,7 @@ class WordPairClass {
     TextHeight: textheight;
     Paragraph {
       ParBackground: 90%;
-      Bold; Word1.Cognate.Cognate.GlobalVariablePath[9..]
+      Bold; Word1.Cognate.Variable.GlobalVariablePath[9..]
     };
 
     textheight += 2 pts;
@@ -334,18 +349,19 @@ class ResultsClass {
         dictionary.Add(segment, segment.Ipa);
     }
 
-    var set = new DictionaryClass(1024);
-
     TotalLength  = 0;
     ConceptCount = 0;
 
-    var clist = new ListClass(256, CognateClass);
+    var set   = new DictionaryClass(1024);
+    var clist = new ListClass(1024, CognateClass);
     var tlist = new ListClass(128, TaxonClass);
 
-    foreach (var concept in Concepts) {
-      if (exists concept.?Confidence and concept.Confidence > 0) {
+    foreach (var conceptvar in Concepts) {
+      if (exists conceptvar.?Confidence and conceptvar.Confidence > 0) {
         ++ConceptCount;
-        foreach (var cognate in concept) {
+        var concept = new ConceptClass(conceptvar, conceptvar.Confidence);
+
+        foreach (var cognate in conceptvar) {
           var vname = cognate.GlobalVariableName();
           var inc   = true;
 
@@ -355,52 +371,23 @@ class ResultsClass {
               inc = false;
               break;
           }
-          /*
-           From the Romanian purge
-
-          if (inc) {
-            var cname = concept.GlobalVariableName();
-
-            if (vname == "Primary") {
-              switch (cname) {
-                case "Woman":
-                case "Rope":
-                case "Thin":
-                  inc = false;
-                  break;
-              }
-            }
-            if (cname == "Breast" && vname == "Pectus")
-              inc = false;
-            if (cname == "ToSpit" && vname == "Exconspuere")
-              inc = false;
-            if (cname == "Narrow" && vname == "Strictus")
-              inc = false;
-            if (cname == "Two" && vname == "Duae")
-              inc = false;
-            if (cname == "Who" && vname == "Quem")
-              inc = false;
-          }
-          */
 
           if (inc) {
             var count = 0;
             foreach (var word in cognate) {
               var n = word.GlobalVariableName;
-//              if (n != Languages.Romanian.Name) {
-                if (set.Add(n, n)) {
-                  var language = Languages.GetField(n);
-                  if (valid language) {
-                    if (n.Length > MaxLanguageName)
-                      MaxLanguageName = n.Length;
-                    tlist.Add(new TaxonClass(language));
-                  }
-                  else
-                    System.Assert(false, "Invalid language: {0}"(n));
+              if (set.Add(n, n)) {
+                var language = Languages.GetField(n);
+                if (valid language) {
+                  if (n.Length > MaxLanguageName)
+                    MaxLanguageName = n.Length;
+                  tlist.Add(new TaxonClass(language));
                 }
-                if (valid word)
-                  ++count;
-  //            }
+                else
+                  System.Assert(false, "Invalid language: {0}"(n));
+              }
+              if (valid word)
+                ++count;
             }
             if (count > 1) {
               WordCount += count;
@@ -428,7 +415,9 @@ class ResultsClass {
 
     foreach (var taxon in Taxa) {
       var word = null;
-      foreach (var langword in cognate.Cognate) {
+      foreach (var langword in cognate.Variable) {
+        LinkTypes.Link.Connect(taxon.Language, cognate);
+
         if (langword.GlobalVariableName == taxon.Variable) {
           var w = new WordClass(dictionary, taxon.Language, cognate, langword);
           maxlength = Math.Max([maxlength, w.Aligned.Length]);
@@ -455,7 +444,6 @@ class ResultsClass {
           word.Padded = a + [IPA.Segments.GapSegment] * (maxlength - a.Length);
         else
           word.Padded = a;
-//        cognate linkto words;
       }
       else
         word.Padded = a;
@@ -472,7 +460,7 @@ class ResultsClass {
             ++gapcount;
         }
       }
-      System.Assert(gapcount < count, "Column with all gaps", cognate.Cognate);
+      System.Assert(gapcount < count, "Column with all gaps", cognate.Variable);
     }
 
     TotalLength += maxlength;
@@ -496,7 +484,7 @@ class ResultsClass {
     };
   };
 
-  GetConcept(concept) = UsedCognates.FindFirst(c => c.Concept == concept);
+  GetConcept(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);
 
   GetTransitionsCount {
     TransitionMax = 1;
@@ -815,7 +803,7 @@ class ResultsClass {
     Span {
       "{";
       Variable("Name");
-      ShowString(cognate.Title);
+      ShowString(cognate.GetTitle);
       CommaSpace;
       Variable("Data"); "[";
     };
