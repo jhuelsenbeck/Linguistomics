@@ -21,7 +21,7 @@ class Mcmc {
         std::string     formattedTime(std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
         int             numDigits(double lnX);
         void            openOutputFiles(void);
-        void            print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept);
+        void            print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
         double          safeExponentiation(double lnX);
         void            sample(int gen, double lnL, double lnP);
         void            runPathSampling(void);
