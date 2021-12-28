@@ -65,7 +65,8 @@ class LanguageClass: FactClass {
 
 class WordClass: FactClass {
   field          Plain,
-                 Text;
+                 Text,
+                 SegmentCount;
   LanguageClass  Language;
   CognateClass   Cognate;
   SegmentClass[] Segments,
@@ -76,15 +77,16 @@ class WordClass: FactClass {
     super.Constructor(cognate.Concept.Name+cognate.Name+language.Name);
 
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
-    Text     = text.GetString(NormalizationForms.FormC);
-    Plain    = Text.FindSlice(c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
-    Language = language;
-    Cognate  = cognate;
+    Text       = text.GetString(NormalizationForms.FormC);
+    Plain      = Text.FindSlice(c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
+    Language   = language;
+    Cognate    = cognate;
 
     if (valid Text) {
       var segments = dictionary.FindTokens(Text, IPA.NoSegment);
-      Aligned  = segments.FindSlice(s => s.Gap or (not s.Punctuation));
-      Segments = segments.FindSlice(s => not s.Punctuation);
+      Aligned      = segments.FindSlice(s => s.Gap or (not s.Punctuation));
+      Segments     = segments.FindSlice(s => not s.Punctuation);
+      SegmentCount = Segments.Length;
 
       // Test that the word's text is the same as the segments converted back into text
       var view = Span {(each segments).Ipa};
@@ -94,8 +96,9 @@ class WordClass: FactClass {
       Link.Connect(this, cognate);
     }
     else {
-      Segments = [];
-      Aligned  = [];
+      Segments     = [];
+      Aligned      = [];
+      SegmentCount = 0;
     }
   }
 

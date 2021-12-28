@@ -2,8 +2,8 @@ using Format, Units, FeatureSet, Math, Style;
 //======================================================================
 
 class FilterClass {
+  field        Name;
   ResultsClass Results;
-  var          Name;
 
   Constructor(ResultsClass results, name) {
     Results = results;
@@ -30,7 +30,8 @@ class FilterClass {
 }
 //======================================================================
 
-class PartitionClass {
+class PartitionClass: FactClass {
+  field          Name;
   SegmentClass[] Segments;
   var            Index,
                  Center,
@@ -40,6 +41,8 @@ class PartitionClass {
   FilterClass    Filter;
 
   Constructor(index, FilterClass filter, SegmentClass[] segments) {
+    super.Constructor(filter.Name);
+    Name     = filter.Name;
     Index    = index;
     Filter   = filter;
     Segments = segments;
@@ -123,16 +126,19 @@ abstract class RuleClass {
     foreach (var filter in FiltersPlus) {
       var find = GetMatching(segments, filter);
       if (valid find) {
-        list.Add(new PartitionClass(i, filter, find));
-        foreach (var s in find)
+        var p = new PartitionClass(i, filter, find);
+        list.Add(p);
+        foreach (var s in find) {
           s.PartitionIndex = i;
+          LinkTypes.Link.Connect(p, s);
+        }
         ++i;
       }
     }
     Partitions = list.Values;
   }
 
-  GetMatching(SegmentClass[] segments, FilterClass filter) = segments.FindSlice(segment => MatchesRule(filter, segment));
+  SegmentClass[] GetMatching(SegmentClass[] segments, FilterClass filter) = segments.FindSlice(segment => MatchesRule(filter, segment));
 
   ShowPartitions = Block {
     Paragraph {
