@@ -3,6 +3,7 @@
 #include <iostream>
 #include "AlignmentProposal.hpp"
 #include "IntVector.hpp"
+#include "Model.hpp"
 #include "Msg.hpp"
 #include "ParameterAlignment.hpp"
 #include "RandomVariable.hpp"
@@ -16,27 +17,60 @@ int AlignmentProposal::bigUnalignableRegion = 0;
 
 
 
-AlignmentProposal::AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVariable* r, double expnt, double gp) {
+AlignmentProposal::AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVariable* r, Model* m, double expnt, double gp) {
 
     if (expnt < 1.0)
         Msg::error("Exponenet parameter must be greater than 1");
     if (gp >= 0.0)
-        Msg::error("Gap penalty parameter must be less than or equal to 0");
-    gap = gp;
-    basis = expnt;
+        Msg::error("Gap penalty parameter must be less than 0");
+        
+    // addresses of important objects
+    alignmentParm = a;
     tree = t;
     rv = r;
-    alignmentParm = a;
+    model = m;
     
+    // initialize instance variables
+    numTaxa = t->getNumTaxa();
+    numNodes = (int)tree->getAncestorIndices().size();
+    taxonMask = alignmentParm->getTaxonMask();
+    gap = gp;
+    basis = expnt;
     gapCode = alignmentParm->getGapCode();
     maxlength = 20; // was 1000
     maxUnalignDimension = 17;
+        
+    // allocate the profile for this alignment
+    profile = new (std::nothrow) int**[numNodes];
+    if (!profile)
+        Msg::error("Could not allocate profile");
+    for (int i=0; i<numNodes; i++)
+        {
+        profile[i] = new (std::nothrow) int*[numNodes];
+        if (!profile[i])
+            Msg::error("Could not allocate profile");
+        profile[i][0] = new (std::nothrow) int[numNodes*maxlength];
+        if (!profile[i][0])
+            Msg::error("Could not allocate profile");
+        for (int j=1; j<numNodes; j++)
+            profile[i][j] = profile[i][j-1] + maxlength;
+        }
+    for (int i=0; i<numNodes; i++)
+        for (int j=0; j<numNodes; j++)
+            for (int k=0; k<maxlength; k++)
+                profile[i][j][k] = 0;
 }
 
-void AlignmentProposal::cleanTable(std::map<IntVector,int,CompIntVector>& m) {
+AlignmentProposal::~AlignmentProposal(void) {
 
-//    for (std::map<IntVector,int,CompIntVector>::iterator it = m.begin(); it != m.end(); it++)
-//        delete it->first;
+    std::cout << "in destructor" << std::endl;
+    freeProfile(profile, numNodes);
+}
+
+void AlignmentProposal::cleanTable(std::map<IntVector*, int, CompIntVector>& m) {
+
+    for (std::map<IntVector*,int,CompIntVector>::iterator it = m.begin(); it != m.end(); it++)
+        returnToPool(it->first);
     m.clear();
 }
 
@@ -50,9 +84,10 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
     std::vector<std::vector<int> > alignment = alignmentParm->getIndelMatrix(inputAlignment);
 
     // Enter first count into DP table
-    std::map<IntVector,int,CompIntVector> dpTable;
-    IntVector pos(numLeaves);
-    dpTable.insert( std::make_pair( IntVector(pos), 1) );  // copy of the pos object is inserted
+    std::map<IntVector*,int,CompIntVector> dpTable;
+    IntVector* pos = getVector();
+    IntVector* newVec = getVector(*pos);
+    dpTable.insert( std::make_pair( newVec, 1) );  // copy of the pos object is inserted
 		
     // Array of possible vector indices, used in inner loop
     std::vector<int> possibles(maxUnalignDimension);
@@ -73,6 +108,7 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                         {
                         // This gets too hairy - bail out.
                         bigUnalignableRegion++;
+                        returnToPool(pos);
                         cleanTable(dpTable);
                         return -1;
                         }
@@ -84,8 +120,8 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
         
         // Loop over all combinations of possible vectors, which define edges from
         // iPos to another possible position, by ordinary binary counting.
-        IntVector newPos = IntVector( pos );
-        IntVector signature = IntVector( pos.size() );
+        IntVector* newPos = getVector(*pos);
+        IntVector* signature = getVector();
         int posPtr;
         bool unusedPos;
         bool foundNonZero;
@@ -99,9 +135,9 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                 if (state[ curPtr ] == possible)
                     {
                     state[ curPtr ] = edgeUsed;
-                    newPos.add( alignment[ curPtr ] );
+                    newPos->add( alignment[ curPtr ] );
                     // Compute signature vector
-                    signature.addMultiple( alignment[ curPtr ], posPtr+1 );
+                    signature->addMultiple( alignment[ curPtr ], posPtr+1 );
                     // Signal: non-zero combination found, and stop
                     foundNonZero = true;
                     posPtr = 0;
@@ -110,19 +146,16 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                     {
                     // It was eEdgeUsed (i.e., digit == 1), so reset digit and continue
                     state[ curPtr ] = possible;
-                    newPos.subtract( alignment[ curPtr ] );
-                    signature.addMultiple( alignment[ curPtr ], -posPtr-1 );
+                    newPos->subtract( alignment[ curPtr ] );
+                    signature->addMultiple( alignment[ curPtr ], -posPtr-1 );
                     }
                 }
         
             if (foundNonZero)
                 {
-                std::map<IntVector, int, CompIntVector>::iterator it = dpTable.find(pos);
+                std::map<IntVector*, int, CompIntVector>::iterator it = dpTable.find(pos);
                 if (it == dpTable.end())
-                    {
-                    cleanTable(dpTable);
                     Msg::error("Could not find pos in dpTable map.");
-                    }
                 int left = it->second;
                 int right;
                 it = dpTable.find(newPos);
@@ -137,18 +170,16 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                     unusedPos = false;
                     }
                 right += left;
-                //System.out.print(" sig=" + iSignature);
-                // And store
-                //System.out.println(" Storing pos " + iNewPos);
+
                 // If we are storing a value at a previously unused position, make sure we use a fresh key object
                 if (unusedPos)
                     {
-//                    IntVector v = new IntVector(newPos);
-                    dpTable.insert( std::make_pair(IntVector(newPos), right) );
+                    IntVector* v = getVector(*newPos);
+                    dpTable.insert( std::make_pair(v, right) );
                     }
                 else
                     {
-                    std::map<IntVector, int, CompIntVector>::iterator it2 = dpTable.find(newPos);
+                    std::map<IntVector*, int, CompIntVector>::iterator it2 = dpTable.find(newPos);
                     if (it2 == dpTable.end())
                         Msg::error("We should have found newPos in dpTable for the alignment proposal!");
                     it2->second = right;
@@ -164,7 +195,7 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
             // Undo any possible used vector that we encounter
             if (state[ptr] == used)
                 {
-                pos.subtract( alignment[ptr] );
+                pos->subtract( alignment[ptr] );
                 state[ptr] = free;
                 }
             --ptr;
@@ -174,38 +205,107 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
             {
             // No more unused vectors, so we also fell through the edge loop above,
             // hence iNewPos contains the final position
-            std::map<IntVector, int, CompIntVector>::iterator it = dpTable.find(newPos);
+            std::map<IntVector*, int, CompIntVector>::iterator it = dpTable.find(newPos);
             if (it == dpTable.end())
-                {
-                cleanTable(dpTable);
                 Msg::error("Could not find newPos in dpTable map.");
-                }
             int result = it->second;
+            returnToPool(pos);
+            returnToPool(newPos);
+            returnToPool(signature);
             cleanTable(dpTable);
             return result;
-//            return ((Integer)iTable.get( iNewPos )).intValue();
+            }
+        else
+            {
+            returnToPool(newPos);
+            returnToPool(signature);
             }
         
         // Now use this farthest-out possible vector
         state[ptr] = used;
-        pos.add( alignment[ptr] );
+        pos->add( alignment[ptr] );
         if (ptr <= firstNotUsed)
             firstNotUsed++;
         
         } while (true);
 
+    returnToPool(pos);
     cleanTable(dpTable);
     return 0;
 }
 
+void AlignmentProposal::drainPool(void) {
+
+    for (std::vector<IntVector*>::iterator v=pool.begin(); v != pool.end(); v++)
+        {
+        allocated.erase(*v);
+        delete (*v);
+        }
+}
+
+IntVector* AlignmentProposal::getVector(void) {
+
+    if (pool.empty() == true)
+        {
+        /* If the vector pool is empty, we allocate a new vector and return it. We
+           do not need to add it to the vector pool. */
+        IntVector* v = new IntVector(numTaxa);
+        allocated.insert(v);
+        return v;
+        }
+    
+    // Return a vector from the vector pool, remembering to remove it from the pool.
+    IntVector* v = pool.back();
+    pool.pop_back();
+    return v;
+}
+
+IntVector* AlignmentProposal::getVector(IntVector& vec) {
+
+    if (pool.empty() == true)
+        {
+        IntVector* v = new IntVector(numTaxa);
+        allocated.insert(v);
+        for (int i=0; i<vec.size(); ++i)
+            (*v)[i] = vec[i];
+        return v;
+        }
+    IntVector* v = pool.back();
+    pool.pop_back();
+    for (int i=0; i<vec.size(); ++i)
+        (*v)[i] = vec[i];
+    return v;
+}
+
 void AlignmentProposal::freeProfile(int*** x, int n) {
 
+    std::cout << "in freeProfile" << std::endl;
     for (int i=0; i<n; i++)
         {
         delete [] x[i][0];
         delete [] x[i];
         }
     delete [] x;
+}
+
+void AlignmentProposal::initialize(void) {
+
+    // get a pointer to the tree
+    tree = model->getTree(taxonMask);
+    
+    // initialize profile
+    for (int i=0; i<numNodes; i++)
+        for (int j=0; j<numNodes; j++)
+            for (int k=0; k<maxlength; k++)
+                profile[i][j][k] = 0;
+                
+    // check that we have no stray IntVectors
+    if (allocated.size() != pool.size())
+        {
+        std::cout << "allocated.size() = " << allocated.size() << std::endl;
+        std::cout << "pool.size()      = " << pool.size() << std::endl;
+        Msg::error("Expecting all IntVectors to have been returned to the pool");
+        }
 }
 
 void AlignmentProposal::print(std::string s, std::vector<int>& x) {
@@ -247,13 +347,13 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
     // check that the extenstion probability is between 0 and 1
     if (extensionProb <= 0.0 || extensionProb > 1.0)
         Msg::error("Extension parameter must be in the range (0,1]");
-
-    // get the current alignment from the alignment parameter
+        
+    // initialize variables that may have changed since last update
+    initialize();
     std::vector<std::vector<int> >& curAlignment = alignmentParm->getAlignment();
 
     // initialize tree
     std::vector<int> parents = tree->getAncestorIndices();
-    int numNodes = (int)parents.size();
     std::vector<int> lftChildrenIndices(numNodes);
     std::vector<int> rhtChildrenIndices(numNodes);
     for (int i=0; i<numNodes-1; i++)
@@ -285,7 +385,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
             }
         }
 
-    // cutting a part of the alignment (we cut out the entrire alignment)
+    // cutting a part of the alignment (we cut out the entire alignment)
 #   if 0
     int len = (int)curAlignment[0].size();
     int pos = 0;
@@ -295,16 +395,6 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
         ;
     int pos = (int)(rv->uniformRv() * (curAlignment[0].size() - len + 1));
 #   endif
-
-    // initialize the first profiles
-    int*** profile = new int**[numNodes];
-    for (int i=0; i<numNodes; i++)
-        {
-        profile[i] = new int*[numNodes];
-        profile[i][0] = new int[numNodes*maxlength];
-        for (int j=1; j<numNodes; j++)
-            profile[i][j] = profile[i][j-1] + maxlength;
-        }
 
     std::vector<std::vector<int> > profileNumber;
     profileNumber.resize(numNodes);
@@ -329,8 +419,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
     
     /* dynamic programming algorithm for the proposal */
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    RbBitSet bs = alignmentParm->getTaxonMask();
-    std::vector<StateMatrix_t*> tiProbs = tip.getTransitionProbabilities(bs);
+    std::vector<StateMatrix_t*> tiProbs = tip.getTransitionProbabilities(taxonMask);
     std::vector<double> stationaryFrequencies = tip.getStationaryFrequencies();
     int numStates = tip.getNumStates();
     std::vector<std::vector<double> > scoring;
@@ -824,8 +913,8 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
 
     } // end of k
 
-    // debug print
 #   if 0
+    // debug print
     std::cout << alignmentParm->getName() << std::endl;
     std::cout << "original" << std::endl;
     for (int i=0; i<curAlignment.size(); i++)
@@ -844,16 +933,11 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
         }
 #   endif
         
-    // free the profile
-    freeProfile(profile, numNodes);
-    
-//    std::cout << "alignment hastings = " << proposalLoglikelihood + (len - iL2) * log(1.0-extensionProb) << std::endl;
-//    std::cout << "proposalLoglikelihood = " << proposalLoglikelihood << std::endl;
-//    std::cout << "len = " << len << " il2 = " << iL2 << std::endl;
-//    std::cout << "extensionProb = " << extensionProb << std::endl;
-    
-
     return proposalLoglikelihood + (len - iL2) * log(1.0-extensionProb);
-//    return proposalLoglikelihood;
 }
 
+void AlignmentProposal::returnToPool(IntVector* v) {
+
+    v->clean();
+    pool.push_back(v);
+}

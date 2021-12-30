@@ -24,7 +24,7 @@ class Tree {
         Tree&                                       operator=(Tree& t);
         void                                        buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
         void                                        debugPrint(std::string h);
-        std::string                                 getNewick(void);
+        std::string                                 getNewick(int brlenPrecision);
         int                                         getNumNodes(void) { return (int)nodes.size(); }
         int                                         getNumTaxa(void) { return numTaxa; }
         std::vector<int>                            getAncestorIndices(void);
@@ -56,7 +56,7 @@ class Tree {
         void                                        listNodes(Node* p, size_t indent);
         void                                        passDown(Node* p);
         std::vector<std::string>                    tokenizeTreeString(std::string ls);
-        void                                        writeTree(Node* p, std::stringstream& ss);
+        void                                        writeTree(Node* p, std::stringstream& ss, int brlenPrecision);
         std::vector<Node*>                          nodes;
         std::vector<Node*>                          downPassSequence;
         Node*                                       root;

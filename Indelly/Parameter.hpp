@@ -14,6 +14,7 @@ class Parameter {
                             Parameter(RandomVariable* r, Model* m, std::string n);
         virtual            ~Parameter(void) { }
         virtual void        accept(void) = 0;
+        virtual std::string getJsonString(void) = 0;
         virtual std::string getHeader(void) = 0;
         std::string         getName(void) { return parmName; }
         std::string         getLastUpdate(void) { return lastUpdateType; }

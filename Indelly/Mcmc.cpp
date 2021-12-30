@@ -256,7 +256,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
 
     Tree* t = modelPtr->getTree();
     double tl = t->getTreeLength();
-    std::string ts = t->getNewick();
+    std::string ts = t->getNewick(6);
     
     if (gen == 1)
         {

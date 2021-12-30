@@ -488,7 +488,7 @@ std::vector<double> Tree::getBranchLengthVector(void) {
     return brlenVec;
 }
 
-std::string Tree::getNewick(void) {
+std::string Tree::getNewick(int brlenPrecision) {
 
     std::stringstream ss;
     if (root->getIsLeaf() == true)
@@ -503,7 +503,7 @@ std::string Tree::getNewick(void) {
         newRoot->setAncestor(NULL);
         root = newRoot;
 
-        writeTree(root, ss);
+        writeTree(root, ss, brlenPrecision);
 
         newRoot->setAncestor(oldRoot);
         oldRoot->setAncestor(NULL);
@@ -511,7 +511,7 @@ std::string Tree::getNewick(void) {
         }
     else
         {
-        writeTree(root, ss);
+        writeTree(root, ss, brlenPrecision);
         }
     std::string newick = ss.str();
     return newick;
@@ -792,7 +792,7 @@ std::vector<std::string> Tree::tokenizeTreeString(std::string ls) {
     return tks;
 }
 
-void Tree::writeTree(Node* p, std::stringstream& ss) {
+void Tree::writeTree(Node* p, std::stringstream& ss, int brlenPrecision) {
 
     if (p != NULL)
         {
@@ -800,7 +800,7 @@ void Tree::writeTree(Node* p, std::stringstream& ss) {
             {
             ss << p->getIndex()+1;
             //ss << p->getName();
-            ss << ":" << std::fixed << std::setprecision(5) << p->getBranchLength();
+            ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBranchLength();
             }
         else
             {
@@ -809,7 +809,7 @@ void Tree::writeTree(Node* p, std::stringstream& ss) {
         std::vector<Node*> myDescendants = p->getDescendantsVector();
         for (int i=0; i<(int)myDescendants.size(); i++)
             {
-            writeTree(myDescendants[i], ss);
+            writeTree(myDescendants[i], ss, brlenPrecision);
             if ( (i + 1) != (int)myDescendants.size() )
                 ss << ",";
             }
@@ -817,7 +817,7 @@ void Tree::writeTree(Node* p, std::stringstream& ss) {
             {
             ss << ")";
             if (p != NULL && p != root)
-                ss << ":" << std::fixed << std::setprecision(5) << p->getBranchLength();
+                ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBranchLength();
             }
         }
 }

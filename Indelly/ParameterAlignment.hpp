@@ -7,6 +7,7 @@
 #include "Parameter.hpp"
 #include "RbBitSet.h"
 class Alignment;
+class AlignmentProposal;
 class Model;
 class SiteLikelihood;
 
@@ -48,6 +49,7 @@ class ParameterAlignment : public Parameter {
         double                          update(void);
     
     protected:
+        AlignmentProposal*              alignmentProposal;
         std::vector<std::vector<int> >  alignment[2];  // numTaxa X numSites
         std::vector<std::vector<int> >  sequences;     // numTaxa X numSites for taxon i (i.e., left-justified)
         bool                            completelySampled;

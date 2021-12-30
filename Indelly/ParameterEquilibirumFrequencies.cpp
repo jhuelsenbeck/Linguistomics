@@ -38,6 +38,17 @@ void ParameterEquilibirumFrequencies::accept(void) {
     freqs[1] = freqs[0];
 }
 
+std::string ParameterEquilibirumFrequencies::getJsonString(void) {
+
+    std::string str = "";
+    for (int i=0; i<numStates; i++)
+        {
+        str += std::to_string(freqs[0][i]);
+        str += '\t';
+        }
+    return str;
+}
+
 std::string ParameterEquilibirumFrequencies::getHeader(void) {
 
     std::string str = "";
