@@ -46,6 +46,7 @@ class PartitionClass: FactClass {
     Index    = index;
     Filter   = filter;
     Segments = segments;
+    LinkTypes.Link.Connect(this, segments);
   }
 
   override GetLayoutTip = Filter.GetLayoutTip;
@@ -126,12 +127,9 @@ abstract class RuleClass {
     foreach (var filter in FiltersPlus) {
       var find = GetMatching(segments, filter);
       if (valid find) {
-        var p = new PartitionClass(i, filter, find);
-        list.Add(p);
-        foreach (var s in find) {
+        list.Add(new PartitionClass(i, filter, find));
+        foreach (var s in find)
           s.PartitionIndex = i;
-          LinkTypes.Link.Connect(p, s);
-        }
         ++i;
       }
     }
