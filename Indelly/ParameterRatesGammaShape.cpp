@@ -40,6 +40,13 @@ std::string ParameterRatesGammaShape::getHeader(void) {
     return str;
 }
 
+std::string ParameterRatesGammaShape::getJsonString(void) {
+
+    std::string str = "";
+    
+    return str;
+}
+
 std::string ParameterRatesGammaShape::getString(void) {
 
     std::string str = std::to_string(alpha[0]);

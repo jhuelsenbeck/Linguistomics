@@ -179,9 +179,15 @@ Tree* ParameterTree::getActiveTree(RbBitSet& mask) {
     return NULL;
 }
 
+std::string ParameterTree::getJsonString(void) {
+
+    std::string str = "\"Tree\": \"" + fullTree.trees[0]->getNewick(20) + "\"";
+    return str;
+}
+
 std::string ParameterTree::getString(void) {
 
-    std::string str = fullTree.trees[0]->getNewick();
+    std::string str = fullTree.trees[0]->getNewick(5);
     return str;
 }
 
@@ -309,9 +315,9 @@ void ParameterTree::print(void) {
 
 void ParameterTree::printNewick(void) {
 
-    std::cout << fullTree.trees[0]->getNewick() << ";" << std::endl;
+    std::cout << fullTree.trees[0]->getNewick(6) << ";" << std::endl;
     for (std::map<RbBitSet,TreePair>::iterator it = subTrees.begin(); it != subTrees.end(); it++)
-        std::cout << it->second.trees[0]->getNewick() << ";" << std::endl;
+        std::cout << it->second.trees[0]->getNewick(6) << ";" << std::endl;
 }
 
 void ParameterTree::reject(void) {

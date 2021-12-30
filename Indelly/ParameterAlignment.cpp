@@ -69,6 +69,9 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     tuning = 0.1;
     exponent = 1.5;
     gapPenalty = -10.0;
+    
+    // allocate and initialize the alignment proposal object
+    alignmentProposal = new AlignmentProposal(this, modelPtr->getTree(taxonMask), rv, modelPtr, 1.5, -5.0);
  
     //print();
 }
@@ -76,6 +79,7 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
 ParameterAlignment::~ParameterAlignment(void) {
 
     delete siteProbs;
+    delete alignmentProposal;
 }
 
 void ParameterAlignment::accept(void) {
@@ -256,9 +260,8 @@ double ParameterAlignment::update(void) {
 
     // update the alignment
     RbBitSet mask(taxonMask);
-    AlignmentProposal alignmentProposal(this, modelPtr->getTree(mask), rv, 1.5, -5.0);
     std::vector<std::vector<int> > newAlignment;
-    double lnProposalRatio = alignmentProposal.propose(newAlignment, 0.5);
+    double lnProposalRatio = alignmentProposal->propose(newAlignment, 0.5);
     alignment[0] = newAlignment;
 
     // set flags indicating the transition probabilities are not affected

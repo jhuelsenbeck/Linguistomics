@@ -13,6 +13,7 @@ UserSettings::UserSettings(void) {
     // dafault values
     dataFile                    = "";
     outFile                     = "";
+    checkPointFrequency         = 10000;
     numMcmcCycles               = 1000;
     printFrequency              = 100;
     sampleFrequency             = 100;
@@ -72,6 +73,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 printFrequency = atoi(cmd.c_str());
             else if (arg == "-s")
                 sampleFrequency = atoi(cmd.c_str());
+            else if (arg == "-z")
+                checkPointFrequency = atoi(cmd.c_str());
             else if (arg == "-l")
                 inverseTreeLength = atof(cmd.c_str());
             else if (arg == "-z")
@@ -206,6 +209,10 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         if (it2 != jsonSettings.end())
             sampleFrequency = jsonSettings["SampleFreq"];
 
+        it2 = jsonSettings.find("CheckPtFreq");
+        if (it2 != jsonSettings.end())
+            checkPointFrequency = jsonSettings["CheckPtFreq"];
+
         it2 = jsonSettings.find("TreeLengthPriorVal");
         if (it2 != jsonSettings.end())
             inverseTreeLength = jsonSettings["TreeLengthPriorVal"];
@@ -241,6 +248,7 @@ void UserSettings::print(void) {
     std::cout << "   * Number of MCMC cycles                   = " << numMcmcCycles << std::endl;
     std::cout << "   * Print-to-screen frequency               = " << printFrequency << std::endl;
     std::cout << "   * Chain sample frequency                  = " << sampleFrequency << std::endl;
+    std::cout << "   * Check point frequency                   = " << checkPointFrequency << std::endl;
     std::cout << "   * Tree length prior parameter             = " << inverseTreeLength << std::endl;
     std::cout << std::endl;
 }
@@ -258,6 +266,7 @@ void UserSettings::usage(void) {
     std::cout << "   * -n / NumCycles          -- Number of MCMC cycles" << std::endl;
     std::cout << "   * -p / PrintFreq          -- Print-to-screen frequency" << std::endl;
     std::cout << "   * -s / SampleFreq         -- Chain sample frequency" << std::endl;
+    std::cout << "   * -z / CheckPtFreq        -- Check point file frequency" << std::endl;
     std::cout << "   * -e / UseEigenSystem     -- Use the Eigen system when calculating the matrix exponential (no/yes)" << std::endl;
     std::cout << "   * -l / TreeLengthPriorVal -- Inverse of the tree length prior" << std::endl;
     std::cout << std::endl;

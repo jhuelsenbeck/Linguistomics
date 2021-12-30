@@ -41,6 +41,13 @@ std::string ParameterIndelGammaShape::getHeader(void) {
     return str;
 }
 
+std::string ParameterIndelGammaShape::getJsonString(void) {
+
+    std::string str = "";
+    
+    return str;
+}
+
 std::string ParameterIndelGammaShape::getString(void) {
 
     std::string str = std::to_string(alpha[0]);

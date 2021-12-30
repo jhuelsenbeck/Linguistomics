@@ -29,6 +29,7 @@ class ParameterTree : public Parameter {
         Tree*                           getActiveTree(void) { return fullTree.trees[0]; }
         Tree*                           getActiveTree(RbBitSet& mask);
         std::map<RbBitSet,TreePair>&    getSubtrees(void) { return subTrees; }
+        std::string                     getJsonString(void);
         std::string                     getHeader(void) { return ""; }
         double                          lnPriorProbability(void);
         void                            print(void);

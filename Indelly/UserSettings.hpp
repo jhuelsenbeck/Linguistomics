@@ -14,6 +14,7 @@ class UserSettings {
                                     return us;
                                 }
         bool                    getCalculateMarginalLikelihood(void) { return calculateMarginalLikelihood; }
+        int                     getCheckPointFrequency(void) { return checkPointFrequency; }
         std::string             getDataFile(void) { return dataFile; }
         double                  getInverseTreeLength(void) { return inverseTreeLength; }
         std::string             getOutFile(void) { return outFile; }
@@ -32,17 +33,18 @@ class UserSettings {
                                 UserSettings(void);
                                 UserSettings(const UserSettings& s) = delete;
         void                    usage(void);
+        bool                    calculateMarginalLikelihood;
+        int                     checkPointFrequency;
         std::string             dataFile;
+        std::string             executablePath;
+        double                  inverseTreeLength;
         std::string             outFile;
+        int                     numIndelCategories;
         int                     numMcmcCycles;
+        int                     numRateCategories;
         int                     printFrequency;
         int                     sampleFrequency;
-        double                  inverseTreeLength;
         int                     substitutionModel;
-        bool                    calculateMarginalLikelihood;
-        std::string             executablePath;
-        int                     numRateCategories;
-        int                     numIndelCategories;
         bool                    useEigenSystem;
         bool                    useOnlyCompleteWords;
 };

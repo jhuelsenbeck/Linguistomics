@@ -16,6 +16,7 @@ class ParameterEquilibirumFrequencies : public Parameter {
                                        ~ParameterEquilibirumFrequencies(void);
         void                            accept(void);
         std::string                     getHeader(void);
+        std::string                     getJsonString(void);
         std::vector<double>&            getValue(void) { return freqs[0]; }
         std::string                     getString(void);
         double                          lnPriorProbability(void);

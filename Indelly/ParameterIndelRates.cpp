@@ -121,6 +121,13 @@ double ParameterIndelRates::getInsertionRate(void) {
     return lambda;
 }
 
+std::string ParameterIndelRates::getJsonString(void) {
+
+    std::string str = "";
+    
+    return str;
+}
+
 std::string ParameterIndelRates::getString(void) {
 
     std::string str = std::to_string(getInsertionRate());

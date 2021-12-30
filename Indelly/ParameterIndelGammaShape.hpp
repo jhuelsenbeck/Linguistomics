@@ -18,6 +18,7 @@ class ParameterIndelGammaShape : public Parameter {
                                 ParameterIndelGammaShape(RandomVariable* r, Model* m, std::string n, double ep, int nc);
         void                    accept(void);
         std::string             getHeader(void);
+        std::string             getJsonString(void);
         std::string             getString(void);
         double                  lnPriorProbability(void);
         std::vector<double>&    getRates(void) { return rates[0]; }

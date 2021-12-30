@@ -84,6 +84,13 @@ std::string ParameterExchangabilityRates::getHeader(void) {
     return str;
 }
 
+std::string ParameterExchangabilityRates::getJsonString(void) {
+
+    std::string str = "";
+    
+    return str;
+}
+
 std::string ParameterExchangabilityRates::getString(void) {
 
     std::string str = "";

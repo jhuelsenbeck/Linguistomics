@@ -25,6 +25,7 @@ class ParameterIndelRates : public Parameter {
         void                            accept(void);
         double                          getDeletionRate(void);
         double                          getExpectedSequenceLength(void);
+        std::string                     getJsonString(void);
         std::string                     getHeader(void);
         double                          getInsertionRate(void);
         std::string                     getString(void);
