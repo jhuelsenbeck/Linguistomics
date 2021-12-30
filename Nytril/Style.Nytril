@@ -1,4 +1,4 @@
-﻿using Format, Units, Math, IO;
+﻿using Format, Units, Math, IO, LinkTypes;
 //======================================================================
 
 namespace PaperSizes {
@@ -262,22 +262,24 @@ namespace Style {
   };
 
   ShowAuthor(PersonClass person) = Span {
-    LinkTo(person);
-    CitationLib.GetFullName(person) {Bold};
+    Link to person;
+    CitationLib.GetFullName(person) {
+      Bold;
+      var site = person.FindFirstFact(WebsiteLink);
+      if (valid site)
+        Hover: new HoverClass(site.Value, HoverTypes.WebSecure);
+    };
+
     Span {
       Separator: Comma;
       TextAlignment: TextAlignments.Superscript;
       EachOne;
       "+";
     };
-
-    var site = person.FindFirstFact(URLClass);
-    if (valid site)
-      Hover: new HoverClass(site.Value, HoverTypes.WebSecure);
   };
 
   ShowAuthorDetails(PersonClass person) = Block {
-    var department = person.FindFirstFact(LinkTypes.Department);
+    var department = person.FindFirstFact(DepartmentLink);
     if (valid department) {
       LeftIndent: NoteIndexIndent;
       Paragraph {
@@ -290,7 +292,7 @@ namespace Style {
         department.Name;
         CommaSpace;
 
-        var org = department.FindFirstFact(LinkTypes.Department) ?? department;
+        var org = department.FindFirstFact(DepartmentLink, true) ?? department;
         if (valid org) {
           if (org != department) {
             org.Name;
@@ -301,7 +303,7 @@ namespace Style {
       };
     }
 
-    var email = person.FindFirstFact(LinkTypes.WorkEmail);
+    var email = person.FindFirstFact(WorkEmailLink);
     if (valid email)
       new HoverClass(email.Value, HoverTypes.Email);
   };
@@ -343,7 +345,7 @@ namespace Style {
 
     CitationLib.ShowLocation(person, CommaSpace, true);
 
-    var email = person.FindFirstFact(LinkTypes.WorkEmail);
+    var email = person.FindFirstFact(WorkEmailLink);
     if (valid email) {
       Paragraph {
         Lang.EMail;
@@ -352,7 +354,7 @@ namespace Style {
       };
     }
 
-    var site = person.FindFirstFact(LinkTypes.Website);
+    var site = person.FindFirstFact(WebsiteLink);
     if (valid site) {
       Paragraph {
         new HoverClass(site.Value, HoverTypes.WebSecure);
@@ -643,8 +645,8 @@ abstract class BaseViewClass: DocumentClass {
   abstract GetMainDocument(ResultsClass results);
 
   override GetDocument {
-    LinkTypes.Author(Authors);
-    LinkTo(References);
+    AuthorLink to Authors;
+    Link to References;
 
     return GetMainDocument(Results);
   }
