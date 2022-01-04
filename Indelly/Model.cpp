@@ -574,7 +574,8 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
 double Model::lnLikelihood(void) {
 
 #   if 1
-    // set up thread pool
+
+    // set up thread pool for calculating the likelihood under the TKF91 model
     ThreadPool& workers = ThreadPool::threadPoolInstance();
 
     for (int i=0; i<wordParameterAlignments.size(); i++)
@@ -582,7 +583,7 @@ double Model::lnLikelihood(void) {
         if (updateLikelihood[i] == true)
             {
             workers.post([=] {
-                wordLnLike(i, wordParameterAlignments[i]);
+                wordLnLike(i);
                 });
             }
         else
@@ -595,32 +596,30 @@ double Model::lnLikelihood(void) {
     workers.wait();
     workers.reset();
     
+#   else
+
+    // calculate likelihood under TKF91 model
+    for (int i=0; i<wordParameterAlignments.size(); i++)
+        {
+        //double lnP = wordLikelihoodCalculators[i]->lnLikelihood();
+        if (updateLikelihood[i] == true)
+            {
+            threadLnL[i] = wordLikelihoodCalculators[i]->lnLikelihood();
+            wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
+            }
+        else
+            {
+            threadLnL[i] = wordLnLikelihoods[ activeLikelihood[i] ][i];
+            }
+        updateLikelihood[i] = false;
+        }
+                
+#   endif
+
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)
         lnL += threadLnL[i];
     return lnL;
-    
-#   else
-
-    // calculate likelihood under TKF91 model
-    double lnL = 0.0;
-    for (int i=0; i<wordParameterAlignments.size(); i++)
-        {
-        double lnP = wordLikelihoodCalculators[i]->lnLikelihood();
-        lnL += lnP;
-        }
-    return lnL;
-    
-//    double lnL = 0.0;
-//    for (int i=0; i<wordParameterAlignments.size(); i++)
-//        {
-//        LikelihoodTkf likelihood(wordParameterAlignments[i], this);
-//        double lnP = likelihood.tkfLike();
-//        lnL += lnP;
-//        }
-//    return lnL;
-    
-#   endif
 }
 
 double Model::lnPriorProbability(void) {
@@ -678,6 +677,26 @@ void Model::reject(void) {
         }
 }
 
+void Model::reportLikelihoodAllocs(void) {
+
+    int maxWordLen = 0;
+    for (int i=0; i<wordLikelihoodCalculators.size(); i++)
+        {
+        if (wordLikelihoodCalculators[i]->alignmentName().length() > maxWordLen)
+            maxWordLen = (int)wordLikelihoodCalculators[i]->alignmentName().length();
+        }
+
+    for (int i=0; i<wordLikelihoodCalculators.size(); i++)
+        {
+        std::cout << i << " -- " << wordLikelihoodCalculators[i]->alignmentName() << " ";
+        for (int j=0; j<maxWordLen-wordLikelihoodCalculators[i]->alignmentName().length(); j++)
+            std::cout << " ";
+        std::cout << wordLikelihoodCalculators[i]->getNumAllocs() << " " << wordLikelihoodCalculators[i]->getNumVectors() << std::endl;
+        wordLikelihoodCalculators[i]->zeroNumAllcos();
+        }
+
+}
+
 void Model::setUpdateLikelihood(void) {
 
     for (int i=0; i<updateLikelihood.size(); i++)
@@ -706,12 +725,8 @@ double Model::update(void) {
     return 0.0;
 }
 
-void Model::wordLnLike(int i, ParameterAlignment* aln) {
+void Model::wordLnLike(int i) {
 
     threadLnL[i] = wordLikelihoodCalculators[i]->lnLikelihood();
     wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
-    
-//    LikelihoodTkf likelihood(aln, this);
-//    threadLnL[i] = likelihood.tkfLike();
-//    wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
 }
