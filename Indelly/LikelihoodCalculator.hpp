@@ -1,8 +1,11 @@
 #ifndef LikelihoodCalculator_hpp
 #define LikelihoodCalculator_hpp
 
+#define TRACK_ALLOCS
+
 #include <map>
 #include <set>
+#include <string>
 #include <vector>
 #include "IntVector.hpp"
 #include "RbBitSet.h"
@@ -21,7 +24,13 @@ class LikelihoodCalculator {
                                         LikelihoodCalculator(void) = delete;
                                         LikelihoodCalculator(ParameterAlignment* a, Model* m);
                                        ~LikelihoodCalculator(void);
+        std::string                     alignmentName(void);
         double                          lnLikelihood(void);
+#       if defined(TRACK_ALLOCS)
+        int                             getNumAllocs(void) { return numAllocs; }
+        int                             getNumVectors(void) { return (int)allocated.size(); }
+        void                            zeroNumAllcos(void) { numAllocs = 0; }
+#       endif
     
     private:
         void                            clearPpTable(void);
@@ -66,6 +75,9 @@ class LikelihoodCalculator {
         double*                         zeroH;
         double*                         zeroI;
         double                          immortalProbability;
+#       if defined(TRACK_ALLOCS)
+        int                             numAllocs;
+#       endif
 };
 
 #endif

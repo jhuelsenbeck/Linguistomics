@@ -228,6 +228,9 @@ void Mcmc::runPosterior(void) {
         // sample the chain, printing the current state to files
         if (n == 1 || n == numMcmcCycles || n % sampleFrequency == 0)
             sample(n, curLnL, curLnP);
+            
+        if (n % 1000 == 0)
+            modelPtr->reportLikelihoodAllocs();
         }
     std::chrono::high_resolution_clock::time_point stop = std::chrono::high_resolution_clock::now();
         

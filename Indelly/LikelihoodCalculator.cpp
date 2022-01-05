@@ -54,6 +54,10 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
     zeroI = new double[numStates + 1];
     for (int i=0; i<numStates+1; i++)
         zeroI[i] = 0.0;
+
+#   if defined (TRACK_ALLOCS)
+    numAllocs = 0;
+#   endif
 }
 
 LikelihoodCalculator::~LikelihoodCalculator(void) {
@@ -65,6 +69,11 @@ LikelihoodCalculator::~LikelihoodCalculator(void) {
     delete [] fI;
     delete [] zeroH;
     delete [] zeroI;
+}
+
+std::string LikelihoodCalculator::alignmentName(void) {
+
+    return data->getName();
 }
 
 void LikelihoodCalculator::clearPpTable(void) {
@@ -92,6 +101,9 @@ IntVector* LikelihoodCalculator::getVector(void) {
            do not need to add it to the vector pool. */
         IntVector* v = new IntVector(numTaxa);
         allocated.insert(v);
+#       if defined (TRACK_ALLOCS)
+        numAllocs++;
+#       endif
         return v;
         }
     
@@ -109,6 +121,9 @@ IntVector* LikelihoodCalculator::getVector(IntVector& vec) {
         allocated.insert(v);
         for (int i=0; i<vec.size(); ++i)
             (*v)[i] = vec[i];
+#       if defined (TRACK_ALLOCS)
+        numAllocs++;
+#       endif
         return v;
         }
     IntVector* v = pool.back();

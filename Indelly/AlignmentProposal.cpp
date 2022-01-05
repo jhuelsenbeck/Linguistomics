@@ -63,7 +63,6 @@ AlignmentProposal::AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVaria
 
 AlignmentProposal::~AlignmentProposal(void) {
 
-    std::cout << "in destructor" << std::endl;
     freeProfile(profile, numNodes);
 }
 
@@ -78,7 +77,6 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
 		
     // size of alignment
     int len = endCol - startCol + 1;
-    int numLeaves = (int)inputAlignment.size();
 
     // get a numSites X numTaxa matrix containing the pattern of indels
     std::vector<std::vector<int> > alignment = alignmentParm->getIndelMatrix(inputAlignment);
@@ -95,13 +93,14 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
     do
         {
         // Find all possible vectors from current position, iPos
-        IntVector mask(numLeaves);
+        //IntVector mask(numLeaves);
+        IntVector* mask = getVector();
         int ptr, numPossible = 0, firstNotUsed = 0;
-        for (ptr = firstNotUsed; mask.zeroEntry() && ptr<len; ptr++)
+        for (ptr = firstNotUsed; mask->zeroEntry() && ptr<len; ptr++)
             {
             if (state[ ptr ] != used)
                 {
-                if (mask.innerProduct( alignment[ptr] ) == 0)
+                if (mask->innerProduct( alignment[ptr] ) == 0)
                     {
                     state[ ptr ] = possible;
                     if (numPossible == maxUnalignDimension)
@@ -114,9 +113,10 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                         }
                     possibles[numPossible++] = ptr;
                     }
-                mask.add( alignment[ptr] );
+                mask->add( alignment[ptr] );
                 }
             }
+        returnToPool(mask);
         
         // Loop over all combinations of possible vectors, which define edges from
         // iPos to another possible position, by ordinary binary counting.
@@ -279,7 +279,6 @@ IntVector* AlignmentProposal::getVector(IntVector& vec) {
 
 void AlignmentProposal::freeProfile(int*** x, int n) {
 
-    std::cout << "in freeProfile" << std::endl;
     for (int i=0; i<n; i++)
         {
         delete [] x[i][0];

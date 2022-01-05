@@ -47,6 +47,7 @@ class Model {
         double                                  lnLikelihood(void);
         double                                  lnPriorProbability(void);
         void                                    reject(void);
+        void                                    reportLikelihoodAllocs(void);
         void                                    setUpdateLikelihood(void);
         void                                    setUpdateLikelihood(int idx);
         double                                  update(void);
@@ -57,7 +58,7 @@ class Model {
         void                                    initializeStateSets(nlohmann::json& j);
         void                                    initializeTransitionProbabilities(std::vector<Alignment*>& wordAlignments, nlohmann::json& j);
         nlohmann::json                          parseJsonFile(void);
-        void                                    wordLnLike(int i, ParameterAlignment* aln);
+        void                                    wordLnLike(int i);
         RandomVariable*                         rv;
         double*                                 threadLnL;
         std::vector<bool>                       updateLikelihood;
