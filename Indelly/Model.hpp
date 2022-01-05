@@ -42,7 +42,8 @@ class Model {
         ParameterTree*                          getParameterTree(void);
         std::string                             getStateSetsJsonString(void);
         Tree*                                   getTree(void);
-        Tree*                                   getTree(RbBitSet mask);
+        Tree*                                   getTree(RbBitSet& mask);
+        Tree*                                   getTree(const RbBitSet& mask);
         std::string                             getUpdatedParameterName(void);
         double                                  lnLikelihood(void);
         double                                  lnPriorProbability(void);

@@ -28,6 +28,7 @@ class ParameterTree : public Parameter {
         void                            clearSubtrees(void);
         Tree*                           getActiveTree(void) { return fullTree.trees[0]; }
         Tree*                           getActiveTree(RbBitSet& mask);
+        Tree*                           getActiveTree(const RbBitSet& mask);
         std::map<RbBitSet,TreePair>&    getSubtrees(void) { return subTrees; }
         std::string                     getJsonString(void);
         std::string                     getHeader(void) { return ""; }

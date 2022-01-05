@@ -1,7 +1,7 @@
 #ifndef LikelihoodCalculator_hpp
 #define LikelihoodCalculator_hpp
 
-#define TRACK_ALLOCS
+#undef TRACK_ALLOCS
 
 #include <map>
 #include <set>
