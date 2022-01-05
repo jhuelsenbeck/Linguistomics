@@ -77,14 +77,15 @@ namespace Figures.ConsensusTree {
 //=====================================================================
 
 namespace ExampleConcept {
-  Cognate            = Results.GetConcept(Concepts.Star);
+  Cognate            = Results.GetConcept(Concepts.Grass);
   GetTaxon(language) = Results.Taxa.FindFirst(t => t.Language == language);
 
   TaxonIndex     = 0;
   Taxon          = Results.Taxa[TaxonIndex];
   Callout        = Results.Taxa[3];
   Name           = ToLower(Cognate.Name);
-  ExLanguages    = [Languages.Romanian, Languages.Catalan, Languages.Portuguese, Languages.French, Languages.Friulian];
+//  ExLanguages    = [Languages.Romanian, Languages.Catalan, Languages.Portuguese, Languages.French, Languages.Friulian];
+  ExLanguages    = [Languages.A, Languages.B, Languages.C, Languages.D];
   TaxonList      = GetTaxon(each ExLanguages);
   LangNames      = (each TaxonList).Language;
   CalloutSegment = FirstLetter(Callout);
@@ -586,7 +587,7 @@ namespace PaperSections.DataSummary {
       "The manual alignments served as the starting point for the MCMC sampling procedure (see below), so our analyses did not condition on any particular alignment of word segments being correct. ";
       ShowTableNumber(TableFigures.ManualAlignment); " provides an illustrative example of the alignment for the concept ";
       TableFigures.ManualAlignment.WordDisplay; eos;
-      "The ancestral Latin form "; TextIpa{Concepts.What.Primary.Latin}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
+      "The ancestral Latin form "; TextIpa{"ˈkʷ-id"}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
       "In all of the descendant languages, the secondary articulation is lost. ";
       "In some languages, it becomes a consonant in its own right (i.e., the "; IPA.Segments.kw.ShowDoc; " of French and Walloon). ";
       "To accommodate this change, the Latin form has two segmental slots before the vowel (i.e., ";
@@ -608,8 +609,9 @@ namespace PaperSections.DataSummary {
 //======================================================================
 
 namespace TableFigures.ManualAlignment {
-  Cognate     = Results.GetConcept(Concepts.What);
-  WordDisplay = Quote{TextCase: TextCases.AllLower; Cognate.Name};
+  Concept     = Concepts.Grass;
+  Cognate     = Results.GetConcept(Concept);
+  WordDisplay = Quote{TextCase: TextCases.AllLower; Concept.GlobalVariableName};
 
   Caption = FigureCaption {
     "Manual alignment of the words for the concept "; WordDisplay; eos;
@@ -717,7 +719,7 @@ namespace PaperSections.ModelInference {
 namespace PaperSections.DataCuration {
   Title = "Data Curation and Analyses";
 
-  Example = Concepts.Dog;
+  Example = Concepts.Woman;
 
   Body = Block {
     FirstPar {
@@ -1410,10 +1412,10 @@ namespace PaperSections.Methods {
       ProbVar(SegmentalInfo);
       Space;
       ProbALL;
-      D(ExpectedEvents);
-      D(RateMatrixParams);
-      D(InsertionRate);
-      D(DeletionRate);
+      FD(ExpectedEvents);
+      FD(RateMatrixParams);
+      FD(InsertionRate);
+      FD(DeletionRate);
     };
 
     BodyPar {
@@ -1674,7 +1676,7 @@ IntegrateOver(v) = Integral {
 
 ParamList(v) = Equation {EllipsisList {v sub 1; v sub BN}};
 
-D(x) = HBox {Span {Classical; " d"}; x};
+FD(x) = HBox {Span {Classical; " d"}; x};
 
 Prob(x) = Equation {
   MarginalLikelihood; InParens {x};
