@@ -270,7 +270,7 @@ Tree* Model::getTree(void) {
     return t;
 }
 
-Tree* Model::getTree(RbBitSet mask) {
+Tree* Model::getTree(RbBitSet& mask) {
 
     Tree* t = NULL;
     for (int i=0; i<parameters.size(); i++)
@@ -282,7 +282,20 @@ Tree* Model::getTree(RbBitSet mask) {
             }
         }
     return t;
+}
 
+Tree* Model::getTree(const RbBitSet& mask) {
+
+    Tree* t = NULL;
+    for (int i=0; i<parameters.size(); i++)
+        {
+        if (parameters[i]->getName() == "tree")
+            {
+            ParameterTree* pt = dynamic_cast<ParameterTree*>(parameters[i]);
+            return pt->getActiveTree(mask);
+            }
+        }
+    return t;
 }
 
 std::string Model::getUpdatedParameterName(void) {

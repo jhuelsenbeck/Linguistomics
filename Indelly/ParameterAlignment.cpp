@@ -26,7 +26,8 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     // initialize the alignment
     numTaxa = a->getNumTaxa();
     int numSites = a->getNumChar();
-    taxonMask = a->getTaxonMask();
+    std::vector<bool> boolMask = a->getTaxonMask();
+    taxonMask = RbBitSet(boolMask);
     taxonMapKeyCanonical = a->getTaxonMap();
     for (std::map<int,int>::iterator it = taxonMapKeyCanonical.begin(); it != taxonMapKeyCanonical.end(); it++)
         taxonMapKeyAlignment.insert( std::make_pair(it->second,it->first) );
@@ -259,7 +260,7 @@ double ParameterAlignment::update(void) {
     lastUpdateType = "alignment for " + parmName;
 
     // update the alignment
-    RbBitSet mask(taxonMask);
+    //RbBitSet mask(taxonMask);
     std::vector<std::vector<int> > newAlignment;
     double lnProposalRatio = alignmentProposal->propose(newAlignment, 0.5);
     alignment[0] = newAlignment;

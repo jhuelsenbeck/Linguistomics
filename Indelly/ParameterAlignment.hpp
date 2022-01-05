@@ -63,7 +63,8 @@ class ParameterAlignment : public Parameter {
         int                             index;
         SiteLikelihood*                 siteProbs;
         std::vector<std::string>        taxonNames;
-        std::vector<bool>               taxonMask;
+      //std::vector<bool>               taxonMask;
+        RbBitSet                        taxonMask;
         std::map<int,int>               taxonMapKeyCanonical;
         std::map<int,int>               taxonMapKeyAlignment;
 };

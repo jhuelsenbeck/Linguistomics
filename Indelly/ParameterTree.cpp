@@ -179,6 +179,17 @@ Tree* ParameterTree::getActiveTree(RbBitSet& mask) {
     return NULL;
 }
 
+Tree* ParameterTree::getActiveTree(const RbBitSet& mask) {
+
+    if (mask.getNumberSetBits() == mask.size())
+        return fullTree.trees[0];
+        
+    std::map<RbBitSet,TreePair>::iterator it = subTrees.find(mask);
+    if (it != subTrees.end())
+        return it->second.trees[0];
+    return NULL;
+}
+
 std::string ParameterTree::getJsonString(void) {
 
     std::string str = "\"Tree\": \"" + fullTree.trees[0]->getNewick(20) + "\"";
@@ -473,7 +484,7 @@ double ParameterTree::updateNni(void) {
 
     lastUpdateType = "local";
 
-    double tuning = log(4.0);
+    double tuning = log(2.0);
     Tree* t = fullTree.trees[0];
 #   if defined(DEBUG_LOCAL)
     t->print("BEFORE");
