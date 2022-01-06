@@ -13,6 +13,7 @@ class Parameter;
 class ParameterAlignment;
 class ParameterTree;
 class RandomVariable;
+class thread_pool;
 class Tree;
 class UserSettings;
 
@@ -22,7 +23,7 @@ class Model {
 
     public:
                                                 Model(void) = delete;
-                                                Model(RandomVariable* rj);
+                                                Model(RandomVariable* r, thread_pool* p);
                                                ~Model(void);
         void                                    accept(void);
         void                                    flipActiveLikelihood(void);
@@ -48,7 +49,6 @@ class Model {
         double                                  lnLikelihood(void);
         double                                  lnPriorProbability(void);
         void                                    reject(void);
-        void                                    reportLikelihoodAllocs(void);
         void                                    setUpdateLikelihood(void);
         void                                    setUpdateLikelihood(int idx);
         double                                  update(void);
@@ -61,6 +61,7 @@ class Model {
         nlohmann::json                          parseJsonFile(void);
         void                                    wordLnLike(int i);
         RandomVariable*                         rv;
+        thread_pool*                            threadPool;
         double*                                 threadLnL;
         std::vector<bool>                       updateLikelihood;
         std::vector<int>                        activeLikelihood;
