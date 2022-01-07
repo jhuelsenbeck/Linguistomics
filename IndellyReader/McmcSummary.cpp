@@ -216,6 +216,7 @@ void McmcSummary::print(void) {
         std::cout << std::endl;
         }
     conTree->print();
+    std::cout << conTree->getNewick(4) << std::endl;
 }
 
 void McmcSummary::readAlnFile(std::string fn, int bi) {

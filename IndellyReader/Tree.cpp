@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include "Msg.hpp"
 #include "Node.hpp"
@@ -131,6 +132,7 @@ Tree::Tree(std::map<RbBitSet,ParameterStatistics*>& partitions, std::map<int,std
         {
         Node* newTip = addNode();
         newTip->setIndex(i);
+        newTip->setIsLeaf(true);
 
         if (translateMap.size() > 0)
             {
@@ -204,6 +206,35 @@ Node* Tree::addNode(void) {
     Node* newNode = new Node;
     nodes.push_back(newNode);
     return newNode;
+}
+
+std::string Tree::getNewick(int brlenPrecision) {
+
+    std::stringstream ss;
+    if (root->getIsLeaf() == true)
+        {
+        Node* oldRoot = root;
+        std::vector<Node*> nbs = root->getDescendants();
+        if (nbs.size() > 1)
+            Msg::error("Expecting only a single neighbor at the root of the tree");
+        Node* newRoot = nbs[0];
+        root->setAncestor(newRoot);
+        oldRoot->setAncestor(newRoot);
+        newRoot->setAncestor(NULL);
+        root = newRoot;
+
+        writeTree(root, ss, brlenPrecision);
+
+        newRoot->setAncestor(oldRoot);
+        oldRoot->setAncestor(NULL);
+        root = oldRoot;
+        }
+    else
+        {
+        writeTree(root, ss, brlenPrecision);
+        }
+    std::string newick = ss.str();
+    return newick;
 }
 
 std::map<RbBitSet,double> Tree::getPartitions(void) {
@@ -312,4 +343,34 @@ void Tree::passDown(Node* p) {
 void Tree::print(void) {
 
     listNode(root, 3);
+}
+
+void Tree::writeTree(Node* p, std::stringstream& ss, int brlenPrecision) {
+
+    if (p != NULL)
+        {
+        if (p->getIsLeaf() == true)
+            {
+            //ss << p->getIndex()+1;
+            ss << p->getName();
+            ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBrlen();
+            }
+        else
+            {
+            ss << "(";
+            }
+        std::vector<Node*> myDescendants = p->getDescendants();
+        for (int i=0; i<(int)myDescendants.size(); i++)
+            {
+            writeTree(myDescendants[i], ss, brlenPrecision);
+            if ( (i + 1) != (int)myDescendants.size() )
+                ss << ",";
+            }
+        if (p->getIsLeaf() == false)
+            {
+            ss << ")";
+            if (p != NULL && p != root)
+                ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBrlen();
+            }
+        }
 }
