@@ -317,7 +317,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         {
         algnJsonStrm[i] << alns[i]->getJsonString();
         if (gen == numMcmcCycles)
-            algnJsonStrm[i] << "]" << std::endl;
+            algnJsonStrm[i] << "]\n}" << std::endl;
         else
             algnJsonStrm[i] << "," << std::endl;
         }
