@@ -432,8 +432,8 @@ class TransitionClass {
   }
 
   RandomArray {
-    var list = new ListClass(Rule.Filters.Length);
-    foreach (var f in Rule.Filters)
+    var list = new ListClass(Rule.Partitions.Length);
+    foreach (var f in Rule.Partitions)
       list.Add(Math.Random(0..1000));
     return list.Values;
   }
@@ -442,25 +442,25 @@ class TransitionClass {
     // This is temporary until we get actual data
 
     Frequencies = RandomArray;
-    var list = new ListClass(Rule.Filters.Length);
-    foreach (var f in Rule.Filters)
+    var list = new ListClass(Rule.Partitions.Length);
+    foreach (var f in Rule.Partitions)
       list.Add(RandomArray);
     Rates = list.Values;
   }
 
   void StaticFrequencies(SegmentClass[] segments, MatrixClass tcount) {
-    var list  = new ListClass(Rule.Filters.Length);
-    var flist = new ListClass(Rule.Filters.Length);
-    foreach (var f0 in Rule.Filters) {
-      var s0  = Rule.GetMatching(segments, f0);
+    var max   = Rule.Partitions.Length;
+    var list  = new ListClass(max);
+    var flist = new ListClass(max);
+    foreach (var p0 in Rule.Partitions) {
+      var s0  = Rule.GetMatching(segments, p0.Filter);
       var sum = Math.Sum((each s0).UsedCount);
 
       flist.Add(sum);
 
-      var l1 = new ListClass(Rule.Filters.Length);
-      foreach (var f1 in Rule.Filters) {
-        var s1 = Rule.GetMatching(segments, f1);
-
+      var l1 = new ListClass(max);
+      foreach (var p1 in Rule.Partitions) {
+        var s1    = Rule.GetMatching(segments, p1.Filter);
         var count = 0;
         foreach (var s0i in s0) {
           foreach (var s1i in s1) {

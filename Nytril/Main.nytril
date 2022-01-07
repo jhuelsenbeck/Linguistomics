@@ -18,20 +18,9 @@ include "Tables";
 include "Languages";
 include "../../nytril/deploy/citations";
 include "../../nytril/deploy/graphics";
-//======================================================================
 
-
-/*
-include "Concepts/Nouns";
-include "Concepts/Pronouns";
-include "Concepts/Verbs";
-include "Concepts/Adjectives";
-include "Concepts/Numbers";
-include "Concepts/Misc";
-*/
-
-include "Concepts/Test";
-
+//include "LanguageSet";
+include "LanguageTest";
 //======================================================================
 
 Main.Documents = [
@@ -67,22 +56,19 @@ ResultsClass Results = new ResultsClass;
 //======================================================================
 
 namespace Info {
-  Generations    = 1_000_000;
   LinkMin        = 5;
   ImageFolder    = Folders.Source Folder("Images");
-  RunFolder      = "Test";  // No spaces in the name; RevBayes has a problem with folder names that contain spaces
-
-  OutFolder      = Folders.Repository Folder("Run") Folder(RunFolder);
-  ResultsFolder  = OutFolder Folder("results");
-
+  OutFolder      = Folders.Repository Folder("Run") RunFolder;
   RevSourceName  = FileName("Program") Extensions.RevBayes;
   CharacterName  = FileName("Characters") Extensions.Nexus;
   GammaTrees     = FileName("Gamma.trees");
   GammaLog       = FileName("Gamma.log");
-  GammaMAP       = FileName("Gamma_MAP.tree");
-  GammaConsensus = FileName("Gamma_Consensus.tree");
-  ResultsFile    = IO.Read(ResultsFolder FileName("test.con.tre"), FileFormats.Nexus);
-  ConsensusTree  = ResultsFile.trees.con_50_majrule;
+  MAPName        = FileName("map.tree");
+  MCCName        = FileName("mcc.tree");
+  ConsensusName  = FileName("consensus.tree");
+  ConsensusTree  = IO.Read(OutFolder ConsensusName, FileFormats.Nexus).trees.TREE1;
+  MCCTree        = IO.Read(OutFolder MAPName, FileFormats.Nexus).trees.TREE1;
+  MAPTree        = IO.Read(OutFolder MAPName, FileFormats.Nexus).trees.TREE1;
 }
 //======================================================================
 

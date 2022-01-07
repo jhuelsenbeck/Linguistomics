@@ -63,13 +63,43 @@ namespace Figures.SegmentFrequencies {
 
 namespace Figures.ConsensusTree {
   Caption = FigureCaption {
-    "The majority rule consensus tree from the MCMC analysis";
+    Lang.ConsensusTree;
   };
 
   Body = FigureBody {
     Style.TreeOptions {
-      Width: DocMetrics.TreeWidth - 30 pts;
+      Width: DocMetrics.TreeFigureWidth;
       Root: Info.ConsensusTree;
+    }
+  };
+}
+
+//======================================================================
+
+namespace Figures.MCCTree {
+  Caption = FigureCaption {
+    "The maximumum clade credibility tree";
+  };
+
+  Body = FigureBody {
+    Style.TreeOptions {
+      Width: DocMetrics.TreeFigureWidth;
+      Root: Info.MCCTree;
+    }
+  };
+}
+
+//======================================================================
+
+namespace Figures.MAPTree {
+  Caption = FigureCaption {
+    "The maximum "; textit {"a posteriori"}; " tree";
+  };
+
+  Body = FigureBody {
+    Style.TreeOptions {
+      Width: DocMetrics.TreeFigureWidth;
+      Root: Info.MAPTree;
     }
   };
 }
@@ -77,16 +107,12 @@ namespace Figures.ConsensusTree {
 //=====================================================================
 
 namespace ExampleConcept {
-  Cognate            = Results.GetConcept(Concepts.Grass);
-  GetTaxon(language) = Results.Taxa.FindFirst(t => t.Language == language);
-
+  Cognate        = Results.GetConcept(Concepts.Grass);
   TaxonIndex     = 0;
   Taxon          = Results.Taxa[TaxonIndex];
   Callout        = Results.Taxa[3];
   Name           = ToLower(Cognate.Name);
-//  ExLanguages    = [Languages.Romanian, Languages.Catalan, Languages.Portuguese, Languages.French, Languages.Friulian];
-  ExLanguages    = [Languages.A, Languages.B, Languages.C, Languages.D];
-  TaxonList      = GetTaxon(each ExLanguages);
+  TaxonList      = Results.Taxa.FindSlice(t => t.Language.Example);
   LangNames      = (each TaxonList).Language;
   CalloutSegment = FirstLetter(Callout);
   LangWord       = Span {(each Cognate.Words[TaxonIndex].Segments).Ipa};
@@ -97,67 +123,14 @@ namespace ExampleConcept {
 //======================================================================
 
 namespace Figures.ExampleTree {
-  LanguageClass[] LanguageList = [
-    Latin,
-    Romanian,
-    Portuguese,
-    PortugueseBrazil,
-    Spanish,
-    Catalan,
-    French,
-    Walloon,
-    Friulian,
-    Italian,
-  ];
-
-  LangNumber(LanguageClass language) = LanguageList.FindFirstIndex(language)+1;
-
-  Leaf(LanguageClass language, length) = new NodeClass("{0} ({1})"(language, LangNumber(language))) {
-    BranchLength: length
-  };
-
-  Branch(name, length) = new NodeClass(name) {
-    Marker      : Style.BranchMarker;
-    BranchLength: length
-  };
-
-  Nodes = Branch(19, 1) {
-    Leaf(Latin, 7);
-    Branch(18, 1) {
-      Leaf(Romanian, 6);
-      Branch(17, 1) {
-        Branch(16, 1) {
-          Branch(15, 1) {
-            Leaf(Walloon, 3);
-            Leaf(French, 3);
-          };
-          Branch(14, 1) {
-            Branch(13, 1) {
-              Branch(12, 1) {
-                Leaf(Portuguese, 1);
-                Leaf(PortugueseBrazil, 1);
-              };
-              Leaf(Spanish, 2);
-            };
-            Leaf(Catalan, 3);
-          }
-        };
-        Branch(11, 1) {
-          Leaf(Friulian, 4);
-          Leaf(Italian, 4);
-        }
-      }
-    }
-  };
-
   Caption = FigureCaption {
-    "An example tree showing the relationships of {0} languages."(SampledLanguages(LanguageList.Length));
+    "An example tree showing the relationships of {0} languages."(SampledLanguages(Info.LanguageList.Length));
   };
 
   Body = FigureBody {
     TreeOptions {
       Width: 5 inches;
-      Root: Nodes;
+      Root: Info.NumberedTree;
     };
   };
 }
@@ -165,7 +138,6 @@ namespace Figures.ExampleTree {
 
 namespace Figures.Alignment {
   ArrowWidth  = 40;
-  ArrowHeight = 100;
   ArrowMargin = 10 pts;
   Arrowhead   = 8 pts;
   ArrowColor  = 80%;
@@ -283,7 +255,7 @@ namespace Figures.Alignment {
     };
     Canvas {
       Background: Colors.White;
-      Position: Point(size.Width * 0.3, size.Height * 0.25);
+      Position: Point(size.Width * 0.3, (size.Height - 25 pts) * 0.5);
       TextHeight: 20 pts;
       TextColor: ArrowColor;
       Bold;
@@ -339,7 +311,7 @@ namespace Figures.Alignment {
       HBox {
         MarginB: 4 pts;
         VAlign: VAligns.Bottom;
-        var size = Size(ArrowWidth, ArrowHeight);
+        var size = Size(ArrowWidth, Results.Taxa.Length * 8 pts);
 
         ArrowFigure(size) {
           Transform: Affine(-1, 0, 0, 1, size.Width, 0);
@@ -463,6 +435,8 @@ namespace PaperSections.RomanceLanguagePhylogeny {
       "The results of the MCMC analysis are shown below.";
     };
     ShowFigureDoc(Figures.ConsensusTree);
+    ShowFigureDoc(Figures.MAPTree);
+    ShowFigureDoc(Figures.MCCTree);
   };
 }
 //======================================================================
@@ -640,6 +614,9 @@ namespace TableFigures.ManualAlignment {
 //======================================================================
 
 namespace PaperSections.ModelInference {
+  Combinations(n, r) = Math.Factorial(n) / (Math.Factorial(r) * (Math.Factorial(n - r)));
+
+
   Title = "Model and Statistical Inference";
 
   InsertionLessThanDeletion = Span {InsertionRate; Tex.lt; DeletionRate};
@@ -704,10 +681,7 @@ namespace PaperSections.ModelInference {
       ", and has a large number of parameters (";
       Results.UniqueCount;
       " parameters for the equilibrium distribution and ";
-      Span {
-        Results.UniqueCount^2 div 2;// verify this calculation
-        TextColor: Colors.Red;
-      };
+      Combinations(Results.UniqueCount, 2);
       " exchangability parameters). ";
       "For both the second and third models, we consider the equilibrium frequencies of the model to be random variables with a flat Dirichlet prior distribution."
     };
@@ -856,7 +830,7 @@ namespace PaperSections.Methods {
       French; " and "; Walloon; ", together, are more closely related to "; Friulian; " in the tree of "; TreeFigure; eos;
       "Both French and Walloon are equally related to "; Friulian; " because they both share the same common ancestor with ";
       Friulian; ", at the node numbered ";
-      Figures.ExampleTree.LangNumber(Friulian); " in "; TreeFigure; eos;
+      LangNumber(Friulian); " in "; TreeFigure; eos;
       "It is important to realize that there are many possible ways in which the languages can be related to one another, with the tree of ";
       TreeFigure;
       " depicting only one of the possibilities. ";
@@ -1009,7 +983,7 @@ namespace PaperSections.Methods {
     };
 
     BodyPar {
-      "The word for "; Quote {ExampleConcept.Name};  " in "; ExampleConcept.Taxon.Language; ", for example, is "
+      "The word for "; Quote {ExampleConcept.Cognate.Concept.Name};  " in "; ExampleConcept.Taxon.Language; ", for example, is "
       "/"; ExampleConcept.LangWord; "/. ";
       "The matrix for the word "; ExampleConcept.Name; " also assumes that the fine-scale homology of the segments has been established. ";
       "For example, the above matrix for the concept "; Quote {ExampleConcept.Name};  " assumes that the first segment of the ";
