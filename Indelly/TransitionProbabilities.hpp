@@ -9,6 +9,7 @@
 #include "UserSettings.hpp"
 class Alignment;
 class Model;
+class thread_pool;
 class Tree;
 
 struct TransitionProbabilitiesPair {
@@ -31,7 +32,7 @@ class TransitionProbabilities {
         std::vector<double>                             getStationaryFrequencies(void) { return stationaryFreqs[activeProbs]; }
         std::vector<StateMatrix_t*>                     getTransitionProbabilities(RbBitSet& bs);
         StateMatrix_t*                                  getTransitionProbabilities(RbBitSet& bs, int nodeIdx);
-        void                                            initialize(Model* m, std::vector<Alignment*>& alns, int nn, int ns, int sm);
+        void                                            initialize(Model* m, thread_pool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm);
         void                                            print(void);
         void                                            setNeedsUpdate(bool tf) { needsUpdate = tf; }
         void                                            setTransitionProbabilities(void);
@@ -40,17 +41,17 @@ class TransitionProbabilities {
                                                         TransitionProbabilities(void);
                                                        ~TransitionProbabilities(void);
                                                         TransitionProbabilities(const TransitionProbabilities& tp) = delete;
-        void                                            padeTransitionProbabilities(Tree* t, const StateMatrix_t& Q, const std::vector<StateMatrix_t*>& probs);
         void                                            setTransitionProbabilitiesJc69(void);
         void                                            setTransitionProbabilitiesUsingEigenSystem(void);
         void                                            setTransitionProbabilitiesUsingPadeMethod(void);
         bool                                            isInitialized;
+        Model*                                          modelPtr;
+        thread_pool*                                    threadPool;
         int                                             numNodes;
         int                                             numStates;
         int                                             activeProbs;
         std::map<RbBitSet,TransitionProbabilitiesPair>  transProbs;
         std::vector<double>                             stationaryFreqs[2];
-        Model*                                          modelPtr;
         bool                                            needsUpdate;
         int                                             substitutionModel;
         int                                             numRateCategories;

@@ -19,18 +19,21 @@
 #include "RateMatrix.hpp"
 #include "RateMatrixHelper.hpp"
 #include "SiteLikelihood.hpp"
-#include "ThreadPool.hpp"
+#include "thread_pool.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 
+void thrWordLnLike(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL);
 
 
 
-Model::Model(RandomVariable* r) {
+
+Model::Model(RandomVariable* r, thread_pool* p) {
 
     std::cout << "   Model" << std::endl;
     rv = r;
+    threadPool = p;
 
     // read the json file
     nlohmann::json j = parseJsonFile();
@@ -579,7 +582,7 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
     
     // initialize the transition probabilities
     TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
-    tProbs.initialize( this, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
+    tProbs.initialize( this, threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();
 }
@@ -589,15 +592,11 @@ double Model::lnLikelihood(void) {
 #   if 1
 
     // set up thread pool for calculating the likelihood under the TKF91 model
-    ThreadPool& workers = ThreadPool::threadPoolInstance();
-
     for (int i=0; i<wordParameterAlignments.size(); i++)
         {
         if (updateLikelihood[i] == true)
             {
-            workers.post([=] {
-                wordLnLike(i);
-                });
+            threadPool->push_task(thrWordLnLike, wordLikelihoodCalculators[i], &threadLnL[i], &wordLnLikelihoods[ activeLikelihood[i] ][i]);
             }
         else
             {
@@ -605,9 +604,8 @@ double Model::lnLikelihood(void) {
             }
         updateLikelihood[i] = false;
         }
-
-    workers.wait();
-    workers.reset();
+    
+    threadPool->wait_for_tasks();
     
 #   else
 
@@ -690,26 +688,6 @@ void Model::reject(void) {
         }
 }
 
-void Model::reportLikelihoodAllocs(void) {
-
-    int maxWordLen = 0;
-    for (int i=0; i<wordLikelihoodCalculators.size(); i++)
-        {
-        if (wordLikelihoodCalculators[i]->alignmentName().length() > maxWordLen)
-            maxWordLen = (int)wordLikelihoodCalculators[i]->alignmentName().length();
-        }
-
-    for (int i=0; i<wordLikelihoodCalculators.size(); i++)
-        {
-        std::cout << i << " -- " << wordLikelihoodCalculators[i]->alignmentName() << " ";
-        for (int j=0; j<maxWordLen-wordLikelihoodCalculators[i]->alignmentName().length(); j++)
-            std::cout << " ";
-        std::cout << wordLikelihoodCalculators[i]->getNumAllocs() << " " << wordLikelihoodCalculators[i]->getNumVectors() << std::endl;
-        wordLikelihoodCalculators[i]->zeroNumAllcos();
-        }
-
-}
-
 void Model::setUpdateLikelihood(void) {
 
     for (int i=0; i<updateLikelihood.size(); i++)
@@ -738,8 +716,16 @@ double Model::update(void) {
     return 0.0;
 }
 
+void thrWordLnLike(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL) {
+
+    double lnL = calculator->lnLikelihood();
+    *threadLnL = lnL;
+    *wordLnL   = lnL;
+}
+
 void Model::wordLnLike(int i) {
 
     threadLnL[i] = wordLikelihoodCalculators[i]->lnLikelihood();
     wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
 }
+

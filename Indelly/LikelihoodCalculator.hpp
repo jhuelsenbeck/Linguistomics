@@ -1,8 +1,6 @@
 #ifndef LikelihoodCalculator_hpp
 #define LikelihoodCalculator_hpp
 
-#undef TRACK_ALLOCS
-
 #include <map>
 #include <set>
 #include <string>
@@ -26,11 +24,6 @@ class LikelihoodCalculator {
                                        ~LikelihoodCalculator(void);
         std::string                     alignmentName(void);
         double                          lnLikelihood(void);
-#       if defined(TRACK_ALLOCS)
-        int                             getNumAllocs(void) { return numAllocs; }
-        int                             getNumVectors(void) { return (int)allocated.size(); }
-        void                            zeroNumAllcos(void) { numAllocs = 0; }
-#       endif
     
     private:
         void                            clearPpTable(void);
@@ -75,9 +68,6 @@ class LikelihoodCalculator {
         double*                         zeroH;
         double*                         zeroI;
         double                          immortalProbability;
-#       if defined(TRACK_ALLOCS)
-        int                             numAllocs;
-#       endif
 };
 
 #endif
