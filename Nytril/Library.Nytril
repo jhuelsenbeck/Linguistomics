@@ -6,12 +6,14 @@ class LanguageClass: FactClass {
         Cases;
   var   Variable,
         MapImage,
-        MapAttribution;
+        MapAttribution,
+        Example;
 
   Constructor(id, name, cases=0) {
     super.Constructor(id);
-    Name  = name;
-    Cases = cases;
+    Name    = name;
+    Cases   = cases;
+    Example = false;
   }
 
   virtual Description = null;
@@ -41,20 +43,22 @@ class LanguageClass: FactClass {
   ShowMap(size) {
     if (valid MapImage) {
       return VBox {
-        var h = 6 pts;
-
+        Width: size.Width;
         HAlign: HAligns.Center;
 
+        var h = 6 pts;
         MapImage {
           Size: Size(size.Width, size.Height - h);
           Proportional: true;
         };
 
-        Span {
-          TextHeight: h;
-          TextColor: 80%;
-          Lang.Credit;
-          Hover: new HoverClass(MapAttribution, HoverTypes.Tip);
+        if (valid MapAttribution) {
+          Span {
+            TextHeight: h;
+            TextColor: 80%;
+            Lang.Credit;
+            Hover: new HoverClass(MapAttribution, HoverTypes.Tip);
+          }
         }
       };
     }
@@ -712,19 +716,19 @@ class ResultsClass {
 
   ShowLanguageTrees = Block {
     Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, GetTreeNodes(LanguageBranches.Romance));
-    Style.ShowTree("Priors", Lang.Years, GetTreeNodes(LanguageBranches.Experiment));
+    Style.ShowTree("Priors", Lang.Years, Info.ExperimentTree);
     Style.ShowTree("Results", "Branches", Info.ConsensusTree);
   };
 
   ShowStats = Block {
-    var schema = new LogSchemaClass();
-    var view   = schema.ReadTextFile(Info.OutFolder Info.GammaLog, true, DB.ValueTypes.Double);
+//    var schema = new LogSchemaClass();
+//    var view   = schema.ReadTextFile(Info.OutFolder Info.GammaLog, true, DB.ValueTypes.Double);
 
-    schema.GetHistogram(view, "alpha");
-    schema.LineChart(view, "Prior");
-    schema.LineChart(view, "Likelihood");
-    schema.LineChart(view, "Posterior");
-    schema.LineChart(view, "Tree Length", "TL");
+//    schema.GetHistogram(view, "alpha");
+//    schema.LineChart(view, "Prior");
+//    schema.LineChart(view, "Likelihood");
+//    schema.LineChart(view, "Posterior");
+//    schema.LineChart(view, "Tree Length", "TL");
 
 //    schema.LineChart(view, null, each "bl[{0}]"(each 1..Concepts*2));
 //    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
@@ -771,7 +775,7 @@ class ResultsClass {
     Span {
       Variable("Tree");
       Quote;
-      Newick(GetTreeNodes(LanguageBranches.Experiment));
+      Newick(Info.ExperimentTree);
       ";"; Quote; ",";
     };
   };
@@ -917,7 +921,7 @@ class ResultsClass {
 
     BlockComment("Tree Model");
     LineComment("Outgroup is a clade consisting of one language");
-    "out_group = clade({0})"(ShowString(Languages.Latin));
+    "out_group = clade({0})"(ShowString(Results.Taxa[0].Language));
 
     LineComment("Prior distribution on the tree topology");
     "topology ~ dnUniformTopology(taxa, outgroup=out_group, rooted=TRUE)";
@@ -1010,9 +1014,9 @@ class ResultsClass {
 
     BlockComment("Post processing");
     "treetrace      = readTreeTrace(gammapath, outgroup=out_group)";
-    "map_tree       = mapTree(treetrace, {0})"(PathPlus(Info.GammaMAP));
-//    "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(Info.ConsensusTreeFile));
-    "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(Info.GammaConsensus));
+    "map_tree       = mapTree(treetrace, {0})"(PathPlus(Info.MAPName));
+    "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(Info.MCCName));
+    "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(Info.ConsensusName));
 
     LineComment("Exit the program");
     "q()";

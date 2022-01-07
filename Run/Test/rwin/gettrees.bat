@@ -1,0 +1,1 @@
+"../../../revbayes/rb.exe" "../run/test/rwin/gettrees.rev"
