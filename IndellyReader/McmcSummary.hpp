@@ -1,0 +1,42 @@
+#ifndef McmcSummary_hpp
+#define McmcSummary_hpp
+
+#include <map>
+#include <string>
+#include <vector>
+#include "ParameterStatistics.hpp"
+#include "RbBitSet.h"
+
+class AlignmentDistribution;
+class RandomVariable;
+class Tree;
+
+
+class McmcSummary {
+
+    public:
+                                                McmcSummary(void) = delete;
+                                                McmcSummary(RandomVariable* r);
+                                               ~McmcSummary(void);
+        std::vector<CredibleInterval>           getCredibleIntervals(void);
+        std::vector<double>                     getMeans(void);
+        void                                    print(void);
+        void                                    readAlnFile(std::string fn, int bi);
+        void                                    readTreFile(std::string fn, int bi);
+        void                                    readTsvFile(std::string fn, int bi);
+    
+    private:
+        void                                    addPartion(std::map<RbBitSet,double>& parts);
+        std::vector<std::string>                breakString(std::string str);
+        std::string                             getCognateName(std::string str);
+        bool                                    hasSemicolon(std::string str);
+        std::map<int,std::string>               interpretTranslateString(std::vector<std::string> translateTokens);
+        std::string                             interpretTreeString(std::string str);
+        RandomVariable*                         rv;
+        std::vector<ParameterStatistics*>       stats;
+        std::vector<AlignmentDistribution*>     alignments;
+        std::map<RbBitSet,ParameterStatistics*> partitions;
+        Tree*                                   conTree;
+};
+
+#endif
