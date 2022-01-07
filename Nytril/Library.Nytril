@@ -684,13 +684,14 @@ class ResultsClass {
   };
 
   void InitSource {
+    CreateFolder(Info.BaseFolder);
     CreateFolder(Info.OutFolder);
     if (not CharacterRule.Numbers) {
       IO.Write(CharacterFile(1), Info.OutFolder Info.CharacterName);
       IO.Write(RevBayesSource, Info.OutFolder Info.RevSourceName);
     }
-    IO.Write(RunBatchFile, Info.OutFolder FileName("Run") Extension("bat"), FileFormats.ANSI);
-    IO.Write(ConfigFile, Info.OutFolder FileName("config") Extensions.JSON, FileFormats.Text);
+    IO.Write(RunBatchFile, Info.BaseFolder FileName("RunIndelly") Extension("bat"), FileFormats.ANSI);
+    IO.Write(ConfigFile, Info.BaseFolder Info.ConfigFile, FileFormats.Text);
 
     var p = new RevProcessClass(EXEName, Info.OutFolder Info.RevSourceName) {
 /*      CacheName: "RevBayes";
@@ -715,8 +716,8 @@ class ResultsClass {
   }
 
   ShowLanguageTrees = Block {
-    Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, GetTreeNodes(LanguageBranches.Romance));
-    Style.ShowTree("Priors", Lang.Years, Info.ExperimentTree);
+    Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, LanguageBranches.Romance);
+    Style.ShowTree("Priors", Lang.Years, Info.PriorTree);
     Style.ShowTree("Results", "Branches", Info.ConsensusTree);
   };
 
@@ -736,8 +737,10 @@ class ResultsClass {
 
   RunBatchFile = TextBlock {
     Span {
-      "\"../../revbayes/rb.exe\" \"";
-      Info.OutFolder Info.RevSourceName;
+      "\"../../Indelly/x64/Release/tonguetwister.exe\" -d ";
+      "\""; Info.ConfigFile; "\"";
+      " -o \"";
+      Info.OutFolder FileName(Info.BaseFileName);
       "\"";
     }
   };
@@ -775,7 +778,7 @@ class ResultsClass {
     Span {
       Variable("Tree");
       Quote;
-      Newick(Info.ExperimentTree);
+      Newick(Info.PriorTree);
       ";"; Quote; ",";
     };
   };
@@ -1014,9 +1017,9 @@ class ResultsClass {
 
     BlockComment("Post processing");
     "treetrace      = readTreeTrace(gammapath, outgroup=out_group)";
+    "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(Info.ConsensusName));
     "map_tree       = mapTree(treetrace, {0})"(PathPlus(Info.MAPName));
     "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(Info.MCCName));
-    "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(Info.ConsensusName));
 
     LineComment("Exit the program");
     "q()";
