@@ -537,7 +537,7 @@ class CalcRatesClass {
     Results    = results;
     Rule       = transition.Rule;
     Transition = transition;
-    ArrowGap   = 10 pts;
+    ArrowGap   = 2 pts;
     GapAngle   = 80.0 degrees;
   }
 
@@ -582,20 +582,22 @@ class CalcRatesClass {
         var  rate = Transition.Rates[pi][EachIndex];
         var  hint = new PartitionHintClass(Results, rate, p1, p2);
         var  line = new LineStyleClass(rate * RateScale, 0.25, 1);
+        var  r    = rate * RateScale / MaxLine;
+        var  frac = (100 * (1.0 - r))%;
+        line.LineColor = Color(frac, frac, frac, (50*(r + 1))%);
+
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
-          Graphics.CircleArrow(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
-            Fill: Colors.Black;
+          Graphics.CircleLine(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
             Hover: new HoverClass(hint, HoverTypes.Tip);
           };
         }
-        else {
+        else if (EachIndex < pi) {
           var angle = Graphics.GetAngle(p1.Center, p2.Center);
           var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle);
           var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle + Graphics.OneEighty);
 
-          Graphics.TwoArrowLine(line, c1, c2) {
-            Fill: Color(0, 0, 0/*, Integer(128 + rate * RateScale / MaxLine * 127.0)*/);
+          Graphics.Line(line, c1, c2) {
             Hover: new HoverClass(hint, HoverTypes.Tip);
           };
         }
@@ -614,7 +616,7 @@ class CalcRatesClass {
       };
 
       var c = LayoutSize(TestText(p1)).Width;
-      CircleText(p1, pos, fsize, p1.Radius * 16 / c);
+      CircleText(p1, pos, fsize, p1.Radius * 14 / c);
     }
   };
 
