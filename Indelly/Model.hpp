@@ -12,6 +12,7 @@ class LikelihoodCalculator;
 class Parameter;
 class ParameterAlignment;
 class ParameterTree;
+class Partition;
 class RandomVariable;
 class thread_pool;
 class Tree;
@@ -71,6 +72,7 @@ class Model {
         std::vector<LikelihoodCalculator*>      wordLikelihoodCalculators;
         int                                     updatedParameterIdx;
         int                                     substitutionModel;
+        Partition*                              partitionInfo;
         std::map<std::string,std::set<int> >    stateSets;
         std::vector<std::string>                canonicalTaxonList;
 };

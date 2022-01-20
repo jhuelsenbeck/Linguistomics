@@ -82,7 +82,7 @@ void Partition::print(void) {
     for (int i=1; i<=subsets.size(); i++)
         {
         Subset* s = findSubsetIndexed(i);
-        std::set<int>& vals = s->getValues();
+        std::set<int> vals = s->getValues();
         std::cout << s->getIndex() << " " << s->getLabel();
         for (int j=0; j<len-s->getLabel().length(); j++)
             std::cout << " ";
@@ -98,7 +98,7 @@ int Partition::maxValue(void) {
     int m = -1;
     for (Subset* s : subsets)
         {
-        std::set<int>& vals = s->getValues();
+        std::set<int> vals = s->getValues();
         for (int i : vals)
             {
             if (i > m)

@@ -2,7 +2,9 @@
 #include <iostream>
 #include <map>
 #include "Msg.hpp"
+#include "Partition.hpp"
 #include "RateMatrixHelper.hpp"
+#include "Subset.hpp"
 #include "UserSettings.hpp"
 
 
@@ -30,9 +32,9 @@ std::vector<std::string> RateMatrixHelper::getLabels(void) {
         int idx = it->second;
         int i = it->first.group1;
         int j = it->first.group2;
-        std::string str = std::to_string(i);
+        std::string str = std::to_string(i+1);
         str += "-";
-        str += std::to_string(j);
+        str += std::to_string(j+1);
         labels[idx] = str;
         }
     return labels;
@@ -49,7 +51,7 @@ int RateMatrixHelper::groupIdForState(int stateIdx) {
     return -1;
 }
 
-void RateMatrixHelper::initialize(int ns, nlohmann::json& j) {
+void RateMatrixHelper::initialize(int ns, Partition* part) {
 
     if (isInitialized == true)
         return;
@@ -65,14 +67,23 @@ void RateMatrixHelper::initialize(int ns, nlohmann::json& j) {
             m[i][j] = 0;
         
     // get the state groupings from the json object
-    numGroups = (int)j.size();
-    for (int i=0; i<numGroups; i++)
+//    numGroups = (int)js.size();
+//    for (int i=0; i<numGroups; i++)
+//        {
+//        std::string groupName = js[i]["Name"];
+//        std::vector<int> group = js[i]["Set"];
+//        std::set<int> groupSet;
+//        for (int j=0; j<group.size(); j++)
+//            groupSet.insert(group[j]);
+//        stateGroupings.push_back(groupSet);
+//        stateGroupingsNames.push_back(groupName);
+//        }
+    numGroups = part->numSubsets();
+    for (int i=1; i<=numGroups; i++)
         {
-        std::string groupName = j[i]["Name"];
-        std::vector<int> group = j[i]["Set"];
-        std::set<int> groupSet;
-        for (int j=0; j<group.size(); j++)
-            groupSet.insert(group[j]);
+        Subset* ss = part->findSubsetIndexed(i);
+        std::string groupName = ss->getLabel();
+        std::set<int> groupSet = ss->getValues();
         stateGroupings.push_back(groupSet);
         stateGroupingsNames.push_back(groupName);
         }
@@ -102,6 +113,8 @@ void RateMatrixHelper::initialize(int ns, nlohmann::json& j) {
             {
             int groupI = groupIdForState(i);
             int groupJ = groupIdForState(j);
+//            int groupI = part->indexOfSubsetWithValue(i);
+//            int groupJ = part->indexOfSubsetWithValue(j);
             GroupPair key(groupI, groupJ);
             std::map<GroupPair,int,CompGroupPair>::iterator it = groupIndices.find(key);
             if (it == groupIndices.end())
@@ -122,6 +135,8 @@ void RateMatrixHelper::initialize(int ns, nlohmann::json& j) {
             {
             int groupI = groupIdForState(i);
             int groupJ = groupIdForState(j);
+//            int groupI = part->indexOfSubsetWithValue(i);
+//            int groupJ = part->indexOfSubsetWithValue(j);
             GroupPair key(groupI, groupJ);
             std::map<GroupPair,int,CompGroupPair>::iterator it = groupIndices.find(key);
             if (it == groupIndices.end())
@@ -159,6 +174,18 @@ void RateMatrixHelper::print(void) {
         std::cout << ")" << std::endl;
         }
     std::cout << "     The model has " << groupIndices.size() << " rate parameters" << std::endl;
+}
+
+void RateMatrixHelper::printMap(void) {
+
+    for (int i=0; i<numStates; i++)
+        {
+        for (int j=0; j<numStates; j++)
+            {
+            std::cout << std::setw(2) << m[i][j] << " ";
+            }
+        std::cout << std::endl;
+        }
 }
 
 GroupPair::GroupPair(int i, int j) {

@@ -1,10 +1,10 @@
 #ifndef RateMatrixHelper_hpp
 #define RateMatrixHelper_hpp
 
+#include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include "json.hpp"
 
 struct GroupPair {
 
@@ -28,6 +28,8 @@ struct CompGroupPair {
         }
 };
 
+class Partition;
+
 class RateMatrixHelper {
 
     public:
@@ -42,8 +44,9 @@ class RateMatrixHelper {
         int                                     getNumRates(void) { return (int)groupIndices.size(); }
         int                                     getNumStates(void) { return numStates; }
         int                                     groupIdForState(int stateIdx);
-        void                                    initialize(int ns, nlohmann::json& j);
+        void                                    initialize(int ns, Partition* part);
         void                                    print(void);
+        void                                    printMap(void);
         
     private:
                                                 RateMatrixHelper(void);
