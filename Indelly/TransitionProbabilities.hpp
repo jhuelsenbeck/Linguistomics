@@ -29,8 +29,8 @@ class TransitionProbabilities {
         void                                            flipActive(void);
         int                                             getNumNodes(void) { return numNodes; }
         int                                             getNumStates(void) { return numStates; }
-        std::vector<double>                             getStationaryFrequencies(void) { return stationaryFreqs[activeProbs]; }
-        std::vector<StateMatrix_t*>                     getTransitionProbabilities(RbBitSet& bs);
+        std::vector<double>&                            getStationaryFrequencies(void) { return stationaryFreqs[activeProbs]; }
+        std::vector<StateMatrix_t*>&                    getTransitionProbabilities(RbBitSet& bs);
         StateMatrix_t*                                  getTransitionProbabilities(RbBitSet& bs, int nodeIdx);
         void                                            initialize(Model* m, thread_pool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm);
         void                                            print(void);

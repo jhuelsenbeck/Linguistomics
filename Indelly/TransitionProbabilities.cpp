@@ -47,7 +47,7 @@ void TransitionProbabilities::flipActive(void) {
         activeProbs = 0;
 }
 
-std::vector<StateMatrix_t*> TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs) {
+std::vector<StateMatrix_t*>& TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs) {
 
     std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.find(bs);
     if (it == transProbs.end())

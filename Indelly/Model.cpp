@@ -15,6 +15,7 @@
 #include "ParameterIndelRates.hpp"
 #include "ParameterIndelGammaShape.hpp"
 #include "ParameterTree.hpp"
+#include "Partition.hpp"
 #include "RandomVariable.hpp"
 #include "RateMatrix.hpp"
 #include "RateMatrixHelper.hpp"
@@ -34,6 +35,7 @@ Model::Model(RandomVariable* r, thread_pool* p) {
     std::cout << "   Model" << std::endl;
     rv = r;
     threadPool = p;
+    partitionInfo = NULL;
 
     // read the json file
     nlohmann::json j = parseJsonFile();
@@ -61,6 +63,8 @@ Model::~Model(void) {
         delete parameters[i];
     for (int i=0; i<wordLikelihoodCalculators.size(); i++)
         delete wordLikelihoodCalculators[i];
+    if (partitionInfo != NULL)
+        delete partitionInfo;
 }
 
 void Model::accept(void) {
@@ -437,10 +441,14 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         if (it == j.end())
             Msg::error("Could not finda  partition of the substitution model states");
         nlohmann::json jsonPart = j["PartitionSets"];
+        
+        partitionInfo = new Partition(jsonPart);
+        //partitionInfo->print();
             
         RateMatrixHelper& helper = RateMatrixHelper::rateMatrixHelper();
-        helper.initialize(numStates, jsonPart);
+        helper.initialize(numStates, partitionInfo);
         helper.print();
+        //helper.printMap();
         
         initializeStateSets(jsonPart);
         }
@@ -469,7 +477,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         {
         std::string alnName = wordAlignments[i]->getName();
         Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, new SiteLikelihood(numNodes,numStates), i);
-        pAlign->setProposalProbability(1.0);
+        pAlign->setProposalProbability(0.0);
         parameters.push_back(pAlign);
         wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
         wordLikelihoodCalculators.push_back( new LikelihoodCalculator(dynamic_cast<ParameterAlignment*>(pAlign), this) );

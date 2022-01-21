@@ -11,6 +11,9 @@ void printHeader(void);
 
 int main(int argc, char* argv[]) {
 
+    // TODO: Output information on partition group frequencies (i.e., size of circles), with CIs.
+    //       Check that the partition group indices are consistent across all output in this program (esp. check .csv file)
+
     RandomVariable rv;
     printHeader();
 
