@@ -1,4 +1,21 @@
-﻿using Format, Style, Defs, Units;
+﻿using Format, Style, Defs, Equations, Units;
+//======================================================================
+
+BranchFormula(n) {
+  var t = 1;
+  n = n*2 - 3;
+  while (n > 1) {
+    if (n mod 2 == 1)
+      t *= n;
+    --n;
+  }
+  return t;
+}
+
+BranchMinus(n) = Equation {2 NumLanguages Minus n};
+
+MaxBranches = BranchMinus(2);
+MaxBranch   = BranchMinus(3);
 //======================================================================
 
 namespace sym {
@@ -91,175 +108,274 @@ AncestorNode(i) = Equation {
 //======================================================================
 
 namespace Defs {
-  Phylogeny               = new DefClass(GreekFamily Tex.Psi, "Phylogeny", "The (possibly unknown) relationship between entities resulting from an evolutionary tree");
-  Topology                = new DefClass(GreekFamily Tex.tau, "Tree topology", "Information on the relationships of the languages");
-  SubstitutionRate        = new DefClass(GreekFamily Tex.mu, "Substitution rate", "the rate at which the language changes");
-  NumLanguages            = new DefClass(Extra "N", "Sampled languages", "The number of languages in a sample");
-  ExpectedEvents          = new DefClass(GreekFamily Tex.nu, "Expected events", "The expected number of evolutionary events that occurred between two languages");
-  Time                    = new DefClass(Classical "t", "Past times", "Times of branch events");
-  PossibleRootedTrees     = new DefClass(Span {TextFamily: TextFamilies.TimesNewRoman; Bold; "ℬ"}, "Possible rooted trees", "");
-  SegmentalAlignment      = new DefClass(Bold "A", "Segmental alignment", "Constructed by combining the word segment information for the languages of interest with information on the homology of the segments");
-  SegmentalInfo           = new DefClass(Bold "S", "Segmental information", "Information on the homology of the segments");
-  Segment                 = new DefClass(Bold "s", "Segment", "Linguistic segment");
-  ISegment                = new DefClass(Segment sub sym.i, "ith segment", "");
-  HomologyMap             = new DefClass(Bold "H", "Homology map", "The map describing the alignment of the segments");
-  RateMatrix              = new DefClass(Bold Classical "Q", "Rate Matrix", "");
-  RateMatrixScale         = new DefClass(Extra Italic Tex.beta, "Rate matrix scaling factor", "Scales the rate matrix such that the average rate of segmental substitution is one");
-  StateProbability        = new DefClass(Bold "P", "Probability", "The probability the process ends in certain state");
-  MarginalLikelihood      = new DefClass(Extra "P", "Marginal Likelihood", "The probability of an event ocurring");
-  EquilibriumDistribution = new DefClass(GreekFamily Tex.pi, "Equilibrium distribution", "");
-  InsertionRate           = new DefClass(GreekFamily Tex.lambda, "Rate of segment insertion", "");
-  DeletionRate            = new DefClass(GreekFamily Tex.mu, "Rate of segment deletion", "");
-  WordLength              = new DefClass(Classical "n", "Word length", "Number of segments in a word");
-  RateParameter           = new DefClass(Classical "r", "Rate parameter", "");
-  RateMatrixParams        = new DefClass(sym.theta, "Rate parameters", "Parameters associated with the rate matrix");
-  NewValueProposal        = new DefClass(Span {sym.theta; Tex.prime}, "Proposal", "New value proposal");
-  ProbProposal            = new DefClass(sym.q, "Proposal probability", "Probability of new proposal");
-  RandomNumber            = new DefClass(Classical "u", "Random number", "");
-  ProbOfAccepting         = new DefClass(Classical "R", "Acceptance probability", "Probability of accepting a proposed value");
-  Model                   = new DefClass(Span {TextFamily: TextFamilies.TimesNewRoman; "ℳ"}, "Model", "Mathematical model for linguistic parameters");
-  BayesFactor             = new DefClass(Extra "BF", "Bayes Factor", "A numerical factor related to the quality of the model fit");
-  Unknown                 = new DefClass(Classical "X", "Unknown", "");
+  Phylogeny               = new DefClass(#307ce909-f048-4a73-bc64-45f876fc661a#, GreekFamily Tex.Psi, "Phylogeny", "The (possibly unknown) relationship between entities resulting from an evolutionary tree");
+  Topology                = new DefClass(#8e8c02ac-3f24-4ae2-837d-7c807b313956#, GreekFamily Tex.tau, "Tree topology", "Information on the relationships of the languages");
+  SubstitutionRate        = new DefClass(#04322008-770d-4b3f-8241-88e38317047c#, GreekFamily Tex.mu, "Substitution rate", "the rate at which the language changes");
+  NumLanguages            = new DefClass(#a0899195-acf6-40a0-8578-9ea88cc81044#, Extra "N", "Sampled languages", "The number of languages in a sample");
+  ExpectedEvents          = new DefClass(#7095d7ae-44a8-4b30-bd2c-cefa28c48ea9#, GreekFamily Tex.nu, "Expected events", "The expected number of evolutionary events that occurred between two languages");
+  Time                    = new DefClass(#c32a5efb-f18a-4b9f-9308-b378e9a652bd#, Classical "t", "Past times", "Times of branch events");
+  SegmentalAlignment      = new DefClass(#f9325799-863b-459b-94c0-d119367ab196#, Bold "A", "Segmental alignment", "Constructed by combining the word segment information for the languages of interest with information on the homology of the segments");
+  SegmentalInfo           = new DefClass(#3bd5d33a-9ea7-4f50-9e4a-ac030af87091#, Bold "S", "Segmental information", "Information on the homology of the segments");
+  Segment                 = new DefClass(#2e02739b-37ba-4e12-b1a1-9741d9dc3a12#, Bold "s", "Segment", "Linguistic segment");
+  ISegment                = new DefClass(#0e1f8bcd-f299-4852-a98c-5031c53e1b72#, Segment sub sym.i, "ith segment", "");
+  HomologyMap             = new DefClass(#8b2c537a-0161-47ab-8376-aa2cfd3e5377#, Bold "H", "Homology map", "The map describing the alignment of the segments");
+  RateMatrix              = new DefClass(#a8a039e6-63af-4496-bb50-22e5bdf5d312#, Bold Classical "Q", "Rate Matrix", "");
+  RateMatrixScale         = new DefClass(#c19ebb53-371c-460e-adf0-86e960231174#, Extra Italic Tex.beta, "Rate matrix scaling factor", "Scales the rate matrix such that the average rate of segmental substitution is one");
+  StateProbability        = new DefClass(#4d420b31-d22f-4915-8ae8-15f2f4bbb87d#, Bold "P", "Probability", "The probability the process ends in certain state");
+  MarginalLikelihood      = new DefClass(#c2f230d4-4050-4ee3-98b6-ec1c52405ce5#, Extra "P", "Marginal Likelihood", "The probability of an event ocurring");
+  EquilibriumDistribution = new DefClass(#37149ed6-e98a-431c-b40d-7069c0a8c7ca#, GreekFamily Tex.pi, "Equilibrium distribution", "");
+  InsertionRate           = new DefClass(#1a94ba3d-d7da-4634-bbf6-88b03d84cffc#, GreekFamily Tex.lambda, "Rate of segment insertion", "");
+  DeletionRate            = new DefClass(#0c0d91ab-e586-451e-8519-74bead5be54d#, GreekFamily Tex.mu, "Rate of segment deletion", "");
+  WordLength              = new DefClass(#5018b4ef-62b3-47fe-8086-64802e6f5a63#, Classical "n", "Word length", "Number of segments in a word");
+  RateParameter           = new DefClass(#909d6802-f159-4c23-9467-fd848d6e3e3c#, Classical "r", "Rate parameter", "");
+  RateMatrixParams        = new DefClass(#d5d8bf9d-088e-420c-8c2f-56fd1fb73071#, sym.theta, "Rate parameters", "Parameters associated with the rate matrix");
+  NewValueProposal        = new DefClass(#ba307fd0-0546-459c-9f34-7e624f72015c#, Span {sym.theta; Tex.prime}, "Proposal", "New value proposal");
+  ProbProposal            = new DefClass(#cdd0c1f4-55fe-4c2d-9852-9a1d8387e821#, sym.q, "Proposal probability", "Probability of new proposal");
+  RandomNumber            = new DefClass(#daf62f51-5846-41dd-b56a-768d4c7d0bd5#, Classical "u", "Random number", "");
+  ProbOfAccepting         = new DefClass(#031c7f83-937c-4208-88d2-a843019be1c5#, Classical "R", "Acceptance probability", "Probability of accepting a proposed value");
+  Model                   = new DefClass(#424c092b-4204-4be4-a54b-153d609d39a7#, Span {TextFamily: TextFamilies.TimesNewRoman; "ℳ"}, "Model", "Mathematical model for linguistic parameters");
+  BayesFactor             = new DefClass(#81d76a56-bdff-4876-8794-62d3dcff6346#, Extra "BF", "Bayes Factor", "A numerical factor related to the quality of the model fit");
+  Unknown                 = new DefClass(#b201f529-2e31-4ccd-927c-3bcd5dbef524#, Classical "X", "Unknown", "");
+  PossibleRootedTrees     = new DefClass(#7a776122-8f31-49ff-94e0-e8124fa9b5b5#, Span {TextFamily: TextFamilies.TimesNewRoman; Bold; "ℬ"}, "Possible rooted trees", "");
+  BN                      = new DefClass(#c7fecde1-fcb0-4b68-9bc2-69622b63a7f6#, Span {PossibleRootedTrees; InParens {NumLanguages}}, "Possible rooted trees as a function of the number of languages", "");
 }
 
-Condition(x, y) = Span {
-  x; "|"; y;
+Condition(x, y) = HBox {
+  VAlign: VAligns.Baseline;
+  x; Tex.vert; y;
 };
 
-UnknownTree = Equation {
-   Phylogeny;
-   Equals;
-   Arguments {
-     Topology;
-     ExpectedEvents;
-   }
-};
-
-LiklihoodFunction = Equation {
-  FunctionF;
-  Arguments {
-    Condition(SegmentalInfo, Phylogeny);
-    InsertionRate;
-    DeletionRate;
-    RateMatrixParams;
+namespace Equations {
+  UnknownTree = new EquationClass(#c070ccfe-ee29-41be-9064-6dc6ccaa5995#, "Unknown Tree") {
+    Line: Equation {
+       Phylogeny;
+       Equals;
+       Arguments {
+         Topology;
+         ExpectedEvents;
+       }
+    };
   };
-};
 
-MarginalLiklihood = Equation {
-  FunctionF;
-  Arguments {
-    SegmentalInfo;
-  };
-};
-
-BayesianEstimation = Equation {
-  FunctionF;
-  Arguments {
-    Phylogeny;
-    InsertionRate;
-    DeletionRate;
-    Condition(RateMatrixParams, SegmentalInfo);
-  };
-  Equals;
-  Fraction {
-    LiklihoodFunction;
-    Span {
+  LiklihoodFunction = new EquationClass(#4a58876a-8295-4ea2-830a-bc1f39cd1634#, "Liklihood Function") {
+    Line: Equation {
       FunctionF;
       Arguments {
-        Phylogeny;
+        Condition(SegmentalInfo, Phylogeny);
         InsertionRate;
         DeletionRate;
         RateMatrixParams;
       };
     };
+  };
 
-    Span {
+  MarginalLiklihood = new EquationClass(#311eaf7f-7d9e-4569-868f-eda0cc0ac959#, "Marginal Liklihood") {
+    Line: Equation {
       FunctionF;
       Arguments {
         SegmentalInfo;
       };
     };
   };
-};
 
-ExpectedEventsPerBranch = Equation {
-  ExpectedEvents;
-  Equals;
-  InParens {
-    Time sub (Tex.sigma sub sym.i);
-    Minus;
-    Time sub sym.i;
+  BayesianEstimation = new EquationClass(#a6660b63-6222-4967-93f4-589f47b986ce#, "Bayesian Estimation") {
+    Line: Equation {
+      FunctionF;
+      Arguments {
+        Phylogeny;
+        InsertionRate;
+        DeletionRate;
+        Condition(RateMatrixParams, SegmentalInfo);
+      };
+      Equals;
+      Fraction {
+        LiklihoodFunction;
+        Span {
+          FunctionF;
+          Arguments {
+            Phylogeny;
+            InsertionRate;
+            DeletionRate;
+            RateMatrixParams;
+          };
+        };
+
+        Span {
+          FunctionF;
+          Arguments {
+            SegmentalInfo;
+          };
+        };
+      };
+    };
   };
-  Tex.times;
-  SubstitutionRate sub sym.i;
-};
 
-BranchMinus(n) = Equation {2 NumLanguages Minus n};
-
-MaxBranches = BranchMinus(2);
-MaxBranch   = BranchMinus(3);
-
-BN = Equation {
-  PossibleRootedTrees;
-  InParens {
-    NumLanguages
+  ExpectedEventsPerBranch = new EquationClass(#64e8f644-cd4b-45f6-ba4a-8c947a356458#, "Expected Events per Branch") {
+    Line: Equation {
+      ExpectedEvents;
+      Equals;
+      InParens {
+        Time sub (Tex.sigma sub sym.i);
+        Minus;
+        Time sub sym.i;
+      };
+      Tex.times;
+      SubstitutionRate sub sym.i;
+    };
   };
-};
 
-BNEquation = Equation {
-  BN;
-  Equals;
-  InParens {MaxBranch};
-  "!!";
-  Equals;
-  ProductList {
-    1; 3; MaxBranch;
-  }
-};
+  PossibleTrees = new EquationClass(#38134545-1719-4b8b-9af4-cb18eab9d09e#, "Possible Rooted Trees") {
+    Line: Equation {
+      BN;
+      Equals;
+      InParens {MaxBranch};
+      "!!";
+      Equals;
+      ProductList {
+        1; 3; MaxBranch;
+      };
+    };
+  };
 
-BranchFormula(n) {
-  var t = 1;
-  n = n*2 - 3;
-  while (n > 1) {
-    if (n mod 2 == 1)
-      t *= n;
-    --n;
-  }
-  return t;
+  InDelDistribution = new EquationClass(#db4b99ec-6725-4b11-b873-f8ab6698ac16#, "Indel Distribution") {
+    Line: Equation {
+      RateParameter;
+      Equals;
+      Negative;
+      Summation {
+        Lower: sym.i;
+        InParens {sym.ni; sym.qii};
+        Plus;
+        WordLength;
+        InsertionRate;
+        Plus;
+        InParens {WordLength; Minus; 1};
+        SubstitutionRate;
+      };
+    };
+  };
+
+  InDelProbability = new EquationClass(#01728f12-67b4-4bd0-ab13-e4124d4ac7ae#, "In-Del Probability") {
+    Line: Equation {
+      Negative;
+      Summation {
+        Lower: sym.i;
+        InParens {sym.ni; sym.qii};
+      };
+      Divide;
+      RateParameter;
+    };
+  };
+
+  ProbOfAcceptingProposal = new EquationClass(#f85ca0eb-aa0b-49ac-a97c-58f95f15b181#, "Probability of accepting the proposed value") {
+    Line: Equation {
+      ProbOfAccepting;
+      Equals;
+      "min";
+      InParens {
+        "1, ";
+        Fraction {
+          FunctionF; Arguments {
+            Condition(Unknown, NewValueProposal)
+          };
+
+          FunctionF; Arguments {Condition(Unknown, RateMatrixParams)};
+        };
+        Times;
+        Fraction {
+          FunctionF; Arguments {NewValueProposal};
+          FunctionF; Arguments {RateMatrixParams};
+        };
+        Times;
+        Fraction {
+          NewProposal(NewValueProposal, RateMatrixParams);
+          NewProposal(RateMatrixParams, NewValueProposal);
+        };
+      };
+    };
+  };
+
+  ModelComparison = new EquationClass(#99c4daca-c075-42c3-beb8-d89b4148d9a4#, "Model Comparison") {
+    Line: Equation {
+      BayesFactor sub 12;
+      Equals;
+      Fraction {
+        PSM(1);
+        PSM(2);
+      }
+    };
+  };
+
+  MarginalLikelihoodParameters = new EquationClass(#a25bcd04-7841-4a0d-9859-acf4ea460c71#, "Marginal Likelihood Parameters") {
+    Line: EquationPar {
+      Prob(SegmentalInfo);
+      Equals;
+      Summation {Lower: Topology};
+      IntegrateOver(ExpectedEvents);
+      IntegrateOver(RateMatrixParams);
+      IntegrateOver(InsertDelete(Tex.lt));
+      ProbVar(SegmentalInfo);
+      Space;
+      ProbALL;
+      FD(ExpectedEvents);
+      FD(RateMatrixParams);
+      FD(InsertionRate);
+      FD(DeletionRate);
+    };
+  };
+
+  MarginalizationOverAlignments = new EquationClass(#666bdb91-49be-408a-af3e-fe7ca5c7aebb#, "Marginalization Over Alignments") {
+    Line: EquationPar {
+      ProbVar(SegmentalInfo);
+      Equals;
+      Summation {
+        Lower: HomologyMap;
+        ProbVar(SegmentalAlignment);
+        Space;
+        Prob(CommaList {Condition(SegmentalAlignment, HomologyMap); SegmentalInfo});
+        Space;
+        Prob(HomologyMap);
+      };
+    };
+  };
+
+  PosteriorProbabilityDistribution = new EquationClass(#5294924e-b618-4073-adf4-bf782cc45e65#, "Posterior Probability Distribution") {
+    Line: EquationPar {
+      Prob(CommaList {
+        Topology;
+        ExpectedEvents;
+        RateMatrixParams;
+        InsertionRate;
+        Condition(DeletionRate, SegmentalInfo);
+      });
+      Equals;
+      Fraction {
+        Span {
+          ProbVar(SegmentalInfo);
+          Space;
+          ProbALL;
+        };
+        Prob(SegmentalInfo);
+      }
+    };
+  };
+
+  BayesTheorem = new EquationClass(#7a57afd3-1293-4a75-8518-9ce32bbe9fa8#, "Bayes Theorem") {
+    Line: EquationPar {
+      PPO;
+      Equals;
+      Fraction {
+        Span {
+          POP;
+          Space;
+          PP;
+        };
+        PO;
+      }
+    };
+  };
 }
-
-InDelDistribution = Equation {
-  RateParameter;
-  Equals;
-  Negative;
-  Summation {
-    Lower: sym.i;
-    InParens {sym.ni; sym.qii};
-    Plus;
-    WordLength;
-    InsertionRate;
-    Plus;
-    InParens {WordLength; Minus; 1};
-    SubstitutionRate;
-  };
-};
-
-InDelProbability = Equation {
-  Negative;
-  Summation {
-    Lower: sym.i;
-    InParens {sym.ni; sym.qii};
-  };
-  Divide;
-  RateParameter;
-};
 //======================================================================
 
-namespace ExampleAnimals {
-  Chimpanzee = "AAGCTTCACCGGCGCAATTATCCTCATAATCGCCCACGGACTTACATCCT";
-  Gorilla    = "AAGCTTCACCGGCGCAGTTGTTCTTATAATTGCCCACGGACTTACATCAT";
-  Human      = "AAGCTTCACCGGCGCAGTCATTCTCATAATCGCCCACGGGCTTACATCCT";
-}
-//======================================================================
 
 

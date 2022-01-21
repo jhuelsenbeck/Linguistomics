@@ -55,12 +55,14 @@ class AppendixClass {
 }
 //======================================================================
 
-class DefClass {
-  var Symbol,
-      Name,
-      Description;
+class DefClass: FactClass {
+  field Name,
+        Description;
+  var   Symbol;
 
-  Constructor(symbol, name, description=null) {
+  Constructor(id, symbol, name, description=null) {
+    super.Constructor(id);
+
     Symbol      = symbol;
     Name        = name;
     Description = description;
@@ -69,7 +71,10 @@ class DefClass {
   override GetLayoutDoc = Span {
     Hover: new HoverClass(this, HoverTypes.Tip);
     Symbol;
+    Link to this;
   };
+
+  override GetLayoutFact = GetLayoutTip;
 
   override GetLayoutTip = Block {
     Paragraph {
@@ -95,6 +100,41 @@ class DefClass {
         SpaceAfter: 6 pts;
         Description;
       };
+    }
+  };
+}
+//======================================================================
+
+class EquationClass: FactClass {
+  field Name;
+  var   Line;
+
+  Constructor(id, name) {
+    super.Constructor(id);
+    Name = name;
+  }
+
+  override GetLayoutDoc = Span {
+    Canvas {
+      Size: Size(10 pts, 10 pts);
+      Hover: new HoverClass(Name, HoverTypes.Description);
+    };
+    Line;
+    Link to this;
+  };
+
+  override GetLayoutFact = GetLayoutTip;
+
+  override GetLayoutTip = Block {
+    Paragraph {
+      SpaceAfter: 10 pts;
+      TextFamily: TextFamilies.Calibri;
+      Bold;
+      Name;
+    };
+    Paragraph {
+      LeftIndent: 24 pts;
+      GetLayoutDoc;
     }
   };
 }

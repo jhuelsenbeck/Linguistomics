@@ -1,4 +1,4 @@
-﻿using Format, Units, Math, IO, Style, Defs, Languages, References;
+﻿using Format, Units, Math, IO, Style, Defs, Equations, Languages, References;
 //======================================================================
 
 namespace Figures.FrequencyDiagramExperiment {
@@ -51,7 +51,7 @@ namespace Figures.FrequencyBoxStatic {
 namespace Figures.SegmentFrequencies {
   Caption = FigureCaption {
     "Frequency of occurance of segments in the lexicon";
-    Citation {References.Phoible};
+    Citation {Phoible};
   };
 
   Body = FigureBody {
@@ -103,7 +103,13 @@ namespace Figures.MAPTree {
     }
   };
 }
+//======================================================================
 
+namespace ExampleAnimals {
+  Chimpanzee = "AAGCTTCACCGGCGCAATTATCCTCATAATCGCCCACGGACTTACATCCT";
+  Gorilla    = "AAGCTTCACCGGCGCAGTTGTTCTTATAATTGCCCACGGACTTACATCAT";
+  Human      = "AAGCTTCACCGGCGCAGTCATTCTCATAATCGCCCACGGGCTTACATCCT";
+}
 //=====================================================================
 
 namespace ExampleConcept {
@@ -398,7 +404,7 @@ namespace PaperSections.WordTransformation {
   Body  = Block {
     FirstPar {
       "Marginal likelihoods under the three models of word transition were approximated using the stepping-stone path-sampling method";
-      Citation {References.xie2010}; eos;
+      Citation {xie2010}; eos;
       "The marginal likelihoods were NUMBER, NUMBER, and NUMBER under the Jukes-Cantor, "; ModelName; ", and GTR models, respectively. ";
       "Hence, the "; ModelName; " model is best supported by the data.";
     };
@@ -535,7 +541,7 @@ namespace PaperSections.DataSummary {
       "We selected ";
       Results.ConceptCount;
       " concepts from the 200-word Swadesh list of basic vocabulary. ";
-      "The initial set of data was downloaded from Wiktionary"; Citation{References.Wictionary}; ", which was then manually checked for accuracy and augmented. ";
+      "The initial set of data was downloaded from Wiktionary"; Citation{Wictionary}; ", which was then manually checked for accuracy and augmented. ";
       "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; Quote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; QuoteEnd{"serious"};
@@ -839,7 +845,7 @@ namespace PaperSections.Methods {
       "In general, the number of possible rooted trees is the product of the odd numbers up to, and including, ";
       MaxBranch;
       ": ";
-      BNEquation; eos;
+      PossibleTrees; eos;
       "Each topology is given a unique label, ";
       Equation {
         EllipsisList {
@@ -1277,16 +1283,7 @@ namespace PaperSections.Methods {
     };
 
     EquationPar {
-      PPO;
-      Equals;
-      Fraction {
-        Span {
-          POP;
-          Space;
-          PP;
-        };
-        PO;
-      }
+      BayesTheorem;
     };
 
     BodyPar {
@@ -1333,22 +1330,7 @@ namespace PaperSections.Methods {
     };
 
     EquationPar {
-      Prob(CommaList {
-        Topology;
-        ExpectedEvents;
-        RateMatrixParams;
-        InsertionRate;
-        Condition(DeletionRate, SegmentalInfo);
-      });
-      Equals;
-      Fraction {
-        Span {
-          ProbVar(SegmentalInfo);
-          Space;
-          ProbALL;
-        };
-        Prob(SegmentalInfo);
-      }
+      PosteriorProbabilityDistribution;
     };
 
     BodyPar {
@@ -1356,16 +1338,7 @@ namespace PaperSections.Methods {
     };
 
     EquationPar {
-      ProbVar(SegmentalInfo);
-      Equals;
-      Summation {
-        Lower: HomologyMap;
-        ProbVar(SegmentalAlignment);
-        Space;
-        Prob(CommaList {Condition(SegmentalAlignment, HomologyMap); SegmentalInfo});
-        Space;
-        Prob(HomologyMap);
-      };
+      MarginalizationOverAlignments;
     };
 
     BodyPar {
@@ -1374,19 +1347,7 @@ namespace PaperSections.Methods {
     };
 
     EquationPar {
-      Prob(SegmentalInfo);
-      Equals;
-      Summation {Lower: Topology};
-      IntegrateOver(ExpectedEvents);
-      IntegrateOver(RateMatrixParams);
-      IntegrateOver(InsertDelete(Tex.lt));
-      ProbVar(SegmentalInfo);
-      Space;
-      ProbALL;
-      FD(ExpectedEvents);
-      FD(RateMatrixParams);
-      FD(InsertionRate);
-      FD(DeletionRate);
+      MarginalLikelihoodParameters;
     };
 
     BodyPar {
@@ -1443,32 +1404,8 @@ namespace PaperSections.Methods {
       Paragraph {
         "Calculate the probability of accepting the proposed value:";
         LineBreak;
-        Equation {
-          Tab;
-          ProbOfAccepting;
-          Equals;
-          "min";
-          InParens {
-            "1, ";
-            Fraction {
-              FunctionF; Arguments {
-                Condition(Unknown, NewValueProposal)
-              };
-
-              FunctionF; Arguments {Condition(Unknown, RateMatrixParams)};
-            };
-            Times;
-            Fraction {
-              FunctionF; Arguments {NewValueProposal};
-              FunctionF; Arguments {RateMatrixParams};
-            };
-            Times;
-            Fraction {
-              NewProposal(NewValueProposal, RateMatrixParams);
-              NewProposal(RateMatrixParams, NewValueProposal);
-            };
-          };
-        };
+        Tab;
+        ProbOfAcceptingProposal;
         LineBreak;
         "In words, the acceptance probability is the product of the likelihood, prior, and proposal ratios.";
       };
@@ -1524,12 +1461,7 @@ namespace PaperSections.Methods {
     };
 
     EquationPar {
-      BayesFactor sub 12;
-      Equals;
-      Fraction {
-        PSM(1);
-        PSM(2);
-      }
+      ModelComparison;
     };
 
     BodyPar {
