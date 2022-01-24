@@ -59,6 +59,13 @@ AlignmentProposal::AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVaria
         for (int j=0; j<numNodes; j++)
             for (int k=0; k<maxlength; k++)
                 profile[i][j][k] = 0;
+                
+    possibles.resize(maxUnalignDimension);
+    state.resize(3*maxUnalignDimension);
+    numStates = alignmentParm->getNumStates();
+    dp.resize(maxlength);
+    for (int i=0; i<maxlength; i++)
+        dp[i].resize(maxlength);
 }
 
 AlignmentProposal::~AlignmentProposal(void) {
@@ -79,7 +86,8 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
     int len = endCol - startCol + 1;
 
     // get a numSites X numTaxa matrix containing the pattern of indels
-    std::vector<std::vector<int> > alignment = alignmentParm->getIndelMatrix(inputAlignment);
+    //std::vector<std::vector<int> > alignment = alignmentParm->getIndelMatrix(inputAlignment);
+    alignmentParm->getIndelMatrix(inputAlignment, alignment);
 
     // Enter first count into DP table
     std::map<IntVector*,int,CompIntVector> dpTable;
@@ -88,8 +96,13 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
     dpTable.insert( std::make_pair( newVec, 1) );  // copy of the pos object is inserted
 		
     // Array of possible vector indices, used in inner loop
-    std::vector<int> possibles(maxUnalignDimension);
-    std::vector<int> state(len, 0);
+//    std::vector<int> possibles(maxUnalignDimension);
+//    std::vector<int> state(len, 0);
+    for (int i=0; i<maxUnalignDimension; i++)
+        possibles[i] = 0;
+    state.resize(len);
+    for (int i=0; i<len; i++)
+        state[i] = 0;
     do
         {
         // Find all possible vectors from current position, iPos
@@ -395,12 +408,19 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
     int pos = (int)(rv->uniformRv() * (curAlignment[0].size() - len + 1));
 #   endif
 
-    std::vector<std::vector<int> > profileNumber;
+    //std::vector<std::vector<int> > profileNumber;
     profileNumber.resize(numNodes);
     for (int i=0; i<numNodes; i++)
         profileNumber[i].resize(curAlignment.size());
-    std::vector<int> xProfile(numNodes, 0);
-    std::vector<int> yProfile(numNodes, 0);
+    //std::vector<int> xProfile(numNodes, 0);
+    //std::vector<int> yProfile(numNodes, 0);
+    xProfile.resize(numNodes);
+    yProfile.resize(numNodes);
+    for (int i=0; i<numNodes; i++)
+        {
+        xProfile[i] = 0;
+        yProfile[i] = 0;
+        }
     for (int i=0; i<curAlignment.size(); i++)
         {
         yProfile[i] = 1;
@@ -418,16 +438,15 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
     
     /* dynamic programming algorithm for the proposal */
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    std::vector<StateMatrix_t*> tiProbs = tip.getTransitionProbabilities(taxonMask);
-    std::vector<double> stationaryFrequencies = tip.getStationaryFrequencies();
-    int numStates = tip.getNumStates();
-    std::vector<std::vector<double> > scoring;
+    std::vector<StateMatrix_t*>& tiProbs = tip.getTransitionProbabilities(taxonMask);
+    std::vector<double>& stationaryFrequencies = tip.getStationaryFrequencies();
+    //std::vector<std::vector<double> > scoring;
     scoring.resize(numStates);
     for (int i=0; i<numStates; i++)
         scoring[i].resize(numStates);
 
     double proposalLoglikelihood = 0.0;
-    std::vector<std::vector<int> > tempProfile;
+    //std::vector<std::vector<int> > tempProfile;
     tempProfile.resize(numNodes);
     for (int i=0; i<numNodes; i++)
         tempProfile[i].resize(maxlength);
@@ -455,10 +474,10 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
             }
 
         // initialising the table
-        std::vector<std::vector<double> > dp;
-        dp.resize(maxlength);
-        for (int i=0; i<maxlength; i++)
-            dp[i].resize(maxlength);
+        //std::vector<std::vector<double> > dp;
+        //dp.resize(maxlength);
+        //for (int i=0; i<maxlength; i++)
+        //    dp[i].resize(maxlength);
         dp[0][0] = 0.0;
         for (int i=1; i<=xProfile[lftChild]; i++)
             {
@@ -765,10 +784,10 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
                 scoring[i][j] = log(scoring[i][j] / stationaryFrequencies[j]);
 
         // initialising the table
-        std::vector<std::vector<double> > dp;
-        dp.resize(maxlength);
-        for (int i=0; i<maxlength; i++)
-            dp[i].resize(maxlength);
+        //std::vector<std::vector<double> > dp;
+        //dp.resize(maxlength);
+        //for (int i=0; i<maxlength; i++)
+        //    dp[i].resize(maxlength);
         dp[0][0] = 0.0;
         double iTempdouble2 = 0.0;
         for (int i = 1; i <= xProfile[lftChildrenIndices[k]]; i++)

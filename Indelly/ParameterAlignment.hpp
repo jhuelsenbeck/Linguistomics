@@ -30,7 +30,7 @@ class ParameterAlignment : public Parameter {
         std::vector<std::vector<int> >  getIndelMatrix(void);
         std::vector<std::vector<int> >  getIndelMatrix(int idx);
         std::vector<std::vector<int> >  getIndelMatrix(std::vector<std::vector<int> >& aln);
-        void                            getIndelMatrix(std::vector<std::vector<int> >& aln, int** m);
+        void                            getIndelMatrix(std::vector<std::vector<int> >& aln, std::vector<std::vector<int> >& m);
         int                             getIndex(void) { return index; }
         bool                            getIsCompletelySampled(void) { return completelySampled; }
         std::string                     getJsonString(void);
