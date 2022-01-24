@@ -259,7 +259,6 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
 
     // threaded version
     RateMatrix& rmat = RateMatrix::rateMatrix();
-    Eigen::MatrixXd M(numStates,numStates);
     const StateMatrix_t& Q = rmat.getRateMatrix();
     
     // update the main tree
@@ -307,7 +306,9 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
 
 #   endif
         
-    stationaryFreqs[activeProbs] = rmat.getEquilibriumFrequencies();
+    std::vector<double>& rmatFreqs = rmat.getEquilibriumFrequencies();
+    for (int i=0; i<numStates; i++)
+        stationaryFreqs[activeProbs][i] = rmatFreqs[i];
 }
 
 void padeTransitionProbabilities(Tree* t, const StateMatrix_t& Q, const std::vector<StateMatrix_t*>& probs, const std::vector<StateMatrix_t*>& m) {
