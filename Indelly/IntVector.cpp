@@ -63,6 +63,14 @@ void IntVector::add(std::vector<int>& iVec) {
         v[i] += iVec[i];
 }
     
+void IntVector::add(int* iVec, int n) {
+
+	if (n != dim)
+        Msg::error("Vector sizes don't match in add2.");
+    for (int i=0; i<dim; i++)
+        v[i] += iVec[i];
+}
+
 void IntVector::addMultiple(IntVector& iVec, int iMultiple) {
 
 	if (iVec.dim != dim)
@@ -74,6 +82,14 @@ void IntVector::addMultiple(IntVector& iVec, int iMultiple) {
 void IntVector::addMultiple(std::vector<int>& iVec, int iMultiple) {
 
 	if (iVec.size() != dim)
+        Msg::error("Vector sizes don't match in addMultiple2.");
+    for (int i=0; i<dim; i++)
+        v[i] += iVec[i] * iMultiple;
+}
+
+void IntVector::addMultiple(int* iVec, int n, int iMultiple) {
+
+	if (n != dim)
         Msg::error("Vector sizes don't match in addMultiple2.");
     for (int i=0; i<dim; i++)
         v[i] += iVec[i] * iMultiple;
@@ -132,6 +148,16 @@ int IntVector::innerProduct(std::vector<int>& iVec) {
     return sum;
 }
 
+int IntVector::innerProduct(int* iVec, int n) {
+
+	if (n != dim)
+        Msg::error("Vector sizes don't match in innerProduct2 (" + std::to_string(n) + " vs " + std::to_string(dim) + ").");
+    int sum = 0;
+    for (int i=0; i<dim; i++)
+        sum += iVec[i] * v[i];
+    return sum;
+}
+
 void IntVector::subtract(IntVector& iVec) {
 
 	if (iVec.dim != dim)
@@ -143,6 +169,14 @@ void IntVector::subtract(IntVector& iVec) {
 void IntVector::subtract(std::vector<int>& iVec) {
 
 	if (iVec.size() != dim)
+        Msg::error("Vector sizes don't match in subtract2.");
+    for (int i=0; i<dim; i++)
+        v[i] -= iVec[i];
+}
+
+void IntVector::subtract(int* iVec, int n) {
+
+	if (n != dim)
         Msg::error("Vector sizes don't match in subtract2.");
     for (int i=0; i<dim; i++)
         v[i] -= iVec[i];

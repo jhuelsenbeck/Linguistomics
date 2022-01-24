@@ -41,7 +41,8 @@ void RateMatrix::initialize(int d, bool useEigens) {
 void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<double>& f) {
 
     // set the stationary frequencies
-    equilibriumFrequencies[activeMatrix] = f;
+    for (int i=0; i<numStates; i++)
+        equilibriumFrequencies[activeMatrix][i] = f[i];
     
     // initialize the rate matrix
     StateMatrix_t& Q = this->Q[activeMatrix];

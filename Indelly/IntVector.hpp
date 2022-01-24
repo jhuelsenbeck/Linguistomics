@@ -36,16 +36,20 @@ class IntVector {
         friend bool             operator!=(const IntVector& vecA, const IntVector& vecB);
         void                    add(IntVector& iVec);
         void                    add(std::vector<int>& iVec);
+        void                    add(int* iVec, int n);
         void                    addMultiple(IntVector& iVec, int iMultiple);
         void                    addMultiple(std::vector<int>& iVec, int iMultiple);
+        void                    addMultiple(int* iVec, int n, int iMultiple);
         void                    clean(void);
         void                    clean(void) const;
         int                     innerProduct(IntVector& iVec);
         int                     innerProduct(std::vector<int>& iVec);
+        int                     innerProduct(int* iVec, int n);
         size_t                  size(void) { return dim; }
         size_t                  size(void) const { return dim; }
         void                    subtract(IntVector& iVec);
         void                    subtract(std::vector<int>& iVec);
+        void                    subtract(int* iVec, int n);
         bool                    zeroEntry(void);
             
     private:

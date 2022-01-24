@@ -150,6 +150,26 @@ std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(std::vector<st
     return m;
 }
 
+void ParameterAlignment::getIndelMatrix(std::vector<std::vector<int> >& aln, int** m) {
+
+    // note that this returns a numSites X numTaxa matrix (i.e.,
+    // the rows contain the information for the i-th site while
+    // the columns contain the information the j-th taxon)
+    // we assume outAln is large enough to hold the alignment
+    size_t nt = aln.size();
+    size_t ns = aln[0].size();
+    for (int i=0; i<ns; i++)
+        {
+        for (int j=0; j<nt; j++)
+            {
+            if (aln[j][i] == gapCode)
+                m[i][j] = 0;
+            else
+                m[i][j] = 1;
+            }
+        }
+}
+
 std::string ParameterAlignment::getJsonString(void) {
 
     int longestName = 0;
