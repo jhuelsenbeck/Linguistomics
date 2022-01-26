@@ -15,6 +15,7 @@ class Tree;
 struct TransitionProbabilitiesPair {
 
     std::vector<StateMatrix_t*> probs[2];
+    std::vector<StateMatrix_t*> aMat;
 };
 
 
