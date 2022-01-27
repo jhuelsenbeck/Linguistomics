@@ -24,7 +24,7 @@ class Model {
 
     public:
                                                 Model(void) = delete;
-                                                Model(RandomVariable* r, thread_pool* p);
+                                                Model(RandomVariable* r, ThreadPool* p);
                                                ~Model(void);
         void                                    accept(void);
         void                                    flipActiveLikelihood(void);
@@ -62,7 +62,7 @@ class Model {
         nlohmann::json                          parseJsonFile(void);
         void                                    wordLnLike(int i);
         RandomVariable*                         rv;
-        thread_pool*                            threadPool;
+        ThreadPool*                             threadPool;
         double*                                 threadLnL;
         std::vector<bool>                       updateLikelihood;
         std::vector<int>                        activeLikelihood;

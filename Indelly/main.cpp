@@ -12,7 +12,7 @@ void printHeader(int count);
 int main(int argc, char* argv[]) {
 
     // create the thread pool
-    thread_pool pool;
+    ThreadPool pool;
 
     // print the header
     printHeader(pool.thread_count);

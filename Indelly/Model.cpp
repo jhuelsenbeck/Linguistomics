@@ -25,12 +25,27 @@
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 
-void thrWordLnLike(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL);
+class WordLnLikeTask : public ThreadTask {
+    public:
+        WordLnLikeTask(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL) {
+            Calculator = calculator;
+            ThreadLnL = threadLnL;
+            WordLnL = wordLnL;
+        }
 
+        virtual void run() {
+            double lnL = Calculator->lnLikelihood();
+            *ThreadLnL = lnL;
+            *WordLnL = lnL;
+        }
 
+    private:
+        LikelihoodCalculator* Calculator;
+        double* ThreadLnL;
+        double* WordLnL;
+};
 
-
-Model::Model(RandomVariable* r, thread_pool* p) {
+Model::Model(RandomVariable* r, ThreadPool* p) {
 
     std::cout << "   Model" << std::endl;
     rv = r;
@@ -604,7 +619,7 @@ double Model::lnLikelihood(void) {
         {
         if (updateLikelihood[i] == true)
             {
-            threadPool->push_task(thrWordLnLike, wordLikelihoodCalculators[i], &threadLnL[i], &wordLnLikelihoods[ activeLikelihood[i] ][i]);
+            threadPool->push_task(new WordLnLikeTask(wordLikelihoodCalculators[i], &threadLnL[i], &wordLnLikelihoods[ activeLikelihood[i] ][i]));
             }
         else
             {
@@ -722,13 +737,6 @@ double Model::update(void) {
         }
     Msg::error("Failed to pick a parameter to update");
     return 0.0;
-}
-
-void thrWordLnLike(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL) {
-
-    double lnL = calculator->lnLikelihood();
-    *threadLnL = lnL;
-    *wordLnL   = lnL;
 }
 
 void Model::wordLnLike(int i) {
