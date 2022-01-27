@@ -3,9 +3,9 @@
 #include "Model.hpp"
 #include "RandomVariable.hpp"
 #include "UserSettings.hpp"
-#include "thread_pool.hpp"
+#include "threads.hpp"
 
-void printHeader(thread_pool* p);
+void printHeader(int count);
 
 
 
@@ -14,8 +14,8 @@ int main(int argc, char* argv[]) {
     // create the thread pool
     thread_pool pool;
 
-    // print hte header
-    printHeader(&pool);
+    // print the header
+    printHeader(pool.thread_count);
 
     // read the user settings from the command-line arguments
     UserSettings& settings = UserSettings::userSettings();
@@ -35,12 +35,12 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void printHeader(thread_pool* p) {
+void printHeader(int count) {
 
     std::cout << "   TongueTwister 1.0" << std::endl;
     std::cout << "   * John P. Huelsenbeck (University of California, Berkeley)" << std::endl;
     std::cout << "   * Shawn McCreight (University of California, Berkeley)" << std::endl;
     std::cout << "   * David Goldstein (University of California, Los Angeles)" << std::endl;
-    std::cout << "   * Running on " << p->get_thread_count() << " processors" << std::endl;
+    std::cout << "   * Running on " << count << " processors" << std::endl;
     std::cout << std::endl;
 }

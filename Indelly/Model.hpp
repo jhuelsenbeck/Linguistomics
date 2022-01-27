@@ -7,6 +7,7 @@
 #include <vector>
 #include "json.hpp"
 #include "RbBitSet.h"
+#include "threads.hpp"
 class Alignment;
 class LikelihoodCalculator;
 class Parameter;
@@ -14,7 +15,6 @@ class ParameterAlignment;
 class ParameterTree;
 class Partition;
 class RandomVariable;
-class thread_pool;
 class Tree;
 class UserSettings;
 

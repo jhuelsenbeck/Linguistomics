@@ -20,7 +20,7 @@
 #include "RateMatrix.hpp"
 #include "RateMatrixHelper.hpp"
 #include "SiteLikelihood.hpp"
-#include "thread_pool.hpp"
+#include "threads.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
