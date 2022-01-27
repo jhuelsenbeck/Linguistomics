@@ -26,9 +26,14 @@ int main(int argc, char* argv[]) {
     McmcSummary summary(&rv);
     for (const auto& entry : std::filesystem::directory_iterator(settings.getPath()))
         {
-        std::filesystem::path filePath = entry.path();
-        std::filesystem::path fileName = filePath.filename();
-        std::filesystem::path fileExtension = filePath.extension();
+        std::filesystem::path fp = entry.path();
+        #ifdef _CONSOLE
+        auto filePath      = fp.string();
+        auto fileExtension = fp.extension();
+        #else
+        auto filePath      = fp;
+        auto fileExtension = fp.extension();
+        #endif
         std::cout << filePath << std::endl;
         
         if (fileExtension == ".tsv")

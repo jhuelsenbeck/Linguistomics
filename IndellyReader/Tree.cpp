@@ -90,10 +90,10 @@ Tree::Tree(std::string newickString, std::map<int,std::string> translateMap) {
     int intIdx = numTaxa;
     for (int i=0; i<downPassSequence.size(); i++)
         {
-        Node* p = downPassSequence[i];
-        if (p->getIsLeaf() == false)
+        Node* pd = downPassSequence[i];
+        if (pd->getIsLeaf() == false)
             {
-            p->setIndex(intIdx++);
+            pd->setIndex(intIdx++);
             }
         }
 }
