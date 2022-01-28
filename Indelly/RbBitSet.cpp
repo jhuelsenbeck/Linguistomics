@@ -399,7 +399,7 @@ size_t RbBitSet::getFirstSetBit(void) const {
             break;
         }
     if (i == numUints)
-        return -1;
+        return (size_t)-1;
     for (j=0; j<RbBitSet::bitsPerUint; j++)
         {
         if ((v[i] & (RbBitSet::highBit >> j)) != 0)

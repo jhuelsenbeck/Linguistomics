@@ -442,7 +442,7 @@ double LikelihoodTkf::tkfLike(void) {
     } while (true);
 }
 
-double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int siteColumn) {
+double LikelihoodTkf::treeRecursion(IntVector* signature, IntVector* pos, int /*siteColumn*/) {
 
     int numLeaves = (int)signature->size();
     int numNodes = tree->getNumNodes();

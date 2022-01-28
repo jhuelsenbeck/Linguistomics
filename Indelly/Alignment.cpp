@@ -266,7 +266,7 @@ bool Alignment::hasBOM(std::string& str) {
     std::stringstream is(str);
 
     // read the first byte
-    char const c0 = is.get();
+    char const c0 = (char)is.get();
     if (c0 != '\xEF')
         {
         is.putback(c0);
@@ -274,7 +274,7 @@ bool Alignment::hasBOM(std::string& str) {
         }
 
     // read the second byte
-    char const c1 = is.get();
+    char const c1 = (char)is.get();
     if (c1 != '\xBB')
         {
         is.putback(c1);
@@ -283,7 +283,7 @@ bool Alignment::hasBOM(std::string& str) {
         }
 
     // peek the third byte
-    char const c2 = is.peek();
+    char const c2 = (char)is.peek();
     if (c2 != '\xBF')
         {
         is.putback(c1);

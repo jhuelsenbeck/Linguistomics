@@ -45,19 +45,19 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
         equilibriumFrequencies[activeMatrix][i] = f[i];
     
     // initialize the rate matrix
-    StateMatrix_t& Q = this->Q[activeMatrix];
+    StateMatrix_t& QM = this->Q[activeMatrix];
     
     // fill in off diagonal components of the rate matrix in
     // a model-dependent manner
-    if (rates.size() == numStates * (numStates-1) / 2)
+    if ((int)rates.size() == numStates * (numStates-1) / 2)
         {
         // gtr model
         for (int i=0, k=0; i<numStates; i++)
             {
             for (int j=i+1; j<numStates; j++)
                 {
-                Q(i,j) = rates[k] * f[j];
-                Q(j,i) = rates[k] * f[i];
+                QM(i,j) = rates[k] * f[j];
+                QM(j,i) = rates[k] * f[i];
                 k++;
                 }
             }
@@ -72,8 +72,8 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
             for (int j=i+1; j<numStates; j++)
                 {
                 int changeType = map[i][j];
-                Q(i,j) = rates[changeType] * f[j];
-                Q(j,i) = rates[changeType] * f[i];
+                QM(i,j) = rates[changeType] * f[j];
+                QM(j,i) = rates[changeType] * f[i];
                 }
             }
         }
@@ -85,29 +85,29 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
         for (int j=0; j<numStates; j++)
             {
             if (i != j)
-                sum += Q(i,j);
+                sum += QM(i,j);
             }
-        Q(i,i) = -sum;
+        QM(i,i) = -sum;
         }
     
     // rescale the rate matrix
     double averageRate = 0.0;
     for (int i=0; i<numStates; i++)
-        averageRate += -f[i] * Q(i,i);
+        averageRate += -f[i] * QM(i,i);
     double scaleFactor = 1.0 / averageRate;
-    Q *= scaleFactor;
+    QM *= scaleFactor;
     
     // update the eigen system
     if (useEigenSystem == true)
         {
         EigenSystem& eigs = EigenSystem::eigenSystem();
         eigs.setActiveEigens(activeMatrix);
-        eigs.calculateEigenSystem(Q);
+        eigs.calculateEigenSystem(QM);
         }
         
 #   if 0
     std::cout << std::fixed << std::setprecision(5);
-    std::cout << Q << std::endl;
+    std::cout << QM << std::endl;
     for (int i=0; i<numStates; i++)
         std::cout << equilibriumFrequencies[activeMatrix][i] << " ";
     std::cout << std::endl;
