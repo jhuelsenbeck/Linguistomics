@@ -38,7 +38,6 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
     Probability::Dirichlet::rv(rv, alpha, rates[0]);
     normalize(rates[0], minVal);
     rates[1] = rates[0];
-    
 }
 
 ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns, std::vector<std::string> labs) : Parameter(r, m, n) {
@@ -177,12 +176,13 @@ double ParameterExchangabilityRates::update(void) {
 
     lastUpdateType = "exchangeability rates";
 
-    int k = numRates;
+    //int k = numRates;
+    int k = 1;
     
     double lnP = 0.0;
     if (k == 1)
         {
-        double alpha0 = 1000.0;
+        double alpha0 = 100.0;
         
         int indexToUpdate = (int)(rv->uniformRv()*numRates);
 

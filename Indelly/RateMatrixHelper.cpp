@@ -168,7 +168,7 @@ void RateMatrixHelper::print(void) {
     std::cout << "   * Custom rate matrix with states grouped into " << numGroups << " sets:" << std::endl;
     for (int i=0; i<stateGroupings.size(); i++)
         {
-        std::cout << "     Group \"" << stateGroupingsNames[i] << "\" = ( ";
+        std::cout << "     Group " << i+1 << " \"" << stateGroupingsNames[i] << "\" = ( ";
         for (int j : stateGroupings[i])
             std::cout << j << " ";
         std::cout << ")" << std::endl;

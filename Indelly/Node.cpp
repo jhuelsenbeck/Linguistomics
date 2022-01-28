@@ -65,10 +65,18 @@ double Node::getBranchLength(void) {
 std::vector<Node*> Node::getDescendantsVector(void) {
 
     std::set<Node*,CompNode>& des = descendants->getNodes();
-    std::vector<Node*> nb;
+    std::vector<Node*> dv;
     for (Node* n : des)
-        nb.push_back( n );
-    return nb;
+        dv.push_back( n );
+    return dv;
+}
+
+void Node::getDescendantsVector(std::vector<Node*>& dv) {
+
+    std::set<Node*,CompNode>& des = descendants->getNodes();
+    dv.clear();
+    for (Node* n : des)
+        dv.push_back( n );
 }
 
 Node* Node::getSisterNode(void) {

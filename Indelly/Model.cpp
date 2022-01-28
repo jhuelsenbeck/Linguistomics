@@ -20,7 +20,7 @@
 #include "RateMatrix.hpp"
 #include "RateMatrixHelper.hpp"
 #include "SiteLikelihood.hpp"
-#include "threads.hpp"
+#include "Threads.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
@@ -475,7 +475,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     int numNodes = ((ParameterTree*)pTree)->getActiveTree()->getNumNodes();
 
     // set up the indel parameter
-    Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 7.0, 100.0, 100.0);
+    Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 3.0, 100.0, 100.0);
     pIndel->setProposalProbability(1.0);
     parameters.push_back(pIndel);
     
@@ -488,11 +488,12 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         }
 
     // set up the alignment parameter(s)
+    double alnProposalProb = 10.0 / wordAlignments.size();
     for (int i=0; i<wordAlignments.size(); i++)
         {
         std::string alnName = wordAlignments[i]->getName();
         Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, new SiteLikelihood(numNodes,numStates), i);
-        pAlign->setProposalProbability(1.0);
+        pAlign->setProposalProbability(alnProposalProb);
         parameters.push_back(pAlign);
         wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
         wordLikelihoodCalculators.push_back( new LikelihoodCalculator(dynamic_cast<ParameterAlignment*>(pAlign), this) );
