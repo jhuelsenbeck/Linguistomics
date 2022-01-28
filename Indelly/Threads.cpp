@@ -17,13 +17,22 @@ void ThreadTask::Run() {
 ThreadPool::ThreadPool():
     ThreadCount(std::thread::hardware_concurrency()),
     Running(true),
-    Active(false),
     TaskCount(0),
-    SleepInterval(std::chrono::microseconds(1000)),
     Threads(new std::thread[ThreadCount])
 {
     for (int i = 0; i < ThreadCount; i++)
         Threads[i] = std::thread(&ThreadPool::Worker, this);
+}
+
+ThreadPool::~ThreadPool() {
+    Wait();
+    Running = false;
+    if (Threads)
+    {
+        for (auto* t = Threads; t < Threads + ThreadCount; ++t)
+            t->join();
+        delete[] Threads;
+    }
 }
 
 void ThreadPool::PushTask(ThreadTask* task) {
@@ -45,8 +54,11 @@ ThreadTask* ThreadPool::PopTask() {
 
 void ThreadPool::Wait() {
     for (;;) {
-        //      std::unique_lock lock(WaitMutex);
-        //      WaitCondition.wait(lock);
+        // This WaitCondition is signaled when all tasks are completed
+        std::unique_lock lock(WaitMutex);
+        WaitCondition.wait(lock);
+
+        // According to the documentation, this needs to be double-checked because of "spurious" wakeups
 
         int count;
         {
@@ -56,7 +68,7 @@ void ThreadPool::Wait() {
         if (count == 0)
             break;
         else
-            std::this_thread::sleep_for(SleepInterval);
+            std::this_thread::yield();
     }
 }
 
@@ -70,10 +82,11 @@ void ThreadPool::Worker() {
             delete task;
             std::scoped_lock lock(TaskMutex);
             --TaskCount;
+            if (TaskCount == 0)
+                WaitCondition.notify_one();
         }
         else
-            std::this_thread::sleep_for(SleepInterval);
-        //        std::this_thread::yield();
+            std::this_thread::yield();
     }
 }
 
@@ -83,10 +96,12 @@ void ThreadPool::Worker() {
 ThreadPool::ThreadPool():
     ThreadCount(1),
     Running(false),
-    Active(false),
     TaskCount(0),
     Threads(NULL)
 {
+}
+
+ThreadPool::~ThreadPool() {
 }
 
 void ThreadPool::PushTask(ThreadTask* task) {
@@ -103,17 +118,6 @@ void ThreadPool::Wait() {
 
 void ThreadPool::Worker() {
 }
+
 #endif
-
-ThreadPool::~ThreadPool() {
-    Wait();
-    Running = false;
-    if (Threads) 
-        {
-        for (auto* t = Threads; t < Threads + ThreadCount; ++t)
-            t->join();
-        delete[] Threads;
-        }
-}
-
 

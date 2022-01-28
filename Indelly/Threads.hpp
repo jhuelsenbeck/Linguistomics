@@ -23,15 +23,13 @@ class ThreadPool {
         void Wait();
 
     private:
-        std::atomic<bool>         Running,
-                                  Active;
-        std::mutex                TaskMutex,
-                                  WaitMutex;
-        std::condition_variable   WaitCondition;
-        std::queue<ThreadTask*>   Tasks;
-        std::chrono::microseconds SleepInterval;
-        std::thread*              Threads;
-        int                       TaskCount;
+        std::atomic<bool>       Running;
+        std::mutex              TaskMutex,
+                                WaitMutex;
+        std::condition_variable WaitCondition;
+        std::queue<ThreadTask*> Tasks;
+        std::thread*            Threads;
+        int                     TaskCount;
 
         void              Worker();
         ThreadTask*       PopTask();
