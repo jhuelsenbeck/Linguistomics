@@ -39,11 +39,17 @@ void ThreadPool::PushTask(ThreadTask* task) {
     const std::scoped_lock lock(TaskMutex);
     ++TaskCount;
     Tasks.push(task);
+    CheckCondition.notify_one();
 }
 
 ThreadTask* ThreadPool::PopTask() {
+    {
+      std::unique_lock mlock(CheckMutex);
+      CheckCondition.wait(mlock, [this]{return TaskCount > 0;});
+    }
+
     std::scoped_lock lock(TaskMutex);
-    if (Tasks.empty()) 
+    if (Tasks.empty())
         return NULL;
     else {
         auto task = Tasks.front();

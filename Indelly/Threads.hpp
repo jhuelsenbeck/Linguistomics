@@ -25,8 +25,10 @@ class ThreadPool {
     private:
         std::atomic<bool>       Running;
         std::mutex              TaskMutex,
-                                WaitMutex;
-        std::condition_variable WaitCondition;
+                                WaitMutex,
+                                CheckMutex;
+        std::condition_variable WaitCondition,
+                                CheckCondition;
         std::queue<ThreadTask*> Tasks;
         std::thread*            Threads;
         int                     TaskCount;
