@@ -11,7 +11,7 @@ void ThreadTask::Run() {
 }
 
 
-#if 0
+#if 1
 // Threaded version
 
 ThreadPool::ThreadPool():
@@ -28,7 +28,7 @@ ThreadPool::ThreadPool():
 
 void ThreadPool::PushTask(ThreadTask* task) {
     const std::scoped_lock lock(TaskMutex);
-    Active = true;
+    ++TaskCount;
     Tasks.push(task);
 }
 
@@ -40,6 +40,40 @@ ThreadTask* ThreadPool::PopTask() {
         auto task = Tasks.front();
         Tasks.pop();
         return task;
+    }
+}
+
+void ThreadPool::Wait() {
+    for (;;) {
+        //      std::unique_lock lock(WaitMutex);
+        //      WaitCondition.wait(lock);
+
+        int count;
+        {
+          std::scoped_lock lock2(TaskMutex);
+          count = TaskCount;
+        }
+        if (count == 0)
+            break;
+        else
+            std::this_thread::sleep_for(SleepInterval);
+    }
+}
+
+void ThreadPool::Worker() {
+    while (Running)
+    {
+        ThreadTask* task = PopTask();
+        if (task)
+        {
+            task->Run();
+            delete task;
+            std::scoped_lock lock(TaskMutex);
+            --TaskCount;
+        }
+        else
+            std::this_thread::sleep_for(SleepInterval);
+        //        std::this_thread::yield();
     }
 }
 
@@ -63,6 +97,12 @@ void ThreadPool::PushTask(ThreadTask* task) {
 ThreadTask* ThreadPool::PopTask() {
     return NULL;
 }
+
+void ThreadPool::Wait() {
+}
+
+void ThreadPool::Worker() {
+}
 #endif
 
 ThreadPool::~ThreadPool() {
@@ -74,32 +114,6 @@ ThreadPool::~ThreadPool() {
             t->join();
         delete[] Threads;
         }
-}
-
-void ThreadPool::Wait() {
-    while (Active) {
-      std::unique_lock lock(WaitMutex);
-      WaitCondition.wait(lock);
-    }
-}
-
-void ThreadPool::Worker() {
-    while (Running)
-    {
-        ThreadTask* task = PopTask();
-        if (task)
-        {
-            task->Run();
-            delete task;
-        }
-        else if (Active) {
-            Active = false;
-            WaitCondition.notify_one();
-        }
-        else
-          std::this_thread::sleep_for(SleepInterval);
-//        std::this_thread::yield();
-    }
 }
 
 
