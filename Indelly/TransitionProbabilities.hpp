@@ -7,7 +7,7 @@
 #include "EigenSystem.hpp"
 #include "RbBitSet.h"
 #include "UserSettings.hpp"
-#include "threads.hpp"
+#include "Threads.hpp"
 class Alignment;
 class Model;
 class thread_pool;
