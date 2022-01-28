@@ -406,11 +406,11 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         {
         std::cout << "   * These words were not included because at least one " << std::endl;
         std::cout << "     taxon had no word segments: ";
-        size_t cnt = 28;
+        int cnt = 28;
         for (int i=0; i<rejectedWords.size(); i++)
             {
             std::cout << rejectedWords[i];
-            if (i+(size_t)1 != rejectedWords.size())
+            if (i+1 != (int)rejectedWords.size())
                 std::cout << ", ";
             cnt += rejectedWords[i].length();
             if (cnt > 40)
@@ -611,9 +611,6 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
 }
 
 double Model::lnLikelihood(void) {
-
-#   if 1
-
     // set up thread pool for calculating the likelihood under the TKF91 model
     for (int i=0; i<wordParameterAlignments.size(); i++)
         {
@@ -629,26 +626,6 @@ double Model::lnLikelihood(void) {
         }
     
     threadPool->Wait();
-    
-#   else
-
-    // calculate likelihood under TKF91 model
-    for (int i=0; i<wordParameterAlignments.size(); i++)
-        {
-        //double lnP = wordLikelihoodCalculators[i]->lnLikelihood();
-        if (updateLikelihood[i] == true)
-            {
-            threadLnL[i] = wordLikelihoodCalculators[i]->lnLikelihood();
-            wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
-            }
-        else
-            {
-            threadLnL[i] = wordLnLikelihoods[ activeLikelihood[i] ][i];
-            }
-        updateLikelihood[i] = false;
-        }
-                
-#   endif
 
     double lnL = 0.0;
     for (int i=0; i<wordParameterAlignments.size(); i++)

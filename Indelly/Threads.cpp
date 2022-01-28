@@ -11,47 +11,75 @@ void ThreadTask::Run() {
 }
 
 
+#if 0
+// Threaded version
 
 ThreadPool::ThreadPool():
     ThreadCount(std::thread::hardware_concurrency()),
     Running(true),
-    TaskCount(0)
+    Active(false),
+    TaskCount(0),
+    SleepInterval(std::chrono::microseconds(1000)),
+    Threads(new std::thread[ThreadCount])
 {
-    Threads = new std::thread[ThreadCount];
     for (int i = 0; i < ThreadCount; i++)
-    {
         Threads[i] = std::thread(&ThreadPool::Worker, this);
-    }
-}
-
-ThreadPool::~ThreadPool() {
-    Wait();
-    Running = false;
-    for (auto* t = Threads; t < Threads + ThreadCount; ++t)
-        t->join();
-    delete[] Threads;
-}
-
-void ThreadPool::Wait() {
-    while (TaskCount > 0)
-      std::this_thread::yield();
 }
 
 void ThreadPool::PushTask(ThreadTask* task) {
     const std::scoped_lock lock(TaskMutex);
-    TaskCount++;
+    Active = true;
     Tasks.push(task);
 }
 
 ThreadTask* ThreadPool::PopTask() {
-    const std::scoped_lock lock(TaskMutex);
-    if (Tasks.empty())
+    std::scoped_lock lock(TaskMutex);
+    if (Tasks.empty()) 
         return NULL;
-    else
-    {
+    else {
         auto task = Tasks.front();
         Tasks.pop();
         return task;
+    }
+}
+
+#else
+// Serial version
+
+ThreadPool::ThreadPool():
+    ThreadCount(1),
+    Running(false),
+    Active(false),
+    TaskCount(0),
+    Threads(NULL)
+{
+}
+
+void ThreadPool::PushTask(ThreadTask* task) {
+    task->Run();
+    delete task;
+}
+
+ThreadTask* ThreadPool::PopTask() {
+    return NULL;
+}
+#endif
+
+ThreadPool::~ThreadPool() {
+    Wait();
+    Running = false;
+    if (Threads) 
+        {
+        for (auto* t = Threads; t < Threads + ThreadCount; ++t)
+            t->join();
+        delete[] Threads;
+        }
+}
+
+void ThreadPool::Wait() {
+    while (Active) {
+      std::unique_lock lock(WaitMutex);
+      WaitCondition.wait(lock);
     }
 }
 
@@ -63,9 +91,15 @@ void ThreadPool::Worker() {
         {
             task->Run();
             delete task;
-            TaskCount--;
+        }
+        else if (Active) {
+            Active = false;
+            WaitCondition.notify_one();
         }
         else
-          std::this_thread::yield();
+          std::this_thread::sleep_for(SleepInterval);
+//        std::this_thread::yield();
     }
 }
+
+

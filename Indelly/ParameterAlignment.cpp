@@ -89,14 +89,10 @@ void ParameterAlignment::accept(void) {
 }
 
 bool ParameterAlignment::areAlignmentsIdentical(void) {
-
-    std::vector<std::vector<int> >  align[2];  // numTaxa X numSites
-    
-    if (align[0].size() != align[1].size())
+    if (alignment[0].size() != alignment[1].size())
         return false;
-    if (align[0][0].size() != align[1][0].size())
+    if (alignment[0][0].size() != alignment[1][0].size())
         return false;
-        
     return true;
 }
 

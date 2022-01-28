@@ -283,10 +283,6 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
 }
 
 void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
-
-#   if 1
-
-    // threaded version
     RateMatrix& rmat = RateMatrix::rateMatrix();
     const StateMatrix_t& Q = rmat.getRateMatrix();
     
@@ -296,44 +292,10 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
         Tree* t = modelPtr->getTree(it->first);
         if (t == NULL)
             Msg::error("Could not find tree for mask " + it->first.bitString());
-        const std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
-        const std::vector<StateMatrix_t*>& m     = it->second.aMat;
-        
-        threadPool->PushTask(new TransitionProbabilitiesTask(t, Q, probs, m));
+        threadPool->PushTask(new TransitionProbabilitiesTask(t, Q, it->second.probs[activeProbs], it->second.aMat));
         }
         
     threadPool->Wait();
-   
-#   else
-
-    // serial version
-    RateMatrix& rmat = RateMatrix::rateMatrix();
-    Eigen::MatrixXd M(numStates,numStates);
-    StateMatrix_t& Q = rmat.getRateMatrix();
-    
-    // update the main tree
-    for (std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.begin(); it != transProbs.end(); it++)
-        {
-        Tree* t = modelPtr->getTree(it->first);
-        if (t == NULL)
-            Msg::error("Could not find tree for mask " + it->first.bitString());
-        std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
-        
-        std::vector<Node*>& traversalSeq = t->getDownPassSequence();
-        std::vector<double> branchLengths(traversalSeq.size());
-        for (int n=0; n<traversalSeq.size(); n++)
-            {
-            Node* p = traversalSeq[n];
-            StateMatrix_t* tp = probs[p->getIndex()];
-            double v = p->getBranchLength();
-            branchLengths[p->getIndex()] = v;
-            
-            M = Q * v;
-            (*tp) = M.exp();
-            }
-        }
-
-#   endif
         
     std::vector<double>& rmatFreqs = rmat.getEquilibriumFrequencies();
     for (int i=0; i<numStates; i++)
