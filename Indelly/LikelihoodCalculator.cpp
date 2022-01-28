@@ -54,10 +54,11 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
     zeroI = new double[numStates + 1];
     for (int i=0; i<numStates+1; i++)
         zeroI[i] = 0.0;
-
-#   if defined (TRACK_ALLOCS)
-    numAllocs = 0;
-#   endif
+        
+    possibleVectorIndices.resize(maxUnalignableDimension);
+    nodeHomology.resize(numNodes);
+    numHomologousEmissions.resize(numNodes);
+    numHomologousEmissionsForClass.resize(maxUnalignableDimension + 1);
 }
 
 LikelihoodCalculator::~LikelihoodCalculator(void) {
@@ -162,11 +163,14 @@ double LikelihoodCalculator::lnLikelihood(void) {
     partialProbabilities.insert( std::make_pair(pos, f) );
 
     // array of possible vector indices, used in inner loop
-    std::vector<int> possibleVectorIndices(maxUnalignableDimension, 0);
+    //std::vector<int> possibleVectorIndices(maxUnalignableDimension, 0);
+    for (int i=0; i<maxUnalignableDimension; i++)
+        possibleVectorIndices[i] = 0;
     int firstNotUsed = 0;
     int len = (int)alignment.size();
     int currentAlignmentColumn = 0;
-    std::vector<int> state(len);
+    //std::vector<int> state(len);
+    state.resize(len);
     do
         {
         // Find all possible vectors from current position, pos
@@ -319,7 +323,7 @@ double LikelihoodCalculator::lnLikelihood(void) {
     } while (true);
 }
 
-#if 1
+#if 0
 
 double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector* pos) {
 
@@ -346,7 +350,7 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
     // Loop over all nodes except root, and find out which nodes need carry nucleotides of what
     // homology class.
     bool isHomologyClashing = false;
-    std::vector<Node*> dpSequence = tree->getDownPassSequence();
+    std::vector<Node*>& dpSequence = tree->getDownPassSequence();
     for (int n=0; n<dpSequence.size(); n++)
         {
         Node* p = dpSequence[n];
@@ -404,7 +408,8 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
         else
             {
             // calculate conditional probabilities for interior nodes
-            std::vector<Node*> des = p->getDescendantsVector();
+            //std::vector<Node*> des = p->getDescendantsVector();
+            p->getDescendantsVector(des);
             if (des.size() != 2)
                 Msg::error("Expecting two descendants");
             Node* pLft = des[0];
@@ -563,9 +568,16 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
     for (int i=0; i<numNodes; i++)
         memcpy( fI[i], zeroI, (numStates+1)*sizeof(double) );
         
-    std::vector<int> nodeHomology(numNodes);
-    std::vector<int> numHomologousEmissions(numNodes);
-    std::vector<int> numHomologousEmissionsForClass(maxUnalignableDimension + 1);
+//    std::vector<int> nodeHomology(numNodes);
+//    std::vector<int> numHomologousEmissions(numNodes);
+//    std::vector<int> numHomologousEmissionsForClass(maxUnalignableDimension + 1);
+    for (int i=0; i<numNodes; i++)
+        {
+        nodeHomology[i] = 0;
+        numHomologousEmissions[i] = 0;
+        }
+    for (int i=0; i<maxUnalignableDimension + 1; i++)
+        numHomologousEmissionsForClass[i] = 0;
     for (int i=0; i<numTaxa; i++)
         {
         numHomologousEmissionsForClass[ (*signature)[ i ] ]++;
@@ -579,7 +591,7 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
     // Loop over all nodes except root, and find out which nodes need carry nucleotides of what
     // homology class.
     bool isHomologyClashing = false;
-    std::vector<Node*> dpSequence = tree->getDownPassSequence();
+    std::vector<Node*>& dpSequence = tree->getDownPassSequence();
     for (int n=0; n<dpSequence.size(); n++)
         {
         Node* p = dpSequence[n];
@@ -635,7 +647,8 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
         else
             {
             // calculate conditional probabilities for interior nodes
-            std::vector<Node*> des = p->getDescendantsVector();
+            p->getDescendantsVector(des);
+            //std::vector<Node*> des = p->getDescendantsVector();
             if (des.size() != 2)
                 Msg::error("Expecting two descendants");
             Node* pLft = des[0];
@@ -649,8 +662,6 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
                 {
                 // Case 1: One homology family spanning tree intersects both child edges, i.e.
                 //         a 'homologous' nucleotide should travel down both edges.
-                double* fH_lft = &fH[lftChildIdx][0];
-                double* fH_rht = &fH[rhtChildIdx][0];
                 for (int i=0; i<numStates; i++)
                     {
                     double lft = 0.0;

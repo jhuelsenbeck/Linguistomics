@@ -233,7 +233,12 @@ std::string ParameterAlignment::getTaxonMaskString(void) {
 
 double ParameterAlignment::lnPriorProbability(void) {
 
-    return 0.0;
+    int len = getNumSites();
+    double lambda = modelPtr->getInsertionRate();
+    double mu = modelPtr->getDeletionRate();
+    double prob = lambda / mu;
+    double lnP = (len-1) * log(prob) + log(1.0-prob);
+    return lnP;
 }
 
 void ParameterAlignment::print(void) {

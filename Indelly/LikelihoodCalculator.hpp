@@ -9,6 +9,7 @@
 #include "RbBitSet.h"
 #include "TransitionProbabilities.hpp"
 class Model;
+class Node;
 class ParameterAlignment;
 class TransitionProbabilities;
 class Tree;
@@ -68,6 +69,12 @@ class LikelihoodCalculator {
         double*                         zeroH;
         double*                         zeroI;
         double                          immortalProbability;
+        std::vector<int>                possibleVectorIndices;
+        std::vector<int>                state;
+        std::vector<int>                nodeHomology;
+        std::vector<int>                numHomologousEmissions;
+        std::vector<int>                numHomologousEmissionsForClass;
+        std::vector<Node*>              des;
 };
 
 #endif

@@ -26,6 +26,7 @@ class Node {
         double              getBranchProportion(void) { return proportion; }
         NodeSet*&           getDescendants(void) { return descendants; }
         std::vector<Node*>  getDescendantsVector(void);
+        void                getDescendantsVector(std::vector<Node*>& dv);
         bool                getFlag(void) { return flag; }
         int                 getIndex(void) { return index; }
         bool                getIsLeaf(void) { return isLeaf; }
