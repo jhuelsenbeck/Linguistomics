@@ -39,7 +39,7 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
             completelySampled = false;
         }
     
-    printWidth = numSites * 1.8;
+    printWidth = (int)(numSites * 1.8);
     gapCode = a->getGapCode();
     numStates = a->getNumStates();
     taxonNames = a->getTaxonNames();
@@ -90,11 +90,11 @@ void ParameterAlignment::accept(void) {
 
 bool ParameterAlignment::areAlignmentsIdentical(void) {
 
-        std::vector<std::vector<int> >  alignment[2];  // numTaxa X numSites
+    std::vector<std::vector<int> >  align[2];  // numTaxa X numSites
     
-    if (alignment[0].size() != alignment[1].size())
+    if (align[0].size() != align[1].size())
         return false;
-    if (alignment[0][0].size() != alignment[1][0].size())
+    if (align[0][0].size() != align[1][0].size())
         return false;
         
     return true;

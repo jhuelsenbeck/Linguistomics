@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     ThreadPool pool;
 
     // print the header
-    printHeader(pool.thread_count);
+    printHeader(pool.ThreadCount);
 
     // read the user settings from the command-line arguments
     UserSettings& settings = UserSettings::userSettings();

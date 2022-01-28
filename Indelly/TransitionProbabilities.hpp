@@ -7,6 +7,7 @@
 #include "EigenSystem.hpp"
 #include "RbBitSet.h"
 #include "UserSettings.hpp"
+#include "threads.hpp"
 class Alignment;
 class Model;
 class thread_pool;
@@ -33,7 +34,7 @@ class TransitionProbabilities {
         std::vector<double>&                            getStationaryFrequencies(void) { return stationaryFreqs[activeProbs]; }
         std::vector<StateMatrix_t*>&                    getTransitionProbabilities(RbBitSet& bs);
         StateMatrix_t*                                  getTransitionProbabilities(RbBitSet& bs, int nodeIdx);
-        void                                            initialize(Model* m, thread_pool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm);
+        void                                            initialize(Model* m, ThreadPool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm);
         void                                            print(void);
         void                                            setNeedsUpdate(bool tf) { needsUpdate = tf; }
         void                                            setTransitionProbabilities(void);
@@ -47,7 +48,7 @@ class TransitionProbabilities {
         void                                            setTransitionProbabilitiesUsingPadeMethod(void);
         bool                                            isInitialized;
         Model*                                          modelPtr;
-        thread_pool*                                    threadPool;
+        ThreadPool*                                     threadPool;
         int                                             numNodes;
         int                                             numStates;
         int                                             activeProbs;

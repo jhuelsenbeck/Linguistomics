@@ -18,14 +18,14 @@ ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::strin
     insertionLambda = insLam;
     deletionLambda  = delLam;
     
-    double expEpsilon = expectedEpsilon(slen); // epsilon = insertionRate / deletionRate
+    double expE = expectedEpsilon(slen); // epsilon = insertionRate / deletionRate
     
     epsilon[0].resize(2);
     epsilon[1].resize(2);
     //std::cout << "Expected Epsilon = " << expEpsilon << std::endl;
     std::vector<double> alpha(2);
-    alpha[0] = 100.0 * expEpsilon;
-    alpha[1] = 190.0 * (1.0 - expEpsilon);
+    alpha[0] = 100.0 * expE;
+    alpha[1] = 190.0 * (1.0 - expE);
     Probability::Dirichlet::rv(rv, alpha, epsilon[0]);
 
     rhoExpParm = 100.0;

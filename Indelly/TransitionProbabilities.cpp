@@ -14,7 +14,7 @@
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 
-class TransitionProbabilitiesTask : public ThreadTask {
+class TransitionProbabilitiesTask: public ThreadTask {
     public:
         TransitionProbabilitiesTask(Tree* tree, const StateMatrix_t& q, const std::vector<StateMatrix_t*>& probs, const std::vector<StateMatrix_t*>& m):
             Tree(tree),
@@ -24,7 +24,7 @@ class TransitionProbabilitiesTask : public ThreadTask {
         {
         }
 
-        virtual void run() {
+        virtual void Run() {
             std::vector<Node*>& traversalSeq = Tree->getDownPassSequence();
             for (int n = 0; n < traversalSeq.size(); n++)
             {
@@ -96,7 +96,7 @@ StateMatrix_t* TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs,
     return it->second.probs[activeProbs][nodeIdx];
 }
 
-void TransitionProbabilities::initialize(Model* m, thread_pool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm) {
+void TransitionProbabilities::initialize(Model* m, ThreadPool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm) {
 
     if (isInitialized == true)
         {
@@ -299,10 +299,10 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
         const std::vector<StateMatrix_t*>& probs = it->second.probs[activeProbs];
         const std::vector<StateMatrix_t*>& m     = it->second.aMat;
         
-        threadPool->push_task(new TransitionProbabilitiesTask(t, Q, probs, m));
+        threadPool->PushTask(new TransitionProbabilitiesTask(t, Q, probs, m));
         }
         
-    threadPool->wait_for_tasks();
+    threadPool->Wait();
    
 #   else
 

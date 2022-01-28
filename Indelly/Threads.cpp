@@ -1,80 +1,71 @@
-#include <atomic>      // std::atomic
-#include <future>      // std::future, std::promise
-#include <utility>     // std::move
-#include "threads.hpp" // std::move
+#include <atomic> 
+#include "threads.hpp"
+
+ThreadTask::ThreadTask() {
+}
+
+ThreadTask::~ThreadTask() {
+}
+
+void ThreadTask::Run() {
+}
 
 
-ThreadPool::ThreadPool() {
-    thread_count  = std::thread::hardware_concurrency();
-    sleepinterval = std::chrono::microseconds(1000);
-    running       = true;
-    tasks_total   = 0;
-    threads       = new std::thread[thread_count];
-    for (int i = 0; i < thread_count; i++)
-        {
-        threads[i] = std::thread(&ThreadPool::worker, this);
-        }
+
+ThreadPool::ThreadPool():
+    ThreadCount(std::thread::hardware_concurrency()),
+    Running(true),
+    TaskCount(0)
+{
+    Threads = new std::thread[ThreadCount];
+    for (int i = 0; i < ThreadCount; i++)
+    {
+        Threads[i] = std::thread(&ThreadPool::Worker, this);
+    }
 }
 
 ThreadPool::~ThreadPool() {
-    wait_for_tasks();
-    running = false;
-    for (auto* t = threads; t < threads + thread_count; ++t)
-        {
+    Wait();
+    Running = false;
+    for (auto* t = Threads; t < Threads + ThreadCount; ++t)
         t->join();
-        }
-    delete[] threads;
+    delete[] Threads;
 }
 
-int ThreadPool::get_tasks_running() {
-    const std::scoped_lock lock(queue_mutex);
-    return tasks_total - (int)tasks.size();
+void ThreadPool::Wait() {
+    while (TaskCount > 0)
+      std::this_thread::yield();
 }
 
-
-void ThreadPool::wait_for_tasks() {
-    while (true)
-        {
-        if (tasks_total == 0)
-            break;
-        sleep_or_yield();
-        }
+void ThreadPool::PushTask(ThreadTask* task) {
+    const std::scoped_lock lock(TaskMutex);
+    TaskCount++;
+    Tasks.push(task);
 }
 
-void ThreadPool::push_task(ThreadTask* task) {
-    const std::scoped_lock lock(queue_mutex);
-    tasks_total++;
-    tasks.push(task);
-}
-
-ThreadTask* ThreadPool::pop_task() {
-    const std::scoped_lock lock(queue_mutex);
-    if (tasks.empty())
+ThreadTask* ThreadPool::PopTask() {
+    const std::scoped_lock lock(TaskMutex);
+    if (Tasks.empty())
         return NULL;
     else
-        {
-            auto task = std::move(tasks.front());
-            tasks.pop();
-            return task;
-        }
+    {
+        auto task = Tasks.front();
+        Tasks.pop();
+        return task;
+    }
 }
 
-void ThreadPool::sleep_or_yield() {
-    std::this_thread::sleep_for(sleepinterval);
-}
-
-void ThreadPool::worker() {
-    while (running)
-        {
-        ThreadTask* task = pop_task();
+void ThreadPool::Worker() {
+    while (Running)
+    {
+        ThreadTask* task = PopTask();
         if (task)
-            {
-            task->run();
-            tasks_total--;
-            }
-        else
-            {
-            sleep_or_yield();
-            }
+        {
+            task->Run();
+            delete task;
+            TaskCount--;
         }
+        else
+          std::this_thread::yield();
+    }
 }

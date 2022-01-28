@@ -58,7 +58,7 @@ class Model {
         std::vector<Alignment*>                 initializeAlignments(nlohmann::json& j);
         void                                    initializeParameters(std::vector<Alignment*>& wordAlignments, nlohmann::json& j);
         void                                    initializeStateSets(nlohmann::json& j);
-        void                                    initializeTransitionProbabilities(std::vector<Alignment*>& wordAlignments, nlohmann::json& j);
+        void                                    initializeTransitionProbabilities(std::vector<Alignment*>& wordAlignments);
         nlohmann::json                          parseJsonFile(void);
         void                                    wordLnLike(int i);
         RandomVariable*                         rv;

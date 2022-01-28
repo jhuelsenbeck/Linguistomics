@@ -3,38 +3,36 @@
 
 #include <thread>
 #include <mutex> 
-#include <queue> 
+#include <queue>
 
 
 class ThreadTask {
     public:
-        ThreadTask() {
-        }
-
-        virtual void run() = 0;
+        ThreadTask();
+        virtual ~ThreadTask();
+        virtual void Run();
 };
 
 class ThreadPool {
     public:
-        int  thread_count;
+        int  ThreadCount;
 
-            ThreadPool();
-            ~ThreadPool();
-        void push_task(ThreadTask* task);
-        void wait_for_tasks();
+             explicit ThreadPool();
+             ~ThreadPool();
+        void PushTask(ThreadTask* task);
+        void Wait();
 
     private:
-        int  get_tasks_running();
-        void sleep_or_yield();
-        void worker();
-        ThreadTask* pop_task();
-    
-        std::chrono::microseconds  sleepinterval;
-        std::thread*               threads;
-        std::atomic<bool>          running;
-        std::mutex                 queue_mutex = {};
-        std::queue<ThreadTask*>    tasks = {};
-        int                        tasks_total;
+        std::atomic<bool>       Running;
+        std::mutex              TaskMutex;
+        std::condition_variable TaskCondition;
+        std::queue<ThreadTask*> Tasks;
+        std::thread*            Threads;
+        int                     TaskCount;
+
+        void              Worker();
+        ThreadTask*       PopTask();
 };
+
 
 #endif

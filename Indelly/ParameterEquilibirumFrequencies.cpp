@@ -89,24 +89,24 @@ void ParameterEquilibirumFrequencies::print(void) {
     std::cout << "]" << std::endl;
 }
 
-void ParameterEquilibirumFrequencies::normalize(std::vector<double>& vec, double minVal) {
+void ParameterEquilibirumFrequencies::normalize(std::vector<double>& vec, double min) {
 
     // find entries with values that are too small
     int numTooSmall = 0;
     double sum = 0.0;
     for (int i=0; i<vec.size(); i++)
         {
-        if (vec[i] < minVal)
+        if (vec[i] < min)
             numTooSmall++;
         else
             sum += vec[i];
         }
         
-    double factor = (1.0 - numTooSmall * minVal) / sum;
+    double factor = (1.0 - numTooSmall * min) / sum;
     for (int i=0; i<vec.size(); i++)
         {
-        if (vec[i] < minVal)
-            vec[i] = minVal;
+        if (vec[i] < min)
+            vec[i] = min;
         else
             vec[i] *= factor;
         }

@@ -29,20 +29,20 @@ class WordLnLikeTask : public ThreadTask {
     public:
         WordLnLikeTask(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL) {
             Calculator = calculator;
-            ThreadLnL = threadLnL;
-            WordLnL = wordLnL;
+            ThreadLnL  = threadLnL;
+            WordLnL    = wordLnL;
         }
 
-        virtual void run() {
+        virtual void Run() {
             double lnL = Calculator->lnLikelihood();
             *ThreadLnL = lnL;
-            *WordLnL = lnL;
+            *WordLnL   = lnL;
         }
 
     private:
         LikelihoodCalculator* Calculator;
-        double* ThreadLnL;
-        double* WordLnL;
+        double*               ThreadLnL;
+        double*               WordLnL;
 };
 
 Model::Model(RandomVariable* r, ThreadPool* p) {
@@ -62,7 +62,7 @@ Model::Model(RandomVariable* r, ThreadPool* p) {
     initializeParameters(wordAlignments, j);
     
     // initialize transition probabilities
-    initializeTransitionProbabilities(wordAlignments, j);
+    initializeTransitionProbabilities(wordAlignments);
 
     // delete the alignments
     for (int i=0; i<wordAlignments.size(); i++)
@@ -406,11 +406,11 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         {
         std::cout << "   * These words were not included because at least one " << std::endl;
         std::cout << "     taxon had no word segments: ";
-        int cnt = 28;
+        size_t cnt = 28;
         for (int i=0; i<rejectedWords.size(); i++)
             {
             std::cout << rejectedWords[i];
-            if (i+1 != rejectedWords.size())
+            if (i+(size_t)1 != rejectedWords.size())
                 std::cout << ", ";
             cnt += rejectedWords[i].length();
             if (cnt > 40)
@@ -569,14 +569,14 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
 #   endif
 }
 
-void Model::initializeStateSets(nlohmann::json& j) {
+void Model::initializeStateSets(nlohmann::json& json) {
 
     // get the state groupings from the json object
-    int numGroups = (int)j.size();
+    int numGroups = (int)json.size();
     for (int i=0; i<numGroups; i++)
         {
-        std::string groupName = j[i]["Name"];
-        std::vector<int> group = j[i]["Set"];
+        std::string groupName = json[i]["Name"];
+        std::vector<int> group = json[i]["Set"];
         std::set<int> groupSet;
         for (int j=0; j<group.size(); j++)
             groupSet.insert(group[j]);
@@ -584,7 +584,7 @@ void Model::initializeStateSets(nlohmann::json& j) {
         }
 }
 
-void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlignments, nlohmann::json& j) {
+void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlignments) {
 
     std::cout << "   * Initializing likelihood-calculation machinery" << std::endl;
     
@@ -619,7 +619,7 @@ double Model::lnLikelihood(void) {
         {
         if (updateLikelihood[i] == true)
             {
-            threadPool->push_task(new WordLnLikeTask(wordLikelihoodCalculators[i], &threadLnL[i], &wordLnLikelihoods[ activeLikelihood[i] ][i]));
+            threadPool->PushTask(new WordLnLikeTask(wordLikelihoodCalculators[i], &threadLnL[i], &wordLnLikelihoods[ activeLikelihood[i] ][i]));
             }
         else
             {
@@ -628,7 +628,7 @@ double Model::lnLikelihood(void) {
         updateLikelihood[i] = false;
         }
     
-    threadPool->wait_for_tasks();
+    threadPool->Wait();
     
 #   else
 

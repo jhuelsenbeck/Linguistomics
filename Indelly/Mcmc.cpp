@@ -45,7 +45,7 @@ void Mcmc::closeOutputFiles(void) {
 std::string Mcmc::formattedTime(std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
 
     std::chrono::duration<double> durationSecs  = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1);
-    int s = durationSecs.count();
+    int s = (int)durationSecs.count();
     int m = s / 60;
     int h = s / 3600;
         
@@ -70,7 +70,7 @@ int Mcmc::numDigits(double x) {
 
     if (x < 0.0)
         x = -x;
-    return log(x) / log(10.0) + 1;
+    return (int)(log(x) / log(10.0)) + 1;
 }
 
 void Mcmc::openOutputFiles(void) {
@@ -106,7 +106,7 @@ void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double ne
     double timePerCycle = (double)durationSecs.count() / gen;
     if (timePerCycle == 0)
         timePerCycle = 1.0 / printFrequency;
-    int s = (numMcmcCycles - gen) * timePerCycle;
+    int s = (int)((numMcmcCycles - gen) * timePerCycle);
     int m = s / 60;
     int h = s / 3600;
     std::string tStr = "";
