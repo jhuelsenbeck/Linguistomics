@@ -28,11 +28,11 @@ ThreadPool::~ThreadPool() {
     Wait();
     Running = false;
     if (Threads)
-        {
+    {
         for (auto* t = Threads; t < Threads + ThreadCount; ++t)
             t->join();
         delete[] Threads;
-        }
+    }
 }
 
 void ThreadPool::PushTask(ThreadTask* task) {
@@ -44,24 +44,22 @@ void ThreadPool::PushTask(ThreadTask* task) {
 
 ThreadTask* ThreadPool::PopTask() {
     {
-        std::unique_lock mlock(CheckMutex);
-        CheckCondition.wait(mlock, [this]{return TaskCount > 0;});
+      std::unique_lock mlock(CheckMutex);
+      CheckCondition.wait(mlock, [this]{return TaskCount > 0;});
     }
 
     std::scoped_lock lock(TaskMutex);
     if (Tasks.empty())
         return NULL;
-    else 
-        {
+    else {
         auto task = Tasks.front();
         Tasks.pop();
         return task;
-        }
+    }
 }
 
 void ThreadPool::Wait() {
-    for (;;) 
-        {
+    for (;;) {
         // This WaitCondition is signaled when all tasks are completed
         std::unique_lock lock(WaitMutex);
         WaitCondition.wait(lock);
@@ -70,22 +68,22 @@ void ThreadPool::Wait() {
 
         int count;
         {
-            std::scoped_lock lock2(TaskMutex);
-            count = TaskCount;
+          std::scoped_lock lock2(TaskMutex);
+          count = TaskCount;
         }
         if (count == 0)
             break;
         else
             std::this_thread::yield();
-        }
+    }
 }
 
 void ThreadPool::Worker() {
     while (Running)
-        {
+    {
         ThreadTask* task = PopTask();
         if (task)
-            {
+        {
             task->Run();
             delete task;
             int count;
@@ -95,7 +93,7 @@ void ThreadPool::Worker() {
             }
             if (count == 0)
                 WaitCondition.notify_one();
-            }
+        }
         else
             std::this_thread::yield();
     }
