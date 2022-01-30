@@ -26,6 +26,13 @@ UserSettings::UserSettings(void) {
     useOnlyCompleteWords        = false;
 }
 
+
+std::string UserSettings::getVariable(nlohmann::json &settings, const char* name) {
+    std::string res = settings[name];
+    std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return (char)std::tolower(c); });
+    return res;
+}
+
 void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 
     // move the command-line arguments to a good-ol' C++ STL vector of strings
@@ -146,8 +153,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         it2 = jsonSettings.find("OnlyCompleteWords");
         if (it2 != jsonSettings.end())
             {
-            std::string res = jsonSettings["OnlyCompleteWords"];
-            std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return std::tolower(c); });
+            std::string res = getVariable(jsonSettings, "OnlyCompleteWords");
             if (res == "no")
                 useOnlyCompleteWords = false;
             else if (res == "yes")
@@ -159,8 +165,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         it2 = jsonSettings.find("Model");
         if (it2 != jsonSettings.end())
             {
-            std::string res = jsonSettings["Model"];
-            std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return std::tolower(c); });
+            std::string res = getVariable(jsonSettings, "Model");
             if (res == "jc69")
                 substitutionModel = jc69;
             else if (res == "gtr")
@@ -174,8 +179,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         it2 = jsonSettings.find("CalcMarginal");
         if (it2 != jsonSettings.end())
             {
-            std::string res = jsonSettings["CalcMarginal"];
-            std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return std::tolower(c); });
+            std::string res = getVariable(jsonSettings, "CalcMarginal");
             if (res == "no")
                 calculateMarginalLikelihood = false;
             else if (res == "yes")
@@ -187,8 +191,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         it2 = jsonSettings.find("UseEigenSystem");
         if (it2 != jsonSettings.end())
             {
-            std::string res = jsonSettings["UseEigenSystem"];
-            std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return std::tolower(c); });
+            std::string res = getVariable(jsonSettings, "UseEigenSystem");
             if (res == "no")
                 useEigenSystem = false;
             else if (res == "yes")

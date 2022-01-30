@@ -2,6 +2,7 @@
 #define UserSettings_hpp
 
 #include <string>
+#include "json.hpp"
 
 
 enum SubstitutionModel { jc69, gtr, custom };
@@ -33,12 +34,12 @@ class UserSettings {
                                 UserSettings(void);
                                 UserSettings(const UserSettings& s) = delete;
         void                    usage(void);
-        bool                    calculateMarginalLikelihood;
-        int                     checkPointFrequency;
+        std::string             getVariable(nlohmann::json& settings, const char *name);
+        std::string             outFile;
         std::string             dataFile;
         std::string             executablePath;
         double                  inverseTreeLength;
-        std::string             outFile;
+        int                     checkPointFrequency;
         int                     numIndelCategories;
         int                     numMcmcCycles;
         int                     numRateCategories;
@@ -47,6 +48,7 @@ class UserSettings {
         int                     substitutionModel;
         bool                    useEigenSystem;
         bool                    useOnlyCompleteWords;
+        bool                    calculateMarginalLikelihood;
 };
 
 #endif

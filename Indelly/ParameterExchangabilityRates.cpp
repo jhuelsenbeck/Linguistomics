@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include <map>
 #include "Model.hpp"
 #include "ParameterExchangabilityRates.hpp"
 #include "Probability.hpp"
@@ -158,7 +157,7 @@ std::vector<int> ParameterExchangabilityRates::randomlyChooseIndices(int k, int 
     std::vector<int> indices(k);
     for (int i=0; i<k; i++)
         {
-        int pos = (int)(rv->uniformRv()*(n-i));
+        int pos = rv->uniformRvInt(n-i);
         indices[i] = possibleIndices[pos];
         possibleIndices[pos] = possibleIndices[n-i-1];
         }
@@ -184,7 +183,7 @@ double ParameterExchangabilityRates::update(void) {
         {
         double alpha0 = 100.0;
         
-        int indexToUpdate = (int)(rv->uniformRv()*numRates);
+        int indexToUpdate = rv->uniformRvInt(numRates);
 
         std::vector<double> oldValues(2, 0.0);
         std::vector<double> newValues(2, 0.0);

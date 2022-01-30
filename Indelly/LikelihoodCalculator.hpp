@@ -1,7 +1,6 @@
 #ifndef LikelihoodCalculator_hpp
 #define LikelihoodCalculator_hpp
 
-#include <map>
 #include <set>
 #include <string>
 #include <vector>

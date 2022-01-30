@@ -9,6 +9,7 @@
 class ThreadTask {
     public:
         ThreadTask();
+        virtual ~ThreadTask() {};
         virtual void Run();
 };
 
@@ -23,6 +24,7 @@ class ThreadPool {
         void Wait();
 
     private:
+        int                     TaskCount;
         std::atomic<bool>       Running;
         std::mutex              TaskMutex,
                                 WaitMutex,
@@ -31,7 +33,6 @@ class ThreadPool {
                                 CheckCondition;
         std::queue<ThreadTask*> Tasks;
         std::thread*            Threads;
-        int                     TaskCount;
 
         void                    Worker();
         ThreadTask*             PopTask();

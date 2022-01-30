@@ -137,7 +137,7 @@ void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
         Msg::error("Problem choosing random backbone");
 
     std::vector<Node*> possibleIncidentNodes(2);
-    Node* a = pDes[(int)(rv->uniformRv()*2)];
+    Node* a = pDes[rv->uniformRvInt(2)];
     if (a == pDes[0])
         possibleIncidentNodes[0] = pDes[1];
     else
@@ -165,7 +165,7 @@ void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
     backbone.push_back(a);
     backbone.push_back(p);
     backbone.push_back(b);
-    incidentNode = possibleIncidentNodes[(int)(rv->uniformRv()*2)];
+    incidentNode = possibleIncidentNodes[rv->uniformRvInt(2)];
 }
 
 Tree* ParameterTree::getActiveTree(RbBitSet& mask) {
@@ -349,8 +349,6 @@ double ParameterTree::update(void) {
         return updateBrlenProportions();
     else
         return updateTreeLength();
-    
-    return 0.0;
 }
 
 double ParameterTree::updateBrlenProportions(void) {
@@ -367,7 +365,7 @@ double ParameterTree::updateBrlenProportions(void) {
     Node* nde = NULL;
     do
         {
-        nde = nodes[(int)(rv->uniformRv()*nodes.size())];
+        nde = nodes[rv->uniformRvInt(nodes.size())];
         if (nde == t->getRoot())
             nde = NULL;
         } while(nde == NULL);

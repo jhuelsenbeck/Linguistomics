@@ -33,10 +33,10 @@ class Parameter {
         
     protected:
         std::string         parmName;
-        double              proposalProbability;
         Model*              modelPtr;
         RandomVariable*     rv;
         std::string         lastUpdateType;
+        double              proposalProbability;
         bool                updateChangesRateMatrix;
         bool                updateChangesTransitionProbabilities;
 };

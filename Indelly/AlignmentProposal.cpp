@@ -405,7 +405,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
     int len = 0;
     for (len=1; len < curAlignment[0].size() && rv->uniformRv() < extensionProb; len++)
         ;
-    int pos = (int)(rv->uniformRv() * (curAlignment[0].size() - len + 1));
+    int pos = rv->uniformRvInt(curAlignment[0].size() - len + 1);
 #   endif
 
     //std::vector<std::vector<int> > profileNumber;

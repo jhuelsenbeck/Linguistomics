@@ -9,7 +9,7 @@
 #include "Node.hpp"
 #include "ParameterTree.hpp"
 #include "RateMatrix.hpp"
-#include "threads.hpp"
+#include "Threads.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"

@@ -1,8 +1,6 @@
-#include <future>
 #include <fstream>
 #include <iostream>
 #include <list>
-#include <mutex>
 #include "Alignment.hpp"
 #include "EigenSystem.hpp"
 #include "LikelihoodCalculator.hpp"
@@ -53,7 +51,7 @@ Model::Model(RandomVariable* r, ThreadPool& p):
     std::cout << "   Model" << std::endl;
     rv = r;
     partitionInfo = NULL;
-    taskList      = NULL;
+//    taskList      = NULL;
     taskMax = 1;
     GetTaskList(1024);
 
@@ -496,7 +494,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         }
 
     // set up the alignment parameter(s)
-    double alnProposalProb = 10.0 / wordAlignments.size();
+    double alnProposalProb = 10.0 / (double)wordAlignments.size();
     for (int i=0; i<wordAlignments.size(); i++)
         {
         std::string alnName = wordAlignments[i]->getName();

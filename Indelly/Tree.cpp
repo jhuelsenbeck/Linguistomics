@@ -1,7 +1,6 @@
 #include <iomanip>
 #include <iostream>
 #include <istream>
-#include <map>
 #include <sstream>
 #include <vector>
 #include "Msg.hpp"
@@ -224,7 +223,7 @@ void Tree::buildRandomTree(std::vector<std::string> tNames, double betaT, Random
         newTip->setName(tNames[i]);
         newTip->setIsLeaf(true);
         
-        Node* p = nodes[(int)(rv->uniformRv()*nodes.size())];
+        Node* p = nodes[rv->uniformRvInt(nodes.size())];
         Node* pAnc = p->getAncestor();
         
         if (pAnc == NULL)
@@ -750,7 +749,7 @@ void Tree::passDown(Node* p) {
 
 Node* Tree::randomNode(RandomVariable* rv) {
 
-    return nodes[(int)(rv->uniformRv()*nodes.size())];
+    return nodes[rv->uniformRvInt(nodes.size())];
 }
 
 void Tree::setAllFlags(bool tf) {

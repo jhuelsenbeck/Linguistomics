@@ -69,3 +69,8 @@ double RandomVariable::uniformRv(void) {
 
     return (double)extractU32() / UINT32_MAX;
 }
+
+int RandomVariable::uniformRvInt(size_t scale) {
+
+    return (int) (((double)extractU32() / UINT32_MAX) * (double)scale);
+}

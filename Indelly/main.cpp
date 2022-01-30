@@ -3,7 +3,7 @@
 #include "Model.hpp"
 #include "RandomVariable.hpp"
 #include "UserSettings.hpp"
-#include "threads.hpp"
+#include "Threads.hpp"
 
 void printHeader(int count);
 

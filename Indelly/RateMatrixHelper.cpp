@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include <map>
 #include "Msg.hpp"
 #include "Partition.hpp"
 #include "RateMatrixHelper.hpp"

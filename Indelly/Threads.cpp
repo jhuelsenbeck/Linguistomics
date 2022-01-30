@@ -1,4 +1,3 @@
-#include <atomic> 
 #include "Threads.hpp"
 
 ThreadTask::ThreadTask() {
@@ -13,8 +12,8 @@ void ThreadTask::Run() {
 
 ThreadPool::ThreadPool():
     ThreadCount(std::thread::hardware_concurrency()),
-    Running(true),
     TaskCount(0),
+    Running(true),
     Threads(new std::thread[ThreadCount])
 {
     for (int i = 0; i < ThreadCount; i++)

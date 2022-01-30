@@ -8931,9 +8931,6 @@ scan_number_done:
     /// the current character
     std::char_traits<char>::int_type current = std::char_traits<char>::eof();
 
-    /// whether the next get() call should just return current
-    bool next_unget = false;
-
     /// the start position of the current token
     position_t position {};
 
@@ -8950,6 +8947,9 @@ scan_number_done:
     number_integer_t value_integer = 0;
     number_unsigned_t value_unsigned = 0;
     number_float_t value_float = 0;
+
+    /// whether the next get() call should just return current
+    bool next_unget = false;
 
     /// the decimal point
     const char decimal_point_char = '.';

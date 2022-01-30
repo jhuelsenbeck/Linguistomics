@@ -54,15 +54,15 @@ class Node {
     protected:
         NodeSet*            descendants;
         Node*               ancestor;
-        int                 index;
-        bool                isLeaf;
+        Tree*               myTree;
+        StateMatrix_t*      transitionProbability;
+        std::vector<int>    tpMatrices;
         std::string         name;
         double              proportion;
         int                 offset;
-        Tree*               myTree;
+        int                 index;
+        bool                isLeaf;
         bool                flag;
-        StateMatrix_t*      transitionProbability;
-        std::vector<int>    tpMatrices;
 };
 
 struct CompNode {

@@ -428,7 +428,7 @@ size_t RbBitSet::getNumberSetBits(void) const {
 void RbBitSet::insert(size_t pos, bool tf) {
 
     // check position of insertion
-    if (pos < 0 || pos > numElements)
+    if (pos > numElements)
         {
         std::cout << "Cannot insert bit at position " << pos << " because there are only " << numElements << " bits" << std::endl;
         return;

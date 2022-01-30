@@ -27,6 +27,8 @@ class RandomVariable {
                     RandomVariable(void);
                     RandomVariable(uint32_t seed);
         double      uniformRv(void);
+        int         uniformRvInt(size_t scale);
+
 
     protected:
         uint32_t    extractU32(void);

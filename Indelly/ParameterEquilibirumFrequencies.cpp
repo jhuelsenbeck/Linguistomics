@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include <map>
 #include "Model.hpp"
 #include "ParameterEquilibirumFrequencies.hpp"
 #include "Probability.hpp"
@@ -129,7 +128,7 @@ std::vector<int> ParameterEquilibirumFrequencies::randomlyChooseIndices(int k, i
     std::vector<int> indices(k);
     for (int i=0; i<k; i++)
         {
-        int pos = (int)(rv->uniformRv()*(n-i));
+        int pos = rv->uniformRvInt(n-i);
         indices[i] = possibleIndices[pos];
         possibleIndices[pos] = possibleIndices[n-i-1];
         }
@@ -155,7 +154,7 @@ double ParameterEquilibirumFrequencies::update(void) {
         {
         double alpha0 = 100.0;
         
-        int indexToUpdate = (int)(rv->uniformRv()*numStates);
+        int indexToUpdate = rv->uniformRvInt(numStates);
 
         std::vector<double> oldValues(2, 0.0);
         std::vector<double> newValues(2, 0.0);
