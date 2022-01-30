@@ -22,13 +22,10 @@ CredibleInterval ParameterStatistics::getCredibleInterval(void) {
 
     size_t size = values.size();
     sortValues();
-    CredibleInterval ci;
-    
     size_t lp = size / 40;
     size_t up = size - lp - 1;
-    ci.lower = values[lp];
-    ci.upper = values[up];
-        
+
+    CredibleInterval ci(values[lp], values[up], 0.0);
     if (size == 0)
         {
         ci.median = 0.0;

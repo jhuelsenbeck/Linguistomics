@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "ParameterStatistics.hpp"
+#include "UserSettings.hpp"
 #include "RbBitSet.h"
 
 class AlignmentDistribution;
@@ -21,6 +22,7 @@ class McmcSummary {
         std::vector<CredibleInterval>           getCredibleIntervals(void);
         std::vector<double>                     getMeans(void);
         void                                    print(void);
+        void                                    output(UserSettings& settings);
         void                                    readAlnFile(std::string fn, int bi);
         void                                    readTreFile(std::string fn, int bi);
         void                                    readTsvFile(std::string fn, int bi);

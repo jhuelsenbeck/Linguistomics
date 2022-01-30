@@ -15,9 +15,10 @@
 
 
 
-McmcSummary::McmcSummary(RandomVariable* r) {
-
-    rv = r;
+McmcSummary::McmcSummary(RandomVariable* r):
+    conTree(NULL),
+    rv(r)
+{
 }
 
 McmcSummary::~McmcSummary(void) {
@@ -201,15 +202,15 @@ void McmcSummary::print(void) {
     
     // print summary of tre file
     int n = 0;
-    for (std::map<RbBitSet,ParameterStatistics*>::iterator it = partitions.begin(); it != partitions.end(); it++)
+    for (auto it = partitions.begin(); it != partitions.end(); it++)
         {
         if (it->second->size() > n)
             n = it->second->size();
         }
     std::cout << std::fixed << std::setprecision(6);
-    for (std::map<RbBitSet,ParameterStatistics*>::iterator it = partitions.begin(); it != partitions.end(); it++)
+    for (auto it = partitions.begin(); it != partitions.end(); it++)
         {
-        CredibleInterval ci = it->second->getCredibleInterval();
+        auto ci = it->second->getCredibleInterval();
         std::cout << it->second->getName() << " ";
         std::cout << (double)it->second->size() / n << " ";
         std::cout << it->second->getMean() << " (" << ci.lower << ", " << ci.upper << ")";
@@ -219,7 +220,17 @@ void McmcSummary::print(void) {
     std::cout << conTree->getNewick(4) << std::endl;
 }
 
-void McmcSummary::readAlnFile(std::string fn, int bi) {
+void McmcSummary::output(UserSettings& settings) {
+    auto& file = *new std::ofstream(settings.getPath() + "/consensus.tre" , std::ios::out);
+    file << "#NEXUS\n\nbegin taxa;" << std::endl;
+
+    file << "dimensions=" << conTree->numTaxa << ";" << std::endl;
+    file << "end;\nbegin trees;\ntree TREE1 = ";
+    file << conTree->getNewick(4) << ";"  << std::endl;
+    file << "end;" << std::endl;
+}
+    
+void McmcSummary::readAlnFile(std::string fn, int /*bi*/) {
 
     std::ifstream ifs(fn);
     nlohmann::json j;
@@ -232,7 +243,7 @@ void McmcSummary::readAlnFile(std::string fn, int bi) {
         Msg::error("Error parsing JSON file at byte " + std::to_string(ex.byte));
         }
         
-    std::string cognateName = getCognateName(fn);;
+    std::string cognateName = getCognateName(fn);
         
     auto it = j.find("PartitionSets");
     if (it == j.end())
@@ -258,7 +269,7 @@ void McmcSummary::readAlnFile(std::string fn, int bi) {
     //dist->print();
 }
 
-void McmcSummary::readTreFile(std::string fn, int bi) {
+void McmcSummary::readTreFile(std::string fn, int /*bi*/) {
 
 	// open the file
 	std::ifstream fstrm(fn.c_str());

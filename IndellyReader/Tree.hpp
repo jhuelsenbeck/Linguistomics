@@ -30,6 +30,8 @@ class Tree {
         std::vector<Node*>          nodes;
         std::vector<Node*>          downPassSequence;
         Node*                       root;
+
+    public:
         int                         numTaxa;
 };
 

@@ -5,10 +5,15 @@
 #include <vector>
 
 struct CredibleInterval {
-
     double lower;
     double upper;
     double median;
+
+    CredibleInterval(double low, double up, double med) {
+        lower = low;
+        upper = up;
+        median = med;
+    }
 };
 
 

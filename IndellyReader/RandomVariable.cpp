@@ -27,7 +27,7 @@ uint32_t RandomVariable::extractU32(void) {
         }
 
     uint32_t y = mt[i];
-    index = i + 1;
+    index = (uint16_t)(i + 1);
 
     y ^= (mt[i] >> U);
     y ^= (y << S) & B;

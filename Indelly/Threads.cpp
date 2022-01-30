@@ -22,9 +22,11 @@ ThreadPool::ThreadPool():
 
 ThreadPool::~ThreadPool() {
     Wait();
-    Running = false;
     if (Threads)
         {
+        Running = false;
+        TaskCount = 1;
+        CheckCondition.notify_all();
         for (auto* t = Threads; t < Threads + ThreadCount; ++t)
             t->join();
         delete[] Threads;
@@ -40,7 +42,7 @@ void ThreadPool::PushTask(ThreadTask* task) {
     std::unique_lock mlock(CheckMutex);
     CheckCondition.notify_one();
 }
-
+    
 ThreadTask* ThreadPool::PopTask() {
     {
         std::unique_lock mlock(CheckMutex);

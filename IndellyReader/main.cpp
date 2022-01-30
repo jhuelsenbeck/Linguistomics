@@ -34,23 +34,30 @@ int main(int argc, char* argv[]) {
         auto filePath      = fp;
         auto fileExtension = fp.extension();
         #endif
-        std::cout << filePath << std::endl;
+        bool show = false;
         
         if (fileExtension == ".tsv")
             {
+            show = true;
             summary.readTsvFile(filePath, settings.getBurnIn());
             }
         else if (fileExtension == ".aln")
             {
+            show = true;
             summary.readAlnFile(filePath, settings.getBurnIn());
             }
         else if (fileExtension == ".tre")
             {
+            show = true;
             summary.readTreFile(filePath, settings.getBurnIn());
             }
+
+        if (show)
+            std::cout << filePath << std::endl;
         }
     
     summary.print();
+    summary.output(settings);
 
 
     return 0;
