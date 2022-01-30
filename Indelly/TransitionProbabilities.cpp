@@ -17,6 +17,10 @@
 class TransitionProbabilitiesTask: public ThreadTask {
     public:
         TransitionProbabilitiesTask() {
+            Tree  = NULL;
+            Q     = NULL;
+            Probs = NULL;
+            M     = NULL;
         }
         
         void init(Tree* tree, const StateMatrix_t& q, const std::vector<StateMatrix_t*>& probs, const std::vector<StateMatrix_t*>& m) {
@@ -50,7 +54,12 @@ class TransitionProbabilitiesTask: public ThreadTask {
 
 
 TransitionProbabilities::TransitionProbabilities(void) {
-
+    modelPtr = NULL;
+    numNodes = 0;
+    numRateCategories = 0;
+    numStates = 0;
+    substitutionModel = NULL;
+    threadPool = NULL;
     isInitialized = false;
     needsUpdate = true;
     activeProbs = 0;

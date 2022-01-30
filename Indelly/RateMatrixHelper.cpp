@@ -9,7 +9,8 @@
 
 
 RateMatrixHelper::RateMatrixHelper(void) {
-
+    numStates = 0;
+    numGroups = 0;
     isInitialized = false;
     m = NULL;
 }

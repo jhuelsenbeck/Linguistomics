@@ -32,9 +32,12 @@ ThreadPool::~ThreadPool() {
 }
 
 void ThreadPool::PushTask(ThreadTask* task) {
-    const std::scoped_lock lock(TaskMutex);
-    ++TaskCount;
-    Tasks.push(task);
+    {
+      std::lock_guard<std::mutex> lock(TaskMutex);
+      ++TaskCount;
+      Tasks.push(task);
+    }
+    std::unique_lock mlock(CheckMutex);
     CheckCondition.notify_one();
 }
 
@@ -44,7 +47,7 @@ ThreadTask* ThreadPool::PopTask() {
         CheckCondition.wait(mlock, [this]{return TaskCount > 0;});
     }
 
-    std::scoped_lock lock(TaskMutex);
+    std::lock_guard<std::mutex> tasklock(TaskMutex);
     if (Tasks.empty())
         return NULL;
     else 
@@ -59,17 +62,17 @@ void ThreadPool::Wait() {
     for (;;) 
         {
         // This WaitCondition is signaled when all tasks are completed
-        std::unique_lock lock(WaitMutex);
-        WaitCondition.wait(lock);
+//        std::unique_lock lock(WaitMutex);
+//        WaitCondition.wait(lock);
 
         // According to the documentation, this needs to be double-checked because of "spurious" wakeups
 
-        int count;
-        {
-            std::scoped_lock lock2(TaskMutex);
-            count = TaskCount;
-        }
-        if (count == 0)
+//        size_t count;
+//        {
+//            std::lock_guard<std::mutex> tasklock(TaskMutex);
+//            count = TaskCount;
+//        }
+        if (TaskCount == 0)
             break;
         else
             std::this_thread::yield();
@@ -84,15 +87,18 @@ void ThreadPool::Worker() {
             {
             task->Run();
 
-            int count;
-            {
-              std::scoped_lock lock(TaskMutex);
-              count = --TaskCount;
+            --TaskCount;
+//            if (TaskCount == 0)
+
+  //          size_t count;
+//            {
+//                std::lock_guard<std::mutex> tasklock(TaskMutex);
+//                count = --TaskCount;
+//            }
+//            if (count == 0)
+//                WaitCondition.notify_one();
             }
-            if (count == 0)
-                WaitCondition.notify_one();
-            }
-        else
+//        else
             std::this_thread::yield();
     }
 }
@@ -102,8 +108,8 @@ void ThreadPool::Worker() {
 
 ThreadPool::ThreadPool():
     ThreadCount(1),
-    Running(false),
     TaskCount(0),
+    Running(false),
     Threads(NULL)
 {
 }
@@ -113,7 +119,6 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::PushTask(ThreadTask* task) {
     task->Run();
-    delete task;
 }
 
 ThreadTask* ThreadPool::PopTask() {

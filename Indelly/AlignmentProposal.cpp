@@ -41,24 +41,17 @@ AlignmentProposal::AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVaria
     maxUnalignDimension = 17;
         
     // allocate the profile for this alignment
-    profile = new (std::nothrow) int**[numNodes];
-    if (!profile)
-        Msg::error("Could not allocate profile");
+    profile = new int**[numNodes];
+
     for (int i=0; i<numNodes; i++)
         {
-        profile[i] = new (std::nothrow) int*[numNodes];
-        if (!profile[i])
-            Msg::error("Could not allocate profile");
-        profile[i][0] = new (std::nothrow) int[numNodes*maxlength];
-        if (!profile[i][0])
-            Msg::error("Could not allocate profile");
+        profile[i] = new int*[numNodes];
+        profile[i][0] = new int[numNodes*maxlength];
         for (int j=1; j<numNodes; j++)
             profile[i][j] = profile[i][j-1] + maxlength;
-        }
-    for (int i=0; i<numNodes; i++)
-        for (int j=0; j<numNodes; j++)
-            for (int k=0; k<maxlength; k++)
-                profile[i][j][k] = 0;
+        for (int j = 0; j < numNodes; j++)
+            memset(profile[i][j], 0, maxlength * sizeof(int));
+    }
                 
     possibles.resize(maxUnalignDimension);
     state.resize(3*maxUnalignDimension);

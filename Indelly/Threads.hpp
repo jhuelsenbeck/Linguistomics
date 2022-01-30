@@ -24,7 +24,7 @@ class ThreadPool {
         void Wait();
 
     private:
-        int                     TaskCount;
+        std::atomic<size_t>     TaskCount;
         std::atomic<bool>       Running;
         std::mutex              TaskMutex,
                                 WaitMutex,

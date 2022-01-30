@@ -4,6 +4,7 @@
 
 
 StateMatrixFactory::StateMatrixFactory(void) {
+    numStates = 0;
 
     // get the number of states from the configuration file
 //    auto it = j.find("NumberOfStates");

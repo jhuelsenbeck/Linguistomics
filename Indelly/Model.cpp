@@ -51,7 +51,7 @@ Model::Model(RandomVariable* r, ThreadPool& p):
     std::cout << "   Model" << std::endl;
     rv = r;
     partitionInfo = NULL;
-//    taskList      = NULL;
+    taskList = NULL;
     taskMax = 1;
     GetTaskList(1024);
 

@@ -89,8 +89,9 @@ void Mcmc::openOutputFiles(void) {
         Msg::error("Cannot open file \"" + treeFileName + "\"");
   
     std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
-    algnJsonStrm = new std::ofstream[alns.size()];
-    for (int i=0; i<alns.size(); i++)
+    auto outsize = alns.size();
+    algnJsonStrm = new std::ofstream[outsize];
+    for (int i=0; i< outsize; i++)
         {
         std::string fn = outPath + "." + alns[i]->getName() + ".aln";
         algnJsonStrm[i].open( fn.c_str(), std::ios::out );
