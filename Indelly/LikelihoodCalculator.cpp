@@ -623,25 +623,32 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
         }
     if (isHomologyClashing)
         return 0.0;
- 
+    return prune(signature, pos, dpSequence);
+}
 
+double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::vector<Node*>& dpSequence) {
+ 
     // pruning algorithm
     for (int n=0; n<dpSequence.size(); n++)
         {
         Node* p = dpSequence[n];
         int pIdx = p->getIndex();
+        auto fIIdx = fI[pIdx];
+        auto fHIdx = fH[pIdx];
+        auto nodeHomologyI = nodeHomology[pIdx];
+
         if (p->getIsLeaf() == true)
             {
             // initialize conditional probabilties for the tip
             if ( (*signature)[pIdx] == 0 )
                 {
                 // gap
-                fI[pIdx][numStates] = 1.0;
+                fIIdx[numStates] = 1.0;
                 }
             else
                 {
                 // nucleotide
-                fH[pIdx][ sequences[pIdx][(*pos)[pIdx]] ] = 1.0;
+                fHIdx[ sequences[pIdx][(*pos)[pIdx]] ] = 1.0;
                 }
             }
         else
@@ -658,7 +665,7 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
             StateMatrix_t& tpLft = *(pLft->getTransitionProbability());
             StateMatrix_t& tpRht = *(pRht->getTransitionProbability());
             
-            if ( (nodeHomology[pIdx] != 0) && (nodeHomology[pIdx] == nodeHomology[lftChildIdx]) && (nodeHomology[pIdx] == nodeHomology[rhtChildIdx]) )
+            if ( (nodeHomologyI != 0) && (nodeHomologyI == nodeHomology[lftChildIdx]) && (nodeHomologyI == nodeHomology[rhtChildIdx]) )
                 {
                 // Case 1: One homology family spanning tree intersects both child edges, i.e.
                 //         a 'homologous' nucleotide should travel down both edges.
@@ -671,17 +678,17 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
                         lft += fH[lftChildIdx][j] * homologousProbability[lftChildIdx] * tpLft(i,j);
                         rht += fH[rhtChildIdx][j] * homologousProbability[rhtChildIdx] * tpRht(i,j);
                         }
-                    fH[pIdx][i] = lft * rht;
+                    fHIdx[i] = lft * rht;
                     }
                 }
-            else if (nodeHomology[pIdx] != 0)
+            else if (nodeHomologyI != 0)
                 {
                 // Case 2: One homology family Spanning tree intersects one of the child edges, i.e.
                 //        'homologous' nucleotide must travel down a specific edge.
                 int homologousChildIdx, inhomologousChildIdx;
                 StateMatrix_t* tpHomologous = NULL;
                 StateMatrix_t* tpInhomologous = NULL;
-                if (nodeHomology[pIdx] == nodeHomology[lftChildIdx])
+                if (nodeHomologyI == nodeHomology[lftChildIdx])
                     {
                     homologousChildIdx = lftChildIdx;
                     inhomologousChildIdx = rhtChildIdx;
@@ -707,7 +714,7 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
                             (fH[inhomologousChildIdx][j] + fI[inhomologousChildIdx][j]) * (nonHomologousProbability[inhomologousChildIdx] - extinctionProbability[inhomologousChildIdx] * birthProbability[inhomologousChildIdx]) * stateEquilibriumFrequencies[j] +
                             fI[inhomologousChildIdx][j] * homologousProbability[inhomologousChildIdx] * (*tpInhomologous)(i,j);
                         }
-                    fH[pIdx][i] = lft * rht;
+                    fHIdx[i] = lft * rht;
                     }
                 }
             else
@@ -716,29 +723,69 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
                 //         a 'homologous' nucleotide may travel down either edge and pop out at a leaf,
                 //         or may travel down both edges but has to die in at least one subtree, or
                 //         an 'inhomologous' nucleotide may do whatever it likes here.
+
+                auto extinctionProbabilityLeft  = extinctionProbability[lftChildIdx];
+                auto extinctionProbabilityRight = extinctionProbability[rhtChildIdx];
+
+                auto fILeft = fI[lftChildIdx];
+                auto fIRight = fI[rhtChildIdx];
+                auto fHLeft = fH[lftChildIdx];
+                auto fHRight = fH[rhtChildIdx];
+                auto homologousProbabilityLeft = homologousProbability[lftChildIdx];
+                auto homologousProbabilityRight = homologousProbability[rhtChildIdx];
+                auto birthProbabilityLeft = birthProbability[lftChildIdx];
+                auto birthProbabilityRight = birthProbability[rhtChildIdx];
+                auto nonHomologousProbabilityLeft = nonHomologousProbability[lftChildIdx];
+                auto nonHomologousProbabilityRight = nonHomologousProbability[rhtChildIdx];
+
                 for (int i=0; i<numStates; i++)
                     {
                     double lft1 = 0.0, lft2 = 0.0;
-                    double rht1 = extinctionProbability[lftChildIdx] * fI[lftChildIdx][numStates];
-                    double rht2 = extinctionProbability[rhtChildIdx] * fI[rhtChildIdx][numStates];
+                    double rht1 = extinctionProbabilityLeft * fILeft[numStates];
+                    double rht2 = extinctionProbabilityRight * fIRight[numStates];
+
+                    auto fhl = fHLeft;
+                    auto fhr = fHRight;
+                    auto fil = fILeft;
+                    auto fir = fIRight;
+
                     for (int j=0; j<numStates; j++)
                         {
-                        lft1 += fH[lftChildIdx][j] * homologousProbability[lftChildIdx] * tpLft(i,j);
-                        lft2 += fH[rhtChildIdx][j] * homologousProbability[rhtChildIdx] * tpRht(i,j);
-                        rht1 += (fH[lftChildIdx][j] + fI[lftChildIdx][j]) * (nonHomologousProbability[lftChildIdx] - extinctionProbability[lftChildIdx] * birthProbability[lftChildIdx]) * stateEquilibriumFrequencies[j] + fI[lftChildIdx][j] * homologousProbability[lftChildIdx] * tpLft(i,j);
-                        rht2 += (fH[rhtChildIdx][j] + fI[rhtChildIdx][j]) * (nonHomologousProbability[rhtChildIdx] - extinctionProbability[rhtChildIdx] * birthProbability[rhtChildIdx]) * stateEquilibriumFrequencies[j] + fI[rhtChildIdx][j] * homologousProbability[rhtChildIdx] * tpRht(i,j);
+                        lft1 += *fhl * homologousProbabilityLeft * tpLft(i,j);
+                        lft2 += *fhr * homologousProbabilityRight * tpRht(i,j);
+                        auto stateEquilibriumFrequency = stateEquilibriumFrequencies[j];
+                        rht1 += (*fhl + *fil) * (nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft) * stateEquilibriumFrequency + *fil * homologousProbabilityLeft * tpLft(i,j);
+                        rht2 += (*fhr + *fir) * (nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight) * stateEquilibriumFrequency + *fir * homologousProbabilityRight * tpRht(i,j);
+                        ++fhl;
+                        ++fhr;
+                        ++fir;
                         }
-                    fH[pIdx][i] = lft1 * rht2 + lft2 * rht1;
-                    fI[pIdx][i] = rht1 * rht2;
+
+                    fHIdx[i] = lft1 * rht2 + lft2 * rht1;
+                    fIIdx[i] = rht1 * rht2;
                     }
-                double lft = fI[lftChildIdx][numStates];
-                double rht = fI[rhtChildIdx][numStates];
+
+                double lft = fILeft[numStates];
+                double rht = fIRight[numStates];
+
+                auto fIL = fILeft;
+                auto fHL = fHLeft;
+
+                auto fIR = fIRight;
+                auto fHR = fHRight;
+
                 for (int j=0; j<numStates; j++)
                     {
-                    lft -= birthProbability[lftChildIdx] * (fI[lftChildIdx][j] + fH[lftChildIdx][j]) * stateEquilibriumFrequencies[j];
-                    rht -= birthProbability[rhtChildIdx] * (fI[rhtChildIdx][j] + fH[rhtChildIdx][j]) * stateEquilibriumFrequencies[j];
+                    auto stateEquilibriumFrequency = stateEquilibriumFrequencies[j];
+                    lft -= birthProbabilityLeft * (*fIL + *fHL) * stateEquilibriumFrequency;
+                    rht -= birthProbabilityRight * (*fIR + *fHR) * stateEquilibriumFrequency;
+                    ++fIL;
+                    ++fHL;
+                    ++fIR;
+                    ++fHR;
                     }
-                fI[pIdx][numStates] = lft * rht;
+
+                fIIdx[numStates] = lft * rht;
                }
             
             }
@@ -746,9 +793,17 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
 
     // average probability over states at the root
     int rootIdx = tree->getRoot()->getIndex();
-    double res = fI[rootIdx][numStates];
-    for (int i=0; i<numStates; i++)
-        res -= (fI[rootIdx][i] + fH[rootIdx][i]) * birthProbability[rootIdx] * stateEquilibriumFrequencies[i];
+    auto fip = fI[rootIdx];
+    double res = fip[numStates];
+    auto bpr = birthProbability[rootIdx];
+    auto fhr = fH[rootIdx];
+
+    for (int i=0; i<numStates; i++) 
+        {
+        res -= (*fip + *fhr) * bpr * stateEquilibriumFrequencies[i];
+        ++fip;
+        ++fhr;
+        }
     return res;
 }
 #endif

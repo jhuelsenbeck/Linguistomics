@@ -75,11 +75,7 @@ TransitionProbabilities::~TransitionProbabilities(void) {
 }
 
 void TransitionProbabilities::flipActive(void) {
-
-    if (activeProbs == 0)
-        activeProbs = 1;
-    else
-        activeProbs = 0;
+    activeProbs ^= 1;
 }
 
 std::vector<StateMatrix_t*>& TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs) {
