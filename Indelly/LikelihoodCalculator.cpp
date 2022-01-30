@@ -13,10 +13,6 @@
 
 #undef DEBUG_LIKELIHOOD
 
-int LikelihoodCalculator::maxUnalignableDimension = 10;
-
-
-
 LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
 
     // memory addresses of important objects
@@ -27,6 +23,7 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
     sequences = data->getRawSequenceMatrix();
 
     numStates = data->getNumStates();
+    numStates1 = numStates+1;
     taxonMask = data->getTaxonMask();
     numTaxa = (int)taxonMask.getNumberSetBits();
     numNodes = 2 * numTaxa - 1;
@@ -37,28 +34,20 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
     homologousProbability.resize(numNodes, 0.0);
     nonHomologousProbability.resize(numNodes, 0.0);
 
+    fI = new double* [numNodes];
+    fI[0] = new double[numNodes * numStates1];
     fH = new double*[numNodes];
     fH[0] = new double[numNodes * numStates];
     for (int i=1; i<numNodes; i++)
+        {
         fH[i] = fH[i-1] + numStates;
-    
-    fI = new double*[numNodes];
-    fI[0] = new double[numNodes * (numStates + 1)];
-    for (int i=1; i<numNodes; i++)
-        fI[i] = fI[i-1] + (numStates + 1);
+        fI[i] = fI[i-1] + numStates1;
+        }
 
-    zeroH = new double[numStates];
-    for (int i=0; i<numStates; i++)
-        zeroH[i] = 0.0;
-        
-    zeroI = new double[numStates + 1];
-    for (int i=0; i<numStates+1; i++)
-        zeroI[i] = 0.0;
-        
     possibleVectorIndices.resize(maxUnalignableDimension);
     nodeHomology.resize(numNodes);
     numHomologousEmissions.resize(numNodes);
-    numHomologousEmissionsForClass.resize(maxUnalignableDimension + 1);
+    numHomologousEmissionsForClass.resize(maxUnalignableDimension1);
 }
 
 LikelihoodCalculator::~LikelihoodCalculator(void) {
@@ -68,8 +57,6 @@ LikelihoodCalculator::~LikelihoodCalculator(void) {
     delete [] fH;
     delete [] fI[0];
     delete [] fI;
-    delete [] zeroH;
-    delete [] zeroI;
 }
 
 std::string LikelihoodCalculator::alignmentName(void) {
@@ -330,13 +317,13 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
     // make certain that the conditional probabilities for all
     // nodes are zero before we start
     for (int i=0; i<numNodes; i++)
-        memcpy( fH[i], zeroH, numStates*sizeof(double) );
+        memset( fH[i], 0, numStates*sizeof(double) );
     for (int i=0; i<numNodes; i++)
-        memcpy( fI[i], zeroI, (numStates+1)*sizeof(double) );
+        memset( fI[i], 0, numStates1*sizeof(double) );
         
     std::vector<int> nodeHomology(numNodes);
     std::vector<int> numHomologousEmissions(numNodes);
-    std::vector<int> numHomologousEmissionsForClass(maxUnalignableDimension + 1);
+    std::vector<int> numHomologousEmissionsForClass(maxUnalignableDimension1);
     for (int i=0; i<numTaxa; i++)
         {
         numHomologousEmissionsForClass[ (*signature)[ i ] ]++;
@@ -563,29 +550,27 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
 
     // make certain that the conditional probabilities for all
     // nodes are zero before we start
-    for (int i=0; i<numNodes; i++)
-        memcpy( fH[i], zeroH, numStates*sizeof(double) );
-    for (int i=0; i<numNodes; i++)
-        memcpy( fI[i], zeroI, (numStates+1)*sizeof(double) );
-        
-//    std::vector<int> nodeHomology(numNodes);
-//    std::vector<int> numHomologousEmissions(numNodes);
-//    std::vector<int> numHomologousEmissionsForClass(maxUnalignableDimension + 1);
+    auto fHi = fH;
+    auto fIi = fI;
+
     for (int i=0; i<numNodes; i++)
         {
+        memset(*fHi++, 0, numStates*sizeof(double) );
+        memset(*fIi++, 0, numStates1*sizeof(double) );
         nodeHomology[i] = 0;
         numHomologousEmissions[i] = 0;
         }
-    for (int i=0; i<maxUnalignableDimension + 1; i++)
+
+    for (int i=0; i<maxUnalignableDimension1; i++)
         numHomologousEmissionsForClass[i] = 0;
+
     for (int i=0; i<numTaxa; i++)
         {
-        numHomologousEmissionsForClass[ (*signature)[ i ] ]++;
-        nodeHomology[ i ] = (*signature)[ i ];
-        if ( (*signature)[i] == 0)
-            numHomologousEmissions[ i ] = 0;
-        else
-            numHomologousEmissions[ i ] = 1;
+        auto sigi = (*signature)[i];
+
+        numHomologousEmissionsForClass[sigi]++;
+        nodeHomology[i] = sigi;
+        numHomologousEmissions[i] = sigi != 0;
         }
         
     // Loop over all nodes except root, and find out which nodes need carry nucleotides of what
@@ -599,19 +584,23 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
             {
             int pIdx = p->getIndex();
             int pAncIdx = p->getAncestor()->getIndex();
-            
-            if ((numHomologousEmissions[pIdx] == numHomologousEmissionsForClass[ nodeHomology[pIdx] ]) || (nodeHomology[pIdx] == 0))
+
+            auto numHomologousEmission = numHomologousEmissions[pIdx];
+            auto nodeHomologyI = nodeHomology[pIdx];
+
+            if (numHomologousEmission == numHomologousEmissionsForClass[nodeHomologyI] || nodeHomologyI == 0)
                 {
                 // This node is the MRCA of the homologous nucleotides iHom[i], or a gap --- do nothing
                 }
             else
                 {
-                if (nodeHomology[pAncIdx] == 0 || nodeHomology[pAncIdx] == nodeHomology[pIdx])
+                auto nodeHomologyAnc = nodeHomology[pAncIdx];
+                if (nodeHomologyAnc == 0 || nodeHomologyAnc == nodeHomologyI)
                     {
                     // This node is not yet MRCA, so node above must be homologous
-                    nodeHomology[pAncIdx] = nodeHomology[pIdx];
+                    nodeHomology[pAncIdx] = nodeHomologyI;
                     // If iHom[i]==0, iHomNum[i]==0.
-                    numHomologousEmissions[pAncIdx] += numHomologousEmissions[pIdx];
+                    numHomologousEmissions[pAncIdx] += numHomologousEmission;
                     }
                 else
                     {
@@ -629,9 +618,10 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
 double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::vector<Node*>& dpSequence) {
  
     // pruning algorithm
-    for (int n=0; n<dpSequence.size(); n++)
+    auto nsize = dpSequence.size();
+    for (int n=0; n<nsize; n++)
         {
-        Node* p = dpSequence[n];
+        auto p = dpSequence[n];
         int pIdx = p->getIndex();
         auto fIIdx = fI[pIdx];
         auto fHIdx = fH[pIdx];
@@ -726,7 +716,6 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
 
                 auto extinctionProbabilityLeft  = extinctionProbability[lftChildIdx];
                 auto extinctionProbabilityRight = extinctionProbability[rhtChildIdx];
-
                 auto fILeft = fI[lftChildIdx];
                 auto fIRight = fI[rhtChildIdx];
                 auto fHLeft = fH[lftChildIdx];
@@ -740,52 +729,50 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
 
                 for (int i=0; i<numStates; i++)
                     {
-                    double lft1 = 0.0, lft2 = 0.0;
+                    double lft1 = 0.0, 
+                           lft2 = 0.0;
                     double rht1 = extinctionProbabilityLeft * fILeft[numStates];
                     double rht2 = extinctionProbabilityRight * fIRight[numStates];
-
-                    auto fhl = fHLeft;
-                    auto fhr = fHRight;
-                    auto fil = fILeft;
-                    auto fir = fIRight;
+                    auto fhleft = fHLeft;
+                    auto fhright = fHRight;
+                    auto fileft = fILeft;
+                    auto firight = fIRight;
 
                     for (int j=0; j<numStates; j++)
                         {
-                        lft1 += *fhl * homologousProbabilityLeft * tpLft(i,j);
-                        lft2 += *fhr * homologousProbabilityRight * tpRht(i,j);
+                        lft1 += *fhleft * homologousProbabilityLeft * tpLft(i,j);
+                        lft2 += *fhright * homologousProbabilityRight * tpRht(i,j);
                         auto stateEquilibriumFrequency = stateEquilibriumFrequencies[j];
-                        rht1 += (*fhl + *fil) * (nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft) * stateEquilibriumFrequency + *fil * homologousProbabilityLeft * tpLft(i,j);
-                        rht2 += (*fhr + *fir) * (nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight) * stateEquilibriumFrequency + *fir * homologousProbabilityRight * tpRht(i,j);
-                        ++fhl;
-                        ++fhr;
-                        ++fir;
+                        rht1 += (*fhleft + *fileft) * (nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft) * stateEquilibriumFrequency + *fileft * homologousProbabilityLeft * tpLft(i,j);
+                        rht2 += (*fhright + *firight) * (nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight) * stateEquilibriumFrequency + *firight * homologousProbabilityRight * tpRht(i,j);
+                        ++fhleft;
+                        ++fhright;
+                        ++firight;
                         }
 
                     fHIdx[i] = lft1 * rht2 + lft2 * rht1;
                     fIIdx[i] = rht1 * rht2;
                     }
 
-                double lft = fILeft[numStates];
-                double rht = fIRight[numStates];
-
+                auto left = fILeft[numStates];
+                auto right = fIRight[numStates];
                 auto fIL = fILeft;
                 auto fHL = fHLeft;
-
                 auto fIR = fIRight;
                 auto fHR = fHRight;
 
                 for (int j=0; j<numStates; j++)
                     {
                     auto stateEquilibriumFrequency = stateEquilibriumFrequencies[j];
-                    lft -= birthProbabilityLeft * (*fIL + *fHL) * stateEquilibriumFrequency;
-                    rht -= birthProbabilityRight * (*fIR + *fHR) * stateEquilibriumFrequency;
+                    left -= birthProbabilityLeft * (*fIL + *fHL) * stateEquilibriumFrequency;
+                    right -= birthProbabilityRight * (*fIR + *fHR) * stateEquilibriumFrequency;
                     ++fIL;
                     ++fHL;
                     ++fIR;
                     ++fHR;
                     }
 
-                fIIdx[numStates] = lft * rht;
+                fIIdx[numStates] = left * right;
                }
             
             }

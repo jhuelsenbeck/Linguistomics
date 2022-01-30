@@ -8,29 +8,16 @@ SiteLikelihood::SiteLikelihood(int nn, int ns) {
     // set dimensions
     numNodes = nn;
     numStates = ns;
+    numStates1 = numStates+1;
         
-    // allocate arrays
-    zeroH = new double[numStates];
-    for (int i=0; i<numStates; i++)
-        zeroH[i] = 0.0;
-        
-    zeroI = new double[numStates + 1];
-    for (int i=0; i<numStates+1; i++)
-        zeroI[i] = 0.0;
-
     probsH = new double*[numNodes];
     probsH[0] = new double[numNodes * numStates];
+    probsI = new double* [numNodes];
+    probsI[0] = new double[numNodes * numStates1];
     for (int i=1; i<numNodes; i++)
-        probsH[i] = probsH[i-1] + numStates;
-    
-    probsI = new double*[numNodes];
-    probsI[0] = new double[numNodes * (numStates + 1)];
-    for (int i=1; i<numNodes; i++)
-        probsI[i] = probsI[i-1] + (numStates + 1);
-                    
-    // set arrays
-    for (int i=0; i<numNodes; i++)
         {
+        probsH[i] = probsH[i-1] + numStates;
+        probsI[i] = probsI[i-1] + numStates1;
         zeroOutH(i);
         zeroOutI(i);
         }
@@ -42,8 +29,6 @@ SiteLikelihood::~SiteLikelihood(void) {
     delete [] probsH;
     delete [] probsI[0];
     delete [] probsI;
-    delete [] zeroH;
-    delete [] zeroI;
 }
 
 void SiteLikelihood::print(void) {
@@ -63,7 +48,7 @@ void SiteLikelihood::print(void) {
     for (int i=0; i<numNodes; i++)
         {
         std::cout << std::setw(3) << i << " -- ";
-        for (int j=0; j<numStates+1; j++)
+        for (int j=0; j<numStates1; j++)
             std::cout << probsI[i][j] << " ";
         std::cout << std::endl;
         }
@@ -72,21 +57,21 @@ void SiteLikelihood::print(void) {
 void SiteLikelihood::zeroOutH(void) {
 
     for (int i=0; i<numNodes; i++)
-        memcpy( probsH[i], zeroH, numStates*sizeof(double) );
+        memset( probsH[i], 0, numStates*sizeof(double) );
 }
 
 void SiteLikelihood::zeroOutI(void) {
 
     for (int i=0; i<numNodes; i++)
-        memcpy( probsI[i], zeroI, (numStates+1)*sizeof(double) );
+        memset( probsI[i], 0, numStates1*sizeof(double) );
 }
 
 void SiteLikelihood::zeroOutH(int idx) {
 
-    memcpy( probsH[idx], zeroH, numStates*sizeof(double) );
+    memset( probsH[idx], 0, numStates*sizeof(double) );
 }
 
 void SiteLikelihood::zeroOutI(int idx) {
 
-    memcpy( probsI[idx], zeroI, (numStates+1)*sizeof(double) );
+    memset( probsI[idx], 0, numStates1*sizeof(double) );
 }

@@ -20,13 +20,18 @@ typedef std::map<IntVector*, double, CompIntVector> PartialProbabilitiesLookup;
 class LikelihoodCalculator {
 
     public:
-                                        LikelihoodCalculator(void) = delete;
+        LikelihoodCalculator(void) = delete;
                                         LikelihoodCalculator(ParameterAlignment* a, Model* m);
                                        ~LikelihoodCalculator(void);
         std::string                     alignmentName(void);
         double                          lnLikelihood(void);
     
     private:
+        const int                      maxUnalignableDimension  = 10,
+                                       maxUnalignableDimension1 = maxUnalignableDimension + 1;
+        const double                   minBranchLength = 1e-6;
+
+
         void                            clearPpTable(void);
         void                            drainPool(void);
         IntVector*                      getVector(void);
@@ -48,12 +53,11 @@ class LikelihoodCalculator {
         std::set<IntVector*>            allocated;
         std::vector<std::vector<int> >  alignment;
         std::vector<std::vector<int> >  sequences;
-        int                             numStates;
+        int                             numStates,
+                                        numStates1;
         int                             numTaxa;
         int                             numNodes;
         int                             unalignableRegionSize;
-        static int                      maxUnalignableDimension;
-        static constexpr double         minBranchLength = 1e-6;
         enum                            StateLabels { free, possible, edgeUsed, used };
         PartialProbabilitiesLookup      partialProbabilities;
         TransitionProbabilities*        transitionProbabilityFactory;
@@ -68,8 +72,6 @@ class LikelihoodCalculator {
         std::vector<double>             nonHomologousProbability;
         double**                        fH;
         double**                        fI;
-        double*                         zeroH;
-        double*                         zeroI;
         double                          immortalProbability;
         std::vector<int>                possibleVectorIndices;
         std::vector<int>                state;

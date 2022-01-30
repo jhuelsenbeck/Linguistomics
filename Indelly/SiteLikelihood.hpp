@@ -24,11 +24,10 @@ class SiteLikelihood {
     
     private:
         int         numNodes;
-        int         numStates;
+        int         numStates,
+                    numStates1;
         double**    probsH;
         double**    probsI;
-        double*     zeroH;
-        double*     zeroI;
 };
 
 #endif
