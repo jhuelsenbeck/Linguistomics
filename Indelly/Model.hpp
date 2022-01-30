@@ -19,12 +19,24 @@ class Tree;
 class UserSettings;
 
 
+class WordLnLikeTask: public ThreadTask {
+    public:
+                              WordLnLikeTask();
+        void                  Init(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL);
+        virtual void          Run();
+
+    private:
+        LikelihoodCalculator* Calculator;
+        double*               ThreadLnL;
+        double*               WordLnL;
+};
+
 
 class Model {
 
     public:
                                                 Model(void) = delete;
-                                                Model(RandomVariable* r, ThreadPool* p);
+                                                Model(RandomVariable* r, ThreadPool& p);
                                                ~Model(void);
         void                                    accept(void);
         void                                    flipActiveLikelihood(void);
@@ -61,8 +73,10 @@ class Model {
         void                                    initializeTransitionProbabilities(std::vector<Alignment*>& wordAlignments);
         nlohmann::json                          parseJsonFile(void);
         void                                    wordLnLike(int i);
+        WordLnLikeTask*                         GetTaskList(size_t count);
+
         RandomVariable*                         rv;
-        ThreadPool*                             threadPool;
+        ThreadPool&                             threadPool;
         double*                                 threadLnL;
         std::vector<bool>                       updateLikelihood;
         std::vector<int>                        activeLikelihood;
@@ -70,11 +84,13 @@ class Model {
         std::vector<Parameter*>                 parameters;
         std::vector<ParameterAlignment*>        wordParameterAlignments;
         std::vector<LikelihoodCalculator*>      wordLikelihoodCalculators;
-        int                                     updatedParameterIdx;
-        int                                     substitutionModel;
         Partition*                              partitionInfo;
         std::map<std::string,std::set<int> >    stateSets;
         std::vector<std::string>                canonicalTaxonList;
+        WordLnLikeTask*                         taskList;
+        size_t                                  taskMax;
+        int                                     updatedParameterIdx;
+        int                                     substitutionModel;
 };
 
 #endif

@@ -331,7 +331,7 @@ double  Probability::Gamma::pdf(double alpha, double beta, double x) {
     return (pow(beta, alpha) / Probability::Helper::gamma(alpha)) * pow(x, alpha - 1.0) * exp(-x * beta);
 }
 
-double  Probability::Gamma::lnPdf(double alpha, double beta, double x) {
+double  Probability::Gamma::lnPdf(double /*alpha*/, double /*beta*/, double /*x*/) {
 
     return 0.0;
 }
@@ -501,12 +501,12 @@ double Probability::Normal::quantile(double mu, double sigma, double p) {
 
 #pragma mark - Uniform
 
-double  Probability::Uniform::pdf(double low, double high, double x) {
+double  Probability::Uniform::pdf(double low, double high, double /*x*/) {
 
     return 1.0 / (high - low);
 }
 
-double  Probability::Uniform::lnPdf(double low, double high, double x) {
+double  Probability::Uniform::lnPdf(double low, double high, double /*x*/) {
 
     return -log(high - low);
 }

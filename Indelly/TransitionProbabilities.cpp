@@ -16,12 +16,14 @@
 
 class TransitionProbabilitiesTask: public ThreadTask {
     public:
-        TransitionProbabilitiesTask(Tree* tree, const StateMatrix_t& q, const std::vector<StateMatrix_t*>& probs, const std::vector<StateMatrix_t*>& m):
-            Tree(tree),
-            Q(q),
-            Probs(probs),
-            M(m)
-        {
+        TransitionProbabilitiesTask() {
+        }
+        
+        void init(Tree* tree, const StateMatrix_t& q, const std::vector<StateMatrix_t*>& probs, const std::vector<StateMatrix_t*>& m) {
+            Tree  = tree;
+            Q     = &q;
+            Probs = &probs;
+            M     = &m;
         }
 
         virtual void Run() {
@@ -30,19 +32,19 @@ class TransitionProbabilitiesTask: public ThreadTask {
             {
                 Node* p = traversalSeq[n];
                 int idx = p->getIndex();
-                StateMatrix_t* tp = Probs[idx];
-                StateMatrix_t* m = M[idx];
+                StateMatrix_t* tp = (*Probs)[idx];
+                StateMatrix_t* m = (*M)[idx];
                 double v = p->getBranchLength();
-                (*m) = Q * v;
+                (*m) = *Q * v;
                 (*tp) = m->exp();
             }
         }
 
     private:
         Tree*                              Tree;
-        const StateMatrix_t&               Q;
-        const std::vector<StateMatrix_t*>& Probs;
-        const std::vector<StateMatrix_t*>& M;
+        const StateMatrix_t*               Q;
+        const std::vector<StateMatrix_t*>* Probs;
+        const std::vector<StateMatrix_t*>* M;
 };
 
 
@@ -285,19 +287,25 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingEigenSystem(void) {
 void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
     RateMatrix& rmat = RateMatrix::rateMatrix();
     const StateMatrix_t& Q = rmat.getRateMatrix();
+
+    auto tasks = new TransitionProbabilitiesTask[transProbs.size()];
+    auto task = tasks;
     
     // update the main tree
-    for (std::map<RbBitSet,TransitionProbabilitiesPair>::iterator it = transProbs.begin(); it != transProbs.end(); it++)
+    for (auto it = transProbs.begin(); it != transProbs.end(); it++)
         {
         Tree* t = modelPtr->getTree(it->first);
         if (t == NULL)
             Msg::error("Could not find tree for mask " + it->first.bitString());
-        threadPool->PushTask(new TransitionProbabilitiesTask(t, Q, it->second.probs[activeProbs], it->second.aMat));
+        task->init(t, Q, it->second.probs[activeProbs], it->second.aMat);
+        threadPool->PushTask(task);
+        ++task;
         }
         
     threadPool->Wait();
+    delete[] tasks;
         
-    std::vector<double>& rmatFreqs = rmat.getEquilibriumFrequencies();
+    auto& rmatFreqs = rmat.getEquilibriumFrequencies();
     for (int i=0; i<numStates; i++)
         stationaryFreqs[activeProbs][i] = rmatFreqs[i];
 }

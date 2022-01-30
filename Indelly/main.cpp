@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     RandomVariable rv;
         
     // set up the phylogenetic model
-    Model model(&rv, &pool);
+    Model model(&rv, pool);
     
     // run the Markov chain Monte Carlo algorithm
     Mcmc chain(&model, &rv);

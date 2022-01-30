@@ -24,33 +24,37 @@
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
+//==============================================================================================
 
-class WordLnLikeTask : public ThreadTask {
-    public:
-        WordLnLikeTask(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL) {
-            Calculator = calculator;
-            ThreadLnL  = threadLnL;
-            WordLnL    = wordLnL;
-        }
+WordLnLikeTask::WordLnLikeTask() {
+    Calculator = NULL;
+    ThreadLnL  = NULL;
+    WordLnL    = NULL;
+}
 
-        virtual void Run() {
-            double lnL = Calculator->lnLikelihood();
-            *ThreadLnL = lnL;
-            *WordLnL   = lnL;
-        }
+void WordLnLikeTask::Init(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL) {
+    Calculator = calculator;
+    ThreadLnL = threadLnL;
+    WordLnL = wordLnL;
+}
 
-    private:
-        LikelihoodCalculator* Calculator;
-        double*               ThreadLnL;
-        double*               WordLnL;
-};
+void WordLnLikeTask::Run() {
+    double lnL = Calculator->lnLikelihood();
+    *ThreadLnL = lnL;
+    *WordLnL = lnL;
+}
+//==============================================================================================
 
-Model::Model(RandomVariable* r, ThreadPool* p) {
+
+Model::Model(RandomVariable* r, ThreadPool& p):
+    threadPool(p)
+{
 
     std::cout << "   Model" << std::endl;
     rv = r;
-    threadPool = p;
     partitionInfo = NULL;
+    taskMax = 1;
+    GetTaskList(1024);
 
     // read the json file
     nlohmann::json j = parseJsonFile();
@@ -72,15 +76,28 @@ Model::Model(RandomVariable* r, ThreadPool* p) {
 }
 
 Model::~Model(void) {
-
+    delete[] taskList;
     delete [] threadLnL;
     for (int i=0; i<parameters.size(); i++)
         delete parameters[i];
     for (int i=0; i<wordLikelihoodCalculators.size(); i++)
         delete wordLikelihoodCalculators[i];
-    if (partitionInfo != NULL)
-        delete partitionInfo;
+    delete partitionInfo;
 }
+
+WordLnLikeTask* Model::GetTaskList(size_t count) {
+    if (count > taskMax) 
+        {
+        // Increment size in powers of 2 to reduce reallocations
+        while (count > taskMax)
+            taskMax *= 2;
+
+        delete[] taskList;
+        taskList = new WordLnLikeTask[taskMax];
+        }
+    return taskList;
+}
+
 
 void Model::accept(void) {
 
@@ -88,22 +105,12 @@ void Model::accept(void) {
 }
 
 void Model::flipActiveLikelihood(void) {
-
     for (int i=0; i<activeLikelihood.size(); i++)
-        {
-        if (activeLikelihood[i] == 0)
-            activeLikelihood[i] = 1;
-        else
-            activeLikelihood[i] = 0;
-        }
+        activeLikelihood[i] ^= 1; 
 }
 
 void Model::flipActiveLikelihood(int idx) {
-
-    if (activeLikelihood[idx] == 0)
-        activeLikelihood[idx] = 1;
-    else
-        activeLikelihood[idx] = 0;
+    activeLikelihood[idx] ^= 1;  // Flip from (0 to 1) or (1 to 0)
 }
 
 ParameterAlignment* Model::getAlignment(int idx) {
@@ -412,7 +419,7 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
             std::cout << rejectedWords[i];
             if (i+1 != (int)rejectedWords.size())
                 std::cout << ", ";
-            cnt += rejectedWords[i].length();
+            cnt += (int)rejectedWords[i].length();
             if (cnt > 40)
                 {
                 std::cout << std::endl << "     ";
@@ -547,16 +554,17 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         parameters[i]->setProposalProbability( parameters[i]->getProposalProbability() / sum );
         
     // make certain to allocate memory to hold thread log likelihoods
-    threadLnL = new double[wordParameterAlignments.size()];
-    for (int i=0; i<wordParameterAlignments.size(); i++)
+    auto wpsize = wordParameterAlignments.size();
+    threadLnL = new double[wpsize];
+    for (int i=0; i< wpsize; i++)
         threadLnL[i] = 0.0;
         
     // set up vectors for the likelihood calculations
-    updateLikelihood.resize(wordParameterAlignments.size());
-    activeLikelihood.resize(wordParameterAlignments.size());
-    wordLnLikelihoods[0].resize(wordParameterAlignments.size());
-    wordLnLikelihoods[1].resize(wordParameterAlignments.size());
-    for (int i=0; i<wordParameterAlignments.size(); i++)
+    updateLikelihood.resize(wpsize);
+    activeLikelihood.resize(wpsize);
+    wordLnLikelihoods[0].resize(wpsize);
+    wordLnLikelihoods[1].resize(wpsize);
+    for (int i=0; i< wpsize; i++)
         {
         updateLikelihood[i] = false;
         activeLikelihood[i] = 0;
@@ -606,31 +614,35 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
     
     // initialize the transition probabilities
     TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
-    tProbs.initialize( this, threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
+    tProbs.initialize( this, &threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();
 }
 
 double Model::lnLikelihood(void) {
     // set up thread pool for calculating the likelihood under the TKF91 model
-    for (int i=0; i<wordParameterAlignments.size(); i++)
+    auto wpsize = wordParameterAlignments.size();
+    auto task   = GetTaskList(wpsize);
+    for (int i=0; i<wpsize; i++)
         {
         if (updateLikelihood[i] == true)
             {
-            threadPool->PushTask(new WordLnLikeTask(wordLikelihoodCalculators[i], &threadLnL[i], &wordLnLikelihoods[ activeLikelihood[i] ][i]));
+            task->Init(wordLikelihoodCalculators[i], &threadLnL[i], &wordLnLikelihoods[activeLikelihood[i]][i]);
+            threadPool.PushTask(task);
             }
         else
             {
             threadLnL[i] = wordLnLikelihoods[ activeLikelihood[i] ][i];
             }
         updateLikelihood[i] = false;
+        ++task;
         }
     
-    threadPool->Wait();
+    threadPool.Wait();
 
     double lnL = 0.0;
-    for (int i=0; i<wordParameterAlignments.size(); i++)
-        lnL += threadLnL[i];
+    for (auto t = threadLnL; t < threadLnL + wpsize; t++)
+        lnL += *t;
     return lnL;
 }
 

@@ -9,7 +9,6 @@
 class ThreadTask {
     public:
         ThreadTask();
-        virtual ~ThreadTask();
         virtual void Run();
 };
 
@@ -19,6 +18,7 @@ class ThreadPool {
 
              explicit ThreadPool();
              ~ThreadPool();
+
         void PushTask(ThreadTask* task);
         void Wait();
 
@@ -33,8 +33,8 @@ class ThreadPool {
         std::thread*            Threads;
         int                     TaskCount;
 
-        void              Worker();
-        ThreadTask*       PopTask();
+        void                    Worker();
+        ThreadTask*             PopTask();
 };
 
 

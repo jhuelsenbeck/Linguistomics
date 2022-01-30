@@ -4,9 +4,6 @@
 ThreadTask::ThreadTask() {
 }
 
-ThreadTask::~ThreadTask() {
-}
-
 void ThreadTask::Run() {
 }
 
@@ -87,7 +84,7 @@ void ThreadPool::Worker() {
         if (task)
             {
             task->Run();
-            delete task;
+
             int count;
             {
               std::scoped_lock lock(TaskMutex);
