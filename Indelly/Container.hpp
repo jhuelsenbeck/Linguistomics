@@ -46,9 +46,9 @@ template<typename T> class MatrixTemplate : public BufferTemplate<T> {
         void   create(size_t rows, size_t cols);
         size_t rows() { return Rows; }
         size_t cols() { return Cols; }
-        T*     operator[](size_t i) const { return this.Buffer + i * Rows; }
-        T      getValue(size_t i, size_t j) const { return this.Buffer[i * Rows + j]; }
-        void   setValue(size_t i, size_t j, T value) {this.Buffer[i * Rows + j] = value; }
+        T*     operator[](size_t i) const { return __super.Buffer + i * Rows; }
+        T      getValue(size_t i, size_t j) const { return __super.Buffer[i * Rows + j]; }
+        void   setValue(size_t i, size_t j, T value) {__super.Buffer[i * Rows + j] = value; }
         void   transpose();
         bool   operator==(const MatrixTemplate<T>& m) const;
         bool   operator!=(const MatrixTemplate<T>& m) const;
