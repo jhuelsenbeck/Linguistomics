@@ -19,6 +19,7 @@ template<typename T> class BufferTemplate {
 
     protected:
         BufferTemplate();
+        BufferTemplate(const BufferTemplate<T> &a);
         void create(size_t elements);
 
         T*     Buffer;
@@ -29,8 +30,9 @@ template<typename T> class BufferTemplate {
 template<typename T> class ArrayTemplate: public BufferTemplate<T> {
     public:
              ArrayTemplate();
-             ArrayTemplate(size_t size);
-        void create(size_t elements) {__super::create(elements);}
+             explicit ArrayTemplate(size_t size);
+             explicit ArrayTemplate(const ArrayTemplate<T>& a);
+             void create(size_t elements) {__super::create(elements);}
         T    operator[](size_t i) const {return this.Buffer[i];}
         void operator+=(const ArrayTemplate<T>& a);
         void operator-=(const ArrayTemplate<T>& a);
@@ -39,11 +41,15 @@ template<typename T> class ArrayTemplate: public BufferTemplate<T> {
 template<typename T> class MatrixTemplate : public BufferTemplate<T> {
     public:
                MatrixTemplate();
-               MatrixTemplate(size_t rows, size_t cols);
-        void   create(size_t rows, size_t cols);
+               explicit MatrixTemplate(size_t rows, size_t cols);
+               explicit MatrixTemplate(const MatrixTemplate<T>& a);
+               void   create(size_t rows, size_t cols);
         size_t rows() { return Rows; }
         size_t cols() { return Cols; }
         T*     operator[](size_t i) const { return this.Buffer + i * Rows; }
+        T      getValue(size_t i, size_t j) const { return this.Buffer[i * Rows + j]; }
+        void   setValue(size_t i, size_t j, T value) {this.Buffer[i * Rows + j] = value; }
+        void   transpose();
         bool   operator==(const MatrixTemplate<T>& a) const;
         bool   operator!=(const MatrixTemplate<T>& a) const;
 
