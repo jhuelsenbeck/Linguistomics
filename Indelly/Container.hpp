@@ -44,11 +44,10 @@ template<typename T> class MatrixTemplate : public BufferTemplate<T> {
                explicit MatrixTemplate(size_t rows, size_t cols);
                explicit MatrixTemplate(const MatrixTemplate<T>& m);  // copy
         void   create(size_t rows, size_t cols);
-        size_t rows() { return Rows; }
-        size_t cols() { return Cols; }
-        T*     operator[](size_t i) const { return __super.Buffer + i * Rows; }
-        T      getValue(size_t i, size_t j) const { return __super.Buffer[i * Rows + j]; }
-        void   setValue(size_t i, size_t j, T value) {__super.Buffer[i * Rows + j] = value; }
+        size_t rows() const { return Rows; }
+        size_t cols() const { return Cols; }
+        T      getValue(size_t r, size_t c) const { return __super::Buffer[r * Rows + c]; }
+        void   setValue(size_t r, size_t c, T value) {__super::Buffer[r * Rows + c] = value; }
         void   transpose();
         bool   operator==(const MatrixTemplate<T>& m) const;
         bool   operator!=(const MatrixTemplate<T>& m) const;
