@@ -341,14 +341,8 @@ int Alignment::getTaxonIndex(std::string ns) {
 int Alignment::numCompleteTaxa(void) {
 
     int n = 0;
-    for (int i=0; i<numTaxa; i++)
+    for (int i=0; i<taxonMask.size(); i++)
         {
-        bool hasNongap = false;
-        for (int j=0; j<numChar; j++)
-            {
-            if (isIndel(i,j) == false)
-                hasNongap = true;
-            }
         if (taxonMask[i] == true)
             n++;
         }
