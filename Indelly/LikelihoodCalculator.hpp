@@ -8,6 +8,7 @@
 #include "JphMatrix.hpp"
 #include "RbBitSet.h"
 #include "TransitionProbabilities.hpp"
+class IndelMatrix;
 class Model;
 class Node;
 class ParameterAlignment;
@@ -72,10 +73,10 @@ class LikelihoodCalculator {
         ParameterAlignment*             data;
         Model*                          model;
         Tree*                           tree;
-        std::vector<Node*>              des;       // instantiated once on construction of object and modified
+        std::vector<Node*>              des;       // instantiated once on construction of this and modified via reference
         std::vector<IntVector*>         pool;
         std::set<IntVector*>            allocated;
-        std::vector<std::vector<int> >  alignment;
+        IndelMatrix*                    alignment;
         std::vector<std::vector<int> >  sequences;  // instantiated once on construction of object, never modified
         int                             numStates,
                                         numStates1;

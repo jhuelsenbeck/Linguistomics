@@ -81,7 +81,7 @@ void ParameterEquilibirumFrequencies::print(void) {
 
     std::cout << "[ ";
     std::cout << std::fixed << std::setprecision(6);
-    for (int i=0; i<freqs[0].size(); i++)
+    for (int i=0; i<numStates; i++)
         {
         std::cout << freqs[0][i] << " ";
         }
@@ -103,6 +103,37 @@ void ParameterEquilibirumFrequencies::normalize(std::vector<double>& vec, double
         
     double factor = (1.0 - numTooSmall * min) / sum;
     for (int i=0; i<vec.size(); i++)
+        {
+        if (vec[i] < min)
+            vec[i] = min;
+        else
+            vec[i] *= factor;
+        }
+        
+#   if 0
+    sum = 0.0;
+    for (int i=0; i<vec.size(); i++)
+        sum += vec[i];
+    if ( fabs(1.0 - sum) > 0.000001)
+        std::cout << "Problem normalizing vector " << std::fixed << std::setprecision(20) << sum << std::endl;
+#   endif
+}
+
+void ParameterEquilibirumFrequencies::normalize(double* vec, double min, int n) {
+
+    // find entries with values that are too small
+    int numTooSmall = 0;
+    double sum = 0.0;
+    for (int i=0; i<n; i++)
+        {
+        if (vec[i] < min)
+            numTooSmall++;
+        else
+            sum += vec[i];
+        }
+        
+    double factor = (1.0 - numTooSmall * min) / sum;
+    for (int i=0; i<n; i++)
         {
         if (vec[i] < min)
             vec[i] = min;
@@ -156,10 +187,10 @@ double ParameterEquilibirumFrequencies::update(void) {
         
         int indexToUpdate = rv->uniformRvInt(numStates);
 
-        std::vector<double> oldValues(2, 0.0);
-        std::vector<double> newValues(2, 0.0);
-        std::vector<double> alphaForward(2, 0.0);
-        std::vector<double> alphaReverse(2, 0.0);
+        oldValues.resize(2, 0.0);
+        newValues.resize(2, 0.0);
+        alphaForward.resize(2, 0.0);
+        alphaReverse.resize(2, 0.0);
 
         oldValues[0] = freqs[0][indexToUpdate];
         oldValues[1] = 1.0 - oldValues[0];
@@ -189,10 +220,10 @@ double ParameterEquilibirumFrequencies::update(void) {
         for (size_t i=0; i<indicesToUpdate.size(); i++)
             mapper.insert( std::make_pair(indicesToUpdate[i], i) );
             
-        std::vector<double> oldValues(k+1, 0.0);
-        std::vector<double> newValues(k+1, 0.0);
-        std::vector<double> alphaForward(k+1, 0.0);
-        std::vector<double> alphaReverse(k+1, 0.0);
+        oldValues.resize(k+1, 0.0);
+        newValues.resize(k+1, 0.0);
+        alphaForward.resize(k+1, 0.0);
+        alphaReverse.resize(k+1, 0.0);
         
         for (size_t i=0; i<numStates; i++)
             {
@@ -231,18 +262,24 @@ double ParameterEquilibirumFrequencies::update(void) {
         }
     else
         {
-        double alpha0 = 100000.0;
         // update all of the rates
-        std::vector<double>& oldValues = freqs[0];
+        double alpha0 = 100000.0;
+        oldValues.resize(numStates, 0.0);
+        newValues.resize(numStates, 0.0);
+        alphaForward.resize(numStates, 0.0);
+        alphaReverse.resize(numStates, 0.0);
+
         std::vector<double> alphaForward(numStates);
         for (int i=0; i<numStates; i++)
+            {
+            oldValues[i] = freqs[0][i];
             alphaForward[i] = oldValues[i] * alpha0;
+            }
         
         std::vector<double> newValues(numStates);
         Probability::Dirichlet::rv(rv, alphaForward, newValues);
         normalize(newValues, minVal);
         
-        std::vector<double> alphaReverse(numStates);
         for (int i=0; i<numStates; i++)
             alphaReverse[i] = newValues[i] * alpha0;
 

@@ -3,7 +3,9 @@
 #include <string>
 #include "Alignment.hpp"
 #include "AlignmentProposal.hpp"
+#include "IndelMatrix.hpp"
 #include "Model.hpp"
+#include "Msg.hpp"
 #include "ParameterAlignment.hpp"
 #include "SiteLikelihood.hpp"
 #include "TransitionProbabilities.hpp"
@@ -96,10 +98,6 @@ bool ParameterAlignment::areAlignmentsIdentical(void) {
     return true;
 }
 
-void ParameterAlignment::configureIndelMatrix(std::vector<std::vector<int> >& indelMatrix) {
-
-}
-
 std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(void) {
 
     return getIndelMatrix(0);
@@ -127,6 +125,26 @@ std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(int idx) {
             }
         }
     return m;
+}
+
+void ParameterAlignment::getIndelMatrix(IndelMatrix* indelMat) {
+
+    int idx = 0;
+    int nt = (int)alignment[idx].size();
+    int ns = (int)alignment[idx][0].size();
+    if (indelMat->getNumTaxa() != nt)
+        Msg::error("Mismatch in the number of taxa when initializing the indel matrix");
+    indelMat->setNumSites(ns);
+    for (int i=0; i<ns; i++)
+        {
+        for (int j=0; j<nt; j++)
+            {
+            if (alignment[idx][j][i] == gapCode)
+                (*indelMat)[i][j] = 0;
+            else
+                (*indelMat)[i][j] = 1;
+            }
+        }
 }
 
 std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(std::vector<std::vector<int> >& aln) {

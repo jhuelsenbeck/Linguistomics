@@ -302,6 +302,19 @@ void Probability::Dirichlet::rv(RandomVariable* rng, const std::vector<double> &
         z[i] /= sum;
 }
 
+void Probability::Dirichlet::rv(RandomVariable* rng, const double* a, double* z, int n) {
+
+    double sum = 0.0;
+    for(int i=0; i<n; i++)
+        {
+        /* z[i] = rndGamma(a[i]) / 1.0; */
+        z[i] = Probability::Helper::rndGamma(rng, a[i]);
+        sum += z[i];
+        }
+    for(int i=0; i<n; i++)
+        z[i] /= sum;
+}
+
 #pragma mark - Exponential
 
 double  Probability::Exponential::pdf(double lambda, double x) {

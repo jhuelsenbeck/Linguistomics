@@ -38,7 +38,8 @@ namespace  Probability {
     
         double  pdf(const std::vector<double> &a, const std::vector<double> &z);
         double  lnPdf(const std::vector<double> &a, const std::vector<double> &z);
-        void    rv(RandomVariable* rng, const std::vector<double> &a, std::vector<double> &z);
+        void    rv(RandomVariable* rng, const std::vector<double>& a, std::vector<double>& z);
+        void    rv(RandomVariable* rng, const double* a, double* z, int n);
     }
 
     namespace Gamma {

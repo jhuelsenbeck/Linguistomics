@@ -8,6 +8,7 @@
 #include "RbBitSet.h"
 class Alignment;
 class AlignmentProposal;
+class IndelMatrix;
 class Model;
 class SiteLikelihood;
 
@@ -22,7 +23,6 @@ class ParameterAlignment : public Parameter {
                                        ~ParameterAlignment(void);
         void                            accept(void);
         bool                            areAlignmentsIdentical(void);
-        void                            configureIndelMatrix(std::vector<std::vector<int> >& indelMatrix);
         std::vector<std::vector<int> >& getAlignment(void) { return alignment[0]; }
         std::vector<std::vector<int> >& getAlignment(int idx) { return alignment[idx]; }
         char                            getCharFromCode(int code);
@@ -30,6 +30,7 @@ class ParameterAlignment : public Parameter {
         std::string                     getHeader(void) { return ""; }
         std::vector<std::vector<int> >  getIndelMatrix(void);
         std::vector<std::vector<int> >  getIndelMatrix(int idx);
+        void                            getIndelMatrix(IndelMatrix* indelMat);
         std::vector<std::vector<int> >  getIndelMatrix(std::vector<std::vector<int> >& aln);
         void                            getIndelMatrix(std::vector<std::vector<int> >& aln, std::vector<std::vector<int> >& m);
         int                             getIndex(void) { return index; }
