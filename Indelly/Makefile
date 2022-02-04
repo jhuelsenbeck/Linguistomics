@@ -6,13 +6,13 @@ CC = clang++
 CFLAGS = -Wall -g -std=c++17 -Ofast
 
 # define any directories containing header files other than /usr/include
-INCLUDES = -I/home/newhall/include  -I../include
+INCLUDES = 
 
 # define library paths in addition to /usr/lib
-LFLAGS =
+LFLAGS = 
 
 # define any libraries to link into executable
-LIBS = -lm
+LIBS =
 
 # define the C source files
 SRCS  =   main.cpp \

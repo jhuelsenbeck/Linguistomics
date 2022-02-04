@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cmath>
+#include <exception>
 #include <iomanip>
 #include <iostream>
 #include "IntVector.hpp"
@@ -89,14 +90,22 @@ void Mcmc::openOutputFiles(void) {
         Msg::error("Cannot open file \"" + treeFileName + "\"");
   
     std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
-    auto outsize = alns.size();
+    int outsize = (int)alns.size();
     algnJsonStrm = new std::ofstream[outsize];
-    for (int i=0; i< outsize; i++)
+    for (int i=0; i<outsize; i++)
         {
         std::string fn = outPath + "." + alns[i]->getName() + ".aln";
-        algnJsonStrm[i].open( fn.c_str(), std::ios::out );
-        if (!algnJsonStrm[i])
-            Msg::error("Cannot open file \"" + fn + "\"");
+        try
+            {
+            algnJsonStrm[i].open( fn.c_str(), std::ios::out );
+            if (!algnJsonStrm[i])
+                throw "Error opening MCMC output file \"" + fn + "\"";
+                //Msg::error("Cannot open file \"" + fn + "\"");
+            }
+        catch (const std::exception& e)
+            {
+            Msg::error(e.what());
+            }
         }
 }
 
