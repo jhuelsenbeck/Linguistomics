@@ -29,6 +29,8 @@ class LikelihoodCalculator {
     private:
         const int                       maxUnalignableDimension  = 10,
                                         maxUnalignableDimension1 = maxUnalignableDimension + 1;
+        const double                    minBranchLength = 1e-6;
+
 
         void                            clearPpTable(void);
         void                            drainPool(void);

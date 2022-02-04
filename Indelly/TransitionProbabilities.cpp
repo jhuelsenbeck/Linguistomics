@@ -93,7 +93,7 @@ TransitionProbabilities::TransitionProbabilities(void) {
     numNodes          = 0;
     numRateCategories = 0;
     numStates         = 0;
-    substitutionModel = jc69;
+    substitutionModel = NULL;
     threadPool        = NULL;
     isInitialized     = false;
     needsUpdate       = true;

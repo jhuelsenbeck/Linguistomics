@@ -236,8 +236,8 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
         
         } while (true);
 
-    //returnToPool(pos);
-    //cleanTable(dpTable);
+    returnToPool(pos);
+    cleanTable(dpTable);
     return 0;
 }
 

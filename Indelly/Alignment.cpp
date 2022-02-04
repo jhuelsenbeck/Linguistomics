@@ -9,7 +9,9 @@
 
 
 Alignment::Alignment(nlohmann::json& js, int ns, std::vector<std::string> canonicalTaxonList) {
-        
+    
+    //std::cout << j.dump() << std::endl;
+    
     matrix = NULL;
     indelMatrix = NULL;
     
@@ -32,7 +34,7 @@ Alignment::Alignment(nlohmann::json& js, int ns, std::vector<std::string> canoni
     numTaxa = (int)js["Data"].size();
     if (numTaxa <= 0)
         Msg::error("Must have at least one taxon in the word");
-                    
+            
     // set up the taxon mask
     taxonMask.resize(canonicalTaxonList.size());
     for (int i=0; i<taxonMask.size(); i++)
@@ -49,7 +51,7 @@ Alignment::Alignment(nlohmann::json& js, int ns, std::vector<std::string> canoni
         if (it == jw.end())
             Msg::error("Could not find taxon name in the JSON object");
         std::string tName = jw["Taxon"];
-                
+        
         // find the index of the taxon name and set the mask accordingly
         int taxonIdx = 0;
         bool foundTaxon = false;
@@ -339,8 +341,14 @@ int Alignment::getTaxonIndex(std::string ns) {
 int Alignment::numCompleteTaxa(void) {
 
     int n = 0;
-    for (int i=0; i<taxonMask.size(); i++)
+    for (int i=0; i<numTaxa; i++)
         {
+        bool hasNongap = false;
+        for (int j=0; j<numChar; j++)
+            {
+            if (isIndel(i,j) == false)
+                hasNongap = true;
+            }
         if (taxonMask[i] == true)
             n++;
         }
