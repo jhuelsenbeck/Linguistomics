@@ -27,11 +27,7 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
     numTaxa = (int)taxonMask.getNumberSetBits();
     numNodes = 2 * numTaxa - 1;
     
-    beta.resize(numNodes, 0.0);
-    birthProbability.resize(numNodes, 0.0);
-    extinctionProbability.resize(numNodes, 0.0);
-    homologousProbability.resize(numNodes, 0.0);
-    nonHomologousProbability.resize(numNodes, 0.0);
+    allocateIndelProbabilities(numNodes);
 
     fI = new double* [numNodes];
     fI[0] = new double[numNodes * numStates1];
@@ -43,15 +39,17 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
         fI[i] = fI[i-1] + numStates1;
         }
 
-    possibleVectorIndices.resize(maxUnalignableDimension);
+    allcoateIndelCombinatorics(numNodes, data->lengthOfLongestSequence()*3);
+    /*possibleVectorIndices.resize(maxUnalignableDimension);
     nodeHomology.resize(numNodes);
     numHomologousEmissions.resize(numNodes);
-    numHomologousEmissionsForClass.resize(maxUnalignableDimension1);
+    numHomologousEmissionsForClass.resize(maxUnalignableDimension1);*/
 }
 
 LikelihoodCalculator::~LikelihoodCalculator(void) {
 
     drainPool();
+    freeIndelProbabilities();
     delete [] fH[0];
     delete [] fH;
     delete [] fI[0];
@@ -63,6 +61,33 @@ std::string LikelihoodCalculator::alignmentName(void) {
     return data->getName();
 }
 
+void LikelihoodCalculator::allcoateIndelCombinatorics(int nn, int maxSeqLen) {
+
+    indelCombos.maximumSequenceLength = maxSeqLen;
+    indelCombos.state = new int[maxSeqLen];
+    indelCombos.possibleVectorIndices = new int[maxUnalignableDimension];
+    indelCombos.nodeHomology = new int[nn];
+    indelCombos.numHomologousEmissions = new int[nn];
+    indelCombos.numHomologousEmissionsForClass = new int[maxUnalignableDimension1];
+}
+
+void LikelihoodCalculator::allocateIndelProbabilities(int nn) {
+
+    indelProbs.beta = new double[nn];
+    indelProbs.birthProbability = new double[nn];
+    indelProbs.extinctionProbability = new double[nn];
+    indelProbs.homologousProbability = new double[nn];
+    indelProbs.nonHomologousProbability = new double[nn];
+    for (int i=0; i<nn; i++)
+        {
+        indelProbs.beta[i] = 0.0;
+        indelProbs.birthProbability[i] = 0.0;
+        indelProbs.extinctionProbability[i] = 0.0;
+        indelProbs.homologousProbability[i] = 0.0;
+        indelProbs.nonHomologousProbability[i] = 0.0;
+        }
+}
+        
 void LikelihoodCalculator::clearPpTable(void) {
 
     for (PartialProbabilitiesLookup::iterator it = partialProbabilities.begin(); it != partialProbabilities.end(); it++)
@@ -78,6 +103,15 @@ void LikelihoodCalculator::drainPool(void) {
         allocated.erase(*v);
         delete (*v);
         }
+}
+
+void LikelihoodCalculator::freeIndelProbabilities(void) {
+
+    delete [] indelProbs.beta;
+    delete [] indelProbs.birthProbability;
+    delete [] indelProbs.extinctionProbability;
+    delete [] indelProbs.homologousProbability;
+    delete [] indelProbs.nonHomologousProbability;
 }
 
 IntVector* LikelihoodCalculator::getVector(void) {
@@ -145,18 +179,20 @@ double LikelihoodCalculator::lnLikelihood(void) {
     // null emissions probability
 	IntVector* pos = getVector();
     double nullEmissionFactor = partialProbability(pos, pos);
-    double f = immortalProbability / nullEmissionFactor;
+    double f = indelProbs.immortalProbability / nullEmissionFactor;
     partialProbabilities.insert( std::make_pair(pos, f) );
 
     // array of possible vector indices, used in inner loop
     //std::vector<int> possibleVectorIndices(maxUnalignableDimension, 0);
     for (int i=0; i<maxUnalignableDimension; i++)
-        possibleVectorIndices[i] = 0;
+        indelCombos.possibleVectorIndices[i] = 0;
     int firstNotUsed = 0;
     int len = (int)alignment.size();
     int currentAlignmentColumn = 0;
-    //std::vector<int> state(len);
-    state.resize(len);
+    if (len > indelCombos.maximumSequenceLength)
+        Msg::error("Alignment unexpectedly exceeded 3X the length of the longest sequence");
+    for (int i=0; i<len; i++)
+        indelCombos.state[i] = 0;
     do
         {
         // Find all possible vectors from current position, pos
@@ -165,11 +201,11 @@ double LikelihoodCalculator::lnLikelihood(void) {
         IntVector* mask = getVector();
 	    for (ptr=firstNotUsed; mask->zeroEntry() && ptr<len; ptr++)
             {
-            if (state[ ptr ] != used)
+            if (indelCombos.state[ ptr ] != used)
                 {
                 if (mask->innerProduct( alignment[ptr] ) == 0)
                     {
-                    state[ ptr ] = possible;
+                    indelCombos.state[ ptr ] = possible;
                     if (numPossible == maxUnalignableDimension)
                         {
                         // This gets too hairy - bail out.
@@ -177,7 +213,7 @@ double LikelihoodCalculator::lnLikelihood(void) {
                         Msg::warning("We bailed out because things became too hairy: numPossible = " + std::to_string(numPossible));
                         return -std::numeric_limits<double>::infinity();
                         }
-                    possibleVectorIndices[numPossible++] = ptr;
+                    indelCombos.possibleVectorIndices[numPossible++] = ptr;
                     }
                 mask->add( alignment[ptr] );
                 }
@@ -186,8 +222,6 @@ double LikelihoodCalculator::lnLikelihood(void) {
 
         // Loop over all combinations of possible vectors, which define edges from
         // pos to another possible position, by ordinary binary counting.
-	    //IntVector newPos(*pos);
-	    //IntVector signature(pos->size());
         IntVector* newPos = getVector(*pos);
         IntVector* signature = getVector();
 	    bool unusedPos, foundNonZero;
@@ -197,11 +231,11 @@ double LikelihoodCalculator::lnLikelihood(void) {
             foundNonZero = false;
 			for (int posPtr=numPossible-1; posPtr>=0; --posPtr)
                 {
-			    int curPtr = possibleVectorIndices[ posPtr ];
+			    int curPtr = indelCombos.possibleVectorIndices[ posPtr ];
                 currentAlignmentColumn = curPtr;
-                if (state[ curPtr ] == possible)
+                if (indelCombos.state[ curPtr ] == possible)
                     {
-                    state[ curPtr ] = edgeUsed;
+                    indelCombos.state[ curPtr ] = edgeUsed;
 					newPos->add( alignment[ curPtr ] );
                     // Compute signature vector
 					signature->addMultiple( alignment[ curPtr ], posPtr + 1 );
@@ -212,7 +246,7 @@ double LikelihoodCalculator::lnLikelihood(void) {
                 else
                     {
                     // It was edgeUsed (i.e., digit == 1), so reset digit and continue
-					state[ curPtr ] = possible;
+					indelCombos.state[ curPtr ] = possible;
 					newPos->subtract( alignment[ curPtr ] );
 					signature->addMultiple( alignment[ curPtr ], -posPtr - 1 );
                     }
@@ -263,13 +297,13 @@ double LikelihoodCalculator::lnLikelihood(void) {
 
     // Now find next entry in partial probability table.  Use farthest unused vector
     --ptr;
-    while (ptr >= 0 && state[ptr] != possible)
+    while (ptr >= 0 && indelCombos.state[ptr] != possible)
         {
         // Undo any possible used vector that we encounter
-        if (state[ptr] == used)
+        if (indelCombos.state[ptr] == used)
             {
             pos->subtract( alignment[ptr] );
-            state[ptr] = free;
+            indelCombos.state[ptr] = free;
             }
         --ptr;
         }
@@ -300,7 +334,7 @@ double LikelihoodCalculator::lnLikelihood(void) {
     returnToPool(newPos);
 
     // Now use this farthest-out possible vector
-    state[ptr] = used;
+    indelCombos.state[ptr] = used;
     pos->add( alignment[ptr] );
     if (ptr <= firstNotUsed)
         firstNotUsed++;
@@ -393,7 +427,6 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
         else
             {
             // calculate conditional probabilities for interior nodes
-            //std::vector<Node*> des = p->getDescendantsVector();
             p->getDescendantsVector(des);
             if (des.size() != 2)
                 Msg::error("Expecting two descendants");
@@ -555,20 +588,20 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
         {
         memset(*fHi++, 0, numStates*sizeof(double) );
         memset(*fIi++, 0, numStates1*sizeof(double) );
-        nodeHomology[i] = 0;
-        numHomologousEmissions[i] = 0;
+        indelCombos.nodeHomology[i] = 0;
+        indelCombos.numHomologousEmissions[i] = 0;
         }
 
     for (int i=0; i<maxUnalignableDimension1; i++)
-        numHomologousEmissionsForClass[i] = 0;
+        indelCombos.numHomologousEmissionsForClass[i] = 0;
 
     for (int i=0; i<numTaxa; i++)
         {
         auto sigi = (*signature)[i];
 
-        numHomologousEmissionsForClass[sigi]++;
-        nodeHomology[i] = sigi;
-        numHomologousEmissions[i] = sigi != 0;
+        indelCombos.numHomologousEmissionsForClass[sigi]++;
+        indelCombos.nodeHomology[i] = sigi;
+        indelCombos.numHomologousEmissions[i] = sigi != 0;
         }
         
     // Loop over all nodes except root, and find out which nodes need carry nucleotides of what
@@ -583,22 +616,22 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
             int pIdx = p->getIndex();
             int pAncIdx = p->getAncestor()->getIndex();
 
-            auto numHomologousEmission = numHomologousEmissions[pIdx];
-            auto nodeHomologyI = nodeHomology[pIdx];
+            auto numHomologousEmission = indelCombos.numHomologousEmissions[pIdx];
+            auto nodeHomologyI = indelCombos.nodeHomology[pIdx];
 
-            if (numHomologousEmission == numHomologousEmissionsForClass[nodeHomologyI] || nodeHomologyI == 0)
+            if (numHomologousEmission == indelCombos.numHomologousEmissionsForClass[nodeHomologyI] || nodeHomologyI == 0)
                 {
                 // This node is the MRCA of the homologous nucleotides iHom[i], or a gap --- do nothing
                 }
             else
                 {
-                auto nodeHomologyAnc = nodeHomology[pAncIdx];
+                auto nodeHomologyAnc = indelCombos.nodeHomology[pAncIdx];
                 if (nodeHomologyAnc == 0 || nodeHomologyAnc == nodeHomologyI)
                     {
                     // This node is not yet MRCA, so node above must be homologous
-                    nodeHomology[pAncIdx] = nodeHomologyI;
+                    indelCombos.nodeHomology[pAncIdx] = nodeHomologyI;
                     // If iHom[i]==0, iHomNum[i]==0.
-                    numHomologousEmissions[pAncIdx] += numHomologousEmission;
+                    indelCombos.numHomologousEmissions[pAncIdx] += numHomologousEmission;
                     }
                 else
                     {
@@ -623,7 +656,7 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
         int pIdx = p->getIndex();
         auto fIIdx = fI[pIdx];
         auto fHIdx = fH[pIdx];
-        auto nodeHomologyI = nodeHomology[pIdx];
+        auto nodeHomologyI = indelCombos.nodeHomology[pIdx];
 
         if (p->getIsLeaf() == true)
             {
@@ -653,7 +686,7 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
             DoubleMatrix& tpLft = *(pLft->getTransitionProbability());
             DoubleMatrix& tpRht = *(pRht->getTransitionProbability());
             
-            if ( (nodeHomologyI != 0) && (nodeHomologyI == nodeHomology[lftChildIdx]) && (nodeHomologyI == nodeHomology[rhtChildIdx]) )
+            if ( (nodeHomologyI != 0) && (nodeHomologyI == indelCombos.nodeHomology[lftChildIdx]) && (nodeHomologyI == indelCombos.nodeHomology[rhtChildIdx]) )
                 {
                 // Case 1: One homology family spanning tree intersects both child edges, i.e.
                 //         a 'homologous' nucleotide should travel down both edges.
@@ -663,8 +696,8 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                     double rht = 0.0;
                     for (int j=0; j<numStates; j++)
                         {
-                        lft += fH[lftChildIdx][j] * homologousProbability[lftChildIdx] * tpLft[i][j];
-                        rht += fH[rhtChildIdx][j] * homologousProbability[rhtChildIdx] * tpRht[i][j];
+                        lft += fH[lftChildIdx][j] * indelProbs.homologousProbability[lftChildIdx] * tpLft[i][j];
+                        rht += fH[rhtChildIdx][j] * indelProbs.homologousProbability[rhtChildIdx] * tpRht[i][j];
                         }
                     fHIdx[i] = lft * rht;
                     }
@@ -676,7 +709,7 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                 int homologousChildIdx, inhomologousChildIdx;
                 DoubleMatrix* tpHomologous = NULL;
                 DoubleMatrix* tpInhomologous = NULL;
-                if (nodeHomologyI == nodeHomology[lftChildIdx])
+                if (nodeHomologyI == indelCombos.nodeHomology[lftChildIdx])
                     {
                     homologousChildIdx = lftChildIdx;
                     inhomologousChildIdx = rhtChildIdx;
@@ -694,13 +727,13 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                 for (int i=0; i<numStates; i++)
                     {
                     double lft = 0.0;
-                    double rht = extinctionProbability[inhomologousChildIdx] * fI[inhomologousChildIdx][numStates];
+                    double rht = indelProbs.extinctionProbability[inhomologousChildIdx] * fI[inhomologousChildIdx][numStates];
                     for (int j=0; j<numStates; j++)
                         {
-                        lft += fH[homologousChildIdx][j] * homologousProbability[homologousChildIdx] * (*tpHomologous)[i][j];
+                        lft += fH[homologousChildIdx][j] * indelProbs.homologousProbability[homologousChildIdx] * (*tpHomologous)[i][j];
                         rht +=
-                            (fH[inhomologousChildIdx][j] + fI[inhomologousChildIdx][j]) * (nonHomologousProbability[inhomologousChildIdx] - extinctionProbability[inhomologousChildIdx] * birthProbability[inhomologousChildIdx]) * stateEquilibriumFrequencies[j] +
-                            fI[inhomologousChildIdx][j] * homologousProbability[inhomologousChildIdx] * (*tpInhomologous)[i][j];
+                            (fH[inhomologousChildIdx][j] + fI[inhomologousChildIdx][j]) * (indelProbs.nonHomologousProbability[inhomologousChildIdx] - indelProbs.extinctionProbability[inhomologousChildIdx] * indelProbs.birthProbability[inhomologousChildIdx]) * stateEquilibriumFrequencies[j] +
+                            fI[inhomologousChildIdx][j] * indelProbs.homologousProbability[inhomologousChildIdx] * (*tpInhomologous)[i][j];
                         }
                     fHIdx[i] = lft * rht;
                     }
@@ -712,18 +745,18 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                 //         or may travel down both edges but has to die in at least one subtree, or
                 //         an 'inhomologous' nucleotide may do whatever it likes here.
 
-                auto extinctionProbabilityLeft  = extinctionProbability[lftChildIdx];
-                auto extinctionProbabilityRight = extinctionProbability[rhtChildIdx];
+                auto extinctionProbabilityLeft  = indelProbs.extinctionProbability[lftChildIdx];
+                auto extinctionProbabilityRight = indelProbs.extinctionProbability[rhtChildIdx];
                 auto fILeft = fI[lftChildIdx];
                 auto fIRight = fI[rhtChildIdx];
                 auto fHLeft = fH[lftChildIdx];
                 auto fHRight = fH[rhtChildIdx];
-                auto homologousProbabilityLeft = homologousProbability[lftChildIdx];
-                auto homologousProbabilityRight = homologousProbability[rhtChildIdx];
-                auto birthProbabilityLeft = birthProbability[lftChildIdx];
-                auto birthProbabilityRight = birthProbability[rhtChildIdx];
-                auto nonHomologousProbabilityLeft = nonHomologousProbability[lftChildIdx];
-                auto nonHomologousProbabilityRight = nonHomologousProbability[rhtChildIdx];
+                auto homologousProbabilityLeft = indelProbs.homologousProbability[lftChildIdx];
+                auto homologousProbabilityRight = indelProbs.homologousProbability[rhtChildIdx];
+                auto birthProbabilityLeft = indelProbs.birthProbability[lftChildIdx];
+                auto birthProbabilityRight = indelProbs.birthProbability[rhtChildIdx];
+                auto nonHomologousProbabilityLeft = indelProbs.nonHomologousProbability[lftChildIdx];
+                auto nonHomologousProbabilityRight = indelProbs.nonHomologousProbability[rhtChildIdx];
 
                 for (int i=0; i<numStates; i++)
                     {
@@ -780,7 +813,7 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
     int rootIdx = tree->getRoot()->getIndex();
     auto fip = fI[rootIdx];
     double res = fip[numStates];
-    auto bpr = birthProbability[rootIdx];
+    auto bpr = indelProbs.birthProbability[rootIdx];
     auto fhr = fH[rootIdx];
 
     for (int i=0; i<numStates; i++) 
@@ -813,10 +846,10 @@ void LikelihoodCalculator::returnToPool(IntVector* v) {
 
 void LikelihoodCalculator::setBirthDeathProbabilities(void) {
 
-    insertionRate = model->getInsertionRate();
-    deletionRate  = model->getDeletionRate();
+    indelProbs.insertionRate = model->getInsertionRate();
+    indelProbs.deletionRate  = model->getDeletionRate();
 
-    immortalProbability= 1.0;
+    indelProbs.immortalProbability= 1.0;
     std::vector<Node*>& dpSequence = tree->getDownPassSequence();
     for (int n=0; n<dpSequence.size(); n++)
         {
@@ -826,20 +859,20 @@ void LikelihoodCalculator::setBirthDeathProbabilities(void) {
         if (p->getAncestor() == NULL)
             {
             // root
-            beta[pIdx] = 1.0 / deletionRate;
-            homologousProbability[pIdx] = 0.0;
+            indelProbs.beta[pIdx] = 1.0 / indelProbs.deletionRate;
+            indelProbs.homologousProbability[pIdx] = 0.0;
             }
         else
             {
             // internal node or tip
-            beta[pIdx] = exp( (insertionRate - deletionRate) * v );
-            beta[pIdx] = (1.0 - beta[pIdx]) / (deletionRate - insertionRate * beta[pIdx]);
-            homologousProbability[pIdx] = exp( -deletionRate * v) * (1.0 - insertionRate * beta[pIdx] );
+            indelProbs.beta[pIdx] = exp( (indelProbs.insertionRate - indelProbs.deletionRate) * v );
+            indelProbs.beta[pIdx] = (1.0 - indelProbs.beta[pIdx]) / (indelProbs.deletionRate - indelProbs.insertionRate * indelProbs.beta[pIdx]);
+            indelProbs.homologousProbability[pIdx] = exp( -indelProbs.deletionRate * v) * (1.0 - indelProbs.insertionRate * indelProbs.beta[pIdx] );
             }
-        birthProbability[pIdx]         = insertionRate * beta[pIdx];
-        extinctionProbability[pIdx]    = deletionRate * beta[pIdx];
-        nonHomologousProbability[pIdx] = (1.0 - deletionRate * beta[pIdx]) * (1.0 - birthProbability[pIdx]) - homologousProbability[pIdx];
-        immortalProbability *= (1.0 - birthProbability[pIdx]);
+        indelProbs.birthProbability[pIdx]         = indelProbs.insertionRate * indelProbs.beta[pIdx];
+        indelProbs.extinctionProbability[pIdx]    = indelProbs.deletionRate * indelProbs.beta[pIdx];
+        indelProbs.nonHomologousProbability[pIdx] = (1.0 - indelProbs.deletionRate * indelProbs.beta[pIdx]) * (1.0 - indelProbs.birthProbability[pIdx]) - indelProbs.homologousProbability[pIdx];
+        indelProbs.immortalProbability *= (1.0 - indelProbs.birthProbability[pIdx]);
         }
         
 #   if defined(DEBUG_LIKELIHOOD)

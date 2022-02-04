@@ -15,6 +15,28 @@ class TransitionProbabilities;
 class Tree;
 typedef std::map<IntVector*, double, CompIntVector> PartialProbabilitiesLookup;
 
+struct IndelProbabilities {
+
+    double      insertionRate;
+    double      deletionRate;
+    double      immortalProbability;
+    double*     beta;
+    double*     birthProbability;
+    double*     extinctionProbability;
+    double*     homologousProbability;
+    double*     nonHomologousProbability;
+};
+
+struct IndelCombinatorics {
+
+    int         maximumSequenceLength;
+    int*        state;
+    int*        possibleVectorIndices;
+    int*        nodeHomology;
+    int*        numHomologousEmissions;
+    int*        numHomologousEmissionsForClass;
+};
+
 
 
 class LikelihoodCalculator {
@@ -30,10 +52,11 @@ class LikelihoodCalculator {
         const int                       maxUnalignableDimension  = 10,
                                         maxUnalignableDimension1 = maxUnalignableDimension + 1;
         const double                    minBranchLength = 1e-6;
-
-
+        void                            allcoateIndelCombinatorics(int nn, int maxSeqLen);
+        void                            allocateIndelProbabilities(int nn);
         void                            clearPpTable(void);
         void                            drainPool(void);
+        void                            freeIndelProbabilities(void);
         IntVector*                      getVector(void);
         IntVector*                      getVector(IntVector& vec);
         int                             getNumAllocated(void) { return (int) allocated.size(); }
@@ -49,10 +72,11 @@ class LikelihoodCalculator {
         ParameterAlignment*             data;
         Model*                          model;
         Tree*                           tree;
+        std::vector<Node*>              des;       // instantiated once on construction of object and modified
         std::vector<IntVector*>         pool;
         std::set<IntVector*>            allocated;
         std::vector<std::vector<int> >  alignment;
-        std::vector<std::vector<int> >  sequences;
+        std::vector<std::vector<int> >  sequences;  // instantiated once on construction of object, never modified
         int                             numStates,
                                         numStates1;
         int                             numTaxa;
@@ -63,22 +87,10 @@ class LikelihoodCalculator {
         TransitionProbabilities*        transitionProbabilityFactory;
         DoubleMatrix*                   transitionProbabilities;
         std::vector<double>             stateEquilibriumFrequencies;
-        double                          insertionRate;
-        double                          deletionRate;
-        std::vector<double>             beta;
-        std::vector<double>             birthProbability;
-        std::vector<double>             extinctionProbability;
-        std::vector<double>             homologousProbability;
-        std::vector<double>             nonHomologousProbability;
+        IndelProbabilities              indelProbs;
         double**                        fH;
         double**                        fI;
-        double                          immortalProbability;
-        std::vector<int>                possibleVectorIndices;
-        std::vector<int>                state;
-        std::vector<int>                nodeHomology;
-        std::vector<int>                numHomologousEmissions;
-        std::vector<int>                numHomologousEmissionsForClass;
-        std::vector<Node*>              des;
+        IndelCombinatorics              indelCombos;
 };
 
 #endif

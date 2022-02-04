@@ -96,6 +96,10 @@ bool ParameterAlignment::areAlignmentsIdentical(void) {
     return true;
 }
 
+void ParameterAlignment::configureIndelMatrix(std::vector<std::vector<int> >& indelMatrix) {
+
+}
+
 std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(void) {
 
     return getIndelMatrix(0);
@@ -225,6 +229,17 @@ std::string ParameterAlignment::getTaxonMaskString(void) {
             str += "0";
         }
     return str;
+}
+
+int ParameterAlignment::lengthOfLongestSequence(void) {
+
+    int n = 0;
+    for (int i=0; i<sequences.size(); i++)
+        {
+        if (sequences[i].size() > n)
+            n = (int)sequences[i].size();
+        }
+    return n;
 }
 
 double ParameterAlignment::lnPriorProbability(void) {

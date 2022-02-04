@@ -22,6 +22,7 @@ class ParameterAlignment : public Parameter {
                                        ~ParameterAlignment(void);
         void                            accept(void);
         bool                            areAlignmentsIdentical(void);
+        void                            configureIndelMatrix(std::vector<std::vector<int> >& indelMatrix);
         std::vector<std::vector<int> >& getAlignment(void) { return alignment[0]; }
         std::vector<std::vector<int> >& getAlignment(int idx) { return alignment[idx]; }
         char                            getCharFromCode(int code);
@@ -44,6 +45,7 @@ class ParameterAlignment : public Parameter {
         RbBitSet                        getTaxonMask(void);
         std::string                     getTaxonMaskString(void);
         std::vector<std::string>        getTaxonNames(void) { return taxonNames; }
+        int                             lengthOfLongestSequence(void);
         double                          lnPriorProbability(void);
         void                            print(void);
         void                            reject(void);
@@ -52,19 +54,18 @@ class ParameterAlignment : public Parameter {
     protected:
         AlignmentProposal*              alignmentProposal;
         std::vector<std::vector<int> >  alignment[2];  // numTaxa X numSites
-        std::vector<std::vector<int> >  sequences;     // numTaxa X numSites for taxon i (i.e., left-justified)
+        std::vector<std::vector<int> >  sequences;     // numTaxa X numSites for taxon i (i.e., left-justified), instantiated once on construction
         bool                            completelySampled;
         double                          tuning;
         double                          exponent;
         double                          gapPenalty;
         int                             numStates;
-        int                             gapCode;       // the gap code is simply the maximum number of states possible in any Markov model
+        int                             gapCode;       // the gap code is simply the maximum number of states possible in the Markov model
         int                             numTaxa;
         int                             printWidth;
         int                             index;
         SiteLikelihood*                 siteProbs;
         std::vector<std::string>        taxonNames;
-      //std::vector<bool>               taxonMask;
         RbBitSet                        taxonMask;
         std::map<int,int>               taxonMapKeyCanonical;
         std::map<int,int>               taxonMapKeyAlignment;
