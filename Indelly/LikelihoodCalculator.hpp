@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "IntVector.hpp"
+#include "JphMatrix.hpp"
 #include "RbBitSet.h"
 #include "TransitionProbabilities.hpp"
 class Model;
@@ -26,9 +27,9 @@ class LikelihoodCalculator {
         double                          lnLikelihood(void);
     
     private:
-        const int                      maxUnalignableDimension  = 10,
-                                       maxUnalignableDimension1 = maxUnalignableDimension + 1;
-        const double                   minBranchLength = 1e-6;
+        const int                       maxUnalignableDimension  = 10,
+                                        maxUnalignableDimension1 = maxUnalignableDimension + 1;
+        const double                    minBranchLength = 1e-6;
 
 
         void                            clearPpTable(void);
@@ -60,7 +61,7 @@ class LikelihoodCalculator {
         enum                            StateLabels { free, possible, edgeUsed, used };
         PartialProbabilitiesLookup      partialProbabilities;
         TransitionProbabilities*        transitionProbabilityFactory;
-        std::vector<StateMatrix_t*>     transitionProbabilities;
+        DoubleMatrix*                   transitionProbabilities;
         std::vector<double>             stateEquilibriumFrequencies;
         double                          insertionRate;
         double                          deletionRate;

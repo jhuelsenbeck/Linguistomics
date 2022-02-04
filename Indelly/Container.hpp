@@ -37,8 +37,8 @@ template<typename T> class ArrayTemplate: public BufferTemplate<T> {
              explicit ArrayTemplate(size_t size);
              explicit ArrayTemplate(const ArrayTemplate<T>& a); // copy
              void create(size_t elements) { BufferTemplate<T>::create(elements);}
-        T    operator[](size_t i) const {return this.Buffer[i];}
-        T    getValue(size_t i) const { return this.Buffer[i]; }
+        T    operator[](size_t i) const {return this->Buffer[i];}
+        T    getValue(size_t i) const { return this->Buffer[i]; }
 };
 
 template<typename T> class MatrixTemplate : public BufferTemplate<T> {

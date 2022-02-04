@@ -132,15 +132,16 @@ template<typename T> MatrixTemplate<T>::MatrixTemplate() {
     Cols = 0;
 }
 
-template<typename T> MatrixTemplate<T>::MatrixTemplate(size_t rows, size_t cols):
-    BufferTemplate::BufferTemplate<T>(rows * cols)
+template<typename T>
+MatrixTemplate<T>::MatrixTemplate(size_t rows, size_t cols):
+    BufferTemplate<T>::BufferTemplate(rows * cols)
 {
     Rows = rows;
     Cols = cols;
 }
 
 template<typename T> MatrixTemplate<T>::MatrixTemplate(const MatrixTemplate<T>& m):
-    BufferTemplate::BufferTemplate<T>(m)
+    BufferTemplate<T>::BufferTemplate(m)
 {
     Rows = m.Rows;
     Cols = m.Cols;
@@ -153,11 +154,11 @@ template<typename T> void MatrixTemplate<T>::create(size_t rows, size_t cols) {
 }
 
 template<typename T> T MatrixTemplate<T>::getValue(size_t r, size_t c) const { 
-    return this.Buffer[r * Rows + c]; 
+    return this->Buffer[r * Rows + c];
 }
 
 template<typename T> void MatrixTemplate<T>::setValue(size_t r, size_t c, T value) { 
-    this.Buffer[r * Rows + c] = value;
+    this->Buffer[r * Rows + c] = value;
 }
 
 template<typename T> void MatrixTemplate<T>::setIdentity(T value) {

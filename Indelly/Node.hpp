@@ -4,7 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "EigenSystem.hpp"
+#include "JphMatrix.hpp"
 class NodeSet;
 class RbBitSet;
 class Tree;
@@ -34,7 +34,7 @@ class Node {
         int                 getOffset(void) { return offset; }
         int                 getOffset(void) const { return offset; }
         Node*               getSisterNode(void);
-        StateMatrix_t*      getTransitionProbability(void) { return transitionProbability; }
+        DoubleMatrix*       getTransitionProbability(void) { return transitionProbability; }
         std::vector<int>&   getTpMatrices(void) { return tpMatrices; }
         bool                isDescendant(Node* p);
         size_t              numDescendants(void);
@@ -49,13 +49,13 @@ class Node {
         void                setMyTree(Tree* t) { myTree = t; }
         void                setName(std::string s) { name = s; }
         void                setOffset(int x) { offset = x; }
-        void                setTransitionProbability(StateMatrix_t* p) { transitionProbability = p; }
+        void                setTransitionProbability(DoubleMatrix* p) { transitionProbability = p; }
 
     protected:
         NodeSet*            descendants;
         Node*               ancestor;
         Tree*               myTree;
-        StateMatrix_t*      transitionProbability;
+        DoubleMatrix*       transitionProbability;
         std::vector<int>    tpMatrices;
         std::string         name;
         double              proportion;

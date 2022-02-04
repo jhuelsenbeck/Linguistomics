@@ -1,7 +1,6 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include "EigenSystem.hpp"
 #include "IntVector.hpp"
 #include "LikelihoodCalculator.hpp"
 #include "Model.hpp"
@@ -133,7 +132,7 @@ void LikelihoodCalculator::initialize(void) {
     for (int n=0; n<downPassSequence.size(); n++)
         {
         Node* p = downPassSequence[n];
-        p->setTransitionProbability( transitionProbabilities[p->getIndex()] );
+        p->setTransitionProbability( &transitionProbabilities[p->getIndex()] );
         }
     stateEquilibriumFrequencies = transitionProbabilityFactory->getStationaryFrequencies();
     setBirthDeathProbabilities();
@@ -288,7 +287,6 @@ double LikelihoodCalculator::lnLikelihood(void) {
         double lnL = log(it->second);
         if (isinf(lnL) == true)
             {
-            std::cout << "res = " << it->second << std::endl;
             data->print();
             printTable();
             }
@@ -652,8 +650,8 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
             Node* pRht = des[1];
             int lftChildIdx = pLft->getIndex();
             int rhtChildIdx = pRht->getIndex();
-            StateMatrix_t& tpLft = *(pLft->getTransitionProbability());
-            StateMatrix_t& tpRht = *(pRht->getTransitionProbability());
+            DoubleMatrix& tpLft = *(pLft->getTransitionProbability());
+            DoubleMatrix& tpRht = *(pRht->getTransitionProbability());
             
             if ( (nodeHomologyI != 0) && (nodeHomologyI == nodeHomology[lftChildIdx]) && (nodeHomologyI == nodeHomology[rhtChildIdx]) )
                 {
@@ -665,8 +663,8 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                     double rht = 0.0;
                     for (int j=0; j<numStates; j++)
                         {
-                        lft += fH[lftChildIdx][j] * homologousProbability[lftChildIdx] * tpLft(i,j);
-                        rht += fH[rhtChildIdx][j] * homologousProbability[rhtChildIdx] * tpRht(i,j);
+                        lft += fH[lftChildIdx][j] * homologousProbability[lftChildIdx] * tpLft[i][j];
+                        rht += fH[rhtChildIdx][j] * homologousProbability[rhtChildIdx] * tpRht[i][j];
                         }
                     fHIdx[i] = lft * rht;
                     }
@@ -676,8 +674,8 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                 // Case 2: One homology family Spanning tree intersects one of the child edges, i.e.
                 //        'homologous' nucleotide must travel down a specific edge.
                 int homologousChildIdx, inhomologousChildIdx;
-                StateMatrix_t* tpHomologous = NULL;
-                StateMatrix_t* tpInhomologous = NULL;
+                DoubleMatrix* tpHomologous = NULL;
+                DoubleMatrix* tpInhomologous = NULL;
                 if (nodeHomologyI == nodeHomology[lftChildIdx])
                     {
                     homologousChildIdx = lftChildIdx;
@@ -699,10 +697,10 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                     double rht = extinctionProbability[inhomologousChildIdx] * fI[inhomologousChildIdx][numStates];
                     for (int j=0; j<numStates; j++)
                         {
-                        lft += fH[homologousChildIdx][j] * homologousProbability[homologousChildIdx] * (*tpHomologous)(i,j);
+                        lft += fH[homologousChildIdx][j] * homologousProbability[homologousChildIdx] * (*tpHomologous)[i][j];
                         rht +=
                             (fH[inhomologousChildIdx][j] + fI[inhomologousChildIdx][j]) * (nonHomologousProbability[inhomologousChildIdx] - extinctionProbability[inhomologousChildIdx] * birthProbability[inhomologousChildIdx]) * stateEquilibriumFrequencies[j] +
-                            fI[inhomologousChildIdx][j] * homologousProbability[inhomologousChildIdx] * (*tpInhomologous)(i,j);
+                            fI[inhomologousChildIdx][j] * homologousProbability[inhomologousChildIdx] * (*tpInhomologous)[i][j];
                         }
                     fHIdx[i] = lft * rht;
                     }
@@ -740,11 +738,11 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
 
                     for (int j=0; j<numStates; j++)
                         {
-                        lft1 += *fhleft * homologousProbabilityLeft * tpLft(i,j);
-                        lft2 += *fhright * homologousProbabilityRight * tpRht(i,j);
+                        lft1 += *fhleft * homologousProbabilityLeft * tpLft[i][j];
+                        lft2 += *fhright * homologousProbabilityRight * tpRht[i][j];
                         auto stateEquilibriumFrequency = stateEquilibriumFrequencies[j];
-                        rht1 += (*fhleft + *fileft) * (nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft) * stateEquilibriumFrequency + *fileft * homologousProbabilityLeft * tpLft(i,j);
-                        rht2 += (*fhright + *firight) * (nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight) * stateEquilibriumFrequency + *firight * homologousProbabilityRight * tpRht(i,j);
+                        rht1 += (*fhleft + *fileft) * (nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft) * stateEquilibriumFrequency + *fileft * homologousProbabilityLeft * tpLft[i][j];
+                        rht2 += (*fhright + *firight) * (nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight) * stateEquilibriumFrequency + *firight * homologousProbabilityRight * tpRht[i][j];
                         ++fhleft;
                         ++fhright;
                         ++firight;
@@ -804,6 +802,7 @@ void LikelihoodCalculator::printTable(void) {
         {
         std::cout << i++ << " -- " << *(it->first) << " -- " << it->second << std::endl;
         }
+    Msg::error("Found infinite likelihood");
 }
 
 void LikelihoodCalculator::returnToPool(IntVector* v) {

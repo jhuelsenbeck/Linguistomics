@@ -1,6 +1,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include "MatrixMath.hpp"
 #include "RateMatrix.hpp"
 #include "RateMatrixHelper.hpp"
 
@@ -9,9 +10,13 @@
 RateMatrix::RateMatrix(void) {
 
     numStates = 0;
-    useEigenSystem = true;
     activeMatrix = 0;
     isInitialized = false;
+}
+
+RateMatrix::~RateMatrix(void) {
+
+    delete [] Q;
 }
 
 void RateMatrix::flipActiveValues(void) {
@@ -22,19 +27,21 @@ void RateMatrix::flipActiveValues(void) {
         activeMatrix = 0;
 }
 
-void RateMatrix::initialize(int d, bool useEigens) {
+void RateMatrix::initialize(int d) {
 
     if (isInitialized == true)
         return;
         
     numStates = d;
-    useEigenSystem = useEigens;
     activeMatrix = 0;
-    Q[0].resize(numStates,numStates);
-    Q[1].resize(numStates,numStates);
-    equilibriumFrequencies[0].resize(numStates);
-    equilibriumFrequencies[1].resize(numStates);
 
+    Q = new DoubleMatrix[2];
+    for (int s=0; s<2; s++)
+        Q[s].initialize(numStates, numStates);
+        
+    for (int s=0; s<2; s++)
+        equilibriumFrequencies[s].resize(numStates);
+        
     isInitialized = true;
 }
 
@@ -45,7 +52,7 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
         equilibriumFrequencies[activeMatrix][i] = f[i];
     
     // initialize the rate matrix
-    StateMatrix_t& QM = this->Q[activeMatrix];
+    DoubleMatrix& QM = this->Q[activeMatrix];
     
     // fill in off diagonal components of the rate matrix in
     // a model-dependent manner
@@ -56,8 +63,8 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
             {
             for (int j=i+1; j<numStates; j++)
                 {
-                QM(i,j) = rates[k] * f[j];
-                QM(j,i) = rates[k] * f[i];
+                QM[i][j] = rates[k] * f[j];
+                QM[j][i] = rates[k] * f[i];
                 k++;
                 }
             }
@@ -72,8 +79,8 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
             for (int j=i+1; j<numStates; j++)
                 {
                 int changeType = map[i][j];
-                QM(i,j) = rates[changeType] * f[j];
-                QM(j,i) = rates[changeType] * f[i];
+                QM[i][j] = rates[changeType] * f[j];
+                QM[j][i] = rates[changeType] * f[i];
                 }
             }
         }
@@ -85,29 +92,26 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
         for (int j=0; j<numStates; j++)
             {
             if (i != j)
-                sum += QM(i,j);
+                sum += QM[i][j];
             }
-        QM(i,i) = -sum;
+        QM[i][i] = -sum;
         }
     
     // rescale the rate matrix
     double averageRate = 0.0;
     for (int i=0; i<numStates; i++)
-        averageRate += -f[i] * QM(i,i);
+        averageRate += -f[i] * QM[i][i];
     double scaleFactor = 1.0 / averageRate;
-    QM *= scaleFactor;
-    
-    // update the eigen system
-    if (useEigenSystem == true)
-        {
-        EigenSystem& eigs = EigenSystem::eigenSystem();
-        eigs.setActiveEigens(activeMatrix);
-        eigs.calculateEigenSystem(QM);
-        }
-        
+    MatrixMath::multiplicationByScalar(&QM, scaleFactor); // QM *= scaleFactor
+            
 #   if 0
     std::cout << std::fixed << std::setprecision(5);
-    std::cout << QM << std::endl;
+    for (int i=0; i<numStates; i++)
+        {
+        for (int j=0; j<numStates; j++)
+            std::cout << QM[i][j] << " ";
+        std::cout << std::endl;
+        }
     for (int i=0; i<numStates; i++)
         std::cout << equilibriumFrequencies[activeMatrix][i] << " ";
     std::cout << std::endl;

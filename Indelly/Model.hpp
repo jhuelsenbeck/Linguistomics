@@ -7,7 +7,7 @@
 #include <vector>
 #include "json.hpp"
 #include "RbBitSet.h"
-#include "threads.hpp"
+#include "Threads.hpp"
 class Alignment;
 class LikelihoodCalculator;
 class Parameter;

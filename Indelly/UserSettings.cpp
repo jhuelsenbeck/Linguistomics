@@ -22,7 +22,6 @@ UserSettings::UserSettings(void) {
     calculateMarginalLikelihood = false;
     numRateCategories           = 1;
     numIndelCategories          = 1;
-    useEigenSystem              = true;
     useOnlyCompleteWords        = false;
 }
 
@@ -92,15 +91,6 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                     calculateMarginalLikelihood = false;
                 else
                     Msg::error("Unknown option for calculating marginal likelihood");
-                }
-            else if (arg == "-e")
-                {
-                if (cmd == "yes")
-                    useEigenSystem = true;
-                else if (cmd == "no")
-                    useEigenSystem = false;
-                else
-                    Msg::error("Unknown option for calculating matrix exponential");
                 }
             else if (arg == "-c")
                 {
@@ -188,18 +178,6 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 Msg::error("Unknown option" + res);
             }
 
-        it2 = jsonSettings.find("UseEigenSystem");
-        if (it2 != jsonSettings.end())
-            {
-            std::string res = getVariable(jsonSettings, "UseEigenSystem");
-            if (res == "no")
-                useEigenSystem = false;
-            else if (res == "yes")
-                useEigenSystem = true;
-            else
-                Msg::error("Unknown option" + res);
-            }
-
         it2 = jsonSettings.find("NumCycles");
         if (it2 != jsonSettings.end())
             numMcmcCycles = jsonSettings["NumCycles"];
@@ -244,10 +222,6 @@ void UserSettings::print(void) {
         std::cout << "   * Calculate marginal likelihood           = yes" << std::endl;
     else
         std::cout << "   * Calculate marginal likelihood           = no" << std::endl;
-    if (useEigenSystem == true)
-        std::cout << "   * Use eigen system for matrix exponential = yes" << std::endl;
-    else
-        std::cout << "   * Use eigen system for matrix exponential = no" << std::endl;
     std::cout << "   * Number of MCMC cycles                   = " << numMcmcCycles << std::endl;
     std::cout << "   * Print-to-screen frequency               = " << printFrequency << std::endl;
     std::cout << "   * Chain sample frequency                  = " << sampleFrequency << std::endl;
@@ -270,7 +244,6 @@ void UserSettings::usage(void) {
     std::cout << "   * -p / PrintFreq          -- Print-to-screen frequency" << std::endl;
     std::cout << "   * -s / SampleFreq         -- Chain sample frequency" << std::endl;
     std::cout << "   * -z / CheckPtFreq        -- Check point file frequency" << std::endl;
-    std::cout << "   * -e / UseEigenSystem     -- Use the Eigen system when calculating the matrix exponential (no/yes)" << std::endl;
     std::cout << "   * -l / TreeLengthPriorVal -- Inverse of the tree length prior" << std::endl;
     std::cout << std::endl;
 }

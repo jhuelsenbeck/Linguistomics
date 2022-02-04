@@ -2,9 +2,7 @@
 #include <iostream>
 #include <list>
 #include "Alignment.hpp"
-#include "EigenSystem.hpp"
 #include "LikelihoodCalculator.hpp"
-#include "LikelihoodTkf.hpp"
 #include "Model.hpp"
 #include "Msg.hpp"
 #include "ParameterAlignment.hpp"
@@ -601,14 +599,8 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
     
     // set up the rate matrix
     RateMatrix& rmat = RateMatrix::rateMatrix();
-    rmat.initialize(numStates, settings.getUseEigenSystem());
-    if (settings.getUseEigenSystem() == true && settings.getSubstitutionModel() != jc69)
-        {
-        EigenSystem& eigs = EigenSystem::eigenSystem();
-        eigs.initialize(numStates);
-        rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
-        }
-    else if (settings.getUseEigenSystem() == false && settings.getSubstitutionModel() != jc69)
+    rmat.initialize(numStates);
+    if (settings.getSubstitutionModel() != jc69)
         rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
     
     // initialize the transition probabilities
@@ -616,6 +608,8 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
     tProbs.initialize( this, &threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();
+    if (tProbs.areTransitionProbabilitiesValid(0.000001) == false)
+        Msg::error("Row sums of transition probabilities are not equal to 1.0");
 }
 
 double Model::lnLikelihood(void) {
@@ -671,7 +665,7 @@ nlohmann::json Model::parseJsonFile(void) {
         
     // print the json information to a file
     std::string configPath = settings.getOutFile();
-    configPath += ".config";
+    configPath += "settings.config";
     std::ofstream configStrm;
     configStrm.open( configPath.c_str(), std::ios::out );
     if (!configStrm)

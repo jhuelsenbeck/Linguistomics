@@ -25,7 +25,6 @@ class UserSettings {
         int                     getPrintFrequency(void) { return printFrequency; }
         int                     getSampleFrequency(void) { return sampleFrequency; }
         int                     getSubstitutionModel(void) { return substitutionModel; }
-        bool                    getUseEigenSystem(void) { return useEigenSystem; }
         void                    print(void);
         void                    readCommandLineArguments(int argc, char* argv[]);
         bool                    getUseOnlyCompleteWords(void) { return useOnlyCompleteWords; }
@@ -46,7 +45,6 @@ class UserSettings {
         int                     printFrequency;
         int                     sampleFrequency;
         int                     substitutionModel;
-        bool                    useEigenSystem;
         bool                    useOnlyCompleteWords;
         bool                    calculateMarginalLikelihood;
 };

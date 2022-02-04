@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "EigenSystem.hpp"
+#include "JphMatrix.hpp"
 #include "RbBitSet.h"
 #include "UserSettings.hpp"
 #include "Threads.hpp"
@@ -13,10 +13,20 @@ class Model;
 class thread_pool;
 class Tree;
 
-struct TransitionProbabilitiesPair {
 
-    std::vector<StateMatrix_t*> probs[2];
-    std::vector<StateMatrix_t*> aMat;
+struct TransitionProbabilitiesInfo {
+
+    int             numMatrices;
+    int             numStates;
+    DoubleMatrix*   probs[2];
+    DoubleMatrix*   a_mat;
+    DoubleMatrix*   d_mat;
+    DoubleMatrix*   n_mat;
+    DoubleMatrix*   x_mat;
+    DoubleMatrix*   cX_mat;
+    DoubleMatrix*   scratch_mat1;
+    DoubleMatrix*   scratch_mat2;
+    double*         scratch_vec;
 };
 
 
@@ -28,12 +38,13 @@ class TransitionProbabilities {
                                                             static TransitionProbabilities tp;
                                                             return tp;
                                                         }
+        bool                                            areTransitionProbabilitiesValid(double tolerance);
         void                                            flipActive(void);
         int                                             getNumNodes(void) { return numNodes; }
         int                                             getNumStates(void) { return numStates; }
         std::vector<double>&                            getStationaryFrequencies(void) { return stationaryFreqs[activeProbs]; }
-        std::vector<StateMatrix_t*>&                    getTransitionProbabilities(RbBitSet& bs);
-        StateMatrix_t*                                  getTransitionProbabilities(RbBitSet& bs, int nodeIdx);
+        DoubleMatrix*                                   getTransitionProbabilities(RbBitSet& bs);
+        DoubleMatrix&                                   getTransitionProbabilities(RbBitSet& bs, int nodeIdx);
         void                                            initialize(Model* m, ThreadPool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm);
         void                                            print(void);
         void                                            setNeedsUpdate(bool tf) { needsUpdate = tf; }
@@ -44,7 +55,6 @@ class TransitionProbabilities {
                                                        ~TransitionProbabilities(void);
                                                         TransitionProbabilities(const TransitionProbabilities& tp) = delete;
         void                                            setTransitionProbabilitiesJc69(void);
-        void                                            setTransitionProbabilitiesUsingEigenSystem(void);
         void                                            setTransitionProbabilitiesUsingPadeMethod(void);
         bool                                            isInitialized;
         Model*                                          modelPtr;
@@ -52,7 +62,7 @@ class TransitionProbabilities {
         int                                             numNodes;
         int                                             numStates;
         int                                             activeProbs;
-        std::map<RbBitSet,TransitionProbabilitiesPair>  transProbs;
+        std::map<RbBitSet,TransitionProbabilitiesInfo>  transProbs;
         std::vector<double>                             stationaryFreqs[2];
         bool                                            needsUpdate;
         int                                             substitutionModel;
