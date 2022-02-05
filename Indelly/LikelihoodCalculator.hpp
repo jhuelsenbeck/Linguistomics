@@ -43,15 +43,13 @@ struct IndelCombinatorics {
 class LikelihoodCalculator {
 
     public:
-        LikelihoodCalculator(void) = delete;
+                                        LikelihoodCalculator(void) = delete;
                                         LikelihoodCalculator(ParameterAlignment* a, Model* m);
                                        ~LikelihoodCalculator(void);
         std::string                     alignmentName(void);
         double                          lnLikelihood(void);
     
     private:
-        const int                       maxUnalignableDimension  = 10,
-                                        maxUnalignableDimension1 = maxUnalignableDimension + 1;
         void                            allcoateIndelCombinatorics(int nn, int maxSeqLen);
         void                            allocateIndelProbabilities(int nn);
         void                            clearPpTable(void);
@@ -82,9 +80,10 @@ class LikelihoodCalculator {
         std::vector<IntVector*>         pool;
         std::set<IntVector*>            allocated;
         
-        IndelMatrix*                    alignment;
+        IndelMatrix*                    alignment;  // allocated once with a fixed size larger than an alignment should get
         std::vector<std::vector<int> >  sequences;  // instantiated once on construction of object, never modified
         int                             unalignableRegionSize;
+        const int                       maxUnalignableDimension  = 10, maxUnalignableDimension1 = maxUnalignableDimension + 1;
         
         TransitionProbabilities*        transitionProbabilityFactory;
         DoubleMatrix*                   transitionProbabilities;
@@ -94,7 +93,7 @@ class LikelihoodCalculator {
         enum                            StateLabels { free, possible, edgeUsed, used };
         IndelProbabilities              indelProbs;
         IndelCombinatorics              indelCombos;
-        double**                        fH;
+        double**                        fH;    // fH and fI can be replaced by Shawn's container class later
         double**                        fI;
 };
 

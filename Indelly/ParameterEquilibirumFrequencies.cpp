@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <iostream>
 #include "Model.hpp"
+#include "Msg.hpp"
 #include "ParameterEquilibirumFrequencies.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"

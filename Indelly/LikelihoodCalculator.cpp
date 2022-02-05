@@ -177,7 +177,6 @@ void LikelihoodCalculator::initialize(void) {
         Node* p = downPassSequence[n];
         p->setTransitionProbability( &transitionProbabilities[p->getIndex()] );
         }
-    //stateEquilibriumFrequencies = transitionProbabilityFactory->getStationaryFrequencies();
     transitionProbabilityFactory->getStationaryFrequencies(stateEquilibriumFrequencies);
     setBirthDeathProbabilities();
 }
@@ -193,7 +192,6 @@ double LikelihoodCalculator::lnLikelihood(void) {
     partialProbabilities.insert( std::make_pair(pos, f) );
 
     // array of possible vector indices, used in inner loop
-    //std::vector<int> possibleVectorIndices(maxUnalignableDimension, 0);
     for (int i=0; i<maxUnalignableDimension; i++)
         indelCombos.possibleVectorIndices[i] = 0;
     int firstNotUsed = 0;
@@ -214,7 +212,6 @@ double LikelihoodCalculator::lnLikelihood(void) {
             {
             if (indelCombos.state[ ptr ] != used)
                 {
-                //if (mask->innerProduct( alignment[ptr], numTaxa ) == 0)
                 if (mask->innerProduct( alignment->getRow(ptr), numTaxa ) == 0)
                     {
                     indelCombos.state[ ptr ] = possible;
@@ -249,10 +246,8 @@ double LikelihoodCalculator::lnLikelihood(void) {
                 if (indelCombos.state[ curPtr ] == possible)
                     {
                     indelCombos.state[ curPtr ] = edgeUsed;
-					//ewPos->add( alignment[ curPtr ] );
 					newPos->add( alignment->getRow(curPtr), numTaxa );
                     // Compute signature vector
-					//signature->addMultiple( alignment[ curPtr ], posPtr + 1 );
 					signature->addMultiple( alignment->getRow(curPtr), numTaxa, posPtr + 1 );
                     // Signal: non-zero combination found, and stop
                     foundNonZero = true;
@@ -262,9 +257,7 @@ double LikelihoodCalculator::lnLikelihood(void) {
                     {
                     // It was edgeUsed (i.e., digit == 1), so reset digit and continue
 					indelCombos.state[ curPtr ] = possible;
-					//newPos->subtract( alignment[ curPtr ] );
 					newPos->subtract( alignment->getRow(curPtr), numTaxa );
-					//signature->addMultiple( alignment[ curPtr ], -posPtr - 1 );
 					signature->addMultiple( alignment->getRow(curPtr), numTaxa, -posPtr - 1 );
                     }
                 }
@@ -319,7 +312,6 @@ double LikelihoodCalculator::lnLikelihood(void) {
         // Undo any possible used vector that we encounter
         if (indelCombos.state[ptr] == used)
             {
-            //pos->subtract( alignment[ptr] );
             pos->subtract( alignment->getRow(ptr), numTaxa );
             indelCombos.state[ptr] = free;
             }
@@ -353,7 +345,6 @@ double LikelihoodCalculator::lnLikelihood(void) {
 
     // Now use this farthest-out possible vector
     indelCombos.state[ptr] = used;
-    //pos->add( alignment[ptr] );
     pos->add( alignment->getRow(ptr), numTaxa );
     if (ptr <= firstNotUsed)
         firstNotUsed++;
