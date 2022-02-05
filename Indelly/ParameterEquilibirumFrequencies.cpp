@@ -24,6 +24,8 @@ ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable*
     for (int i=0; i<numStates; i++)
         alpha[i] = 1.0;
     Probability::Dirichlet::rv(rv, alpha, freqs[0]);
+    for (int i=0; i<numStates; i++)
+        freqs[0][i] = 1.0 / numStates;
     normalize(freqs[0], minVal);
     freqs[1] = freqs[0];
 }

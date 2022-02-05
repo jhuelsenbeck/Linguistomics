@@ -27,6 +27,7 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
     taxonMask = data->getTaxonMask();
     numTaxa = (int)taxonMask.getNumberSetBits();
     numNodes = 2 * numTaxa - 1;
+    stateEquilibriumFrequencies.resize(numStates);
     
     allocateIndelProbabilities(numNodes);
     allcoateIndelCombinatorics(numNodes, data->lengthOfLongestSequence()*3);
@@ -176,7 +177,8 @@ void LikelihoodCalculator::initialize(void) {
         Node* p = downPassSequence[n];
         p->setTransitionProbability( &transitionProbabilities[p->getIndex()] );
         }
-    stateEquilibriumFrequencies = transitionProbabilityFactory->getStationaryFrequencies();
+    //stateEquilibriumFrequencies = transitionProbabilityFactory->getStationaryFrequencies();
+    transitionProbabilityFactory->getStationaryFrequencies(stateEquilibriumFrequencies);
     setBirthDeathProbabilities();
 }
 

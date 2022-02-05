@@ -238,6 +238,12 @@ void TransitionProbabilities::print(void) {
         }
 }
 
+void TransitionProbabilities::getStationaryFrequencies(std::vector<double>& f) {
+
+    for (int i=0; i<numStates; i++)
+        f[i] = stationaryFreqs[activeProbs][i];
+}
+
 void TransitionProbabilities::setTransitionProbabilities(void) {
 
     if (needsUpdate == false)

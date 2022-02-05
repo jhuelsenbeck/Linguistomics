@@ -35,6 +35,8 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
     for (int i=0; i<numRates; i++)
         alpha[i] = 1.0;
     Probability::Dirichlet::rv(rv, alpha, rates[0]);
+    for (int i=0; i<numRates; i++)
+        rates[0][i] = 1.0 / numRates;
     normalize(rates[0], minVal);
     rates[1] = rates[0];
 }

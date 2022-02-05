@@ -52,7 +52,6 @@ class LikelihoodCalculator {
     private:
         const int                       maxUnalignableDimension  = 10,
                                         maxUnalignableDimension1 = maxUnalignableDimension + 1;
-        const double                    minBranchLength = 1e-6;
         void                            allcoateIndelCombinatorics(int nn, int maxSeqLen);
         void                            allocateIndelProbabilities(int nn);
         void                            clearPpTable(void);
@@ -73,26 +72,30 @@ class LikelihoodCalculator {
         RbBitSet                        taxonMask;
         ParameterAlignment*             data;
         Model*                          model;
+        
         Tree*                           tree;
         std::vector<Node*>              des;       // instantiated once on construction and modified via reference
-        std::vector<IntVector*>         pool;
-        std::set<IntVector*>            allocated;
-        IndelMatrix*                    alignment;
-        std::vector<std::vector<int> >  sequences;  // instantiated once on construction of object, never modified
-        int                             numStates,
-                                        numStates1;
         int                             numTaxa;
         int                             numNodes;
-        int                             unalignableRegionSize;
-        enum                            StateLabels { free, possible, edgeUsed, used };
+        
         PartialProbabilitiesLookup      partialProbabilities;
+        std::vector<IntVector*>         pool;
+        std::set<IntVector*>            allocated;
+        
+        IndelMatrix*                    alignment;
+        std::vector<std::vector<int> >  sequences;  // instantiated once on construction of object, never modified
+        int                             unalignableRegionSize;
+        
         TransitionProbabilities*        transitionProbabilityFactory;
         DoubleMatrix*                   transitionProbabilities;
-        std::vector<double>             stateEquilibriumFrequencies;
+        std::vector<double>             stateEquilibriumFrequencies; // resized once on construction of object and modified via reference
+        int                             numStates, numStates1;
+        
+        enum                            StateLabels { free, possible, edgeUsed, used };
         IndelProbabilities              indelProbs;
+        IndelCombinatorics              indelCombos;
         double**                        fH;
         double**                        fI;
-        IndelCombinatorics              indelCombos;
 };
 
 #endif
