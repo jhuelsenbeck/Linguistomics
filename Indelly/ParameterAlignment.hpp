@@ -10,7 +10,6 @@ class Alignment;
 class AlignmentProposal;
 class IndelMatrix;
 class Model;
-class SiteLikelihood;
 
 
 
@@ -19,7 +18,7 @@ class ParameterAlignment : public Parameter {
     public:
                                         ParameterAlignment(void) = delete;
                                         ParameterAlignment(const ParameterAlignment& pa) = delete;
-                                        ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, SiteLikelihood* sl, int idx);
+                                        ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, int idx);
                                        ~ParameterAlignment(void);
         void                            accept(void);
         bool                            areAlignmentsIdentical(void);
@@ -41,7 +40,6 @@ class ParameterAlignment : public Parameter {
         int                             getNumTaxa(void) { return numTaxa; }
         int                             getPrintWidth(void) { return printWidth; }
         std::vector<std::vector<int> >  getRawSequenceMatrix(void) { return sequences; }
-        SiteLikelihood*                 getSiteProbs(void) { return siteProbs; }
         std::string                     getString(void) { return ""; }
         RbBitSet                        getTaxonMask(void);
         std::string                     getTaxonMaskString(void);
@@ -65,7 +63,6 @@ class ParameterAlignment : public Parameter {
         int                             numTaxa;
         int                             printWidth;
         int                             index;
-        SiteLikelihood*                 siteProbs;
         std::vector<std::string>        taxonNames;
         RbBitSet                        taxonMask;
         std::map<int,int>               taxonMapKeyCanonical;

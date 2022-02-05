@@ -7,16 +7,14 @@
 #include "Model.hpp"
 #include "Msg.hpp"
 #include "ParameterAlignment.hpp"
-#include "SiteLikelihood.hpp"
 #include "TransitionProbabilities.hpp"
 
 
 
-ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, SiteLikelihood* sl, int idx) : Parameter(r, m, n) {
+ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, int idx) : Parameter(r, m, n) {
     
     updateChangesRateMatrix = false;
     
-    siteProbs = sl;
     index = idx;
 
     std::string name = a->getName();
@@ -81,7 +79,7 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
 
 ParameterAlignment::~ParameterAlignment(void) {
 
-    delete siteProbs;
+    //delete siteProbs;
     delete alignmentProposal;
 }
 

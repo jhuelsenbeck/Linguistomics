@@ -57,6 +57,7 @@ class LikelihoodCalculator {
         void                            allocateIndelProbabilities(int nn);
         void                            clearPpTable(void);
         void                            drainPool(void);
+        void                            freeIndelCombinatorics(void);
         void                            freeIndelProbabilities(void);
         IntVector*                      getVector(void);
         IntVector*                      getVector(IntVector& vec);
@@ -73,7 +74,7 @@ class LikelihoodCalculator {
         ParameterAlignment*             data;
         Model*                          model;
         Tree*                           tree;
-        std::vector<Node*>              des;       // instantiated once on construction of this and modified via reference
+        std::vector<Node*>              des;       // instantiated once on construction and modified via reference
         std::vector<IntVector*>         pool;
         std::set<IntVector*>            allocated;
         IndelMatrix*                    alignment;

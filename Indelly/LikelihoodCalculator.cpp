@@ -46,6 +46,7 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
 LikelihoodCalculator::~LikelihoodCalculator(void) {
 
     drainPool();
+    freeIndelCombinatorics();
     freeIndelProbabilities();
     delete [] fH[0];
     delete [] fH;
@@ -100,6 +101,15 @@ void LikelihoodCalculator::drainPool(void) {
         allocated.erase(*v);
         delete (*v);
         }
+}
+
+void LikelihoodCalculator::freeIndelCombinatorics(void) {
+
+    delete [] indelCombos.state;
+    delete [] indelCombos.possibleVectorIndices;
+    delete [] indelCombos.nodeHomology;
+    delete [] indelCombos.numHomologousEmissions;
+    delete [] indelCombos.numHomologousEmissionsForClass;
 }
 
 void LikelihoodCalculator::freeIndelProbabilities(void) {

@@ -15,7 +15,6 @@
 #include "RandomVariable.hpp"
 #include "RateMatrix.hpp"
 #include "RateMatrixHelper.hpp"
-#include "SiteLikelihood.hpp"
 #include "Threads.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
@@ -496,7 +495,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     for (int i=0; i<wordAlignments.size(); i++)
         {
         std::string alnName = wordAlignments[i]->getName();
-        Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, new SiteLikelihood(numNodes,numStates), i);
+        Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, i);
         pAlign->setProposalProbability(alnProposalProb);
         parameters.push_back(pAlign);
         wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
