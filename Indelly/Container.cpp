@@ -154,11 +154,11 @@ template<typename T> void MatrixTemplate<T>::create(size_t rows, size_t cols) {
 }
 
 template<typename T> T MatrixTemplate<T>::getValue(size_t r, size_t c) const { 
-    return this->Buffer[r * Rows + c];
+    return this->Buffer[r * Cols + c];
 }
 
 template<typename T> void MatrixTemplate<T>::setValue(size_t r, size_t c, T value) { 
-    this->Buffer[r * Rows + c] = value;
+    this->Buffer[r * Cols + c] = value;
 }
 
 template<typename T> void MatrixTemplate<T>::setIdentity(T value) {
