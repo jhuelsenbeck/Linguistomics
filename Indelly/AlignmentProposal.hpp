@@ -35,10 +35,15 @@ class AlignmentProposal {
         void                                print(std::string s, std::vector<std::vector<int> >& x);
         void                                print(std::string s, int*** x, int a, int b, int c);
         void                                returnToPool(IntVector* n);
-        Tree*                               tree;
         RandomVariable*                     rv;
         ParameterAlignment*                 alignmentParm;
         Model*                              model;
+        
+        RbBitSet                            taxonMask;
+        Tree*                               tree;
+        int                                 numTaxa;
+        int                                 numNodes;
+
         double                              gap;
         int                                 gapCode;
         double                              basis;
@@ -46,22 +51,19 @@ class AlignmentProposal {
         int                                 maxUnalignDimension;
         enum                                StateLabels { free, possible, edgeUsed, used };
         static int                          bigUnalignableRegion;
-        int                                 numTaxa;
-        int                                 numNodes;
-        RbBitSet                            taxonMask;
         std::vector<IntVector*>             pool;
         std::set<IntVector*>                allocated;
         
         int***                              profile;
-        std::vector<int>                    possibles;
-        std::vector<int>                    state;
+        std::vector<int>                    possibles;      // resized once on instantiation, never copied
+        std::vector<int>                    state;          // resized to large value on instantiation, resized frequently to smaller values, no realloc should occur
         std::vector<std::vector<int> >      alignment;
         std::vector<std::vector<int> >      profileNumber;
-        std::vector<int>                    xProfile;
-        std::vector<int>                    yProfile;
+        int*                                xProfile;
+        int*                                yProfile;
         int                                 numStates;
-        std::vector<std::vector<double> >   scoring;
+        double**                            scoring;
         std::vector<std::vector<int> >      tempProfile;
-        std::vector<std::vector<double> >   dp;
+        int**                               dp;
 };
 #endif

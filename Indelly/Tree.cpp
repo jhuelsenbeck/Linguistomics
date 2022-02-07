@@ -393,10 +393,10 @@ void Tree::debugPrint(std::string h) {
     for (int i=0; i<nodes.size(); i++)
         {
         std::cout << std::setw(4) << nodes[i]->getIndex() << " " << nodes[i] << " < ";
-        std::vector<int> mat = nodes[i]->getTpMatrices();
-        for (int j=0; j<mat.size(); j++)
-            std::cout << mat[j] << " ";
-        std::cout << ">" << std::endl;
+        //std::vector<int> mat = nodes[i]->getTpMatrices();
+        //for (int j=0; j<mat.size(); j++)
+        //    std::cout << mat[j] << " ";
+        //std::cout << ">" << std::endl;
         }
 
     std::cout << "root: " << root->getIndex() << " " << root << std::endl;

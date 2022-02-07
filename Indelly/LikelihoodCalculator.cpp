@@ -686,7 +686,6 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
             {
             // calculate conditional probabilities for interior nodes
             p->getDescendantsVector(des);
-            //std::vector<Node*> des = p->getDescendantsVector();
             if (des.size() != 2)
                 Msg::error("Expecting two descendants");
             Node* pLft = des[0];

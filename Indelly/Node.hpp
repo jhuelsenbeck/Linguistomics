@@ -18,9 +18,7 @@ class Node {
                             Node(int idx);
                            ~Node(void);
         void                addDescendant(Node* p);
-        void                addMatrix(int x) { tpMatrices.push_back(x); }
         void                clean(void);
-        void                clearTpMatrix(void) { tpMatrices.clear(); }
         Node*               getAncestor(void) { return ancestor; }
         double              getBranchLength(void);
         double              getBranchProportion(void) { return proportion; }
@@ -35,7 +33,6 @@ class Node {
         int                 getOffset(void) const { return offset; }
         Node*               getSisterNode(void);
         DoubleMatrix*       getTransitionProbability(void) { return transitionProbability; }
-        std::vector<int>&   getTpMatrices(void) { return tpMatrices; }
         bool                isDescendant(Node* p);
         size_t              numDescendants(void);
         void                print(void);
@@ -56,7 +53,6 @@ class Node {
         Node*               ancestor;
         Tree*               myTree;
         DoubleMatrix*       transitionProbability;
-        std::vector<int>    tpMatrices;
         std::string         name;
         double              proportion;
         int                 offset;
