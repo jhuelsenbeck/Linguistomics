@@ -17,7 +17,7 @@ UserSettings::UserSettings(void) {
     numMcmcCycles               = 1000;
     printFrequency              = 100;
     sampleFrequency             = 100;
-    inverseTreeLength           = 1.0;
+    branchLengthLambda          = 10.0;
     substitutionModel           = jc69;
     calculateMarginalLikelihood = false;
     numRateCategories           = 1;
@@ -82,7 +82,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
             else if (arg == "-z")
                 checkPointFrequency = atoi(cmd.c_str());
             else if (arg == "-l")
-                inverseTreeLength = atof(cmd.c_str());
+                branchLengthLambda = atof(cmd.c_str());
             else if (arg == "-z")
                 {
                 if (cmd == "yes")
@@ -194,9 +194,9 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         if (it2 != jsonSettings.end())
             checkPointFrequency = jsonSettings["CheckPtFreq"];
 
-        it2 = jsonSettings.find("TreeLengthPriorVal");
+        it2 = jsonSettings.find("BrlenPriorVal");
         if (it2 != jsonSettings.end())
-            inverseTreeLength = jsonSettings["TreeLengthPriorVal"];
+            branchLengthLambda = jsonSettings["BrlenPriorVal"];
         }
 }
 
@@ -226,7 +226,7 @@ void UserSettings::print(void) {
     std::cout << "   * Print-to-screen frequency               = " << printFrequency << std::endl;
     std::cout << "   * Chain sample frequency                  = " << sampleFrequency << std::endl;
     std::cout << "   * Check point frequency                   = " << checkPointFrequency << std::endl;
-    std::cout << "   * Tree length prior parameter             = " << inverseTreeLength << std::endl;
+    std::cout << "   * Branch length prior parameter           = " << branchLengthLambda << std::endl;
     std::cout << std::endl;
 }
 
@@ -244,7 +244,7 @@ void UserSettings::usage(void) {
     std::cout << "   * -p / PrintFreq          -- Print-to-screen frequency" << std::endl;
     std::cout << "   * -s / SampleFreq         -- Chain sample frequency" << std::endl;
     std::cout << "   * -z / CheckPtFreq        -- Check point file frequency" << std::endl;
-    std::cout << "   * -l / TreeLengthPriorVal -- Inverse of the tree length prior" << std::endl;
+    std::cout << "   * -l / BrlenPriorVal      -- Parameter of exponential branch length prior" << std::endl;
     std::cout << std::endl;
 }
 

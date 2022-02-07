@@ -52,7 +52,7 @@ class ParameterTree : public Parameter {
         double                          updateNni(void);
         double                          updateSpr(void);
         double                          updateTreeLength(void);
-        double                          betaT;
+        double                          lambda;
         TreePair                        fullTree;
         std::map<RbBitSet,TreePair>     subTrees;
 };

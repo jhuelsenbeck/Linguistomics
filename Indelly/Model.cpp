@@ -472,7 +472,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         }
     
     // set up the tree parameter
-    Parameter* pTree = new ParameterTree(rv, this, treeStr, canonicalTaxonList, wordAlignments, settings.getInverseTreeLength());
+    Parameter* pTree = new ParameterTree(rv, this, treeStr, canonicalTaxonList, wordAlignments, settings.getBranchLengthLambda());
     pTree->setProposalProbability(10.0);
     parameters.push_back(pTree);
 

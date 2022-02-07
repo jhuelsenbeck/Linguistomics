@@ -20,8 +20,7 @@ class Node {
         void                addDescendant(Node* p);
         void                clean(void);
         Node*               getAncestor(void) { return ancestor; }
-        double              getBranchLength(void);
-        double              getBranchProportion(void) { return proportion; }
+        double              getBranchLength(void) { return length; }
         NodeSet*&           getDescendants(void) { return descendants; }
         std::vector<Node*>  getDescendantsVector(void);
         void                getDescendantsVector(std::vector<Node*>& dv);
@@ -39,7 +38,7 @@ class Node {
         void                removeDescendant(Node* p);
         void                removeDescendants(void);
         void                setAncestor(Node* p) { ancestor = p; }
-        void                setBranchProportion(double x) { proportion = x; }
+        void                setBranchLength(double x) { length = x; }
         void                setFlag(bool tf) { flag = tf; }
         void                setIndex(int x) { index = x; }
         void                setIsLeaf(bool tf) { isLeaf = tf; }
@@ -54,7 +53,7 @@ class Node {
         Tree*               myTree;
         DoubleMatrix*       transitionProbability;
         std::string         name;
-        double              proportion;
+        double              length;
         int                 offset;
         int                 index;
         bool                isLeaf;

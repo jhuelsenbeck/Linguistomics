@@ -17,7 +17,7 @@ class UserSettings {
         bool                    getCalculateMarginalLikelihood(void) { return calculateMarginalLikelihood; }
         int                     getCheckPointFrequency(void) { return checkPointFrequency; }
         std::string             getDataFile(void) { return dataFile; }
-        double                  getInverseTreeLength(void) { return inverseTreeLength; }
+        double                  getBranchLengthLambda(void) { return branchLengthLambda; }
         std::string             getOutFile(void) { return outFile; }
         int                     getNumMcmcCycles(void) { return numMcmcCycles; }
         int                     getNumIndelCategories(void) { return numIndelCategories; }
@@ -37,7 +37,7 @@ class UserSettings {
         std::string             outFile;
         std::string             dataFile;
         std::string             executablePath;
-        double                  inverseTreeLength;
+        double                  branchLengthLambda;
         int                     checkPointFrequency;
         int                     numIndelCategories;
         int                     numMcmcCycles;

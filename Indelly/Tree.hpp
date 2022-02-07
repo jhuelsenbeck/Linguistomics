@@ -28,14 +28,13 @@ class Tree {
         int                                         getNumNodes(void) { return (int)nodes.size(); }
         int                                         getNumTaxa(void) { return numTaxa; }
         std::vector<int>                            getAncestorIndices(void);
-        std::vector<double>                         getBranchLengthVector(void);
         std::vector<Node*>&                         getDownPassSequence(void) { return downPassSequence; }
         Node*                                       getLeafIndexed(int idx);
         Node*                                       getLeafNamed(std::string n);
         Node*                                       getRoot(void) { return root; }
         std::vector<std::string>&                   getTaxonNames(void) { return taxonNames; }
         int                                         getTaxonNameIndex(std::string tName);
-        double                                      getTreeLength(void) { return treeLength; }
+        double                                      getTreeLength(void);
         void                                        initializeDownPassSequence(void);
         bool                                        isBinary(void);
         bool                                        isRoot(Node* p) { return ((p == root) ? true : false); }
@@ -46,7 +45,6 @@ class Tree {
         void                                        print(std::string header);
         Node*                                       randomNode(RandomVariable* rv);
         void                                        setAllFlags(bool tf);
-        void                                        setTreeLength(double x) { treeLength = x; }
                 
     private:
         Node*                                       addNode(void);
@@ -62,7 +60,6 @@ class Tree {
         Node*                                       root;
         int                                         numTaxa;
         std::vector<std::string>                    taxonNames;
-        double                                      treeLength;
 };
 
 #endif

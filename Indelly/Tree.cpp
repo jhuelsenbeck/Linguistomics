@@ -23,7 +23,7 @@ Tree::Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
     buildRandomTree(tNames, betaT, rv);
 }
 
-Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
+Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double lambda, RandomVariable* rv) {
 
     // read the tree file
     Node* p = NULL;
@@ -92,7 +92,7 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
             else
                 {
                 double brlen = std::stod(token);
-                p->setBranchProportion(brlen);
+                p->setBranchLength(brlen);
                 }
             readingBrlen = false;
             }
@@ -116,7 +116,7 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
     for (int i=0; i<downPassSequence.size(); i++)
         {
         p = downPassSequence[i];
-        if (p != root && p->getBranchProportion() < 0.0001)
+        if (p != root && p->getBranchLength() < 0.0001)
             branchLengthsPresent = false;
         }
     if (branchLengthsPresent == false)
@@ -127,42 +127,18 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, R
             {
             p = downPassSequence[i];
             if (p != root)
-                p->setBranchProportion(Probability::Exponential::rv(rv, 1.0));
+                p->setBranchLength(Probability::Exponential::rv(rv, lambda));
             else
-                p->setBranchProportion(0.0);
+                p->setBranchLength(0.0);
             }
         // make certain the two branches incident to the root are the
         // same in length and considered one branch
         std::vector<Node*> rootDes = root->getDescendantsVector();
         if (rootDes.size() != 2)
             Msg::error("Expecting two descendants of the root node");
-        double x = rootDes[0]->getBranchProportion() + rootDes[1]->getBranchProportion();
-        rootDes[0]->setBranchProportion(x/4.0);
-        rootDes[1]->setBranchProportion(x/4.0);
-
-        // rescale so branch proportions sum to 1.0
-        double sum = 0.0;
-        for (int i=0; i<downPassSequence.size(); i++)
-            {
-            p = downPassSequence[i];
-            sum += p->getBranchProportion();
-            }
-        for (int i=0; i<downPassSequence.size(); i++)
-            {
-            p = downPassSequence[i];
-            p->setBranchProportion( p->getBranchProportion()/sum );
-            }
-            
-        treeLength = Probability::Gamma::rv(rv, 1.0, betaT);
-        }
-    else
-        {
-        // rescale all branch proportions so they sum to one
-        treeLength = 0.0;
-        for (int i=0; i<nodes.size(); i++)
-            treeLength += nodes[i]->getBranchProportion();
-        for (int i=0; i<nodes.size(); i++)
-            nodes[i]->setBranchProportion( nodes[i]->getBranchProportion()/treeLength );
+        double x = rootDes[0]->getBranchLength() + rootDes[1]->getBranchLength();
+        rootDes[0]->setBranchLength(x/2.0);
+        rootDes[1]->setBranchLength(x/2.0);
         }
 }
 
@@ -195,7 +171,7 @@ Node* Tree::addNode(void) {
     return newNode;
 }
 
-void Tree::buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
+void Tree::buildRandomTree(std::vector<std::string> tNames, double lambda, RandomVariable* rv) {
 
     deleteAllNodes();
     
@@ -265,9 +241,9 @@ void Tree::buildRandomTree(std::vector<std::string> tNames, double betaT, Random
         {
         Node* p = downPassSequence[i];
         if (p != root)
-            p->setBranchProportion(Probability::Exponential::rv(rv,1.0));
+            p->setBranchLength(Probability::Exponential::rv(rv,lambda));
         else
-            p->setBranchProportion(0.0);
+            p->setBranchLength(0.0);
         }
         
     // make certain the two branches incident to the root are the
@@ -275,25 +251,9 @@ void Tree::buildRandomTree(std::vector<std::string> tNames, double betaT, Random
     std::vector<Node*> rootDes = root->getDescendantsVector();
     if (rootDes.size() != 2)
         Msg::error("Expecting two descendants of the root node");
-    double x = rootDes[0]->getBranchProportion() + rootDes[1]->getBranchProportion();
-    rootDes[0]->setBranchProportion(x/4.0);
-    rootDes[1]->setBranchProportion(x/4.0);
-
-    // rescale so branch proportions sum to 1.0
-    double sum = 0.0;
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        sum += p->getBranchProportion();
-        }
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        p->setBranchProportion( p->getBranchProportion()/sum );
-        }
-        
-    // set the tree length from a gamma
-    treeLength = Probability::Gamma::rv(rv, 1.0, betaT);
+    double x = rootDes[0]->getBranchLength() + rootDes[1]->getBranchLength();
+    rootDes[0]->setBranchLength(x/2.0);
+    rootDes[1]->setBranchLength(x/2.0);
     
     print();
 }
@@ -334,7 +294,7 @@ double Tree::calculateDistance(std::string t1, std::string t2) {
                 foundCommonAncestor = true;
             
             if (foundCommonAncestor == false)
-                d += p->getBranchProportion();
+                d += p->getBranchLength();
             }
         }
     
@@ -346,7 +306,6 @@ void Tree::clone(Tree& t) {
     // copy some instance variables
     numTaxa = t.numTaxa;
     taxonNames = t.taxonNames;
-    treeLength = t.treeLength;
     
     // make certain we have the saame number of nodes in each tree
     if (nodes.size() != t.nodes.size())
@@ -366,7 +325,7 @@ void Tree::clone(Tree& t) {
         pLft->setIndex( pRht->getIndex() );
         pLft->setIsLeaf( pRht->getIsLeaf() );
         pLft->setName( pRht->getName() );
-        pLft->setBranchProportion( pRht->getBranchProportion() );
+        pLft->setBranchLength( pRht->getBranchLength() );
         
         if (pRht->getAncestor() != NULL)
             pLft->setAncestor( nodes[pRht->getAncestor()->getOffset()] );
@@ -393,15 +352,11 @@ void Tree::debugPrint(std::string h) {
     for (int i=0; i<nodes.size(); i++)
         {
         std::cout << std::setw(4) << nodes[i]->getIndex() << " " << nodes[i] << " < ";
-        //std::vector<int> mat = nodes[i]->getTpMatrices();
-        //for (int j=0; j<mat.size(); j++)
-        //    std::cout << mat[j] << " ";
-        //std::cout << ">" << std::endl;
         }
 
     std::cout << "root: " << root->getIndex() << " " << root << std::endl;
     std::cout << "numTaxa: " << numTaxa << std::endl;
-    std::cout << "treeLength: " << treeLength << std::endl;
+    std::cout << "treeLength: " << getTreeLength() << std::endl;
     for (int i=0; i<taxonNames.size(); i++)
         std::cout << i << " " << taxonNames[i] << std::endl;
 }
@@ -470,23 +425,6 @@ std::vector<int> Tree::getAncestorIndices(void) {
     return ancIndices;
 }
 
-std::vector<double> Tree::getBranchLengthVector(void) {
-
-    std::vector<double> brlenVec(nodes.size());
-
-    for (int i=0; i<downPassSequence.size(); i++)
-        {
-        Node* p = downPassSequence[i];
-        int idx = p->getIndex();
-        if (p == root)
-            brlenVec[idx] = 0.0;
-        else
-            brlenVec[idx] = p->getBranchLength();
-        }
-
-    return brlenVec;
-}
-
 std::string Tree::getNewick(int brlenPrecision) {
 
     std::stringstream ss;
@@ -524,6 +462,18 @@ int Tree::getTaxonNameIndex(std::string tName) {
             return i;
         }
     return -1;
+}
+
+double Tree::getTreeLength(void) {
+
+    double tl = 0.0;
+    for (int i=0; i<downPassSequence.size(); i++)
+        {
+        Node* p = downPassSequence[i];
+        if (p->getAncestor() != NULL)
+            tl += p->getBranchLength();
+        }
+    return tl;
 }
 
 bool Tree::isBinary(void) {
@@ -574,7 +524,7 @@ void Tree::listNodes(Node* p, size_t indent) {
             {
             std::cout << n->getIndex() << " ";
             }
-        std::cout << ") " << std::fixed << std::setprecision(5) << p->getBranchProportion() << " " << p->getBranchLength() << " ";
+        std::cout << ") " << std::fixed << std::setprecision(5) << p->getBranchLength() << " ";
     
         if (p->getIsLeaf() == true)
             std::cout << " (" << p->getName() << ")";
@@ -647,12 +597,12 @@ void Tree::makeSubtree(Tree& t, RbBitSet& taxonMask) {
                     d->setAncestor(a);
                     a->removeDescendant(p);
                     a->addDescendant(d);
-                    d->setBranchProportion( d->getBranchProportion() + p->getBranchProportion() );
+                    d->setBranchLength( d->getBranchLength() + p->getBranchLength() );
                     }
                 else
                     {
                     d->setAncestor(NULL);
-                    d->setBranchProportion(0.0);
+                    d->setBranchLength(0.0);
                     if (p == root)
                         root = d;
                     }

@@ -20,7 +20,7 @@
 ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, std::vector<Alignment*>& wordAlignments, double itl) : Parameter(r, m, "tree") {
 
     updateChangesRateMatrix = false;
-    betaT = itl;
+    lambda = itl;
     
     if (treeStr != "")
         std::cout << "   * Setting up the tree parameter from information in json file " << std::endl;
@@ -28,9 +28,9 @@ ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, s
         std::cout << "   * Setting up the tree parameter with randomly chosen tree" << std::endl;
         
     if (treeStr != "")
-        fullTree.trees[0] = new Tree(treeStr, tNames, betaT, rv);
+        fullTree.trees[0] = new Tree(treeStr, tNames, lambda, rv);
     else
-        fullTree.trees[0] = new Tree(tNames, betaT, rv);
+        fullTree.trees[0] = new Tree(tNames, lambda, rv);
     fullTree.trees[1] = new Tree(*fullTree.trees[0]);
     
     // initialize the subtrees
@@ -241,6 +241,36 @@ void ParameterTree::initializeSubtrees(std::vector<Alignment*>& alns) {
 
 double ParameterTree::lnPriorProbability(void) {
 
+#   if 1
+
+    Tree* t = fullTree.trees[0];
+
+    // get a vector with the branch lengths
+    std::vector<Node*>& dpSeq = fullTree.trees[0]->getDownPassSequence();
+    double lnP = 0.0;
+    for (int i=0; i<dpSeq.size(); i++)
+        {
+        Node* p = dpSeq[i];
+        if (p->getAncestor() != t->getRoot())
+            {
+            if (p == t->getRoot())
+                {
+                std::set<Node*,CompNode>& rootDes = p->getDescendants()->getNodes();
+                double len = 0.0;
+                for (Node* n : rootDes)
+                    len += n->getBranchLength();
+                lnP += Probability::Exponential::lnPdf(lambda, len);
+                }
+            else
+                {
+                lnP += Probability::Exponential::lnPdf(lambda, p->getBranchLength());
+                }
+            }
+        }
+    return lnP;
+
+#   else
+
     // Prior from:
     // Rannala, B., T. Zhu, and Z. Yang. 2012. Tail paradox, partial identifiability, and
     //    influential priors in Bayesian branch length inference. Molecular Biology and
@@ -283,6 +313,7 @@ double ParameterTree::lnPriorProbability(void) {
     lnP += (-2.0 * s + 4.0) * log(treeLength);
             
     return lnP;
+#   endif
 }
 
 void ParameterTree::normalize(std::vector<double>& vec, double minVal) {
@@ -353,10 +384,10 @@ double ParameterTree::update(void) {
 
 double ParameterTree::updateBrlenProportions(void) {
 
-    lastUpdateType = "branch proportions";
+    lastUpdateType = "branch length";
     
     // tuning parameter for move
-    double alpha0 = 100.0;
+    double tuning = log(4.0);
     
     // pick a branch at random (note that the two branches
     // from the root are treated as a single branch)
@@ -370,83 +401,41 @@ double ParameterTree::updateBrlenProportions(void) {
             nde = NULL;
         } while(nde == NULL);
         
-    // determine if the branch is one of the two branches
-    // incident to the root
+    // determine if the branch is one of the
+    // two branches incident to the root
     bool isRootBranch = false;
     if (nde->getAncestor() == t->getRoot())
-        isRootBranch = true;
-
-    // get original branch proportions
-    std::vector<double> oldProportions(2);
-    if (isRootBranch == false)
         {
-        oldProportions[0] = nde->getBranchProportion();
+        isRootBranch = true;
+        std::set<Node*,CompNode>& des = t->getRoot()->getDescendants()->getNodes();
+        if (des.size() != 2)
+            Msg::error("Expecting two descendants at root of the tree");
         }
+        
+    // get the old branch length
+    double oldBrlen = 0.0;
+    if (isRootBranch == false)
+        oldBrlen = nde->getBranchLength();
     else
         {
         std::set<Node*,CompNode>& des = t->getRoot()->getDescendants()->getNodes();
-        oldProportions[0] = 0.0;
         for (Node* n : des)
-            oldProportions[0] += n->getBranchProportion();
+            oldBrlen += n->getBranchLength();
         }
-    oldProportions[1] = 1.0 - oldProportions[0];
 
-    // propose new branch proportions
-    std::vector<double> alphaForward(2);
-    for (int i=0; i<2; i++)
-        alphaForward[i] = oldProportions[i] * alpha0;
-    std::vector<double> newProportions(2);
-    Probability::Dirichlet::rv(rv, alphaForward, newProportions);
+    // propose new branch length
+    double randomFactor = exp( -tuning*(rv->uniformRv()-0.5) );
+    double newBrlen = oldBrlen * randomFactor;
     
-    // check the proposed values
-    normalize(newProportions, 0.000001);
-    
-    // get reverse move information
-    std::vector<double> alphaReverse(2);
-    for (int i=0; i<2; i++)
-        alphaReverse[i] = newProportions[i] * alpha0;
-    
-    // update branch proportions on the tree
+    // set the new branch length
     if (isRootBranch == false)
-        {
-        nde->setBranchProportion(newProportions[0]);
-        double factor = newProportions[1] / oldProportions[1];
-        for (int i=0; i<nodes.size(); i++)
-            {
-            Node* p = nodes[i];
-            if (p != nde && p != t->getRoot())
-                {
-                double x = p->getBranchProportion();
-                p->setBranchProportion( x * factor );
-                }
-            }
-        }
+        nde->setBranchLength(newBrlen);
     else
         {
-        // update root branches
-        std::vector<Node*> rootDes = t->getRoot()->getDescendantsVector();
-        if (rootDes.size() != 2)
-            Msg::error("Expecting two descendants of the root node");
-        double factor0 = newProportions[0] / oldProportions[0];
-        double factor1 = newProportions[1] / oldProportions[1];
-        for (int i=0; i<nodes.size(); i++)
-            {
-            Node* p = nodes[i];
-            if (p != t->getRoot())
-                {
-                double x = p->getBranchProportion();
-                if (p == rootDes[0] || p == rootDes[1])
-                    p->setBranchProportion( x * factor0 );
-                else
-                    p->setBranchProportion( x * factor1 );
-                }
-            }
+        std::set<Node*,CompNode>& des = t->getRoot()->getDescendants()->getNodes();
+        for (Node* n : des)
+            n->setBranchLength(newBrlen*0.5);
         }
-    
-    // calculate Hastings ratio, including the Jacobian
-    int n = 2 * t->getNumTaxa() - 3;
-    double lnH  = Probability::Dirichlet::lnPdf(alphaReverse, oldProportions) - Probability::Dirichlet::lnPdf(alphaForward, newProportions); // Hastings Ratio
-    lnH += (n - 2) * log(newProportions[1] / oldProportions[1]); // Jacobian (check this)
 
     // update the subtrees (before updating transition probabilities)
     updateSubtrees();
@@ -475,7 +464,7 @@ double ParameterTree::updateBrlenProportions(void) {
     std::cout << ")" << std::endl;
 #   endif
 
-    return lnH;
+    return log(randomFactor);
 }
 
 double ParameterTree::updateNni(void) {
@@ -487,17 +476,7 @@ double ParameterTree::updateNni(void) {
 #   if defined(DEBUG_LOCAL)
     t->print("BEFORE");
 #   endif
-    
-    // temporarily, make all of the branch proportions
-    // for the tree equal to the branch length
-    double treeLen = t->getTreeLength();
-    std::vector<Node*> dpSeq = t->getDownPassSequence();
-    for (int i=0; i<dpSeq.size(); i++)
-        {
-        double bp = dpSeq[i]->getBranchProportion();
-        dpSeq[i]->setBranchProportion(bp*treeLen);
-        }
-    
+        
     // randomly choose area of rearrangement
     std::vector<Node*> backbone;
     Node* incidentNode = NULL;
@@ -509,26 +488,26 @@ double ParameterTree::updateNni(void) {
     if (b == pAnc && b->getAncestor() == t->getRoot())
         {
         std::vector<Node*> rDes = t->getRoot()->getDescendantsVector();
-        double rBrlen = rDes[0]->getBranchProportion() + rDes[1]->getBranchProportion();
-        rDes[0]->setBranchProportion(0.0);
-        rDes[1]->setBranchProportion(0.0);
-        b->setBranchProportion(rBrlen);
+        double rBrlen = rDes[0]->getBranchLength() + rDes[1]->getBranchLength();
+        rDes[0]->setBranchLength(0.0);
+        rDes[1]->setBranchLength(0.0);
+        b->setBranchLength(rBrlen);
         }
         
     // get length of backbone and randomly change it
-    double mOld = a->getBranchProportion() + p->getBranchProportion() + b->getBranchProportion();
+    double mOld = a->getBranchLength() + p->getBranchLength() + b->getBranchLength();
     double mNew = mOld * exp(tuning*(rv->uniformRv()-0.5));
     double factor = mNew / mOld;
-    a->setBranchProportion( a->getBranchProportion() * factor );
-    p->setBranchProportion( p->getBranchProportion() * factor );
-    b->setBranchProportion( b->getBranchProportion() * factor );
+    a->setBranchLength( a->getBranchLength() * factor );
+    p->setBranchLength( p->getBranchLength() * factor );
+    b->setBranchLength( b->getBranchLength() * factor );
 
     // rearrange the tree
     if (incidentNode == pAnc)
         {
         // the backbone must be rotated around incident
         double newPt = rv->uniformRv() * mNew;
-        if (newPt < a->getBranchProportion())
+        if (newPt < a->getBranchLength())
             {
             p->removeDescendant(a);
             p->addDescendant(b);
@@ -536,17 +515,17 @@ double ParameterTree::updateNni(void) {
             pAnc->addDescendant(a);
             a->setAncestor(pAnc);
             b->setAncestor(p);
-            b->setBranchProportion( b->getBranchProportion() + p->getBranchProportion() );
-            p->setBranchProportion(newPt);
-            a->setBranchProportion( a->getBranchProportion() - newPt );
+            b->setBranchLength( b->getBranchLength() + p->getBranchLength() );
+            p->setBranchLength(newPt);
+            a->setBranchLength( a->getBranchLength() - newPt );
             }
         else
             {
             // no topology change, but adjust branch lengths for pAnc descendants
-            newPt -= a->getBranchProportion();
-            double sum = b->getBranchProportion() + p->getBranchProportion();
-            b->setBranchProportion(newPt);
-            p->setBranchProportion(sum-newPt);
+            newPt -= a->getBranchLength();
+            double sum = b->getBranchLength() + p->getBranchLength();
+            b->setBranchLength(newPt);
+            p->setBranchLength(sum-newPt);
             }
         }
     else
@@ -558,11 +537,11 @@ double ParameterTree::updateNni(void) {
         incidentAncAnc->removeDescendant(incidentAnc);
         incidentAncAnc->addDescendant(incidentSis);
         incidentSis->setAncestor(incidentAncAnc);
-        incidentSis->setBranchProportion( incidentSis->getBranchProportion() + incidentAnc->getBranchProportion() );
+        incidentSis->setBranchLength( incidentSis->getBranchLength() + incidentAnc->getBranchLength() );
         incidentAnc->removeDescendant(incidentSis);
         
         double newPt = rv->uniformRv() * mNew;
-        if (newPt < a->getBranchProportion())
+        if (newPt < a->getBranchLength())
             {
             // reattach along branch a
             Node* aAnc = a->getAncestor();
@@ -571,8 +550,8 @@ double ParameterTree::updateNni(void) {
             incidentAnc->addDescendant(a);
             incidentAnc->setAncestor(aAnc);
             a->setAncestor(incidentAnc);
-            a->setBranchProportion( a->getBranchProportion() - newPt );
-            incidentAnc->setBranchProportion( newPt );
+            a->setBranchLength( a->getBranchLength() - newPt );
+            incidentAnc->setBranchLength( newPt );
             }
         else
             {
@@ -592,29 +571,20 @@ double ParameterTree::updateNni(void) {
             incidentAnc->addDescendant(x);
             incidentAnc->setAncestor(xAnc);
             x->setAncestor(incidentAnc);
-            double xPt = newPt - a->getBranchProportion();
-            x->setBranchProportion( x->getBranchProportion() - xPt );
-            incidentAnc->setBranchProportion( xPt );
+            double xPt = newPt - a->getBranchLength();
+            x->setBranchLength( x->getBranchLength() - xPt );
+            incidentAnc->setBranchLength( xPt );
             }
         }
     
     // reinitialize the down pass sequence for the tree, in case the topology has changed
     t->initializeDownPassSequence();
-    
-    // convert back to branch proportions and a tree length
-    dpSeq = t->getDownPassSequence();
-    treeLen = 0.0;
-    for (int i=0; i<dpSeq.size(); i++)
-        treeLen +=  dpSeq[i]->getBranchProportion();
-    for (int i=0; i<dpSeq.size(); i++)
-        dpSeq[i]->setBranchProportion( dpSeq[i]->getBranchProportion()/treeLen );
-    t->setTreeLength(treeLen);
-    
+        
     // break the branch at the root evenly in two
     std::vector<Node*> rDes = t->getRoot()->getDescendantsVector();
-    double rBrlenSum = rDes[0]->getBranchProportion() + rDes[1]->getBranchProportion();
-    rDes[0]->setBranchProportion(rBrlenSum*0.5);
-    rDes[1]->setBranchProportion(rBrlenSum*0.5);
+    double rBrlenSum = rDes[0]->getBranchLength() + rDes[1]->getBranchLength();
+    rDes[0]->setBranchLength(rBrlenSum*0.5);
+    rDes[1]->setBranchLength(rBrlenSum*0.5);
     
     // update the subtrees (before updating transition probabilities)
     updateSubtrees();
@@ -657,9 +627,16 @@ double ParameterTree::updateTreeLength(void) {
     // update the tree length
     Tree* t = getActiveTree();
     double tuning = log(2.0);
-    double oldL = t->getTreeLength();
-    double newL = oldL * exp(tuning * (rv->uniformRv()-0.5));
-    t->setTreeLength(newL);
+    double randomFactor = exp(tuning * (rv->uniformRv()-0.5));
+    
+    // update all of the branch lengths
+    std::vector<Node*>& dpSeq = t->getDownPassSequence();
+    for (int i=0; i<dpSeq.size(); i++)
+        {
+        Node* p = dpSeq[i];
+        if (p->getAncestor() != NULL)
+            p->setBranchLength( p->getBranchLength() * randomFactor );
+        }
 
     // update the transition probabilities
     updateChangesTransitionProbabilities = true;
@@ -671,7 +648,7 @@ double ParameterTree::updateTreeLength(void) {
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
 
-    return log(newL) - log(oldL);
+    return (dpSeq.size()-1) * log(randomFactor);
 }
 
 double ParameterTree::updateTopologyFromPrior(void) {
@@ -686,7 +663,7 @@ double ParameterTree::updateTopologyFromPrior(void) {
         
     // update the topology and calculate proposal probability
     double lnP1 = lnPriorProbability();
-    t->buildRandomTree(tNames, betaT, rv);
+    t->buildRandomTree(tNames, lambda, rv);
     double lnP2 = lnPriorProbability();
 
     // update the transition probabilities
@@ -708,29 +685,20 @@ double ParameterTree::updateBranchlengthsFromPrior(void) {
     Tree* t = getActiveTree();
     double lnP1 = lnPriorProbability();
     std::vector<Node*> dpSeq = t->getDownPassSequence();
-    double sum = 0.0;
     for (int i=0; i<dpSeq.size(); i++)
         {
         Node* p = dpSeq[i];
         if (p != t->getRoot())
-            {
-            p->setBranchProportion( Probability::Exponential::rv(rv, 1.0) );
-            sum += p->getBranchProportion();
-            }
+            p->setBranchLength( Probability::Exponential::rv(rv, lambda) );
         else
-            p->setBranchProportion(0.0);
+            p->setBranchLength(0.0);
         }
-    for (int i=0; i<dpSeq.size(); i++)
-        {
-        Node* p = dpSeq[i];
-        p->setBranchProportion( p->getBranchProportion() / sum );
-        }
-
-    double treeLength = Probability::Gamma::rv(rv, 1.0, betaT);
-    t->setTreeLength(treeLength);
+    double rootLen = Probability::Exponential::rv(rv, lambda);
+    std::set<Node*,CompNode>& rootDes = t->getRoot()->getDescendants()->getNodes();
+    for (Node* n : rootDes)
+        n->setBranchLength(rootLen * 0.5);
 
     double lnP2 = lnPriorProbability();
-
     return lnP1 - lnP2;
 }
 

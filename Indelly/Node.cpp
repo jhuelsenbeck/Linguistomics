@@ -12,7 +12,7 @@ Node::Node(void) {
     isLeaf                = false;
     name                  = "";
     ancestor              = NULL;
-    proportion            = 0.0;
+    length                = 0.0;
     offset                = 0;
     myTree                = NULL;
     descendants           = new NodeSet;
@@ -25,7 +25,7 @@ Node::Node(int idx) {
     isLeaf                = false;
     name                  = "";
     ancestor              = NULL;
-    proportion            = 0.0;
+    length                = 0.0;
     offset                = idx;
     myTree                = NULL;
     descendants           = new NodeSet;
@@ -48,15 +48,10 @@ void Node::clean(void) {
     isLeaf     = false;
     name       = "";
     ancestor   = NULL;
-    proportion = 0.0;
+    length     = 0.0;
     myTree     = NULL;
     descendants->deleteAllNodes();
     transitionProbability = NULL;
-}
-
-double Node::getBranchLength(void) {
-
-    return proportion * myTree->getTreeLength();
 }
 
 std::vector<Node*> Node::getDescendantsVector(void) {
