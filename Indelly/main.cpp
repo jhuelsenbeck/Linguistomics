@@ -7,9 +7,14 @@
 
 void printHeader(int count);
 
+#include "Container.hpp"
 
 
 int main(int argc, char* argv[]) {
+
+    MyDoubleMatrix x;
+    
+    exit(1);
 
     // create the thread pool
     ThreadPool pool;

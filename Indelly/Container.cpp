@@ -8,107 +8,6 @@
 // not sure what the platform neutral version of this is
 #define IFVERIFY(condition) _ASSERT(condition); if (condition)
 
-// John, use this macro below if the above macro does not compile
-//#define IFVERIFY(condition) if (condition)
-
-
-template<typename T> BufferTemplate<T>::BufferTemplate() {
-    Elements = 0;
-    Buffer = NULL;
-    EndBuffer = NULL;
-}
-
-template<typename T> BufferTemplate<T>::BufferTemplate(const BufferTemplate<T>& a) {
-    create(a.Elements);
-    if (Elements)
-        memcpy(Buffer, a.Buffer, Elements * sizeof(T));
-}
-
-template<typename T> BufferTemplate<T>::BufferTemplate(size_t elements) {
-    create(elements);
-}
-
-template<typename T> BufferTemplate<T>::~BufferTemplate() {
-    delete[] Buffer;
-}
-
-template<typename T> void BufferTemplate<T>::create(size_t elements) {
-    if (elements > Elements)
-        {
-        delete[] Buffer;
-        if (elements > 0)
-            Buffer = new T[elements];
-        else
-            Buffer = NULL;
-        }
-    Elements = elements;
-    EndBuffer = Buffer + elements;
-}
-
-template<typename T> void BufferTemplate<T>::fill(T value) {
-    memset(Buffer, value, Elements); 
-}
-
-template<typename T> void BufferTemplate<T>::operator+=(T c) {
-    ForElements(e)
-        *e += c;
-}
-
-template<typename T> void BufferTemplate<T>::operator-=(T c) {
-    ForElements(e)
-        *e -= c;
-}
-
-template<typename T> void BufferTemplate<T>::operator*=(T c) {
-    ForElements(e)
-        *e *= c;
-}
-
-template<typename T> void BufferTemplate<T>::operator/=(T c) {
-    ForElements(e)
-        *e /= c;
-}
-
-template<typename T> void BufferTemplate<T>::operator|=(T c) {
-    ForElements(e)
-        *e |= c;
-}
-
-template<typename T> void BufferTemplate<T>::operator^=(T c) {
-    ForElements(e)
-        *e ^= c;
-}
-
-template<typename T> bool BufferTemplate<T>::operator==(const BufferTemplate<T>& a) const {
-    if (Elements != a.Elements) 
-        return false;
-    ForLeftRight(a) 
-        {
-        if (*left != *right)
-            return false;
-        }
-    return true;
-}
-
-template<typename T> bool BufferTemplate<T>::operator!=(const BufferTemplate<T>& a) const {
-    if (Elements != a.Elements)
-        return true;
-     ForLeftRight(a) {
-        if (*left != *right)
-            return true;
-    }
-    return false;
-}
-
-template<typename T> void BufferTemplate<T>::operator+=(const BufferTemplate<T>& a) {
-    ForLeftRight(a)
-        *left += *right;
-}
-
-template<typename T> void BufferTemplate<T>::operator-=(const BufferTemplate<T>& a) {
-    ForLeftRight(a)
-        *left -= *right;
-}
 
 //==========================================================================
 
@@ -127,24 +26,17 @@ template<typename T> ArrayTemplate<T>::ArrayTemplate(const ArrayTemplate<T>& a) 
 #define ForRows for (T* row = Buffer; row < EndBuffer; row += Cols)
 #define ForColumns for (T* col = row; col < row + Cols; ++col)
 
-template<typename T> MatrixTemplate<T>::MatrixTemplate() {
+/*template<typename T> MatrixTemplate<T>::MatrixTemplate() {
     Rows = 0;
     Cols = 0;
-}
+}*/
 
-template<typename T>
+/*template<typename T>
 MatrixTemplate<T>::MatrixTemplate(size_t rows, size_t cols):
     BufferTemplate<T>::BufferTemplate(rows * cols)
 {
     Rows = rows;
     Cols = cols;
-}
-
-template<typename T> MatrixTemplate<T>::MatrixTemplate(const MatrixTemplate<T>& m):
-    BufferTemplate<T>::BufferTemplate(m)
-{
-    Rows = m.Rows;
-    Cols = m.Cols;
 }
 
 template<typename T> void MatrixTemplate<T>::create(size_t rows, size_t cols) {
@@ -203,6 +95,6 @@ template<typename T> void MatrixTemplate<T>::multiply(const MatrixTemplate<T>& m
             }
         }
     }
-}
+}*/
 
 //==========================================================================
