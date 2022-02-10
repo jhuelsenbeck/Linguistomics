@@ -7,28 +7,9 @@
 
 void printHeader(int count);
 
-#include "Container.hpp"
 
 
 int main(int argc, char* argv[]) {
-
-    MyDoubleMatrix x(10,10);
-    for (int i=0; i<10; i++)
-        for (int j=0; j<10; j++)
-            x(i, j) = (double)j;
-            
-    x.print("x");
-    
-    MyDoubleMatrix a(5,5);
-    MyDoubleMatrix b;
-    b.print("b");
-    b = a;
-    
-    a.print("a");
-    b.print("b");
-    
-    
-    return 0;
 
     // create the thread pool
     ThreadPool pool;

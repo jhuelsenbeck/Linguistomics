@@ -138,9 +138,9 @@ void ParameterAlignment::getIndelMatrix(IndelMatrix* indelMat) {
         for (int j=0; j<nt; j++)
             {
             if (alignment[idx][j][i] == gapCode)
-                (*indelMat)[i][j] = 0;
+                (*indelMat)(i,j) = 0;
             else
-                (*indelMat)[i][j] = 1;
+                (*indelMat)(i,j) = 1;
             }
         }
 }

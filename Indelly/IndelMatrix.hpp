@@ -1,16 +1,16 @@
 #ifndef IndelMatrix_hpp
 #define IndelMatrix_hpp
 
+#include "Container.hpp"
 
-class IndelMatrix {
+
+
+class IndelMatrix : public MatrixTemplate<int> {
 
     public:
                     IndelMatrix(void) = delete;
                     IndelMatrix(int nt, int maxNs);
-                   ~IndelMatrix(void);
-        int*        operator[](int i) { return m[i]; }
-        const int*  operator[](int i) const { return m[i]; }
-        int*        getRow(int idx) { return m[idx]; }
+        int*        getRow(int r) { return &(this->buffer[r * numCols]); }
         int         getNumTaxa(void) { return numTaxa; }
         int         getNumSites(void) { return numSites; }
         void        print(void);
@@ -20,7 +20,6 @@ class IndelMatrix {
         int         numTaxa;
         int         numSites;
         int         maxNumSites;
-        int**       m;
 };
 
 #endif
