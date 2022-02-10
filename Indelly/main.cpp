@@ -17,14 +17,15 @@ int main(int argc, char* argv[]) {
         for (int j=0; j<10; j++)
             x(i, j) = (double)j;
             
-    x.print();
+    x.print("x");
     
     MyDoubleMatrix a(5,5);
     MyDoubleMatrix b;
+    b.print("b");
     b = a;
     
-    a.print();
-    b.print();
+    a.print("a");
+    b.print("b");
     
     
     return 0;

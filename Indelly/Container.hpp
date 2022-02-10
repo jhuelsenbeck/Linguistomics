@@ -2,6 +2,7 @@
 #define Container_H
 
 #include <iostream>
+#include <string>
 
 #define ForElements(v) for (T* v = buffer; v < endBuffer; ++v)
 #define ForLeftRight(a) const T* right = a; for (T* left = buffer; left < endBuffer; ++left, ++right)
@@ -55,7 +56,7 @@ class ArrayTemplate: public BufferTemplate<T> {
                             ArrayTemplate(void);
         explicit            ArrayTemplate(size_t size);
         explicit            ArrayTemplate(const ArrayTemplate<T>& a);
-        ArrayTemplate<T>&   operator=(const ArrayTemplate<T>& other);
+        ArrayTemplate<T>&   operator=(const ArrayTemplate<T>& rhs);
         void                create(size_t elements) { BufferTemplate<T>::create(elements); }
         T                   operator[](size_t i) const { return this->buffer[i]; }
         T                   getValue(size_t i) const { return this->buffer[i]; }
@@ -75,9 +76,11 @@ class MatrixTemplate : public BufferTemplate<T> {
                             MatrixTemplate(void);
         explicit            MatrixTemplate(size_t rows, size_t cols);
         explicit            MatrixTemplate(const MatrixTemplate<T>& m);
-        MatrixTemplate<T>&  operator=(const MatrixTemplate<T>& other);
+        MatrixTemplate<T>&  operator=(const MatrixTemplate<T>& rhs);
         T&                  operator()(size_t r, size_t c) { return this->buffer[r * numCols + c]; }
         const T&            operator()(size_t r, size_t c) const { return this->buffer[r * numCols + c]; }
+        bool                operator==(const MatrixTemplate<T>& m) const;
+        bool                operator!=(const MatrixTemplate<T>& m) const;
         void                create(size_t rows, size_t cols);
         size_t              rows(void) const { return numRows; }
         size_t              cols(void) const { return numCols; }
@@ -85,8 +88,7 @@ class MatrixTemplate : public BufferTemplate<T> {
         void                setValue(size_t r, size_t c, T value);
         void                setIdentity(T value=1);
         void                print(void);
-        bool                operator==(const MatrixTemplate<T>& m) const;
-        bool                operator!=(const MatrixTemplate<T>& m) const;
+        void                print(std::string title);
         void                multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const;
         void                transpose(MatrixTemplate<T>& result);
 
@@ -111,7 +113,6 @@ BufferTemplate<T>::BufferTemplate(const BufferTemplate<T>& a) {
 template<typename T>
 BufferTemplate<T>::BufferTemplate(size_t ne) {
 
-    std::cout << "In constructor for BufferTemplate" << std::endl;
     numElements = 0;
     create(ne);
 }
@@ -119,7 +120,6 @@ BufferTemplate<T>::BufferTemplate(size_t ne) {
 template<typename T>
 BufferTemplate<T>::~BufferTemplate(void) {
 
-    std::cout << "In destructor for BufferTemplate" << std::endl;
     delete [] buffer;
 }
 
@@ -142,7 +142,6 @@ void BufferTemplate<T>::create(size_t ne) {
 template<typename T>
 void BufferTemplate<T>::fill(T value) {
 
-    std::cout << "In Fill " << value << " " << numElements << std::endl;
     memset(buffer, value, numElements * sizeof(T));
 }
 
@@ -239,9 +238,9 @@ ArrayTemplate<T>::ArrayTemplate(void) {
 }
 
 template<typename T>
-ArrayTemplate<T>::ArrayTemplate(size_t size) {
+ArrayTemplate<T>::ArrayTemplate(size_t ne) {
 
-    create(size);
+    create(ne);
 }
 
 template<typename T>
@@ -251,10 +250,10 @@ ArrayTemplate<T>::ArrayTemplate(const ArrayTemplate<T>& a) {
 }
 
 template<typename T>
-ArrayTemplate<T>& ArrayTemplate<T>::operator=(const ArrayTemplate<T>& other) {
+ArrayTemplate<T>& ArrayTemplate<T>::operator=(const ArrayTemplate<T>& rhs) {
 
-    if (this != &other)
-        copy(other);
+    if (this != &rhs)
+        copy(rhs);
     return *this;
 }
 
@@ -284,27 +283,26 @@ MatrixTemplate<T>::MatrixTemplate(const MatrixTemplate<T>& m) : BufferTemplate<T
 template<typename T>
 MatrixTemplate<T>::MatrixTemplate(size_t nr, size_t nc) : BufferTemplate<T>::BufferTemplate(nr * nc) {
 
-    std::cout << "In constructor for MatrixTemplate" << std::endl;
     numRows = nr;
     numCols = nc;
     BufferTemplate<T>::fill(0);
 }
 
 template<typename T>
-MatrixTemplate<T>& MatrixTemplate<T>::operator=(const MatrixTemplate<T>& other) {
+MatrixTemplate<T>& MatrixTemplate<T>::operator=(const MatrixTemplate<T>& rhs) {
 
-    if (this != &other)
-        copy(other);
+    if (this != &rhs)
+        copy(rhs);
     return *this;
 }
 
 template<typename T>
 void MatrixTemplate<T>::print(void) {
 
-    std::cout << "[";
+    std::cout << "{";
     for (int i=0; i<numRows; i++)
         {
-        std::cout << "(";
+        std::cout << "{";
         for (int j=0; j<numCols; j++)
             {
             std::cout << getValue(i, j);
@@ -312,15 +310,21 @@ void MatrixTemplate<T>::print(void) {
                 std::cout << ",";
             }
         if (i != numRows-1)
-            std::cout << ")" << std::endl;
+            std::cout << "}," << std::endl;
         }
-    std::cout << ")]" << std::endl;
+    std::cout << "}}" << std::endl;
+}
+
+template<typename T>
+void MatrixTemplate<T>::print(std::string title) {
+
+    std::cout << title << std::endl;
+    print();
 }
 
 template<typename T>
 void MatrixTemplate<T>::copy(const MatrixTemplate<T>& other) {
 
-    std::cout << "In copy of MatrixTemplate" << std::endl;
     create(other.numRows, other.numCols);
     numRows = other.numRows;
     numCols = other.numCols;
