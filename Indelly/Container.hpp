@@ -2,163 +2,194 @@
 #define Container_H
 
 #include <iostream>
-#define ForElements(v) for (T* v = Buffer; v < endBuffer; ++v)
-#define ForLeftRight(a) const T* right = a; for (T* left = Buffer; left < endBuffer; ++left, ++right)
+
+#define ForElements(v) for (T* v = buffer; v < endBuffer; ++v)
+#define ForLeftRight(a) const T* right = a; for (T* left = buffer; left < endBuffer; ++left, ++right)
 #define IFVERIFY(condition) _ASSERT(condition); if (condition)
+
 
 
 #pragma mark - BufferTemplate Definition -
 
-template<typename T> class BufferTemplate {
+template<typename T>
+class BufferTemplate {
 
     public:
-               ~BufferTemplate(void);
-        size_t  size(void) { return numElements; }
-        void    setZero(void) { fill(0); }
-        void    fill(T value);
-        bool    operator==(const BufferTemplate<T>& a) const;
-        bool    operator!=(const BufferTemplate<T>& a) const;
-        void    operator+=(const BufferTemplate<T>& a);
-        void    operator-=(const BufferTemplate<T>& a);
-        void    operator|=(T c);
-        void    operator+=(T c);
-        void    operator-=(T c);
-        void    operator*=(T c);
-        void    operator/=(T c);
-        void    operator^=(T c);
+                   ~BufferTemplate(void);
+        const T*    begin(void) const { return buffer; }
+        T*          begin(void) { return buffer; }
+        const T*    end(void) const { return endBuffer; }
+        T*          end(void) { return endBuffer; }
+        void        fill(T value);
+        size_t      size(void) { return numElements; }
+        void        setZero(void) { fill(0); }
+        bool        operator==(const BufferTemplate<T>& a) const;
+        bool        operator!=(const BufferTemplate<T>& a) const;
+        void        operator+=(const BufferTemplate<T>& a);
+        void        operator-=(const BufferTemplate<T>& a);
+        void        operator|=(T c);
+        void        operator+=(T c);
+        void        operator-=(T c);
+        void        operator*=(T c);
+        void        operator/=(T c);
+        void        operator^=(T c);
 
     protected:
-                BufferTemplate(void);
-                BufferTemplate(const BufferTemplate<T> &a);
-                BufferTemplate(size_t elements);
-        void    create(size_t elements);
-        T*      Buffer;
-        T*      endBuffer;
-        size_t  numElements;
+                    BufferTemplate(void) = delete;
+        explicit    BufferTemplate(const BufferTemplate<T> &a);
+        explicit    BufferTemplate(size_t ne);
+        void        create(size_t ne);
+        T*          buffer;
+        T*          endBuffer;
+        size_t      numElements;
 };
+
+
 
 #pragma mark - ArrayTemplate Definition -
 
-template<typename T> class ArrayTemplate: public BufferTemplate<T> {
+template<typename T>
+class ArrayTemplate: public BufferTemplate<T> {
 
     public:
-                ArrayTemplate(void);
-                explicit ArrayTemplate(size_t size);
-                explicit ArrayTemplate(const ArrayTemplate<T>& a); // copy
-                void create(size_t elements) { BufferTemplate<T>::create(elements);}
-        T       operator[](size_t i) const {return this->Buffer[i];}
-        T       getValue(size_t i) const { return this->Buffer[i]; }
+                            ArrayTemplate(void);
+        explicit            ArrayTemplate(size_t size);
+        explicit            ArrayTemplate(const ArrayTemplate<T>& a);
+        ArrayTemplate<T>&   operator=(const ArrayTemplate<T>& other);
+        void                create(size_t elements) { BufferTemplate<T>::create(elements); }
+        T                   operator[](size_t i) const { return this->buffer[i]; }
+        T                   getValue(size_t i) const { return this->buffer[i]; }
+        
+    private:
+        void                copy(const ArrayTemplate<T>& other);
 };
+
+
 
 #pragma mark - MatrixTemplate Definition -
 
-template<typename T> class MatrixTemplate : public BufferTemplate<T> {
+template<typename T>
+class MatrixTemplate : public BufferTemplate<T> {
 
     public:
-                MatrixTemplate(void);
-                explicit MatrixTemplate(size_t rows, size_t cols);
-                explicit MatrixTemplate(const MatrixTemplate<T>& m);  // copy
-        void    create(size_t rows, size_t cols);
-        size_t  rows(void) const { return Rows; }
-        size_t  cols(void) const { return Cols; }
-        T       getValue(size_t r, size_t c) const;
-        bool    isSquare(void) { return (Rows == Cols); } 
-        void    setValue(size_t r, size_t c, T value);
-        void    setIdentity(T value=1);
-        bool    operator==(const MatrixTemplate<T>& m) const;
-        bool    operator!=(const MatrixTemplate<T>& m) const;
-        void    multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const;
-        void    transpose(MatrixTemplate<T>& result);
+                            MatrixTemplate(void);
+        explicit            MatrixTemplate(size_t rows, size_t cols);
+        explicit            MatrixTemplate(const MatrixTemplate<T>& m);
+        MatrixTemplate<T>&  operator=(const MatrixTemplate<T>& other);
+        T&                  operator()(size_t r, size_t c) { return this->buffer[r * numCols + c]; }
+        const T&            operator()(size_t r, size_t c) const { return this->buffer[r * numCols + c]; }
+        void                create(size_t rows, size_t cols);
+        size_t              rows(void) const { return numRows; }
+        size_t              cols(void) const { return numCols; }
+        T                   getValue(size_t r, size_t c) const;
+        void                setValue(size_t r, size_t c, T value);
+        void                setIdentity(T value=1);
+        void                print(void);
+        bool                operator==(const MatrixTemplate<T>& m) const;
+        bool                operator!=(const MatrixTemplate<T>& m) const;
+        void                multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const;
+        void                transpose(MatrixTemplate<T>& result);
 
-    private:
-        size_t  Rows,
-                Cols;
+    protected:
+        void                copy(const MatrixTemplate<T>& other);
+        size_t              numRows,
+                            numCols;
 };
 
 
 
 #pragma mark - BufferTemplate Implementation -
 
-template<typename T> BufferTemplate<T>::BufferTemplate(void) {
-
-    numElements = 0;
-    Buffer = NULL;
-    endBuffer = NULL;
-}
-
-template<typename T> BufferTemplate<T>::BufferTemplate(const BufferTemplate<T>& a) {
+template<typename T>
+BufferTemplate<T>::BufferTemplate(const BufferTemplate<T>& a) {
 
     create(a.numElements);
     if (numElements)
-        memcpy(Buffer, a.Buffer, numElements * sizeof(T));
+        memcpy(buffer, a.buffer, numElements * sizeof(T));
 }
 
-template<typename T> BufferTemplate<T>::BufferTemplate(size_t elements) {
+template<typename T>
+BufferTemplate<T>::BufferTemplate(size_t ne) {
 
-    create(elements);
+    std::cout << "In constructor for BufferTemplate" << std::endl;
+    numElements = 0;
+    create(ne);
 }
 
-template<typename T> BufferTemplate<T>::~BufferTemplate(void) {
+template<typename T>
+BufferTemplate<T>::~BufferTemplate(void) {
 
-    delete [] Buffer;
+    std::cout << "In destructor for BufferTemplate" << std::endl;
+    delete [] buffer;
 }
 
-template<typename T> void BufferTemplate<T>::create(size_t ne) {
+template<typename T>
+void BufferTemplate<T>::create(size_t ne) {
 
-    if (ne > numElements)
+    if (ne != numElements)
         {
-        delete[] Buffer;
+        if (numElements > 0)
+            delete [] buffer;
         if (ne > 0)
-            Buffer = new T[ne];
+            buffer = new T[ne];
         else
-            Buffer = NULL;
+            buffer = NULL;
         }
     numElements = ne;
-    endBuffer = Buffer + numElements;
+    endBuffer = buffer + numElements;
 }
 
-template<typename T> void BufferTemplate<T>::fill(T value) {
+template<typename T>
+void BufferTemplate<T>::fill(T value) {
 
-    memset(Buffer, value, numElements);
+    std::cout << "In Fill " << value << " " << numElements << std::endl;
+    memset(buffer, value, numElements * sizeof(T));
 }
 
-template<typename T> void BufferTemplate<T>::operator+=(T c) {
+template<typename T>
+void BufferTemplate<T>::operator+=(T c) {
 
     ForElements(e)
         *e += c;
 }
 
-template<typename T> void BufferTemplate<T>::operator-=(T c) {
+template<typename T>
+void BufferTemplate<T>::operator-=(T c) {
 
     ForElements(e)
         *e -= c;
 }
 
-template<typename T> void BufferTemplate<T>::operator*=(T c) {
+template<typename T>
+void BufferTemplate<T>::operator*=(T c) {
 
     ForElements(e)
         *e *= c;
 }
 
-template<typename T> void BufferTemplate<T>::operator/=(T c) {
+template<typename T>
+void BufferTemplate<T>::operator/=(T c) {
 
     ForElements(e)
         *e /= c;
 }
 
-template<typename T> void BufferTemplate<T>::operator|=(T c) {
+template<typename T>
+void BufferTemplate<T>::operator|=(T c) {
 
     ForElements(e)
         *e |= c;
 }
 
-template<typename T> void BufferTemplate<T>::operator^=(T c) {
+template<typename T>
+void BufferTemplate<T>::operator^=(T c) {
 
     ForElements(e)
         *e ^= c;
 }
 
-template<typename T> bool BufferTemplate<T>::operator==(const BufferTemplate<T>& a) const {
+template<typename T>
+bool BufferTemplate<T>::operator==(const BufferTemplate<T>& a) const {
 
     if (numElements != a.numElements)
         return false;
@@ -170,7 +201,8 @@ template<typename T> bool BufferTemplate<T>::operator==(const BufferTemplate<T>&
     return true;
 }
 
-template<typename T> bool BufferTemplate<T>::operator!=(const BufferTemplate<T>& a) const {
+template<typename T>
+bool BufferTemplate<T>::operator!=(const BufferTemplate<T>& a) const {
 
     if (numElements != a.numElements)
         return true;
@@ -182,106 +214,197 @@ template<typename T> bool BufferTemplate<T>::operator!=(const BufferTemplate<T>&
     return false;
 }
 
-template<typename T> void BufferTemplate<T>::operator+=(const BufferTemplate<T>& a) {
+template<typename T>
+void BufferTemplate<T>::operator+=(const BufferTemplate<T>& a) {
 
     ForLeftRight(a)
         *left += *right;
 }
 
-template<typename T> void BufferTemplate<T>::operator-=(const BufferTemplate<T>& a) {
+template<typename T>
+void BufferTemplate<T>::operator-=(const BufferTemplate<T>& a) {
 
     ForLeftRight(a)
         *left -= *right;
 }
 
-#pragma mark - MatrixTemplate Implementation -
 
-template<typename T> MatrixTemplate<T>::MatrixTemplate(void) {
 
-    Rows = 0;
-    Cols = 0;
-}
+#pragma mark - ArrayTemplate Implementation -
 
-template<typename T> MatrixTemplate<T>::MatrixTemplate(const MatrixTemplate<T>& m) : BufferTemplate<T>::BufferTemplate(m) {
+template<typename T>
+ArrayTemplate<T>::ArrayTemplate(void) {
 
-    Rows = m.Rows;
-    Cols = m.Cols;
+    create(1);
 }
 
 template<typename T>
-MatrixTemplate<T>::MatrixTemplate(size_t rows, size_t cols) : BufferTemplate<T>::BufferTemplate(rows * cols) {
+ArrayTemplate<T>::ArrayTemplate(size_t size) {
 
-    Rows = rows;
-    Cols = cols;
+    create(size);
 }
 
-template<typename T> void MatrixTemplate<T>::create(size_t rows, size_t cols) {
+template<typename T>
+ArrayTemplate<T>::ArrayTemplate(const ArrayTemplate<T>& a) {
 
-    BufferTemplate<T>::create(rows * cols);
-    Rows = rows;
-    Cols = cols;
+    copy(a);
 }
 
-template<typename T> T MatrixTemplate<T>::getValue(size_t r, size_t c) const {
+template<typename T>
+ArrayTemplate<T>& ArrayTemplate<T>::operator=(const ArrayTemplate<T>& other) {
 
-    return this->Buffer[r * Cols + c];
+    if (this != &other)
+        copy(other);
+    return *this;
 }
 
-template<typename T> void MatrixTemplate<T>::setValue(size_t r, size_t c, T value) {
+template<typename T>
+void ArrayTemplate<T>::copy(const ArrayTemplate<T>& other) {
 
-    this->Buffer[r * Cols + c] = value;
+    create(other.numElements);
+    memcpy(this->buffer, other.buffer, sizeof(T) * this->numElements);
 }
 
-template<typename T> void MatrixTemplate<T>::setIdentity(T value) {
 
-    IFVERIFY(Rows > 0 && Rows == Cols)
+#pragma mark - MatrixTemplate Implementation -
+
+template<typename T>
+MatrixTemplate<T>::MatrixTemplate(void) : BufferTemplate<T>::BufferTemplate(1) {
+
+    numRows = 1;
+    numCols = 1;
+}
+
+template<typename T>
+MatrixTemplate<T>::MatrixTemplate(const MatrixTemplate<T>& m) : BufferTemplate<T>::BufferTemplate(m) {
+
+    copy(m);
+}
+
+template<typename T>
+MatrixTemplate<T>::MatrixTemplate(size_t nr, size_t nc) : BufferTemplate<T>::BufferTemplate(nr * nc) {
+
+    std::cout << "In constructor for MatrixTemplate" << std::endl;
+    numRows = nr;
+    numCols = nc;
+    BufferTemplate<T>::fill(0);
+}
+
+template<typename T>
+MatrixTemplate<T>& MatrixTemplate<T>::operator=(const MatrixTemplate<T>& other) {
+
+    if (this != &other)
+        copy(other);
+    return *this;
+}
+
+template<typename T>
+void MatrixTemplate<T>::print(void) {
+
+    std::cout << "[";
+    for (int i=0; i<numRows; i++)
+        {
+        std::cout << "(";
+        for (int j=0; j<numCols; j++)
+            {
+            std::cout << getValue(i, j);
+            if (j != numCols-1)
+                std::cout << ",";
+            }
+        if (i != numRows-1)
+            std::cout << ")" << std::endl;
+        }
+    std::cout << ")]" << std::endl;
+}
+
+template<typename T>
+void MatrixTemplate<T>::copy(const MatrixTemplate<T>& other) {
+
+    std::cout << "In copy of MatrixTemplate" << std::endl;
+    create(other.numRows, other.numCols);
+    numRows = other.numRows;
+    numCols = other.numCols;
+    memcpy(this->buffer, other.buffer, numRows * numCols * sizeof(T));
+}
+
+template<typename T>
+void MatrixTemplate<T>::create(size_t nr, size_t nc) {
+
+    BufferTemplate<T>::create(nr * nc);
+    numRows = nr;
+    numCols = nc;
+}
+
+template<typename T> T
+MatrixTemplate<T>::getValue(size_t r, size_t c) const {
+
+    return this->buffer[r * numCols + c];
+}
+
+template<typename T>
+void MatrixTemplate<T>::setValue(size_t r, size_t c, T value) {
+
+    this->buffer[r * numCols + c] = value;
+}
+
+template<typename T>
+void MatrixTemplate<T>::setIdentity(T value) {
+
+    IFVERIFY(numRows > 0 && numRows == numCols)
         {
         BufferTemplate<T>::fill(0);
-        for (int i = 0; i < Rows; ++i)
+        for (int i = 0; i < numRows; ++i)
             setValue(i, i, value);
         }
 }
 
-template<typename T> bool MatrixTemplate<T>::operator==(const MatrixTemplate<T>& m) const {
+template<typename T>
+bool MatrixTemplate<T>::operator==(const MatrixTemplate<T>& m) const {
 
-    if (Rows != m.Rows || Cols != m.Cols)
+    if (numRows != m.numRows || numCols != m.numCols)
         return false;
     return BufferTemplate<T>::operator==(m);
 }
 
-template<typename T> bool MatrixTemplate<T>::operator!=(const MatrixTemplate<T>& m) const {
+template<typename T>
+bool MatrixTemplate<T>::operator!=(const MatrixTemplate<T>& m) const {
 
-    if (Rows != m.Rows || Cols != m.Cols)
+    if (numRows != m.numRows || numCols != m.numCols)
         return true;
     return BufferTemplate<T>::operator!=(m);
 }
 
-template<typename T> void MatrixTemplate<T>::transpose(MatrixTemplate<T>& result)  {
-    result.Create(Cols, Rows);
-    for (int r = 0; r < Rows; ++r)
+template<typename T>
+void MatrixTemplate<T>::transpose(MatrixTemplate<T>& result)  {
+
+    result.Create(numCols, numRows);
+    for (int r = 0; r < numRows; ++r)
         {
-        for (int c = 0; c < Cols; ++c)
+        for (int c = 0; c < numCols; ++c)
             result.setValue(c, r, getValue(r, c));
         }
 }
 
-template<typename T> void MatrixTemplate<T>::multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
+template<typename T>
+void MatrixTemplate<T>::multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
 
-    IFVERIFY (Cols == m.Rows)
+    IFVERIFY (numCols == m.numRows)
         {
-        result.create(Rows, m.Cols);
-        for (size_t i = 0; i < Rows; ++i)
+        result.create(numRows, m.numCols);
+        for (size_t i = 0; i < numRows; ++i)
             {
-            for (size_t j = 0; j < m.Cols; ++j)
+            for (size_t j = 0; j < m.numCols; ++j)
                 {
                 T total = getValue(i, 0) * m.getValue(0, j);
-                for (size_t z = 1; z < m.Rows; ++z)
+                for (size_t z = 1; z < m.numRows; ++z)
                     total += getValue(i, z) * m.getValue(z, j);
                 result.SetValue(i, j, total);
                 }
             }
         }
 }
+
+
 
 #pragma mark - Type Definitions -
 

@@ -17,4 +17,4 @@ namespace  MatrixMath {
     void    multiplyTwoMatrices(DoubleMatrix* A, DoubleMatrix* B, DoubleMatrix* C, DoubleMatrix* temp);
 };
 
-#endif /* Matrix_hpp */
+#endif
