@@ -1,6 +1,7 @@
 #ifndef Container_H
 #define Container_H
 
+#include <iomanip>
 #include <iostream>
 #include <string>
 
@@ -82,8 +83,8 @@ class MatrixTemplate : public BufferTemplate<T> {
         bool                operator==(const MatrixTemplate<T>& m) const;
         bool                operator!=(const MatrixTemplate<T>& m) const;
         void                create(size_t rows, size_t cols);
-        size_t              rows(void) const { return numRows; }
-        size_t              cols(void) const { return numCols; }
+        size_t              getNumRows(void) const { return numRows; }
+        size_t              getNumCols(void) const { return numCols; }
         T                   getValue(size_t r, size_t c) const;
         void                setValue(size_t r, size_t c, T value);
         void                setIdentity(T value=1);
@@ -416,6 +417,6 @@ typedef ArrayTemplate<int>    IntArray;
 typedef ArrayTemplate<double> DoubleArray;
 
 typedef MatrixTemplate<int>    IntMatrix;
-typedef MatrixTemplate<double> MyDoubleMatrix;
+typedef MatrixTemplate<double> DoubleMatrix;
 
 #endif

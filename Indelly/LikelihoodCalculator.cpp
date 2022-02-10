@@ -175,7 +175,7 @@ void LikelihoodCalculator::initialize(void) {
     for (int n=0; n<downPassSequence.size(); n++)
         {
         Node* p = downPassSequence[n];
-        p->setTransitionProbability( &transitionProbabilities[p->getIndex()] );
+        p->setTransitionProbability( transitionProbabilities[p->getIndex()] );
         }
     transitionProbabilityFactory->getStationaryFrequencies(stateEquilibriumFrequencies);
     setBirthDeathProbabilities();
@@ -705,8 +705,8 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                     double rht = 0.0;
                     for (int j=0; j<numStates; j++)
                         {
-                        lft += fH[lftChildIdx][j] * indelProbs.homologousProbability[lftChildIdx] * tpLft[i][j];
-                        rht += fH[rhtChildIdx][j] * indelProbs.homologousProbability[rhtChildIdx] * tpRht[i][j];
+                        lft += fH[lftChildIdx][j] * indelProbs.homologousProbability[lftChildIdx] * tpLft(i,j);
+                        rht += fH[rhtChildIdx][j] * indelProbs.homologousProbability[rhtChildIdx] * tpRht(i,j);
                         }
                     fHIdx[i] = lft * rht;
                     }
@@ -739,10 +739,10 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                     double rht = indelProbs.extinctionProbability[inhomologousChildIdx] * fI[inhomologousChildIdx][numStates];
                     for (int j=0; j<numStates; j++)
                         {
-                        lft += fH[homologousChildIdx][j] * indelProbs.homologousProbability[homologousChildIdx] * (*tpHomologous)[i][j];
+                        lft += fH[homologousChildIdx][j] * indelProbs.homologousProbability[homologousChildIdx] * (*tpHomologous)(i,j);
                         rht +=
                             (fH[inhomologousChildIdx][j] + fI[inhomologousChildIdx][j]) * (indelProbs.nonHomologousProbability[inhomologousChildIdx] - indelProbs.extinctionProbability[inhomologousChildIdx] * indelProbs.birthProbability[inhomologousChildIdx]) * stateEquilibriumFrequencies[j] +
-                            fI[inhomologousChildIdx][j] * indelProbs.homologousProbability[inhomologousChildIdx] * (*tpInhomologous)[i][j];
+                            fI[inhomologousChildIdx][j] * indelProbs.homologousProbability[inhomologousChildIdx] * (*tpInhomologous)(i,j);
                         }
                     fHIdx[i] = lft * rht;
                     }
@@ -780,11 +780,11 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
 
                     for (int j=0; j<numStates; j++)
                         {
-                        lft1 += *fhleft * homologousProbabilityLeft * tpLft[i][j];
-                        lft2 += *fhright * homologousProbabilityRight * tpRht[i][j];
+                        lft1 += *fhleft * homologousProbabilityLeft * tpLft(i,j);
+                        lft2 += *fhright * homologousProbabilityRight * tpRht(i,j);
                         auto stateEquilibriumFrequency = stateEquilibriumFrequencies[j];
-                        rht1 += (*fhleft + *fileft) * (nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft) * stateEquilibriumFrequency + *fileft * homologousProbabilityLeft * tpLft[i][j];
-                        rht2 += (*fhright + *firight) * (nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight) * stateEquilibriumFrequency + *firight * homologousProbabilityRight * tpRht[i][j];
+                        rht1 += (*fhleft + *fileft) * (nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft) * stateEquilibriumFrequency + *fileft * homologousProbabilityLeft * tpLft(i,j);
+                        rht2 += (*fhright + *firight) * (nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight) * stateEquilibriumFrequency + *firight * homologousProbabilityRight * tpRht(i,j);
                         ++fhleft;
                         ++fhright;
                         ++firight;

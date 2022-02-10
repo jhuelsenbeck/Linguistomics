@@ -2,8 +2,8 @@
 #include <iomanip>
 #include <iostream>
 #include "AlignmentProposal.hpp"
+#include "Container.hpp"
 #include "IntVector.hpp"
-#include "JphMatrix.hpp"
 #include "Model.hpp"
 #include "Msg.hpp"
 #include "ParameterAlignment.hpp"
@@ -455,7 +455,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
     
     /* dynamic programming algorithm for the proposal */
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    DoubleMatrix* tiProbs = tip.getTransitionProbabilities(taxonMask);
+    DoubleMatrix** tiProbs = tip.getTransitionProbabilities(taxonMask);
     std::vector<double>& stationaryFrequencies = tip.getStationaryFrequencies();
     for (int i=0; i<numStates; i++)
         for (int j=0; j<numStates; j++)
@@ -478,7 +478,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
                 {
                 scoring[i][j] = 0.0;
                 for (int l=0; l<numStates; l++)
-                    scoring[i][j] += tiProbs[lftChild][i][l] * tiProbs[rhtChild][l][j];
+                    scoring[i][j] += (*tiProbs[lftChild])(i,l) * (*tiProbs[rhtChild])(l,j);
                 }
             }
         for (int i=0; i<numStates; i++)
@@ -789,7 +789,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
                 {
                 scoring[i][j] = 0.0;
                 for (int l = 0; l < numStates; l++)
-                    scoring[i][j] += tiProbs[lftChildrenIndices[k]][i][l] * tiProbs[rhtChildrenIndices[k]][l][j];
+                    scoring[i][j] += (*tiProbs[lftChildrenIndices[k]])(i,l) * (*tiProbs[rhtChildrenIndices[k]])(l,j);
                 }
         for (int i = 0; i < numStates; i++)
             for (int j = 0; j < numStates; j++)

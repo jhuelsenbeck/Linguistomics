@@ -4,7 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "JphMatrix.hpp"
+#include "Container.hpp"
 class NodeSet;
 class RbBitSet;
 class Tree;

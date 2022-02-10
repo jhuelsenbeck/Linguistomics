@@ -16,7 +16,8 @@ RateMatrix::RateMatrix(void) {
 
 RateMatrix::~RateMatrix(void) {
 
-    delete [] Q;
+    delete Q[0];
+    delete Q[1];
 }
 
 void RateMatrix::flipActiveValues(void) {
@@ -35,9 +36,8 @@ void RateMatrix::initialize(int d) {
     numStates = d;
     activeMatrix = 0;
 
-    Q = new DoubleMatrix[2];
-    for (int s=0; s<2; s++)
-        Q[s].initialize(numStates, numStates);
+    Q[0] = new DoubleMatrix(numStates, numStates);
+    Q[1] = new DoubleMatrix(numStates, numStates);
         
     for (int s=0; s<2; s++)
         equilibriumFrequencies[s].resize(numStates);
@@ -52,7 +52,7 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
         equilibriumFrequencies[activeMatrix][i] = f[i];
     
     // initialize the rate matrix
-    DoubleMatrix& QM = this->Q[activeMatrix];
+    DoubleMatrix& QM = *Q[activeMatrix];
     
     // fill in off diagonal components of the rate matrix in
     // a model-dependent manner
@@ -63,8 +63,8 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
             {
             for (int j=i+1; j<numStates; j++)
                 {
-                QM[i][j] = rates[k] * f[j];
-                QM[j][i] = rates[k] * f[i];
+                QM(i,j) = rates[k] * f[j];
+                QM(j,i) = rates[k] * f[i];
                 k++;
                 }
             }
@@ -79,8 +79,8 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
             for (int j=i+1; j<numStates; j++)
                 {
                 int changeType = map[i][j];
-                QM[i][j] = rates[changeType] * f[j];
-                QM[j][i] = rates[changeType] * f[i];
+                QM(i,j) = rates[changeType] * f[j];
+                QM(j,i) = rates[changeType] * f[i];
                 }
             }
         }
@@ -92,15 +92,15 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
         for (int j=0; j<numStates; j++)
             {
             if (i != j)
-                sum += QM[i][j];
+                sum += QM(i,j);
             }
-        QM[i][i] = -sum;
+        QM(i,i) = -sum;
         }
     
     // rescale the rate matrix
     double averageRate = 0.0;
     for (int i=0; i<numStates; i++)
-        averageRate += -f[i] * QM[i][i];
+        averageRate += -f[i] * QM(i,i);
     double scaleFactor = 1.0 / averageRate;
     MatrixMath::multiplicationByScalar(&QM, scaleFactor); // QM *= scaleFactor
             

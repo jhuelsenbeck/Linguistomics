@@ -65,7 +65,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
                     {
                     int pIdx = p->getIndex();
                     double v = p->getBranchLength();
-                    computeMatrixExponential(Q, qValue, v, A, &P[pIdx], D, N, X, cX, numStates, scratch1, scratch2, scratchVec);
+                    computeMatrixExponential(Q, qValue, v, A, P[pIdx], D, N, X, cX, numStates, scratch1, scratch2, scratchVec);
                     }
                 }
             }
@@ -75,7 +75,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
         Tree*           Tree;
         DoubleMatrix*   Q;
         DoubleMatrix*   A;
-        DoubleMatrix*   P;
+        DoubleMatrix**  P;
         DoubleMatrix*   D;
         DoubleMatrix*   N;
         DoubleMatrix*   X;
@@ -128,7 +128,7 @@ bool TransitionProbabilities::areTransitionProbabilitiesValid(double tolerance) 
                 {
                 double sum = 0.0;
                 for (int j=0; j<numStates; j++)
-                    sum += it->second.probs[activeProbs][n][i][j];;
+                    sum += (*it->second.probs[activeProbs][n])(i,j);
                 if (fabs(1.0 - sum) > tolerance)
                     allGood = false;
                 }
@@ -142,7 +142,7 @@ void TransitionProbabilities::flipActive(void) {
     activeProbs ^= 1;
 }
 
-DoubleMatrix* TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs) {
+DoubleMatrix** TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs) {
 
     std::map<RbBitSet,TransitionProbabilitiesInfo>::iterator it = transProbs.find(bs);
     if (it == transProbs.end())
@@ -155,7 +155,7 @@ DoubleMatrix& TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs, 
     std::map<RbBitSet,TransitionProbabilitiesInfo>::iterator it = transProbs.find(bs);
     if (it == transProbs.end())
         Msg::error("Could not find transition probability vector for mask " + bs.bitString());
-    return it->second.probs[activeProbs][nodeIdx];
+    return *it->second.probs[activeProbs][nodeIdx];
 }
 
 void TransitionProbabilities::initialize(Model* m, ThreadPool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm) {
@@ -194,7 +194,14 @@ void TransitionProbabilities::initialize(Model* m, ThreadPool* p, std::vector<Al
             info.numMatrices = nNodes;
             info.numStates = numStates;
             for (int s=0; s<2; s++)
-                info.probs[s] = new DoubleMatrix[nNodes];
+                {
+                info.probs[s] = new DoubleMatrix*[nNodes];
+                for (int m=0; m<nNodes; m++)
+                    {
+                    info.probs[s][m] = new DoubleMatrix(numStates, numStates);
+                    MatrixMath::setIdentity(info.probs[s][m]);
+                    }
+                }
             info.a_mat = new DoubleMatrix(numStates, numStates);
             info.d_mat = new DoubleMatrix(numStates, numStates);
             info.n_mat = new DoubleMatrix(numStates, numStates);
@@ -203,14 +210,6 @@ void TransitionProbabilities::initialize(Model* m, ThreadPool* p, std::vector<Al
             info.scratch_mat1 = new DoubleMatrix(numStates, numStates);
             info.scratch_mat2 = new DoubleMatrix(numStates, numStates);
             info.scratch_vec = new double[numStates];
-            for (int m=0; m<nNodes; m++)
-                {
-                for (int s=0; s<2; s++)
-                    {
-                    info.probs[s][m].initialize(numStates, numStates);
-                    MatrixMath::setIdentity(&info.probs[s][m]);
-                    }
-                }
             
             transProbs.insert( std::make_pair(mask,info) );
             }
@@ -232,8 +231,7 @@ void TransitionProbabilities::print(void) {
         for (int n=0; n<it->second.numMatrices; n++)
             {
             std::cout << "Transition probabilities for node " << n << " (" << it->first.bitString() << ")" << std::endl;
-            it->second.probs[activeProbs][n].print(4);
-            it->second.probs[activeProbs][n].printSummary();
+            it->second.probs[activeProbs][n]->print();
             }
         }
 }
@@ -273,13 +271,13 @@ void TransitionProbabilities::setTransitionProbabilitiesJc69(void) {
         if (t == NULL)
             Msg::error("Could not find tree for mask " + it->first.bitString());
                 
-        DoubleMatrix* probs = it->second.probs[activeProbs];
+        DoubleMatrix** probs = it->second.probs[activeProbs];
         
         std::vector<Node*>& traversalSeq = t->getDownPassSequence();
         for (int n=0; n<traversalSeq.size(); n++)
             {
             Node* p = traversalSeq[n];
-            DoubleMatrix& tp = probs[p->getIndex()];
+            DoubleMatrix& tp = *probs[p->getIndex()];
             double v = p->getBranchLength();
             
             double x = -((double)numStates/(numStates-1));
@@ -290,9 +288,9 @@ void TransitionProbabilities::setTransitionProbabilitiesJc69(void) {
                 for (int j=0; j<numStates; j++)
                     {
                     if (i == j)
-                        tp[i][j] = pNoChange;
+                        tp(i,j) = pNoChange;
                     else
-                        tp[i][j] = pChange;
+                        tp(i,j) = pChange;
                     }
                 }
             }
@@ -351,7 +349,7 @@ void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatri
 
 	double maxAValue = 0.0;
 	for (int i=0; i<numStates; i++)
-		maxAValue = ((maxAValue > (*A)[i][i]) ? maxAValue : (*A)[i][i]);
+		maxAValue = ((maxAValue > (*A)(i,i) ) ? maxAValue : (*A)(i,i) );
 
 	int y = logBase2Plus1(maxAValue);
 	int j = (( 0 > y ) ? 0 : y);
@@ -386,8 +384,8 @@ void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatri
 		{
 		for (j=0; j<numStates; j++)
 			{
-			if ((*P)[i][j] < 0.0)
-				(*P)[i][j] = fabs( (*P)[i][j] );
+			if ((*P)(i,j) < 0.0)
+				(*P)(i,j) = fabs( (*P)(i,j) );
 			}
 		}
 }

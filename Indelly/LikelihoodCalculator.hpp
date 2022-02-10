@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include "IntVector.hpp"
-#include "JphMatrix.hpp"
 #include "RbBitSet.h"
 #include "TransitionProbabilities.hpp"
 class IndelMatrix;
@@ -86,7 +85,7 @@ class LikelihoodCalculator {
         const int                       maxUnalignableDimension  = 10, maxUnalignableDimension1 = maxUnalignableDimension + 1;
         
         TransitionProbabilities*        transitionProbabilityFactory;
-        DoubleMatrix*                   transitionProbabilities;
+        DoubleMatrix**                  transitionProbabilities;
         std::vector<double>             stateEquilibriumFrequencies; // resized once on construction of object and modified via reference
         int                             numStates, numStates1;
         

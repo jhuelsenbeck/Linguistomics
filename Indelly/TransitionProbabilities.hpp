@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "JphMatrix.hpp"
+#include "Container.hpp"
 #include "RbBitSet.h"
 #include "UserSettings.hpp"
 #include "Threads.hpp"
@@ -18,7 +18,7 @@ struct TransitionProbabilitiesInfo {
 
     int             numMatrices;
     int             numStates;
-    DoubleMatrix*   probs[2];
+    DoubleMatrix**  probs[2];
     DoubleMatrix*   a_mat;
     DoubleMatrix*   d_mat;
     DoubleMatrix*   n_mat;
@@ -44,7 +44,7 @@ class TransitionProbabilities {
         int                                             getNumStates(void) { return numStates; }
         std::vector<double>&                            getStationaryFrequencies(void) { return stationaryFreqs[activeProbs]; }
         void                                            getStationaryFrequencies(std::vector<double>& f);
-        DoubleMatrix*                                   getTransitionProbabilities(RbBitSet& bs);
+        DoubleMatrix**                                  getTransitionProbabilities(RbBitSet& bs);
         DoubleMatrix&                                   getTransitionProbabilities(RbBitSet& bs, int nodeIdx);
         void                                            initialize(Model* m, ThreadPool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm);
         void                                            print(void);

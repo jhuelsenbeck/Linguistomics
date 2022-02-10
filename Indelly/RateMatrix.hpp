@@ -2,7 +2,7 @@
 #define RateMatrix_hpp
 
 #include <vector>
-#include "JphMatrix.hpp"
+#include "Container.hpp"
 
 
 
@@ -14,7 +14,7 @@ class RateMatrix {
                                     return m;
                                 }
         std::vector<double>&    getEquilibriumFrequencies(void) { return equilibriumFrequencies[activeMatrix]; }
-        DoubleMatrix&           getRateMatrix(void) { return Q[activeMatrix]; }
+        DoubleMatrix&           getRateMatrix(void) { return *Q[activeMatrix]; }
         void                    flipActiveValues(void);
         void                    initialize(int d);
         void                    updateRateMatrix(std::vector<double>& rates, std::vector<double>& f);
@@ -25,7 +25,7 @@ class RateMatrix {
                                ~RateMatrix(void);
         int                     numStates;
         int                     activeMatrix;
-        DoubleMatrix*           Q;
+        DoubleMatrix*           Q[2];
         std::vector<double>     equilibriumFrequencies[2];
         bool                    isInitialized;
 };
