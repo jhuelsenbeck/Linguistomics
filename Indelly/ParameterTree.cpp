@@ -648,7 +648,7 @@ double ParameterTree::updateTreeLength(void) {
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
 
-    return (dpSeq.size()-1) * log(randomFactor);
+    return (double)(dpSeq.size()-1) * log(randomFactor);
 }
 
 double ParameterTree::updateTopologyFromPrior(void) {

@@ -24,7 +24,7 @@ class BufferTemplate {
         T*          end(void) { return endBuffer; }
         void        fill(T value);
         size_t      size(void) { return numElements; }
-        void        setZero(void) { fill(0); }
+        void        setZero(void);
         bool        operator==(const BufferTemplate<T>& a) const;
         bool        operator!=(const BufferTemplate<T>& a) const;
         void        operator+=(const BufferTemplate<T>& a);
@@ -141,9 +141,14 @@ void BufferTemplate<T>::create(size_t ne) {
 }
 
 template<typename T>
-void BufferTemplate<T>::fill(T value) {
+void BufferTemplate<T>::setZero() {
+    memzero(buffer, numElements * sizeof(T));
+}
 
-    memset(buffer, value, numElements * sizeof(T));
+template<typename T>
+void BufferTemplate<T>::fill(T value) {
+    ForElements(e)
+        *e = value;
 }
 
 template<typename T>
