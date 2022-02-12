@@ -5,10 +5,9 @@
 #include <iostream>
 #include <string>
 
-#define ForElements(v) for (T* v = buffer; v < endBuffer; ++v)
-#define ForLeftRight(a) const T* right = a; for (T* left = buffer; left < endBuffer; ++left, ++right)
+#define ForElements(v) for (auto v = this->begin(), end = this->end(); v < end; ++v)
+#define ForLeftRight(a) const auto* right = a.begin(); for (auto left = this->begin(), end = this->end(); left < end; ++left, ++right)
 #define IFVERIFY(condition) _ASSERT(condition); if (condition)
-
 
 
 #pragma mark - BufferTemplate Definition -
@@ -27,14 +26,14 @@ class BufferTemplate {
         void        setZero(void);
         bool        operator==(const BufferTemplate<T>& a) const;
         bool        operator!=(const BufferTemplate<T>& a) const;
-        void        operator+=(const BufferTemplate<T>& a);
         void        operator-=(const BufferTemplate<T>& a);
         void        operator|=(T c);
-        void        operator+=(T c);
         void        operator-=(T c);
         void        operator*=(T c);
         void        operator/=(T c);
         void        operator^=(T c);
+        void        add(T c);
+        void        add(const BufferTemplate<T>& a);
 
     protected:
                     BufferTemplate(void) = delete;
@@ -87,14 +86,17 @@ class MatrixTemplate : public BufferTemplate<T> {
         size_t              getNumCols(void) const { return numCols; }
         T                   getValue(size_t r, size_t c) const;
         void                setValue(size_t r, size_t c, T value);
-        void                setIdentity(T value=1);
+        void                setIdentity();
         void                print(void);
         void                print(std::string title);
         void                multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const;
+        void                add(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const;
+        void                add(const MatrixTemplate<T>& m) { BufferTemplate<T>::add(m);}
+        void                add(T c) { BufferTemplate<T>::add(c);}
         void                transpose(MatrixTemplate<T>& result);
+        void                copy(const MatrixTemplate<T>& other);
 
     protected:
-        void                copy(const MatrixTemplate<T>& other);
         size_t              numRows,
                             numCols;
 };
@@ -152,7 +154,7 @@ void BufferTemplate<T>::fill(T value) {
 }
 
 template<typename T>
-void BufferTemplate<T>::operator+=(T c) {
+void BufferTemplate<T>::add(T c) {
 
     ForElements(e)
         *e += c;
@@ -211,7 +213,7 @@ bool BufferTemplate<T>::operator!=(const BufferTemplate<T>& a) const {
 
     if (numElements != a.numElements)
         return true;
-     ForLeftRight(a)
+    ForLeftRight(a)
         {
         if (*left != *right)
             return true;
@@ -220,7 +222,7 @@ bool BufferTemplate<T>::operator!=(const BufferTemplate<T>& a) const {
 }
 
 template<typename T>
-void BufferTemplate<T>::operator+=(const BufferTemplate<T>& a) {
+void BufferTemplate<T>::add(const BufferTemplate<T>& a) {
 
     ForLeftRight(a)
         *left += *right;
@@ -291,7 +293,7 @@ MatrixTemplate<T>::MatrixTemplate(size_t nr, size_t nc) : BufferTemplate<T>::Buf
 
     numRows = nr;
     numCols = nc;
-    BufferTemplate<T>::fill(0);
+    BufferTemplate<T>::setZero();
 }
 
 template<typename T>
@@ -332,9 +334,7 @@ template<typename T>
 void MatrixTemplate<T>::copy(const MatrixTemplate<T>& other) {
 
     create(other.numRows, other.numCols);
-    numRows = other.numRows;
-    numCols = other.numCols;
-    memcpy(this->buffer, other.buffer, numRows * numCols * sizeof(T));
+    memcpy(this->buffer, other.buffer, this->numElements * sizeof(T));
 }
 
 template<typename T>
@@ -358,13 +358,14 @@ void MatrixTemplate<T>::setValue(size_t r, size_t c, T value) {
 }
 
 template<typename T>
-void MatrixTemplate<T>::setIdentity(T value) {
+void MatrixTemplate<T>::setIdentity() {
 
     IFVERIFY(numRows > 0 && numRows == numCols)
         {
-        BufferTemplate<T>::fill(0);
-        for (int i = 0; i < numRows; ++i)
-            setValue(i, i, value);
+        this->setZero();
+        auto nc1 = getNumCols() + 1;
+        for (auto end = this->end(), m = this->begin(); m < end; m += nc1)
+            *m = 1;
         }
 }
 
@@ -388,10 +389,19 @@ template<typename T>
 void MatrixTemplate<T>::transpose(MatrixTemplate<T>& result)  {
 
     result.Create(numCols, numRows);
-    for (int r = 0; r < numRows; ++r)
+    for (size_t r = 0; r < numRows; ++r)
         {
         for (int c = 0; c < numCols; ++c)
             result.setValue(c, r, getValue(r, c));
+        }
+}
+
+template<typename T>
+void MatrixTemplate<T>::add(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
+    IFVERIFY(numRows == m.numRows && numCols == m.numCols)
+        {
+        for (auto end = this->end(), a = this->begin(), b = m.begin(), r = result.begin(); a < end; a++, b++, r++)
+            *r = *a + *b;
         }
 }
 
@@ -400,18 +410,28 @@ void MatrixTemplate<T>::multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& 
 
     IFVERIFY (numCols == m.numRows)
         {
-        result.create(numRows, m.numCols);
-        for (size_t i = 0; i < numRows; ++i)
+        auto nrA = getNumRows();
+        auto ncA = getNumCols();
+        auto ncB = m.getNumCols();
+        result.create(nrA, ncB);
+
+        auto arow = this->begin();
+        auto t = result.begin();
+        for (size_t i = 0; i < nrA; i++)
             {
-            for (size_t j = 0; j < m.numCols; ++j)
+            for (size_t j = 0; j < ncB; j++)
                 {
-                T total = getValue(i, 0) * m.getValue(0, j);
-                for (size_t z = 1; z < m.numRows; ++z)
-                    total += getValue(i, z) * m.getValue(z, j);
-                result.SetValue(i, j, total);
+                auto acol = arow;
+                T sum = 0;
+                for (int k = 0; k < ncA; k++)
+                    sum += *acol++ * m.getValue(k, j);
+
+                *t++ = sum;
                 }
+
+            arow += ncA;
             }
-        }
+      }
 }
 
 

@@ -199,7 +199,7 @@ void TransitionProbabilities::initialize(Model* m, ThreadPool* p, std::vector<Al
                 for (int m=0; m<nNodes; m++)
                     {
                     info.probs[s][m] = new DoubleMatrix(numStates, numStates);
-                    MatrixMath::setIdentity(info.probs[s][m]);
+                    info.probs[s][m]->setIdentity();
                     }
                 }
             info.a_mat = new DoubleMatrix(numStates, numStates);
@@ -343,9 +343,9 @@ void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatri
     MatrixMath::multiplicationByScalar(Q, v, A);
 
 	// set up identity matrices
-    MatrixMath::setIdentity(D);
-    MatrixMath::setIdentity(N);
-    MatrixMath::setIdentity(X);
+    D->setIdentity();
+    N->setIdentity();
+    X->setIdentity();
 
 	double maxAValue = 0.0;
 	for (int i=0; i<numStates; i++)
@@ -366,13 +366,13 @@ void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatri
 
 		/* N = N + cX */
 		MatrixMath::multiplicationByScalar(X, c, cX);
-		MatrixMath::addTwoMatrices(N, cX, N);
+        N->add(*cX);
 
 		/* D = D + (-1)^k*cX */
 		int negativeFactor = (k % 2 == 0 ? 1 : -1);
 		if ( negativeFactor == -1 )
 			MatrixMath::multiplicationByScalar(cX, negativeFactor, cX);
-		MatrixMath::addTwoMatrices(D, cX, D);
+		D->add(*cX);
 		}
 
 	MatrixMath::gaussianElimination(D, N, P, scratch1, scratch2, scratchVec);
