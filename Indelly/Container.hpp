@@ -142,7 +142,7 @@ void BufferTemplate<T>::create(size_t ne) {
 
 template<typename T>
 void BufferTemplate<T>::setZero() {
-    memzero(buffer, numElements * sizeof(T));
+    memset(buffer, 0, numElements * sizeof(T));
 }
 
 template<typename T>
