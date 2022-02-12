@@ -556,8 +556,9 @@ class CalcRatesClass {
 
     RateScale = MaxLine / Max(Max(each Transition.Rates));
 
+    var mult = 2.0 * Graphics.OneEighty / Rule.Partitions.Length;
     foreach (var partition in Rule.Partitions) {
-      partition.Angle  = (2 * EachIndex *  Graphics.OneEighty / Rule.Partitions.Length) - Graphics.Ninety;
+      partition.Angle  = mult * EachIndex - Graphics.Ninety;
       partition.Radius = Sqrt(Real(Transition.Frequencies[EachIndex])) * fmax;
     }
 
@@ -595,8 +596,8 @@ class CalcRatesClass {
         }
         else if (EachIndex < pi) {
           var angle = Graphics.GetAngle(p1.Center, p2.Center);
-          var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle);
-          var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle + Graphics.OneEighty);
+          var c1    = Graphics.Adjust(p1.Center, p1.Radius - ArrowGap, angle);
+          var c2    = Graphics.Adjust(p2.Center, p2.Radius - ArrowGap, angle + Graphics.OneEighty);
 
           Graphics.Line(line, c1, c2) {
             Hover: new HoverClass(hint, HoverTypes.Tip);
@@ -663,7 +664,6 @@ class CalcRatesClass {
                   Fill: ChartColor(EachIndex);
                   Ellipse(Rect(0, 10 pts));
                 };
-                Tab;
                 partition.Filter;
               }
             }
