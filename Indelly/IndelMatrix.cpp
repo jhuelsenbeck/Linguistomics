@@ -23,6 +23,10 @@ void IndelMatrix::print(void) {
 void IndelMatrix::setNumSites(int ns) {
 
     if (ns > maxNumSites)
-        Msg::error("invalid attempt to increase the number of sites for an IndelMatrix");
+        {
+        maxNumSites *= 2;
+        MatrixTemplate<int>::create(maxNumSites, numTaxa);
+        Msg::warning("Increasing the number of sites for an IndelMatrix");
+        }
     numSites = ns;
 }

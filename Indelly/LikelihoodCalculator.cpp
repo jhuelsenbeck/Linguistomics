@@ -30,8 +30,8 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
     stateEquilibriumFrequencies.resize(numStates);
     
     allocateIndelProbabilities(numNodes);
-    allcoateIndelCombinatorics(numNodes, data->lengthOfLongestSequence()*3);
-    alignment = new IndelMatrix(numTaxa, data->lengthOfLongestSequence()*3); // numSites X numTaxa
+    allcoateIndelCombinatorics(numNodes, data->lengthOfLongestSequence()*5);
+    alignment = new IndelMatrix(numTaxa, data->lengthOfLongestSequence()*5); // numSites X numTaxa
 
     fI = new double* [numNodes];
     fI[0] = new double[numNodes * numStates1];
