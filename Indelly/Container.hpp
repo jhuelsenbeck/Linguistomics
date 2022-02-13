@@ -75,34 +75,41 @@ class BufferTemplate {
                 *left += *right;
         }
 
-        void operator-=(T c) {
+        void multiply(T scalar) {
 
             ForElements(e)
-                *e -= c;
+                *e *= scalar;
         }
 
-        void operator*=(T c) {
-
+        void multiply(T scalar, BufferTemplate<T>& result) const {
+            result.create(numElements);
+            auto r = result.begin();
             ForElements(e)
-                *e *= c;
+                *r++ = *e * scalar;
         }
 
-        void operator/=(T c) {
+        void operator-=(T scalar) {
 
             ForElements(e)
-                *e /= c;
+                *e -= scalar;
         }
 
-        void operator|=(T c) {
+        void operator/=(T scalar) {
 
             ForElements(e)
-                *e |= c;
+                *e /= scalar;
         }
 
-        void operator^=(T c) {
+        void operator|=(T scalar) {
 
             ForElements(e)
-                *e ^= c;
+                *e |= scalar;
+        }
+
+        void operator^=(T scalar) {
+
+            ForElements(e)
+                *e ^= scalar;
         }
 
         void operator-=(const BufferTemplate<T>& a) {
@@ -323,6 +330,17 @@ class MatrixTemplate : public BufferTemplate<T> {
             BufferTemplate<T>::add(m, result);
         }
 
+        void multiply(T scalar) {
+            BufferTemplate<T>::multiply(scalar);
+        }
+
+        void multiply(T scalar, MatrixTemplate<T>& result) const {
+            result.create(getNumRows(), getNumCols());
+            auto r = result.begin();
+            ForElements(e)
+                * r++ = *e * scalar;
+        }
+
         void multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
 
             _ASSERT(numCols == m.numRows);
@@ -332,7 +350,7 @@ class MatrixTemplate : public BufferTemplate<T> {
             result.create(rows, mcols);
 
             auto row = this->begin();
-            auto t = result.begin();
+            auto r = result.begin();
             auto mbegin = m.begin();
             for (size_t i = 0; i < rows; i++)
                 {
@@ -349,13 +367,26 @@ class MatrixTemplate : public BufferTemplate<T> {
                         mcol += mcols;
                         }
 
-                    *t++ = sum;
+                    *r++ = sum;
                     ++mrow;
                     }
 
                 row += cols;
                 }
         }
+
+        void square(MatrixTemplate<T>& scratch) {
+            // There is probably a faster way
+            multiply(*this, scratch);
+            copy(scratch);
+        }
+
+        void divideByPowerOfTwo(int power) {
+            if (power > 0)
+              multiply(1.0 / (double)(1 << power));
+        }
+
+
 
 
     protected:

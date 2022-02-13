@@ -341,7 +341,7 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
 void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatrix* A, DoubleMatrix* P, DoubleMatrix* D, DoubleMatrix* N, DoubleMatrix* X, DoubleMatrix* cX, int numStates, DoubleMatrix* scratch1, DoubleMatrix* scratch2, double* scratchVec) {
     
     // A is the matrix Q * v and p = exp(a)
-    MatrixMath::multiplicationByScalar(Q, v, A);
+    Q->multiply(v, *A);
 
 	// set up identity matrices
     D->setIdentity();
@@ -350,12 +350,15 @@ void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatri
 
 	double maxAValue = 0.0;
 	for (int i=0; i<numStates; i++)
-		maxAValue = ((maxAValue > (*A)(i,i) ) ? maxAValue : (*A)(i,i) );
+        {
+        auto ai = (*A)(i, i);
+		maxAValue = (maxAValue > ai ) ? maxAValue : ai;
+        }
 
 	int y = logBase2Plus1(maxAValue);
 	int j = (( 0 > y ) ? 0 : y);
 	
-	MatrixMath::divideMatrixByPowerOfTwo(A, j);
+	A->divideByPowerOfTwo(j);
 
 	double c = 1.0;
 	for (int k=1; k<=qValue; k++)
@@ -363,32 +366,31 @@ void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatri
 		c = c * (qValue - k + 1.0) / ((2.0 * qValue - k + 1.0) * k);
 
 		/* X = AX */
-		MatrixMath::multiplyTwoMatrices(A, X, X, scratch1);
+        A->multiply(*X, *scratch1);
+        X->copy(*scratch1);
+
 
 		/* N = N + cX */
-		MatrixMath::multiplicationByScalar(X, c, cX);
+		X->multiply(c, *cX);
         N->add(*cX);
 
 		/* D = D + (-1)^k*cX */
 		int negativeFactor = (k % 2 == 0 ? 1 : -1);
 		if ( negativeFactor == -1 )
-			MatrixMath::multiplicationByScalar(cX, negativeFactor, cX);
+			cX->multiply(negativeFactor);
 		D->add(*cX);
 		}
 
 	MatrixMath::gaussianElimination(D, N, P, scratch1, scratch2, scratchVec);
 
-	for (int k=0; k<j; k++)
-		MatrixMath::multiplyTwoMatrices(P, P, P, scratch1);
-	
-	for (int i=0; i<numStates; i++)
-		{
-		for (j=0; j<numStates; j++)
-			{
-			if ((*P)(i,j) < 0.0)
-				(*P)(i,j) = fabs( (*P)(i,j) );
-			}
-		}
+
+    // There is a faster way to do this if j is >= 4 routinely 
+	for (int k=0; k<j; k++) 
+        P->square(*scratch1);
+
+
+    for (auto p = P->begin(), end = P->end(); p < end; ++p)
+        *p = fabs(*p);
 }
 
 int logBase2Plus1(double x) {

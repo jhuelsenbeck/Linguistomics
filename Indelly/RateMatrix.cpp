@@ -102,7 +102,7 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
     for (int i=0; i<numStates; i++)
         averageRate += -f[i] * QM(i,i);
     double scaleFactor = 1.0 / averageRate;
-    MatrixMath::multiplicationByScalar(&QM, scaleFactor); // QM *= scaleFactor
+    QM.multiply(scaleFactor); // QM *= scaleFactor
             
 #   if 0
     std::cout << std::fixed << std::setprecision(5);

@@ -18,87 +18,66 @@ void MatrixMath::backSubstitutionRow(DoubleMatrix* U, double* b) {
     }
 }
 
-void MatrixMath::computeLandU(DoubleMatrix* A, DoubleMatrix* L, DoubleMatrix* U) {
-
-    int n = (int)A->getNumRows();
-
-    for (int j = 0; j < n; j++)
-    {
-        for (int k = 0; k < j; k++)
-            for (int i = k + 1; i < j; i++)
-                (*A)(i, j) = (*A)(i, j) - (*A)(i, k) * (*A)(k, j);
-
-        for (int k = 0; k < j; k++)
-            for (int i = j; i < n; i++)
-                (*A)(i, j) = (*A)(i, j) - (*A)(i, k) * (*A)(k, j);
-
-        for (int m = j + 1; m < n; m++)
-            (*A)(m, j) /= (*A)(j, j);
-    }
-
-    for (int row = 0; row < n; row++)
-    {
-        for (int col = 0; col < n; col++)
-        {
-            if (row <= col)
-            {
-                (*U)(row, col) = (*A)(row, col);
-                (*L)(row, col) = (row == col ? 1.0 : 0.0);
-            }
-            else
-            {
-                (*L)(row, col) = (*A)(row, col);
-                (*U)(row, col) = 0.0;
-            }
-        }
-    }
-}
-
-void MatrixMath::divideMatrixByPowerOfTwo(DoubleMatrix* M, int power) {
-
-#   if defined(ROW_MAJOR_ORDER)
-
-    int divisor = 1;
-    for (int i = 0; i < power; i++)
-        divisor = divisor * 2;
-    double factor = 1.0 / divisor;
-    for (auto mPtr = M->begin(); mPtr != M->end(); mPtr++)
-        *mPtr *= factor;
-
-#   else
-
-    int divisor = 1;
-    for (int i = 0; i < power; i++)
-        divisor = divisor * 2;
-
-    int nr = (int)M->getNumRows();
-    int nc = (int)M->getNumCols();
-
-    double factor = 1.0 / divisor;
-    for (int i = 0; i < nr; i++)
-        for (int j = 0; j < nc; j++)
-            (*M)[i][j] *= factor;
-
-#   endif
-}
-
 void MatrixMath::forwardSubstitutionRow(DoubleMatrix* L, double* b) {
 
-    int n = (int)L->getNumRows();
+    size_t n = L->getNumRows();
 
     b[0] = b[0] / (*L)(0, 0);
-    for (int i = 1; i < n; i++)
+    for (size_t i = 1; i < n; i++)
     {
         double dotProduct = 0.0;
-        for (int j = 0; j < i; j++)
+        for (size_t j = 0; j < i; j++)
             dotProduct += (*L)(i, j) * b[j];
         b[i] = (b[i] - dotProduct) / (*L)(i, i);
     }
 }
 
+void MatrixMath::computeLandU(DoubleMatrix* A, DoubleMatrix* L, DoubleMatrix* U) {
+
+    size_t n = A->getNumRows();
+
+    for (size_t j = 0; j < n; j++)
+    {
+        for (size_t k = 0; k < j; k++)
+            for (size_t i = k + 1; i < j; i++)
+                (*A)(i, j) -= (*A)(i, k) * (*A)(k, j);
+
+        for (size_t k = 0; k < j; k++)
+            for (size_t i = j; i < n; i++)
+                (*A)(i, j) -= (*A)(i, k) * (*A)(k, j);
+
+        for (size_t m = j + 1; m < n; m++)
+            (*A)(m, j) /= (*A)(j, j);
+    }
+
+    auto u = U->begin();
+    auto l = L->begin();
+    auto a = A->begin();
+    for (size_t row = 0; row < n; row++)
+    {
+        for (size_t col = 0; col < n; col++)
+        {
+            if (row <= col)
+            {
+                *u = *a;
+                *l = (row == col ? 1.0 : 0.0);
+            }
+            else
+            {
+                *l = *a;
+                *u = 0.0;
+            }
+
+            ++l;
+            ++u;
+            ++a;
+        }
+    }
+}
+
 void MatrixMath::gaussianElimination(DoubleMatrix* A, DoubleMatrix* B, DoubleMatrix* X, DoubleMatrix* L, DoubleMatrix* U, double* b) {
 
-    int n = (int)A->getNumRows();
+    auto n = A->getNumRows();
 
     computeLandU(A, L, U);
 
@@ -116,52 +95,4 @@ void MatrixMath::gaussianElimination(DoubleMatrix* A, DoubleMatrix* B, DoubleMat
         for (int i = 0; i < n; i++)
             (*X)(i, k) = b[i];
     }
-}
-
-void MatrixMath::multiplicationByScalar(DoubleMatrix* M, double c) {
-
-#   if defined(ROW_MAJOR_ORDER)
-
-    for (auto mPtr = M->begin(); mPtr != M->end(); mPtr++)
-        *mPtr *= c;
-
-#   else
-
-    int nr = (int)M->getNumRows();
-    int nc = (int)M->getNumCols();
-    for (int i = 0; i < nr; i++)
-        for (int j = 0; j < nc; j++)
-            (*M)[i][j] *= c;
-
-#   endif
-}
-
-void MatrixMath::multiplicationByScalar(DoubleMatrix* M, double c, DoubleMatrix* Res) {
-
-#   if defined(ROW_MAJOR_ORDER)
-
-    if (M->size() != Res->size() || M->getNumRows() != Res->getNumRows())
-        Msg::error("Error in matrix dimensions in multiplicationByScalar");
-
-    for (auto end = M->end(), mPtr = M->begin(), resPtr = Res->begin(); mPtr != end; mPtr++, resPtr++)
-        *resPtr = (*mPtr) * c;
-
-#   else
-
-    int nr = (int)M->getNumRows();
-    int nc = (int)M->getNumCols();
-
-    if (nr != Res->getNumRows() || nc != Res->getNumCols())
-        Msg::error("Error in matrix dimensions in multiplicationByScalar");
-
-    for (int i = 0; i < nr; i++)
-        for (int j = 0; j < nc; j++)
-            (*Res)[i][j] = (*M)[i][j] * c;
-
-#   endif
-}
-
-void MatrixMath::multiplyTwoMatrices(const DoubleMatrix* A, const DoubleMatrix* B, DoubleMatrix* C, DoubleMatrix* temp) {
-    A->multiply(*B, *temp);
-    C->copy(*temp);
 }
