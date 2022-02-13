@@ -193,13 +193,14 @@ void TransitionProbabilities::initialize(Model* m, ThreadPool* p, std::vector<Al
             TransitionProbabilitiesInfo info;
             info.numMatrices = nNodes;
             info.numStates = numStates;
+
             for (int s=0; s<2; s++)
                 {
                 info.probs[s] = new DoubleMatrix*[nNodes];
-                for (int m=0; m<nNodes; m++)
+                for (int mi=0; mi<nNodes; mi++)
                     {
-                    info.probs[s][m] = new DoubleMatrix(numStates, numStates);
-                    info.probs[s][m]->setIdentity();
+                    info.probs[s][mi] = new DoubleMatrix(numStates, numStates);
+                    info.probs[s][mi]->setIdentity();
                     }
                 }
             info.a_mat = new DoubleMatrix(numStates, numStates);
