@@ -226,7 +226,7 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
             if (state[ptr] == used)
                 {
                 pos->subtract( alignment[ptr] );
-                state[ptr] = free;
+                state[ptr] = freeToUse;
                 }
             --ptr;
             }
@@ -548,7 +548,8 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
             if (iI > 0 && jJ > 0)
                 {
                 int iCounter = 0;
-                double iTempdouble3 = 0.0;
+                //double iTempdouble3 = 0.0;
+                iTempdouble3 = 0.0;
                 for (int l=0; l<yProfile[lftChild]; l++)
                     for (int m=0; m<yProfile[rhtChild]; m++)
                         {

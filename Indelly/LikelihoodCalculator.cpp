@@ -313,7 +313,7 @@ double LikelihoodCalculator::lnLikelihood(void) {
         if (indelCombos.state[ptr] == used)
             {
             pos->subtract( alignment->getRow(ptr), numTaxa );
-            indelCombos.state[ptr] = free;
+            indelCombos.state[ptr] = freeToUse;
             }
         --ptr;
         }

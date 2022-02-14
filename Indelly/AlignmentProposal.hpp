@@ -49,7 +49,7 @@ class AlignmentProposal {
         double                              basis;
         int                                 maxlength;
         int                                 maxUnalignDimension;
-        enum                                StateLabels { free, possible, edgeUsed, used };
+        enum                                StateLabels { freeToUse, possible, edgeUsed, used };
         static int                          bigUnalignableRegion;
         std::vector<IntVector*>             pool;
         std::set<IntVector*>                allocated;
