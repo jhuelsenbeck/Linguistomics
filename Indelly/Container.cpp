@@ -1,22 +1,10 @@
 #include "container.hpp"
 
 
-BufferAllocator::BufferAllocator(size_t size, size_t elements) {
-    startBuffer = nullptr;
-    endBuffer = nullptr;
-    elementSize = size;
-    numElements = 0;
-    bufSize = 0;
-    create(elements);
-}
-
-BufferAllocator::BufferAllocator(const BufferAllocator &b) {
-    startBuffer = nullptr;
-    endBuffer = nullptr;
-    elementSize = b.elementSize;
-    numElements = 0;
-    bufSize = 0;
-    copy(b);
+BufferAllocator::BufferAllocator() {
+    buffer = nullptr;
+    currentSize = 0;
+    maxSize = 0;
 }
 
 BufferAllocator::~BufferAllocator() {
@@ -24,51 +12,42 @@ BufferAllocator::~BufferAllocator() {
 }
 
 void BufferAllocator::deallocate() {
-    if (startBuffer) 
+    if (buffer) 
         {
-        free(startBuffer);
-        startBuffer = nullptr;
-        endBuffer   = nullptr;
-        numElements = 0;
-        bufSize = 0;
-        }
-}
-
-void BufferAllocator::create(size_t elements) {
-    if (elements != numElements)
-    {
-        if (numElements > 0)
-            deallocate();
-        if (elements > 0) {
-            bufSize = elementSize * elements;
-            startBuffer = (char*)malloc(bufSize);
-        }
-        numElements = elements;
-        endBuffer = startBuffer + bufSize;
+        free(buffer);
+        buffer = nullptr;
+        currentSize = 0;
+        maxSize = 0;
     }
 }
 
+void BufferAllocator::allocate(size_t size) {
+    if (size > maxSize)
+    {
+        deallocate();
+        if (size > 0) 
+            buffer = (char*)malloc(size);
+        maxSize = size;
+    }
+    currentSize = size;
+}
+
 void BufferAllocator::setZero() {
-    memset(startBuffer, 0, bufSize);
+    memset(buffer, 0, currentSize);
 }
 
 void BufferAllocator::copy(const BufferAllocator &b) {
 
-    create(b.numElements);
-    memcpy(startBuffer, b.startBuffer, bufSize);
+    allocate(b.currentSize);
+    memcpy(buffer, b.buffer, currentSize);
 }
 
 bool BufferAllocator::operator==(const BufferAllocator& b) const {
-    if (numElements != b.numElements)
-        return false;
-    return memcmp(startBuffer, b.startBuffer, bufSize) == 0;
+    return currentSize == b.currentSize && memcmp(buffer, b.buffer, currentSize) == 0;
 }
 
 bool BufferAllocator::operator!=(const BufferAllocator& b) const {
-
-    if (numElements != b.numElements)
-        return true;
-    return memcmp(startBuffer, b.startBuffer, bufSize) != 0;
+    return currentSize != b.currentSize ||memcmp(buffer, b.buffer, currentSize) != 0;
 }
 
 
