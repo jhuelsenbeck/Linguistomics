@@ -89,7 +89,7 @@ class LikelihoodCalculator {
         std::vector<double>             stateEquilibriumFrequencies; // resized once on construction of object and modified via reference
         int                             numStates, numStates1;
         
-        enum                            StateLabels { free, possible, edgeUsed, used };
+        enum                            StateLabels { freeToUse, possible, edgeUsed, used };
         IndelProbabilities              indelProbs;
         IndelCombinatorics              indelCombos;
         double**                        fH;    // fH and fI can be replaced by Shawn's container class later

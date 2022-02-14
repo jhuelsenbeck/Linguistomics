@@ -272,14 +272,12 @@ double ParameterEquilibirumFrequencies::update(void) {
         alphaForward.resize(numStates, 0.0);
         alphaReverse.resize(numStates, 0.0);
 
-        std::vector<double> alphaForward(numStates);
         for (int i=0; i<numStates; i++)
             {
             oldValues[i] = freqs[0][i];
             alphaForward[i] = oldValues[i] * alpha0;
             }
         
-        std::vector<double> newValues(numStates);
         Probability::Dirichlet::rv(rv, alphaForward, newValues);
         normalize(newValues, minVal);
         
