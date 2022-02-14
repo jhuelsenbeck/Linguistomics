@@ -64,6 +64,6 @@ class AlignmentProposal {
         int                                 numStates;
         double**                            scoring;
         std::vector<std::vector<int> >      tempProfile;
-        int**                               dp;
+        double**                            dp;
 };
 #endif
