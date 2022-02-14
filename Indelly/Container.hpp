@@ -7,6 +7,7 @@
 
 #define ForElements(v) for (auto v = this->begin(), end = this->end(); v < end; ++v)
 #define ForLeftRight(a) const auto* right = a.begin(); for (auto left = this->begin(), end = this->end(); left < end; ++left, ++right)
+#define SIZEASSERT(condition)
 
 #pragma mark - BufferTemplate Definition -
 
@@ -288,7 +289,7 @@ class MatrixTemplate : public BufferTemplate<T> {
 
         void setIdentity() {
 
-            _ASSERT(numRows == numCols);
+            SIZEASSERT(numRows == numCols);
             this->setZero();
             auto cols1 = getNumCols() + 1;
             for (auto end = this->end(), c = this->begin(); c < end; c += cols1)
@@ -321,12 +322,12 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void add(const MatrixTemplate<T>& m) {
-            _ASSERT(numRows == m.numRows && numCols == m.numCols);
+            SIZEASSERT(numRows == m.numRows && numCols == m.numCols);
             BufferTemplate<T>::add(m);
         }
 
         void add(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
-            _ASSERT(numRows == m.numRows && numCols == m.numCols);
+            SIZEASSERT(numRows == m.numRows && numCols == m.numCols);
             BufferTemplate<T>::add(m, result);
         }
 
@@ -343,7 +344,7 @@ class MatrixTemplate : public BufferTemplate<T> {
 
         void multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
 
-            _ASSERT(numCols == m.numRows);
+            SIZEASSERT(numCols == m.numRows);
             auto rows = getNumRows();
             auto cols = getNumCols();
             auto mcols = m.getNumCols();
@@ -373,12 +374,6 @@ class MatrixTemplate : public BufferTemplate<T> {
 
                 row += cols;
                 }
-        }
-
-        void square(MatrixTemplate<T>& scratch) {
-            // There is probably a faster way
-            multiply(*this, scratch);
-            copy(scratch);
         }
 
         void divideByPowerOfTwo(int power) {

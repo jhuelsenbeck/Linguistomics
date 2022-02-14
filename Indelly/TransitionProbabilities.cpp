@@ -386,7 +386,10 @@ void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatri
 
     // There is a faster way to do this if j is >= 4 routinely 
 	for (int k=0; k<j; k++) 
-        P->square(*scratch1);
+        {
+        P->multiply(*P, *scratch1);
+        P->copy(*scratch1);
+        }
 
 
     for (auto p = P->begin(), end = P->end(); p < end; ++p)

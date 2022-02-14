@@ -245,7 +245,7 @@ double ParameterEquilibirumFrequencies::update(void) {
         normalize(newValues, minVal);
         
         // fill in the Dirichlet parameters for the reverse probability calculations
-        for (size_t i=0; i<k+1; i++)
+        for (int i=0; i<k+1; i++)
             alphaReverse[i] = newValues[i] * alpha0;
         
         // fill in the full vector
