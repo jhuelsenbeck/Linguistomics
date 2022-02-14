@@ -4,59 +4,49 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <assert.h>
 
 #define ForElements(v) for (auto v = this->begin(), end = this->end(); v < end; ++v)
 #define ForLeftRight(a) const auto* right = a.begin(); for (auto left = this->begin(), end = this->end(); left < end; ++left, ++right)
-#define SIZEASSERT(condition)
 
 #pragma mark - BufferTemplate Definition -
 
 
+class BufferAllocator {
+    public:
+        explicit BufferAllocator(size_t size, size_t elements);
+        explicit BufferAllocator(const BufferAllocator& b);
+        virtual ~BufferAllocator();
+        virtual void deallocate();
+        void create(size_t ne);
+        void copy(const BufferAllocator& b);
+        void setZero();
+        bool operator==(const BufferAllocator &b) const;
+        bool operator!=(const BufferAllocator &b) const;
+
+    protected:
+        char* startBuffer;
+        char* endBuffer;
+        size_t numElements;
+
+    private:
+        size_t bufSize;
+        size_t elementSize;
+};
+
+
 template<typename T>
-class BufferTemplate {
+class BufferTemplate: public BufferAllocator {
 
     public:
-        explicit BufferTemplate(const BufferTemplate<T>& a) {
-            create(a.numElements);
-            if (numElements)
-                memcpy(buffer, a.buffer, numElements * sizeof(T));
+        explicit BufferTemplate(const BufferTemplate<T>& a):
+            BufferAllocator(a)
+        {
         }
 
-        explicit BufferTemplate(size_t ne) {
-
-            numElements = 0;
-            create(ne);
-        }
-
-        ~BufferTemplate(void) {
-
-            delete[] buffer;
-        }
-
-        
-        void create(size_t ne) {
-
-            if (ne != numElements)
-            {
-                if (numElements > 0)
-                    delete[] buffer;
-                if (ne > 0)
-                    buffer = new T[ne];
-                else
-                    buffer = NULL;
-            }
-            numElements = ne;
-            endBuffer = buffer + numElements;
-        }
-
-        void setZero() {
-            memset(this->begin(), 0, numElements * sizeof(T));
-        }
-
-        void copy(const BufferTemplate<T> &a) {
-
-            create(a.numElements);
-            memcpy(this->begin(), a.begin(), sizeof(T)* this->numElements);
+        explicit BufferTemplate(size_t ne):
+            BufferAllocator(sizeof(T), ne)
+        {
         }
 
         void fill(T value) {
@@ -119,29 +109,11 @@ class BufferTemplate {
                 *left -= *right;
         }
 
-        bool operator==(const BufferTemplate<T>& a) const {
-            if (numElements != a.numElements)
-                return false;
-            return memcmp(this->begin(), a.begin(), numElements * sizeof(T)) == 0;
-        }
-
-        bool operator!=(const BufferTemplate<T>& a) const {
-
-            if (numElements != a.numElements)
-                return true;
-            return memcmp(this->begin(), a.begin(), numElements * sizeof(T)) != 0;
-        }
-
-        const T*    begin(void) const { return buffer; }
-        T*          begin(void) { return buffer; }
-        const T*    end(void) const { return endBuffer; }
-        T*          end(void) { return endBuffer; }
+        const T*    begin(void) const { return (T*)startBuffer; }
+        T*          begin(void) { return (T*)startBuffer; }
+        const T*    end(void) const { return (T*)endBuffer; }
+        T*          end(void) { return (T*)endBuffer; }
         size_t      size(void) { return numElements; }
-
-    protected:
-        T*          buffer;
-        T*          endBuffer;
-        size_t      numElements;
 };
 
 
@@ -152,11 +124,12 @@ template<typename T>
 class ArrayTemplate: public BufferTemplate<T> {
 
     public:
+/*
         ArrayTemplate(void) {
 
             create(1);  // why?
         }
-
+*/
         
         ArrayTemplate(size_t ne) {
 
@@ -180,10 +153,10 @@ class ArrayTemplate: public BufferTemplate<T> {
          }
 
         T operator[](size_t i) const { 
-            return this->buffer[i]; 
+            return this->begin()[i]; 
         }
 
-        T getValue(size_t i) const { return this->buffer[i]; }
+        T getValue(size_t i) const { return this->begin()[i]; }
 
         void copy(const ArrayTemplate<T>& other) {
             BufferTemplate<T>::copy(other);
@@ -198,14 +171,14 @@ template<typename T>
 class MatrixTemplate : public BufferTemplate<T> {
 
     public:
-        MatrixTemplate(void) : 
+/*        MatrixTemplate(void) : 
             BufferTemplate<T>::BufferTemplate(1) 
         {
 
             numRows = 1;
             numCols = 1;
         }
-
+*/
         explicit MatrixTemplate(const MatrixTemplate<T>& m) : 
             BufferTemplate<T>::BufferTemplate(m) 
         {
@@ -214,12 +187,12 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         explicit MatrixTemplate(size_t nr, size_t nc) : 
-            BufferTemplate<T>::BufferTemplate(nr* nc) 
+            BufferTemplate<T>::BufferTemplate(nr * nc) 
         {
 
             numRows = nr;
             numCols = nc;
-            BufferTemplate<T>::setZero();
+            this->setZero();
         }
 
         MatrixTemplate<T>& operator=(const MatrixTemplate<T>& rhs) {
@@ -230,24 +203,26 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         T& operator()(size_t r, size_t c) { 
-            return this->buffer[r * numCols + c]; 
+            return this->begin()[r * numCols + c];
         }
 
         const T& operator()(size_t r, size_t c) const { 
-            return this->buffer[r * numCols + c]; 
+            return this->begin()[r * numCols + c];
         }
 
         size_t getNumRows() const {return numRows;}
         size_t getNumCols() const { return numCols; }
+        T* getRow(int r) { return this->begin() + r * numCols; }
+
 
         T getValue(size_t r, size_t c) const {
 
-            return this->buffer[r * numCols + c];
+            return this->begin()[r * numCols + c];
         }
 
         void setValue(size_t r, size_t c, T value) {
 
-            this->buffer[r * numCols + c] = value;
+            this->begin()[r * numCols + c] = value;
         }
 
         void print(void) {
@@ -275,9 +250,9 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void copy(const MatrixTemplate<T>& other) {
-
-            create(other.numRows, other.numCols);
-            memcpy(this->buffer, other.buffer, this->numElements * sizeof(T));
+            BufferTemplate<T>::copy(other);
+            numRows = other.numRows;
+            numCols = other.numCols;
         }
 
         void create(size_t nr, size_t nc) {
@@ -289,7 +264,7 @@ class MatrixTemplate : public BufferTemplate<T> {
 
         void setIdentity() {
 
-            SIZEASSERT(numRows == numCols);
+            assert(numRows == numCols);
             this->setZero();
             auto cols1 = getNumCols() + 1;
             for (auto end = this->end(), c = this->begin(); c < end; c += cols1)
@@ -322,12 +297,12 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void add(const MatrixTemplate<T>& m) {
-            SIZEASSERT(numRows == m.numRows && numCols == m.numCols);
+            assert(numRows == m.numRows && numCols == m.numCols);
             BufferTemplate<T>::add(m);
         }
 
         void add(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
-            SIZEASSERT(numRows == m.numRows && numCols == m.numCols);
+            assert(numRows == m.numRows && numCols == m.numCols);
             BufferTemplate<T>::add(m, result);
         }
 
@@ -344,7 +319,7 @@ class MatrixTemplate : public BufferTemplate<T> {
 
         void multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
 
-            SIZEASSERT(numCols == m.numRows);
+            assert(numCols == m.numRows);
             auto rows = getNumRows();
             auto cols = getNumCols();
             auto mcols = m.getNumCols();

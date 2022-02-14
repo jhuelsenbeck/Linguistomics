@@ -5,12 +5,11 @@
 
 
 
-class IndelMatrix : public MatrixTemplate<int> {
+class IndelMatrix : public IntMatrix {
 
     public:
                     IndelMatrix(void) = delete;
                     IndelMatrix(int nt, int maxNs);
-        int*        getRow(int r) { return &(this->buffer[r * numCols]); }
         int         getNumTaxa(void) { return numTaxa; }
         int         getNumSites(void) { return numSites; }
         void        print(void);

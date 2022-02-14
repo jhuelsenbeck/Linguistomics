@@ -3,7 +3,7 @@
 #include "Msg.hpp"
 
 
-IndelMatrix::IndelMatrix(int nt, int maxNs) : MatrixTemplate<int>::MatrixTemplate(maxNs, nt) {
+IndelMatrix::IndelMatrix(int nt, int maxNs) : IntMatrix(maxNs, nt) {
 
     numTaxa = nt;
     maxNumSites = maxNs;
@@ -25,7 +25,7 @@ void IndelMatrix::setNumSites(int ns) {
     if (ns > maxNumSites)
         {
         maxNumSites *= 2;
-        MatrixTemplate<int>::create(maxNumSites, numTaxa);
+        IntMatrix::create(maxNumSites, numTaxa);
         Msg::warning("Increasing the number of sites for an IndelMatrix");
         }
     numSites = ns;
