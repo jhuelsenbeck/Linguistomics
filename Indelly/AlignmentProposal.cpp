@@ -58,13 +58,13 @@ AlignmentProposal::AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVaria
     state.resize(3*maxUnalignDimension);
     numStates = alignmentParm->getNumStates();
 
-    dp = new int*[maxlength];
-    dp[0] = new int[maxlength*maxlength];
+    dp = new double*[maxlength];
+    dp[0] = new double[maxlength*maxlength];
     for (int i=1; i<maxlength; i++)
         dp[i] = dp[i-1] + maxlength;
     for (int i=0; i<maxlength; i++)
         for (int j=0; j<maxlength; j++)
-            dp[i][j] = 0;
+            dp[i][j] = 0.0;
         
     scoring = new double*[numStates];
     scoring[0] = new double[numStates*numStates];
