@@ -26,7 +26,7 @@ void BufferAllocator::allocate(size_t size) {
     {
         deallocate();
         if (size > 0) 
-            buffer = (char*)malloc(size);
+            buffer = malloc(size);
         maxSize = size;
     }
     currentSize = size;
