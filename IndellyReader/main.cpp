@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
             show = true;
             summary.readAlnFile(filePath, settings.getBurnIn());
             }
-        else if (fileExtension == ".tre")
+        else if (fp.filename() == "out.tre")
             {
             show = true;
             summary.readTreFile(filePath, settings.getBurnIn());
