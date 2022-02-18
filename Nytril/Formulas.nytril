@@ -25,7 +25,6 @@ namespace sym {
   j     = Classical "j";
   r     = Classical "r";
   n     = Classical "n";
-  e     = Classical "e";
   q     = Extra "q";
   qij   = sym.q sub sym.ij;
   qii   = sym.q sub sym.ii;
@@ -137,6 +136,7 @@ namespace Defs {
   PossibleRootedTrees     = new DefClass(#7a776122-8f31-49ff-94e0-e8124fa9b5b5#, Span {TextFamily: TextFamilies.TimesNewRoman; Bold; "ℬ"}, "Possible rooted trees", "");
   BN                      = new DefClass(#c7fecde1-fcb0-4b68-9bc2-69622b63a7f6#, Span {PossibleRootedTrees; InParens {NumLanguages}}, "Possible rooted trees as a function of the number of languages", "");
   FunctionF               = new DefClass(#431c5ec9-7a2b-433d-8bff-b4d9bfa37704#, Classical "f", "Function");
+  EulerNumber             = new DefClass(#431c5ec9-7a2b-433d-8bff-b4d9bfa37704#, Classical "e", "Root of the natural log or Euler number");
 
 
 }
@@ -372,6 +372,43 @@ namespace Equations {
           PP;
         };
         PO;
+      }
+    };
+  };
+
+  RateChange = new EquationClass(#f7a964f6-414b-4e40-9d31-e63eadf32f8f#, "Rate change") {
+    Line: EquationPar {
+      sym.qij;
+      Tex.geq;
+      0;
+      InParens {
+        sym.i;
+        Tex.neq;
+        sym.j;
+      }
+    };
+  };
+
+  RatesOfChangeBetweenStates = new EquationClass (#a7b02873-4fe5-47b8-9e3f-b594aef21fc3#, "Rates of change between all pairs of states") {
+    Line: EquationPar {
+      RateMatrix;
+      Equals;
+      InBraces {sym.qij};
+      Equals;
+      StateSection.StateMatrix;
+      Space;
+      RateMatrixScale;
+    };
+  };
+
+  DiagonalElements = new EquationClass(#49b4a095-118d-4bbe-9fe3-80a5e13ddf28#, "The diagonal elements of the rate matrix") {
+    Line: EquationPar {
+      sym.qii;
+      Equals;
+      Negative;
+      Summation {
+        Lower: Span {sym.j Tex.neq; sym.i};
+        sym.qij;
       }
     };
   };

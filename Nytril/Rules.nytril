@@ -3,11 +3,14 @@ using Format, Units, Features, Math, Style;
 
 class FilterClass {
   field        Name;
+  var          CircleName;
   ResultsClass Results;
 
   Constructor(ResultsClass results, name) {
     Results = results;
     Name    = name;
+    CircleName = name.Substitute(name.FindIndex(c => c == Space), LineBreak);
+
   }
 
   virtual Matches(SegmentClass segment) = true;
@@ -618,13 +621,13 @@ class CalcRatesClass {
       };
 
       var c = LayoutSize(TestText(p1)).Width;
-      CircleText(p1, pos, fsize, p1.Radius * 14 / c);
+      CircleText(p1, pos, fsize, Math.Min([12 pts, p1.Radius * 20 / c]));
     }
   };
 
   TestText(PartitionClass p) = Paragraph {
     TextHeight: 10 pts;
-    p.Filter;
+    p.Filter.CircleName;
   };
 
   CircleText(PartitionClass p, pos, fsize, textheight) = HBox {
@@ -635,7 +638,7 @@ class CalcRatesClass {
       Width: fsize;
       TextHeight: textheight;
       ParAlignment: ParAlignments.Center;
-      p.Filter;
+      p.Filter.CircleName;
     };
   };
 
