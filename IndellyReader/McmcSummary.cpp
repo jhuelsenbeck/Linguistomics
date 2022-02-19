@@ -25,6 +25,8 @@ McmcSummary::~McmcSummary(void) {
 
     for (int i=0; i<stats.size(); i++)
         delete stats[i];
+    if (statePartitions != NULL)
+        delete statePartitions;
 }
 
 void McmcSummary::addPartion(std::map<RbBitSet,double>& parts) {
@@ -182,7 +184,7 @@ std::string McmcSummary::interpretTreeString(std::string str) {
 
 void McmcSummary::print(void) {
 
-    // print summary of csv file
+    // print summary of tsv file
     std::vector<CredibleInterval> cis = getCredibleIntervals();
     std::vector<double> means = getMeans();
     std::cout << std::fixed << std::setprecision(4);
@@ -193,6 +195,8 @@ void McmcSummary::print(void) {
         std::cout << cis[i].lower << ", " << cis[i].upper << ")";
         std::cout << std::endl;
         }
+        
+    printPartitionFreqs();
         
     // print summary of aln files
     for (int i=0; i<alignments.size(); i++)
@@ -218,6 +222,133 @@ void McmcSummary::print(void) {
         }
     conTree->print();
     std::cout << conTree->getNewick(4) << std::endl;
+    
+    std::vector<int> dist(1000,0);
+    int maxSize = 0;
+    std::cout << "raw = c(";
+    for (int i=0; i<alignments.size(); i++)
+        {
+        int ciSize = alignments[i]->ciSize();
+        if (ciSize > maxSize)
+            maxSize = ciSize;
+        dist[ciSize]++;
+
+        std::cout << ciSize;
+        if (i + 1 != alignments.size())
+            std::cout << ",";
+        }
+    std::cout << ")" << std::endl;
+
+    for (int i=1; i<maxSize; i++)
+        std::cout << i << " -- " << dist[i] << std::endl;
+    std::cout << "v = c(";
+    for (int i=1; i<maxSize; i++)
+        {
+        std::cout << i;
+        if (i + 1 != maxSize)
+            std::cout << ",";
+        }
+    std::cout << ")" << std::endl;
+    
+    std::cout << "x = c(";
+    for (int i=1; i<maxSize; i++)
+        {
+        std::cout << dist[i];
+        if (i + 1 != maxSize)
+            std::cout << ",";
+        }
+    std::cout << ")" << std::endl;
+    
+    std::cout << "x <- c(";
+    for (int i=0; i<alignments.size(); i++)
+        {
+        Alignment* map = alignments[i]->getMapAlignment();
+        std::map<double,double> gaps = map->gapInfo();
+        for (std::map<double,double>::iterator it = gaps.begin(); it != gaps.end(); it++)
+            std::cout << it->first << ",";
+        }
+    std::cout << std::endl;
+    std::cout << "y <- c(";
+    for (int i=0; i<alignments.size(); i++)
+        {
+        Alignment* map = alignments[i]->getMapAlignment();
+        std::map<double,double> gaps = map->gapInfo();
+        for (std::map<double,double>::iterator it = gaps.begin(); it != gaps.end(); it++)
+            std::cout << it->second << ",";
+        }
+    std::cout << std::endl;
+
+}
+
+void McmcSummary::printPartitionSet(void) {
+
+    if (statePartitions != NULL)
+        statePartitions->print();
+}
+
+void McmcSummary::printPartitionFreqs(void) {
+
+    if (statePartitions != NULL)
+        {
+        std::vector<double> subsetFreqs(statePartitions->numSubsets(), 0.0);
+        for (int i=0; i<stats.size(); i++)
+            {
+            std::string statName = stats[i]->getName();
+             if (statName[0] == 'F')
+                {
+                statName.erase(remove(statName.begin(), statName.end(), 'F'), statName.end());
+                statName.erase(remove(statName.begin(), statName.end(), '['), statName.end());
+                statName.erase(remove(statName.begin(), statName.end(), ']'), statName.end());
+                int idx = atoi(statName.c_str());
+                int pIdx = statePartitions->indexOfSubsetWithValue(idx);
+                subsetFreqs[pIdx-1] += stats[i]->getMean();
+                //std::cout << statName << " " << idx << " " << pIdx << std::endl;
+                }
+            }
+            
+        double maxFreq = 0.0;
+        for (int i=0; i<subsetFreqs.size(); i++)
+            {
+            if (subsetFreqs[i] > maxFreq)
+                maxFreq = subsetFreqs[i];
+            }
+        double maxR = sqrt(maxFreq / 3.14);
+
+        for (int i=0; i<subsetFreqs.size(); i++)
+            {
+            double r = (sqrt(subsetFreqs[i] / 3.14) / maxR) * 100.0;
+            std::cout << "Subset " << i+1 << " freqeuncy = " << subsetFreqs[i] << " " << r << std::endl;
+            }
+            
+            
+            
+            
+        
+        double maxVal = 0.0;
+        for (int i=0; i<stats.size(); i++)
+            {
+            std::string statName = stats[i]->getName();
+             if (statName[0] == 'R')
+                {
+                if (stats[i]->getMean() > maxVal)
+                    maxVal = stats[i]->getMean();
+                }
+            }
+        std::cout << "maxVal = " << maxVal << std::endl;
+        maxR = sqrt(maxVal / 3.14);
+        for (int i=0; i<stats.size(); i++)
+            {
+            std::string statName = stats[i]->getName();
+             if (statName[0] == 'R')
+                {
+                double r = (sqrt(stats[i]->getMean() / 3.14) / maxR) * 36.0;
+                std::cout << stats[i]->getName() << " " << stats[i]->getMean() << " " << r << std::endl;
+                }
+            }
+           
+            
+
+        }
 }
 
 void McmcSummary::output(UserSettings& settings) {
@@ -240,7 +371,8 @@ void McmcSummary::readAlnFile(std::string fn, int /*bi*/) {
         }
     catch (nlohmann::json::parse_error& ex)
         {
-        Msg::error("Error parsing JSON file at byte " + std::to_string(ex.byte));
+        Msg::warning("Error parsing JSON file" + fn + " at byte " + std::to_string(ex.byte));
+        return;
         }
         
     std::string cognateName = getCognateName(fn);
@@ -267,6 +399,33 @@ void McmcSummary::readAlnFile(std::string fn, int /*bi*/) {
         }
         
     //dist->print();
+}
+
+void McmcSummary::readConfigFile(std::string fn) {
+
+    std::ifstream ifs(fn);
+    nlohmann::json j;
+    try
+        {
+        j = nlohmann::json::parse(ifs);
+        }
+    catch (nlohmann::json::parse_error& ex)
+        {
+        Msg::warning("Error parsing JSON file" + fn + " at byte " + std::to_string(ex.byte));
+        return;
+        }
+
+    auto it = j.find("PartitionSets");
+    if (it == j.end())
+        {
+        Msg::warning("Could not find partition set in the JSON file");
+        statePartitions = NULL;
+        }
+    else
+        {
+        nlohmann::json jsPart = j["PartitionSets"];
+        statePartitions = new Partition(jsPart);
+        }
 }
 
 void McmcSummary::readTreFile(std::string fn, int /*bi*/) {

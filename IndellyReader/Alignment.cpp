@@ -33,6 +33,28 @@ bool Alignment::operator==(const Alignment& aln) const {
     return true;
 }
 
+std::map<double,double> Alignment::gapInfo(void) {
+
+    std::map<double,double> info;
+    
+    for (int j=0; j<numChar; j++)
+        {
+        int numGaps = 0;
+        for (int i=0; i<numTaxa; i++)
+            {
+            int charCode = matrix[i][j];
+            if (charCode == -1)
+                numGaps++;
+            }
+            
+        double fracGaps = (double)numGaps / numTaxa;
+        double pos = (double)(j+1) / numChar;
+        info.insert( std::make_pair(pos,fracGaps) );
+        }
+    
+    return info;
+}
+
 int Alignment::lengthOfLongestName(void) {
 
     int maxLen = 0;

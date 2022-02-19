@@ -54,6 +54,49 @@ int AlignmentDistribution::numSamples(void) {
     return n;
 }
 
+int AlignmentDistribution::ciSize(void) {
+
+    std::vector<std::pair<Alignment*, int> > v;
+    for (auto& it : samples)
+        v.push_back(it);
+  
+    sort(v.begin(), v.end(), cmp);
+
+    int n = numSamples();
+    double cumulativeProb = 0.0;
+    int i = 0;
+    for (auto& it : v)
+        {
+        double prob = (double)it.second / n;
+        cumulativeProb += prob;
+        if (cumulativeProb < 0.95)
+            {
+            i++;
+            }
+        else
+            {
+            double lowerVal = cumulativeProb - prob;
+            double u = rv->uniformRv();
+            if (u < (0.95-lowerVal)/(cumulativeProb-lowerVal))
+                {
+                i++;
+                }
+            break;
+           
+            }
+        }
+    return i;
+}
+
+Alignment* AlignmentDistribution::getMapAlignment(void) {
+
+    std::vector<std::pair<Alignment*, int> > v;
+    for (auto& it : samples)
+        v.push_back(it);
+    sort(v.begin(), v.end(), cmp);
+    return v[0].first;
+}
+
 void AlignmentDistribution::print(void) {
 
     std::vector<std::pair<Alignment*, int> > v;

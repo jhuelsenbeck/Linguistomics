@@ -9,6 +9,7 @@
 #include "RbBitSet.h"
 
 class AlignmentDistribution;
+class Partition;
 class RandomVariable;
 class Tree;
 
@@ -22,10 +23,12 @@ class McmcSummary {
         std::vector<CredibleInterval>           getCredibleIntervals(void);
         std::vector<double>                     getMeans(void);
         void                                    print(void);
+        void                                    printPartitionSet(void);
         void                                    output(UserSettings& settings);
         void                                    readAlnFile(std::string fn, int bi);
         void                                    readTreFile(std::string fn, int bi);
         void                                    readTsvFile(std::string fn, int bi);
+        void                                    readConfigFile(std::string fn);
     
     private:
         void                                    addPartion(std::map<RbBitSet,double>& parts);
@@ -34,11 +37,13 @@ class McmcSummary {
         bool                                    hasSemicolon(std::string str);
         std::map<int,std::string>               interpretTranslateString(std::vector<std::string> translateTokens);
         std::string                             interpretTreeString(std::string str);
+        void                                    printPartitionFreqs(void);
         RandomVariable*                         rv;
         std::vector<ParameterStatistics*>       stats;
         std::vector<AlignmentDistribution*>     alignments;
         std::map<RbBitSet,ParameterStatistics*> partitions;
         Tree*                                   conTree;
+        Partition*                              statePartitions;
 };
 
 #endif
