@@ -16,6 +16,7 @@ class Partition {
         Subset*             findSubsetIndexed(int x);
         Subset*             findSubsetWithValue(int x);
         int                 indexOfSubsetWithValue(int x);
+        int                 numSubsets(void) { return (int)subsets.size(); }
         void                print(void);
         int                 maxValue(void);
     

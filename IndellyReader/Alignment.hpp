@@ -3,6 +3,7 @@
 
 #include "json.hpp"
 #include "Sequence.hpp"
+#include <map>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,7 @@ class Alignment {
         int                     getNumChar(void) { return numChar; }
         int                     getNumTaxa(void) { return numTaxa; }
         int                     lengthOfLongestName(void);
+        std::map<double,double> gapInfo(void);
         void                    print(void);
         void                    print(std::string h);
         size_t                  size(void) { return matrix.size(); }

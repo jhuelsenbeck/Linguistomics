@@ -284,16 +284,10 @@ void TransitionProbabilities::setTransitionProbabilitiesJc69(void) {
             double x = -((double)numStates/(numStates-1));
             double pChange = (1.0/numStates) - (1.0/numStates) * exp(x * v);
             double pNoChange = (1.0/numStates) + ((double)(numStates-1)/numStates) * exp(x * v);
+            tp.fill(pChange);
             for (int i=0; i<numStates; i++)
-                {
-                for (int j=0; j<numStates; j++)
-                    {
-                    if (i == j)
-                        tp(i,j) = pNoChange;
-                    else
-                        tp(i,j) = pChange;
-                    }
-                }
+                tp(i,i) = pNoChange;
+                
             }
         
         }
