@@ -23,7 +23,7 @@ class WordLnLikeTask: public ThreadTask {
     public:
                               WordLnLikeTask();
         void                  Init(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL);
-        virtual void          Run();
+        virtual void          Run(ThreadCache& cache);
 
     private:
         LikelihoodCalculator* Calculator;
@@ -36,7 +36,7 @@ class Model {
 
     public:
                                                 Model(void) = delete;
-                                                Model(RandomVariable* r, ThreadPool& p);
+                                                Model(RandomVariable* r);
                                                ~Model(void);
         void                                    accept(void);
         void                                    flipActiveLikelihood(void);
@@ -76,7 +76,6 @@ class Model {
         WordLnLikeTask*                         GetTaskList(size_t count);
 
         RandomVariable*                         rv;
-        ThreadPool&                             threadPool;
         double*                                 threadLnL;
         std::vector<bool>                       updateLikelihood;
         std::vector<int>                        activeLikelihood;
@@ -88,6 +87,7 @@ class Model {
         std::map<std::string,std::set<int> >    stateSets;
         std::vector<std::string>                canonicalTaxonList;
         WordLnLikeTask*                         taskList;
+        ThreadPool                              *threadPool;
         size_t                                  taskMax;
         int                                     updatedParameterIdx;
         int                                     substitutionModel;

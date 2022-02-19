@@ -24,9 +24,6 @@ struct TransitionProbabilitiesInfo {
     DoubleMatrix*   n_mat;
     DoubleMatrix*   x_mat;
     DoubleMatrix*   cX_mat;
-    DoubleMatrix*   scratch_mat1;
-    DoubleMatrix*   scratch_mat2;
-    double*         scratch_vec;
 };
 
 

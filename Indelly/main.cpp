@@ -5,17 +5,17 @@
 #include "UserSettings.hpp"
 #include "Threads.hpp"
 
-void printHeader(int count);
+void printHeader() {
 
+    std::cout << "   TongueTwister 1.0" << std::endl;
+    std::cout << "   * John P. Huelsenbeck (University of California, Berkeley)" << std::endl;
+    std::cout << "   * Shawn McCreight (University of California, Berkeley)" << std::endl;
+    std::cout << "   * David Goldstein (University of California, Los Angeles)" << std::endl;
+    std::cout << std::endl;
+}
 
 
 int main(int argc, char* argv[]) {
-
-    // create the thread pool
-    ThreadPool pool;
-
-    // print the header
-    printHeader(pool.ThreadCount);
 
     // read the user settings from the command-line arguments
     UserSettings& settings = UserSettings::userSettings();
@@ -25,8 +25,11 @@ int main(int argc, char* argv[]) {
     // instantiate the random number generator
     RandomVariable rv;
         
+    // print the header
+    printHeader();
+
     // set up the phylogenetic model
-    Model model(&rv, pool);
+    Model model(&rv);
     
     // run the Markov chain Monte Carlo algorithm
     Mcmc chain(&model, &rv);
@@ -35,12 +38,3 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void printHeader(int count) {
-
-    std::cout << "   TongueTwister 1.0" << std::endl;
-    std::cout << "   * John P. Huelsenbeck (University of California, Berkeley)" << std::endl;
-    std::cout << "   * Shawn McCreight (University of California, Berkeley)" << std::endl;
-    std::cout << "   * David Goldstein (University of California, Los Angeles)" << std::endl;
-    std::cout << "   * Running on " << count << " processors" << std::endl;
-    std::cout << std::endl;
-}

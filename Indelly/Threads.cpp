@@ -3,19 +3,34 @@
 ThreadTask::ThreadTask() {
 }
 
-void ThreadTask::Run() {
+void ThreadTask::Run(ThreadCache& cache) {
 }
+
+
+ThreadCache::ThreadCache(int numStates) {
+    scratch1 = new DoubleMatrix(numStates, numStates);
+    scratch2 = new DoubleMatrix(numStates, numStates);
+    scratchVec = new double[numStates];
+}
+
+ThreadCache::~ThreadCache() {
+    delete scratch1;
+    delete scratch2;
+    delete scratchVec;
+}
+
 
 
 #if 1
 // Threaded version
 
-ThreadPool::ThreadPool():
+ThreadPool::ThreadPool(int numstates):
     ThreadCount(std::thread::hardware_concurrency()),
     TaskCount(0),
     Running(true),
     Threads(new std::thread[ThreadCount])
 {
+    numStates = numstates;
     for (int i = 0; i < ThreadCount; i++)
         Threads[i] = std::thread(&ThreadPool::Worker, this);
 }
@@ -82,12 +97,13 @@ void ThreadPool::Wait() {
 }
 
 void ThreadPool::Worker() {
+    ThreadCache cache(numStates);
     while (Running)
         {
         ThreadTask* task = PopTask();
         if (task)
             {
-            task->Run();
+            task->Run(cache);
 
             --TaskCount;
 //            if (TaskCount == 0)

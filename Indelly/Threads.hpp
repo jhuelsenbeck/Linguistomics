@@ -4,20 +4,33 @@
 #include <thread>
 #include <mutex> 
 #include <queue>
+#include "Container.hpp"
+
+
+class ThreadCache {
+    public:
+        ThreadCache(int numstates);
+        ~ThreadCache();
+
+        DoubleMatrix* scratch1;
+        DoubleMatrix* scratch2;
+        double* scratchVec;
+};
 
 
 class ThreadTask {
     public:
         ThreadTask();
         virtual ~ThreadTask() {};
-        virtual void Run();
+        virtual void Run(ThreadCache& cache);
 };
+
 
 class ThreadPool {
     public:
         int  ThreadCount;
 
-             explicit ThreadPool();
+             explicit ThreadPool(int numstates);
              ~ThreadPool();
 
         void PushTask(ThreadTask* task);
@@ -33,6 +46,7 @@ class ThreadPool {
                                 CheckCondition;
         std::queue<ThreadTask*> Tasks;
         std::thread*            Threads;
+        int                     numStates;
 
         void                    Worker();
         ThreadTask*             PopTask();

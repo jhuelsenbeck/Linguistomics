@@ -33,7 +33,7 @@ void WordLnLikeTask::Init(LikelihoodCalculator* calculator, double* threadLnL, d
     WordLnL = wordLnL;
 }
 
-void WordLnLikeTask::Run() {
+void WordLnLikeTask::Run(ThreadCache& cache) {
     double lnL = Calculator->lnLikelihood();
     *ThreadLnL = lnL;
     *WordLnL = lnL;
@@ -41,9 +41,7 @@ void WordLnLikeTask::Run() {
 //==============================================================================================
 
 
-Model::Model(RandomVariable* r, ThreadPool& p):
-    threadPool(p)
-{
+Model::Model(RandomVariable* r) {
 
     std::cout << "   Model" << std::endl;
     rv = r;
@@ -79,6 +77,8 @@ Model::~Model(void) {
     for (int i=0; i<wordLikelihoodCalculators.size(); i++)
         delete wordLikelihoodCalculators[i];
     delete partitionInfo;
+    delete threadPool;
+
 }
 
 WordLnLikeTask* Model::GetTaskList(size_t count) {
@@ -355,6 +355,12 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
     if (numStates <= 1)
         Msg::error("There must be at least two states in the model");
     std::cout << "   * The substitution model has " << numStates << " states" << std::endl;
+
+
+    // create the thread pool
+    threadPool = new ThreadPool(numStates);
+
+
     
     // read each word
     std::vector<Alignment*> words;
@@ -603,7 +609,7 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
     
     // initialize the transition probabilities
     TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
-    tProbs.initialize( this, &threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
+    tProbs.initialize( this, threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();
     if (tProbs.areTransitionProbabilitiesValid(0.000001) == false)
@@ -619,7 +625,7 @@ double Model::lnLikelihood(void) {
         if (updateLikelihood[i] == true)
             {
             task->Init(wordLikelihoodCalculators[i], &threadLnL[i], &wordLnLikelihoods[activeLikelihood[i]][i]);
-            threadPool.PushTask(task);
+            threadPool->PushTask(task);
             }
         else
             {
@@ -629,7 +635,7 @@ double Model::lnLikelihood(void) {
         ++task;
         }
     
-    threadPool.Wait();
+    threadPool->Wait();
 
     double lnL = 0.0;
     for (auto t = threadLnL; t < threadLnL + wpsize; t++)

@@ -13,7 +13,6 @@
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 
-void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatrix* A, DoubleMatrix* P, DoubleMatrix* D, DoubleMatrix* N, DoubleMatrix* X, DoubleMatrix* cX, int numStates, DoubleMatrix* scratch1, DoubleMatrix* scratch2, double* scratchVec);
 double factorial(int x);
 int logBase2Plus1(double x);
 int setQvalue(double tol);
@@ -23,7 +22,7 @@ int setQvalue(double tol);
 class TransitionProbabilitiesTask: public ThreadTask {
 
     public:
-        TransitionProbabilitiesTask(void) {
+        TransitionProbabilitiesTask() {
             numStates  = 0;
             Tree       = NULL;
             Q          = NULL;
@@ -33,9 +32,6 @@ class TransitionProbabilitiesTask: public ThreadTask {
             N          = NULL;
             X          = NULL;
             cX         = NULL;
-            scratch1   = NULL;
-            scratch2   = NULL;
-            scratchVec = NULL;
         }
         
         void init(Tree* tree, DoubleMatrix* q, TransitionProbabilitiesInfo& info, int activeProbs) {
@@ -49,12 +45,75 @@ class TransitionProbabilitiesTask: public ThreadTask {
             N          = info.n_mat;
             X          = info.x_mat;
             cX         = info.cX_mat;
-            scratch1   = info.scratch_mat1;
-            scratch2   = info.scratch_mat2;
-            scratchVec = info.scratch_vec;
         }
 
-        virtual void Run(void) {
+        /* The method approximates the matrix exponential, P = e^A, using
+           the algorithm 11.3.1, described in:
+
+           Golub, G. H., and C. F. Van Loan. 1996. Matrix Computations, Third Edition.
+              The Johns Hopkins University Press, Baltimore, Maryland.
+
+           The method has the advantage of error control. The error is controlled by
+           setting qValue appropriately (using the function SetQValue). */
+        void computeMatrixExponential(ThreadCache& cache, int qValue, double v, DoubleMatrix* probs) {
+
+            // A is the matrix Q * v and p = exp(a)
+            Q->multiply(v, *A);
+
+            // set up identity matrices
+            D->setIdentity();
+            N->setIdentity();
+            X->setIdentity();
+
+            double maxAValue = 0.0;
+            for (int i = 0; i < numStates; i++)
+            {
+                auto ai = (*A)(i, i);
+                maxAValue = (maxAValue > ai) ? maxAValue : ai;
+            }
+
+            int y = logBase2Plus1(maxAValue);
+            int j = ((0 > y) ? 0 : y);
+
+            A->divideByPowerOfTwo(j);
+
+            double c = 1.0;
+            for (int k = 1; k <= qValue; k++)
+            {
+                c = c * (qValue - k + 1.0) / ((2.0 * qValue - k + 1.0) * k);
+
+                /* X = AX */
+                A->multiply(*X, *cache.scratch1);
+                X->copy(*cache.scratch1);
+
+
+                /* N = N + cX */
+                X->multiply(c, *cX);
+                N->add(*cX);
+
+                /* D = D + (-1)^k*cX */
+                int negativeFactor = (k % 2 == 0 ? 1 : -1);
+                if (negativeFactor == -1)
+                    cX->multiply(negativeFactor);
+                D->add(*cX);
+            }
+
+            MatrixMath::gaussianElimination(D, N, probs, cache.scratch1, cache.scratch2, cache.scratchVec);
+
+
+            // There is a faster way to do this if j is >= 4 routinely 
+            for (int k = 0; k < j; k++)
+            {
+                probs->multiply(*probs, *cache.scratch1);
+                probs->copy(*cache.scratch1);
+            }
+
+
+            for (auto p = probs->begin(), end = probs->end(); p < end; ++p)
+                *p = fabs(*p);
+        }
+
+        virtual void Run(ThreadCache& cache) {
         
             int qValue = setQvalue(10e-7);
             std::vector<Node*>& traversalSeq = Tree->getDownPassSequence();
@@ -65,7 +124,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
                     {
                     int pIdx = p->getIndex();
                     double v = p->getBranchLength();
-                    computeMatrixExponential(Q, qValue, v, A, P[pIdx], D, N, X, cX, numStates, scratch1, scratch2, scratchVec);
+                    computeMatrixExponential(cache, qValue, v, P[pIdx]);
                     }
                 }
             }
@@ -80,9 +139,6 @@ class TransitionProbabilitiesTask: public ThreadTask {
         DoubleMatrix*   N;
         DoubleMatrix*   X;
         DoubleMatrix*   cX;
-        DoubleMatrix*   scratch1;
-        DoubleMatrix*   scratch2;
-        double*         scratchVec;
 };
 
 
@@ -111,9 +167,6 @@ TransitionProbabilities::~TransitionProbabilities(void) {
         delete it->second.n_mat;
         delete it->second.x_mat;
         delete it->second.cX_mat;
-        delete it->second.scratch_mat1;
-        delete it->second.scratch_mat2;
-        delete it->second.scratch_vec;
         }
 }
 
@@ -208,10 +261,7 @@ void TransitionProbabilities::initialize(Model* m, ThreadPool* p, std::vector<Al
             info.n_mat = new DoubleMatrix(numStates, numStates);
             info.x_mat = new DoubleMatrix(numStates, numStates);
             info.cX_mat = new DoubleMatrix(numStates, numStates);
-            info.scratch_mat1 = new DoubleMatrix(numStates, numStates);
-            info.scratch_mat2 = new DoubleMatrix(numStates, numStates);
-            info.scratch_vec = new double[numStates];
-            
+
             transProbs.insert( std::make_pair(mask,info) );
             }
         }
@@ -322,72 +372,6 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
     auto& rmatFreqs = rmat.getEquilibriumFrequencies();
     for (int i=0; i<numStates; i++)
         stationaryFreqs[activeProbs][i] = rmatFreqs[i];
-}
-
-/* The method approximates the matrix exponential, P = e^A, using
-   the algorithm 11.3.1, described in:
-
-   Golub, G. H., and C. F. Van Loan. 1996. Matrix Computations, Third Edition.
-      The Johns Hopkins University Press, Baltimore, Maryland.
-
-   The method has the advantage of error control. The error is controlled by
-   setting qValue appropriately (using the function SetQValue). */
-void computeMatrixExponential(DoubleMatrix* Q, int qValue, double v, DoubleMatrix* A, DoubleMatrix* P, DoubleMatrix* D, DoubleMatrix* N, DoubleMatrix* X, DoubleMatrix* cX, int numStates, DoubleMatrix* scratch1, DoubleMatrix* scratch2, double* scratchVec) {
-    
-    // A is the matrix Q * v and p = exp(a)
-    Q->multiply(v, *A);
-
-	// set up identity matrices
-    D->setIdentity();
-    N->setIdentity();
-    X->setIdentity();
-
-	double maxAValue = 0.0;
-	for (int i=0; i<numStates; i++)
-        {
-        auto ai = (*A)(i, i);
-		maxAValue = (maxAValue > ai ) ? maxAValue : ai;
-        }
-
-	int y = logBase2Plus1(maxAValue);
-	int j = (( 0 > y ) ? 0 : y);
-	
-	A->divideByPowerOfTwo(j);
-
-	double c = 1.0;
-	for (int k=1; k<=qValue; k++)
-		{
-		c = c * (qValue - k + 1.0) / ((2.0 * qValue - k + 1.0) * k);
-
-		/* X = AX */
-        A->multiply(*X, *scratch1);
-        X->copy(*scratch1);
-
-
-		/* N = N + cX */
-		X->multiply(c, *cX);
-        N->add(*cX);
-
-		/* D = D + (-1)^k*cX */
-		int negativeFactor = (k % 2 == 0 ? 1 : -1);
-		if ( negativeFactor == -1 )
-			cX->multiply(negativeFactor);
-		D->add(*cX);
-		}
-
-	MatrixMath::gaussianElimination(D, N, P, scratch1, scratch2, scratchVec);
-
-
-    // There is a faster way to do this if j is >= 4 routinely 
-	for (int k=0; k<j; k++) 
-        {
-        P->multiply(*P, *scratch1);
-        P->copy(*scratch1);
-        }
-
-
-    for (auto p = P->begin(), end = P->end(); p < end; ++p)
-        *p = fabs(*p);
 }
 
 int logBase2Plus1(double x) {
