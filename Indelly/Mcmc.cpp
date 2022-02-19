@@ -101,6 +101,20 @@ void Mcmc::openOutputFiles(void) {
 }
 
 void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
+    if (numDigits(curLnL) > maxLikePrint)
+        maxLikePrint = numDigits(curLnL);
+    if (numDigits(newLnL) > maxLikePrint)
+        maxLikePrint = numDigits(newLnL);
+    if (numDigits(curLnP) > maxPriorPrint)
+        maxPriorPrint = numDigits(curLnP);
+    if (numDigits(newLnP) > maxPriorPrint)
+        maxPriorPrint = numDigits(newLnP);
+
+
+    std::cout << std::fixed << std::setprecision(3);
+    std::cout << "   * ";
+    std::cout << std::setw(maxGenPrint) << gen << " --   ";
+    std::cout << std::setw(maxLikePrint + 5) << curLnL << " -> " << std::setw(maxLikePrint + 5) << newLnL << "   ";
 
     // estimate time remaining based on time to this point
     std::chrono::duration<double> durationSecs  = std::chrono::duration_cast<std::chrono::seconds>(t1 - t2);
@@ -110,47 +124,32 @@ void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double ne
     int s = (int)((numMcmcCycles - gen) * timePerCycle);
     int m = s / 60;
     int h = s / 3600;
-    std::string tStr = "";
+
     if (h > 0)
         {
-        tStr += std::to_string(h) + "h:";
+        std::cout << h;
+        std::cout << ":";
         m -= h * 60;
         s -= h * 60 * 60;
         }
     if (m > 0 || (m == 0 && h > 0))
         {
         if (m < 10)
-            tStr += "0" + std::to_string(m) + "m:";
-        else
-            tStr += std::to_string(m) + "m:";
+            std::cout << "0";
+        std::cout << m;
+        std::cout << ":";
         s -= m * 60;
         }
-    if (s < 10)
-        tStr += "0" + std::to_string(s) + "s";
-    else
-        tStr += std::to_string(s) + "s";
-    tStr += " time remaining";
+    if (s < 10) 
+        std::cout << "0";
+    std::cout << s;
+    std::cout << " remaining  ";
 
-    if (numDigits(curLnL) > maxLikePrint)
-        maxLikePrint = numDigits(curLnL);
-    if (numDigits(newLnL) > maxLikePrint)
-        maxLikePrint = numDigits(newLnL);
-    if (numDigits(curLnP) > maxPriorPrint)
-        maxPriorPrint = numDigits(curLnP);
-    if (numDigits(newLnP) > maxPriorPrint)
-        maxPriorPrint = numDigits(newLnP);
-    
-        
-    std::cout << std::fixed << std::setprecision(3);
-    std::cout << "   * ";
-    std::cout << std::setw(maxGenPrint) << gen << " --   ";
-    std::cout << std::setw(maxLikePrint + 5) << curLnL << " -> " << std::setw(maxLikePrint + 5) << newLnL << "   ";
-    std::cout << tStr << "   ";
     //std::cout << std::setw(maxPriorPrint + 5) << curLnP << " -> " << std::setw(maxPriorPrint + 5) << newLnP << "   ";
     if (accept == true)
-        std::cout << "Accepted update of ";
+        std::cout << "Accepted ";
     else
-        std::cout << "Rejected update of ";
+        std::cout << "Rejected ";
     std::cout << modelPtr->getUpdatedParameterName();
     std::cout << " parameter";
     std::string updateType = modelPtr->getLastUpdate();
