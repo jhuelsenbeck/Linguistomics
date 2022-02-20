@@ -46,7 +46,7 @@ class LikelihoodCalculator {
                                         LikelihoodCalculator(ParameterAlignment* a, Model* m);
                                        ~LikelihoodCalculator(void);
         std::string                     alignmentName(void);
-        double                          lnLikelihood(void);
+        double                          lnLikelihood(MathCache& cache);
     
     private:
         void                            allcoateIndelCombinatorics(int nn, int maxSeqLen);

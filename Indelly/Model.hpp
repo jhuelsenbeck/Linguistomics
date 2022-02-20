@@ -23,7 +23,7 @@ class WordLnLikeTask: public ThreadTask {
     public:
                               WordLnLikeTask();
         void                  Init(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL);
-        virtual void          Run(ThreadCache& cache);
+        virtual void          Run(MathCache& cache);
 
     private:
         LikelihoodCalculator* Calculator;

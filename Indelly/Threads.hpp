@@ -4,25 +4,13 @@
 #include <thread>
 #include <mutex> 
 #include <queue>
-#include "Container.hpp"
-
-
-class ThreadCache {
-    public:
-        ThreadCache(int numstates);
-        ~ThreadCache();
-
-        DoubleMatrix* scratch1;
-        DoubleMatrix* scratch2;
-        double* scratchVec;
-};
-
+#include "MatrixMath.hpp"
 
 class ThreadTask {
     public:
         ThreadTask();
-        virtual ~ThreadTask() {};
-        virtual void Run(ThreadCache& cache);
+        virtual ~ThreadTask();
+        virtual void Run(MathCache& cache) = 0;
 };
 
 

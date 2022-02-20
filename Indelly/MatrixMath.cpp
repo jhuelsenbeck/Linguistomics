@@ -1,7 +1,18 @@
 #include "MatrixMath.hpp"
 #include "Msg.hpp"
 
-#define ROW_MAJOR_ORDER
+MathCache::MathCache(int numStates):
+    scratch1(numStates, numStates),
+    scratch2(numStates, numStates)
+{
+    scratchVec = new double[numStates];
+}
+
+MathCache::~MathCache() {
+    delete scratchVec;
+}
+
+
 
 
 void MatrixMath::backSubstitutionRow(DoubleMatrix* U, double* b) {

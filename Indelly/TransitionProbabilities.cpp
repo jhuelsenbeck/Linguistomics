@@ -55,7 +55,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
 
            The method has the advantage of error control. The error is controlled by
            setting qValue appropriately (using the function SetQValue). */
-        void computeMatrixExponential(ThreadCache& cache, int qValue, double v, DoubleMatrix* probs) {
+        void computeMatrixExponential(MathCache& cache, int qValue, double v, DoubleMatrix* probs) {
 
             // A is the matrix Q * v and p = exp(a)
             Q->multiply(v, *A);
@@ -83,8 +83,8 @@ class TransitionProbabilitiesTask: public ThreadTask {
                 c = c * (qValue - k + 1.0) / ((2.0 * qValue - k + 1.0) * k);
 
                 /* X = AX */
-                A->multiply(*X, *cache.scratch1);
-                X->copy(*cache.scratch1);
+                A->multiply(*X, cache.scratch1);
+                X->copy(cache.scratch1);
 
 
                 /* N = N + cX */
@@ -98,14 +98,14 @@ class TransitionProbabilitiesTask: public ThreadTask {
                 D->add(*cX);
             }
 
-            MatrixMath::gaussianElimination(D, N, probs, cache.scratch1, cache.scratch2, cache.scratchVec);
+            MatrixMath::gaussianElimination(D, N, probs, &cache.scratch1, &cache.scratch2, cache.scratchVec);
 
 
             // There is a faster way to do this if j is >= 4 routinely 
             for (int k = 0; k < j; k++)
             {
-                probs->multiply(*probs, *cache.scratch1);
-                probs->copy(*cache.scratch1);
+                probs->multiply(*probs, cache.scratch1);
+                probs->copy(cache.scratch1);
             }
 
 
@@ -113,7 +113,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
                 *p = fabs(*p);
         }
 
-        virtual void Run(ThreadCache& cache) {
+        virtual void Run(MathCache& cache) {
         
             int qValue = setQvalue(10e-7);
             std::vector<Node*>& traversalSeq = Tree->getDownPassSequence();

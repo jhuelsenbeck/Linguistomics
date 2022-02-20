@@ -3,22 +3,8 @@
 ThreadTask::ThreadTask() {
 }
 
-void ThreadTask::Run(ThreadCache& cache) {
+ThreadTask::~ThreadTask() {
 }
-
-
-ThreadCache::ThreadCache(int numStates) {
-    scratch1 = new DoubleMatrix(numStates, numStates);
-    scratch2 = new DoubleMatrix(numStates, numStates);
-    scratchVec = new double[numStates];
-}
-
-ThreadCache::~ThreadCache() {
-    delete scratch1;
-    delete scratch2;
-    delete scratchVec;
-}
-
 
 
 #if 1
@@ -97,7 +83,7 @@ void ThreadPool::Wait() {
 }
 
 void ThreadPool::Worker() {
-    ThreadCache cache(numStates);
+    MathCache cache(numStates);
     while (Running)
         {
         ThreadTask* task = PopTask();

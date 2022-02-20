@@ -33,8 +33,8 @@ void WordLnLikeTask::Init(LikelihoodCalculator* calculator, double* threadLnL, d
     WordLnL = wordLnL;
 }
 
-void WordLnLikeTask::Run(ThreadCache& cache) {
-    double lnL = Calculator->lnLikelihood();
+void WordLnLikeTask::Run(MathCache& cache) {
+    double lnL = Calculator->lnLikelihood(cache);
     *ThreadLnL = lnL;
     *WordLnL = lnL;
 }
@@ -726,9 +726,11 @@ double Model::update(void) {
     return 0.0;
 }
 
-void Model::wordLnLike(int i) {
+/*
+void Model::wordLnLike(MathCache &cache, int i) {
 
-    threadLnL[i] = wordLikelihoodCalculators[i]->lnLikelihood();
+    threadLnL[i] = wordLikelihoodCalculators[i]->lnLikelihood(cache);
     wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
 }
+*/
 

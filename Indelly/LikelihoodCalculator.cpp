@@ -181,7 +181,7 @@ void LikelihoodCalculator::initialize(void) {
     setBirthDeathProbabilities();
 }
 
-double LikelihoodCalculator::lnLikelihood(void) {
+double LikelihoodCalculator::lnLikelihood(MathCache&) {
 
     initialize();
     

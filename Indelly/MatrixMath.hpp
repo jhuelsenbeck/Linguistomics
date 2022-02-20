@@ -3,6 +3,19 @@
 
 #include "Container.hpp"
 
+#include "Container.hpp"
+
+
+class MathCache {
+    public:
+        MathCache(int numstates);
+        ~MathCache();
+
+        DoubleMatrix scratch1;
+        DoubleMatrix scratch2;
+        double* scratchVec;
+};
+
 namespace  MatrixMath {
 
     void    backSubstitutionRow(DoubleMatrix* U, double* b);
