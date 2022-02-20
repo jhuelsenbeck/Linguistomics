@@ -8,20 +8,21 @@
 
 class MathCache {
     public:
-        MathCache(int numstates);
-        ~MathCache();
+                     MathCache(int numstates);
+                     ~MathCache();
+        void         backSubstitutionRow(DoubleMatrix& U, double* b);
+        void         computeLandU(DoubleMatrix& A, DoubleMatrix& L, DoubleMatrix& U);
+        void         forwardSubstitutionRow(DoubleMatrix& L, double* b);
+        void         gaussianElimination(DoubleMatrix& A, DoubleMatrix& B, DoubleMatrix& X, DoubleMatrix& L);
+        void         multiply(DoubleMatrix& A, DoubleMatrix& B);
+
 
         DoubleMatrix scratch1;
         DoubleMatrix scratch2;
-        double* scratchVec;
+        DoubleMatrix scratchmult;
+        double*      scratchVec;
+
 };
 
-namespace  MatrixMath {
-
-    void    backSubstitutionRow(DoubleMatrix* U, double* b);
-    void    computeLandU(DoubleMatrix* A, DoubleMatrix* L, DoubleMatrix* U);
-    void    forwardSubstitutionRow(DoubleMatrix* L, double* b);
-    void    gaussianElimination(DoubleMatrix* A, DoubleMatrix* B, DoubleMatrix* X, DoubleMatrix* L, DoubleMatrix* U, double* b);
-};
 
 #endif

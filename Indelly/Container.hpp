@@ -319,22 +319,19 @@ class MatrixTemplate : public BufferTemplate<T> {
             result.create(rows, mcols);
 
             auto row = this->begin();
+            auto end = this->end();
             auto r = result.begin();
             auto mbegin = m.begin();
-            for (size_t i = 0; i < rows; i++)
+
+            while (row < end)
                 {
                 auto mrow = mbegin;
-
-                for (size_t j = 0; j < mcols; j++)
+                auto mend = mbegin + mcols;
+                while (mrow < mend)
                     {
                     T sum = 0;
-                    auto col = row;
-                    auto mcol = mrow;
-                    for (size_t k = 0; k < cols; k++)
-                        {
-                        sum += *col++ * *mcol;
-                        mcol += mcols;
-                        }
+                    for (auto col = row, cend = row + cols, mcol = mrow; col < cend; ++col, mcol += mcols) 
+                        sum += *col * *mcol;
 
                     *r++ = sum;
                     ++mrow;

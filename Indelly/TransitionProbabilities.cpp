@@ -83,9 +83,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
                 c = c * (qValue - k + 1.0) / ((2.0 * qValue - k + 1.0) * k);
 
                 /* X = AX */
-                A->multiply(*X, cache.scratch1);
-                X->copy(cache.scratch1);
-
+                cache.multiply(*A, *X);
 
                 /* N = N + cX */
                 X->multiply(c, *cX);
@@ -98,15 +96,12 @@ class TransitionProbabilitiesTask: public ThreadTask {
                 D->add(*cX);
             }
 
-            MatrixMath::gaussianElimination(D, N, probs, &cache.scratch1, &cache.scratch2, cache.scratchVec);
+            cache.gaussianElimination(*D, *N, *probs, cache.scratch1);
 
 
             // There is a faster way to do this if j is >= 4 routinely 
             for (int k = 0; k < j; k++)
-            {
-                probs->multiply(*probs, cache.scratch1);
-                probs->copy(cache.scratch1);
-            }
+                cache.multiply(*probs, *probs);
 
 
             for (auto p = probs->begin(), end = probs->end(); p < end; ++p)

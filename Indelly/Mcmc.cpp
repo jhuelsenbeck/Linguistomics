@@ -187,7 +187,7 @@ void Mcmc::runPosterior(void) {
     UpdateInfo& updateInfo = UpdateInfo::updateInfo();
 
     // Metropolis-Hastings algorithm
-    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     for (int n=1; n<=numMcmcCycles; n++)
         {
         // propose a new value for the chain
@@ -207,7 +207,7 @@ void Mcmc::runPosterior(void) {
         // print to the screen to give the user some clue where the chain is
         if (n == 1 || n == numMcmcCycles || n % printFrequency == 0)
             {
-            std::chrono::high_resolution_clock::time_point timePt = std::chrono::high_resolution_clock::now();
+            auto timePt = std::chrono::high_resolution_clock::now();
             print(n, curLnL, newLnL, curLnP, newLnP, accept, timePt, start);
             }
         
@@ -229,7 +229,7 @@ void Mcmc::runPosterior(void) {
         if (n == 1 || n == numMcmcCycles || n % sampleFrequency == 0)
             sample(n, curLnL, curLnP);
         }
-    std::chrono::high_resolution_clock::time_point stop = std::chrono::high_resolution_clock::now();
+    auto stop = std::chrono::high_resolution_clock::now();
         
     // print summary information
     std::cout << std::endl;
