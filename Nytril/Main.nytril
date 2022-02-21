@@ -19,8 +19,8 @@ include "Languages";
 include "../../nytril/deploy/citations";
 include "../../nytril/deploy/graphics";
 
-include "LanguageSet";
-//include "LanguageTest";
+//include "LanguageSet";
+include "LanguageTest";
 //======================================================================
 
 Main.Documents = [
@@ -65,17 +65,34 @@ ResultsClass Results = new ResultsClass;
 namespace Info {
   LinkMin        = 5;
   ImageFolder    = Folders.Source Folder("Images");
-  BaseFolder     = Folders.Repository Folder("Run") RunFolder;
+  RunBase        = Folders.Repository Folder("Run");
+  BaseFolder     = RunBase RunFolder;
   OutFolder      = BaseFolder ResultsFolder;
-  BaseFileName   = "out";
+  BaseFileName   = FileName("out");
   ConfigFile     = FileName("config") Extensions.JSON;
   RevSourceName  = FileName("Program") Extensions.RevBayes;
   CharacterName  = FileName("Characters") Extensions.Nexus;
   GammaTrees     = FileName("Gamma.trees");
   GammaLog       = FileName("Gamma.log");
   ConsensusName  = FileName("consensus.tre");
-  ConsensusTree  = IO.Read(OutFolder ConsensusName, FileFormats.Nexus).trees.TREE1;
+  ConsensusTree  = Read(OutFolder ConsensusName, FileFormats.Nexus).trees.TREE1;
 }
+//======================================================================
+
+ShowTree(filename, name) = Block {
+  Style.Header1 {
+    name;
+  };
+  Style.TreeOptions {
+    Width: DocMetrics.TreeFigureWidth;
+    Root: Read(Info.RunBase FileName(filename) Extension("tre")).trees.TREE1;
+  }
+};
+
+ShowTreeComparison = Block {
+  ShowTree("consensusAll100K", "All words - 100K cycles");
+  ShowTree("consensusAll300K", "All words - 300K cycles");
+};
 //======================================================================
 
 class SubmissionViewClass: BaseViewClass {
@@ -191,6 +208,7 @@ class ExperimentViewClass: BaseViewClass {
 
   override GetMainDocument(ResultsClass results) = MainDocument {
     var appendices = [
+      new AppendixClass("Tree Comparison", ShowTreeComparison),
       new AppendixClass(Lang.CharacterRules, results.CharacterRule.ShowDescription(results.UniqueSegments)),
       new AppendixClass(Lang.PartitionRules, results.PartitionRule.ShowPartitions),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
@@ -201,7 +219,6 @@ class ExperimentViewClass: BaseViewClass {
       AppendixTitle {
         Title;
       };
-      Header2 {Lang.Appendices};
       AppendixRow(each appendices);
     };
     ShowAppendix(each appendices);

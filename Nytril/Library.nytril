@@ -691,8 +691,9 @@ class ResultsClass {
       IO.Write(CharacterFile(1), Info.OutFolder Info.CharacterName);
       IO.Write(RevBayesSource, Info.OutFolder Info.RevSourceName);
     }
-    IO.Write(RunBatchFile, Info.BaseFolder FileName("RunIndelly") Extension("bat"), FileFormats.ANSI);
-    IO.Write(ConfigFile, Info.BaseFolder Info.ConfigFile, FileFormats.Text);
+    IO.Write(RunReader, Info.BaseFolder FileName("RunReader") Extensions.Batch);
+    IO.Write(RunAll, Info.BaseFolder FileName("RunAll") Extensions.Batch);
+    IO.Write(ConfigFile, Info.BaseFolder Info.ConfigFile);
 
     var p = new RevProcessClass(EXEName, Info.OutFolder Info.RevSourceName) {
 /*      CacheName: "RevBayes";
@@ -736,14 +737,33 @@ class ResultsClass {
 //    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
   };
 
-  RunBatchFile = TextBlock {
-    Span {
-      "\"../../Indelly/x64/Release/tonguetwister.exe\" -d ";
-      "\""; Info.ConfigFile; "\"";
-      " -o \"";
-      Info.OutFolder FileName(Info.BaseFileName);
-      "\"";
+  ArgString(arg, text) = Span {
+    if (valid arg) {
+      "-";
+      arg;
+      Space;
     }
+    "\"";
+    text;
+    "\" ";
+  };
+
+  RunReader = TextBlock {
+    Span {
+      ArgString(null, "../../IndellyReader/x64/Release/indellyreader.exe");
+      ArgString("i", Info.OutFolder);
+      ArgString("o", Info.OutFolder Info.BaseFileName);
+    };
+  };
+
+  RunAll = TextBlock {
+    Span {
+      ArgString(null, "../../Indelly/x64/Release/tonguetwister.exe");
+      ArgString("d", Info.ConfigFile);
+      ArgString("o", Info.OutFolder Info.BaseFileName);
+    };
+    "pause";
+    RunReader;
   };
 
   CompareSegments(SegmentClass s1, SegmentClass s2) = s1.UsedCount.Compare(s2.UsedCount);
