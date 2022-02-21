@@ -43,7 +43,7 @@ class TransitionProbabilities {
         void                                            getStationaryFrequencies(std::vector<double>& f);
         DoubleMatrix**                                  getTransitionProbabilities(RbBitSet& bs);
         DoubleMatrix&                                   getTransitionProbabilities(RbBitSet& bs, int nodeIdx);
-        void                                            initialize(Model* m, ThreadPool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm);
+        void                                            initialize(Model* m, ThreadPool* pool, std::vector<Alignment*>& alns, int nn, int ns, int sm);
         void                                            print(void);
         void                                            setNeedsUpdate(bool tf) { needsUpdate = tf; }
         void                                            setTransitionProbabilities(void);

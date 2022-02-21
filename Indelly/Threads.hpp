@@ -18,7 +18,7 @@ class ThreadPool {
     public:
         int  ThreadCount;
 
-             explicit ThreadPool(int numstates);
+             explicit ThreadPool();
              ~ThreadPool();
 
         void PushTask(ThreadTask* task);
@@ -34,7 +34,6 @@ class ThreadPool {
                                 CheckCondition;
         std::queue<ThreadTask*> Tasks;
         std::thread*            Threads;
-        int                     numStates;
 
         void                    Worker();
         ThreadTask*             PopTask();

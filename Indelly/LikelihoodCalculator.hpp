@@ -11,7 +11,7 @@ class IndelMatrix;
 class Model;
 class Node;
 class ParameterAlignment;
-class TransitionProbabilities;
+//class TransitionProbabilities;
 class Tree;
 typedef std::map<IntVector*, double, CompIntVector> PartialProbabilitiesLookup;
 

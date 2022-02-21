@@ -96,7 +96,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
                 D->add(*cX);
             }
 
-            cache.gaussianElimination(*D, *N, *probs, cache.scratch1);
+            cache.gaussianElimination(*D, *N, *probs);
 
 
             // There is a faster way to do this if j is >= 4 routinely 
@@ -206,7 +206,7 @@ DoubleMatrix& TransitionProbabilities::getTransitionProbabilities(RbBitSet& bs, 
     return *it->second.probs[activeProbs][nodeIdx];
 }
 
-void TransitionProbabilities::initialize(Model* m, ThreadPool* p, std::vector<Alignment*>& alns, int nn, int ns, int sm) {
+void TransitionProbabilities::initialize(Model* m, ThreadPool* pool, std::vector<Alignment*>& alns, int nn, int ns, int sm) {
 
     if (isInitialized == true)
         {
@@ -216,7 +216,7 @@ void TransitionProbabilities::initialize(Model* m, ThreadPool* p, std::vector<Al
                 
     UserSettings& settings = UserSettings::userSettings();
     modelPtr = m;
-    threadPool = p;
+    threadPool = pool;
     numNodes = nn;
     numStates = ns;
     substitutionModel = sm;

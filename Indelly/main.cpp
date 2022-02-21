@@ -21,7 +21,10 @@ int main(int argc, char* argv[]) {
     UserSettings& settings = UserSettings::userSettings();
     settings.readCommandLineArguments(argc, argv);
     settings.print();
-        
+
+    // create the thread pool
+    ThreadPool threadPool;
+
     // instantiate the random number generator
     RandomVariable rv;
         
@@ -29,7 +32,7 @@ int main(int argc, char* argv[]) {
     printHeader();
 
     // set up the phylogenetic model
-    Model model(&rv);
+    Model model(&rv, threadPool);
     
     // run the Markov chain Monte Carlo algorithm
     Mcmc chain(&model, &rv);

@@ -10,13 +10,12 @@ ThreadTask::~ThreadTask() {
 #if 1
 // Threaded version
 
-ThreadPool::ThreadPool(int numstates):
+ThreadPool::ThreadPool():
     ThreadCount(std::thread::hardware_concurrency()),
     TaskCount(0),
     Running(true),
     Threads(new std::thread[ThreadCount])
 {
-    numStates = numstates;
     for (int i = 0; i < ThreadCount; i++)
         Threads[i] = std::thread(&ThreadPool::Worker, this);
 }
@@ -83,7 +82,7 @@ void ThreadPool::Wait() {
 }
 
 void ThreadPool::Worker() {
-    MathCache cache(numStates);
+    MathCache cache;
     while (Running)
         {
         ThreadTask* task = PopTask();

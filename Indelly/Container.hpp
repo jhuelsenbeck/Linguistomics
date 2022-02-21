@@ -38,6 +38,9 @@ template<typename T>
 class BufferTemplate: public BufferAllocator {
 
     public:
+        BufferTemplate() {
+        }
+
         explicit BufferTemplate(const BufferTemplate<T>& a) {
             copy(a);
         }
@@ -136,6 +139,10 @@ template<typename T>
 class ArrayTemplate: public BufferTemplate<T> {
 
     public:
+        ArrayTemplate() {
+        }
+
+
         ArrayTemplate(size_t elements):
           BufferTemplate<T>(elements)
         {
@@ -172,6 +179,11 @@ template<typename T>
 class MatrixTemplate : public BufferTemplate<T> {
 
     public:
+        explicit MatrixTemplate() {
+            numRows = 0;
+            numCols = 0;
+        }
+
         explicit MatrixTemplate(size_t nr, size_t nc) :
             BufferTemplate<T>::BufferTemplate(nr * nc)
         {

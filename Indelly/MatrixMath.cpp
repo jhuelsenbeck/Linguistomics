@@ -1,16 +1,36 @@
 #include "MatrixMath.hpp"
 #include "Msg.hpp"
 
-MathCache::MathCache(int numStates):
-    scratch1(numStates, numStates),
-    scratch2(numStates, numStates),
-    scratchmult(numStates, numStates)
-{
-    scratchVec = new double[numStates];
+MathCache::MathCache() {
+    matrixCount = 0; 
+    arrayCount = 0;
 }
 
 MathCache::~MathCache() {
-    delete scratchVec;
+}
+
+DoubleMatrix* MathCache::pushMatrix(size_t rows, size_t columns) {
+    assert(matrixCount < bufferSize -1);
+    auto m = &matrixBuffer[matrixCount++];
+    m->create(rows, columns);
+    return m;
+}
+
+void MathCache::popMatrix() {
+    assert(matrixCount > 0);
+    --matrixCount;
+}
+
+DoubleArray* MathCache::pushArray(size_t size) {
+    assert(arrayCount < bufferSize - 1);
+    auto a = &arrayBuffer[arrayCount++];
+    a->create(size);
+    return a;
+}
+
+void MathCache::popArray() {
+    assert(arrayCount > 0);
+    --arrayCount;
 }
 
 void MathCache::backSubstitutionRow(DoubleMatrix& U, double* b) {
@@ -110,37 +130,46 @@ void MathCache::computeLandU(DoubleMatrix& A, DoubleMatrix& L, DoubleMatrix& U) 
     }
 }
 
-void MathCache::gaussianElimination(DoubleMatrix& A, DoubleMatrix& B, DoubleMatrix& X, DoubleMatrix& L) {
+void MathCache::gaussianElimination(DoubleMatrix& A, DoubleMatrix& B, DoubleMatrix& X) {
 
     auto n  = A.getNumRows();
-    auto b  = scratchVec;
+    auto b  = pushArray(n)->begin();
 
-    computeLandU(A, L, scratch2);
+    auto L = pushMatrix(n, n);
+    auto scratch2 = pushMatrix(n, n);
+
+    computeLandU(A, *L, *scratch2);
 
     auto brow = B.begin();
     auto xrow = X.begin();
 
     for (int k = 0; k < n; k++)
-    {
+        {
         for (auto bp = b, bend = b + n, br = brow; bp < bend; ++bp, br += n)
             *bp = *br;
 
         /* Answer of Ly = b (which is solving for y) is copied into b. */
-        forwardSubstitutionRow(L, b);
+        forwardSubstitutionRow(*L, b);
 
         /* Answer of Ux = y (solving for x and the y was copied into b above)
            is also copied into b. */
-        backSubstitutionRow(scratch2, b);
+        backSubstitutionRow(*scratch2, b);
 
         for (auto bp = b, bend = b + n, xr = xrow; bp < bend; ++bp, xr += n)
             *xr = *bp;
 
         ++brow;
         ++xrow;
-    }
+        }
+
+    popMatrix();
+    popMatrix();
+    popArray();
 }
 
-void MathCache::multiply(DoubleMatrix& A, DoubleMatrix&B) {
-    A.multiply(B, scratchmult);
-    B.copy(scratchmult);
+void MathCache::multiply(DoubleMatrix& A, DoubleMatrix& B) {
+    auto m = pushMatrix(A.getNumCols(), B.getNumRows());
+    A.multiply(B, *m);
+    B.copy(*m);
+    popMatrix();
 }

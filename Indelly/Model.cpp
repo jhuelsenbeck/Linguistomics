@@ -41,7 +41,9 @@ void WordLnLikeTask::Run(MathCache& cache) {
 //==============================================================================================
 
 
-Model::Model(RandomVariable* r) {
+Model::Model(RandomVariable* r, ThreadPool& pool):
+    threadPool(pool)
+{
 
     std::cout << "   Model" << std::endl;
     rv = r;
@@ -77,7 +79,6 @@ Model::~Model(void) {
     for (int i=0; i<wordLikelihoodCalculators.size(); i++)
         delete wordLikelihoodCalculators[i];
     delete partitionInfo;
-    delete threadPool;
 
 }
 
@@ -357,11 +358,6 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
     std::cout << "   * The substitution model has " << numStates << " states" << std::endl;
 
 
-    // create the thread pool
-    threadPool = new ThreadPool(numStates);
-
-
-    
     // read each word
     std::vector<Alignment*> words;
     std::vector<std::string> rejectedWords;
@@ -609,7 +605,7 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
     
     // initialize the transition probabilities
     TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
-    tProbs.initialize( this, threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
+    tProbs.initialize( this, &threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
     tProbs.setNeedsUpdate(true);
     tProbs.setTransitionProbabilities();
     if (tProbs.areTransitionProbabilitiesValid(0.000001) == false)
@@ -625,7 +621,7 @@ double Model::lnLikelihood(void) {
         if (updateLikelihood[i] == true)
             {
             task->Init(wordLikelihoodCalculators[i], &threadLnL[i], &wordLnLikelihoods[activeLikelihood[i]][i]);
-            threadPool->PushTask(task);
+            threadPool.PushTask(task);
             }
         else
             {
@@ -635,7 +631,7 @@ double Model::lnLikelihood(void) {
         ++task;
         }
     
-    threadPool->Wait();
+    threadPool.Wait();
 
     double lnL = 0.0;
     for (auto t = threadLnL; t < threadLnL + wpsize; t++)

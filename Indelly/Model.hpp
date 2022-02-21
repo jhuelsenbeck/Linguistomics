@@ -35,8 +35,8 @@ class WordLnLikeTask: public ThreadTask {
 class Model {
 
     public:
-                                                Model(void) = delete;
-                                                Model(RandomVariable* r);
+                                                Model() = delete;
+                                                explicit Model(RandomVariable* r, ThreadPool& threadPool);
                                                ~Model(void);
         void                                    accept(void);
         void                                    flipActiveLikelihood(void);
@@ -87,7 +87,7 @@ class Model {
         std::map<std::string,std::set<int> >    stateSets;
         std::vector<std::string>                canonicalTaxonList;
         WordLnLikeTask*                         taskList;
-        ThreadPool                              *threadPool;
+        ThreadPool                              &threadPool;
         size_t                                  taskMax;
         int                                     updatedParameterIdx;
         int                                     substitutionModel;

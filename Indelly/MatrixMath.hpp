@@ -8,20 +8,25 @@
 
 class MathCache {
     public:
-                     MathCache(int numstates);
-                     ~MathCache();
-        void         backSubstitutionRow(DoubleMatrix& U, double* b);
-        void         computeLandU(DoubleMatrix& A, DoubleMatrix& L, DoubleMatrix& U);
-        void         forwardSubstitutionRow(DoubleMatrix& L, double* b);
-        void         gaussianElimination(DoubleMatrix& A, DoubleMatrix& B, DoubleMatrix& X, DoubleMatrix& L);
-        void         multiply(DoubleMatrix& A, DoubleMatrix& B);
+                      MathCache();
+                      ~MathCache();
+        void          backSubstitutionRow(DoubleMatrix& U, double* b);
+        void          computeLandU(DoubleMatrix& A, DoubleMatrix& L, DoubleMatrix& U);
+        void          forwardSubstitutionRow(DoubleMatrix& L, double* b);
+        void          gaussianElimination(DoubleMatrix& A, DoubleMatrix& B, DoubleMatrix& X);
+        void          multiply(DoubleMatrix& A, DoubleMatrix& B);
 
+        DoubleMatrix* pushMatrix(size_t rows, size_t columns);
+        void          popMatrix();
+        DoubleArray*  pushArray(size_t size);
+        void          popArray();
 
-        DoubleMatrix scratch1;
-        DoubleMatrix scratch2;
-        DoubleMatrix scratchmult;
-        double*      scratchVec;
+        static const size_t bufferSize = 16;
 
+        DoubleMatrix matrixBuffer[bufferSize];
+        DoubleArray  arrayBuffer[bufferSize];
+        size_t       matrixCount,
+                     arrayCount;
 };
 
 
