@@ -65,6 +65,8 @@ class LikelihoodCalculator {
         void                            returnToPool(IntVector* n);
         void                            setBirthDeathProbabilities(void);
         double                          prune(IntVector* signature, IntVector* pos, std::vector<Node*>& dpSequence);
+        void                            pruneBranch(std::vector<Node*>& dpSequence, Node* p);
+
 
         RbBitSet                        taxonMask;
         ParameterAlignment*             data;

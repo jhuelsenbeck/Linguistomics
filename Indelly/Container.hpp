@@ -291,8 +291,8 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void transpose(MatrixTemplate<T>& result) {
+            assert(result.numRows == numCols && result.numCols == numRows);
 
-            result.Create(numCols, numRows);
             auto cell = this->begin();
             for (size_t r = 0; r < numRows; ++r)
                 {
@@ -302,11 +302,13 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void add(const MatrixTemplate<T>& m) {
+
             assert(numRows == m.numRows && numCols == m.numCols);
             BufferTemplate<T>::add(m);
         }
 
         void add(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
+
             assert(numRows == m.numRows && numCols == m.numCols);
             BufferTemplate<T>::add(m, result);
         }
@@ -316,7 +318,9 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void multiply(T scalar, MatrixTemplate<T>& result) const {
-            result.create(getNumRows(), getNumCols());
+
+            assert(result.numRows == numRows && result.numCols == numCols);
+
             auto r = result.begin();
             ForElements(e)
                 * r++ = *e * scalar;
@@ -325,11 +329,10 @@ class MatrixTemplate : public BufferTemplate<T> {
         void multiply(const MatrixTemplate<T>& m, MatrixTemplate<T>& result) const {
 
             assert(numCols == m.numRows);
-            auto rows = getNumRows();
+            assert(result.numRows == numCols && result.numCols == numRows);
+
             auto cols = getNumCols();
             auto mcols = m.getNumCols();
-            result.create(rows, mcols);
-
             auto row = this->begin();
             auto end = this->end();
             auto r = result.begin();
@@ -355,7 +358,7 @@ class MatrixTemplate : public BufferTemplate<T> {
 
         void divideByPowerOfTwo(int power) {
             if (power > 0)
-              multiply(1.0 / (double)(1 << power));
+              multiply(1.0 / (double)(1UL << power));
         }
 
 
