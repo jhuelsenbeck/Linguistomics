@@ -656,7 +656,7 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
     return prune(signature, pos, dpSequence);
 }
 
-void LikelihoodCalculator::pruneBranch(std::vector<Node*>& dpSequence, Node* p) {
+void LikelihoodCalculator::pruneBranch(Node* p) {
     int pIdx = p->getIndex();
     auto fIIdx = fI[pIdx];
     auto fHIdx = fH[pIdx];
@@ -677,14 +677,26 @@ void LikelihoodCalculator::pruneBranch(std::vector<Node*>& dpSequence, Node* p) 
     {
         // Case 1: One homology family spanning tree intersects both child edges, i.e.
         //         a 'homologous' nucleotide should travel down both edges.
+
+        auto fHleft = fH[lftChildIdx];
+        auto fHright = fH[rhtChildIdx];
+        auto probLeft = indelProbs.homologousProbability[lftChildIdx];
+        auto probRight = indelProbs.homologousProbability[rhtChildIdx];
+
+        auto tpLeft = tpLft.begin();
+        auto tpRight = tpRht.begin();
+
         for (int i = 0; i < numStates; i++)
         {
             double lft = 0.0;
             double rht = 0.0;
+            auto lj = fHleft;
+            auto rj = fHright;
+
             for (int j = 0; j < numStates; j++)
             {
-                lft += fH[lftChildIdx][j] * indelProbs.homologousProbability[lftChildIdx] * tpLft(i, j);
-                rht += fH[rhtChildIdx][j] * indelProbs.homologousProbability[rhtChildIdx] * tpRht(i, j);
+                lft += *lj++ * probLeft * *tpLeft++;
+                rht += *rj++ * probRight * *tpRight++;
             }
             fHIdx[i] = lft * rht;
         }
@@ -744,6 +756,8 @@ void LikelihoodCalculator::pruneBranch(std::vector<Node*>& dpSequence, Node* p) 
         auto birthProbabilityRight = indelProbs.birthProbability[rhtChildIdx];
         auto nonHomologousProbabilityLeft = indelProbs.nonHomologousProbability[lftChildIdx];
         auto nonHomologousProbabilityRight = indelProbs.nonHomologousProbability[rhtChildIdx];
+        auto rfactor = nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight;
+        auto lfactor = nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft;
 
         for (int i = 0; i < numStates; i++)
         {
@@ -761,8 +775,8 @@ void LikelihoodCalculator::pruneBranch(std::vector<Node*>& dpSequence, Node* p) 
                 lft1 += *fhleft * homologousProbabilityLeft * tpLft(i, j);
                 lft2 += *fhright * homologousProbabilityRight * tpRht(i, j);
                 auto stateEquilibriumFrequency = stateEquilibriumFrequencies[j];
-                rht1 += (*fhleft + *fileft) * (nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft) * stateEquilibriumFrequency + *fileft * homologousProbabilityLeft * tpLft(i, j);
-                rht2 += (*fhright + *firight) * (nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight) * stateEquilibriumFrequency + *firight * homologousProbabilityRight * tpRht(i, j);
+                rht1 += (*fhleft + *fileft) * lfactor * stateEquilibriumFrequency + *fileft * homologousProbabilityLeft * tpLft(i, j);
+                rht2 += (*fhright + *firight) * rfactor * stateEquilibriumFrequency + *firight * homologousProbabilityRight * tpRht(i, j);
                 ++fhleft;
                 ++fhright;
                 ++firight;
@@ -808,22 +822,15 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
             int pIdx = p->getIndex();
             auto fIIdx = fI[pIdx];
             auto fHIdx = fH[pIdx];
-            auto nodeHomologyI = indelCombos.nodeHomology[pIdx];
 
             // initialize conditional probabilties for the tip
             if ( (*signature)[pIdx] == 0 )
-                {
-                // gap
-                fIIdx[numStates] = 1.0;
-                }
+                fIIdx[numStates] = 1.0;  // gap
             else
-                {
-                // nucleotide
-                fHIdx[ sequences[pIdx][(*pos)[pIdx]] ] = 1.0;
-                }
+                fHIdx[ sequences[pIdx][(*pos)[pIdx]] ] = 1.0; // nucleotide
             }
         else
-            pruneBranch(dpSequence, p);
+            pruneBranch(p);
         }
 
     // average probability over states at the root
