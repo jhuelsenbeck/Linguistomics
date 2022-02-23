@@ -6,6 +6,7 @@ include "Library";
 include "LanguageTree";
 include "IPA";
 include "Rules";
+include "Experiments";
 include "RevBayes";
 include "Style";
 include "References";
@@ -66,6 +67,7 @@ namespace Info {
   LinkMin        = 5;
   ImageFolder    = Folders.Source Folder("Images");
   RunBase        = Folders.Repository Folder("Run");
+  ExperimentBase = Folders.Repository Folder("Experiments");
   BaseFolder     = RunBase RunFolder;
   OutFolder      = BaseFolder ResultsFolder;
   BaseFileName   = FileName("out");
@@ -75,29 +77,8 @@ namespace Info {
   GammaTrees     = FileName("Gamma.trees");
   GammaLog       = FileName("Gamma.log");
   ConsensusName  = FileName("consensus.tre");
-  ConsensusTree  = Read(OutFolder ConsensusName, FileFormats.Nexus).trees.TREE1;
+  ConsensusTree  = Read(OutFolder ConsensusName).trees.TREE1;
 }
-//======================================================================
-
-ShowTree(date, filename, name) = Block {
-  Style.Header1 {
-    name;
-    " - ";
-    Span {
-      TextFormat: "MMM dd";
-      date;
-    }
-  };
-  Style.TreeOptions {
-    Width: DocMetrics.TreeFigureWidth;
-    Root: Read(Info.RunBase FileName(filename) Extension("tre")).trees.TREE1;
-  }
-};
-
-ShowTreeComparison = Block {
-  ShowTree(DateTime(2022, 2, 16), "consensusAll100K", "All words - 100K cycles");
-  ShowTree(DateTime(2022, 2, 20), "consensusAll300K", "All words - 300K cycles");
-};
 //======================================================================
 
 class SubmissionViewClass: BaseViewClass {
@@ -164,11 +145,8 @@ class PaperViewClass: BaseViewClass {
 
   override GetMainDocument(ResultsClass results) = MainDocument {
     var appendices = [
-      new AppendixClass("Program Output", results.ShowLanguageTrees),
-      new AppendixClass("Statistics", results.ShowStats),
-      new AppendixClass(Lang.CharacterRules, results.CharacterRule.ShowDescription(results.UniqueSegments)),
+      new AppendixClass("Experimental Runs", ExperimentClass.ShowComparison),
       new AppendixClass(Lang.PartitionRules, results.PartitionRule.ShowPartitions),
-      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
     ];
 
     PageSection {
@@ -213,11 +191,9 @@ class ExperimentViewClass: BaseViewClass {
 
   override GetMainDocument(ResultsClass results) = MainDocument {
     var appendices = [
-      new AppendixClass("Tree Comparison", ShowTreeComparison),
+      new AppendixClass("Experimental Runs", ExperimentClass.ShowComparison),
       new AppendixClass(Lang.CharacterRules, results.CharacterRule.ShowDescription(results.UniqueSegments)),
       new AppendixClass(Lang.PartitionRules, results.PartitionRule.ShowPartitions),
-      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
-      new AppendixClass(Lang.Results, results.ShowLanguageTrees),
     ];
 
     PageSection {
@@ -259,6 +235,7 @@ class DiagnosticsViewClass: BaseViewClass {
       new AppendixClass("Feature Tree", SegmentTree.ShowTree),
       new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
       new AppendixClass(Lang.Languages, results.ShowLanguageDetails),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
     ];
 
     ShowAppendix(each appendices);

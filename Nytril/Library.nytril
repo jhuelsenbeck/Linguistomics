@@ -175,13 +175,18 @@ class WordClass: FactClass {
 class ConceptClass: FactClass {
   field Name,
         Confidence;
-  var   Variable;
+  var   Variable,
+        WordType;
 
-  Constructor(variable, confidence) {
+  Constructor(variable) {
     super.Constructor(variable.GlobalVariablePath);
-    Name       = variable.GlobalVariableName;
-    Confidence = confidence;
     Variable   = variable;
+    Name       = variable.GlobalVariableName;
+    Confidence = variable.Confidence;
+    WordType   = variable.WordType;
+
+    System.Assert(Confidence > 0);
+    System.Assert(WordType != WordTypes.None);
   }
 
   override GetLayoutTip = Span {Name; "-"; Confidence};
@@ -365,9 +370,12 @@ class ResultsClass {
     var tlist = new ListClass(128, TaxonClass);
 
     foreach (var conceptvar in Concepts) {
-      if (exists conceptvar.?Confidence and conceptvar.Confidence > 0) {
+      var good = exists conceptvar.?Confidence and exists conceptvar.?WordType;
+      System.Assert(good, "Improper concept", conceptvar);
+
+      if (good and conceptvar.Confidence > 0) {
         ++ConceptCount;
-        var concept = new ConceptClass(conceptvar, conceptvar.Confidence);
+        var concept = new ConceptClass(conceptvar);
 
         foreach (var cognate in conceptvar) {
           var vname = cognate.GlobalVariableName();
@@ -716,12 +724,6 @@ class ResultsClass {
 //    if (results.ExitCode != 0)
 //      System.Assert(false, results.StandardOutput, p);
   }
-
-  ShowLanguageTrees = Block {
-    Style.ShowTree("Commonly Accepted Romance Tree", Lang.Years, LanguageBranches.Romance);
-    Style.ShowTree("Priors", Lang.Years, Info.PriorTree);
-    Style.ShowTree("Results", "Branches", Info.ConsensusTree);
-  };
 
   ShowStats = Block {
 //    var schema = new LogSchemaClass();
@@ -1156,7 +1158,6 @@ class ResultsClass {
       };
     }
   };
-}
 }
 //======================================================================
 

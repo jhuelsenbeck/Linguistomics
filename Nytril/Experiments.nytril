@@ -1,0 +1,40 @@
+using Format, IO, Units;
+
+//======================================================================
+
+class ExperimentClass: FactClass {
+  field Name,
+        FolderName,
+        Generations;
+  var   Tree;
+
+
+  Constructor(id, name, folder, generations) {
+    super.Constructor(id);
+    Name        = name;
+    FolderName  = folder;
+    Generations = generations;
+    Tree        = Read(Info.ExperimentBase Folder(folder) Info.ConsensusName).trees.TREE1;
+  }
+
+  Show = Block {
+    var subtitle = Span {
+      Span {
+        TextGroup: true;
+        Generations;
+      };
+       " generations";
+    };
+
+    Style.ShowTree(Name, subtitle, Tree);
+  };
+
+  static ShowComparison = Block {
+    (each Info.Experiments).Show;
+    Style.ShowTree("Prior", null, Info.PriorTree);
+    Style.ShowTree("Commonly Accepted Romance Tree", null, LanguageBranches.Romance, Lang.Years);
+  };
+}
+//======================================================================
+
+

@@ -39,7 +39,7 @@ namespace DocMetrics {
   SegmentColumns  = 4;
   SegmentSize     = 40 pts;
   SlideFooter     = 0.5 inches;
-  SlideHeader     = 1 inches;
+  SlideHeader     = 0.75 inches;
   SlideContent    = Size(PageContent.Width, PageContent.Height - SlideFooter);
 }
 //======================================================================
@@ -181,7 +181,12 @@ namespace Style {
   FooterBar1           = Color(223, 232, 249);
   FooterBar2           = Colors.White;
   TitleColor           = Colors.Orange;
-  HeaderLeftBar        = HeaderBar1..HeaderBar2;
+  HeaderLeftBar        = new RadialGradientClass(Point(95%, 50%), Point(95%, 50%), Size(20%, 90%)) {
+    Stops: [
+      new ColorStopClass(0%, HeaderBar2),
+      new ColorStopClass(100%, HeaderBar1),
+    ];
+  };
   HeaderRightBar       = (99%)..(90%);
   FooterLeftBar        = FooterBar1..FooterBar2;
   FooterRightBar       = FooterBar2..FooterBar1;
@@ -227,12 +232,6 @@ namespace Style {
   };
 
   FigureCaption = Span;
-
-  BranchMarker = Figure {
-    Stroke: 1 pt {Color: Colors.Gray};
-    Fill: Colors.White;
-    Ellipse(Rect(Point(0), Size(3 pts, 2 pts)))
-  };
 
   ShowFigureNumber(figure) = Span {
     Lang.Figure;
@@ -518,27 +517,41 @@ namespace Style {
     Marker: i => "{0}."(i+1);
   };
 
-  TreeOptions = Tree {
-    TextHeight: 10 pts;
-    NodeGap: 6 pts;
-    Curvature: 20%;
-    Bevel: 20%;
+  BranchMarker = Figure {
+    Stroke: 1 pt {Color: Colors.Gray};
+    Fill: Colors.Black;
+    Ellipse(Rect(0, 1 pts))
   };
 
-  ShowTree(title, axis, root) = VBox {
+  TreeOptions = Tree {
+    TextHeight: 10 pts;
+    NodeGap: 5 pts;
+    Curvature: 20%;
+    Bevel: 20%;
+    Marker: BranchMarker;
+  };
+
+  ShowTree(title, subtitle, root, axis=null) = VBox {
     Corner: 8 pts;
     MarginB: 20 pts;
     PaddingLR: 15 pts;
     Border: 0.5 pts {Color: 90%};
-    Paragraph {
+    Style.Header1 {
       HAlignment: HAligns.Center;
-      TextHeight: 14 pts;
-      Bold;
       title;
     };
+    if (valid subtitle) {
+      Paragraph {
+        TextHeight: 10 pts;
+        HAlignment: HAligns.Center;
+        subtitle;
+      };
+      Paragraph;
+    }
+
     TreeOptions {
       Width: DocMetrics.TreeFigureWidth;
-      ValueLabel: axis;
+      ValueLabel: axis ?? "Branches";
       ValueAxis: ChartAxis;
       Root: root;
     };
@@ -754,7 +767,7 @@ abstract class BaseViewClass: DocumentClass {
     };
   };
 
-  HeaderBackground(title, width, height) = Design(width, height, true, Style.HeaderBar1..Style.HeaderBar2) {
+  HeaderBackground(title, width, height) = Design(width, height, true, Style.HeaderLeftBar) {
     Frame {
       Width: 0.75 width;
       VAlignment: VAligns.Center;
