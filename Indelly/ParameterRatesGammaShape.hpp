@@ -16,8 +16,10 @@ class ParameterRatesGammaShape : public Parameter {
                             ParameterRatesGammaShape(const ParameterRatesGammaShape& p) = delete;
                             ParameterRatesGammaShape(RandomVariable* r, Model* m, std::string n, double ep, int nc);
         void                accept(void);
+        void                fillParameterValues(double* x, int& start);
         std::string         getHeader(void);
         std::string         getJsonString(void);
+        int                 getNumValues(void) { return 1; }
         std::string         getString(void);
         double              lnPriorProbability(void);
         void                print(void);

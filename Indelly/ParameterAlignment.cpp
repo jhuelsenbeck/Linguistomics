@@ -96,6 +96,10 @@ bool ParameterAlignment::areAlignmentsIdentical(void) {
     return true;
 }
 
+void ParameterAlignment::fillParameterValues(double* x, int& start) {
+
+}
+
 std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(void) {
 
     return getIndelMatrix(0);

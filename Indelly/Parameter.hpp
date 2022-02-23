@@ -14,10 +14,12 @@ class Parameter {
                             Parameter(RandomVariable* r, Model* m, std::string n);
         virtual            ~Parameter(void) { }
         virtual void        accept(void) = 0;
+        virtual void        fillParameterValues(double* x, int& start) = 0;
         virtual std::string getJsonString(void) = 0;
         virtual std::string getHeader(void) = 0;
         std::string         getName(void) { return parmName; }
         std::string         getLastUpdate(void) { return lastUpdateType; }
+        virtual int         getNumValues(void) = 0;
         double              getProposalProbability(void) { return proposalProbability; }
         virtual std::string getString(void) = 0;
         bool                getUpdateChangesRateMatrix(void) { return updateChangesRateMatrix; }
