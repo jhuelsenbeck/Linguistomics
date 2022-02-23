@@ -16,8 +16,10 @@ class ParameterExchangabilityRates : public Parameter {
                                         ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns, std::vector<std::string> labs);
                                        ~ParameterExchangabilityRates(void);
         void                            accept(void);
+        void                            fillParameterValues(double* x, int& start);
         std::string                     getHeader(void);
         std::string                     getJsonString(void);
+        int                             getNumValues(void) { return numRates; }
         std::string                     getString(void);
         std::vector<double>&            getValue(void) { return rates[0]; }
         double                          lnPriorProbability(void);

@@ -53,7 +53,9 @@ class Model {
         int                                     getNumAlignments(void);
         std::string                             getParameterHeader(void);
         std::string                             getParameterString(void);
+        void                                    fillParameterValues(double* x, int n);
         ParameterTree*                          getParameterTree(void);
+        int                                     getNumParameterValues(void);
         std::string                             getStateSetsJsonString(void);
         Tree*                                   getTree(void);
         Tree*                                   getTree(RbBitSet& mask);

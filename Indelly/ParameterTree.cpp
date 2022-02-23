@@ -110,6 +110,10 @@ int ParameterTree::countMaskBits(std::vector<bool>& m) {
     return n;
 }
 
+void ParameterTree::fillParameterValues(double* x, int& start) {
+
+}
+
 void ParameterTree::nniArea(std::vector<Node*>& backbone, Node*& incidentNode) {
 
     Tree* t = fullTree.trees[0];

@@ -19,6 +19,7 @@ class Mcmc {
     private:
         void            closeOutputFiles(void);
         std::string     formattedTime(std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
+        void            initialize(void);
         int             numDigits(double lnX);
         void            openOutputFiles(void);
         void            print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
@@ -34,6 +35,8 @@ class Mcmc {
         std::ofstream*  algnJsonStrm;
         std::ofstream   parmStrm;
         std::ofstream   treeStrm;
+        double*         parmValues;
+        int             numParmValues;
         int             maxPriorPrint;
         int             maxLikePrint;
         int             maxGenPrint;

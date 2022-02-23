@@ -22,6 +22,7 @@ class ParameterAlignment : public Parameter {
                                        ~ParameterAlignment(void);
         void                            accept(void);
         bool                            areAlignmentsIdentical(void);
+        void                            fillParameterValues(double* x, int& start);
         std::vector<std::vector<int> >& getAlignment(void) { return alignment[0]; }
         std::vector<std::vector<int> >& getAlignment(int idx) { return alignment[idx]; }
         char                            getCharFromCode(int code);
@@ -38,6 +39,7 @@ class ParameterAlignment : public Parameter {
         int                             getNumSites(void) { return (int)alignment[0][0].size(); }
         int                             getNumStates(void) { return numStates; }
         int                             getNumTaxa(void) { return numTaxa; }
+        int                             getNumValues(void) { return 1; }
         int                             getPrintWidth(void) { return printWidth; }
         std::vector<std::vector<int> >  getRawSequenceMatrix(void) { return sequences; }
         std::string                     getString(void) { return ""; }

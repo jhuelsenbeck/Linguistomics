@@ -70,6 +70,14 @@ void ParameterExchangabilityRates::accept(void) {
     rates[1] = rates[0];
 }
 
+void ParameterExchangabilityRates::fillParameterValues(double* x, int& start) {
+
+    int j = start;
+    for (int i=0; i<numRates; i++)
+        x[j++] = rates[0][i];
+    start = j;
+}
+
 std::string ParameterExchangabilityRates::getHeader(void) {
 
     std::string str = "";

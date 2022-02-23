@@ -101,6 +101,20 @@ void Model::accept(void) {
     parameters[updatedParameterIdx]->accept();
 }
 
+void Model::fillParameterValues(double* x, int n) {
+
+    int valNum = 0;
+    for (int i=0; i<parameters.size(); i++)
+        {
+        ParameterAlignment* pA = dynamic_cast<ParameterAlignment*>(parameters[i]);
+        ParameterTree* pT = dynamic_cast<ParameterTree*>(parameters[i]);
+        if (pA == NULL && pT == NULL)
+            parameters[i]->fillParameterValues(x, valNum);
+        if (valNum > n)
+            Msg::error("Too many parameter values");
+        }
+}
+
 void Model::flipActiveLikelihood(void) {
     for (int i=0; i<activeLikelihood.size(); i++)
         activeLikelihood[i] ^= 1; 
@@ -209,6 +223,19 @@ int Model::getNumAlignments(void) {
         if (p != NULL)
             n++;
         }
+    return n;
+}
+int Model::getNumParameterValues(void) {
+
+    int n = 0;
+    for (int i=0; i<parameters.size(); i++)
+        {
+        ParameterAlignment* pA = dynamic_cast<ParameterAlignment*>(parameters[i]);
+        ParameterTree* pT = dynamic_cast<ParameterTree*>(parameters[i]);
+        if (pA == NULL && pT == NULL)
+            n += parameters[i]->getNumValues();
+        }
+    
     return n;
 }
 

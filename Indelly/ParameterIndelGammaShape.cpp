@@ -34,6 +34,13 @@ void ParameterIndelGammaShape::accept(void) {
     rates[1] = rates[0];
 }
 
+void ParameterIndelGammaShape::fillParameterValues(double* x, int& start) {
+
+    int j = start;
+    x[j++] = alpha[0];
+    start = j;
+}
+
 std::string ParameterIndelGammaShape::getHeader(void) {
 
     std::string str = "IndelAlpha";

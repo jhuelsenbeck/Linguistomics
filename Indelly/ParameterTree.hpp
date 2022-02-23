@@ -26,12 +26,14 @@ class ParameterTree : public Parameter {
                                        ~ParameterTree(void);
         void                            accept(void);
         void                            clearSubtrees(void);
+        void                            fillParameterValues(double* x, int& start);
         Tree*                           getActiveTree(void) { return fullTree.trees[0]; }
         Tree*                           getActiveTree(RbBitSet& mask);
         Tree*                           getActiveTree(const RbBitSet& mask);
         std::map<RbBitSet,TreePair>&    getSubtrees(void) { return subTrees; }
         std::string                     getJsonString(void);
         std::string                     getHeader(void) { return ""; }
+        int                             getNumValues(void) { return 1; }
         double                          lnPriorProbability(void);
         void                            print(void);
         void                            printNewick(void);

@@ -92,6 +92,15 @@ double ParameterIndelRates::expectedEpsilon(double slen) {
     return eps;
 }
 
+
+void ParameterIndelRates::fillParameterValues(double* x, int& start) {
+
+    int j = start;
+    x[j++] = getInsertionRate();
+    x[j++] = getDeletionRate();
+    start = j;
+}
+
 double ParameterIndelRates::getDeletionRate(void) {
 
     double mu = rho[0] / (1.0 + epsilon[0][0]);

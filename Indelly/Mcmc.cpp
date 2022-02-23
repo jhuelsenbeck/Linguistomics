@@ -66,6 +66,15 @@ std::string Mcmc::formattedTime(std::chrono::high_resolution_clock::time_point& 
     return tStr;
 }
 
+void Mcmc::initialize(void) {
+
+    openOutputFiles();
+    numParmValues = modelPtr->getNumParameterValues();
+    parmValues = new double[numParmValues];
+    for (int i=0; i<numParmValues; i++)
+        parmValues[i] = 0.0;
+}
+
 int Mcmc::numDigits(double x) {
 
     if (x < 0.0)
@@ -101,6 +110,7 @@ void Mcmc::openOutputFiles(void) {
 }
 
 void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
+
     if (numDigits(curLnL) > maxLikePrint)
         maxLikePrint = numDigits(curLnL);
     if (numDigits(newLnL) > maxLikePrint)
@@ -109,7 +119,6 @@ void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double ne
         maxPriorPrint = numDigits(curLnP);
     if (numDigits(newLnP) > maxPriorPrint)
         maxPriorPrint = numDigits(newLnP);
-
 
     std::cout << std::fixed << std::setprecision(3);
     std::cout << "   * ";
@@ -180,7 +189,8 @@ void Mcmc::runPosterior(void) {
     std::cout << "   Markov chain Monte Carlo" << std::endl;
     
     // initialize the chain
-    openOutputFiles();
+    initialize();
+    
     modelPtr->setUpdateLikelihood();
     double curLnL = modelPtr->lnLikelihood();
     double curLnP = modelPtr->lnPriorProbability();
@@ -240,6 +250,7 @@ void Mcmc::runPosterior(void) {
     
     // clean up
     closeOutputFiles();
+    delete [] parmValues;
 }
 
 double Mcmc::safeExponentiation(double lnX) {
@@ -299,6 +310,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         }
         
     // output to parameter file
+#   if 0
     std::string parmStr = "";
     parmStr += std::to_string(gen) + '\t';
     parmStr += std::to_string(lnL) + '\t';
@@ -306,6 +318,17 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     parmStr += std::to_string(tl)  + '\t';
     parmStr += modelPtr->getParameterString();
     parmStrm << parmStr << std::endl;
+#   else
+    std::cout << std::fixed << std::setprecision(8);
+    modelPtr->fillParameterValues(parmValues, numParmValues);
+    parmStrm << gen << '\t';
+    parmStrm << lnL << '\t';
+    parmStrm << lnP << '\t';
+    parmStrm << tl << '\t';
+    for (int i=0; i<numParmValues; i++)
+        parmStrm << parmValues[i] << '\t';
+    parmStrm << std::endl;
+#   endif
     
     // output to tree file
     treeStrm << "   tree t_" << gen << " = " << ts << ";";

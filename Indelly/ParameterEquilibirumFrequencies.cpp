@@ -40,6 +40,14 @@ void ParameterEquilibirumFrequencies::accept(void) {
     freqs[1] = freqs[0];
 }
 
+void ParameterEquilibirumFrequencies::fillParameterValues(double* x, int& start) {
+
+    int j = start;
+    for (int i=0; i<numStates; i++)
+        x[j++] = freqs[0][i];
+    start = j;
+}
+
 std::string ParameterEquilibirumFrequencies::getJsonString(void) {
 
     std::string str = "";

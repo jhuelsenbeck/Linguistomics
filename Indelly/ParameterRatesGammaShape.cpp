@@ -33,6 +33,13 @@ void ParameterRatesGammaShape::accept(void) {
     rates[1] = rates[0];
 }
 
+void ParameterRatesGammaShape::fillParameterValues(double* x, int& start) {
+
+    int j = start;
+    x[j++] = alpha[0];
+    start = j;
+}
+
 std::string ParameterRatesGammaShape::getHeader(void) {
 
     std::string str = "RatesAlpha";
