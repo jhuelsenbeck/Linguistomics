@@ -1,6 +1,7 @@
 #ifndef ParameterAlignment_hpp
 #define ParameterAlignment_hpp
 
+#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
@@ -22,7 +23,7 @@ class ParameterAlignment : public Parameter {
                                        ~ParameterAlignment(void);
         void                            accept(void);
         bool                            areAlignmentsIdentical(void);
-        void                            fillParameterValues(double* x, int& start);
+        void                            fillParameterValues(double* x, int& start, int maxNumValues);
         std::vector<std::vector<int> >& getAlignment(void) { return alignment[0]; }
         std::vector<std::vector<int> >& getAlignment(int idx) { return alignment[idx]; }
         char                            getCharFromCode(int code);
@@ -46,6 +47,7 @@ class ParameterAlignment : public Parameter {
         RbBitSet                        getTaxonMask(void);
         std::string                     getTaxonMaskString(void);
         std::vector<std::string>        getTaxonNames(void) { return taxonNames; }
+        void                            jsonStrm(std::ofstream& strm);
         int                             lengthOfLongestSequence(void);
         double                          lnPriorProbability(void);
         void                            print(void);

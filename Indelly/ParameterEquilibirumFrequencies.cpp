@@ -40,8 +40,10 @@ void ParameterEquilibirumFrequencies::accept(void) {
     freqs[1] = freqs[0];
 }
 
-void ParameterEquilibirumFrequencies::fillParameterValues(double* x, int& start) {
+void ParameterEquilibirumFrequencies::fillParameterValues(double* x, int& start, int maxNumValues) {
 
+    if (start + numStates > maxNumValues)
+        Msg::error("Exceeding bounds when filling parameter value array");
     int j = start;
     for (int i=0; i<numStates; i++)
         x[j++] = freqs[0][i];

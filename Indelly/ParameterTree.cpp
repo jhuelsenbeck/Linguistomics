@@ -110,7 +110,7 @@ int ParameterTree::countMaskBits(std::vector<bool>& m) {
     return n;
 }
 
-void ParameterTree::fillParameterValues(double* x, int& start) {
+void ParameterTree::fillParameterValues(double* x, int& start, int maxNumValues) {
 
 }
 

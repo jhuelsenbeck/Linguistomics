@@ -23,7 +23,7 @@ class ParameterIndelRates : public Parameter {
                                         ParameterIndelRates(RandomVariable* r, Model* m, std::string n, double slen, double insLam, double delLam);
                                        ~ParameterIndelRates(void);
         void                            accept(void);
-        void                            fillParameterValues(double* x, int& start);
+        void                            fillParameterValues(double* x, int& start, int maxNumValues);
         double                          getDeletionRate(void);
         double                          getExpectedSequenceLength(void);
         std::string                     getJsonString(void);

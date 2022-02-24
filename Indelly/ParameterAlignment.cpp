@@ -96,7 +96,7 @@ bool ParameterAlignment::areAlignmentsIdentical(void) {
     return true;
 }
 
-void ParameterAlignment::fillParameterValues(double* x, int& start) {
+void ParameterAlignment::fillParameterValues(double* x, int& start, int maxNumValues) {
 
 }
 
@@ -249,6 +249,43 @@ std::string ParameterAlignment::getTaxonMaskString(void) {
             str += "0";
         }
     return str;
+}
+
+void ParameterAlignment::jsonStrm(std::ofstream& strm) {
+
+    int longestName = 0;
+    for (int i=0; i<taxonNames.size(); i++)
+        {
+        if (taxonNames[i].length() > longestName)
+            longestName = (int)taxonNames[i].length();
+        }
+        
+    strm << "{\"Name\": \"" << parmName << "\", \"Data\": [\n";
+    for (int i=0; i<alignment[0].size(); i++)
+        {
+        strm << "{\"Taxon\": \"" << taxonNames[i] << "\", ";
+        for (int j=0; j<longestName-taxonNames[i].length(); j++)
+            strm << " ";
+        strm << "\"Segments\": [";
+        for (int j=0; j<alignment[0][i].size(); j++)
+            {
+            int x = alignment[0][i][j];
+            if (x == numStates)
+                strm << "-1";
+            else
+                {
+                if (x < 10)
+                    strm << " ";
+                strm << std::to_string(x);
+                }
+            if (j + 1 != alignment[0][i].size())
+                strm << ",";
+            }
+        strm << "]}";
+        if (i + 1 != alignment[0].size())
+            strm << ",\n";
+        }
+    strm << "]}\n";
 }
 
 int ParameterAlignment::lengthOfLongestSequence(void) {

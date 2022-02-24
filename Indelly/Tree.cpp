@@ -646,6 +646,32 @@ void Tree::makeSubtree(Tree& t, RbBitSet& taxonMask) {
 
 }
 
+void Tree::newickStream(std::ofstream& strm, int brlenPrecision) {
+
+    if (root->getIsLeaf() == true)
+        {
+        Node* oldRoot = root;
+        std::vector<Node*> nbs = root->getDescendantsVector();
+        if (nbs.size() > 1)
+            Msg::error("Expecting only a single neighbor at the root of the tree");
+        Node* newRoot = nbs[0];
+        root->setAncestor(newRoot);
+        oldRoot->setAncestor(newRoot);
+        newRoot->setAncestor(NULL);
+        root = newRoot;
+
+        writeTree(root, strm, brlenPrecision);
+
+        newRoot->setAncestor(oldRoot);
+        oldRoot->setAncestor(NULL);
+        root = oldRoot;
+        }
+    else
+        {
+        writeTree(root, strm, brlenPrecision);
+        }
+}
+
 std::map<TaxonPair,double,CompTaxonPair> Tree::pairwiseDistances(void) {
 
     // find all of the taxon pairs for this tree
@@ -767,6 +793,36 @@ void Tree::writeTree(Node* p, std::stringstream& ss, int brlenPrecision) {
             ss << ")";
             if (p != NULL && p != root)
                 ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBranchLength();
+            }
+        }
+}
+
+void Tree::writeTree(Node* p, std::ofstream& strm, int brlenPrecision) {
+
+    if (p != NULL)
+        {
+        if (p->getIsLeaf() == true)
+            {
+            strm << p->getIndex()+1;
+            //ss << p->getName();
+            strm << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBranchLength();
+            }
+        else
+            {
+            strm << "(";
+            }
+        std::vector<Node*> myDescendants = p->getDescendantsVector();
+        for (int i=0; i<(int)myDescendants.size(); i++)
+            {
+            writeTree(myDescendants[i], strm, brlenPrecision);
+            if ( (i + 1) != (int)myDescendants.size() )
+                strm << ",";
+            }
+        if (p->getIsLeaf() == false)
+            {
+            strm << ")";
+            if (p != NULL && p != root)
+                strm << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBranchLength();
             }
         }
 }

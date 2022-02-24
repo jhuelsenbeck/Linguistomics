@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <iostream>
 #include "Model.hpp"
+#include "Msg.hpp"
 #include "ParameterExchangabilityRates.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
@@ -70,8 +71,10 @@ void ParameterExchangabilityRates::accept(void) {
     rates[1] = rates[0];
 }
 
-void ParameterExchangabilityRates::fillParameterValues(double* x, int& start) {
+void ParameterExchangabilityRates::fillParameterValues(double* x, int& start, int maxNumValues) {
 
+    if (start + numRates > maxNumValues)
+        Msg::error("Exceeding bounds when filling parameter value array");
     int j = start;
     for (int i=0; i<numRates; i++)
         x[j++] = rates[0][i];
