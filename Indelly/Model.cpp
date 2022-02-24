@@ -109,7 +109,7 @@ void Model::fillParameterValues(double* x, int n) {
         ParameterAlignment* pA = dynamic_cast<ParameterAlignment*>(parameters[i]);
         ParameterTree* pT = dynamic_cast<ParameterTree*>(parameters[i]);
         if (pA == NULL && pT == NULL)
-            parameters[i]->fillParameterValues(x, valNum);
+            parameters[i]->fillParameterValues(x, valNum, n);
         if (valNum > n)
             Msg::error("Too many parameter values");
         }

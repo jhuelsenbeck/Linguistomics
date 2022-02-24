@@ -271,13 +271,12 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     
     if (gen == 1)
         {
-        std::string parmStr = "";
-        parmStr += "Gen\t";
-        parmStr += "lnL\t";
-        parmStr += "lnP\t";
-        parmStr += "TL\t";
-        parmStr += modelPtr->getParameterHeader();
-        parmStrm << parmStr << std::endl;
+        parmStrm << "Gen\t";
+        parmStrm << "lnL\t";
+        parmStrm << "lnP\t";
+        parmStrm << "TL\t";
+        parmStrm << modelPtr->getParameterHeader();
+        parmStrm << std::endl;
 
         std::vector<std::string>& tn = t->getTaxonNames();
         treeStrm << "begin trees;" << std::endl;
@@ -331,14 +330,21 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
 #   endif
     
     // output to tree file
+#   if 0
     treeStrm << "   tree t_" << gen << " = " << ts << ";";
     treeStrm << std::endl;
+#   else
+    treeStrm << "   tree t_" << gen << " = ";
+    t->newickStream(treeStrm, 6);
+    treeStrm  << ts << ";" << std::endl;
+#   endif
     
     // output to alignment file
     std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
     for (int i=0; i<alns.size(); i++)
         {
-        algnJsonStrm[i] << alns[i]->getJsonString();
+        //algnJsonStrm[i] << alns[i]->getJsonString();
+        alns[i]->jsonStrm(algnJsonStrm[i]);
         if (gen == numMcmcCycles)
             algnJsonStrm[i] << "]\n}" << std::endl;
         else
@@ -346,7 +352,5 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         }
     
     if (gen == numMcmcCycles)
-        {
         treeStrm << "end;" << std::endl;
-        }
 }

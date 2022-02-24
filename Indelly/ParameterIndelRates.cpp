@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include "Model.hpp"
+#include "Msg.hpp"
 #include "ParameterIndelRates.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
@@ -93,8 +94,10 @@ double ParameterIndelRates::expectedEpsilon(double slen) {
 }
 
 
-void ParameterIndelRates::fillParameterValues(double* x, int& start) {
+void ParameterIndelRates::fillParameterValues(double* x, int& start, int maxNumValues) {
 
+    if (start + 2 > maxNumValues)
+        Msg::error("Exceeding bounds when filling parameter value array");
     int j = start;
     x[j++] = getInsertionRate();
     x[j++] = getDeletionRate();

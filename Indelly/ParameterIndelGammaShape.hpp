@@ -17,7 +17,7 @@ class ParameterIndelGammaShape : public Parameter {
                                 ParameterIndelGammaShape(const ParameterIndelGammaShape& p) = delete;
                                 ParameterIndelGammaShape(RandomVariable* r, Model* m, std::string n, double ep, int nc);
         void                    accept(void);
-        void                    fillParameterValues(double* x, int& start);
+        void                    fillParameterValues(double* x, int& start, int maxNumValues);
         std::string             getHeader(void);
         std::string             getJsonString(void);
         std::string             getString(void);

@@ -15,7 +15,7 @@ class ParameterEquilibirumFrequencies : public Parameter {
                                         ParameterEquilibirumFrequencies(RandomVariable* r, Model* m, std::string n, int ns);
                                        ~ParameterEquilibirumFrequencies(void);
         void                            accept(void);
-        void                            fillParameterValues(double* x, int& start);
+        void                            fillParameterValues(double* x, int& start, int maxNumValues);
         std::string                     getHeader(void);
         std::string                     getJsonString(void);
         int                             getNumValues(void) { return numStates; }

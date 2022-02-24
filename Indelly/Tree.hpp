@@ -1,6 +1,7 @@
 #ifndef Tree_H
 #define Tree_H
 
+#include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
@@ -40,6 +41,7 @@ class Tree {
         bool                                        isRoot(Node* p) { return ((p == root) ? true : false); }
         bool                                        isTaxonPresent(std::string tn);
         void                                        makeSubtree(Tree& t, RbBitSet& taxonMask);
+        void                                        newickStream(std::ofstream& strm, int brlenPrecision);
         std::map<TaxonPair,double,CompTaxonPair>    pairwiseDistances(void);
         void                                        print(void);
         void                                        print(std::string header);
@@ -55,6 +57,7 @@ class Tree {
         void                                        passDown(Node* p);
         std::vector<std::string>                    tokenizeTreeString(std::string ls);
         void                                        writeTree(Node* p, std::stringstream& ss, int brlenPrecision);
+        void                                        writeTree(Node* p, std::ofstream& strm, int brlenPrecision);
         std::vector<Node*>                          nodes;
         std::vector<Node*>                          downPassSequence;
         Node*                                       root;

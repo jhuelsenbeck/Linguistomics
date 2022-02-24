@@ -14,7 +14,7 @@ class Parameter {
                             Parameter(RandomVariable* r, Model* m, std::string n);
         virtual            ~Parameter(void) { }
         virtual void        accept(void) = 0;
-        virtual void        fillParameterValues(double* x, int& start) = 0;
+        virtual void        fillParameterValues(double* x, int& start, int maxNumValues) = 0;
         virtual std::string getJsonString(void) = 0;
         virtual std::string getHeader(void) = 0;
         std::string         getName(void) { return parmName; }

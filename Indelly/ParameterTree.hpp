@@ -26,7 +26,7 @@ class ParameterTree : public Parameter {
                                        ~ParameterTree(void);
         void                            accept(void);
         void                            clearSubtrees(void);
-        void                            fillParameterValues(double* x, int& start);
+        void                            fillParameterValues(double* x, int& start, int maxNumValues);
         Tree*                           getActiveTree(void) { return fullTree.trees[0]; }
         Tree*                           getActiveTree(RbBitSet& mask);
         Tree*                           getActiveTree(const RbBitSet& mask);

@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include "Model.hpp"
+#include "Msg.hpp"
 #include "ParameterIndelGammaShape.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
@@ -34,8 +35,10 @@ void ParameterIndelGammaShape::accept(void) {
     rates[1] = rates[0];
 }
 
-void ParameterIndelGammaShape::fillParameterValues(double* x, int& start) {
+void ParameterIndelGammaShape::fillParameterValues(double* x, int& start, int maxNumValues) {
 
+    if (start + 1 > maxNumValues)
+        Msg::error("Exceeding bounds when filling parameter value array");
     int j = start;
     x[j++] = alpha[0];
     start = j;
