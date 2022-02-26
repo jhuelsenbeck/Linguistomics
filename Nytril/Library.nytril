@@ -814,22 +814,32 @@ class ResultsClass {
     };
   };
 
-  ShowWordGroups = Block {
+  ShowConceptGroups = Block {
     var groups = WordGroups[1..];
     Table {
       Style.TableEdge;
-      Columns: [1 inch] + [1 inches]*3;
+      Columns: [1 inch] + [1 inches]*groups.Length;
       Row {
-        Lang.Concept;
-        (each groups).Name;
+        Style.HeaderCell {
+          HAligns: HAligns.Center;
+          Lang.Concept;
+        };
+        foreach (var g in groups) {
+          Style.HeaderCell {
+            HAligns: HAligns.Center;
+            g.Name;
+          };
+        }
       };
       foreach (var concept in UsedConcepts) {
         Row {
+          Style.RowBar(EachIndex);
           concept.Name;
           foreach (var g in groups) {
             Cell {
+              HAlign: HAligns.Center;
               if (concept.WordGroup.HasFlag(g))
-                "X";
+                Tex.bullet;
             }
           }
         }
