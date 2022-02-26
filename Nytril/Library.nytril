@@ -176,7 +176,8 @@ class ConceptClass: FactClass {
   field Name,
         Confidence;
   var   Variable,
-        WordType;
+        WordType,
+        WordGroup;
 
   Constructor(variable) {
     super.Constructor(variable.GlobalVariablePath);
@@ -184,9 +185,11 @@ class ConceptClass: FactClass {
     Name       = variable.GlobalVariableName;
     Confidence = variable.Confidence;
     WordType   = variable.WordType;
+    WordGroup  = variable.WordGroup;
 
     System.Assert(Confidence > 0);
     System.Assert(WordType != WordTypes.None);
+    System.Assert(WordGroup != WordGroups.None);
   }
 
   override GetLayoutTip = Span {Name; "-"; Confidence};
@@ -277,11 +280,11 @@ class ResultsClass {
                   SortedSegments,
                   PartSegments;
   CognateClass[]  UsedCognates;
+  ConceptClass[]  UsedConcepts;
   MatrixClass     TransitionCount;
   TaxonClass[]    Taxa;
   var             DisplaySegments,
                   UniqueCharacters,
-                  ConceptCount,
                   TotalLength,
                   MaxLanguageName,
                   EXEName,
@@ -363,19 +366,21 @@ class ResultsClass {
     }
 
     TotalLength  = 0;
-    ConceptCount = 0;
 
     var set   = new DictionaryClass(1024);
     var clist = new ListClass(1024, CognateClass);
     var tlist = new ListClass(128, TaxonClass);
+    var conceptlist = new ListClass(256, ConceptClass);
 
     foreach (var conceptvar in Concepts) {
-      var good = exists conceptvar.?Confidence and exists conceptvar.?WordType;
+      var good = exists conceptvar.?Confidence and
+                 exists conceptvar.?WordType and
+                 exists conceptvar.?WordGroup;
       System.Assert(good, "Improper concept", conceptvar);
 
       if (good and conceptvar.Confidence > 0) {
-        ++ConceptCount;
         var concept = new ConceptClass(conceptvar);
+        conceptlist.Add(concept);
 
         foreach (var cognate in conceptvar) {
           var vname = cognate.GlobalVariableName();
@@ -384,6 +389,7 @@ class ResultsClass {
           switch (vname) {
             case "Confidence":
             case "WordType":
+            case "WordGroup":
               inc = false;
               break;
           }
@@ -413,6 +419,8 @@ class ResultsClass {
         }
       }
     }
+
+    UsedConcepts = conceptlist.Values.Sort(false);
     UsedCognates = clist.Values;
     Taxa         = tlist.Values;
 
@@ -804,6 +812,29 @@ class ResultsClass {
       Newick(Info.PriorTree);
       ";"; Quote; ",";
     };
+  };
+
+  ShowWordGroups = Block {
+    var groups = WordGroups[1..];
+    Table {
+      Style.TableEdge;
+      Columns: [1 inch] + [1 inches]*3;
+      Row {
+        Lang.Concept;
+        (each groups).Name;
+      };
+      foreach (var concept in UsedConcepts) {
+        Row {
+          concept.Name;
+          foreach (var g in groups) {
+            Cell {
+              if (concept.WordGroup.HasFlag(g))
+                "X";
+            }
+          }
+        }
+      }
+    }
   };
 
   AddScope = TextBlock {
