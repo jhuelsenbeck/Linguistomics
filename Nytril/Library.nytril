@@ -378,7 +378,7 @@ class ResultsClass {
                  exists conceptvar.?WordGroup;
       System.Assert(good, "Improper concept", conceptvar);
 
-      if (good and conceptvar.Confidence > 0) {
+      if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(Info.IncludeWordGroups)) {
         var concept = new ConceptClass(conceptvar);
         conceptlist.Add(concept);
 
@@ -818,11 +818,16 @@ class ResultsClass {
     var groups = WordGroups[1..];
     Table {
       Style.TableEdge;
-      Columns: [1 inch] + [1 inches]*groups.Length;
+      Columns: [0.25 inches] + [1 inch] * (2+groups.Length);
       Row {
+        Style.HeaderCell;
         Style.HeaderCell {
           HAligns: HAligns.Center;
           Lang.Concept;
+        };
+        Style.HeaderCell {
+          HAligns: HAligns.Center;
+          "Type";
         };
         foreach (var g in groups) {
           Style.HeaderCell {
@@ -834,7 +839,9 @@ class ResultsClass {
       foreach (var concept in UsedConcepts) {
         Row {
           Style.RowBar(EachIndex);
+          EachIndex;
           concept.Name;
+          concept.WordType.Name;
           foreach (var g in groups) {
             Cell {
               HAlign: HAligns.Center;
