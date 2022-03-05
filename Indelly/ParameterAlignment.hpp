@@ -5,9 +5,11 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "AlnMatrix.hpp"
 #include "Parameter.hpp"
 #include "RbBitSet.h"
 class Alignment;
+class AlnMatrix;
 class AlignmentProposal;
 class IndelMatrix;
 class Model;
@@ -22,10 +24,10 @@ class ParameterAlignment : public Parameter {
                                         ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, int idx);
                                        ~ParameterAlignment(void);
         void                            accept(void);
-        bool                            areAlignmentsIdentical(void);
+      //bool                            areAlignmentsIdentical(void);
         void                            fillParameterValues(double* x, int& start, int maxNumValues);
-        std::vector<std::vector<int> >& getAlignment(void) { return alignment[0]; }
-        std::vector<std::vector<int> >& getAlignment(int idx) { return alignment[idx]; }
+        AlnMatrix*                      getAlignment(void) { return alignment[0]; }
+        AlnMatrix*                      getAlignment(int idx) { return alignment[idx]; }
         char                            getCharFromCode(int code);
         int                             getGapCode(void) { return gapCode; }
         std::string                     getHeader(void) { return ""; }
@@ -37,7 +39,7 @@ class ParameterAlignment : public Parameter {
         int                             getIndex(void) { return index; }
         bool                            getIsCompletelySampled(void) { return completelySampled; }
         std::string                     getJsonString(void);
-        int                             getNumSites(void) { return (int)alignment[0][0].size(); }
+        int                             getNumSites(void) { return alignment[0]->getNumSites(); }
         int                             getNumStates(void) { return numStates; }
         int                             getNumTaxa(void) { return numTaxa; }
         int                             getNumValues(void) { return 1; }
@@ -47,7 +49,7 @@ class ParameterAlignment : public Parameter {
         RbBitSet                        getTaxonMask(void);
         std::string                     getTaxonMaskString(void);
         std::vector<std::string>        getTaxonNames(void) { return taxonNames; }
-        void                            jsonStrm(std::ofstream& strm);
+        void                            jsonStream(std::ofstream& strm);
         int                             lengthOfLongestSequence(void);
         double                          lnPriorProbability(void);
         void                            print(void);
@@ -56,7 +58,8 @@ class ParameterAlignment : public Parameter {
     
     protected:
         AlignmentProposal*              alignmentProposal;
-        std::vector<std::vector<int> >  alignment[2];  // numTaxa X numSites
+      //std::vector<std::vector<int> >  alignment[2];  // numTaxa X numSites
+        AlnMatrix*                      alignment[2];  // numTaxa X numSites
         std::vector<std::vector<int> >  sequences;     // numTaxa X numSites for taxon i (i.e., left-justified), instantiated once on construction
         bool                            completelySampled;
         double                          tuning;

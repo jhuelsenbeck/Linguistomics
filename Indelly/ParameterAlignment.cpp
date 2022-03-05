@@ -44,15 +44,19 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     numStates = a->getNumStates();
     taxonNames = a->getTaxonNames();
     gapCode = a->getGapCode();
-    alignment[0].resize(numTaxa);
-    for (int i=0; i<numTaxa; i++)
-        alignment[0][i].resize(numSites);
+    alignment[0] = new AlnMatrix(numTaxa, numSites * 5);
+    alignment[1] = new AlnMatrix(numTaxa, numSites * 5);
+    alignment[0]->setNumSites(numSites);
+    alignment[1]->setNumSites(numSites);
+    //alignment[0].resize(numTaxa);
+    //for (int i=0; i<numTaxa; i++)
+    //    alignment[0][i].resize(numSites);
     for (int i=0; i<numTaxa; i++)
         {
         for (int j=0; j<numSites; j++)
-            alignment[0][i][j] = a->getCharacter(i, j);
+            (*alignment[0])(i,j) = a->getCharacter(i, j);
         }
-    alignment[1] = alignment[0];
+    (*alignment[1]) = (*alignment[0]);
     
 #   if 0
     std::cout << "alignment from ParameterAlignment " << name << std::endl;
@@ -85,16 +89,17 @@ ParameterAlignment::~ParameterAlignment(void) {
 
 void ParameterAlignment::accept(void) {
 
-    alignment[1] = alignment[0];
+    (*alignment[1]) = (*alignment[0]);
 }
 
-bool ParameterAlignment::areAlignmentsIdentical(void) {
+/*bool ParameterAlignment::areAlignmentsIdentical(void) {
+
     if (alignment[0].size() != alignment[1].size())
         return false;
     if (alignment[0][0].size() != alignment[1][0].size())
         return false;
     return true;
-}
+}*/
 
 void ParameterAlignment::fillParameterValues(double* x, int& start, int maxNumValues) {
 
@@ -110,8 +115,8 @@ std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(int idx) {
     // note that this returns a numSites X numTaxa matrix (i.e.,
     // the rows contain the information for the i-th site while
     // the columns contain the information the j-th taxon)
-    size_t nt = alignment[idx].size();
-    size_t ns = alignment[idx][0].size();
+    size_t nt = alignment[idx]->getNumTaxa();
+    size_t ns = alignment[idx]->getNumSites();
     std::vector<std::vector<int> > m;
     m.resize(ns);
     for (int i=0; i<ns; i++)
@@ -120,7 +125,7 @@ std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(int idx) {
         {
         for (int j=0; j<nt; j++)
             {
-            if (alignment[idx][j][i] == gapCode)
+            if ( (*alignment[idx])(j,i) == gapCode)
                 m[i][j] = 0;
             else
                 m[i][j] = 1;
@@ -132,8 +137,8 @@ std::vector<std::vector<int> > ParameterAlignment::getIndelMatrix(int idx) {
 void ParameterAlignment::getIndelMatrix(IndelMatrix* indelMat) {
 
     int idx = 0;
-    int nt = (int)alignment[idx].size();
-    int ns = (int)alignment[idx][0].size();
+    int nt = alignment[idx]->getNumTaxa();
+    int ns = alignment[idx]->getNumSites();
     if (indelMat->getNumTaxa() != nt)
         Msg::error("Mismatch in the number of taxa when initializing the indel matrix");
     indelMat->setNumSites(ns);
@@ -141,7 +146,7 @@ void ParameterAlignment::getIndelMatrix(IndelMatrix* indelMat) {
         {
         for (int j=0; j<nt; j++)
             {
-            if (alignment[idx][j][i] == gapCode)
+            if ((*alignment[idx])(j,i) == gapCode)
                 (*indelMat)(i,j) = 0;
             else
                 (*indelMat)(i,j) = 1;
@@ -203,15 +208,15 @@ std::string ParameterAlignment::getJsonString(void) {
         
     std::string jsonStr = "";
     jsonStr += "{\"Name\": \"" + parmName + "\", \"Data\": [\n";
-    for (int i=0; i<alignment[0].size(); i++)
+    for (int i=0; i<alignment[0]->getNumTaxa(); i++)
         {
         jsonStr += "{\"Taxon\": \"" + taxonNames[i] + "\", ";
         for (int j=0; j<longestName-taxonNames[i].length(); j++)
             jsonStr += " ";
         jsonStr += "\"Segments\": [";
-        for (int j=0; j<alignment[0][i].size(); j++)
+        for (int j=0; j<alignment[0]->getNumSites(); j++)
             {
-            int x = alignment[0][i][j];
+            int x = (*alignment[0])(i,j);
             if (x == numStates)
                 jsonStr += "-1";
             else
@@ -220,11 +225,11 @@ std::string ParameterAlignment::getJsonString(void) {
                     jsonStr += " ";
                 jsonStr += std::to_string(x);
                 }
-            if (j + 1 != alignment[0][i].size())
+            if (j + 1 != alignment[0]->getNumSites())
                 jsonStr += ",";
             }
         jsonStr += "]}";
-        if (i + 1 != alignment[0].size())
+        if (i + 1 != alignment[0]->getNumTaxa())
             jsonStr += ",\n";
         }
     jsonStr += "]}\n";
@@ -251,7 +256,7 @@ std::string ParameterAlignment::getTaxonMaskString(void) {
     return str;
 }
 
-void ParameterAlignment::jsonStrm(std::ofstream& strm) {
+void ParameterAlignment::jsonStream(std::ofstream& strm) {
 
     int longestName = 0;
     for (int i=0; i<taxonNames.size(); i++)
@@ -261,15 +266,15 @@ void ParameterAlignment::jsonStrm(std::ofstream& strm) {
         }
         
     strm << "{\"Name\": \"" << parmName << "\", \"Data\": [\n";
-    for (int i=0; i<alignment[0].size(); i++)
+    for (int i=0; i<alignment[0]->getNumTaxa(); i++)
         {
         strm << "{\"Taxon\": \"" << taxonNames[i] << "\", ";
         for (int j=0; j<longestName-taxonNames[i].length(); j++)
             strm << " ";
         strm << "\"Segments\": [";
-        for (int j=0; j<alignment[0][i].size(); j++)
+        for (int j=0; j<alignment[0]->getNumSites(); j++)
             {
-            int x = alignment[0][i][j];
+            int x = (*alignment[0])(i,j);
             if (x == numStates)
                 strm << "-1";
             else
@@ -278,11 +283,11 @@ void ParameterAlignment::jsonStrm(std::ofstream& strm) {
                     strm << " ";
                 strm << std::to_string(x);
                 }
-            if (j + 1 != alignment[0][i].size())
+            if (j + 1 != alignment[0]->getNumSites())
                 strm << ",";
             }
         strm << "]}";
-        if (i + 1 != alignment[0].size())
+        if (i + 1 != alignment[0]->getNumTaxa())
             strm << ",\n";
         }
     strm << "]}\n";
@@ -321,15 +326,15 @@ void ParameterAlignment::print(void) {
     for (int k=0; k<2; k++)
         {
         std::cout << "alignment[" << k << "]" << std::endl;
-        for (int i=0; i<alignment[k].size(); i++)
+        for (int i=0; i<alignment[k]->getNumTaxa(); i++)
             {
             std::cout << taxonNames[i] << " ";
             for (int j=0; j<longestName-taxonNames[i].length(); j++)
                 std::cout << " ";
             std::map<int,int>::iterator it = taxonMapKeyAlignment.find(i);
             std::cout << std::setw(3) << i << " [ " << it->first << "->" << it->second << "] -- ";
-            for (int j=0; j<alignment[k][i].size(); j++)
-                std::cout << std::setw(2) << alignment[k][i][j] << " ";
+            for (int j=0; j<alignment[k]->getNumSites(); j++)
+                std::cout << std::setw(2) << (*alignment[k])(i,j) << " ";
             std::cout << std::endl;
             }
         }
@@ -346,7 +351,7 @@ void ParameterAlignment::print(void) {
 
 void ParameterAlignment::reject(void) {
 
-    alignment[0] = alignment[1];
+    (*alignment[0]) = (*alignment[1]);
     modelPtr->flipActiveLikelihood(index);
 }
 
@@ -356,9 +361,9 @@ double ParameterAlignment::update(void) {
 
     // update the alignment
     //RbBitSet mask(taxonMask);
-    std::vector<std::vector<int> > newAlignment;
-    double lnProposalRatio = alignmentProposal->propose(newAlignment, 0.5);
-    alignment[0] = newAlignment;
+    //std::vector<std::vector<int> > newAlignment;
+    double lnProposalRatio = alignmentProposal->propose(alignment[0], alignment[1], 0.5);
+    //(*alignment[0]) = *newAlignment;
 
     // set flags indicating the transition probabilities are not affected
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();

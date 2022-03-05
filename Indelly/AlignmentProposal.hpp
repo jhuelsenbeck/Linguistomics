@@ -4,8 +4,11 @@
 #include <map>
 #include <set>
 #include <vector>
+#include "Container.hpp"
 #include "IntVector.hpp"
 #include "RbBitSet.h"
+class AlnMatrix;
+class IndelMatrix;
 class Model;
 class ParameterAlignment;
 class RandomVariable;
@@ -19,13 +22,16 @@ class AlignmentProposal {
                                             AlignmentProposal(void) = delete;
                                             AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVariable* r, Model* m, double expnt, double gp);
                                            ~AlignmentProposal(void);
-        double                              propose(std::vector<std::vector<int> >& newAlignment, double iP);
+      //double                              propose(std::vector<std::vector<int> >& newAlignment, double iP);
+        double                              propose(AlnMatrix* newAlignment, AlnMatrix* oldAlignment, double iP);
                 
     private:
         void                                cleanTable(std::map<IntVector*,int,CompIntVector>& m);
-        int                                 countPaths(std::vector<std::vector<int> >& inputAlignment, int startCol, int endCol);
+        int                                 countPaths(AlnMatrix* inputAlignment, int startCol, int endCol);
+        void                                debugPrint(void);
         void                                drainPool(void);
         void                                freeProfile(int*** x, int n);
+        void                                getIndelMatrix(AlnMatrix* inputAlignment, IndelMatrix* indelMat);
         IntVector*                          getVector(void);
         IntVector*                          getVector(IntVector& vec);
         int                                 getNumAllocated(void) { return (int) allocated.size(); }
@@ -47,7 +53,7 @@ class AlignmentProposal {
         double                              gap;
         int                                 gapCode;
         double                              basis;
-        int                                 maxlength;
+        int                                 maxLength;
         int                                 maxUnalignDimension;
         enum                                StateLabels { freeToUse, possible, edgeUsed, used };
         static int                          bigUnalignableRegion;
@@ -57,13 +63,13 @@ class AlignmentProposal {
         int***                              profile;
         std::vector<int>                    possibles;      // resized once on instantiation, never copied
         std::vector<int>                    state;          // resized to large value on instantiation, resized frequently to smaller values, no realloc should occur
-        std::vector<std::vector<int> >      alignment;
-        std::vector<std::vector<int> >      profileNumber;
+        IndelMatrix*                        alignment;
+        AlnMatrix*                          profileNumber;
         int*                                xProfile;
         int*                                yProfile;
         int                                 numStates;
         double**                            scoring;
-        std::vector<std::vector<int> >      tempProfile;
+        IntMatrix*                          tempProfile;
         double**                            dp;
 };
 #endif

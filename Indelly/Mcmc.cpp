@@ -344,7 +344,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     for (int i=0; i<alns.size(); i++)
         {
         //algnJsonStrm[i] << alns[i]->getJsonString();
-        alns[i]->jsonStrm(algnJsonStrm[i]);
+        alns[i]->jsonStream(algnJsonStrm[i]);
         if (gen == numMcmcCycles)
             algnJsonStrm[i] << "]\n}" << std::endl;
         else

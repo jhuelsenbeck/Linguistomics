@@ -1,8 +1,9 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include "AlnMatrix.hpp"
 #include "AlignmentProposal.hpp"
-#include "Container.hpp"
+#include "IndelMatrix.hpp"
 #include "IntVector.hpp"
 #include "Model.hpp"
 #include "Msg.hpp"
@@ -38,32 +39,36 @@ AlignmentProposal::AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVaria
     gap = gp;
     basis = expnt;
     gapCode = alignmentParm->getGapCode();
-    maxlength = 20; // was 1000
+    maxLength = 20; // was 1000
     maxUnalignDimension = 17;
+    
+    
+    alignment = new IndelMatrix(numTaxa, alignmentParm->lengthOfLongestSequence()*5);    // numSites X numTaxa
+    profileNumber = new AlnMatrix(numNodes, alignmentParm->lengthOfLongestSequence()*5); // numNodes X numSites
+    tempProfile = new IntMatrix(numNodes, maxLength);                                    // numNodes X maxlength
         
     // allocate the profile for this alignment
     profile = new int**[numNodes];
-
     for (int i=0; i<numNodes; i++)
         {
         profile[i] = new int*[numNodes];
-        profile[i][0] = new int[numNodes*maxlength];
+        profile[i][0] = new int[numNodes*maxLength];
         for (int j=1; j<numNodes; j++)
-            profile[i][j] = profile[i][j-1] + maxlength;
+            profile[i][j] = profile[i][j-1] + maxLength;
         for (int j = 0; j < numNodes; j++)
-            memset(profile[i][j], 0, maxlength * sizeof(int));
+            memset(profile[i][j], 0, maxLength * sizeof(int));
     }
                 
     possibles.resize(maxUnalignDimension);
     state.resize(3*maxUnalignDimension);
     numStates = alignmentParm->getNumStates();
 
-    dp = new double*[maxlength];
-    dp[0] = new double[maxlength*maxlength];
-    for (int i=1; i<maxlength; i++)
-        dp[i] = dp[i-1] + maxlength;
-    for (int i=0; i<maxlength; i++)
-        for (int j=0; j<maxlength; j++)
+    dp = new double*[maxLength];
+    dp[0] = new double[maxLength*maxLength];
+    for (int i=1; i<maxLength; i++)
+        dp[i] = dp[i-1] + maxLength;
+    for (int i=0; i<maxLength; i++)
+        for (int j=0; j<maxLength; j++)
             dp[i][j] = 0.0;
         
     scoring = new double*[numStates];
@@ -91,6 +96,10 @@ AlignmentProposal::~AlignmentProposal(void) {
     delete [] scoring;
     delete [] xProfile;
     delete [] yProfile;
+    
+    delete alignment;
+    delete profileNumber;
+    delete tempProfile;
 }
 
 void AlignmentProposal::cleanTable(std::map<IntVector*, int, CompIntVector>& m) {
@@ -100,13 +109,14 @@ void AlignmentProposal::cleanTable(std::map<IntVector*, int, CompIntVector>& m) 
     m.clear();
 }
 
-int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment, int startCol, int endCol) {
+int AlignmentProposal::countPaths(AlnMatrix* inputAlignment, int startCol, int endCol) {
 		
     // size of alignment
     int len = endCol - startCol + 1;
 
     // get a numSites X numTaxa matrix containing the pattern of indels
-    alignmentParm->getIndelMatrix(inputAlignment, alignment);
+    //alignmentParm->getIndelMatrix(inputAlignment, alignment);
+    getIndelMatrix(inputAlignment, alignment);
 
     // Enter first count into DP table
     std::map<IntVector*,int,CompIntVector> dpTable;
@@ -130,7 +140,8 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
             {
             if (state[ ptr ] != used)
                 {
-                if (mask->innerProduct( alignment[ptr] ) == 0)
+                //if (mask->innerProduct( alignment[ptr] ) == 0)
+                if (mask->innerProduct( alignment->getRow(ptr), alignment->getNumTaxa() ) == 0)
                     {
                     state[ ptr ] = possible;
                     if (numPossible == maxUnalignDimension)
@@ -143,7 +154,8 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                         }
                     possibles[numPossible++] = ptr;
                     }
-                mask->add( alignment[ptr] );
+                //mask->add( alignment[ptr] );
+                mask->add( alignment->getRow(ptr), alignment->getNumTaxa() );
                 }
             }
         returnToPool(mask);
@@ -165,9 +177,11 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                 if (state[ curPtr ] == possible)
                     {
                     state[ curPtr ] = edgeUsed;
-                    newPos->add( alignment[ curPtr ] );
+                    //newPos->add( alignment[ curPtr ] );
+                    newPos->add( alignment->getRow(curPtr), alignment->getNumTaxa() );
                     // Compute signature vector
-                    signature->addMultiple( alignment[ curPtr ], posPtr+1 );
+                    //signature->addMultiple( alignment[ curPtr ], posPtr+1 );
+                    signature->addMultiple( alignment->getRow(curPtr), alignment->getNumTaxa(), posPtr+1 );
                     // Signal: non-zero combination found, and stop
                     foundNonZero = true;
                     posPtr = 0;
@@ -176,8 +190,10 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
                     {
                     // It was eEdgeUsed (i.e., digit == 1), so reset digit and continue
                     state[ curPtr ] = possible;
-                    newPos->subtract( alignment[ curPtr ] );
-                    signature->addMultiple( alignment[ curPtr ], -posPtr-1 );
+                    //newPos->subtract( alignment[ curPtr ] );
+                    newPos->subtract( alignment->getRow(curPtr), alignment->getNumTaxa() );
+                    //signature->addMultiple( alignment[ curPtr ], -posPtr-1 );
+                    signature->addMultiple( alignment->getRow(curPtr), alignment->getNumTaxa(), -posPtr-1 );
                     }
                 }
         
@@ -225,7 +241,8 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
             // Undo any possible used vector that we encounter
             if (state[ptr] == used)
                 {
-                pos->subtract( alignment[ptr] );
+                //pos->subtract( alignment[ptr] );
+                pos->subtract( alignment->getRow(ptr), alignment->getNumTaxa() );
                 state[ptr] = freeToUse;
                 }
             --ptr;
@@ -253,7 +270,8 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
         
         // Now use this farthest-out possible vector
         state[ptr] = used;
-        pos->add( alignment[ptr] );
+        //pos->add( alignment[ptr] );
+        pos->add( alignment->getRow(ptr), alignment->getNumTaxa() );
         if (ptr <= firstNotUsed)
             firstNotUsed++;
         
@@ -264,12 +282,56 @@ int AlignmentProposal::countPaths(std::vector<std::vector<int> >& inputAlignment
     return 0;
 }
 
+void AlignmentProposal::debugPrint(void) {
+
+    std::cout << "xProfile: ";
+    for (int i=0; i<numNodes; i++)
+        std::cout << std::setw(3) << xProfile[i];
+    std::cout << std::endl;
+
+    std::cout << "yProfile: ";
+    for (int i=0; i<numNodes; i++)
+        std::cout << std::setw(3) << yProfile[i];
+    std::cout << std::endl;
+
+    for (int i=0; i<numNodes; i++)
+        {
+        for (int j=0; j<numNodes; j++)
+            {
+            std::cout << "(" << i << "," << j << "): ";
+            for (int k=0; k<maxLength; k++)
+                std::cout << std::setw(3) << profile[i][j][k];
+            std::cout << std::endl;
+            }
+        }
+
+}
+
 void AlignmentProposal::drainPool(void) {
 
     for (std::vector<IntVector*>::iterator v=pool.begin(); v != pool.end(); v++)
         {
         allocated.erase(*v);
         delete (*v);
+        }
+}
+
+void AlignmentProposal::getIndelMatrix(AlnMatrix* inputAlignment, IndelMatrix* indelMat) {
+
+    int nt = inputAlignment->getNumTaxa();
+    int ns = inputAlignment->getNumSites();
+    if (indelMat->getNumTaxa() != nt)
+        Msg::error("Mismatch in the number of taxa when initializing the indel matrix");
+    indelMat->setNumSites(ns);
+    for (int i=0; i<ns; i++)
+        {
+        for (int j=0; j<nt; j++)
+            {
+            if ((*inputAlignment)(j,i) == gapCode)
+                (*indelMat)(i,j) = 0;
+            else
+                (*indelMat)(i,j) = 1;
+            }
         }
 }
 
@@ -325,7 +387,7 @@ void AlignmentProposal::initialize(void) {
     // initialize profile
     for (int i=0; i<numNodes; i++)
         for (int j=0; j<numNodes; j++)
-            for (int k=0; k<maxlength; k++)
+            for (int k=0; k<maxLength; k++)
                 profile[i][j][k] = 0;
                 
     // check that we have no stray IntVectors
@@ -371,7 +433,7 @@ void AlignmentProposal::print(std::string s, int*** x, int a, int b, int c) {
         }
 }
 
-double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, double extensionProb) {
+double AlignmentProposal::propose(AlnMatrix* newAlignment, AlnMatrix* oldAlignment, double extensionProb) {
     
     // check that the extenstion probability is between 0 and 1
     if (extensionProb <= 0.0 || extensionProb > 1.0)
@@ -379,8 +441,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
         
     // initialize variables that may have changed since last update
     initialize();
-    std::vector<std::vector<int> >& curAlignment = alignmentParm->getAlignment();
-
+    
     // initialize tree
     std::vector<int> parents = tree->getAncestorIndices();
     std::vector<int> lftChildrenIndices(numNodes);
@@ -393,11 +454,16 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
             rhtChildrenIndices[ parents[ i ] ] = i;
         }
 
+    // get transition probabilities
+    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
+    DoubleMatrix** tiProbs = tip.getTransitionProbabilities(taxonMask);
+    std::vector<double>& stationaryFrequencies = tip.getStationaryFrequencies();
+
     // sort children
     std::vector<int> sorter(numNodes);
-    for (int i=0; i<curAlignment.size(); i++)
+    for (int i=0; i<newAlignment->getNumTaxa(); i++)
         sorter[i] = i;
-    for( int i=(int)curAlignment.size(); i<parents.size(); i++)
+    for( int i=newAlignment->getNumTaxa(); i<parents.size(); i++)
         {
         if (sorter[lftChildrenIndices[i]] > sorter[rhtChildrenIndices[i]])
             sorter[i] = sorter[rhtChildrenIndices[i]];
@@ -414,295 +480,280 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
             }
         }
 
-    // cutting a part of the alignment (we cut out the entire alignment)
-#   if 0
-    int len = (int)curAlignment[0].size();
-    int pos = 0;
-#   else
-    int len = 0;
-    for (len=1; len < curAlignment[0].size() && rv->uniformRv() < extensionProb; len++)
-        ;
-    int pos = rv->uniformRvInt(curAlignment[0].size() - len + 1);
-#   endif
-
-    //std::vector<std::vector<int> > profileNumber;
-    profileNumber.resize(numNodes);
-    for (int i=0; i<numNodes; i++)
-        {
-        profileNumber[i].resize(curAlignment.size());
-        xProfile[i] = 0;
-        yProfile[i] = 0;
-        }
-    for (int i=0; i<numNodes; i++)
-        {
-        xProfile[i] = 0;
-        yProfile[i] = 0;
-        }
-    for (int i=0; i<curAlignment.size(); i++)
-        {
-        yProfile[i] = 1;
-        for (int j=pos; j<pos+len; j++)
-            {
-            if (curAlignment[i][j] != gapCode)
-                {
-                profile[i][0][xProfile[i]] = curAlignment[i][j];
-                xProfile[i]++;
-                }
-            }
-        // profile number
-        profileNumber[i][0] = i;
-        }
-    
-    /* dynamic programming algorithm for the proposal */
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    DoubleMatrix** tiProbs = tip.getTransitionProbabilities(taxonMask);
-    std::vector<double>& stationaryFrequencies = tip.getStationaryFrequencies();
-    for (int i=0; i<numStates; i++)
-        for (int j=0; j<numStates; j++)
-            scoring[i][j] = 0.0;
-
+    // begin
+    bool foundDifferentAlignment = false;
+    int len = 0, len2 = 0, pos = 0;
     double proposalLoglikelihood = 0.0;
-    //std::vector<std::vector<int> > tempProfile;
-    tempProfile.resize(numNodes);
-    for (int i=0; i<numNodes; i++)
-        tempProfile[i].resize(maxlength);
-    for (int k=(int)curAlignment.size(); k<numNodes; k++)
+    do
         {
-        int lftChild = lftChildrenIndices[k];
-        int rhtChild = rhtChildrenIndices[k];
-        
-        // obtaining the scoring matrix
-        for (int i=0; i<numStates; i++)
+        // cutting a part of the alignment (we cut out the entire alignment)
+#       if 0
+        len = newAlignment->getNumSites();
+        pos = 0;
+#       else
+        len = 0;
+        for (len=1; len < newAlignment->getNumSites() && rv->uniformRv() < extensionProb; len++)
+            ;
+        pos = rv->uniformRvInt(newAlignment->getNumSites() - len + 1);
+#       endif
+
+        profileNumber->setNumSites( newAlignment->getNumTaxa() );
+        for (int i=0; i<numNodes; i++)
             {
-            for (int j=0; j<numStates; j++)
+            xProfile[i] = 0;
+            yProfile[i] = 0;
+            }
+        for (int i=0; i<numNodes; i++)
+            {
+            xProfile[i] = 0;
+            yProfile[i] = 0;
+            }
+        for (int i=0; i<newAlignment->getNumTaxa(); i++)
+            {
+            yProfile[i] = 1;
+            for (int j=pos; j<pos+len; j++)
                 {
+                if ((*newAlignment)(i,j) != gapCode)
+                    {
+                    profile[i][0][xProfile[i]] = (*newAlignment)(i,j);
+                    xProfile[i]++;
+                    }
+                }
+            // profile number
+            (*profileNumber)(i,0) = i;
+            }
+        
+        // dynamic programming algorithm for the proposal
+        for (int i=0; i<numStates; i++)
+            for (int j=0; j<numStates; j++)
                 scoring[i][j] = 0.0;
-                for (int l=0; l<numStates; l++)
-                    scoring[i][j] += (*tiProbs[lftChild])(i,l) * (*tiProbs[rhtChild])(l,j);
-                }
-            }
-        for (int i=0; i<numStates; i++)
+
+        for (int k=newAlignment->getNumTaxa(); k<numNodes; k++)
             {
-            for (int j=0; j<numStates; j++)
+            int lftChild = lftChildrenIndices[k];
+            int rhtChild = rhtChildrenIndices[k];
+            
+            // obtaining the scoring matrix
+            for (int i=0; i<numStates; i++)
                 {
-                scoring[i][j] = log(scoring[i][j] / stationaryFrequencies[j]);
+                for (int j=0; j<numStates; j++)
+                    {
+                    scoring[i][j] = 0.0;
+                    for (int l=0; l<numStates; l++)
+                        scoring[i][j] += (*tiProbs[lftChild])(i,l) * (*tiProbs[rhtChild])(l,j);
+                    }
                 }
-            }
+            for (int i=0; i<numStates; i++)
+                {
+                for (int j=0; j<numStates; j++)
+                    scoring[i][j] = log(scoring[i][j] / stationaryFrequencies[j]);
+                }
 
-        // initialising the table
-        dp[0][0] = 0.0;
-        for (int i=1; i<=xProfile[lftChild]; i++)
-            {
-            dp[i][0] = dp[i - 1][0] + gap;
-            }
-        for (int j=1; j<=xProfile[rhtChild]; j++)
-            {
-            dp[0][j] = dp[0][j - 1] + gap;
-            }
-
-        // main dynamic programming
-        double iTempdouble3 = 0.0;
-        for (int i=1; i<=xProfile[lftChild]; i++)
+            // initialising the table
+            dp[0][0] = 0.0;
+            for (int i=1; i<=xProfile[lftChild]; i++)
+                dp[i][0] = dp[i - 1][0] + gap;
             for (int j=1; j<=xProfile[rhtChild]; j++)
-                {
-                double iTempdouble1 = dp[i - 1][j] + gap;
-                double iTempdouble2 = dp[i][j - 1] + gap;
-//                { //JPH why restrict the scope?
-                int iCounter = 0;
-                iTempdouble3 = 0.0;
-                for (int l=0; l<yProfile[lftChild]; l++)
-                    for (int m=0; m<yProfile[rhtChild]; m++)
-                        {
-                        if (profile[lftChild][l][i - 1] != gapCode && profile[rhtChild][m][j - 1] != gapCode)
-                            {
-                            iTempdouble3 += scoring[profile[lftChild][l][i - 1]][profile[rhtChild][m][j - 1]];
-                            iCounter++;
-                            }
-                        }
-                    iTempdouble3 = dp[i - 1][j - 1] + iTempdouble3/iCounter;
-//                }
+                dp[0][j] = dp[0][j - 1] + gap;
 
-                if (iTempdouble1 > iTempdouble2)
-                    dp[i][j] = iTempdouble1;
+            // main dynamic programming
+            double iTempdouble3 = 0.0;
+            for (int i=1; i<=xProfile[lftChild]; i++)
+                for (int j=1; j<=xProfile[rhtChild]; j++)
+                    {
+                    double iTempdouble1 = dp[i - 1][j] + gap;
+                    double iTempdouble2 = dp[i][j - 1] + gap;
+                    int iCounter = 0;
+                    iTempdouble3 = 0.0;
+                    for (int l=0; l<yProfile[lftChild]; l++)
+                        for (int m=0; m<yProfile[rhtChild]; m++)
+                            {
+                            if (profile[lftChild][l][i - 1] != gapCode && profile[rhtChild][m][j - 1] != gapCode)
+                                {
+                                iTempdouble3 += scoring[profile[lftChild][l][i - 1]][profile[rhtChild][m][j - 1]];
+                                iCounter++;
+                                }
+                            }
+                        iTempdouble3 = dp[i - 1][j - 1] + iTempdouble3/iCounter;
+
+                    if (iTempdouble1 > iTempdouble2)
+                        dp[i][j] = iTempdouble1;
+                    else
+                        dp[i][j] = iTempdouble2;
+                    if (iTempdouble3 > dp[i][j])
+                        dp[i][j] = iTempdouble3;
+                    }
+
+            // Stochastic traceback, generating the new profile
+            int iI = xProfile[lftChild];
+            int jJ = xProfile[rhtChild];
+            double iTempdouble4;
+            while (iI > 0 || jJ > 0)
+                {
+                double iTempdouble1 = 0.0, iTempdouble2 = 0.0;
+                if (iI > 0)
+                    {
+                    iTempdouble1 = dp[iI - 1][jJ] + gap;
+                    }
+                if (jJ > 0)
+                    {
+                    iTempdouble2 = dp[iI][jJ - 1] + gap;
+                    }
+                if (iI > 0 && jJ > 0)
+                    {
+                    int iCounter = 0;
+                    //double iTempdouble3 = 0.0;
+                    iTempdouble3 = 0.0;
+                    for (int l=0; l<yProfile[lftChild]; l++)
+                        for (int m=0; m<yProfile[rhtChild]; m++)
+                            {
+                            if (profile[lftChild][l][iI - 1] != gapCode && profile[rhtChild][m][jJ - 1] != gapCode)
+                                {
+                                iTempdouble3 += scoring[profile[lftChild][l][iI - 1]][profile[rhtChild][m][jJ - 1]];
+                                iCounter++;
+                                }
+                            }
+                    iTempdouble3 = dp[iI - 1][jJ - 1] + iTempdouble3/iCounter;
+                    }
+
+                // normalising
+                iTempdouble4 = 0.0;
+                if (iI > 0)
+                    {
+                    iTempdouble4 += exp(iTempdouble1 * log(basis));
+                    }
+                if (jJ > 0)
+                    {
+                    iTempdouble4 += exp(iTempdouble2 * log(basis));
+                    }
+                if (iI > 0 && jJ > 0)
+                    {
+                    iTempdouble4 += exp(iTempdouble3 * log(basis));
+                    }
+
+                if(iI > 0)
+                    iTempdouble1 = exp(iTempdouble1 * log(basis))/iTempdouble4;
                 else
-                    dp[i][j] = iTempdouble2;
-                if (iTempdouble3 > dp[i][j])
-                    dp[i][j] = iTempdouble3;
-                }
+                    iTempdouble1 = 0.0;
 
-        // Stochastic traceback, generating the new profile
-        int iI = xProfile[lftChild];
-        int jJ = xProfile[rhtChild];
-        double iTempdouble4;
-        while (iI > 0 || jJ > 0)
-            {
-            double iTempdouble1 = 0.0, iTempdouble2 = 0.0;
-            if (iI > 0)
-                {
-                iTempdouble1 = dp[iI - 1][jJ] + gap;
-                }
-            if (jJ > 0)
-                {
-                iTempdouble2 = dp[iI][jJ - 1] + gap;
-                }
-            if (iI > 0 && jJ > 0)
-                {
-                int iCounter = 0;
-                //double iTempdouble3 = 0.0;
-                iTempdouble3 = 0.0;
-                for (int l=0; l<yProfile[lftChild]; l++)
-                    for (int m=0; m<yProfile[rhtChild]; m++)
+                if(jJ > 0)
+                    iTempdouble2 = exp(iTempdouble2 * log(basis))/iTempdouble4;
+                else
+                    iTempdouble2 = 0.0;
+
+                if(iI > 0 && jJ > 0)
+                    iTempdouble3 = exp(iTempdouble3 * log(basis))/iTempdouble4;
+                else
+                    iTempdouble3 = 0.0;
+
+                // stochastic step
+                iTempdouble4 = rv->uniformRv();
+                if (iTempdouble4 < iTempdouble1)
+                    {
+                    // the probability is in the denominator, that's why we substract
+                    proposalLoglikelihood -= log(iTempdouble1);
+                    for (int l=0; l<yProfile[lftChild]; l++)
                         {
-                        if (profile[lftChild][l][iI - 1] != gapCode && profile[rhtChild][m][jJ - 1] != gapCode)
-                            {
-                            iTempdouble3 += scoring[profile[lftChild][l][iI - 1]][profile[rhtChild][m][jJ - 1]];
-                            iCounter++;
-                            }
+                        (*tempProfile)(l,xProfile[k]) = profile[lftChild][l][iI - 1];
                         }
-                iTempdouble3 = dp[iI - 1][jJ - 1] + iTempdouble3/iCounter;
-                }
-
-            // normalising
-            iTempdouble4 = 0.0;
-            if (iI > 0)
-                {
-                iTempdouble4 += exp(iTempdouble1 * log(basis));
-                }
-            if (jJ > 0)
-                {
-                iTempdouble4 += exp(iTempdouble2 * log(basis));
-                }
-            if (iI > 0 && jJ > 0)
-                {
-                iTempdouble4 += exp(iTempdouble3 * log(basis));
-                }
-
-            if(iI > 0)
-                iTempdouble1 = exp(iTempdouble1 * log(basis))/iTempdouble4;
-            else
-                iTempdouble1 = 0.0;
-
-            if(jJ > 0)
-                iTempdouble2 = exp(iTempdouble2 * log(basis))/iTempdouble4;
-            else
-                iTempdouble2 = 0.0;
-
-            if(iI > 0 && jJ > 0)
-                iTempdouble3 = exp(iTempdouble3 * log(basis))/iTempdouble4;
-            else
-                iTempdouble3 = 0.0;
-
-            // stochastic step
-            iTempdouble4 = rv->uniformRv();
-            if (iTempdouble4 < iTempdouble1)
-                {
-                // the probability is in the denominator, that's why we substract
-                proposalLoglikelihood -= log(iTempdouble1);
-                for (int l=0; l<yProfile[lftChild]; l++)
-                    {
-                    tempProfile[l][xProfile[k]] = profile[lftChild][l][iI - 1];
+                    for (int l=yProfile[lftChild]; l<yProfile[lftChild] + yProfile[rhtChild]; l++)
+                        {
+                        (*tempProfile)(l,xProfile[k]) = gapCode;
+                        }
+                    xProfile[k]++;
+                    iI--;
                     }
-                for (int l=yProfile[lftChild]; l<yProfile[lftChild] + yProfile[rhtChild]; l++)
+                else if (iTempdouble4 < iTempdouble1 + iTempdouble2)
                     {
-                    tempProfile[l][xProfile[k]] = gapCode;
+                    // the probability is in the denominator, that's why we substract
+                    proposalLoglikelihood -= log(iTempdouble2);
+                    for (int l=0; l<yProfile[lftChild]; l++)
+                        {
+                        (*tempProfile)(l,xProfile[k]) = gapCode;
+                        }
+                    for (int l=yProfile[lftChild]; l < yProfile[lftChild] + yProfile[rhtChild]; l++)
+                        {
+                        (*tempProfile)(l,xProfile[k]) = profile[rhtChild][l - yProfile[lftChild]][jJ - 1];
+                        }
+                    xProfile[k]++;
+                    jJ--;
                     }
-                xProfile[k]++;
-                iI--;
-                }
-            else if (iTempdouble4 < iTempdouble1 + iTempdouble2)
+                else
+                    {
+                    if (iTempdouble3 <= 0.0)
+                        {
+                        freeProfile(profile, numNodes);
+                        Msg::error("Problem proposing new alignment");
+                        }
+                    // the probability is in the denominator, that's why we substract
+                    proposalLoglikelihood -= log(iTempdouble3);
+                    for (int l=0; l<yProfile[lftChild]; l++)
+                        (*tempProfile)(l,xProfile[k]) = profile[lftChild][l][iI - 1];
+                    for (int l=yProfile[lftChild]; l < yProfile[lftChild] + yProfile[rhtChild]; l++)
+                        (*tempProfile)(l,xProfile[k]) = profile[rhtChild][l - yProfile[lftChild]][jJ - 1];
+                    xProfile[k]++;
+                    jJ--;
+                    iI--;
+                    }
+
+                } // finished the traceback, iI, jJ
+
+            yProfile[k] = yProfile[lftChild] + yProfile[rhtChild];
+
+            // new profileNumbers
+            for (int i=0; i<yProfile[lftChild]; i++)
+                (*profileNumber)(k,i) = (*profileNumber)(lftChild,i);
+            for (int i=yProfile[lftChild]; i<yProfile[lftChild] + yProfile[rhtChild]; i++)
+                (*profileNumber)(k,i) = (*profileNumber)(rhtChild,i - yProfile[lftChild]);
+
+            // now reversing the profile, loading from the tempProfile into profile
+            for (int i=0; i<xProfile[k]; i++)
                 {
-                // the probability is in the denominator, that's why we substract
-                proposalLoglikelihood -= log(iTempdouble2);
-                for (int l=0; l<yProfile[lftChild]; l++)
+                for (int j=0; j<yProfile[k]; j++)
                     {
-                    tempProfile[l][xProfile[k]] = gapCode;
+                    profile[k][j][i] = (*tempProfile)(j,xProfile[k] - i - 1);
                     }
-                for (int l=yProfile[lftChild]; l < yProfile[lftChild] + yProfile[rhtChild]; l++)
-                    {
-                    tempProfile[l][xProfile[k]] = profile[rhtChild][l - yProfile[lftChild]][jJ - 1];
-                    }
-                xProfile[k]++;
-                jJ--;
-                }
-            else
-                {
-                if (iTempdouble3 <= 0.0)
-                    {
-                    freeProfile(profile, numNodes);
-                    Msg::error("Problem proposing new alignment");
-                    }
-                // the probability is in the denominator, that's why we substract
-                proposalLoglikelihood -= log(iTempdouble3);
-                for (int l=0; l<yProfile[lftChild]; l++)
-                    tempProfile[l][xProfile[k]] = profile[lftChild][l][iI - 1];
-                for (int l=yProfile[lftChild]; l < yProfile[lftChild] + yProfile[rhtChild]; l++)
-                    tempProfile[l][xProfile[k]] = profile[rhtChild][l - yProfile[lftChild]][jJ - 1];
-                xProfile[k]++;
-                jJ--;
-                iI--;
                 }
 
-            } // finished the traceback, iI, jJ
+            } // k, index for the internal nodes, profile[root] is the obtained multiple alignment
+        len2 = xProfile[numNodes - 1];
 
-        yProfile[k] = yProfile[lftChild] + yProfile[rhtChild];
-
-        //Making new profileNumbers
-        for (int i=0; i<yProfile[lftChild]; i++)
-            profileNumber[k][i] = profileNumber[lftChild][i];
-        for (int i=yProfile[lftChild]; i<yProfile[lftChild] + yProfile[rhtChild]; i++)
-            profileNumber[k][i] = profileNumber[rhtChild][i - yProfile[lftChild]];
-
-        // now reversing the profile, loading from the iTempProfile into iProfile
-        for (int i=0; i<xProfile[k]; i++)
+        // putting the new sub-alignment into the new proposal
+        newAlignment->setNumSites( oldAlignment->getNumSites() + len2 - len );
+        for (int i=0; i<pos; i++)
             {
-            for (int j=0; j<yProfile[k]; j++)
-                {
-                profile[k][j][i] = tempProfile[j][xProfile[k] - i - 1];
-                }
+            for (int j=0; j<numTaxa; j++)
+                (*newAlignment)(j,i) = (*oldAlignment)(j,i);
+            }
+        for (int i=pos; i<pos + len2; i++)
+            {
+            for (int j=0; j<numTaxa; j++)
+                (*newAlignment)( (*profileNumber)(numNodes - 1,j) , i) = profile[numNodes - 1][j][i - pos];
             }
 
-        } // k, index for the internal nodes, profile[root] is the obtained multiple alignment
-    
-    int iL2 = xProfile[numNodes - 1];
-
-    // putting the new sub-alignment into the new proposal
-//    std::vector<std::vector<int> > returnedAlignment(curAlignment.size());
-    newAlignment.resize( curAlignment.size() );
-    for (int i=0; i < curAlignment.size(); i++)
-        {
-        newAlignment[i].resize( curAlignment[0].size() + iL2 - len );
-        }
-
-    for (int i=0; i<pos; i++)
-        {
-        for (int j=0; j<curAlignment.size(); j++)
+        for (int i=pos + len; i<oldAlignment->getNumSites(); i++)
             {
-            newAlignment[j][i] = curAlignment[j][i];
+            for (int j=0; j<numTaxa; j++)
+                (*newAlignment)(j,i + len2 - len) = (*oldAlignment)(j,i);
             }
-        }
-    for (int i=pos; i<pos + iL2; i++)
-        {
-        for (int j=0; j<curAlignment.size(); j++)
-            {
-            newAlignment[profileNumber[numNodes - 1][j]][i] = profile[numNodes - 1][j][i - pos];
-            }
-        }
 
-    for (int i=pos + len; i<curAlignment[0].size(); i++)
-        {
-        for (int j=0; j<curAlignment.size(); j++)
+        // check alignment
+        if ( *newAlignment == *oldAlignment)
             {
-            newAlignment[j][i + iL2 - len] = curAlignment[j][i];
+            foundDifferentAlignment = false;
             }
-        }
+        else
+            {
+            foundDifferentAlignment = true;
+            }
         
-//    print("curAlignment", curAlignment);
-//    print("newAlignment", newAlignment);
+        } while(foundDifferentAlignment == false);
     
-    // I involve the combinatorical factor into the Hastings ratio
-    // countPaths(int[][] iInputAlignment, int iStartCol, int iEndCol)
-//    int iCF = countPaths(returnedAlignment, pos, pos+iL2-1);
-    int iCF = countPaths(newAlignment, pos, pos+iL2-1);
+    
+    
+    // calculate Hastings ratio
+    int iCF = countPaths(newAlignment, pos, pos+len2-1);
+    //std::cout << "iCF = " << iCF << std::endl;
     if (iCF == -1)
         {
         freeProfile(profile, numNodes);
@@ -712,7 +763,8 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
         }
     proposalLoglikelihood -= log((double)iCF);
 
-    iCF = countPaths(curAlignment, pos, pos+len-1);
+    iCF = countPaths(oldAlignment, pos, pos+len-1);
+    //std::cout << "iCF = " << iCF << std::endl;
     if (iCF == -1)
         {
         freeProfile(profile, numNodes);
@@ -731,15 +783,15 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
 
     // collecting the sequences from the alignment -- now without cut out!
     // they will be the first profiles
-    for (int i=0; i<curAlignment.size(); i++)
+    for (int i=0; i<newAlignment->getNumTaxa(); i++)
         {
         yProfile[i] = 1;
         for (int j = pos; j <pos + len; j++)
-            profile[i][0][j - pos] = curAlignment[i][j];
+            profile[i][0][j - pos] = (*newAlignment)(i,j);
         }
 
     // profiles at internal nodes are obtained by merging profiles of children
-    for (int i=(int)curAlignment.size(); i<numNodes; i++)
+    for (int i=newAlignment->getNumTaxa(); i<numNodes; i++)
         {
         yProfile[i] = yProfile[lftChildrenIndices[i]] + yProfile[rhtChildrenIndices[i]];
         for(int j=0; j<len; j++)
@@ -757,7 +809,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
         // first i load it into the temporary profile and then back...
         for (int j=0; j<len; j++)
             for (int k=0; k < yProfile[i]; k++)
-                tempProfile[k][j] = profile[i][k][j];
+                (*tempProfile)(k,j) = profile[i][k][j];
         xProfile[i] = 0;
         for (int j = 0; j < len; j++)
             {
@@ -765,7 +817,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
             bool notAllGaps = false;
             for (int k = 0; k < yProfile[i]; k++)
                 {
-                if (tempProfile[k][j] != gapCode)
+                if ((*tempProfile)(k,j) != gapCode)
                     {
                     notAllGaps = true;
                     break;
@@ -775,14 +827,14 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
                 {
                 // if not all-gap then
                 for (int k = 0; k < yProfile[i]; k++)
-                    profile[i][k][xProfile[i]] =  tempProfile[k][j];
+                    profile[i][k][xProfile[i]] =  (*tempProfile)(k,j);
                 xProfile[i]++;
                 }
             }
         }
 
     // profiles are ready, so now the DP
-    for (int k = (int)curAlignment.size(); k < numNodes; k++)
+    for (int k = newAlignment->getNumTaxa(); k < numNodes; k++)
         {
         // obtaining the scoring matrix
         for (int i = 0; i < numStates; i++)
@@ -797,10 +849,6 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
                 scoring[i][j] = log(scoring[i][j] / stationaryFrequencies[j]);
 
         // initialising the table
-        //std::vector<std::vector<double> > dp;
-        //dp.resize(maxlength);
-        //for (int i=0; i<maxlength; i++)
-        //    dp[i].resize(maxlength);
         dp[0][0] = 0.0;
         double iTempdouble2 = 0.0;
         for (int i = 1; i <= xProfile[lftChildrenIndices[k]]; i++)
@@ -964,7 +1012,7 @@ double AlignmentProposal::propose(std::vector<std::vector<int> >& newAlignment, 
         }
 #   endif
         
-    return proposalLoglikelihood + (len - iL2) * log(1.0-extensionProb);
+    return proposalLoglikelihood + (len - len2) * log(1.0-extensionProb);
 }
 
 void AlignmentProposal::returnToPool(IntVector* v) {
