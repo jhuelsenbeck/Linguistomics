@@ -8,6 +8,7 @@
 #include "Msg.hpp"
 #include "Parameter.hpp"
 #include "ParameterAlignment.hpp"
+#include "Probability.hpp"
 #include "RandomVariable.hpp"
 #include "Tree.hpp"
 #include "UpdateInfo.hpp"
@@ -29,6 +30,22 @@ Mcmc::Mcmc(Model* m, RandomVariable* r) {
     sampleFrequency = settings.getSampleFrequency();
 
     maxGenPrint = numDigits(numMcmcCycles);
+}
+
+std::vector<double> Mcmc::calculatePowers(int numStones, double alpha, double beta) {
+
+    int ns = numStones - 1;
+    std::vector<double> pwrs;
+    double intervalProb = (double)1.0 / ns;
+    pwrs.push_back(1.0);
+    for (int i=ns-1; i>0; i--)
+        pwrs.push_back( Probability::Beta::quantile(alpha, beta, i * intervalProb) );
+    pwrs.push_back(0.0);
+#   if 0
+    for (int i=0; i<pwrs.size(); i++)
+        std::cout << i+1 << " -- " << std::fixed << std::setprecision(15) << pwrs[i] << std::endl;
+#   endif
+    return pwrs;
 }
 
 void Mcmc::closeOutputFiles(void) {
@@ -181,6 +198,83 @@ void Mcmc::run(void) {
 }
 
 void Mcmc::runPathSampling(void) {
+
+    // initialize the chain
+    initialize();
+    
+    int numStones = 127;
+    double alpha = 0.3;
+    double beta = 1.0;
+    std::vector<double> powers = calculatePowers(numStones, alpha, beta);
+    
+    modelPtr->setUpdateLikelihood();
+    double curLnL = modelPtr->lnLikelihood();
+    double curLnP = modelPtr->lnPriorProbability();
+    UpdateInfo& updateInfo = UpdateInfo::updateInfo();
+
+    // Metropolis-Hastings algorithm
+    auto start = std::chrono::high_resolution_clock::now();
+    
+    for (int pow=0; pow<powers.size(); pow++)
+        {
+        // set the power
+        double power = powers[pow];
+        
+        for (int n=1; n<=numMcmcCycles; n++)
+            {
+            // propose a new value for the chain
+            double lnProposalRatio = modelPtr->update();
+            
+            // calculate the likelihood and prior ratios (natural log scale)
+            double newLnL = modelPtr->lnLikelihood();
+            double lnLikelihoodRatio = (newLnL - curLnL) * power;
+            double newLnP = modelPtr->lnPriorProbability();
+            double lnPriorRatio = newLnP - curLnP;
+            
+            // accept or reject the state
+            bool accept = false;
+            if ( log(rv->uniformRv()) < lnLikelihoodRatio + lnPriorRatio + lnProposalRatio )
+                accept = true;
+            
+            // print to the screen to give the user some clue where the chain is
+            if (n == 1 || n == numMcmcCycles || n % printFrequency == 0)
+                {
+                auto timePt = std::chrono::high_resolution_clock::now();
+                print(n, curLnL, newLnL, curLnP, newLnP, accept, timePt, start);
+                }
+            
+            // update the state of the chain
+            if (accept == false)
+                {
+                modelPtr->reject();
+                updateInfo.reject(modelPtr->getLastUpdate());
+                }
+            else
+                {
+                modelPtr->accept();
+                updateInfo.accept(modelPtr->getLastUpdate());
+                curLnL = newLnL;
+                curLnP = newLnP;
+                }
+            
+            // sample the chain, printing the current state to files
+            if (n == 1 || n == numMcmcCycles || n % sampleFrequency == 0)
+                sample(n, curLnL, curLnP);
+            }
+            
+        }
+    auto stop = std::chrono::high_resolution_clock::now();
+        
+    // print summary information
+    std::cout << std::endl;
+    std::cout << "   Markov chain Monte Carlo run summary" << std::endl;
+    std::cout << "   * Run time = " << formattedTime(start, stop) << std::endl;
+    updateInfo.print();
+    std::cout << std::endl;
+    
+    // clean up
+    closeOutputFiles();
+    delete [] parmValues;
 
 }
 

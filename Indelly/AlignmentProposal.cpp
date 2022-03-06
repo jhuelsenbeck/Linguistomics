@@ -115,14 +115,13 @@ int AlignmentProposal::countPaths(AlnMatrix* inputAlignment, int startCol, int e
     int len = endCol - startCol + 1;
 
     // get a numSites X numTaxa matrix containing the pattern of indels
-    //alignmentParm->getIndelMatrix(inputAlignment, alignment);
     getIndelMatrix(inputAlignment, alignment);
 
     // Enter first count into DP table
     std::map<IntVector*,int,CompIntVector> dpTable;
     IntVector* pos = getVector();
     IntVector* newVec = getVector(*pos);
-    dpTable.insert( std::make_pair( newVec, 1) );  // copy of the pos object is inserted
+    dpTable.insert( std::make_pair( newVec, 1) );
 		
     // Array of possible vector indices, used in inner loop
     for (int i=0; i<maxUnalignDimension; i++)
@@ -133,14 +132,12 @@ int AlignmentProposal::countPaths(AlnMatrix* inputAlignment, int startCol, int e
     do
         {
         // Find all possible vectors from current position, iPos
-        //IntVector mask(numLeaves);
         IntVector* mask = getVector();
         int ptr, numPossible = 0, firstNotUsed = 0;
         for (ptr = firstNotUsed; mask->zeroEntry() && ptr<len; ptr++)
             {
             if (state[ ptr ] != used)
                 {
-                //if (mask->innerProduct( alignment[ptr] ) == 0)
                 if (mask->innerProduct( alignment->getRow(ptr), alignment->getNumTaxa() ) == 0)
                     {
                     state[ ptr ] = possible;
@@ -154,14 +151,13 @@ int AlignmentProposal::countPaths(AlnMatrix* inputAlignment, int startCol, int e
                         }
                     possibles[numPossible++] = ptr;
                     }
-                //mask->add( alignment[ptr] );
                 mask->add( alignment->getRow(ptr), alignment->getNumTaxa() );
                 }
             }
         returnToPool(mask);
         
         // Loop over all combinations of possible vectors, which define edges from
-        // iPos to another possible position, by ordinary binary counting.
+        // pos to another possible position, by ordinary binary counting.
         IntVector* newPos = getVector(*pos);
         IntVector* signature = getVector();
         int posPtr;
@@ -177,10 +173,8 @@ int AlignmentProposal::countPaths(AlnMatrix* inputAlignment, int startCol, int e
                 if (state[ curPtr ] == possible)
                     {
                     state[ curPtr ] = edgeUsed;
-                    //newPos->add( alignment[ curPtr ] );
                     newPos->add( alignment->getRow(curPtr), alignment->getNumTaxa() );
                     // Compute signature vector
-                    //signature->addMultiple( alignment[ curPtr ], posPtr+1 );
                     signature->addMultiple( alignment->getRow(curPtr), alignment->getNumTaxa(), posPtr+1 );
                     // Signal: non-zero combination found, and stop
                     foundNonZero = true;
@@ -190,9 +184,7 @@ int AlignmentProposal::countPaths(AlnMatrix* inputAlignment, int startCol, int e
                     {
                     // It was eEdgeUsed (i.e., digit == 1), so reset digit and continue
                     state[ curPtr ] = possible;
-                    //newPos->subtract( alignment[ curPtr ] );
                     newPos->subtract( alignment->getRow(curPtr), alignment->getNumTaxa() );
-                    //signature->addMultiple( alignment[ curPtr ], -posPtr-1 );
                     signature->addMultiple( alignment->getRow(curPtr), alignment->getNumTaxa(), -posPtr-1 );
                     }
                 }
@@ -241,7 +233,6 @@ int AlignmentProposal::countPaths(AlnMatrix* inputAlignment, int startCol, int e
             // Undo any possible used vector that we encounter
             if (state[ptr] == used)
                 {
-                //pos->subtract( alignment[ptr] );
                 pos->subtract( alignment->getRow(ptr), alignment->getNumTaxa() );
                 state[ptr] = freeToUse;
                 }
@@ -270,15 +261,12 @@ int AlignmentProposal::countPaths(AlnMatrix* inputAlignment, int startCol, int e
         
         // Now use this farthest-out possible vector
         state[ptr] = used;
-        //pos->add( alignment[ptr] );
         pos->add( alignment->getRow(ptr), alignment->getNumTaxa() );
         if (ptr <= firstNotUsed)
             firstNotUsed++;
         
         } while (true);
 
-    //returnToPool(pos);
-    //cleanTable(dpTable);
     return 0;
 }
 
@@ -718,7 +706,7 @@ double AlignmentProposal::propose(AlnMatrix* newAlignment, AlnMatrix* oldAlignme
             } // k, index for the internal nodes, profile[root] is the obtained multiple alignment
         len2 = xProfile[numNodes - 1];
 
-        // putting the new sub-alignment into the new proposal
+        // putting the new sub-alignment into the new alignment
         newAlignment->setNumSites( oldAlignment->getNumSites() + len2 - len );
         for (int i=0; i<pos; i++)
             {
@@ -734,10 +722,10 @@ double AlignmentProposal::propose(AlnMatrix* newAlignment, AlnMatrix* oldAlignme
         for (int i=pos + len; i<oldAlignment->getNumSites(); i++)
             {
             for (int j=0; j<numTaxa; j++)
-                (*newAlignment)(j,i + len2 - len) = (*oldAlignment)(j,i);
+                (*newAlignment)(j, i + len2 - len) = (*oldAlignment)(j,i);
             }
 
-        // check alignment
+        // check alignment against original alignment
         if ( *newAlignment == *oldAlignment)
             {
             foundDifferentAlignment = false;
@@ -748,9 +736,7 @@ double AlignmentProposal::propose(AlnMatrix* newAlignment, AlnMatrix* oldAlignme
             }
         
         } while(foundDifferentAlignment == false);
-    
-    
-    
+        
     // calculate Hastings ratio
     int iCF = countPaths(newAlignment, pos, pos+len2-1);
     //std::cout << "iCF = " << iCF << std::endl;

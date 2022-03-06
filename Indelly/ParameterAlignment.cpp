@@ -92,15 +92,6 @@ void ParameterAlignment::accept(void) {
     (*alignment[1]) = (*alignment[0]);
 }
 
-/*bool ParameterAlignment::areAlignmentsIdentical(void) {
-
-    if (alignment[0].size() != alignment[1].size())
-        return false;
-    if (alignment[0][0].size() != alignment[1][0].size())
-        return false;
-    return true;
-}*/
-
 void ParameterAlignment::fillParameterValues(double* x, int& start, int maxNumValues) {
 
 }

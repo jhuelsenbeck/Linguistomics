@@ -24,7 +24,6 @@ class ParameterAlignment : public Parameter {
                                         ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, int idx);
                                        ~ParameterAlignment(void);
         void                            accept(void);
-      //bool                            areAlignmentsIdentical(void);
         void                            fillParameterValues(double* x, int& start, int maxNumValues);
         AlnMatrix*                      getAlignment(void) { return alignment[0]; }
         AlnMatrix*                      getAlignment(int idx) { return alignment[idx]; }
@@ -58,7 +57,6 @@ class ParameterAlignment : public Parameter {
     
     protected:
         AlignmentProposal*              alignmentProposal;
-      //std::vector<std::vector<int> >  alignment[2];  // numTaxa X numSites
         AlnMatrix*                      alignment[2];  // numTaxa X numSites
         std::vector<std::vector<int> >  sequences;     // numTaxa X numSites for taxon i (i.e., left-justified), instantiated once on construction
         bool                            completelySampled;
