@@ -6,15 +6,18 @@ class ExperimentClass: FactClass {
   field Name,
         FolderName,
         Generations;
-  var   Tree;
+  var   Tree,
+        Complete;
 
 
-  Constructor(id, name, folder, generations) {
+  Constructor(id, name, folder, generations, complete=true) {
     super.Constructor(id);
     Name        = name;
     FolderName  = folder;
     Generations = generations;
-    Tree        = Read(Info.ExperimentBase Folder(folder) Info.ConsensusName).trees.TREE1;
+    Complete    = complete;
+    if (complete)
+      Tree = Read(Info.ExperimentBase Folder(folder) Info.ConsensusName).trees.TREE1;
   }
 
   Show = Block {
@@ -25,8 +28,8 @@ class ExperimentClass: FactClass {
       };
        " generations";
     };
-
-    Style.ShowTree(Name, subtitle, Tree);
+    if (valid Tree)
+      Style.ShowTree(Name, subtitle, Tree);
   };
 
   static ShowComparison = Block {
