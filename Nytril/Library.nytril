@@ -6,14 +6,12 @@ class LanguageClass: FactClass {
         Cases;
   var   Variable,
         MapImage,
-        MapAttribution,
-        Example;
+        MapAttribution;
 
   Constructor(id, name, cases=0) {
     super.Constructor(id);
     Name    = name;
     Cases   = cases;
-    Example = false;
   }
 
   virtual Description = null;
@@ -193,6 +191,10 @@ class ConceptClass: FactClass {
   }
 
   override GetLayoutTip = Span {Name; "-"; Confidence};
+
+  override Compare(c, options) {
+    return Name.Compare(c.Name);
+  }
 }
 //======================================================================
 
@@ -218,6 +220,13 @@ class CognateClass: FactClass {
   }
 
   override GetLayoutTip = AllWords.ShowConceptTable(this);
+
+  override Compare(c, options) {
+    var i = Concept.Compare(c.Concept, options);
+    if (i == 0)
+      return Name.Compare(c.Name, options);
+    return i;
+  }
 }
 //======================================================================
 
@@ -279,7 +288,8 @@ class ResultsClass {
   SegmentClass[]  UniqueSegments,
                   SortedSegments,
                   PartSegments;
-  CognateClass[]  UsedCognates;
+  CognateClass[]  UsedCognates,
+                  SortedCognates;
   ConceptClass[]  UsedConcepts;
   MatrixClass     TransitionCount;
   TaxonClass[]    Taxa;
@@ -420,9 +430,10 @@ class ResultsClass {
       }
     }
 
-    UsedConcepts = conceptlist.Values.Sort(false);
-    UsedCognates = clist.Values;
-    Taxa         = tlist.Values;
+    UsedConcepts   = conceptlist.Values.Sort(false);
+    UsedCognates   = clist.Values;
+    SortedCognates = UsedCognates.Sort(false);
+    Taxa           = tlist.Values;
 
     foreach (var cognate in UsedCognates)
       ComputeCognate(dictionary, cognate);
@@ -1192,7 +1203,7 @@ class ResultsClass {
         SpaceAfter: 10 pts;
         Span {
           Separator: Space*2;
-          foreach (var cognate in UsedCognates) {
+          foreach (var cognate in SortedCognates) {
             foreach (var word in cognate.Words) {
               if (word.Segments.FindAny(segment)) {
                 Span {
