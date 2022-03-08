@@ -83,11 +83,11 @@ namespace ExampleAnimals {
 //=====================================================================
 
 namespace ExampleConcept {
-  Cognate        = Results.GetConcept(Concepts.Grass);
+  Cognate        = Results.GetCognate(Info.ExampleConcept);
   TaxonIndex     = 0;
   Taxon          = Results.Taxa[TaxonIndex];
   Callout        = Results.Taxa[3];
-  Name           = ToLower(Cognate.Name);
+  Name           = ToLower(Cognate.Concept.Name);
   ExLanguages    = [Languages.French, Languages.Portuguese, Languages.Catalan, Languages.Friulian, Languages.Romanian];
   TaxonList      = Results.Taxa.FindSlice(t => ExLanguages.Contains(t.Language));
   LangNames      = (each TaxonList).Language;
@@ -512,7 +512,8 @@ namespace PaperSections.DataSummary {
       "We selected ";
       Results.UsedConcepts.Length;
       " concepts from the 200-word Swadesh list of basic vocabulary. ";
-      "The initial set of data was downloaded from Wiktionary"; Citation{Wictionary}; ", which was then manually checked for accuracy and augmented. ";
+      "The initial set of data was downloaded from "; Wiktionary.Title; Citation{Wiktionary}; ", which was then manually checked for accuracy and augmented. ";
+      "Words were double-checked against data from "; SoundComparisons.Title; Citation{SoundComparisons}; eos;
       "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; Quote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; QuoteEnd{"serious"};
@@ -560,8 +561,8 @@ namespace PaperSections.DataSummary {
 //======================================================================
 
 namespace TableFigures.ManualAlignment {
-  Concept     = Concepts.What;
-  Cognate     = Results.GetConcept(Concept);
+  Concept     = Info.FigureConcept;
+  Cognate     = Results.GetCognate(Concept);
   WordDisplay = Quote{TextCase: TextCases.AllLower; Concept.GlobalVariableName};
 
   Caption = FigureCaption {
@@ -667,7 +668,7 @@ namespace PaperSections.ModelInference {
 namespace PaperSections.DataCuration {
   Title = "Data Curation and Analyses";
 
-  Example = Concepts.Woman;
+  Example = Info.ExampleConcept;
 
   Body = Block {
     FirstPar {

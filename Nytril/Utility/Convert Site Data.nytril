@@ -1,0 +1,144 @@
+using Format, Units, IO, DB;
+
+class WordClass {
+  var Language,
+      Text,
+      Spelling;
+
+  Constructor(language, text, spelling) {
+    Language = language;
+    Text     = text;
+    Spelling = spelling;
+  }
+}
+
+//================================================================
+
+class ConceptClass {
+  var Name,
+      Words;
+
+  Constructor(name) {
+    Name  = name;
+    Words = new DictionaryClass(16, WordClass);
+  }
+}
+
+//================================================================
+
+class LogSchemaClass: SchemaClass {
+  var Language,
+      Concept,
+      Text,
+      Spelling,
+      Concepts;
+
+
+  Constructor {
+    super.Constructor("log");
+    Language = new FieldClass("Language", ValueTypes.String);
+    Concept  = new FieldClass("Concept", ValueTypes.String);
+    Text     = new FieldClass("Text", ValueTypes.String);
+    Spelling = new FieldClass("Spelling", ValueTypes.String);
+    AddField(Language);
+    AddField(Concept);
+    AddField(Text);
+    AddField(Spelling);
+
+    Concepts = new DictionaryClass(1024, ConceptClass);
+  }
+
+  GetData(view) {
+    foreach (var row in view) {
+      var cname = row.FindValue(Concept);
+      var concept = Concepts.FindKey(cname);
+      if (not exists concept) {
+        concept = new ConceptClass(cname);
+        Concepts.Add(concept, cname);
+      }
+      var word = new WordClass(row.FindValue(Language), row.FindValue(Text), row.FindValue(Spelling));
+      concept.Words.Add(word, word.Language);
+    }
+  }
+
+  ShowDoc = TextBlock {
+    "using Format, WordGroups;";
+    Empty;
+    "namespace Concepts;";
+
+    foreach (var concept in Concepts) {
+      "//==================================================";
+      Empty;
+
+      Span {
+        "namespace ";
+        ToUpper(concept.Name[0]);
+        concept.Name[1..];
+        " {";
+      };
+      "  Confidence = 10;";
+      "  WordType   = WordTypes.Noun;";
+      "  WordGroup  = Leipzig Swadesh100 Swadesh207;";
+      Empty;
+      "  namespace Primary {";
+
+      var length = 0;
+      foreach (var word in concept.Words)
+        length = Math.Max([length, word.Text.Length]);
+
+      foreach (var word in concept.Words) {
+        Span {
+          Space*4;
+          word.Language;
+          Space * (20 - word.Language.Length);
+          "= \"";
+          Span {
+            TextFamily: TextFamilies.CambriaMath;
+            word.Text;
+            "\";";
+            Space * (length - word.Language.Length + 2);
+
+            if (valid word.Spelling) {
+              "  // ";
+              word.Spelling;
+            }
+          }
+        }
+      }
+      "  }";
+      "}";
+      Empty;
+    }
+  };
+}
+
+//================================================================
+
+class MyDocClass: DocumentClass {
+  var Schema;
+
+  Constructor {
+    super.Constructor(#2f91b3da-1566-4591-bcc7-1ec7b798a87f#, "Convert Site Data");
+
+    Schema = new LogSchemaClass;
+    var name   = IO.Folder("c:/temp") FileName("SoundComparisons Export.txt");
+    var view   = Schema.ReadTextFile(name, true);
+
+    Schema.GetData(view);
+  }
+
+  override GetDocument = Document {
+    Schema.ShowDoc;
+  };
+
+  void Out {
+    IO.Write(Schema.ShowDoc, Folders.Source Folders.Up IO.Folder("Concepts") FileName("Phonetic.nytril"));
+  }
+}
+
+Main.Documents = [
+  new MyDocClass
+];
+
+Main.Run = new MyDocClass.Out;
+
