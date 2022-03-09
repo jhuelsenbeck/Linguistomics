@@ -23,6 +23,13 @@ UserSettings::UserSettings(void) {
     numRateCategories           = 1;
     numIndelCategories          = 1;
     useOnlyCompleteWords        = false;
+    
+    preburninLength             = 10000;
+    numTunes                    = 4;
+    tuneLength                  = 1000;
+    burninLength                = 100000;
+    sampleLength                = 100000;
+    sampleToStoneFrequency      = 10;
 }
 
 

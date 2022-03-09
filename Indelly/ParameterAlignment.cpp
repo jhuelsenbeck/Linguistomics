@@ -351,10 +351,7 @@ double ParameterAlignment::update(void) {
     lastUpdateType = "alignment for " + parmName;
 
     // update the alignment
-    //RbBitSet mask(taxonMask);
-    //std::vector<std::vector<int> > newAlignment;
     double lnProposalRatio = alignmentProposal->propose(alignment[0], alignment[1], 0.5);
-    //(*alignment[0]) = *newAlignment;
 
     // set flags indicating the transition probabilities are not affected
     TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();

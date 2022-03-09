@@ -1,11 +1,3 @@
-//
-//  ParameterIndelRates.hpp
-//  Indelly
-//
-//  Created by John Huelsenbeck on 7/30/21.
-//  Copyright © 2021 John Huelsenbeck. All rights reserved.
-//
-
 #ifndef ParameterIndelRates_hpp
 #define ParameterIndelRates_hpp
 
@@ -48,4 +40,4 @@ class ParameterIndelRates : public Parameter {
     
 };
 
-#endif /* ParameterIndelRates_hpp */
+#endif
