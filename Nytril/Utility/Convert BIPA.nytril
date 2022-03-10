@@ -1,0 +1,297 @@
+using Format, Units, IO, DB;
+
+class FeatureClass {
+  var Name,
+      Index,
+      Flag;
+
+  Constructor(name, index) {
+    Name  = name;
+    Index = index;
+    Flag  = 1 << index;
+  }
+}
+
+enum MouthPlacements {
+  None,
+  Low,
+  MidLow,
+  Mid,
+  MidHigh,
+  High,
+}
+
+class SegmentClass {
+  var Description,
+      Text,
+      Code,
+      Props,
+      From,
+      Via,
+      To;
+
+  Constructor(description, text, code) {
+    Description = description.Replace("-", "_");
+    Text        = text.GetString(NormalizationForms.FormC);
+    Code        = code;
+    Props       = 0;
+    From        = MouthPlacements.None;
+    Via         = MouthPlacements.None;
+    To          = MouthPlacements.None;
+  }
+}
+
+//================================================================
+
+class LogSchemaClass: SchemaClass {
+  var            Description,
+                 Text,
+                 Code,
+                 Features;
+  SegmentClass[] Segments;
+  var            From,
+                 Via,
+                 To;
+
+  Constructor {
+    super.Constructor("log");
+    Description = new FieldClass("description", ValueTypes.String);
+    Text        = new FieldClass("text", ValueTypes.String);
+    Code        = new FieldClass("code", ValueTypes.Int32);
+    AddField(Description);
+    AddField(Text);
+    AddField(Code);
+
+    var list = new ListClass(2048, SegmentClass);
+    var view = ReadTextFile(res "BIPA.txt", true);
+    foreach (var row in view)
+      list.Add(new SegmentClass(row.FindValue(Description), row.FindValue(Text), row.FindValue(Code)));
+    Segments  = list.Values;
+
+    var fset = new DictionaryClass(128, FeatureClass);
+    foreach (var s in Segments) {
+      From = MouthPlacements.None;
+      Via  = MouthPlacements.None;
+      To   = MouthPlacements.None;
+      var props = s.Description.Split(Space);
+      foreach (var p in props) {
+        var i = p.IndexOf("_and_");
+        if (i > 0) {
+          AddFeature(p[0..<i], fset, s);
+          AddFeature(p[(i+5)..], fset, s);
+        }
+        else
+          AddFeature(p, fset, s);
+      }
+      s.From = From;
+      s.Via  = Via;
+      s.To   = To;
+    }
+
+    Features = fset;
+  }
+
+  void AddFeature(name, DictionaryClass fset, SegmentClass s) {
+    name = String(ToUpper(name[0]) + name[1..]);
+
+    switch (name) {
+      case "From_high":
+        From = MouthPlacements.High;
+        return;
+
+      case "From_low":
+        From = MouthPlacements.Low;
+        return;
+
+      case "From_mid":
+        From = MouthPlacements.Mid;
+        return;
+
+      case "From_mid_high":
+        From = MouthPlacements.MidHigh;
+        return;
+
+      case "From_mid_low":
+        From = MouthPlacements.Mid;
+        return;
+
+      case "To_high":
+        To = MouthPlacements.High;
+        return;
+
+      case "To_low":
+        To = MouthPlacements.Low;
+        return;
+
+      case "To_mid":
+        To = MouthPlacements.Mid;
+        return;
+
+      case "To_mid_high":
+        To = MouthPlacements.MidHigh;
+        return;
+
+      case "To_mid_low":
+        To = MouthPlacements.Mid;
+        return;
+
+      case "Via_high":
+        Via = MouthPlacements.High;
+        return;
+
+      case "Via_low":
+        Via = MouthPlacements.Low;
+        return;
+
+      case "Via_mid":
+        Via = MouthPlacements.Mid;
+        return;
+
+      case "Via_mid_high":
+        Via = MouthPlacements.MidHigh;
+        return;
+
+      case "Via_mid_low":
+        Via = MouthPlacements.Mid;
+        return;
+
+      case "Alveolo_palatal":
+        AddFeature("Alveolo", fset, s);
+        AddFeature("Palatal", fset, s);
+        return;
+
+      case "Palatal_velar":
+        AddFeature("Palatal", fset, s);
+        AddFeature("Velar", fset, s);
+        return;
+
+      case "Labio_dental":
+        AddFeature("Labial", fset, s);
+        AddFeature("Dental", fset, s);
+        return;
+
+      case "Labio_palatal":
+        AddFeature("Labial", fset, s);
+        AddFeature("Palatal", fset, s);
+        return;
+
+      case "Labio_velar":
+        AddFeature("Labial", fset, s);
+        AddFeature("Velar", fset, s);
+        return;
+
+      case "Close_mid":
+        AddFeature("Close", fset, s);
+        AddFeature("Mid", fset, s);
+        return;
+
+      case "Open_mid":
+        AddFeature("Open", fset, s);
+        AddFeature("Mid", fset, s);
+        return;
+
+      case "Mid_long":
+        AddFeature("Long", fset, s);
+        AddFeature("Mid", fset, s);
+        return;
+
+      case "Nasal_click":
+        AddFeature("Nasal", fset, s);
+        AddFeature("Click", fset, s);
+        return;
+
+      case "Non_syllabic":
+      case "Unrounded":
+      case "Consonant":
+      case "Voiceless":
+        return;
+    }
+
+    var fp = fset.FindKey(name);
+    if (not valid fp) {
+      fp = new FeatureClass(name, fset.Length);
+      fset.Add(fp, name);
+    }
+    s.Props |= fp.Flag;
+  }
+
+  AddProps(props) = Span {
+    Separator: Space;
+    foreach (var f in Features) {
+      if ((props & f.Flag) != 0)
+        f.Name;
+    }
+  };
+
+  ShowDoc = TextBlock {
+    "using Format, WordGroups;";
+    Empty;
+    "namespace Segments;";
+    "//==================================================";
+    Empty;
+    "flags Features {";
+    "  None,";
+    foreach (var f in Features.Values.Sort(false)) {
+      Span {
+        "  ";
+        f.Name;
+        ",";
+      }
+    }
+    "}";
+    Empty;
+
+    var vowel = Features.FindKey("Vowel").Flag;
+
+    foreach (var segment in Segments) {
+      Span {
+        "S";
+        segment.Code;
+        Space * (5 - String(segment.Code).Length);
+        "= new ";
+
+        if ((segment.Props & vowel) != 0)
+          "Vowel";
+        else
+          "Consonent";
+
+        "Class(";
+
+        AddProps(segment.Props);
+
+        ", \"";
+        Span {
+          TextFamily: TextFamilies.CambriaMath;
+          segment.Text;
+        }
+        "\");";
+      }
+    }
+  };
+}
+
+//================================================================
+
+class MyDocClass: DocumentClass {
+  var Schema;
+
+  Constructor {
+    super.Constructor(#2f91b3da-1566-4591-bcc7-1ec7b798a87f#, "Convert BIPA");
+    Schema = new LogSchemaClass;
+  }
+
+  override GetDocument = Document {
+    Schema.ShowDoc;
+  };
+
+  void Out {
+    IO.Write(Schema.ShowDoc, Folders.Source Folders.Up FileName("BIPA.nytril"));
+  }
+}
+
+Main.Documents = [
+  new MyDocClass
+];
+
+Main.Run = new MyDocClass.Out;
+
