@@ -23,6 +23,7 @@ class Mcmc {
         void                initialize(void);
         int                 numDigits(double lnX);
         void                openOutputFiles(void);
+        int                 phaseLength(std::string phs);
         void                print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
         double              safeExponentiation(double lnX);
         void                sample(int gen, double lnL, double lnP);
@@ -41,6 +42,12 @@ class Mcmc {
         int                 maxPriorPrint;
         int                 maxLikePrint;
         int                 maxGenPrint;
+        int                 preburninLength;
+        int                 numTunes;
+        int                 tuneLength;
+        int                 burninLength;
+        int                 sampleLength;
+        int                 stoneSampleFrequency;
 };
 
 #endif

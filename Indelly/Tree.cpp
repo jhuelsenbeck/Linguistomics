@@ -179,7 +179,7 @@ void Tree::buildRandomTree(std::vector<std::string> tNames, double lambda, Rando
     numTaxa = 0;
     taxonNames = tNames;
 
-    // start with a simple two-species tree
+    // start with a two-species tree
     Node* n1 = addNode();
     Node* n2 = addNode();
     n1->setName(tNames[0]);

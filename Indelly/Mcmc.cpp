@@ -10,6 +10,7 @@
 #include "ParameterAlignment.hpp"
 #include "Probability.hpp"
 #include "RandomVariable.hpp"
+#include "SteppingStones.h"
 #include "Tree.hpp"
 #include "UpdateInfo.hpp"
 #include "UserSettings.hpp"
@@ -19,17 +20,22 @@
 
 Mcmc::Mcmc(Model* m, RandomVariable* r) {
 
-    modelPtr = m;
-    rv = r;
-    maxLikePrint = 0;
+    modelPtr      = m;
+    rv            = r;
+    maxLikePrint  = 0;
     maxPriorPrint = 0;
     
     UserSettings& settings = UserSettings::userSettings();
-    numMcmcCycles = settings.getNumMcmcCycles();
-    printFrequency = settings.getPrintFrequency();
-    sampleFrequency = settings.getSampleFrequency();
-
-    maxGenPrint = numDigits(numMcmcCycles);
+    numMcmcCycles        = settings.getNumMcmcCycles();
+    printFrequency       = settings.getPrintFrequency();
+    sampleFrequency      = settings.getSampleFrequency();
+    preburninLength      = settings.getPreburninLength();
+    numTunes             = settings.getNumTunes();
+    tuneLength           = settings.getTuneLength();
+    burninLength         = settings.getBurninLength();
+    sampleLength         = settings.getSampleLength();
+    stoneSampleFrequency = settings.getSampleToStoneFrequency();
+    maxGenPrint          = numDigits(settings.getNumMcmcCycles());
 }
 
 std::vector<double> Mcmc::calculatePowers(int numStones, double alpha, double beta) {
@@ -126,6 +132,18 @@ void Mcmc::openOutputFiles(void) {
         }
 }
 
+int Mcmc::phaseLength(std::string phs) {
+
+    if (phs == "preburn")
+        return preburninLength;
+    else if (phs == "tune")
+        return numTunes * tuneLength;
+    else if (phs == "burn")
+        return burninLength;
+    else
+        return sampleLength;
+}
+
 void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
 
     if (numDigits(curLnL) > maxLikePrint)
@@ -202,10 +220,13 @@ void Mcmc::runPathSampling(void) {
     // initialize the chain
     initialize();
     
+    // get powers and initialize vector with phases
     int numStones = 127;
     double alpha = 0.3;
     double beta = 1.0;
     std::vector<double> powers = calculatePowers(numStones, alpha, beta);
+    SteppingStones samples(powers);
+    std::vector<std::string> mcmcPhases = { "preburn", "tune", "burn", "sample" };
     
     modelPtr->setUpdateLikelihood();
     double curLnL = modelPtr->lnLikelihood();
@@ -214,52 +235,69 @@ void Mcmc::runPathSampling(void) {
 
     // Metropolis-Hastings algorithm
     auto start = std::chrono::high_resolution_clock::now();
-    
-    for (int pow=0; pow<powers.size(); pow++)
+
+    int powerSample = 0, iteration = 0;
+    int numIterations = (preburninLength + (numTunes*tuneLength) + burninLength + sampleLength) * (int)powers.size();
+
+    for (int powIdx=0; powIdx<powers.size(); powIdx++)
         {
         // set the power
-        double power = powers[pow];
-        
-        for (int n=1; n<=numMcmcCycles; n++)
+        double power = powers[powIdx];
+        for (std::string phase : mcmcPhases)
             {
-            // propose a new value for the chain
-            double lnProposalRatio = modelPtr->update();
-            
-            // calculate the likelihood and prior ratios (natural log scale)
-            double newLnL = modelPtr->lnLikelihood();
-            double lnLikelihoodRatio = (newLnL - curLnL) * power;
-            double newLnP = modelPtr->lnPriorProbability();
-            double lnPriorRatio = newLnP - curLnP;
-            
-            // accept or reject the state
-            bool accept = false;
-            if ( log(rv->uniformRv()) < lnLikelihoodRatio + lnPriorRatio + lnProposalRatio )
-                accept = true;
-            
-            // print to the screen to give the user some clue where the chain is
-            if (n == 1 || n == numMcmcCycles || n % printFrequency == 0)
+            int phsLength = phaseLength(phase);
+
+            for (int n=1; n<=phsLength; n++)
                 {
-                auto timePt = std::chrono::high_resolution_clock::now();
-                print(n, curLnL, newLnL, curLnP, newLnP, accept, timePt, start);
+                iteration++;
+                
+                // propose a new value for the chain
+                double lnProposalRatio = modelPtr->update();
+                
+                // calculate the likelihood and prior ratios (natural log scale)
+                double newLnL = modelPtr->lnLikelihood();
+                double lnLikelihoodRatio = (newLnL - curLnL) * power;
+                double newLnP = modelPtr->lnPriorProbability();
+                double lnPriorRatio = newLnP - curLnP;
+                
+                // accept or reject the state
+                bool accept = false;
+                if ( log(rv->uniformRv()) < lnLikelihoodRatio + lnPriorRatio + lnProposalRatio )
+                    accept = true;
+                
+                // print to the screen to give the user some clue where the chain is
+                if (n == 1 || n == numMcmcCycles || n % printFrequency == 0)
+                    {
+                    auto timePt = std::chrono::high_resolution_clock::now();
+                    print(n, curLnL, newLnL, curLnP, newLnP, accept, timePt, start);
+                    }
+                
+                // update the state of the chain
+                if (accept == false)
+                    {
+                    modelPtr->reject();
+                    updateInfo.reject(modelPtr->getLastUpdate());
+                    }
+                else
+                    {
+                    modelPtr->accept();
+                    updateInfo.accept(modelPtr->getLastUpdate());
+                    curLnL = newLnL;
+                    curLnP = newLnP;
+                    }
+                
+                // sample the chain, printing the current state to files
+                if (n == 1 || n == numMcmcCycles || n % sampleFrequency == 0)
+                    sample(n, curLnL, curLnP);
+
+                 if ( (n % stoneSampleFrequency == 0  || n == sampleLength) && phase == "sample" )
+                    samples.addSample(powIdx, curLnL);
+
+                if ( n % tuneLength == 0 && phase == "tune" )
+                    {
+                    }
                 }
             
-            // update the state of the chain
-            if (accept == false)
-                {
-                modelPtr->reject();
-                updateInfo.reject(modelPtr->getLastUpdate());
-                }
-            else
-                {
-                modelPtr->accept();
-                updateInfo.accept(modelPtr->getLastUpdate());
-                curLnL = newLnL;
-                curLnP = newLnP;
-                }
-            
-            // sample the chain, printing the current state to files
-            if (n == 1 || n == numMcmcCycles || n % sampleFrequency == 0)
-                sample(n, curLnL, curLnP);
             }
             
         }
@@ -271,11 +309,13 @@ void Mcmc::runPathSampling(void) {
     std::cout << "   * Run time = " << formattedTime(start, stop) << std::endl;
     updateInfo.print();
     std::cout << std::endl;
-    
+
+    double marginalLnL = samples.marginalLikelihood();
+    std::cout << "   * Marginal likelihood = " << marginalLnL << std::endl;
+
     // clean up
     closeOutputFiles();
     delete [] parmValues;
-
 }
 
 void Mcmc::runPosterior(void) {

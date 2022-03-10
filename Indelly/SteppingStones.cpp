@@ -1,6 +1,6 @@
 #include <cmath>
 #include <iostream>
-#include "Msg.h"
+#include "Msg.hpp"
 #include "SteppingStones.h"
 #include "Stone.h"
 
