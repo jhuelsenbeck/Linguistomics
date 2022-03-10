@@ -236,8 +236,8 @@ void Mcmc::runPathSampling(void) {
     // Metropolis-Hastings algorithm
     auto start = std::chrono::high_resolution_clock::now();
 
-    int powerSample = 0, iteration = 0;
-    int numIterations = (preburninLength + (numTunes*tuneLength) + burninLength + sampleLength) * (int)powers.size();
+    int iteration = 0;
+//    int numIterations = (preburninLength + (numTunes*tuneLength) + burninLength + sampleLength) * (int)powers.size();
 
     for (int powIdx=0; powIdx<powers.size(); powIdx++)
         {

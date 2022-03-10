@@ -92,7 +92,7 @@ void ParameterAlignment::accept(void) {
     (*alignment[1]) = (*alignment[0]);
 }
 
-void ParameterAlignment::fillParameterValues(double* x, int& start, int maxNumValues) {
+void ParameterAlignment::fillParameterValues(double* /*x*/, int& /*start*/, int /*maxNumValues*/) {
 
 }
 
