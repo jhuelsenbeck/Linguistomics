@@ -14,6 +14,7 @@ UserSettings::UserSettings(void) {
     dataFile                    = "";
     outFile                     = "";
     checkPointFrequency         = 10000;
+    seed                        = 0;
     numMcmcCycles               = 1000;
     printFrequency              = 100;
     sampleFrequency             = 100;
@@ -23,7 +24,6 @@ UserSettings::UserSettings(void) {
     numRateCategories           = 1;
     numIndelCategories          = 1;
     useOnlyCompleteWords        = false;
-    
     preburninLength             = 10000;
     numTunes                    = 4;
     tuneLength                  = 1000;
@@ -80,6 +80,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 else
                     Msg::error("Unknown substitution model " + cmd);
                 }
+            else if (arg == "-e")
+                seed = atoi(cmd.c_str());
             else if (arg == "-n")
                 numMcmcCycles = atoi(cmd.c_str());
             else if (arg == "-p")
@@ -185,6 +187,10 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 Msg::error("Unknown option" + res);
             }
 
+        it2 = jsonSettings.find("Seed");
+        if (it2 != jsonSettings.end())
+            seed = jsonSettings["Seed"];
+
         it2 = jsonSettings.find("NumCycles");
         if (it2 != jsonSettings.end())
             numMcmcCycles = jsonSettings["NumCycles"];
@@ -204,6 +210,26 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         it2 = jsonSettings.find("BrlenPriorVal");
         if (it2 != jsonSettings.end())
             branchLengthLambda = jsonSettings["BrlenPriorVal"];
+
+        it2 = jsonSettings.find("Numtunings");
+        if (it2 != jsonSettings.end())
+            numTunes = jsonSettings["Numtunings"];
+
+        it2 = jsonSettings.find("TuneLength");
+        if (it2 != jsonSettings.end())
+            tuneLength = jsonSettings["TuneLength"];
+
+        it2 = jsonSettings.find("PreburnLength");
+        if (it2 != jsonSettings.end())
+            preburninLength = jsonSettings["PreburnLength"];
+
+        it2 = jsonSettings.find("SampleLength");
+        if (it2 != jsonSettings.end())
+            sampleLength = jsonSettings["SampleLength"];
+
+        it2 = jsonSettings.find("StoneSampleFreq");
+        if (it2 != jsonSettings.end())
+            sampleToStoneFrequency = jsonSettings["StoneSampleFreq"];
         }
 }
 
@@ -225,15 +251,28 @@ void UserSettings::print(void) {
         std::cout << "   * Substitution model                      = Custom" << std::endl;
     std::cout << "   * Number of gamma rate categories         = " << numRateCategories << std::endl;
     std::cout << "   * Number of gamma indel categories        = " << numIndelCategories << std::endl;
-    if (calculateMarginalLikelihood == true)
-        std::cout << "   * Calculate marginal likelihood           = yes" << std::endl;
-    else
-        std::cout << "   * Calculate marginal likelihood           = no" << std::endl;
-    std::cout << "   * Number of MCMC cycles                   = " << numMcmcCycles << std::endl;
-    std::cout << "   * Print-to-screen frequency               = " << printFrequency << std::endl;
-    std::cout << "   * Chain sample frequency                  = " << sampleFrequency << std::endl;
-    std::cout << "   * Check point frequency                   = " << checkPointFrequency << std::endl;
     std::cout << "   * Branch length prior parameter           = " << branchLengthLambda << std::endl;
+    if (seed == 0)
+        std::cout << "   * Random number seed                      = Current time" << std::endl;
+    else
+        std::cout << "   * Random number seed                      = " << seed << std::endl;
+    if (calculateMarginalLikelihood == false)
+        {
+        std::cout << "   * Calculate marginal likelihood           = no" << std::endl;
+        std::cout << "   * Number of MCMC cycles                   = " << numMcmcCycles << std::endl;
+        std::cout << "   * Print-to-screen frequency               = " << printFrequency << std::endl;
+        std::cout << "   * Chain sample frequency                  = " << sampleFrequency << std::endl;
+        std::cout << "   * Check point frequency                   = " << checkPointFrequency << std::endl;
+        }
+   else
+        {
+        std::cout << "   * Calculate marginal likelihood           = yes" << std::endl;
+        std::cout << "   * Number of tunings                       = " << numTunes << std::endl;
+        std::cout << "   * Tuning length                           = " << tuneLength << std::endl;
+        std::cout << "   * Pre burnin length                       = " << preburninLength << std::endl;
+        std::cout << "   * Stone sample length                     = " << sampleLength << std::endl;
+        std::cout << "   * Stone sample frequency                  = " << sampleToStoneFrequency << std::endl;
+        }
     std::cout << std::endl;
 }
 
@@ -243,15 +282,21 @@ void UserSettings::usage(void) {
     std::cout << "   * -d                      -- File with initial alignments of words" << std::endl;
     std::cout << "   * -o / FileOutput         -- File name for output" << std::endl;
     std::cout << "   * -m / Model              -- Substitution model (jc69/gtr/custom)" << std::endl;
+    std::cout << "   * -l / BrlenPriorVal      -- Parameter of exponential branch length prior" << std::endl;
     std::cout << "   * -c / OnlyCompleteWords  -- Use only completely sampled words (no/yes)" << std::endl;
     std::cout << "   * -g                      -- Number of gamma rate categories (=1 is no rate variation)" << std::endl;
     std::cout << "   * -i                      -- Number of gamma indel categories (=1 is no indel rate variation)" << std::endl;
     std::cout << "   * -z / CalcMarginal       -- Calculate marginal likelihood (no/yes)" << std::endl;
+    std::cout << "   * -e                      -- Seed for pseudo random number generator" << std::endl;
     std::cout << "   * -n / NumCycles          -- Number of MCMC cycles" << std::endl;
     std::cout << "   * -p / PrintFreq          -- Print-to-screen frequency" << std::endl;
     std::cout << "   * -s / SampleFreq         -- Chain sample frequency" << std::endl;
     std::cout << "   * -z / CheckPtFreq        -- Check point file frequency" << std::endl;
-    std::cout << "   * -l / BrlenPriorVal      -- Parameter of exponential branch length prior" << std::endl;
+    std::cout << "   * -nt                     -- Number of tunings" << std::endl;
+    std::cout << "   * -tl                     -- Tune length" << std::endl;
+    std::cout << "   * -bl                     -- Preburnin length" << std::endl;
+    std::cout << "   * -sl                     -- Sample length" << std::endl;
+    std::cout << "   * -sf                     -- Stone sample frequency" << std::endl;
     std::cout << std::endl;
 }
 

@@ -26,17 +26,23 @@ int main(int argc, char* argv[]) {
     ThreadPool threadPool;
 
     // instantiate the random number generator
-    RandomVariable rv;
+    RandomVariable* rv = NULL;
+    if (settings.getSeed() == 0)
+        rv = new RandomVariable;
+    else
+        rv = new RandomVariable(settings.getSeed());
         
     // print the header
     printHeader();
 
     // set up the phylogenetic model
-    Model model(&rv, threadPool);
+    Model model(rv, threadPool);
     
     // run the Markov chain Monte Carlo algorithm
-    Mcmc chain(&model, &rv);
+    Mcmc chain(&model, rv);
     chain.run();
+    
+    delete rv;
     
     return 0;
 }

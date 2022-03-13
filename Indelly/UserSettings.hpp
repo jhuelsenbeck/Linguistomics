@@ -29,6 +29,7 @@ class UserSettings {
         int                     getSampleFrequency(void) { return sampleFrequency; }
         int                     getSampleLength(void) { return sampleLength; }
         int                     getSampleToStoneFrequency(void) { return sampleToStoneFrequency; }
+        uint32_t                getSeed(void) { return seed; }
         int                     getSubstitutionModel(void) { return substitutionModel; }
         int                     getTuneLength(void) { return tuneLength; }
         void                    print(void);
@@ -59,6 +60,7 @@ class UserSettings {
         int                     burninLength;
         int                     sampleLength;
         int                     sampleToStoneFrequency;
+        uint32_t                seed;
 };
 
 #endif

@@ -37,7 +37,6 @@ class ParameterIndelRates : public Parameter {
         std::vector<double>             epsilon[2];
         double                          rhoExpParm;
         double                          rho[2];
-    
 };
 
 #endif
