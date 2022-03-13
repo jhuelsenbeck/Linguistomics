@@ -211,9 +211,9 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         if (it2 != jsonSettings.end())
             branchLengthLambda = jsonSettings["BrlenPriorVal"];
 
-        it2 = jsonSettings.find("Numtunings");
+        it2 = jsonSettings.find("NumTunings");
         if (it2 != jsonSettings.end())
-            numTunes = jsonSettings["Numtunings"];
+            numTunes = jsonSettings["NumTunings"];
 
         it2 = jsonSettings.find("TuneLength");
         if (it2 != jsonSettings.end())
@@ -223,9 +223,9 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         if (it2 != jsonSettings.end())
             preburninLength = jsonSettings["PreburnLength"];
 
-        it2 = jsonSettings.find("SampleLength");
+        it2 = jsonSettings.find("StoneSampleLength");
         if (it2 != jsonSettings.end())
-            sampleLength = jsonSettings["SampleLength"];
+            sampleLength = jsonSettings["StoneSampleLength"];
 
         it2 = jsonSettings.find("StoneSampleFreq");
         if (it2 != jsonSettings.end())
@@ -287,16 +287,16 @@ void UserSettings::usage(void) {
     std::cout << "   * -g                      -- Number of gamma rate categories (=1 is no rate variation)" << std::endl;
     std::cout << "   * -i                      -- Number of gamma indel categories (=1 is no indel rate variation)" << std::endl;
     std::cout << "   * -z / CalcMarginal       -- Calculate marginal likelihood (no/yes)" << std::endl;
-    std::cout << "   * -e                      -- Seed for pseudo random number generator" << std::endl;
+    std::cout << "   * -e / Seed               -- Seed for pseudo random number generator" << std::endl;
     std::cout << "   * -n / NumCycles          -- Number of MCMC cycles" << std::endl;
     std::cout << "   * -p / PrintFreq          -- Print-to-screen frequency" << std::endl;
     std::cout << "   * -s / SampleFreq         -- Chain sample frequency" << std::endl;
     std::cout << "   * -z / CheckPtFreq        -- Check point file frequency" << std::endl;
-    std::cout << "   * -nt                     -- Number of tunings" << std::endl;
-    std::cout << "   * -tl                     -- Tune length" << std::endl;
-    std::cout << "   * -bl                     -- Preburnin length" << std::endl;
-    std::cout << "   * -sl                     -- Sample length" << std::endl;
-    std::cout << "   * -sf                     -- Stone sample frequency" << std::endl;
+    std::cout << "   * -nt / NumTunings        -- Number of tunings" << std::endl;
+    std::cout << "   * -tl / TuneLength        -- Tune length" << std::endl;
+    std::cout << "   * -bl / PreburnLength     -- Preburnin length" << std::endl;
+    std::cout << "   * -sl / StoneSampleLength -- Sample length" << std::endl;
+    std::cout << "   * -sf / StoneSampleFreq   -- Stone sample frequency" << std::endl;
     std::cout << std::endl;
 }
 

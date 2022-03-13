@@ -1042,6 +1042,68 @@ void Probability::Helper::normalize(std::vector<double>& vec) {
         vec[i] /= sum;
 }
 
+void Probability::Helper::normalize(std::vector<double>& vec, double min) {
+
+    // find entries with values that are too small
+    int numTooSmall = 0;
+    double sum = 0.0;
+    for (int i=0; i<vec.size(); i++)
+        {
+        if (vec[i] < min)
+            numTooSmall++;
+        else
+            sum += vec[i];
+        }
+        
+    double factor = (1.0 - numTooSmall * min) / sum;
+    for (int i=0; i<vec.size(); i++)
+        {
+        if (vec[i] < min)
+            vec[i] = min;
+        else
+            vec[i] *= factor;
+        }
+        
+#   if 0
+    sum = 0.0;
+    for (int i=0; i<vec.size(); i++)
+        sum += vec[i];
+    if ( fabs(1.0 - sum) > 0.000001)
+        std::cout << "Problem normalizing vector " << std::fixed << std::setprecision(20) << sum << std::endl;
+#   endif
+}
+
+void Probability::Helper::normalize(double* vec, double min, int n) {
+
+    // find entries with values that are too small
+    int numTooSmall = 0;
+    double sum = 0.0;
+    for (int i=0; i<n; i++)
+        {
+        if (vec[i] < min)
+            numTooSmall++;
+        else
+            sum += vec[i];
+        }
+        
+    double factor = (1.0 - numTooSmall * min) / sum;
+    for (int i=0; i<n; i++)
+        {
+        if (vec[i] < min)
+            vec[i] = min;
+        else
+            vec[i] *= factor;
+        }
+        
+#   if 0
+    sum = 0.0;
+    for (int i=0; i<vec.size(); i++)
+        sum += vec[i];
+    if ( fabs(1.0 - sum) > 0.000001)
+        std::cout << "Problem normalizing vector " << std::fixed << std::setprecision(20) << sum << std::endl;
+#   endif
+}
+
 double Probability::Helper::pointNormal(double prob) {
 
 	double a0 = -0.322232431088;

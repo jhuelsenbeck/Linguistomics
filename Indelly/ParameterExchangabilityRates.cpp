@@ -38,7 +38,7 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
     Probability::Dirichlet::rv(rv, alpha, rates[0]);
     for (int i=0; i<numRates; i++)
         rates[0][i] = 1.0 / numRates;
-    normalize(rates[0], minVal);
+    Probability::Helper::normalize(rates[0], minVal);
     rates[1] = rates[0];
 }
 
@@ -119,37 +119,6 @@ double ParameterExchangabilityRates::lnPriorProbability(void) {
     
 }
 
-void ParameterExchangabilityRates::normalize(std::vector<double>& vec, double min) {
-
-    // find entries with values that are too small
-    int numTooSmall = 0;
-    double sum = 0.0;
-    for (int i=0; i<vec.size(); i++)
-        {
-        if (vec[i] < min)
-            numTooSmall++;
-        else
-            sum += vec[i];
-        }
-        
-    double factor = (1.0 - numTooSmall * min) / sum;
-    for (int i=0; i<vec.size(); i++)
-        {
-        if (vec[i] < min)
-            vec[i] = min;
-        else
-            vec[i] *= factor;
-        }
-        
-#   if 0
-    sum = 0.0;
-    for (int i=0; i<vec.size(); i++)
-        sum += vec[i];
-    if ( fabs(1.0 - sum) > 0.000001)
-        std::cout << "Problem normalizing vector " << std::fixed << std::setprecision(20) << sum << std::endl;
-#   endif
-}
-
 void ParameterExchangabilityRates::print(void) {
 
     std::cout << "[ ";
@@ -209,7 +178,7 @@ double ParameterExchangabilityRates::update(void) {
         alphaForward[1] = oldValues[1] * alpha0;
         
         Probability::Dirichlet::rv(rv, alphaForward, newValues);
-        normalize(newValues, minVal);
+        Probability::Helper::normalize(newValues, minVal);
         
         alphaReverse[0] = newValues[0] * alpha0;
         alphaReverse[1] = newValues[1] * alpha0;
@@ -250,7 +219,7 @@ double ParameterExchangabilityRates::update(void) {
         
         // draw a new value for the reduced vector
         Probability::Dirichlet::rv(rv, alphaForward, newValues);
-        normalize(newValues, minVal);
+        Probability::Helper::normalize(newValues, minVal);
         
         // fill in the Dirichlet parameters for the reverse probability calculations
         for (size_t i=0; i<k+1; i++)
@@ -282,7 +251,7 @@ double ParameterExchangabilityRates::update(void) {
         
         std::vector<double> newValues(numRates);
         Probability::Dirichlet::rv(rv, alphaForward, newValues);
-        normalize(newValues, minVal);
+        Probability::Helper::normalize(newValues, minVal);
         
         std::vector<double> alphaReverse(numRates);
         for (int i=0; i<numRates; i++)

@@ -27,8 +27,6 @@ class ParameterEquilibirumFrequencies : public Parameter {
         double                          update(void);
         
     private:
-        void                            normalize(std::vector<double>& vec, double minVal);
-        void                            normalize(double* vec, double minVal, int n);
         std::vector<int>                randomlyChooseIndices(int k, int n);
         double                          updateFromPrior(void);
         int                             numStates;

@@ -103,6 +103,8 @@ namespace  Probability {
         double  incompleteBeta(double a, double b, double x);
         double  incompleteGamma(double x, double alpha, double LnGamma_alpha);
         void    normalize(std::vector<double>& vec);
+        void    normalize(std::vector<double>& vec, double min);
+        void    normalize(double* vec, double min, int n);
         double  pointNormal(double prob);
         double  rndGamma(RandomVariable* rng, double s);
         double  rndGamma1(RandomVariable* rng, double s);

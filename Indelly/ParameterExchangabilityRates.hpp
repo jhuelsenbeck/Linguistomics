@@ -28,7 +28,6 @@ class ParameterExchangabilityRates : public Parameter {
         double                          update(void);
         
     private:
-        void                            normalize(std::vector<double>& vec, double minVal);
         std::vector<int>                randomlyChooseIndices(int k, int n);
         double                          updateFromPrior(void);
         int                             numStates;
