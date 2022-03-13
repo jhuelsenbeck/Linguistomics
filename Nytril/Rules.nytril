@@ -99,12 +99,12 @@ abstract class RuleClass {
 
   void SetSegmentCharacter(SegmentClass segment, index) {
     segment.CharacterIndex = index;
-    if (Numbers)
-      segment.CharacterLetter = index;
-    else if (index < Rev.CharacterList.Length)
-      segment.CharacterLetter = Rev.CharacterList[index];
-    else
-      System.Assert(false, "Too many characters");
+    if (not Numbers) {
+      if (index < Nexus.CharacterList.Length)
+        segment.CharacterLetter = Nexus.CharacterList[index];
+      else
+        System.Assert(false, "Too many characters");
+    }
   }
 
   void GetFilters {
@@ -114,7 +114,7 @@ abstract class RuleClass {
   }
 
   virtual void AssignCharacters(SegmentClass[] segments) {
-    var last = Rev.CharacterList.Length-1;
+    var last = Nexus.CharacterList.Length-1;
     foreach (var segment in segments) {
       var index = GetFilterIndex(segment);
       if (index > last)
@@ -194,8 +194,8 @@ abstract class RuleClass {
                 i++;
                 i;
               }
-              else if (i < Rev.CharacterList.Length)
-                Rev.CharacterList[i++];
+              else if (i < Nexus.CharacterList.Length)
+                Nexus.CharacterList[i++];
               else
                 System.Assert(false);
             };

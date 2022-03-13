@@ -5,7 +5,7 @@ namespace Figures.FrequencyDiagramExperiment {
   Caption = FigureCaption {
     var rule = Results.CalcExperiment.Rule;
 
-    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
+    "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
     "The width of the lines is proportional to the estimated rates. ";
     PaperSections.WordTransformation.Note;
@@ -21,7 +21,7 @@ namespace Figures.FrequencyDiagramStatic {
   Caption = FigureCaption {
     var rule = Results.CalcStatic.Rule;
 
-    "For the "; Quote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
+    "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
     "The width of the lines is proportional to the rates of transition between each partition. ";
   };
@@ -516,7 +516,7 @@ namespace PaperSections.DataSummary {
       "Words were double-checked against data from "; SoundComparisons.Title; Citation{SoundComparisons}; eos;
       "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
-      "For instance, the Latin adjective "; textit{"gravis"}; " means "; Quote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; QuoteEnd{"serious"};
+      "For instance, the Latin adjective "; textit{"gravis"}; " means "; SQuote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; SQuoteEnd{"serious"};
       "They are assigned to the same cognate set because segmentally French "; textit{"grave"}; " descends from Latin "; textit{"gravis"}; eos;
       "There are in total "; Results.UsedCognates.Length; " cognate sets, "; Results.WordCount; " word forms, using "; Results.UniqueCount; " unique segments. ";
       "Each word is represented phonemically with the IPA alphabet. ";
@@ -563,7 +563,7 @@ namespace PaperSections.DataSummary {
 namespace TableFigures.ManualAlignment {
   Concept     = Info.FigureConcept;
   Cognate     = Results.GetCognate(Concept);
-  WordDisplay = Quote{TextCase: TextCases.AllLower; Concept.GlobalVariableName};
+  WordDisplay = SQuote{TextCase: TextCases.AllLower; Concept.GlobalVariableName};
 
   Caption = FigureCaption {
     "Manual alignment of the words for the concept "; WordDisplay; eos;
@@ -638,9 +638,9 @@ namespace PaperSections.ModelInference {
 
     BodyPar {
       "We examined three models of segmental transition. ";
-      "The first (denoted "; Quote{"JC69"}") is isomorphic to the Jukes-Cantor"; Citation{jukes69};
+      "The first (denoted "; SQuote{"JC69"}") is isomorphic to the Jukes-Cantor"; Citation{jukes69};
       " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate; ";
-      "the second ("; Quote{Results.PartitionRule.Name}; ") model allows different rates among ";
+      "the second ("; SQuote{Results.PartitionRule.Name}; ") model allows different rates among ";
       Cardinal(Results.PartitionRule.Filters.Length); " groups of word segments (";
       Span {
         Separator: CommaSpace;
@@ -652,7 +652,7 @@ namespace PaperSections.ModelInference {
       " parameters for the equilibrium distribution and ";
       (Results.PartitionRule.Filters.Length-1)^2-1;
       " parameters describing rates among word segment groups); ";
-      "and the third ("; Quote{"GTR"}; ") is a model isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
+      "and the third ("; SQuote{"GTR"}; ") is a model isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
       ", and has a large number of parameters (";
       Results.UniqueCount;
       " parameters for the equilibrium distribution and ";
@@ -679,14 +679,14 @@ namespace PaperSections.DataCuration {
 
     BodyPar {
       "Words for the "; Results.Taxa.Length; " different human languages in our study, coded in standard unicode IPA, are organized into groups by concept, and then by cognate class. ";
-      "For example, the concept "; Quote{TextCase: TextCases.AllLower; Example.GlobalVariableName}; " is coded in the following way:";
+      "For example, the concept "; SQuote{TextCase: TextCases.AllLower; Example.GlobalVariableName}; " is coded in the following way:";
     };
 
     SourcePar(Example);
 
     BodyPar {
-      "The comments following the "; Quote{"//"}; " are meant to be read by a reviewer, but have no effect on the analysis. ";
-      "The dashes ("; Quote{"-"}; ") are used to indicate a preliminary alignment for the analysis. ";
+      "The comments following the "; SQuote{"//"}; " are meant to be read by a reviewer, but have no effect on the analysis. ";
+      "The dashes ("; SQuote{"-"}; ") are used to indicate a preliminary alignment for the analysis. ";
       "A challenge for programming in linguistics is that the IPA representation of words are expressed in Unicode (UCS), not ASCII or ANSI. ";
       "This requires care with file formats, text encodings and diacritic compositional form. ";
       "Furthermore, each text string can comprise several UCS code-points, so that there is not a one-to-one mapping between string characters and segments. ";
@@ -700,12 +700,12 @@ namespace PaperSections.DataCuration {
     BodyPar {
       "Since our analysis requires each word to be seperated into segments, a parser converts word strings into arrays of segment objects that facilitate the manipulation of segments at a high level. ";
       "A reusable library of such objects endows each segment with linguistic features that can be used for analysis. ";
-      "After the input step, all steps are coded using properties such as "; Quote{"vowel"}; " and "; Quote{"nasal"}; ", rather than working with strings of characters directly.";
+      "After the input step, all steps are coded using properties such as "; SQuote{"vowel"}; " and "; SQuote{"nasal"}; ", rather than working with strings of characters directly.";
     };
 
     BodyPar {
       "After the raw input is parsed, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
-      "The MCMC analyses runs for "; Span {Info.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
+      "The MCMC analyses runs for "; Span {Info.MainExperiment.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
       "Samples taken during the first 10% of the chain are discarded as the burn-in phase. ";
       "When the analysis is complete, the results are read back into the control program. ";
       "The resulting tables, trees and graphical figures are combined with narrative elements created by the authors to make the final paper and presentation materials. ";
@@ -749,7 +749,7 @@ namespace PaperSections.Methods {
       "We use ancestral classes, in which the descendant forms are segmentally aligned. ";
       "It is important to note that our definition of cognate refers only to segmental descent. ";
       "It takes no account of semantics whatsoever. ";
-      "So the lexical items for "; Quote{"ear"}; " in Romance are paired with the Latin word "; textit{"auricula"}; " which is the diminute form of "; QuoteEnd{"ear"};
+      "So the lexical items for "; SQuote{"ear"}; " in Romance are paired with the Latin word "; textit{"auricula"}; " which is the diminute form of "; SQuoteEnd{"ear"};
     };
 
     FirstPar {
@@ -768,15 +768,15 @@ namespace PaperSections.Methods {
     BodyPar {
       BodyTitle {"Phylogeny relating languages"}; eos;
       "We assume that modern-day languages are related by an unknown evolutionary tree, called a ";
-      Quote {Phylogeny.Name}; " and denoted "; Phylogeny; eos;
+      SQuote {Phylogeny.Name}; " and denoted "; Phylogeny; eos;
       "The phylogeny contains information on the topological relationships among "; NumLanguages;
       " sampled languages as well as information on the divergence times of the languages or on the amount of change that occurred between the languages. ";
     };
 
     BodyPar {
       TreeFigure; " shows an example of a phylogeny for "; SampledLanguages(Results.Taxa.Length); " languages. ";
-      "In the terminology of evolutionary biology, the tree is composed of "; Quote{"nodes"}; " and "; QuoteEnd{"branches"};
-      "(By contrast, mathematicians call nodes and branches "; Quote{"vertices"} " and "; Quote{"edges,"}; " respectively.) ";
+      "In the terminology of evolutionary biology, the tree is composed of "; SQuote{"nodes"}; " and "; SQuoteEnd{"branches"};
+      "(By contrast, mathematicians call nodes and branches "; SQuote{"vertices"} " and "; SQuote{"edges,"}; " respectively.) ";
       "The nodes represent the tips of the tree, each of which is assigned a language, and the points on the tree where the languages diverge from one another. ";
       "Each language-assigned tip node is labeled "; (TipLabelNumbers); ". ";
       "The interior nodes are labeled "; TipLabelInterior; " in preorder sequence (i.e., ordered sequentially from the tips to the root). ";
@@ -925,7 +925,7 @@ namespace PaperSections.Methods {
       "each column of the alignment is considered to be homologous. ";
       "So, for example, the first column of the alignment which happens to be the nucleotide A in all three species is assumed to be homologous; ";
       "it is assumed that the common ancestor of gorillas, chimpanzees, and humans had the same gene that also had a position that was homologous to the first column in the alignment. ";
-      "Fine-scale homology is established using computer programs in a process called "; QuoteEnd{"alignment"};
+      "Fine-scale homology is established using computer programs in a process called "; SQuoteEnd{"alignment"};
       "Importantly, phylogenetic methods assume that the homology established by the alignment program is correct.";
     };
 
@@ -939,7 +939,7 @@ namespace PaperSections.Methods {
 
     BodyPar {
       "In this study, we take a different approach. ";
-      "Like others, we concentrate on the so-called "; Quote{"basic vocabulary"}; " of a language "
+      "Like others, we concentrate on the so-called "; SQuote{"basic vocabulary"}; " of a language "
       NeedsReview("SWADESH REFERENCE");
       ", since the lexical items that instantiate concepts in this domain are less prone to horizontal transmission (i.e., linguistic borrowing). ";
       "In contrast to every study of linguistic phylogenetics that we are aware of, however, our investigation draws inferences from segmental information. ";
@@ -948,7 +948,7 @@ namespace PaperSections.Methods {
       "The word forms within each cognate class are phonemic representations based on the International Phonetic Alphabet (IPA) ";
       NeedsReview("IPA REFERENCE"); eos;
       "Consider the following word forms for one of the cognate classes for the concept ";
-      Quote {ExampleConcept.Name};
+      SQuote {ExampleConcept.Name};
     };
 
     BodyPar {
@@ -958,10 +958,10 @@ namespace PaperSections.Methods {
     };
 
     BodyPar {
-      "The word for "; Quote {ExampleConcept.Cognate.Concept.Name};  " in "; ExampleConcept.Taxon.Language; ", for example, is "
+      "The word for "; SQuote {ExampleConcept.Cognate.Concept.Name};  " in "; ExampleConcept.Taxon.Language; ", for example, is "
       "/"; ExampleConcept.LangWord; "/. ";
       "The matrix for the word "; ExampleConcept.Name; " also assumes that the fine-scale homology of the segments has been established. ";
-      "For example, the above matrix for the concept "; Quote {ExampleConcept.Name};  " assumes that the first segment of the ";
+      "For example, the above matrix for the concept "; SQuote {ExampleConcept.Name};  " assumes that the first segment of the ";
       TextList {ExampleConcept.LangNames};
       " languages (respectively, ";
       TextList {
@@ -977,8 +977,8 @@ namespace PaperSections.Methods {
       TextList {ExampleConcept.LangNames};
       "? ";
       "In this case, the alignment program chose the alignment that did not consider ";
-      Quote {ExampleConcept.CalloutSegment}; " of "; ExampleConcept.Callout.Language; " as homologous to the ";
-      Quote {ExampleConcept.CalloutSegment}; " of French based on the settings chosen by the user. ";
+      SQuote {ExampleConcept.CalloutSegment}; " of "; ExampleConcept.Callout.Language; " as homologous to the ";
+      SQuote {ExampleConcept.CalloutSegment}; " of French based on the settings chosen by the user. ";
       "It may be that other alignments are nearly as good as the one that is illustrated. ";
       AlignmentFigure;
       " shows two possible alignments of the word "
@@ -1012,7 +1012,7 @@ namespace PaperSections.Methods {
       "The segmental information for the ";
       SampledLanguages(Results.Taxa.Length);
       " languages for the cognate class above for ";
-      Quote {ExampleConcept.Name}; " is:";
+      SQuote {ExampleConcept.Name}; " is:";
     };
 
     BodyPar {
@@ -1088,14 +1088,10 @@ namespace PaperSections.Methods {
 
     BodyPar {
       "where ";
-      Equation {
-        RateChange;
-      };
+      RateChange;
       " is the rate of change from segment "; sym.i; " to segment "; sym.j; eos;
       "The diagonal elements of the rate matrix "; sym.qii; " are specified such that each row sums to zero (i.e., ";
-      Equation {
-        DiagonalElements;
-      };
+      DiagonalElements;
       "); this negative value can be interpreted as the rate at which the process moves away from state "; sym.i; eos;
       "Note that the information on rates of change between all pairs of states is not typically represented in table form, but rather in matrix form as";
     };
@@ -1120,7 +1116,7 @@ namespace PaperSections.Methods {
       Equation {
         Negative;
         sym.qij; Divide; sym.qii;
-      } eos;
+      }; eos;
       "Several important quantities can be calculated using the information contained in the rate matrix, ";
       RateMatrix; eos;
       "For one, the probability the process ends in state ";
@@ -1128,17 +1124,15 @@ namespace PaperSections.Methods {
       " conditional on starting in state ";
       Equation {sym.i};
       " after a period ";
-      Equation {ExpectedEvents};
+      ExpectedEvents;
       " can be calculated through exponentiation of the rate matrix, ";
-      Equation {
-        ExponentiationOfRateMatrix
-      }; eos;
+      ExponentiationOfRateMatrix; eos;
       "One can also calculate the equilibrium distribution of the process --- denoted ";
       Equation {EquilibriumDistribution};
       " and interpreted as the probability of capturing the process in a particular state after a very long time (formally, an infinite amount of time) has passed --- by solving the system of equations defined by ";
       Equation {
         RateMatrixSolution;
-      } eos;
+      }; eos;
       "Both the transition probabilities and equilibrium probability distribution play an important role in calculating the likelihood (see below).";
     };
 

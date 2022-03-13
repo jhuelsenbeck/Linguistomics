@@ -2,41 +2,138 @@ using Format, IO, Units;
 
 //======================================================================
 
+class ModelRunClass {
+  static BaseFileName = "out";
+
+  var Name,
+      Model,
+      RootFolder,
+      RunFolder,
+      Generations,
+      Tree,
+      Complete;
+
+  Constructor(ModelFolderClass model, name, generations) {
+    Name        = name;
+    Model       = model;
+    Generations = generations;
+    RootFolder  = model.RootFolder Folder(name);
+    RunFolder   = RootFolder Folder("Run");
+
+    var treefile = RootFolder FileName("consensus.tre");
+    Complete = FileExists(treefile);
+    if (Complete)
+      Tree = Read(treefile).trees.TREE1;
+  }
+
+  ArgString(arg, text) = Span {
+    if (valid arg) {
+      "-";
+      arg;
+      Space;
+    }
+    "\"";
+    text;
+    "\" ";
+  };
+
+  RunReader = TextBlock {
+    Span {
+      ArgString(null, Info.ReaderEXE);
+      ArgString("i", RunFolder);
+      ArgString("o", RunFolder BaseFileName);
+    };
+    "pause";
+  };
+
+  RunAll = TextBlock {
+    Span {
+      ArgString(null, Info.MCMCEXE);
+      ArgString("d", Info.ConfigFile);
+      ArgString("o", RunFolder BaseFileName);
+    };
+    "pause";
+    RunReader;
+  };
+
+  void InitFolders {
+    CreateFolder(RootFolder);
+    CreateFolder(RunFolder);
+    Write(RunReader, RootFolder FileName("RunReader") Extensions.Batch);
+    Write(RunAll, RootFolder FileName("RunAll") Extensions.Batch);
+
+    Write(Model.Experiment.Results.ConfigFile(Generations, 1000), RootFolder Info.ConfigFile);
+  }
+}
+
+//======================================================================
+
+class ModelFolderClass {
+  var Name,
+      RootFolder,
+      Posterior,
+      Marginal;
+
+  Constructor(ExperimentClass experiment, name) {
+    Name       = name;
+    RootFolder = experiment.RootFolder Folder(name);
+    Posterior  = new ModelRunClass(this, "Posterior", 1_000_000);
+    Marginal   = new ModelRunClass(this, "Marginal", 50_000);
+  }
+
+  void InitFolders {
+    CreateFolder(RootFolder);
+    Posterior.InitFolders;
+    Marginal.InitFolders;
+  }
+}
+
+//======================================================================
+
 class ExperimentClass: FactClass {
   field Name,
-        FolderName,
-        Generations;
-  var   Tree,
-        Complete;
+        FolderName;
+  var   Results,
+        RootFolder,
+        JC69,
+        GTR,
+        Custom,
+        Models;
 
-
-  Constructor(id, name, folder, generations, complete=true) {
+  Constructor(id, name, folder) {
     super.Constructor(id);
     Name        = name;
     FolderName  = folder;
-    Generations = generations;
-    Complete    = complete;
-    if (complete)
-      Tree = Read(Info.ExperimentBase Folder(folder) Info.ConsensusName).trees.TREE1;
+    RootFolder  = Info.ExperimentBase Folder(folder);
+    Results     = new ResultsClass;
+    JC69        = new ModelFolderClass(this, "JC69");
+    GTR         = new ModelFolderClass(this, "GTR");
+    Custom      = new ModelFolderClass(this, "Custom");
+
+    Models = [
+      JC69,
+      GTR,
+      Custom
+    ];
   }
 
-  Show = Block {
-    var subtitle = Span {
-      Span {
-        TextGroup: true;
-        Generations;
-      };
-       " generations";
-    };
-    if (valid Tree)
-      Style.ShowTree(Name, subtitle, Tree);
-  };
+  void InitFolders {
+    if (not FileExists(RootFolder)) {
+      CreateFolder(RootFolder);
+      (each Models).InitFolders;
+    }
+  }
 
   static ShowComparison = Block {
-    (each Info.Experiments).Show;
+    Style.ShowTree(Lang.ConsensusTree, null, Info.ConsensusTree);
     Style.ShowTree("Prior", null, Info.PriorTree);
     Style.ShowTree("Commonly Accepted Romance Tree", null, LanguageBranches.Romance, Lang.Years);
   };
+
+  static void CreateFolders {
+    (each Info.Experiments).InitFolders;
+    OpenExplorer(Info.Experiments[0].RootFolder);
+  }
 }
 //======================================================================
 

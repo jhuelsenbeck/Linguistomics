@@ -1,0 +1,104 @@
+using Format, Units;
+//======================================================================
+
+namespace Nexus {
+  CommentChar  = "#";
+  CommentSpace = "  ";
+  EndMarker    = ";";
+
+    // This is the set of characters used for the nexus file
+  CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1) + ['!', '$', '%', '&', '`', '+', ',', '.', '/', '<', '_', '=', '@', '*'];
+
+  CommentBlock = TextBlock {
+    Empty;
+    TextColor: Style.CommentColor;
+  };
+
+  BlockComment(text) = CommentBlock {
+    var bar = CommentChar * (text.Length + (1 + CommentSpace.Length)*2);
+    bar;
+    Span {
+      CommentChar CommentSpace;
+      text;
+      CommentSpace CommentChar;
+    };
+    bar;
+  };
+
+  LineComment(text) = CommentBlock {
+    CommentChar Space text;
+  };
+
+  ShowString(text) = Span {
+    TextColor: Style.StringColor;
+    Quote;
+    text;
+    Quote;
+  };
+
+  Keyword(name) = Span {
+    Style.KeywordFormat;
+    name;
+  };
+
+  AddValue(name, value=null) = Span {
+    Space;
+    Keyword(name);
+    if (exists value) {
+      "=";
+      value;
+    }
+  };
+
+  AddTaxon(taxon) = Span {
+    Style.TaxonFormat;
+    Space;
+    taxon.Variable;
+  };
+
+  Scope(name) = TextBlock {
+    IndentSpace: 2;
+    Begin: Span {
+      Keyword("begin");
+      Space;
+      name;
+      EndMarker;
+    };
+    End: Span {
+      Keyword("end");
+      EndMarker;
+      LineBreak;
+    };
+  };
+
+  NexusFile = TextBlock {
+    Style.MonoFamily;
+    Keyword("#NEXUS");
+  };
+
+  Newick(node) = Span {
+    if (node.HasChildren) {
+      "(";
+      Span {
+        Separator: ",";
+        Newick(each node);
+      };
+      ")";
+    }
+    node.Label;
+    if (node.BranchLength != 1.0) {
+      ":";
+      node.BranchLength;
+    }
+  };
+
+  ShowTreeLine(tree) = Span {
+    "tree ";
+    tree.GlobalVariableName;
+    " = ";
+    Newick(tree);
+    EndMarker;
+  };
+}
+//======================================================================
+

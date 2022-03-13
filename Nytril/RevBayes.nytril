@@ -5,13 +5,6 @@ namespace Rev {
   CommentChar   = "#";
   CommentSpace  = "  ";
   EndMarker     = ";";
-  Quote         = "\"";
-  TaxonFormat   = {TextColor: Colors.DarkBlue};
-  CommentFormat = {TextColor: Colors.Green};
-  KeywordFormat = {TextColor: Colors.Blue};
-
-    // This is the set of characters used for the nexus file
-  CharacterList = ('A'..'Z' step 1) + ('a'..'z' step 1) + ('0'..'9' step 1) + ['!', '$', '%', '&', '`', '+', ',', '.', '/', '<', '_', '=', '@', '*'];
 
   CommentBlock = TextBlock {
     Empty;
@@ -45,27 +38,9 @@ namespace Rev {
     ShowString(name);
   };
 
-
-  Variable(v) = Span {
-    TextColor: Style.VariableColor;
-    Quote; v; Quote; ": ";
-  };
-
-  ArraySpan(v) = Span {
-    Begin: Variable(v) {"["};
-    End: "],";
-  };
-
   Keyword(name) = Span {
-    KeywordFormat;
+    Style.KeywordFormat;
     name;
-  };
-
-  Comment(text) = Span {
-    CommentFormat;
-    "[ ";
-    text;
-    " ]";
   };
 
   AddLine(name) = Span {
@@ -81,62 +56,15 @@ namespace Rev {
       value;
     }
   };
-
-  AddTaxon(taxon) = Span {
-    TaxonFormat;
-    Space;
-    taxon.Variable;
-  };
-
-  Scope(name) = TextBlock {
-    IndentSpace: 2;
-    Begin: Span {
-      Keyword("begin");
-      Space;
-      name;
-      EndMarker;
-    };
-    End: Span {
-      Keyword("end");
-      EndMarker;
-      LineBreak;
-    };
-  };
-
-  NexusFile = TextBlock {
-    Style.MonoFamily;
-    Keyword("#NEXUS");
-  };
-
-  Newick(node) = Span {
-    if (node.HasChildren) {
-      "(";
-      Span {
-        Separator: ",";
-        Newick(each node);
-      };
-      ")";
-    }
-    node.Label;
-    if (node.BranchLength != 1.0) {
-      ":";
-      node.BranchLength;
-    }
-  };
-
-  ShowTreeLine(tree) = Span {
-    "tree ";
-    tree.GlobalVariableName;
-    " = ";
-    Newick(tree);
-    EndMarker;
-  };
 }
 //======================================================================
 
 class RevProcessClass: ProcessClass {
-  Constructor(exe, args) {
+  var Generations;
+
+  Constructor(exe, args, generations) {
     super.Constructor(exe, args);
+    Generations = generations;
   }
 
   override void OutputLine(line) {
@@ -145,7 +73,7 @@ class RevProcessClass: ProcessClass {
     if (l.Length > 1) {
       var i = Integer(l);
       if (not i.IsError())
-        System.ProgressPercent(i, Info.Generations);
+        System.ProgressPercent(i, Generations);
     }
     else if (line.IndexOf("Error:") >= 0)
       System.ProgressCancel(line);
@@ -243,5 +171,233 @@ class LogSchemaClass: SchemaClass {
     };
   };
 }
+
+/*
+
+  EXEName        = Folders.Repository Folder("RevBayes") FileName("rb") Extensions.EXE;
+  RevSourceName  = FileName("Program") Extensions.RevBayes;
+  CharacterName  = FileName("Characters") Extensions.Nexus;
+  GammaTrees     = FileName("Gamma.trees");
+  GammaLog       = FileName("Gamma.log");
+
+
+
+  ShowStats = Block {
+    var schema = new LogSchemaClass();
+    var view   = schema.ReadTextFile(Info.OutFolder Info.GammaLog, true, DB.ValueTypes.Double);
+
+    schema.GetHistogram(view, "alpha");
+    schema.LineChart(view, "Prior");
+    schema.LineChart(view, "Likelihood");
+    schema.LineChart(view, "Posterior");
+    schema.LineChart(view, "Tree Length", "TL");
+
+    schema.LineChart(view, null, each "bl[{0}]"(each 1..Concepts*2));
+    schema.LineChart(view, null, each "site_rates[{0}]"(each 1..Concepts));
+  };
+
+  RevBayesSource = TextBlock {
+    Style.MonoFamily;
+    BlockComment("RevBayes Source File for Linguistomics Project");
+
+    "clear()";
+//    "setwd({0})"(ShowString(folder));
+    "path = " ShowString(Info.OutFolder Folder("/"));
+    "gammapath = {0}"(PathPlus(Info.GammaTrees));
+
+
+    LineComment("Read in discrete character data");
+    "data = readDiscreteCharacterData({0})"(PathPlus(Info.CharacterName));
+
+    LineComment("Get some useful variables from the data. We need these later on");
+    "num_taxa <- data.ntaxa()";
+
+    LineComment("Number of branches in an rooted tree");
+    "num_branches <- 2 * num_taxa - 2";
+
+    "taxa <- data.taxa()";
+
+    LineComment("Create helper variables");
+    "moves    = VectorMoves()";
+    "monitors = VectorMonitors()";
+
+    BlockComment("Tree Model");
+    LineComment("Outgroup is a clade consisting of one language");
+    "out_group = clade({0})"(ShowString(Results.Taxa[0].Language));
+
+    LineComment("Prior distribution on the tree topology");
+    "topology ~ dnUniformTopology(taxa, outgroup=out_group, rooted=TRUE)";
+
+    LineComment("These are moves that change the tree topology");
+    "moves.append(mvNNI(topology, weight=num_taxa/2.0))";
+    "moves.append(mvSPR(topology, weight=num_taxa/10.0))";
+
+    LineComment("Branch length prior");
+
+    "for (i in 1:num_branches) {";
+    "  bl[i] ~ dnExponential(10.0)";
+    "  moves.append(mvScale(bl[i]))";
+    "}";
+    Empty;
+    "TL  := sum(bl)";
+    Empty;
+    "psi := treeAssembly(topology, bl)";
+    Empty;
+
+    BlockComment("Substitution Model");
+    LineComment("This is the number of unique characters from the segment filters");
+    "unique_chars = {0}"(UniqueCharacters);
+
+    LineComment("Jukes-Cantor model");
+    "Q <- fnJC(unique_chars)";
+
+    BlockComment("Gamma model for among-site variation");
+
+    "alpha ~ dnUniform(0, 10.0)";
+    "moves.append(mvScale(alpha, weight=1))";
+
+    "site_rates := fnDiscretizeGamma(alpha, alpha, 4)";
+
+    BlockComment("PhyloCTMC Model");
+    "seq ~ dnPhyloCTMC(tree=psi, Q=Q, type={0}, siteRates=site_rates)"(ShowString("Standard"));
+    "seq.clamp(data)";
+
+    BlockComment("Analysis");
+
+    LineComment("You can use any node as the argument of model()");
+    "mymodel = model(psi)";
+    "n_gen   = {0}"(Math.Min([100, Math.Max([10, Info.Generations div 1000])]));
+
+    LineComment("This prints monitors to the screen");
+    "monitors.append(mnScreen(TL, printgen=n_gen))";
+
+    LineComment("This monitors the trees and puts them in a file");
+    "monitors.append(mnFile(psi, filename=gammapath, printgen=n_gen))";
+
+    LineComment("Model monitor");
+    "monitors.append(mnModel(filename={0}, printgen=n_gen))"(PathPlus(Info.GammaLog));
+
+    "mymcmc = mcmc(mymodel, moves, monitors, nruns=1, combine={0})"(ShowString("mixed"));
+
+
+//   "mymcmc.burnin(generations={0}, tuningInterval=200)"(Info.Generations);
+    "mymcmc.run(generations={0})"(Info.Generations);
+
+    LineComment("Summarizes the MCMC runs");
+    "mymcmc.operatorSummary()";
+
+    BlockComment("Post processing");
+    "treetrace      = readTreeTrace(gammapath, outgroup=out_group)";
+    "consensus_tree = consensusTree(treetrace, {0})"(PathPlus(Info.ConsensusName));
+//    "map_tree       = mapTree(treetrace, {0})"(PathPlus(Info.MAPName));
+//    "mcc_tree       = mccTree(treetrace, {0})"(PathPlus(Info.MCCName));
+
+    LineComment("Exit the program");
+    "q()";
+  };
+
+  CharacterFile(paper) = NexusFile {
+    var maxlength = MaxNameLength;
+    var ntax      = Taxa.Length;
+
+    TabStops: [4 inches];
+
+    Scope("taxa") {
+      AddLine("dimensions") {
+        AddValue("ntax", ntax);
+      };
+      AddLine("taxlabels") {
+        AddTaxon(each Taxa);
+      };
+    };
+
+    Scope("characters") {
+      AddLine("dimensions") {
+        AddValue("ntax", ntax);
+        AddValue("nchar", TotalLength);
+      };
+      AddLine("format") {
+        AddValue("datatype", "STANDARD");
+        AddValue("interleave", "yes");
+        AddValue("respectcase");
+        AddValue("gap", IPA.Segments.GapSegment.Ipa);
+        AddValue("missing", IPA.Segments.MissingSegment.Ipa);
+        AddValue("symbols", Span {Quote; CharacterList[0..<Math.Min([UniqueCharacters, Rev.CharacterList.Length])]; Quote});
+      };
+
+      Empty;
+      Keyword("matrix");
+
+      foreach (var cognate in UsedCognates) {
+        if (EachIndex > 0)
+          Empty;
+
+        Comment(cognate.Name);
+        WriteTaxa(cognate, paper, maxlength);
+      }
+      EndMarker;
+    };
+  };
+
+  RunRevBayes {
+    var p = new RevProcessClass(EXEName, Info.OutFolder Info.RevSourceName) {
+      CacheName: "RevBayes";
+      CacheInput: [
+        OutFolder CharacterName,
+        OutFolder RevSourceName,
+      ];
+      CacheOutput: [
+        OutFolder GammaTrees,
+        OutFolder GammaConsensus,
+        OutFolder GammaMAP,
+        OutFolder GammaMCC,
+        OutFolder GammaLog,
+      ];
+      Directory: Info.OutFolder;
+    };
+
+    var results = p.Run;
+    if (results.ExitCode != 0)
+      System.Assert(false, results.StandardOutput, p);
+
+    if (not CharacterRule.Numbers) {
+      IO.Write(CharacterFile(1), Info.OutFolder Info.CharacterName);
+      IO.Write(RevBayesSource, Info.OutFolder Info.RevSourceName);
+    }
+
+  }
+
+
+  WriteTaxa(CognateClass cognate, paper, maxlength) = TextBlock {
+    foreach (var taxon in Taxa) {
+      var words = cognate.Words[taxon.Index];
+      Span {
+        taxon.Variable;
+        Space * (maxlength - taxon.Variable.Length);
+        foreach (var segment in words.Padded)
+          segment.ShowCharacter;
+
+        switch (paper) {
+          case 0:
+            break;
+
+          case 1:
+            break;
+
+          case 2:
+            Span {
+              Style.CommentFormat;
+              Style.IPAFamily;
+              Tab;
+              foreach (var segment in words.Padded)
+                segment.ShowBlock;
+            };
+            break;
+        }
+      };
+    }
+  };
+
+*/
 //======================================================================
 

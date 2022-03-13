@@ -7,7 +7,7 @@ include "LanguageTree";
 include "IPA";
 include "Rules";
 include "Experiments";
-include "RevBayes";
+include "Nexus";
 include "Style";
 include "References";
 include "Segment Frequencies";
@@ -21,8 +21,8 @@ include "../../nytril/deploy/citations";
 include "../../nytril/deploy/graphics";
 
 //include "LanguagePhonetic";
-//include "LanguageSet";
-include "LanguageTest";
+include "LanguageSet";
+//include "LanguageTest";
 //======================================================================
 
 Main.Documents = [
@@ -36,7 +36,7 @@ Main.Documents = [
 ];
 
 void Main.Run {
-  Results.InitSource;
+  ExperimentClass.CreateFolders;
 }
 
 Main.Facts = [
@@ -45,12 +45,6 @@ Main.Facts = [
   Defs,
   Equations,
 ];
-
-Main.Query = MatchAll WordClass {
-  MatchAll IPA.Segments.rr;
-//  MatchAll IPA.Segments.e;
-  SegmentCount: ..5;
-};
 //======================================================================
 
 Authors = [
@@ -66,19 +60,13 @@ ResultsClass Results = new ResultsClass;
 
 namespace Info {
   LinkMin        = 5;
+  EXEFolder      = Folders.Repository;
+  EXERelative    = Folder("x64") Folder("release");
+  MCMCEXE        = EXEFolder Folder("IndellyReader") EXERelative FileName("indellyreader.exe");
+  ReaderEXE      = EXEFolder Folder("Indelly") EXERelative FileName("tonguetwister.exe");
   ImageFolder    = Folders.Source Folder("Images");
-  RunBase        = Folders.Repository Folder("Run");
   ExperimentBase = Folders.Repository Folder("Experiments");
-  BaseFolder     = RunBase RunFolder;
-  OutFolder      = BaseFolder ResultsFolder;
-  BaseFileName   = FileName("out");
   ConfigFile     = FileName("config") Extensions.JSON;
-  RevSourceName  = FileName("Program") Extensions.RevBayes;
-  CharacterName  = FileName("Characters") Extensions.Nexus;
-  GammaTrees     = FileName("Gamma.trees");
-  GammaLog       = FileName("Gamma.log");
-  ConsensusName  = FileName("consensus.tre");
-  ConsensusTree  = Read(OutFolder ConsensusName).trees.TREE1;
 }
 //======================================================================
 
@@ -146,7 +134,6 @@ class PaperViewClass: BaseViewClass {
 
   override GetMainDocument(ResultsClass results) = MainDocument {
     var appendices = [
-      new AppendixClass("Experimental Runs", ExperimentClass.ShowComparison),
       new AppendixClass(Lang.PartitionRules, results.PartitionRule.ShowPartitions),
     ];
 
