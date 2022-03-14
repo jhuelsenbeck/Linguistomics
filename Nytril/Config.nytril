@@ -1,0 +1,156 @@
+using Format, Units, Math, IO, LinkTypes;
+
+//======================================================================
+
+class ConfigFileClass {
+  RuleClass    Rule;
+  DataSetClass Data;
+  var          Generations,
+               Print;
+
+  Constructor(DataSetClass data, RuleClass rule) {
+    Data        = data;
+    Rule        = rule;
+    Generations = 1_000_0000;
+    Print       = 1_000;
+  }
+
+  MaxNameLength = Math.Max((each ((each Data.Taxa).Variable)).Length) + 1;
+
+  AddScope = TextBlock {
+    IndentSpace: 2;
+    Begin: "{";
+    End: "}";
+  };
+
+  AddWord(WordClass word, last) = Span {
+    "  {";
+    Variable("Taxon");
+    var n = word.Language.GlobalVariableName;
+    ShowString(n);
+    CommaSpace;
+    Space*(Data.MaxLanguageName - n.Length);
+    Variable("Segments");
+    "[";
+    Span {
+      Separator: CommaSpace;
+      (each word.Padded).Index;
+    };
+    Span {
+      "]}";
+      if (not last)
+         ",";
+    };
+  };
+
+  AddCognate(CognateClass cognate, last) = TextBlock {
+    Span {
+      "{";
+      Variable("Name");
+      ShowString(cognate.GetTitle);
+      CommaSpace;
+      Variable("Data"); "[";
+    };
+
+    TextBlock {
+      var good = cognate.Words.FindSlice(w => valid w.Aligned);
+      var lg   = good.Length-1;
+      foreach (var word in good)
+        AddWord(word, EachIndex == lg);
+    };
+
+    Span {
+      "]}";
+      if (not last)
+        Comma;
+    };
+  };
+
+  ShowString(text) = Span {
+    TextColor: Style.StringColor;
+    QuoteString(text);
+  };
+
+  Variable(v) = Span {
+    TextColor: Style.VariableColor;
+    QuoteString(v) ": ";
+  };
+
+  ArraySpan(v) = Span {
+    Begin: Variable(v) {"["};
+    End: "],";
+  };
+
+  Show = AddScope {
+    Style.MonoFamily;
+    TextHeight: 9 pts;
+
+    Span {
+      Variable("Tree");
+      Quote;
+      Nexus.Newick(Info.PriorTree);
+      ";"; Quote; ",";
+    };
+
+    TextBlock {
+      Span {Variable("NumberOfStates"); Data.UniqueSegments.Length; CommaSpace};
+
+      Span {Variable("McmcSettings"); "{"};
+        Span {Variable("OnlyCompleteWords"); ShowString("No"); Comma};
+        Span {Variable("Model"); ShowString("Custom"); Comma};
+        Span {Variable("CalcMarginal"); ShowString("No"); Comma};
+        Span {Variable("UseEigenSystem"); ShowString("No"); Comma};
+        Span {Variable("NumCycles"); Generations; Comma};
+        Span {Variable("PrintFreq"); Print; Comma};
+        Span {Variable("SampleFreq"); 100; Comma};
+        Span {Variable("TreeLengthPriorVal"); 0.15};
+      "},";
+    };
+
+    ArraySpan("Taxa") {
+      Separator: CommaSpace;
+      ShowString(each (each Data.Taxa).Variable);
+    };
+
+    ArraySpan("PriorFrequencies") {
+      Span {
+        TextDigits: 6;
+        Separator: Comma;
+        (each Data.UniqueSegments).NormalFrequency;
+      };
+    };
+
+    ArraySpan("PartitionSets") {
+      Span {
+        Separator: Comma;
+        foreach (var partition in Rule.Partitions) {
+          Span {
+            "{";
+            Variable("Name");
+            ShowString(partition.Filter.Name);
+            CommaSpace;
+            Variable("Set");
+            "[";
+            Span {
+              Separator: CommaSpace;
+              (each partition.Segments).Index;
+            };
+            "]}";
+          }
+        }
+      };
+    };
+
+    Span {
+      Variable("Words"); "[";
+    };
+    TextBlock {
+      var last = Data.UsedCognates.Length-1;
+      foreach (var cognate in Data.UsedCognates)
+        AddCognate(cognate, EachIndex == last);
+    };
+    "]";
+  };
+}
+//======================================================================
+

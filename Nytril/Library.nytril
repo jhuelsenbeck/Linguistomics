@@ -63,6 +63,7 @@ class LanguageClass: FactClass {
     return null;
   }
 }
+
 //======================================================================
 
 class WordClass: FactClass {
@@ -143,7 +144,7 @@ class WordClass: FactClass {
       Language;
     };
     FieldPar(Lang.Cognate) {
-      Cognate.Title;
+      Cognate.GetTitle;
     };
     FieldPar(Lang.Segments) {
       Frame {
@@ -168,6 +169,7 @@ class WordClass: FactClass {
     super.GetLayoutFact;
   };
 }
+
 //======================================================================
 
 class ConceptClass: FactClass {
@@ -265,7 +267,8 @@ class WordPairClass {
     TextHeight: textheight;
     Paragraph {
       ParBackground: 90%;
-      Bold; Word1.Cognate.Variable.GlobalVariablePath[9..]
+      Bold;
+      Word1.Cognate.Variable.GlobalVariablePath[9..];
     };
 
     textheight += 2 pts;
@@ -277,96 +280,33 @@ class WordPairClass {
 }
 //======================================================================
 
-class ResultsClass {
-  RuleClass       CharacterRule,
-                  PartitionRule;
-  SegmentClass[]  UniqueSegments,
-                  SortedSegments,
-                  PartSegments;
-  CognateClass[]  UsedCognates,
-                  SortedCognates;
-  ConceptClass[]  UsedConcepts;
-  MatrixClass     TransitionCount;
-  TaxonClass[]    Taxa;
-  var             DisplaySegments,
-                  UniqueCharacters,
-                  TotalLength,
-                  MaxLanguageName,
-                  WordCount,
-                  SegmentCount,
-                  UniqueCount,
-                  AddComma,
-                  TransitionMax;
-  CalcRatesClass  CalcExperiment,
-                  CalcStatic;
+class DataSetClass {
+  SegmentClass[] UniqueSegments,
+                 SortedSegments,
+                 PartSegments;
+  CognateClass[] UsedCognates,
+                 SortedCognates;
+  ConceptClass[] UsedConcepts;
+  TaxonClass[]   Taxa;
+  MatrixClass    TransitionCount;
+  var            DisplaySegments,
+                 MaxLanguageName,
+                 WordCount,
+                 SegmentCount,
+                 UniqueCount,
+                 TransitionMax;
 
   Constructor {
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
 
-    InitConcepts;
-
-    // Here we assign a character letter to each unique segment from a set of possible Nexus file characters
-    CharacterRule = new SingletonRuleClass(this);
-    PartitionRule = new Partition2Class(this);
-
-
-    CharacterRule.AssignCharacters(UniqueSegments);
-
-    var max = 0;
-    foreach (var segment in UniqueSegments) {
-      segment.Index = EachIndex;
-      if (segment.CharacterIndex > max)
-        max = segment.CharacterIndex;
-    }
-    UniqueCharacters = max+1;
-
-
-    PartitionRule.AssignPartitions(UniqueSegments);
-
-    PartSegments = UniqueSegments.Sort(true, ref ComparePartSegments);
-
-    GetFrequencies;
-    var texperiment = new TransitionClass(PartitionRule);
-    texperiment.ReadFrequencies;
-    CalcExperiment = new CalcRatesClass(this, texperiment);
-
-    var tstatic = new TransitionClass(PartitionRule);
-    tstatic.StaticFrequencies(UniqueSegments, TransitionCount);
-    CalcStatic = new CalcRatesClass(this, tstatic);
-  }
-
-  SegmentClass[] GetUniqueSegments {
-    var set = new HashSetClass(512, SegmentClass);
-    foreach (var cognate in UsedCognates) {
-      foreach (var word in cognate.Words) {
-        foreach (var segment in word.Segments) {
-          if (!segment.Punctuation)
-            set.Add(segment);
-        }
-      }
-    }
-    return set.Values;
-  }
-
-  ComparePartSegments(SegmentClass s0, SegmentClass s1) {
-    var i = s1.PartitionIndex - s0.PartitionIndex;
-    if (i == 0)
-      return s0.UsedCount - s1.UsedCount;
-    else
-      return i;
-  }
-
-  void InitConcepts {
     // Build a dictionary with IPA text as the key
     var dictionary = new DictionaryClass(256, SegmentClass);
     foreach (var segment in IPA.Segments) {
       if (valid segment.Ipa)
         dictionary.Add(segment, segment.Ipa);
     }
-
-    TotalLength  = 0;
 
     var set   = new DictionaryClass(1024);
     var clist = new ListClass(1024, CognateClass);
@@ -429,10 +369,46 @@ class ResultsClass {
     foreach (var cognate in UsedCognates)
       ComputeCognate(dictionary, cognate);
 
-    UniqueSegments  = GetUniqueSegments;
+    UniqueSegments = GetUniqueSegments;
+    UniqueCount    = UniqueSegments.Length;
+    foreach (var segment in UniqueSegments)
+      segment.Index = EachIndex;
+
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
-    SortedSegments  = UniqueSegments.Sort(true, ref AlphaOrder);
-    UniqueCount     = UniqueSegments.Length;
+    SortedSegments  = UniqueSegments.Sort(true, ref CompareAlpha);
+    PartSegments    = UniqueSegments.Sort(true, ref ComparePartSegments);
+
+    GetFrequencies;
+  }
+
+  ComparePartSegments(SegmentClass s0, SegmentClass s1) {
+    var i = s1.PartitionIndex - s0.PartitionIndex;
+    if (i == 0)
+      return s0.UsedCount - s1.UsedCount;
+    else
+      return i;
+  }
+
+  CompareAlpha(SegmentClass s0, SegmentClass s1) {
+    var cl = s0.Ipa.Length.Compare(s1.Ipa.Length);
+    if (cl == 0)
+      cl = -s0.Ipa.Compare(s1.Ipa);
+    return cl;
+  }
+
+  GetCognate(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);
+
+  SegmentClass[] GetUniqueSegments {
+    var set = new HashSetClass(512, SegmentClass);
+    foreach (var cognate in UsedCognates) {
+      foreach (var word in cognate.Words) {
+        foreach (var segment in word.Segments) {
+          if (!segment.Punctuation)
+            set.Add(segment);
+        }
+      }
+    }
+    return set.Values;
   }
 
   void ComputeCognate(DictionaryClass dictionary, CognateClass cognate) {
@@ -488,11 +464,9 @@ class ResultsClass {
       }
       System.Assert(gapcount < count, "Column with all gaps", cognate.Variable);
     }
-
-    TotalLength += maxlength;
   }
 
-  ShowWord(SegmentClass segment) = Block{
+  ShowWord(SegmentClass segment) = Block {
     Paragraph {
       SpaceBefore: 10 pts;
       TextHeight: 14;
@@ -509,8 +483,6 @@ class ResultsClass {
       }
     };
   };
-
-  GetCognate(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);
 
   GetTransitionsCount {
     TransitionMax = 1;
@@ -547,30 +519,6 @@ class ResultsClass {
   }
 
 
-  WordPairClass[] GetTransitions(SegmentClass segment0, SegmentClass segment1) {
-    var list = new ListClass(TransitionMax, WordPairClass);
-
-    foreach (var cognate in UsedCognates) {
-      var length = cognate.Words.Length;
-      for (var i = 0; i < length; ++i) {
-        var p0 = cognate.Words[i].Padded;
-        for (var j = 0; j < length; ++j) {
-          if (i != j) {
-            var p1 = cognate.Words[j].Padded;
-            var ml = Min([p0.Length, p1.Length]);
-            for (var index = 0; index < ml; ++index) {
-              var s0 = p0[index];
-              var s1 = p1[index];
-              if (s0 == segment0 and s1 == segment1 && s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation)
-                list.Add();
-            }
-          }
-        }
-      }
-    }
-    return list.Values;
-  }
-
   void GetFrequencies {
     TransitionCount = GetTransitionsCount;
 
@@ -596,358 +544,6 @@ class ResultsClass {
       }
     }
   }
-
-  AlphaOrder(SegmentClass x, SegmentClass y) {
-    var cl = x.Ipa.Length.Compare(y.Ipa.Length);
-    if (cl == 0)
-      cl = -x.Ipa.Compare(y.Ipa);
-    return cl;
-  }
-
-  SegmentCell(SegmentClass segment) = Cell {
-    Edge: 0.25 pts {Color: Colors.LightGray};
-    Padding: 2 pts;
-    segment.Display(segment.GlobalVariablePath, 16 pts)
-  };
-
-  SegmentTable = Block {
-    var c = DocMetrics.SegmentColumns;
-
-    Style.TitleBar {Lang.IPAListing};
-    Table {
-      Columns: [DocMetrics.PageContent.Width / c] * c;
-      foreach (var s in (SortedSegments / c)) {
-        Row {
-          SegmentCell(each s);
-        }
-      }
-    };
-    Style.TableNotes;
-  };
-
-  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame {
-    Width: 2 inches;
-    Paragraph {
-      ParAlignment: align;
-
-      TextHeight: 18 pts;
-      var matching = PartitionRule.GetMatching(segments, filter);
-      if (valid matching) {
-        Separator: Space;
-        (each matching).ShowSegment;
-      }
-    }
-  };
-
-  ShowLanguageDetails = Block {
-    foreach (var taxon in Taxa) {
-      var language = taxon.Language;
-      Style.Header2 {
-        language.Name;
-      };
-      Block {
-        Paragraph {
-          ParAlignment: ParAlignments.Center;
-          if (valid language.MapImage)
-            language.ShowMap(Size(5 inches, 3 inches));
-        };
-        language.Description;
-        language.Details;
-      }
-    }
-  };
-
-  ShowLanguages = Block {
-    var rows      = 2;
-    var cols      = (Taxa.Length + 1) div rows;
-    var taxagroup = Taxa / cols;
-    var h         = 14 pts;
-    var space     = 5 pts;
-    var size      = Size(DocMetrics.SlideContent.Width / cols - space, DocMetrics.SlideContent.Height / rows - space);
-
-    foreach (var group in taxagroup) {
-      HBox {
-        PaddingT: space;
-        VAlign: VAligns.Top;
-
-        foreach (var taxon in group) {
-          VBox {
-            MarginR: space;
-            Size: size;
-            HAlign: HAligns.Center;
-
-            Paragraph {
-              TextHeight: h;
-              Bold;
-              taxon.Language;
-            };
-
-            HBox {
-              VAlign: VAligns.Center;
-
-              var s = Size(size.Width, size.Height - h);
-              Size: s;
-              Corner: 20 pts;
-              BorderStroke: 1 pts {Color: 90%};
-              BorderClip: true;
-
-              Span {
-                Hover: new HoverClass(taxon.Language, HoverTypes.Tip);
-                taxon.Language.ShowMap(s);
-              }
-            };
-          }
-        }
-      }
-    }
-  };
-
-  CompareSegments(SegmentClass s1, SegmentClass s2) = s1.UsedCount.Compare(s2.UsedCount);
-
-  FrequencyChart(SizeClass size) = Chart {
-    TextHeight: 11 pts;
-
-    var sorted = UniqueSegments.Sort(true, ref CompareSegments);
-    Style.SansSerif;
-    Size: size;
-    Type: ChartTypes.Column;
-    Legend: ChartLegend {Placement: Placements.Bottom};
-    ValueLabel: "Frequency %" {
-      Transform: Rotate(90 degrees);
-      TransformFit: true;
-    };
-    XAxis: ChartAxis {
-      TextHeight: 0.6 * size.Width / sorted.Length;
-      (each sorted).ShowSegment;
-    };
-    ValueAxis: ChartAxis;
-    ChartSeries {
-      Label: "All Languages";
-      (each sorted).NormalFrequency;
-    };
-    ChartSeries {
-      Label: "Experiment";
-      (each sorted).UsedFrequency;
-    };
-  };
-
-  ShowConceptGroups = Block {
-    var groups = WordGroups[1..];
-    Table {
-      Style.TableEdge;
-      Columns: [0.25 inches] + [1 inch] * (2+groups.Length);
-      Row {
-        Style.HeaderCell;
-        Style.HeaderCell {
-          HAligns: HAligns.Center;
-          Lang.Concept;
-        };
-        Style.HeaderCell {
-          HAligns: HAligns.Center;
-          "Type";
-        };
-        foreach (var g in groups) {
-          Style.HeaderCell {
-            HAligns: HAligns.Center;
-            g.Name;
-          };
-        }
-      };
-      foreach (var concept in UsedConcepts) {
-        Row {
-          Style.RowBar(EachIndex);
-          EachIndex;
-          concept.Name;
-          concept.WordType.Name;
-          foreach (var g in groups) {
-            Cell {
-              HAlign: HAligns.Center;
-              if (concept.WordGroup.HasFlag(g))
-                Tex.bullet;
-            }
-          }
-        }
-      }
-    }
-  };
-
-  AddScope = TextBlock {
-    IndentSpace: 2;
-    Begin: "{";
-    End: "}";
-  };
-
-  AddWord(WordClass word, last) = Span {
-    "  {";
-    Variable("Taxon");
-    var n = word.Language.GlobalVariableName;
-    ShowString(n);
-    CommaSpace;
-    Space*(MaxLanguageName - n.Length);
-    Variable("Segments");
-    "[";
-    Span {
-      Separator: CommaSpace;
-      (each word.Padded).CharacterIndex;
-    };
-    Span {
-      "]}";
-      if (not last)
-         ",";
-    };
-  };
-
-  AddCognate(CognateClass cognate, last) = TextBlock {
-    Span {
-      "{";
-      Variable("Name");
-      ShowString(cognate.GetTitle);
-      CommaSpace;
-      Variable("Data"); "[";
-    };
-
-    TextBlock {
-      var good = cognate.Words.FindSlice(w => valid w.Aligned);
-      var lg   = good.Length-1;
-      foreach (var word in good)
-        AddWord(word, EachIndex == lg);
-    };
-
-    Span {
-      "]}";
-      if (not last)
-        Comma;
-    };
-  };
-
-  ShowString(text) = Span {
-    TextColor: Style.StringColor;
-    Quote;
-    text;
-    Quote;
-  };
-
-  Variable(v) = Span {
-    TextColor: Style.VariableColor;
-    Quote; v; Quote; ": ";
-  };
-
-  ArraySpan(v) = Span {
-    Begin: Variable(v) {"["};
-    End: "],";
-  };
-
-  ConfigFile(generations, print) = AddScope {
-    Style.MonoFamily;
-    TextHeight: 9 pts;
-
-    Span {
-      Variable("Tree");
-      Quote;
-      Nexus.Newick(Info.PriorTree);
-      ";"; Quote; ",";
-    };
-
-    TextBlock {
-      Span {Variable("NumberOfStates"); UniqueCharacters; CommaSpace};
-
-      Span {Variable("McmcSettings"); "{"};
-        Span {Variable("OnlyCompleteWords"); ShowString("No"); Comma};
-        Span {Variable("Model"); ShowString("Custom"); Comma};
-        Span {Variable("CalcMarginal"); ShowString("No"); Comma};
-        Span {Variable("UseEigenSystem"); ShowString("No"); Comma};
-        Span {Variable("NumCycles"); generations; Comma};
-        Span {Variable("PrintFreq"); print; Comma};
-        Span {Variable("SampleFreq"); 100; Comma};
-        Span {Variable("TreeLengthPriorVal"); 0.15};
-      "},";
-    };
-
-    ArraySpan("Taxa") {
-      Separator: CommaSpace;
-      ShowString(each (each Taxa).Variable);
-    };
-
-    ArraySpan("PriorFrequencies") {
-      Span {
-        TextDigits: 6;
-        Separator: Comma;
-        (each UniqueSegments).NormalFrequency;
-      };
-    };
-
-    ArraySpan("PartitionSets") {
-      Span {
-        Separator: Comma;
-        foreach (var partition in PartitionRule.Partitions) {
-          Span {
-            "{";
-            Variable("Name");
-            ShowString(partition.Filter.Name);
-            CommaSpace;
-            Variable("Set");
-            "[";
-            Span {
-              Separator: CommaSpace;
-              (each partition.Segments).CharacterIndex;
-            };
-            "]}";
-          }
-        }
-      };
-    };
-
-    Span {
-      Variable("Words"); "[";
-    };
-    TextBlock {
-      var last = UsedCognates.Length-1;
-      foreach (var cognate in UsedCognates)
-        AddCognate(cognate, EachIndex == last);
-    };
-    "]";
-  };
-
-  MaxNameLength = Math.Max((each ((each Taxa).Variable)).Length) + 1;
-
-  ShowWordsForEachSegment = Block {
-    foreach (var segment in SortedSegments) {
-      Paragraph {
-        TabStops: [0.5 inches, DocMetrics.PageContent.Width {Type: TabTypes.Right}];
-        KeepWithNext: true;
-        TextHeight: 16 pts;
-        ParBackground: 90%;
-
-        segment.ShowSegment;
-        Tab;
-        segment.ShowCodePoint
-        Tab;
-        Span {
-          Hover: new HoverClass(this, HoverTypes.Tip);
-          segment.Ipa;
-        };
-      };
-
-      Paragraph {
-        ParAlignment: ParAlignments.Justify;
-        Style.IPAFamily;
-        SpaceAfter: 10 pts;
-        Span {
-          Separator: Space*2;
-          foreach (var cognate in SortedCognates) {
-            foreach (var word in cognate.Words) {
-              if (word.Segments.FindAny(segment)) {
-                Span {
-                  Hover: new HoverClass(word, HoverTypes.Tip);
-                  word.Plain;
-                }
-              }
-            }
-          }
-        };
-      };
-    }
-  };
 }
 //======================================================================
 

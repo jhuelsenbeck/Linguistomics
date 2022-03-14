@@ -35,7 +35,7 @@ class EulerDiagramClass {
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
 
-  FeatureSegments(features) = Results.DisplaySegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
+  FeatureSegments(features) = DataSet.DisplaySegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
 
   FeatureFrame(x, y, width, name, features) = Canvas {
     X: EX(x);
@@ -138,13 +138,7 @@ class EulerDiagramClass {
 //======================================================================
 
 namespace DisplayWords {
-  SegmentSound(segment) {
-//    if (segment == SpaceSegment)
-//      return Space;
-    return segment.GlobalVariableName
-  }
-
-  WordRow(word, index) = Row {
+  WordRow(WordClass word, index) = Row {
     Style.RowBar(index);
     Cell {
       word.ShowConcept;
@@ -154,8 +148,7 @@ namespace DisplayWords {
     };
     Cell {
       Span {
-        Separator: "-";
-        SegmentSound(each word.Segments)
+        (each word.Segments).ShowBlock;
       }
     }
   };
@@ -176,11 +169,11 @@ namespace DisplayWords {
       Row {
         HeaderCell(Lang.Cognate);
         HeaderCell(Lang.IPA);
-        HeaderCell(Lang.Sounds);
+        HeaderCell(Lang.Segments);
       };
 
       var i = 0;
-      foreach (var cognate in Results.SortedCognates) {
+      foreach (var cognate in DataSet.SortedCognates) {
         foreach (var word in cognate.Words[taxon.Index]) {
           if (valid word.Segments)
             WordRow(word, i++);
@@ -190,8 +183,8 @@ namespace DisplayWords {
     Paragraph;
   };
 
-  ShowTable {
-    return ShowLanguage(each Results.Taxa);
+  ShowWordsByLanguage {
+    return ShowLanguage(each DataSet.Taxa);
   }
 }
 //======================================================================
@@ -227,7 +220,7 @@ namespace AllWords {
         (each cognates).GetTitle;
       };
 
-      AddRow(each Results.Taxa, cognates, textheight);
+      AddRow(each DataSet.Taxa, cognates, textheight);
     };
     Paragraph;
   };
@@ -239,7 +232,7 @@ namespace AllWords {
     TextHeight: textheight;
     var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * (textheight intu pixels)));
 
-    foreach (var cognates in (Results.SortedCognates / wordsperline)) {
+    foreach (var cognates in (DataSet.SortedCognates / wordsperline)) {
       if (EachIndex >= max)
         break;
       ConceptTable(textheight, wordsperline, cognates);
@@ -332,7 +325,7 @@ class TabOptionsClass {
   }
 
   MatchPlace(place) {
-    return Results.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
+    return DataSet.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
   }
 
   AddRow(HashSetClass set, places, f) = Row {
@@ -350,7 +343,7 @@ class TabOptionsClass {
         f;
     };
 
-    var all = Results.DisplaySegments;// + IPA.ImpossibleSegments;
+    var all = DataSet.DisplaySegments;// + IPA.ImpossibleSegments;
     foreach (var place in places)
       SegmentBlock(set, all.FindSlice(s => s.?Place == place and CheckFlags(s.Features, features)));
   };
@@ -439,7 +432,7 @@ namespace MatchingVowels {
     TextHeight: DocMetrics.BoxSize.Height;
 
     var filter  = segment => segment.Backness == backness and segment.Open == open and segment.Features.HasFlagMask(FeatureMask, features);
-    var matches = Results.DisplaySegments.FindSlice(filter);
+    var matches = DataSet.DisplaySegments.FindSlice(filter);
     switch (matches.Length) {
       case 0:
         break;
@@ -572,7 +565,7 @@ namespace MatchingOther {
     Table {
       Style.TableEdge;
       Columns: [DocMetrics.CellSize.Width, DocMetrics.PageContent.Width * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv;
-      var segments = Results.DisplaySegments.FindSlice(segment => not set.Contains(segment));
+      var segments = DataSet.DisplaySegments.FindSlice(segment => not set.Contains(segment));
       AddRow(each (segments / ColumnDiv));
     };
     Style.TableNotes;
@@ -589,7 +582,7 @@ namespace SegmentTree {
   };
 
   AddSegments(DictionaryClass set, name, predicate, width=3 inches) {
-    var segments = Results.DisplaySegments.FindSlice(predicate);
+    var segments = DataSet.DisplaySegments.FindSlice(predicate);
     if (valid segments) {
       var label = Frame {
         Width: width;
@@ -661,5 +654,236 @@ namespace SegmentTree {
     }
   };
 }
+//======================================================================
+
+namespace SegmentDisplay {
+  CompareSegments(SegmentClass s0, SegmentClass s1) = s0.UsedCount.Compare(s1.UsedCount);
+
+  FrequencyChart(DataSetClass data, SizeClass size) = Chart {
+    TextHeight: 11 pts;
+
+    var sorted = data.UniqueSegments.Sort(true, ref CompareSegments);
+    Style.SansSerif;
+    Size: size;
+    Type: ChartTypes.Column;
+    Legend: ChartLegend {Placement: Placements.Bottom};
+    ValueLabel: "Frequency %" {
+      Transform: Rotate(90 degrees);
+      TransformFit: true;
+    };
+    XAxis: ChartAxis {
+      TextHeight: 0.6 * size.Width / sorted.Length;
+      (each sorted).ShowSegment;
+    };
+    ValueAxis: ChartAxis;
+    ChartSeries {
+      Label: "All Languages";
+      (each sorted).NormalFrequency;
+    };
+    ChartSeries {
+      Label: "Experiment";
+      (each sorted).UsedFrequency;
+    };
+  };
+
+  ShowSegmentAssignments(DataSetClass data) = Paragraph {
+    foreach (var segment in data.UniqueSegments) {
+      HBox {
+        VAlign: VAligns.Center;
+        Margin: 2;
+        PaddingLR: 1;
+        Border: 0.25 pts {Color: 80%};
+        Span {
+          Style.MonoFamily;
+          HAlign: HAligns.Center;
+          EachOne;
+        };
+        Space*5;
+        Span {
+          TextHeight: 18 pts;
+          segment.ShowSegment;
+        };
+      }
+    }
+  };
+
+  SegmentCell(SegmentClass segment) = Cell {
+    Edge: 0.25 pts {Color: Colors.LightGray};
+    Padding: 2 pts;
+    segment.Display(segment.GlobalVariablePath, 16 pts)
+  };
+
+  SegmentTable(DataSetClass data) = Block {
+    var c = DocMetrics.SegmentColumns;
+
+    Style.TitleBar {Lang.IPAListing};
+    Table {
+      Columns: [DocMetrics.PageContent.Width / c] * c;
+      foreach (var s in (data.SortedSegments / c)) {
+        Row {
+          SegmentCell(each s);
+        }
+      }
+    };
+    Style.TableNotes;
+  };
+
+  ShowLanguageDetails(DataSetClass data) = Block {
+    foreach (var taxon in data.Taxa) {
+      var language = taxon.Language;
+      Style.Header2 {
+        language.Name;
+      };
+      Block {
+        Paragraph {
+          ParAlignment: ParAlignments.Center;
+          if (valid language.MapImage)
+            language.ShowMap(Size(5 inches, 3 inches));
+        };
+        language.Description;
+        language.Details;
+      }
+    }
+  };
+
+  ShowFilterSegments(RuleClass rule, SegmentClass[] segments, FilterClass filter, align) = Frame {
+    Width: 2 inches;
+    Paragraph {
+      ParAlignment: align;
+
+      TextHeight: 18 pts;
+      var matching = rule.GetMatching(segments, filter);
+      if (valid matching) {
+        Separator: Space;
+        (each matching).ShowSegment;
+      }
+    }
+  };
+
+  ShowLanguages(DataSetClass data) = Block {
+    var rows      = 2;
+    var cols      = (data.Taxa.Length + 1) div rows;
+    var taxagroup = data.Taxa / cols;
+    var h         = 14 pts;
+    var space     = 5 pts;
+    var size      = Size(DocMetrics.SlideContent.Width / cols - space, DocMetrics.SlideContent.Height / rows - space);
+
+    foreach (var group in taxagroup) {
+      HBox {
+        PaddingT: space;
+        VAlign: VAligns.Top;
+
+        foreach (var taxon in group) {
+          VBox {
+            MarginR: space;
+            Size: size;
+            HAlign: HAligns.Center;
+
+            Paragraph {
+              TextHeight: h;
+              Bold;
+              taxon.Language;
+            };
+
+            HBox {
+              VAlign: VAligns.Center;
+
+              var s = Size(size.Width, size.Height - h);
+              Size: s;
+              Corner: 20 pts;
+              BorderStroke: 1 pts {Color: 90%};
+              BorderClip: true;
+
+              Span {
+                Hover: new HoverClass(taxon.Language, HoverTypes.Tip);
+                taxon.Language.ShowMap(s);
+              }
+            };
+          }
+        }
+      }
+    }
+  };
+
+  ShowConceptGroups(DataSetClass data) = Block {
+    var groups = WordGroups[1..];
+    Table {
+      Style.TableEdge;
+      Columns: [0.25 inches] + [1 inch] * (2+groups.Length);
+      Row {
+        Style.HeaderCell;
+        Style.HeaderCell {
+          HAligns: HAligns.Center;
+          Lang.Concept;
+        };
+        Style.HeaderCell {
+          HAligns: HAligns.Center;
+          "Type";
+        };
+        foreach (var g in groups) {
+          Style.HeaderCell {
+            HAligns: HAligns.Center;
+            g.Name;
+          };
+        }
+      };
+      foreach (var concept in data.UsedConcepts) {
+        Row {
+          Style.RowBar(EachIndex);
+          EachIndex;
+          concept.Name;
+          concept.WordType.Name;
+          foreach (var g in groups) {
+            Cell {
+              HAlign: HAligns.Center;
+              if (concept.WordGroup.HasFlag(g))
+                Tex.bullet;
+            }
+          }
+        }
+      }
+    }
+  };
+
+  ShowWordsForEachSegment(DataSetClass data) = Block {
+    foreach (var segment in data.SortedSegments) {
+      Paragraph {
+        TabStops: [0.5 inches, DocMetrics.PageContent.Width {Type: TabTypes.Right}];
+        KeepWithNext: true;
+        TextHeight: 16 pts;
+        ParBackground: 90%;
+
+        segment.ShowSegment;
+        Tab;
+        segment.ShowCodePoint
+        Tab;
+        Span {
+          Hover: new HoverClass(segment, HoverTypes.Tip);
+          segment.Ipa;
+        };
+      };
+
+      Paragraph {
+        ParAlignment: ParAlignments.Justify;
+        Style.IPAFamily;
+        SpaceAfter: 10 pts;
+        Span {
+          Separator: Space*2;
+          foreach (var cognate in data.SortedCognates) {
+            foreach (var word in cognate.Words) {
+              if (word.Segments.FindAny(segment)) {
+                Span {
+                  Hover: new HoverClass(word, HoverTypes.Tip);
+                  word.Plain;
+                }
+              }
+            }
+          }
+        };
+      };
+    }
+  };
+}
+
 //======================================================================
 

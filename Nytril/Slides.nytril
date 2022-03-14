@@ -44,7 +44,7 @@ namespace Slides.ShowResults {
 
 namespace Slides.LanguagesUsed {
   Title = Lang.Languages;
-  Body  = Results.ShowLanguages;
+  Body  = SegmentDisplay.ShowLanguages(DataSet);
 }
 
 namespace Slides.ConceptsUsed {
@@ -52,26 +52,26 @@ namespace Slides.ConceptsUsed {
   Body  = AllWords.ShowTable(3);
 }
 
-namespace Slides.CharacterRules {
-  Title = Lang.CharacterRules;
-  Body  = Results.CharacterRule.ShowDescription(Results.UniqueSegments);
+namespace Slides.UniqueCharacters {
+  Title = Lang.UniqueSegments;
+  Body  = SegmentDisplay.ShowSegmentAssignments(DataSet);
 }
 
 namespace Slides.SegmentFrequencies {
   Title = Lang.SegmentFrequencies;
-  Body  = Results.FrequencyChart(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 180 pts));
+  Body  = SegmentDisplay.FrequencyChart(DataSet, Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 180 pts));
 }
 
 namespace Slides.PartitionRules {
   Title = Lang.PartitionRules;
-  Body  = Results.PartitionRule.ShowPartitions;
+  Body  = PartitionRule.ShowPartitions;
 }
 
 namespace Slides.PartitionDiagramExperiment {
   Title = Lang.TransitionRates;
   Body  = Block {
     Figures.FrequencyDiagramStatic.Caption;
-    Results.CalcExperiment.PartitionDiagram(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 40 pts));
+    CalcExperiment.PartitionDiagram(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 40 pts));
   };
 }
 
@@ -79,7 +79,7 @@ namespace Slides.PartitionDiagramStatic {
   Title = Lang.StaticRates;
   Body  = Block {
     Figures.FrequencyDiagramStatic.Caption;
-    Results.CalcStatic.PartitionDiagram(DocMetrics.SlideContent);
+    CalcStatic.PartitionDiagram(DocMetrics.SlideContent);
   };
 }
 
@@ -87,7 +87,7 @@ namespace Slides.PartitionBoxStatic {
   Title = "Segment Transition Rates";
   Body  = Block {
     Figures.FrequencyBoxStatic.Caption;
-    Results.CalcStatic.PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 20 pts), false);
+    CalcStatic.PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 20 pts), false);
   };
 }
 //======================================================================
@@ -107,7 +107,7 @@ class PresentationViewClass: BaseViewClass {
     SlideList.Add(slide);
   }
 
-  override GetMainDocument(ResultsClass results) = Style.MainDocument {
+  override GetMainDocument = Style.MainDocument {
     Block {
       LeftIndent: 1 inch;
 
@@ -158,7 +158,7 @@ class JohnPresentationClass: PresentationViewClass {
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ExampleTree);
     AddSlide(Slides.Alignment);
-    AddSlide(Slides.CharacterRules);
+    AddSlide(Slides.UniqueCharacters);
     AddSlide(Slides.SegmentFrequencies);
     AddSlide(Slides.PartitionRules);
     AddSlide(Slides.PartitionDiagramStatic);
@@ -174,7 +174,7 @@ class DavidPresentationClass: PresentationViewClass {
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ConceptsUsed);
-    AddSlide(Slides.CharacterRules);
+    AddSlide(Slides.UniqueCharacters);
     AddSlide(Slides.SegmentFrequencies);
     AddSlide(Slides.PartitionRules);
     AddSlide(Slides.PartitionDiagramStatic);

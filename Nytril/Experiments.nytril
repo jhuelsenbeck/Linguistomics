@@ -5,13 +5,13 @@ using Format, IO, Units;
 class ModelRunClass {
   static BaseFileName = "out";
 
-  var Name,
-      Model,
-      RootFolder,
-      RunFolder,
-      Generations,
-      Tree,
-      Complete;
+  var               Name,
+                    RootFolder,
+                    RunFolder,
+                    Generations,
+                    Tree,
+                    Complete;
+   ModelFolderClass Model;
 
   Constructor(ModelFolderClass model, name, generations) {
     Name        = name;
@@ -62,7 +62,10 @@ class ModelRunClass {
     Write(RunReader, RootFolder FileName("RunReader") Extensions.Batch);
     Write(RunAll, RootFolder FileName("RunAll") Extensions.Batch);
 
-    Write(Model.Experiment.Results.ConfigFile(Generations, 1000), RootFolder Info.ConfigFile);
+    var file = new ConfigFileClass(Model.Experiment.Data, Model.Experiment.Rule) {
+      Generations: Generations;
+    };
+    Write(file.Show, RootFolder Info.ConfigFile);
   }
 }
 
@@ -70,12 +73,14 @@ class ModelRunClass {
 
 class ModelFolderClass {
   var Name,
+      Experiment,
       RootFolder,
       Posterior,
       Marginal;
 
   Constructor(ExperimentClass experiment, name) {
     Name       = name;
+    Experiment = experiment;
     RootFolder = experiment.RootFolder Folder(name);
     Posterior  = new ModelRunClass(this, "Posterior", 1_000_000);
     Marginal   = new ModelRunClass(this, "Marginal", 50_000);
@@ -91,21 +96,23 @@ class ModelFolderClass {
 //======================================================================
 
 class ExperimentClass: FactClass {
-  field Name,
-        FolderName;
-  var   Results,
-        RootFolder,
-        JC69,
-        GTR,
-        Custom,
-        Models;
+  field        Name,
+               FolderName;
+  DataSetClass Data;
+  RuleClass    Rule;
+  var          RootFolder,
+               JC69,
+               GTR,
+               Custom,
+               Models;
 
-  Constructor(id, name, folder) {
+  Constructor(id, name, folder, DataSetClass data, RuleClass rule) {
     super.Constructor(id);
+    Data        = data;
+    Rule        = rule;
     Name        = name;
     FolderName  = folder;
     RootFolder  = Info.ExperimentBase Folder(folder);
-    Results     = new ResultsClass;
     JC69        = new ModelFolderClass(this, "JC69");
     GTR         = new ModelFolderClass(this, "GTR");
     Custom      = new ModelFolderClass(this, "Custom");
@@ -118,7 +125,7 @@ class ExperimentClass: FactClass {
   }
 
   void InitFolders {
-    if (not FileExists(RootFolder)) {
+    if (not FolderExists(RootFolder)) {
       CreateFolder(RootFolder);
       (each Models).InitFolders;
     }
