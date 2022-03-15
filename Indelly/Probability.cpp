@@ -1129,7 +1129,7 @@ double Probability::Helper::rndGamma(RandomVariable* rng, double s) {
 
     double r = 0.0;
     if (s <= 0.0)
-        std::cout << "Gamma parameter less than zero" << std::endl;
+        std::cout << "Gamma parameter less than or equal to zero (" << s << ")" << std::endl;
     else if (s < 1.0)
         r = Probability::Helper::rndGamma1(rng, s);
     else if (s > 1.0)
