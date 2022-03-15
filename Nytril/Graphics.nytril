@@ -1,0 +1,132 @@
+using Format, Math;
+
+//======================================================================
+
+class LineStyleClass {
+  var LineSize,
+      Flat,
+      Tip,
+      Side,
+      Edge,
+      Angle,
+      LineColor;
+
+  Constructor(size, width=1.4, length=1.8) {
+    LineSize  = Real(size);
+    LineColor = Colors.Black;
+    Flat      = LineSize * width;
+    Tip       = LineSize * length;
+    Side      = 0.5 * LineSize + Flat;
+    if (Tip == 0)
+      Angle = Graphics.Ninety;
+    else
+      Angle  = ArcTan(Side / Tip);
+    Edge     = Sqrt(Side^2 + Tip^2);
+  }
+}
+//======================================================================
+
+namespace Graphics {
+  OneEighty = Real(Math.PI); // Floating point number for speed
+  Half      = 0.5;
+  Ninety    = Half * OneEighty;
+  FortyFive = 0.25 * OneEighty;
+
+  ExtendPoint(PointClass center, r, angle) {
+    angle = Real(angle);
+    return Point(center.X + r * Cos(angle), center.Y + r * Sin(angle));
+  }
+
+  Adjust(PointClass center, r, angle) {
+    return center - ExtendPoint(Point(0), r, angle);
+  }
+
+  GetAngle(PointClass p1, PointClass p2) {
+    return Math.ArcTan2(p2.Y - p1.Y, p2.X - p1.X);
+  }
+
+  Line(LineStyleClass line, PointClass p1, PointClass p2) = Figure {
+    Stroke: line.LineSize {Color: line.LineColor; LineCap: LineCaps.Round};
+    FigurePath {
+      p1;
+      LineTo(p2);
+    }
+  };
+
+  TwoArrowLine(LineStyleClass line, PointClass p1, PointClass p2) = Figure {
+    Fill: line.LineColor;
+
+    var angle = GetAngle(p1, p2);
+    var opp   = angle - Ninety;
+    var a1    = ExtendPoint(p1, line.Edge, angle + OneEighty - line.Angle);
+    var a2    = ExtendPoint(a1, line.Flat, opp);
+    var a3    = ExtendPoint(a2, line.LineSize, opp);
+    var b1    = ExtendPoint(p2, line.Edge, angle + line.Angle);
+    var b2    = ExtendPoint(b1, line.Flat, opp);
+    var b3    = ExtendPoint(b2, line.LineSize, opp);
+
+    FigurePath {
+      Closed: true;
+      p1;
+
+      LineTo(a1);
+      LineTo(a2);
+      LineTo(b2);
+      LineTo(b1);
+      LineTo(p2);
+      LineTo(ExtendPoint(b3, line.Flat, opp));
+      LineTo(b3);
+      LineTo(a3);
+      LineTo(ExtendPoint(a3, line.Flat, opp));
+    }
+  };
+
+  CircleLine(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure {
+    Stroke: line.LineSize {Color: line.LineColor; LineCap: LineCaps.Round};
+
+    var angle1 = angle + anglegap;
+    var angle2 = angle - anglegap;
+    var an1    = angle1 - Ninety;
+    var an2    = angle2 - Ninety;
+    var p1     = Graphics.ExtendPoint(center, radius, angle1);
+    var p2     = Graphics.ExtendPoint(center, radius, angle2);
+
+    FigurePath {
+      p1;
+      ArcTo(p2, radius, angle, true, true);
+    }
+  };
+
+  CircleArrow(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure {
+    Fill: line.LineColor;
+
+    var angle1 = angle + anglegap;
+    var angle2 = angle - anglegap;
+    var an1    = angle1 - Ninety;
+    var an2    = angle2 - Ninety;
+    var p1     = Graphics.ExtendPoint(center, radius, angle1);
+    var p2     = Graphics.ExtendPoint(center, radius, angle2);
+    var a1     = ExtendPoint(p1, line.Tip, an1 + 1.5 * Ninety);
+    var a2     = ExtendPoint(a1, line.Flat, an1 - Ninety);
+    var a3     = ExtendPoint(a2, line.LineSize, an1 - Ninety);
+    var b1     = ExtendPoint(p2, line.Tip, an2 + FortyFive);
+    var b2     = ExtendPoint(b1, line.Flat, an2 - Ninety);
+    var b3     = ExtendPoint(b2, line.LineSize, an2 - Ninety);
+
+    FigurePath {
+      Closed: true;
+      p1;
+      LineTo(a1);
+      LineTo(a2);
+      ArcTo(b2, radius + line.LineSize, angle, true, true);
+      LineTo(b1);
+      LineTo(p2);
+      LineTo(ExtendPoint(b3, line.Flat, an2 - Ninety));
+      LineTo(b3);
+      ArcTo(a3, radius, angle, true);
+      LineTo(ExtendPoint(a3, line.Flat, an1 - Ninety));
+    };
+  };
+}
+//======================================================================
+
