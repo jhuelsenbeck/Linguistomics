@@ -2,23 +2,29 @@ using Format, IO, Units;
 
 //======================================================================
 
-class ModelRunClass {
-  static BaseFileName = "out";
+class RunClass {
+  static BaseFileName = Folder("out");
 
-  var               Name,
-                    RootFolder,
-                    RunFolder,
-                    Generations,
-                    Tree,
-                    Complete;
-   ModelFolderClass Model;
+  var             Name,
+                  RootFolder,
+                  RunFolder,
+                  Generations,
+                  Print,
+                  Seed,
+                  Tree,
+                  Complete,
+                  Marginal;
+   ModeClass      Mode;
 
-  Constructor(ModelFolderClass model, name, generations) {
+  Constructor(ModeClass mode, name, generations, print, marginal) {
     Name        = name;
-    Model       = model;
+    Mode        = mode;
     Generations = generations;
-    RootFolder  = model.RootFolder Folder(name);
-    RunFolder   = RootFolder Folder("Run");
+    Print       = print;
+    Marginal    = marginal;
+    RootFolder  = mode.RootFolder Folder(name);
+    RunFolder   = RootFolder Folder("Execute");
+    Seed        = Math.Random(0..0xFFFFFFFF);
 
     var treefile = RootFolder FileName("consensus.tre");
     Complete = FileExists(treefile);
@@ -37,74 +43,97 @@ class ModelRunClass {
     "\" ";
   };
 
-  RunReader = TextBlock {
+  Pause(mac) = mac ? "hold" : "pause";
+
+  RunReader(mac) = TextBlock {
     Span {
-      ArgString(null, Info.ReaderEXE);
+      ArgString(null, mac ? Info.MacReaderEXE : Info.ReaderEXE);
       ArgString("i", RunFolder);
       ArgString("o", RunFolder BaseFileName);
     };
-    "pause";
+    Pause(mac);
   };
 
-  RunAll = TextBlock {
+  RunAll(mac) = TextBlock {
     Span {
-      ArgString(null, Info.MCMCEXE);
+      ArgString(null, mac ? Info.MacMCMCEXE : Info.MCMCEXE);
       ArgString("d", Info.ConfigFile);
       ArgString("o", RunFolder BaseFileName);
     };
-    "pause";
-    RunReader;
+    Pause(mac);
+    RunReader(mac);
   };
 
-  void InitFolders {
+  void WriteRuns(mac, ext) {
+    Write(RunReader(mac), RootFolder FileName("RunReader") ext);
+    Write(RunAll(mac), RootFolder FileName("RunAll") ext);
+  }
+
+  void InitFolders(ExperimentClass experiment) {
     CreateFolder(RootFolder);
     CreateFolder(RunFolder);
-    Write(RunReader, RootFolder FileName("RunReader") Extensions.Batch);
-    Write(RunAll, RootFolder FileName("RunAll") Extensions.Batch);
+    WriteRuns(false, Extensions.Batch);
+    WriteRuns(true, Extensions.Text);
 
-    var file = new ConfigFileClass(Model.Experiment.Data, Model.Experiment.Rule) {
-      Generations: Generations;
-    };
-    Write(file.Show, RootFolder Info.ConfigFile);
+    Write(new ConfigFileClass(experiment, this).Show, RootFolder Info.ConfigFile);
+  }
+}
+
+//======================================================================
+
+class ModeClass {
+  var              Name,
+                   RootFolder;
+  ModelFolderClass Model;
+  RunClass[]       Run;
+
+  Constructor(ModelFolderClass model, name, generations, print, marginal) {
+    Name       = name;
+    Model      = model;
+    RootFolder = model.RootFolder Folder(name);
+    Run        = new RunClass(this, each ["Run1", "Run2"], generations, print, marginal);
+  }
+
+  void InitFolders(ExperimentClass experiment) {
+    CreateFolder(RootFolder);
+    (each Run).InitFolders(experiment);
   }
 }
 
 //======================================================================
 
 class ModelFolderClass {
-  var Name,
-      Experiment,
-      RootFolder,
-      Posterior,
-      Marginal;
+  var       Name,
+            RootFolder;
+  ModeClass Posterior,
+            Marginal;
 
   Constructor(ExperimentClass experiment, name) {
     Name       = name;
-    Experiment = experiment;
     RootFolder = experiment.RootFolder Folder(name);
-    Posterior  = new ModelRunClass(this, "Posterior", 1_000_000);
-    Marginal   = new ModelRunClass(this, "Marginal", 50_000);
+    Posterior  = new ModeClass(this, "Posterior", 1_000_000, 1000, false);
+    Marginal   = new ModeClass(this, "Marginal", 50_000, 100, true);
   }
 
-  void InitFolders {
+  void InitFolders(ExperimentClass experiment) {
     CreateFolder(RootFolder);
-    Posterior.InitFolders;
-    Marginal.InitFolders;
+    Posterior.InitFolders(experiment);
+    Marginal.InitFolders(experiment);
   }
 }
 
 //======================================================================
 
 class ExperimentClass: FactClass {
-  field        Name,
-               FolderName;
-  DataSetClass Data;
-  RuleClass    Rule;
-  var          RootFolder,
-               JC69,
-               GTR,
-               Custom,
-               Models;
+  field              Name,
+                     FolderName;
+  DataSetClass       Data;
+  RuleClass          Rule;
+  ModelFolderClass   JC69,
+                     GTR,
+                     Custom;
+  ModelFolderClass[] Models;
+  var                RootFolder;
 
   Constructor(id, name, folder, DataSetClass data, RuleClass rule) {
     super.Constructor(id);
@@ -113,22 +142,22 @@ class ExperimentClass: FactClass {
     Name        = name;
     FolderName  = folder;
     RootFolder  = Info.ExperimentBase Folder(folder);
+    Custom      = new ModelFolderClass(this, "Custom");
     JC69        = new ModelFolderClass(this, "JC69");
     GTR         = new ModelFolderClass(this, "GTR");
-    Custom      = new ModelFolderClass(this, "Custom");
 
     Models = [
+      Custom,
       JC69,
       GTR,
-      Custom
     ];
   }
 
   void InitFolders {
-    if (not FolderExists(RootFolder)) {
+//    if (not FolderExists(RootFolder)) {
       CreateFolder(RootFolder);
-      (each Models).InitFolders;
-    }
+      (each Models).InitFolders(this);
+//    }
   }
 
   static ShowComparison = Block {

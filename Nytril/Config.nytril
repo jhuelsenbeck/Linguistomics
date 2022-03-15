@@ -3,19 +3,13 @@ using Format, Units, Math, IO, LinkTypes;
 //======================================================================
 
 class ConfigFileClass {
-  RuleClass    Rule;
-  DataSetClass Data;
-  var          Generations,
-               Print;
+  ExperimentClass Experiment;
+  RunClass        Run;
 
-  Constructor(DataSetClass data, RuleClass rule) {
-    Data        = data;
-    Rule        = rule;
-    Generations = 1_000_0000;
-    Print       = 1_000;
+  Constructor(ExperimentClass experiment, RunClass run) {
+    Experiment = experiment;
+    Run        = run;
   }
-
-  MaxNameLength = Math.Max((each ((each Data.Taxa).Variable)).Length) + 1;
 
   AddScope = TextBlock {
     IndentSpace: 2;
@@ -29,7 +23,7 @@ class ConfigFileClass {
     var n = word.Language.GlobalVariableName;
     ShowString(n);
     CommaSpace;
-    Space*(Data.MaxLanguageName - n.Length);
+    Space * (Experiment.Data.MaxLanguageName - n.Length);
     Variable("Segments");
     "[";
     Span {
@@ -81,6 +75,17 @@ class ConfigFileClass {
     End: "],";
   };
 
+  AddVar(name, text, comma=true) = Span {
+    Variable(name);
+    text;
+    if (comma)
+      Comma;
+  };
+
+  StringVar(name, text, comma=true) = AddVar(name, ShowString(text), comma);
+
+  BoolVar(name, value, comma=true) = StringVar(name, value ? "Yes" : "No", comma);
+
   Show = AddScope {
     Style.MonoFamily;
     TextHeight: 9 pts;
@@ -92,38 +97,68 @@ class ConfigFileClass {
       ";"; Quote; ",";
     };
 
+    var data = Experiment.Data;
+
     TextBlock {
-      Span {Variable("NumberOfStates"); Data.UniqueSegments.Length; CommaSpace};
+      Span {Variable("NumberOfStates"); data.UniqueSegments.Length; CommaSpace};
 
       Span {Variable("McmcSettings"); "{"};
-        Span {Variable("OnlyCompleteWords"); ShowString("No"); Comma};
-        Span {Variable("Model"); ShowString("Custom"); Comma};
-        Span {Variable("CalcMarginal"); ShowString("No"); Comma};
-        Span {Variable("UseEigenSystem"); ShowString("No"); Comma};
-        Span {Variable("NumCycles"); Generations; Comma};
-        Span {Variable("PrintFreq"); Print; Comma};
-        Span {Variable("SampleFreq"); 100; Comma};
-        Span {Variable("TreeLengthPriorVal"); 0.15};
+        StringVar("Model", ToLower(Run.Mode.Name));
+        BoolVar("OnlyCompleteWords", false);
+        AddVar("Seed", Run.Seed);
+        BoolVar("CalcMarginal", false);
+        AddVar("PrintFreq", Run.Print);
+        if (Run.Marginal) {
+          AddVar("NumTunings", 2);
+          AddVar("TuneLength", 1000);
+          AddVar("PreburnLength", 20_000);
+          AddVar("StoneSampleLength", 10_000);
+          AddVar("StoneSampleFreq", 50);
+        }
+        else {
+          AddVar("NumCycles", Run.Generations);
+          AddVar("SampleFreq", 100);
+        }
+        AddVar("TreeLengthPriorVal", 0.15, false);
       "},";
     };
 
+/*
+    Model              -- Substitution model (jc69/gtr/custom)
+    BrlenPriorVal      -- Parameter of exponential branch length prior
+    OnlyCompleteWords  -- Use only completely sampled words (no/yes)
+                       -- Number of gamma rate categories (=1 is no rate variation)
+                       -- Number of gamma indel categories (=1 is no indel rate variation)
+    CalcMarginal       -- Calculate marginal likelihood (no/yes)
+    Seed               -- Seed for pseudo random number generator
+    NumCycles          -- Number of MCMC cycles
+    PrintFreq          -- Print-to-screen frequency
+    SampleFreq         -- Chain sample frequency
+    CheckPtFreq        -- Check point file frequency
+    NumTunings         -- Number of tunings
+    TuneLength         -- Tune length
+    PreburnLength      -- Preburnin length
+    StoneSampleLength  -- Sample length
+    StoneSampleFreq    -- Stone sample frequency
+*/
+
     ArraySpan("Taxa") {
       Separator: CommaSpace;
-      ShowString(each (each Data.Taxa).Variable);
+      ShowString(each (each data.Taxa).Variable);
     };
 
     ArraySpan("PriorFrequencies") {
       Span {
         TextDigits: 6;
         Separator: Comma;
-        (each Data.UniqueSegments).NormalFrequency;
+        (each data.UniqueSegments).NormalFrequency;
       };
     };
 
     ArraySpan("PartitionSets") {
       Span {
         Separator: Comma;
-        foreach (var partition in Rule.Partitions) {
+        foreach (var partition in Experiment.Rule.Partitions) {
           Span {
             "{";
             Variable("Name");
@@ -145,8 +180,8 @@ class ConfigFileClass {
       Variable("Words"); "[";
     };
     TextBlock {
-      var last = Data.UsedCognates.Length-1;
-      foreach (var cognate in Data.UsedCognates)
+      var last = data.UsedCognates.Length-1;
+      foreach (var cognate in data.UsedCognates)
         AddCognate(cognate, EachIndex == last);
     };
     "]";
