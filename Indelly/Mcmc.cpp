@@ -464,7 +464,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
 #   endif
     
     // output to tree file
-#   if 0
+#   if 1
     treeStrm << "   tree t_" << gen << " = " << ts << ";";
     treeStrm << std::endl;
 #   else
