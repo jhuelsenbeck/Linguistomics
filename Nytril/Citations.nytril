@@ -1,0 +1,1776 @@
+using Format, Units, CitationLib, LinkTypes;
+
+namespace CitationLib {
+  Period      = ".";
+  PeriodSpace = ". ";
+  And         = "and";
+  EtAl        = "et al.";
+  CommaAnd    = Span {CommaSpace; And; Space};
+  CommaEtAl   = Span {CommaSpace; EtAl};
+
+  DelimSpace = Span {
+    Delimiter: Space;
+  };
+
+  DelimComma = Span {
+    Delimiter: Comma;
+  };
+
+  DelimCommaSpace = Span {
+    Delimiter: CommaSpace;
+  };
+
+  DelimPeriod = Span {
+    Delimiter: ". ";
+  };
+
+  InParens = Span {
+    Begin: "(";
+    End: ")";
+  };
+
+  InBrackets = Span {
+    Begin: "[";
+    End: "]";
+  };
+
+  GetLastFirst(PersonClass person) = Span {
+    Link to person;
+
+    Span {
+      Delimiter: CommaSpace;
+      person.Last;
+    };
+    Span {
+      Delimiter: Space;
+      person.First;
+    };
+    Span {
+      Delimiter: CommaSpace;
+      person.Middle;
+    };
+    person.Suffix;
+  };
+
+  FirstInitials(PersonClass person) = Span {
+    if (valid person.First) {
+      person.First[0];
+      DotSpace;
+    }
+    if (valid person.Middle) {
+      person.Middle[0];
+      DotSpace;
+    }
+  };
+
+  GetSuffix(PersonClass person) = Span {
+    if (valid person.Suffix) {
+      CommaSpace;
+      person.Suffix;
+      Period;
+    }
+  };
+
+  GetLastName(PersonClass person) =  person.Last;
+
+  GetLastFirstInitial(PersonClass person)  = Span {
+    Link to person;
+
+    Span {
+      Delimiter: CommaSpace;
+      person.Last;
+    };
+    FirstInitials(person);
+    GetSuffix(person);
+  };
+
+  GetFirstInitialLast(PersonClass person)  = Span {
+    Link to person;
+
+    FirstInitials(person);
+    person.Last;
+    GetSuffix(person);
+  };
+
+  GetFullName(PersonClass person) = Span {
+    Link to person;
+
+    Span {
+      Delimiter: Space;
+      person.First;
+    };
+    Span {
+      Delimiter: Space;
+      person.Middle;
+    };
+    Span {
+      Delimiter: CommaSpace;
+      person.Last;
+    };
+    person.Suffix;
+  };
+
+  ByAuthorName(ReferenceClass r1, ReferenceClass r2) {
+    var a1 = r1.FindFirstFact(AuthorLink);
+    var a2 = r2.FindFirstFact(AuthorLink);
+    if (valid a1 and valid a2)
+      return String(GetLastFirstInitial(a1)).Compare(String(GetLastFirstInitial(a2)));
+    else if (valid a1)
+      return -1;
+    else if (valid a2)
+      return 1;
+    else
+      return 0;
+  }
+
+  ShowLocation(value, sep=null, international=false) = Span {
+    var address = value.FindFirstFact(AddressClass);
+    var city;
+    var state;
+    var country;
+    var postal;
+    var comma = false;
+
+    if (valid address) {
+      if (valid address.Address) {
+        address.Address;
+        comma = true;
+      }
+
+      postal = address.PostalCode;
+      city   = address.FindFirstFact(CityClass);
+    }
+    else
+      city = value.FindFirstFact(CityClass);
+
+    if (valid city)
+      state = city.FindFirstFact(StateClass);
+    else
+      state = value.FindFirstFact(StateClass);
+
+    if (valid state)
+      country = state.FindFirstFact(CountryClass);
+    else
+      country = value.FindFirstFact(CountryClass);
+
+
+    if (valid city) {
+      if (comma)
+        CommaSpace;
+      city.Name;
+      comma = true;
+    }
+
+    if (valid state) {
+      if (comma)
+        CommaSpace;
+      comma = true;
+      state.Abreviation;
+
+      if (valid postal) {
+        Space;
+        postal;
+      }
+    }
+
+    if (international and valid country) {
+      if (comma)
+        CommaSpace;
+      country.Abreviation;
+      comma = true;
+    }
+
+    if (comma)
+      sep;
+  };
+
+  ListNames(people, nameFunc, after = DotSpace) = Span {
+    if (valid people) {
+      switch (people.Length) {
+        case 1:
+          nameFunc(people[0]);
+          after;
+          break;
+
+        case 2:
+          nameFunc(people[0]);
+          Space;
+          And;
+          Space;
+          nameFunc(people[1]);
+          break;
+
+       default:
+          nameFunc(people[0]);
+          CommaEtAl;
+          break;
+      }
+    }
+  };
+}
+//=========================================================================
+
+enum NoteTypes {
+  Full,
+  Short,
+  End
+}
+//=========================================================================
+
+abstract class CitationStyleClass: ReferenceStyleClass {
+  var PublicationSeparator,
+      DateAlternate,
+      PHDString,
+      MastersString,
+      PersonAnd,
+      EndnoteNumberWidth;
+
+  Constructor(type, name=null) {
+    super.Constructor(type, name);
+    PublicationSeparator = ColonSpace;
+    EndnoteNumberWidth   = 20 pts;
+    PersonAnd            = "&";
+  }
+
+  virtual GetDateFormat = ["yyyy", "MMMM yyyy", "dd MMMM, yyyy"];
+
+  virtual GetPubDateFormat = ["yyyy", "yyyy", "yyyy"];
+
+  GetItalic(attribute, separator = null) = Span {
+    if (valid attribute) {
+      Italic;
+      attribute;
+      separator;
+    }
+  };
+
+  GetThesisString(ReferenceClass reference, after = null) = Span {
+    if (reference.Type == ReferenceTypes.PHDThesis) {
+      PHDString; after;
+    }
+    if (reference.Type == ReferenceTypes.MastersThesis) {
+      MastersString; after;
+    }
+  };
+
+  GetQuoted(attribute, separator = null) = Span {
+    if (valid attribute) {
+      Quote;
+      attribute;
+      Quote;
+      separator;
+    }
+  };
+
+  ShowWebsite(ReferenceClass reference, left, right, before, after=null, delim=null) = Span {
+    var url = reference.FindFirstFact(URLClass);
+    if (valid url) {
+      left;
+      if (not valid after)
+        new HoverClass(url.Value, HoverTypes.WebSecure);
+      right;
+      if (valid url.Accessed) {
+        before;
+        FormatDate(url.Accessed);
+        after;
+      }
+      if (valid after)
+        new HoverClass(url.Value, HoverTypes.WebSecure);
+      delim;
+    }
+  };
+
+  virtual GetCitationMarker(ReferenceClass[] references, index) = Span {
+    if (valid index) {
+      TextAlignment: TextAlignments.Superscript;
+      index;
+    }
+  };
+
+  virtual GetOnline(ReferenceClass reference, separator = DotSpace) = Span {
+    Delimiter:
+    ShowWebsite(reference, separator, null, "Retrieved ", " from ");
+  };
+
+  virtual WriteEndName(PersonClass person) = GetFirstInitialLast(person);
+
+  virtual WriteNames(people) = DelimSpace {
+    if (valid people) {
+      if (people.Length < 6) {
+        Span {
+          Separator: CommaSpace;
+          LastSeparator: Span {Space; PersonAnd; Space};
+          WriteEndName(each people);
+        }
+      }
+      else {
+        WriteEndName(people.FirstElement);
+        Space;
+        EtAl;
+      }
+    }
+  };
+
+  virtual GetEdTrans(ReferenceClass reference) = Span {
+    var translators = reference.FindFacts(TranslatorLink);
+    var editors     = reference.FindFacts(EditorLink);
+    if (valid translators || valid editors) {
+      if (valid translators) {
+        InParens {
+          WriteNames(translators);
+          ", Trans.";
+        };
+        Space;
+      }
+      "In ";
+      if (valid editors) {
+        WriteNames(editors);
+        if (editors.Length == 1)
+          " (Ed.), ";
+        else
+          " (Eds.) ";
+      }
+    }
+  };
+
+  virtual GetDate(ReferenceClass reference, before) {
+    if (valid reference.Date) {
+      return Span {
+        before;
+        FormatDate(reference.Date);
+      };
+    }
+    return null;
+  }
+
+  GetNumber(ReferenceClass reference, num) = Span {
+    if (valid reference.Number) {
+      num;
+      reference.Number;
+    }
+  };
+
+  GetPageRange(ReferenceClass reference) = Span {
+    if (valid reference.Pages) {
+      var lo = reference.Pages.GetRangeLo;
+      var hi = reference.Pages.GetRangeHi;
+      if (lo == hi)
+        lo;
+      else {
+        lo; "-"; hi;
+      }
+    }
+  };
+
+  GetEdition(ReferenceClass reference, after, before = CommaSpace) = Span {
+    if (valid reference.Edition) {
+      before;
+      reference.Edition;
+      after;
+    }
+  };
+
+  GetVolume(ReferenceClass reference, before, after = CommaSpace) = Span {
+    if (valid reference.Volume) {
+      before;
+      reference.Volume;
+      after;
+    }
+  };
+
+  GetChapterPages(ReferenceClass reference, chapter = " ch. ", pages = " pp. ", before = null) = Span {
+    if (valid reference.Chapter or valid reference.Pages) {
+      before;
+      var comma = false;
+      if (valid reference.Chapter) {
+        chapter;
+        reference.Chapter;
+        comma = true;
+      }
+      if (valid reference.Pages) {
+        if (comma)
+          CommaSpace;
+        pages;
+        GetPageRange(reference);
+      }
+    }
+  };
+
+  GetSeries(ReferenceClass reference, ser) = Span {
+    if (valid reference.Series) {
+      ser;
+      reference.Series;
+      DotSpace;
+    }
+  };
+
+  virtual GetPublicationInfo(ReferenceClass reference, separator = ColonSpace) = Span {
+    GetSchool(reference, CommaSpace);
+    GetAddress(reference, separator);
+    GetPublisher(reference, null);
+  };
+
+  GetSchool(ReferenceClass reference, after) = Span {
+    var school = reference.FindFacts(SchoolLink);
+    if (valid school) {
+      Span {
+        Separator: CommaSpace;
+        (each school).Name;
+      };
+      after;
+    }
+  };
+
+  GetAddress(ReferenceClass reference, after, before = null) = Span {
+    var publisher = reference.FindFirstFact(PublisherLink);
+    if (valid publisher) {
+      before;
+      ShowLocation(publisher);
+      after;
+    }
+  };
+
+  GetJournal(ReferenceClass reference, after=null) = Span {
+    var journal = reference.FindFacts(JournalLink);
+    if (valid journal) {
+      Span {
+        Separator: CommaSpace;
+        (each journal).Name;
+      };
+      after;
+    }
+  };
+
+  GetPublisher(ReferenceClass reference, pub, before = null) = Span {
+    var publisher = reference.FindFacts(PublisherLink);
+    if (valid publisher) {
+      before;
+      Span {
+        Separator: CommaSpace;
+        (each publisher).Name;
+      };
+      pub;
+    }
+  };
+
+  GetSponsor(ReferenceClass reference, after) = Span {
+    var sponsor = reference.FindFacts(SponsorLink);
+    if (valid sponsor) {
+      Span {
+        Separator: CommaSpace;
+        (each sponsor).Name;
+      };
+      after;
+    }
+  };
+
+  TitlePar(text) = Paragraph {
+    SpaceBefore: 10 pts;
+    SpaceAfter: 6 pts;
+    TextHeight: 14 pts;
+    text;
+  };
+
+  FormatDate(date) {
+    if (valid date) {
+      return Span {
+        TextFormat: GetDateFormat[date.Precision];
+        date;
+      };
+    }
+    return DateAlternate;
+  }
+
+  ShowDate(date) = Span {
+    if (valid date) {
+      date;
+      TextFormat: GetDateFormat[date.Precision];
+    }
+  };
+
+  ShowJournal(ReferenceClass reference) = DelimSpace {
+    var journal = reference.FindFirstFact(JournalLink);
+    if (valid journal)
+      DelimSpace{Italic; journal.Name};
+  };
+
+  ShowVolume(ReferenceClass reference) = DelimSpace {
+    DelimCommaSpace {Bold; reference.Volume};
+    DelimCommaSpace {GetPageRange(reference)};
+    if (valid reference.DOI)
+      DelimCommaSpace {"DOI: "; Span {TextColor: Colors.Blue; reference.DOI}};
+  };
+
+  ShowPublisherDate(ReferenceClass reference) = Span {
+    ShowJournal(reference);
+    ShowVolume(reference);
+
+    var publisher = reference.FindFirstFact(PublisherLink);
+    if (valid reference.Date or valid publisher) {
+      "(";
+
+      if (valid publisher) {
+        publisher.Name;
+        CommaSpace;
+        ShowLocation(publisher, Space);
+      }
+      if (valid reference.Date) {
+        reference.Date;
+        TextFormat: GetPubDateFormat[reference.Date.Precision];
+      }
+
+      ")";
+    }
+  };
+
+  virtual FootnoteBody(ReferenceClass reference, index) = Block {
+  };
+
+  virtual ShowTitle(ReferenceClass reference) = DelimPeriod {reference.Title};
+
+  virtual EndnoteBody(ReferenceClass reference) = Span {
+    WriteNames(reference.FindFacts(AuthorLink));
+    ShowTitle(reference);
+    GetEdTrans(reference);
+    DelimCommaSpace {Italic; reference.BookTitle};
+    ShowWebsite(reference, null, null, "Retrieved ", " from ", Space);
+    ShowPublisherDate(reference);
+  };
+
+  virtual EndnoteNumber(index)  = Span {
+    Bold;
+    EachOne;
+    Period;
+  };
+
+  virtual WriteEndnoteList(ReferenceClass[] references) = Table {
+    Columns: [EndnoteNumberWidth, DocMetrics.PageContent.Width - EndnoteNumberWidth];
+    foreach (var reference in references) {
+      Row {
+        Cell {
+          PaddingR: 3 pts;
+          HAlign: HAligns.Right;
+          EndnoteNumber(EachOne);
+        };
+        Cell {
+          Paragraph {
+            SpaceAfter: 3 pts;
+            LocationMark: reference.GlobalVariablePath;
+            ParAlignment: ParAlignments.Justify;
+            EndnoteBody(reference);
+          }
+        }
+      }
+    }
+  };
+
+  override GetLayoutInline(ReferenceClass[] references, index) = Span {
+    TextAlignment: TextAlignments.Superscript;
+    Separator: Comma;
+    index;
+  };
+
+  override GetLayoutReference(ReferenceClass reference) = Paragraph {
+    EndnoteBody(reference);
+  };
+
+  override GetLayoutEndnotes(ReferenceClass[] references, title) = Block {
+    if (valid references) {
+      if (valid title)
+        TitlePar(title);
+
+      Block {
+        TextHeight: 9.5 pts;
+        WriteEndnoteList(references);
+      }
+    }
+  };
+}
+//=========================================================================
+
+class MLAStyleClass: CitationStyleClass {
+  Constructor {
+    super.Constructor(ReferenceStyles.MLA);
+    PublicationSeparator = CommaSpace;
+    PHDString            = " Ph.D. Dissertation";
+    MastersString        = " Master's Thesis";
+    PersonAnd            = And;
+  }
+
+  override WriteEndName(PersonClass person) = EachIndex== 0 ? GetLastFirst(person) : GetFullName(person);
+
+  ShowAuthors(ReferenceClass reference) = Span {
+    var authors = reference.FindFacts(AuthorLink);
+    if (valid authors) {
+      Link to authors;
+
+      InParens {
+        if (authors.Length <= 2) {
+          Span {
+            Separator: CommaSpace;
+            LastSeparator: CommaAnd;
+            GetLastName(each authors);
+          }
+        }
+        else {
+          GetLastName(authors[0]);
+          CommaEtAl;
+        }
+      }
+    }
+    else {
+      InParens {
+        GetPublisher(reference, null);
+      };
+    }
+  };
+
+  override GetLayoutInline(ReferenceClass[] references, index) = Span {
+    Separator: CommaSpace;
+    ShowAuthors(each references);
+  };
+
+  override ShowTitle(ReferenceClass reference) = Span {
+    if (valid reference.Title) {
+      Quote;
+      reference.Title;
+      Period;
+      Quote;
+      Space;
+    }
+  };
+
+  override WriteEndnoteList(ReferenceClass[] references) = Block {
+    foreach (var reference in references.Sort(false, ref ByAuthorName)) {
+      Paragraph {
+        LeftIndent: 36 pts;
+        FirstIndent: -36 pts;
+        LocationMark: reference.GlobalVariablePath;
+        ParAlignment: ParAlignments.Justify;
+        EndnoteBody(reference);
+      }
+    }
+  };
+
+  override EndnoteBody(ReferenceClass reference) = Span {
+    WriteNames(reference.FindFacts(AuthorLink));
+    ShowTitle(reference);
+    ShowPublisherDate(reference) {
+      Delimiter: PeriodSpace;
+    };
+    GetPageRange(reference) {
+      Delimiter: PeriodSpace;
+    }
+  };
+
+/*
+  override GetEdTrans(ReferenceClass reference) = Span {
+    var editors = reference.FindFacts(LinkEditor);
+    if (valid editors) {
+      "Edited by ";
+      ListNames(editors, ref GetFullName, null);
+      DotSpace;
+    }
+    var translators = reference.FindFacts(TranslatorLink );
+    if (valid translators) {
+      "Translated by ";
+      ListNames(translators, ref GetFullName, null);
+      DotSpace;
+    }
+  };
+
+  ProceedingsNote(ReferenceClass reference, index) = Paragraph {
+    if (valid index) {
+      ParAlignment: ParAlignments.Justify;
+      LeftIndent: 15 pts;
+      FirstIndent: -15 pts;
+      SpaceAfter: 5 pts;
+    }
+  };
+
+  FormatNote(ReferenceClass reference, index) = ProceedingsNote(reference, index) {
+    var authors = GetAuthors(reference);
+    if (valid authors)
+      ListNames(authors, ref GetLastFirst);
+    else
+      GetPublisher(reference, DotSpace);
+  };
+
+  override GetOnline(ReferenceClass reference, separator = null) = Span {
+    ShowWebsite(reference, null, null, " Accessed ", null, separator);
+  };
+
+  override GetArticleEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetQuoted(reference.Title, CommaSpace);
+    GetEdTrans(reference);
+    GetItalic(GetJournal(reference, CommaSpace));
+    GetVolume(reference, " vol. ");
+    GetNumber(reference, " no. ");
+    GetEdition(reference, " ed., ");
+    GetDate(reference, CommaSpace);
+    GetChapterPages(reference);
+    GetPublicationInfo(reference, ColonSpace);
+    GetOnline(reference);
+    reference.Note;
+  };
+
+  override GetBookEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, DotSpace);
+    GetEdTrans(reference);
+    GetEdition(reference, " ed., ");
+    GetVolume(reference, ", vol. ");
+    GetNumber(reference, " no. ");
+    GetPublicationInfo(reference, CommaSpace);
+    GetDate(reference, CommaSpace);
+    GetChapterPages(reference);
+    reference.Note;
+  };
+
+  override GetBookletEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, DotSpace);
+    GetDate(reference, null);
+    DotSpace;
+    reference.HowPublished;
+    reference.Note;
+  };
+
+  override GetInBookEndnote(ReferenceClass reference, index) = GetInCollectionEndnote(reference, index);
+
+  override GetInCollectionEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetQuoted(reference.Title, DotSpace);
+    GetItalic(reference.BookTitle, CommaSpace);
+    GetEdTrans(reference);
+    GetSeries(reference, "ser. ");
+    GetEdition(reference, " ed., ");
+    GetVolume(reference, ", vol. ");
+    GetPublicationInfo(reference, CommaSpace);
+    GetDate(reference, CommaSpace);
+    GetChapterPages(reference);
+    reference.Note;
+  };
+
+  override GetProceedingsEndnote(ReferenceClass reference, index) = ProceedingsNote(reference, index) {
+    GetItalic(reference.Title, CommaSpace);
+    ShowLocation(reference, CommaSpace);
+    GetPublicationInfo(reference, CommaSpace);
+    GetDate(reference, CommaSpace);
+    GetSeries(reference, DotSpace);
+    GetOnline(reference);
+  };
+
+  override GetInProceedingsEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetQuoted(reference.Title, CommaSpace);
+    GetItalic(reference.BookTitle, CommaSpace);
+    if (valid reference.Note) {
+      reference.Note; DotSpace;
+    }
+    GetEdTrans(reference);
+    GetPublicationInfo(reference, DotSpace);
+    GetDate(reference, CommaSpace);
+    GetSeries(reference, DotSpace);
+    GetOnline(reference);
+  };
+
+  override GetThesisEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, DotSpace);
+    GetThesisString(reference, CommaSpace);
+    GetPublicationInfo(reference, null);
+    GetDate(reference, CommaSpace);
+    GetOnline(reference);
+  };
+
+  override GetTechReportEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, DotSpace);
+    GetNumber(reference, "No. ");
+    GetSponsor(reference, CommaSpace);
+    GetDate(reference, CommaSpace);
+  };
+
+  override GetManualEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    DotSpace;
+    GetItalic(reference.Title, DotSpace);
+    GetEdition(reference, " ed., ");
+    GetSponsor(reference, DotSpace);
+    GetDate(reference, null);
+  };
+
+  override GetMiscEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    DotSpace;
+    if (valid reference.BookTitle) {
+      GetQuoted(reference.Title, DotSpace);
+      GetItalic(reference.BookTitle, CommaSpace);
+    }
+    else
+      GetItalic(reference.Title, DotSpace);
+    GetEdition(reference, CommaSpace " ed.");
+    GetVolume(reference, CommaSpace " vol.");
+    GetNumber(reference, CommaSpace " no. ");
+    GetSponsor(reference, ",");
+    GetDate(reference, null);
+    GetAddress(reference, CommaSpace);
+    DotSpace;
+    reference.HowPublished;
+    ShowWebsite(reference, null, DotSpace, " Accessed: ");
+  };
+
+  override GetUnpublishedEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, CommaSpace);
+    GetDate(reference, null);
+    GetAddress(reference, null);
+  };
+
+  override GetUnpublishedEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, CommaSpace);
+    GetDate(reference, null);
+    GetAddress(reference, null);
+  };
+  */
+}
+//=========================================================================
+
+class ChicagoStyleClass: MLAStyleClass {
+  Constructor {
+    super.Constructor;
+    Type          = ReferenceStyles.Chicago;
+    Name          = "Chicago";
+    PHDString     = "";
+    MastersString = "";
+  }
+
+  override GetLayoutInline(ReferenceClass[] references, index) = GetCitationMarker(references, index);
+
+  override EndnoteBody(ReferenceClass reference) = Span {
+    Link to reference;
+
+    Span {
+      Delimiter: PeriodSpace;
+      WriteNames(reference.FindFacts(AuthorLink));
+    };
+    Span {
+      Delimiter: PeriodSpace;
+      reference.Date.Year;
+    };
+    ShowTitle(reference);
+    ShowPublisherDate(reference) {
+      Delimiter: PeriodSpace;
+    };
+    GetPageRange(reference) {
+      Delimiter: PeriodSpace;
+    }
+  };
+
+/*
+
+  override GetLayoutFooter(citations) = Block {
+    if (valid citations) {
+      Paragraph {
+        BorderB: 1;
+        RightIndent: 4.5 inches;
+      };
+      foreach (var r in citations)
+        GetFootnote(r, EachOne);
+    }
+  };
+
+  FormatNote(ReferenceClass reference, index) = Paragraph {
+    if (valid index) {
+      ParAlignment: ParAlignments.Justify;
+      LeftIndent: 22 pts;
+      FirstIndent: -22 pts;
+      SpaceAfter: 5 pts;
+      GetCitationMarker(reference, index);
+      Tab;
+    }
+  };
+
+  GetShortNote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.Short);
+    if (valid reference.BookTitle)
+      GetQuoted(reference.Title, CommaSpace);
+    else
+      GetItalic(reference.Title, CommaSpace);
+    GetChapterPages(reference, null, null);
+  };
+
+  StartEndFieldsList(ReferenceClass reference) = GetNoteAuthor(reference, NoteTypes.End);
+
+  GetNoteAuthor(ReferenceClass reference, noteType) = Span {
+    var people = GetAuthors(reference);
+    if (valid people) {
+      switch (noteType) {
+        case NoteTypes.Full:
+          WriteFootnoteNames(ref GetFullName, people);
+          break;
+
+        case NoteTypes.Short:
+          WriteFootnoteNames(ref GetLastName, people);
+          break;
+
+        default:
+          GetEndnoteNames(people);
+          break;
+      }
+      Space;
+    }
+    else
+      GetPublisher(reference, null);
+  };
+
+  WriteEndnoteNames(people, nameFunc) = Span {
+    if (valid people) {
+      if (people.Length == 1) {
+        nameFunc(people[0]);
+        DotSpace;
+      }
+      else if (people.Length < 11) {
+        Span {
+          Separator: CommaSpace;
+          LastSeparator: CommaAnd;
+          nameFunc(people[0]);
+          nameFunc(each people[1..]);
+        }
+      }
+      else Span {
+        Separator: CommaSpace;
+        LastSeparator: CommaEtAl;
+        nameFunc(people[0]);
+        nameFunc(each people[1..6]);
+      }
+      Space;
+    }
+  };
+
+  WriteFootnoteNames(nameFunc, people) = Span {
+    if (valid people) {
+      var nameCount = people.Length;
+      if (nameCount == 1) {
+        nameFunc(people[0]);
+        DotSpace;
+      }
+      else if (nameCount <= 3) {
+        nameFunc(people[0]);
+        CommaSpace;
+        foreach (var i in 1..(people.Length - 2)) {
+          nameFunc(people[i]);
+          CommaSpace;
+        }
+        "and ";
+        nameFunc(people[people.Length -1]);
+        CommaSpace;
+      }
+      else if (nameCount > 3) {
+        nameFunc(people[0]);
+        CommaEtAl; Space;
+      }
+    }
+  };
+
+  GetEndnoteNames(people) = Span {
+    WriteEndnoteNames(people, ref GetLastFirst);
+  };
+
+  override GetEdTrans(ReferenceClass reference) = Span {
+    var editors = reference.FindFacts(LinkEditor);
+    if (valid editors) {
+      "Edited By ";
+      WriteEndnoteNames(editors, ref GetFullName);
+    }
+    var translators = reference.FindFacts(TranslatorLink );
+    if (valid translators) {
+      "Translated By ";
+      WriteEndnoteNames(translators, ref GetFullName);
+    }
+  };
+
+  GetFootnoteEdTrans(ReferenceClass reference) = Span {
+    var editors = reference.FindFacts(LinkEditor);
+    if (valid editors) {
+      "ed. ";
+      WriteEndnoteNames(editors, ref GetFullName);
+    }
+    var translators = reference.FindFacts(TranslatorLink );
+    if (valid translators) {
+      "trans. ";
+      WriteEndnoteNames(translators, ref GetFullName);
+    }
+  };
+
+  GetEndnoteHowPublished(ReferenceClass reference) = Span {
+    if (valid reference.HowPublished) {
+      reference.HowPublished;
+      DotSpace;
+    }
+  };
+
+  GetEndnoteUrl(ReferenceClass reference) = Span {
+    ShowWebsite(reference, null, DotSpace, ". Accessed ");
+  };
+
+  GetFootOnline(ReferenceClass reference) = Span {
+    ShowWebsite(reference, null, null, ", accessed ", null, CommaSpace);
+  };
+
+  GetEndOnline(ReferenceClass reference) = Span {
+    ShowWebsite(reference, DotSpace, DotSpace, ". Accessed ");
+  };
+
+  override GetArticleFootnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.Full);
+    GetQuoted(reference.Title, CommaSpace);
+    GetFootnoteEdTrans(reference);
+    GetItalic(GetJournal(reference));
+    GetVolume(reference, null);
+    GetNumber(reference, " no. ");
+    InParens {
+      GetDate(reference, null);
+    };
+    GetChapterPages(reference);
+    GetFootOnline(reference);
+  };
+
+  override GetArticleEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    StartEndFieldsList(reference);
+    GetQuoted(reference.Title, CommaSpace);
+    GetEdTrans(reference);
+    GetItalic(GetJournal(reference));
+    GetVolume(reference, null);
+    GetNumber(reference, " no. ");
+    InParens {
+      GetDate(reference, null);
+    };
+    GetChapterPages(reference, null, null, ColonSpace);
+    GetEndOnline(reference);
+  };
+
+  override GetBookFootnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.Full);
+    GetItalic(reference.Title);
+    GetSeries(reference, DotSpace);
+    GetFootnoteEdTrans(reference);
+    InParens {
+      GetPublicationInfo(reference, ColonSpace);
+      GetDate(reference, null);
+    };
+
+    GetChapterPages(reference, null, null, CommaSpace);
+    GetFootOnline(reference);
+  };
+
+  override GetBookEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    StartEndFieldsList(reference);
+    GetItalic(reference.Title, DotSpace);
+    GetSeries(reference, DotSpace);
+    GetEdTrans(reference);
+    GetPublicationInfo(reference, ColonSpace);
+    GetDate(reference, null);
+    GetChapterPages(reference, null, null, CommaSpace);
+    GetEndOnline(reference);
+  };
+
+  override GetBookletFootnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.Full);
+    GetItalic(reference.Title, Space);
+    InParens {
+      reference.HowPublished;
+      GetDate(reference, CommaSpace);
+    }
+  };
+
+  override GetBookletEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    StartEndFieldsList(reference);
+    GetItalic(reference.Title, DotSpace);
+    reference.HowPublished;
+    GetDate(reference, CommaSpace);
+  };
+
+  override GetInBookFootnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.Full);
+    GetQuoted(reference.Title, ". In ");
+    GetItalic(reference.BookTitle, CommaSpace);
+    GetFootnoteEdTrans(reference);
+    InParens {
+      GetPublicationInfo(reference, ColonSpace);
+      GetDate(reference, null);
+    };
+    GetChapterPages(reference, null, null, ColonSpace);
+  };
+
+  override GetInBookEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    StartEndFieldsList(reference); Space;
+    GetQuoted(reference.Title, ". In ");
+    GetItalic(reference.BookTitle, CommaSpace);
+    GetEdTrans(reference);
+    GetChapterPages(reference, null, null, CommaSpace);
+    CommaSpace;
+    GetPublicationInfo(reference, ColonSpace);
+    GetDate(reference, null);
+  };
+
+  override GetInCollectionFootnote(ReferenceClass reference, index) = GetInBookFootnote(reference, index);
+
+  override GetInCollectionEndnote(ReferenceClass reference, index) = GetInBookEndnote(reference, index);
+
+  override GetThesisFootnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.Full);
+    GetQuoted(reference.Title, Space);
+    InParens {
+      if (reference.Type == ReferenceTypes.PHD)
+        "Ph.D. diss., ";
+      if (reference.Type == ReferenceTypes.Masters)
+        "master's thesis, ";
+      GetSchool(reference, CommaSpace);
+      GetDate(reference, null);
+    };
+    Space;
+    GetChapterPages(reference);
+  };
+
+  override GetThesisEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.End);
+    GetQuoted(reference.Title, Space);
+    if (reference.Type == ReferenceTypes.PHD)
+      ". Ph.D. Dissertation, ";
+    if (reference.Type == ReferenceTypes.Masters)
+      ". Master's thesis, ";
+    GetSchool(reference, CommaSpace);
+    GetDate(reference, null);
+  };
+
+  GetFootNote(ReferenceClass reference) = Span {
+    CommaSpace;
+    if (valid reference.BookTitle)
+      GetQuoted(reference.Title);
+    else
+      GetItalic(reference.Title);
+    GetNumber(reference, " no. ");
+    GetEdition(reference, " ed. ");
+    var publisher = reference.FindFacts(PublisherLink );
+    InParens {
+      var authors = GetAuthors(reference);
+      if (valid publisher && not valid authors) {
+        GetAddress(reference, ColonSpace);
+        GetSponsor(reference, CommaSpace);
+      }
+      else {
+        GetPublicationInfo(reference, ColonSpace);
+        GetSponsor(reference, CommaSpace);
+      }
+      GetDate(reference, null);
+    };
+    if (valid reference.HowPublished) {
+      DotSpace;
+      reference.HowPublished;
+    }
+    ShowWebsite(reference, null, DotSpace, ", accessed ");
+  };
+
+  GetEndNote(ReferenceClass reference, index) = Span {
+    index;
+    DotSpace;
+    if (valid reference.BookTitle)
+      GetQuoted(reference.Title);
+    else
+      GetItalic(reference.Title);
+
+    GetNumber(reference, ". no. ");
+    GetEdition(reference, " ed");
+    var authors = GetAuthors(reference);
+    var publisher = reference.FindFacts(PublisherLink );
+    if (valid publisher && not valid authors) {
+      DotSpace;
+      GetAddress(reference, ColonSpace);
+      GetSponsor(reference, CommaSpace);
+    }
+    else {
+      DotSpace;
+      GetPublicationInfo(reference, ColonSpace);
+      GetSponsor(reference, CommaSpace);
+    }
+    GetDate(reference, null);
+
+    if (valid reference.HowPublished) {
+      DotSpace;
+      reference.HowPublished;
+    }
+    ShowWebsite(reference, null, DotSpace, ", accessed ");
+  };
+
+  override GetMiscFootnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.Full);
+    GetFootNote(reference);
+  };
+
+  override GetMiscEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    StartEndFieldsList(reference);
+    GetEndNote(reference, index);
+  };
+
+  override GetInProceedingsEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.End);
+    Space;
+    GetQuoted(reference.Title, " In ");
+    GetItalic(reference.BookTitle, CommaSpace)
+    GetChapterPages(reference, null, null);
+    GetSeries(reference, CommaSpace)
+    reference.Note; DotSpace;
+    GetPublicationInfo(reference, ColonSpace);
+    GetDate(reference, null);
+    Space;
+    GetEndnoteUrl(reference);
+    GetEndnoteHowPublished(reference);
+  };
+
+  override GetInProceedingsFootnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.Full);
+    Space;
+    GetQuoted(reference.Title, " in ");
+    GetItalic(reference.BookTitle, CommaSpace)
+    GetSeries(reference, null);
+    if (valid reference.Note) {
+      reference.Note; Space;
+    }
+    InParens {
+      GetPublicationInfo(reference, ColonSpace);
+      GetDate(reference, CommaSpace);
+    };
+    GetChapterPages(reference, null, null, CommaSpace);
+    Space;
+    GetEndnoteUrl(reference);
+    GetEndnoteHowPublished(reference);
+  };
+
+  override GetProceedingsFootnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, CommaSpace);
+    GetVolume(reference, "vol. ");
+    GetSeries(reference, null);
+    InParens {
+      GetPublicationInfo(reference, ColonSpace);
+      GetDate(reference, CommaSpace);
+    };
+    GetEndnoteUrl(reference);
+    GetEndnoteHowPublished(reference);
+  };
+
+  override GetProceedingsEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, CommaSpace);
+    ShowLocation(reference, CommaSpace) {Italic};
+    GetVolume(reference, "Vol. ");
+    GetSeries(reference, null);
+    GetPublicationInfo(reference, ColonSpace);
+    GetDate(reference, DotSpace);
+    GetSponsor(reference, CommaSpace);
+    GetEndnoteUrl(reference);
+    GetEndnoteHowPublished(reference);
+  };
+
+  override GetUnpublishedEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    StartEndFieldsList(reference);
+    GetQuoted(reference.Title, null);
+    GetAddress(reference, null, DotSpace);
+    GetDate(reference, DotSpace);
+    GetEndnoteUrl(reference);
+    GetEndnoteHowPublished(reference);
+  };
+
+  override GetUnpublishedFootnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetNoteAuthor(reference, NoteTypes.Full);
+    GetQuoted(reference.Title, Space);
+    InParens {
+      GetAddress(reference, CommaSpace);
+      GetDate(reference, null);
+    };
+    GetEndnoteUrl(reference);
+    GetEndnoteHowPublished(reference);
+  };
+
+  override GetTechReportFootnote(ReferenceClass reference, index) = GetMiscFootnote(reference, index);
+
+  override GetTechReportEndnote(ReferenceClass reference, index) = GetMiscEndnote(reference, index);
+
+  override GetManualFootnote(ReferenceClass reference, index) = GetMiscFootnote(reference, index);
+
+  override GetManualEndnote(ReferenceClass reference, index) = GetMiscEndnote(reference, index);
+*/
+}
+
+//=========================================================================
+
+class APAStyleClass: CitationStyleClass {
+  Constructor {
+    super.Constructor(ReferenceStyles.APA);
+    DateAlternate = "(n.d.)";
+  }
+
+  override GetDateFormat = ["yyyy", "yyyy, MMMM", "yyyy, MMMM dd"];
+
+  override WriteEndName(PersonClass person) = GetLastFirstInitial(person);
+
+  ShowInline(ReferenceClass reference) = Span {
+    var authors = reference.FindFacts(AuthorLink);
+    if (valid authors) {
+      Span {
+        Separator: CommaSpace;
+        GetLastName(each authors);
+      };
+    }
+    else
+      GetPublisher(reference, null);
+
+    if (valid reference.Date) {
+      CommaSpace;
+      Span {
+        TextFormat: GetDateFormat[reference.Date.Precision];
+        reference.Date;
+      };
+    }
+  };
+
+  override ShowTitle(ReferenceClass reference) = Span {
+    if (valid reference.Title) {
+      Italic;
+      reference.Title;
+      DotSpace;
+    }
+  };
+
+  override GetLayoutInline(ReferenceClass[] references, index) = InParens {
+    Separator: CommaSpace;
+    ShowInline(each references);
+  };
+
+  override WriteEndnoteList(ReferenceClass[] references) = Block {
+    foreach (var reference in references.Sort(false, ref ByAuthorName)) {
+      Paragraph {
+        LeftIndent: 36 pts;
+        FirstIndent: -36 pts;
+        LocationMark: reference.GlobalVariablePath;
+        ParAlignment: ParAlignments.Justify;
+        EndnoteBody(reference);
+      }
+    }
+  };
+
+/*
+  ProceedingsNote(ReferenceClass reference, index) = Paragraph {
+    ParAlignment: ParAlignments.Justify;
+    LeftIndent: 20 pts;
+    FirstIndent: -20 pts;
+    SpaceAfter: 5 pts;
+    HBox {
+      Width: 16 pts;
+      HAlign: HAligns.Right;
+      Bold;
+      index;
+      Period;
+    };
+    Tab;
+  };
+
+  override WriteNames(people) = Span {
+    if (valid people) {
+      if (people.Length < 20) {
+        Separator: CommaSpace;
+        LastSeparator: " & ";
+        WriteName(each people);
+      }
+      else {
+        Span {
+          Separator: CommaSpace;
+          WriteName(each people[..18]);
+        }
+        "... ";
+        WriteName(people.LastElement);
+      }
+    }
+  };
+
+  FormatNote(ReferenceClass reference, index) = ProceedingsNote(reference, index) {
+    var authors = GetAuthors(reference);
+    if (valid authors)
+      WriteNames(authors, ref GetLastFirstInitial);
+    else
+      GetPublisher(reference, null);
+
+    GetDate(reference, Space);
+    Space;
+  };
+
+  URLs(reference) {
+  }
+
+  override GetDate(ReferenceClass reference, before) = Span {
+    before;
+    InParens {
+      FormatDate(reference.Date);
+    };
+  };
+
+  override GetPublicationInfo(ReferenceClass reference, separator) = GetPublisher(reference, separator);
+
+  GetNumbers(ReferenceClass reference) = Span {
+    if (valid reference.Edition || valid reference.Pages || valid reference.Chapter || valid reference.Volume) {
+      InParens {
+        GetVolume(reference, "vol. ", null);
+        GetEdition(reference, " ed. ", null);
+        GetChapterPages(reference, null);
+      }
+    }
+  };
+
+  override GetArticleEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    reference.Title;
+    DotSpace;
+    GetEdTrans(reference);
+    GetItalic(GetJournal(reference), CommaSpace);
+    GetVolume(reference, null) {Bold};
+    GetNumber(reference, null);
+    GetChapterPages(reference, null, null);
+    GetOnline(reference);
+  };
+
+  override GetBookEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, Space);
+    GetEdTrans(reference);
+    GetPublicationInfo(reference, null);
+    GetOnline(reference);
+  };
+
+  override GetBookletEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    reference.Title;
+    DotSpace;
+    reference.HowPublished;
+  };
+
+  override GetInBookEndnote(ReferenceClass reference, index) = FormatNote(reference, index)  {
+    reference.Title;
+    Space;
+    GetEdTrans(reference);
+    GetItalic(reference.BookTitle);
+    GetNumbers(reference);
+    Space;
+    GetPublicationInfo(reference, null);
+  };
+
+  override GetInCollectionEndnote(ReferenceClass reference, index) = GetInBookEndnote(reference, index);
+
+  override GetInProceedingsEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    reference.Title; Space;
+    if (valid reference.Note) {
+      Space;
+      InBrackets {reference.Note};
+      Space;
+    }
+    GetEdTrans(reference);
+    GetItalic(reference.BookTitle);
+    GetChapterPages(reference, CommaSpace, CommaSpace, null);
+  };
+
+  override GetThesisEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title);
+    if (valid reference.Number) {
+      InParens {
+        "Publication No. ";
+        reference.Number;
+      }
+    }
+
+    if (reference.Type == ReferenceTypes.PHD or reference.Type == ReferenceTypes.Masters) {
+      InParens {
+        if (reference.Type == ReferenceTypes.PHD)
+          "Doctoral dissertation";
+        if (reference.Type == ReferenceTypes.Masters)
+          "Master's Thesis";
+      };
+      Space;
+    }
+    GetSchool(reference, CommaSpace);
+    GetAddress(reference, null);
+  };
+
+  override GetMiscEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    reference.Title;
+    DotSpace;
+    GetItalic(reference.BookTitle);
+    GetNumbers(reference);
+    GetPublisher(reference, CommaSpace);
+    GetAddress(reference, DotSpace);
+    if (valid reference.HowPublished)
+      reference.HowPublished;
+    ShowWebsite(reference, null, null, "Retrieved ", " from ");
+  };
+
+  override GetTechReportEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title);
+    if (valid reference.Number) {
+      InParens {
+        GetNumber(reference, "tech. rep. ")
+      }
+    }
+    Space;
+    GetAddress(ReferenceClass reference, CommaSpace);
+    if (valid reference.FindFacts(LinkSponsor))
+      GetSponsor(reference, null);
+    else
+      GetPublisher(reference, null);
+  };
+
+  override GetManualEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title);
+    DotSpace;
+    GetNumbers(reference);
+    GetSponsor(reference,
+    DotSpace);
+    GetAddress(reference, null);
+    reference.HowPublished;
+    ShowWebsite(reference, null, null, null, null);
+  };
+
+  override GetProceedingsEndnote(ReferenceClass reference, index) = ProceedingsNote(reference, index) {
+    GetItalic(reference.Title);
+    DotSpace;
+    GetNumbers(reference);
+    GetDate(reference, DotSpace);
+    DotSpace;
+    GetPublisher(reference, null);
+  };
+
+  override GetUnpublishedEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title);
+  };
+
+*/
+}
+//=========================================================================
+
+class IEEEStyleClass: CitationStyleClass {
+  Constructor {
+    super.Constructor(ReferenceStyles.IEEE);
+    PHDString           = " Ph.D. Dissertation, ";
+    MastersString       = " Master's Thesis, ";
+    EndnoteNumberWidth  *= 2;
+  }
+
+  override GetDateFormat  = ["yyyy", "MMM. yyyy", "MMM. dd, yyyy"];
+
+  override GetCitationMarker(ReferenceClass[] references, index) = Span {
+    if (valid index)
+      InBrackets {index};
+  };
+
+  override EndnoteNumber(index) = InBrackets {index};
+
+  override WriteNames(people) = Span {
+    if (valid people) {
+      if (people.Length < 7) {
+        Span {
+          Separator: CommaSpace;
+          LastSeparator: CommaAnd;
+          WriteEndName(each people);
+        }
+      }
+      else {
+        WriteEndName(people[0]);
+        CommaEtAl;
+      }
+    }
+  };
+
+  override GetLayoutInline(ReferenceClass[] references, index) = GetCitationMarker(references, index);
+
+
+/*
+
+  override GetEdTrans(ReferenceClass reference) = Span {
+    var editors = reference.FindFacts(LinkEditor);
+    if (valid editors) {
+      WriteNames(editors);
+      if (valid editors)
+        " Eds. ";
+      else
+        " Ed., ";
+    }
+    var translators = reference.FindFacts(TranslatorLink );
+    if (valid translators) {
+      " trans. by "
+      WriteNames(translators);
+    }
+  };
+
+  override GetOnline(ReferenceClass reference, separator = null) = Span {
+    ShowWebsite(reference, " [Online] Available: ", DotSpace, "Accessed: ");
+  };
+
+  ProceedingsNote(ReferenceClass reference, index) = Paragraph {
+    if (valid index) {
+      ParAlignment: ParAlignments.Justify;
+      LeftIndent: 22 pts;
+      FirstIndent: -22 pts;
+      SpaceAfter: 5 pts;
+      GetCitationMarker(reference, index);
+      Tab;
+    }
+  };
+
+  FormatNote(ReferenceClass reference, index) = ProceedingsNote(reference, index) {
+    var authors = GetAuthors(reference);
+    if (valid authors)
+      WriteNames(authors);
+    else
+      GetPublisher(reference, CommaSpace);
+  };
+
+  override GetArticleEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetQuoted(reference.Title, CommaSpace);
+    GetEdTrans(reference);
+    GetJournal(reference, CommaSpace) {Italic};
+    GetVolume(reference, ", vol. ");
+    GetNumber(reference, " no. ");
+    GetEdition(reference, " ed., ");
+    GetChapterPages(reference);
+    GetDate(reference, CommaSpace);
+    GetPublicationInfo(reference, ColonSpace);
+    GetOnline(reference);
+    reference.Note;
+  };
+
+  override GetBookEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, DotSpace);
+    GetVolume(reference, ", vol. ");
+    GetNumber(reference, " no. ");
+    GetEdition(reference, " ed., ");
+    GetEdTrans(reference);
+    GetPublicationInfo(reference, ColonSpace);
+    GetDate(reference, CommaSpace);
+    GetOnline(reference);
+    GetChapterPages(reference);
+    reference.Note;
+  };
+
+  override GetBookletEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, CommaSpace);
+    reference.HowPublished;
+    GetPublicationInfo(reference, CommaSpace);
+    GetDate(reference, CommaSpace);
+    reference.Note;
+  };
+
+  override GetInBookEndnote(ReferenceClass reference, index) = GetInCollectionEndnote(reference, index);
+
+  override GetInCollectionEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetQuoted(reference.Title, ", in ");
+    GetItalic(reference.BookTitle, CommaSpace);
+    GetSeries(reference, "ser. ");
+    GetEdition(reference, " ed., ");
+    GetEdTrans(reference);
+    GetPublicationInfo(reference, ColonSpace);
+    GetDate(reference, CommaSpace);
+    GetChapterPages(reference);
+    reference.Note;
+  };
+
+  override GetInProceedingsEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetQuoted(reference.Title, ", in ");
+    GetItalic(reference.BookTitle, CommaSpace);
+    GetSeries(reference, "ser. ");
+    reference.Note; CommaSpace;
+    GetEdTrans(reference);
+    GetVolume(reference, "vol.  ");
+    GetSponsor(reference, DotSpace);
+    GetPublicationInfo(reference, ColonSpace);
+    GetDate(reference, CommaSpace);
+    GetChapterPages(reference);
+    GetOnline(reference);
+  };
+
+  override GetThesisEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetQuoted(reference.Title, DotSpace);
+    GetThesisString(reference, null);
+    GetPublicationInfo(reference, null);
+    GetDate(reference, CommaSpace);
+    reference.Note;
+  };
+
+  override GetProceedingsEndnote(ReferenceClass reference, index) = ProceedingsNote(reference, index) {
+    GetItalic(reference.Title, DotSpace);
+    ShowLocation(reference, DotSpace) {Italic};
+
+    GetVolume(reference, "vol.  ");
+    GetSeries(reference, null);
+    GetSponsor(reference, DotSpace);
+    GetPublicationInfo(reference, CommaSpace);
+    GetDate(reference, CommaSpace);
+    reference.Note;
+  };
+
+  override GetManualEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetItalic(reference.Title, DotSpace);
+    GetEdition(reference, " ed., ", null);
+    GetSponsor(reference, DotSpace);
+    GetAddress(reference, CommaSpace);
+    GetDate(reference, null);
+    reference.Note;
+  };
+
+  override GetMiscEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    if (valid reference.BookTitle) {
+      GetQuoted(reference.Title, DotSpace);
+      GetItalic(reference.BookTitle, DotSpace);
+    }
+    else
+      GetItalic(reference.Title, DotSpace);
+
+    GetDate(reference, null);
+    reference.HowPublished;
+    ShowWebsite(reference, " [Online]. Available: ", DotSpace, ", Accessed: ");
+    reference.Note;
+  };
+
+  override GetTechReportEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetQuoted(reference.Title, DotSpace);
+    GetSponsor(reference, CommaSpace);
+    GetAddress(reference, CommaSpace);
+    GetNumber(reference, " Tech. Rep. ");
+    GetDate(reference, CommaSpace);
+    reference.Note;
+  };
+
+  override GetUnpublishedEndnote(ReferenceClass reference, index) = FormatNote(reference, index) {
+    GetQuoted(reference.Title, CommaSpace);
+    GetDate(reference, null);
+    reference.Note;
+  };
+
+*/
+}
+//=========================================================================
+
+class NatureStyleClass: IEEEStyleClass {
+  Constructor {
+    super.Constructor;
+    Name               = "Nature";
+    EndnoteNumberWidth = 20 pts;
+  }
+
+  override GetDateFormat = ["yyyy", "MMMM yyyy", "MMMM dd, yyyy"];
+
+  override WriteEndName(PersonClass person) = GetLastFirstInitial(person);
+
+  override GetLayoutInline(ReferenceClass[] references, index) = Span {
+    TextAlignment: TextAlignments.Superscript;
+    Separator: Comma;
+    index;
+  };
+
+  override EndnoteNumber(index)  = Span {
+    Bold;
+    EachOne;
+    Period;
+  };
+
+  override GetCitationMarker(ReferenceClass[] references, index) = Span {
+    if (valid index)
+      InBrackets {index};
+  };
+
+}
+//=========================================================================
