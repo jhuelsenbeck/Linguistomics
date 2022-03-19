@@ -241,11 +241,11 @@ namespace Style {
     RefCounter("figure", figure.GlobalVariablePath);
   };
 
-  FigureReference(figure) = ShowFigureNumber(figure) {
-    Hover: new HoverClass(figure.GlobalVariablePath, HoverTypes.LocationMark, new FigureTipClass(figure));
+  FigureReference(ExperimentClass experiment, figure) = ShowFigureNumber(figure) {
+    Hover: new HoverClass(figure.GlobalVariablePath, HoverTypes.LocationMark, new FigureTipClass(experiment, figure));
   };
 
-  ShowFigureDoc(figure) = Block {
+  ShowFigureDoc(ExperimentClass experiment, figure) = Block {
     Paragraph {
       LocationMark: figure.GlobalVariablePath;
       SpaceBefore: 10 pts;
@@ -257,11 +257,11 @@ namespace Style {
         ShowFigureNumber(figure);
         eos;
       };
-      figure.Caption;
+      figure.Caption(experiment);
     };
 
     FigureBody {
-      figure.Body
+      figure.Body(experiment)
     };
   };
 
@@ -271,17 +271,17 @@ namespace Style {
     RefCounter("table", figure.GlobalVariablePath);
   };
 
-  ShowFigureSlide(figure, format=null) = Block {
-    figure.Caption;
+  ShowFigureSlide(ExperimentClass experiment, figure, format=null) = Block {
+    figure.Caption(experiment);
     Paragraph {
       ParAlignment: ParAlignments.Center;
       format;
-      figure.Body;
+      figure.Body(experiment);
     }
   };
 
-  ShowTable(table) = Block {
-    table.Body {
+  ShowTable(ExperimentClass experiment, table) = Block {
+    table.Body(experiment) {
       SpaceBefore: 10 pts;
       ParAlignment: ParAlignments.Center;
     };
@@ -295,7 +295,7 @@ namespace Style {
         ShowTableNumber(table);
         eos;
       };
-      table.Caption;
+      table.Caption(experiment);
     };
   };
 
@@ -559,13 +559,6 @@ namespace Style {
     };
   };
 
-  ShowContent(content) = Block {
-    Header2 {
-      content.Title;
-    };
-    content.Body;
-  };
-
   AppendixRow(appendix) = Paragraph {
     LeftIndent: 20 pts;
     FirstIndent: -20 pts;
@@ -689,13 +682,15 @@ namespace Style {
 //======================================================================
 
 class FigureTipClass {
-  var Figure;
+  var             Figure;
+  ExperimentClass Experiment;
 
-  Constructor(figure) {
-    Figure = figure;
+  Constructor(ExperimentClass experiment, figure) {
+    Experiment = experiment;
+    Figure     = figure;
   }
 
-  override GetLayoutTip = Style.ShowFigureDoc(Figure);
+  override GetLayoutTip = Style.ShowFigureDoc(Experiment, Figure);
 }
 
 //======================================================================

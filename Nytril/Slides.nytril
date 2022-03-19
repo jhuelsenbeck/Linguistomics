@@ -5,7 +5,7 @@ using Format, Units, Math, IO, LinkTypes;
 namespace Slides.Questions {
   Title = Lang.Questions;
 
-  Body = Paragraph {
+  Body(ExperimentClass experiment) = Paragraph {
     ParAlignment: ParAlignments.Center;
     SpaceBefore: 1 inch;
     Figure {
@@ -18,58 +18,58 @@ namespace Slides.Questions {
 
 namespace Slides.Introduction {
   Title = PaperSections.Introduction.Title;
-  Body  = Block {
+  Body(ExperimentClass experiment)  = Block {
     PaperSections.Introduction.Slide;
-    Style.ShowTable(TableFigures.Cognates);
+    Style.ShowTable(experiment, TableFigures.Cognates);
   };
 }
 
 namespace Slides.ExampleTree {
   Title = "Example Tree";
-  Body  = Style.ShowFigureSlide(Figures.ExampleTree);
+  Body(ExperimentClass experiment) = Style.ShowFigureSlide(experiment, Figures.ExampleTree);
 }
 
 namespace Slides.Alignment {
   Title = Lang.Alignment;
-  Body  = Style.ShowFigureSlide(Figures.Alignment, TextHeight: 5 pts);
+  Body(ExperimentClass experiment) = Style.ShowFigureSlide(experiment, Figures.Alignment, TextHeight: 5 pts);
 }
 
 namespace Slides.ShowResults {
   Title = Lang.ConsensusTree;
-  Body  = Style.TreeOptions {
+  Body(ExperimentClass experiment)  = Style.TreeOptions {
     Width: DocMetrics.SlideContent.Width;
-    Root: Trial.ConsensusTree;
+    Root: experiment.MainRun.Tree;
   };
 }
 
 namespace Slides.LanguagesUsed {
   Title = Lang.Languages;
-  Body  = SegmentDisplay.ShowLanguages(Trial.Data);
+  Body(ExperimentClass experiment)  = SegmentDisplay.ShowLanguages(experiment.Data);
 }
 
 namespace Slides.ConceptsUsed {
   Title = Lang.ConceptsExamples;
-  Body  = AllWords.ShowTable(3);
+  Body(ExperimentClass experiment) = AllWords.ShowTable(experiment.Data, 3);
 }
 
 namespace Slides.UniqueCharacters {
   Title = Lang.UniqueSegments;
-  Body  = SegmentDisplay.ShowSegmentAssignments(Trial.Data);
+  Body(ExperimentClass experiment)  = SegmentDisplay.ShowSegmentAssignments(experiment.Data);
 }
 
 namespace Slides.SegmentFrequencies {
   Title = Lang.SegmentFrequencies;
-  Body  = SegmentDisplay.FrequencyChart(Trial.Data, Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 180 pts));
+  Body(ExperimentClass experiment)  = SegmentDisplay.FrequencyChart(experiment.Data, Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 180 pts));
 }
 
 namespace Slides.PartitionRules {
   Title = Lang.PartitionRules;
-  Body  = Trial.PartitionRule.ShowPartitions;
+  Body(ExperimentClass experiment)  = experiment.Rule.ShowPartitions;
 }
 
 namespace Slides.PartitionDiagramExperiment {
   Title = Lang.TransitionRates;
-  Body  = Block {
+  Body(ExperimentClass experiment) = Block {
     Figures.FrequencyDiagramStatic.Caption;
     Trial.CalcExperiment.PartitionDiagram(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 40 pts));
   };
@@ -77,17 +77,17 @@ namespace Slides.PartitionDiagramExperiment {
 
 namespace Slides.PartitionDiagramStatic {
   Title = Lang.StaticRates;
-  Body  = Block {
-    Figures.FrequencyDiagramStatic.Caption;
+  Body(ExperimentClass experiment) = Block {
+    Figures.FrequencyDiagramStatic.Caption(experiment);
     Trial.CalcStatic.PartitionDiagram(DocMetrics.SlideContent);
   };
 }
 
 namespace Slides.PartitionBoxStatic {
   Title = "Segment Transition Rates";
-  Body  = Block {
-    Figures.FrequencyBoxStatic.Caption;
-    Trial.CalcStatic.PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 20 pts), false);
+  Body(ExperimentClass experiment) = Block {
+    Figures.FrequencyBoxStatic.Caption(experiment);
+    Trial.CalcStatic.PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 20 pts));
   };
 }
 //======================================================================
@@ -96,8 +96,8 @@ class PresentationViewClass: BaseViewClass {
   var SlideList,
       Author;
 
-  Constructor(id, title, author) {
-    super.Constructor(id, title);
+  Constructor(ExperimentClass experiment, id, title, author) {
+    super.Constructor(experiment, id, title);
     DocumentType = ConfigurationClass.DocumentTypes.SlideShow;
     Author       = author;
     SlideList    = new ListClass(64);
@@ -146,14 +146,14 @@ class PresentationViewClass: BaseViewClass {
     };
 
     foreach (var slide in SlideList)
-      AddSlideBlock(slide, EachOne);
+      AddSlideBlock(Experiment, slide, EachOne);
   };
 }
 //======================================================================
 
 class JohnPresentationClass: PresentationViewClass {
-  Constructor {
-    super.Constructor(#aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", People.JPHuelsenbeck);
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", People.JPHuelsenbeck);
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ExampleTree);
@@ -169,8 +169,8 @@ class JohnPresentationClass: PresentationViewClass {
 //======================================================================
 
 class DavidPresentationClass: PresentationViewClass {
-  Constructor {
-    super.Constructor(#75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "David's Presentation", People.DMGoldstein);
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "David's Presentation", People.DMGoldstein);
     AddSlide(Slides.Introduction);
     AddSlide(Slides.LanguagesUsed);
     AddSlide(Slides.ConceptsUsed);

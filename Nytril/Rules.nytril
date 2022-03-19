@@ -2,11 +2,13 @@ using Format, Units, Features, Math, Style;
 //======================================================================
 
 class FilterClass {
-  field     Name;
-  var       CircleName;
-  RuleClass Rule;
+  field        Name;
+  var          CircleName;
+  DataSetClass Data;
+  RuleClass    Rule;
 
-  Constructor(RuleClass rule, name) {
+  Constructor(DataSetClass data, RuleClass rule, name) {
+    Data       = data;
     Rule       = rule;
     Name       = name;
     CircleName = name.Substitute(name.FindIndex(c => c == Space), LineBreak);
@@ -27,7 +29,7 @@ class FilterClass {
       BorderB: 1;
       Name;
     };
-    SegmentDisplay.ShowFilterSegments(Rule, Trial.Data.UniqueSegments, this, ParAlignments.Left);
+    SegmentDisplay.ShowFilterSegments(Rule, Data.UniqueSegments, this, ParAlignments.Left);
   };
 }
 //======================================================================
@@ -56,6 +58,7 @@ class PartitionClass: FactClass {
 //======================================================================
 
 abstract class RuleClass {
+  DataSetClass     Data;
   ListClass        FilterList;
   FilterClass[]    Filters,
                    FiltersPlus;
@@ -64,7 +67,8 @@ abstract class RuleClass {
                    Matrix,
                    Numbers;
 
-  Constructor(name) {
+  Constructor(DataSetClass data, name) {
+    Data       = data;
     Name       = name;
     Numbers    = false;
     FilterList = new ListClass(128);
@@ -105,7 +109,7 @@ abstract class RuleClass {
 
   void GetFilters {
     Filters = FilterList.Values;
-    Add(new FilterClass(this, "Residue"));
+    Add(new FilterClass(Data, this, "Residue"));
     FiltersPlus = FilterList.Values;
   }
 
@@ -212,8 +216,8 @@ abstract class RuleClass {
 class SingleFilterClass: FilterClass {
   SegmentClass Segment;
 
-  Constructor(RuleClass rule, SegmentClass segment) {
-    super.Constructor(rule, segment.Ipa);
+  Constructor(DataSetClass data, RuleClass rule, SegmentClass segment) {
+    super.Constructor(data, rule, segment.Ipa);
     Segment = segment;
   }
 
@@ -225,8 +229,8 @@ class FeatureMaskClass: FilterClass {
   var Mask,
       Flags;
 
-  Constructor(RuleClass rule, name, mask, flag) {
-    super.Constructor(rule, name);
+  Constructor(DataSetClass data, RuleClass rule, name, mask, flag) {
+    super.Constructor(data, rule, name);
     Mask  = mask;
     Flags = flag;
   }
@@ -236,8 +240,8 @@ class FeatureMaskClass: FilterClass {
 //======================================================================
 
 class RootVowelClass: FilterClass {
-  Constructor(RuleClass rule) {
-    super.Constructor(rule, "Root vowel");
+  Constructor(DataSetClass data, RuleClass rule) {
+    super.Constructor(data, rule, "Root vowel");
   }
 
   override Matches(SegmentClass segment) = segment.Features.HasFlag(Vowel) and valid segment.Root;
@@ -247,8 +251,8 @@ class RootVowelClass: FilterClass {
 class DiphthongFilterClass: FilterClass {
   var Root;
 
-  Constructor(RuleClass rule, root) {
-    super.Constructor(rule, "Root+Diphthongs");
+  Constructor(DataSetClass data, RuleClass rule, root) {
+    super.Constructor(data, rule, "Root+Diphthongs");
     Root = root;
   }
 
@@ -259,8 +263,8 @@ class DiphthongFilterClass: FilterClass {
 class SegmentListClass: FilterClass {
   SegmentClass[] List;
 
-  Constructor(RuleClass rule, name, SegmentClass[] list) {
-    super.Constructor(rule, name);
+  Constructor(DataSetClass data, RuleClass rule, name, SegmentClass[] list) {
+    super.Constructor(data, rule, name);
     List = list;
   }
 
@@ -269,8 +273,8 @@ class SegmentListClass: FilterClass {
 //======================================================================
 
 class VowelListClass: SegmentListClass {
-  Constructor(RuleClass rule, SegmentClass[] list) {
-    super.Constructor(rule, list.FirstElement.Ipa, list);
+  Constructor(DataSetClass data, RuleClass rule, SegmentClass[] list) {
+    super.Constructor(data, rule, list.FirstElement.Ipa, list);
   }
 
   override Matches(SegmentClass segment) = List.FindAny(segment);
@@ -278,8 +282,8 @@ class VowelListClass: SegmentListClass {
 //======================================================================
 
 class DiphthongRuleClass: RuleClass {
-  Constructor(RuleClass rule) {
-    super.Constructor(rule, "Diphthongs Separated");
+  Constructor(DataSetClass data, RuleClass rule) {
+    super.Constructor(data, rule, "Diphthongs Separated");
     Add(new FeatureMaskClass(rule, "Diphthong", Diphthong, Diphthong));
   }
 
@@ -294,8 +298,8 @@ class DiphthongRuleClass: RuleClass {
 //======================================================================
 
 class DiphthongPairRuleClass: RuleClass {
-  Constructor(RuleClass rule) {
-    super.Constructor(rule, "Diphthongs Paired with Vowels");
+  Constructor(DataSetClass data, RuleClass rule) {
+    super.Constructor(data, rule, "Diphthongs Paired with Vowels");
   }
 
   override void AssignCharacters(SegmentClass[] segments) {
@@ -333,8 +337,8 @@ class DiphthongPairRuleClass: RuleClass {
 //======================================================================
 
 class SingletonRuleClass: RuleClass {
-  Constructor {
-    super.Constructor("Each segment gets a different number");
+  Constructor(DataSetClass data) {
+    super.Constructor(data, "Each segment gets a different number");
     Numbers = true;
   }
 
@@ -349,26 +353,26 @@ class SingletonRuleClass: RuleClass {
 //======================================================================
 
 class Partition2Class: RuleClass {
-  Constructor {
-    super.Constructor("Linguistically Informed");
+  Constructor(DataSetClass data) {
+    super.Constructor(data, "Linguistically Informed");
     Numbers = true;
 
-    Add(new VowelListClass(this, [IPA.Segments.ay, IPA.Segments.ai]));
-    Add(new VowelListClass(this, [IPA.Segments.e, IPA.Segments.E]));
-    Add(new VowelListClass(this, [IPA.Segments.ah, IPA.Segments.A]));
-    Add(new VowelListClass(this, [IPA.Segments.u, IPA.Segments.U]));
-    Add(new VowelListClass(this, [IPA.Segments.oh, IPA.Segments.O]));
+    Add(new VowelListClass(data, this, [IPA.Segments.ay, IPA.Segments.ai]));
+    Add(new VowelListClass(data, this, [IPA.Segments.e, IPA.Segments.E]));
+    Add(new VowelListClass(data, this, [IPA.Segments.ah, IPA.Segments.A]));
+    Add(new VowelListClass(data, this, [IPA.Segments.u, IPA.Segments.U]));
+    Add(new VowelListClass(data, this, [IPA.Segments.oh, IPA.Segments.O]));
 // Removed because there is only one segment
 //    Add(new VowelListClass(this, [IPA.Segments.euh, IPA.Segments.LongOpenMidBackRounded]));
-    Add(new VowelListClass(this, [IPA.Segments.eh, IPA.Segments.Eh]));
-    Add(new VowelListClass(this, [IPA.Segments.uu, IPA.Segments.o]));
-    Add(new FeatureMaskClass(this, "Nasal Vowel", Vowel Nasal, Vowel Nasal));
-    Add(new FeatureMaskClass(this, "Vowel", Vowel, Vowel));
-    Add(new FeatureMaskClass(this, "Nasal Consonant", Nasal, Nasal));
-    Add(new SegmentListClass(this, "Non Sylabic Sonorant", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]));
-    Add(new FeatureMaskClass(this, "Consonant", Vowel, NoFeature));
+    Add(new VowelListClass(data, this, [IPA.Segments.eh, IPA.Segments.Eh]));
+    Add(new VowelListClass(data, this, [IPA.Segments.uu, IPA.Segments.o]));
+    Add(new FeatureMaskClass(data, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal));
+    Add(new FeatureMaskClass(data, this, "Vowel", Vowel, Vowel));
+    Add(new FeatureMaskClass(data, this, "Nasal Consonant", Nasal, Nasal));
+    Add(new SegmentListClass(data, this, "Non Sylabic Sonorant", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]));
+    Add(new FeatureMaskClass(data, this, "Consonant", Vowel, NoFeature));
     GetFilters;
-    AssignPartitions(Trial.Data.UniqueSegments);
+    AssignPartitions(data.UniqueSegments);
   }
 }
 //======================================================================
@@ -378,9 +382,11 @@ class PartitionHintClass {
   PartitionClass P1,
                  P2;
   RuleClass      Rule;
+  DataSetClass   Data;
 
-  Constructor(RuleClass rule, rate, PartitionClass p1, PartitionClass p2) {
+  Constructor(DataSetClass data, RuleClass rule, rate, PartitionClass p1, PartitionClass p2) {
     Rule = rule;
+    Data = data;
     Rate = rate;
     P1   = p1;
     P2   = p2;
@@ -395,7 +401,7 @@ class PartitionHintClass {
       };
     };
     HBox {
-      SegmentDisplay.ShowFilterSegments(Rule, Trial.Data.UniqueSegments, p.Filter, ParAlignments.Center);
+      SegmentDisplay.ShowFilterSegments(Rule, Data.UniqueSegments, p.Filter, ParAlignments.Center);
     };
   };
 
@@ -428,12 +434,12 @@ class TransitionClass {
             Rates;
   RuleClass Rule;
 
-  Constructor(RuleClass rule, read=false) {
+  Constructor(DataSetClass data, RuleClass rule, read=false) {
     Rule = rule;
     if (read)
       ReadFrequencies;
     else
-      StaticFrequencies(Trial.Data.UniqueSegments, Trial.Data.TransitionCount);
+      StaticFrequencies(data.UniqueSegments, data.TransitionCount);
   }
 
   RandomArray {
@@ -538,12 +544,12 @@ class CalcRatesClass {
                   MaxRadius,
                   RateScale;
 
-  Constructor(RuleClass rule, TransitionClass transition=null) {
-    Data       = Trial.Data;
+  Constructor(DataSetClass data, RuleClass rule, TransitionClass transition=null) {
+    Data       = data;
     Rule       = rule;
     ArrowGap   = 2 pts;
     GapAngle   = 80.0 degrees;
-    Transition = transition ?? new TransitionClass(rule);
+    Transition = transition ?? new TransitionClass(Data, rule);
   }
 
   void Calibrate(size) {
@@ -586,7 +592,7 @@ class CalcRatesClass {
       var pi = EachIndex;
       foreach (var p2 in Rule.Partitions) {
         var  rate = Transition.Rates[pi][EachIndex];
-        var  hint = new PartitionHintClass(Rule, rate, p1, p2);
+        var  hint = new PartitionHintClass(Data, Rule, rate, p1, p2);
         var  line = new LineStyleClass(rate * RateScale, 0.25, 1);
         var  r    = rate * RateScale / MaxLine;
         var  frac = (100 * (1.0 - r))%;
@@ -726,17 +732,19 @@ class CalcRatesClass {
   }
 
   PartitionBlock = Block {
-    PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.PageContent.Height * 0.8), true);
-    PageBreak;
+    PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.PageContent.Height * 0.8));
 
+/*
+    PageBreak;
     Block {
       TextHeight: 9 pts;
       TranPar(each GetSorted);
     }
+*/
   };
 
-  PartitionBox(SizeClass framesize, link) = Paragraph {
-    var segments = Trial.Data.PartSegments;
+  PartitionBox(SizeClass framesize) = Paragraph {
+    var segments = Data.PartSegments;
     var grid     = 0.125 pts;
     var gcolor   = 65%;
     var border   = 0.5 pts;
@@ -783,11 +791,7 @@ class CalcRatesClass {
 
                 Span {
                   tlist.Length;
-                  var tip = new TranClass(tlist, tlist.Length*max);
-                  if (link && tlist.Length < Info.LinkMin)
-                    Hover: new HoverClass(TranLink(s0.Index, s1.Index), HoverTypes.LocationMark, tip);
-                  else
-                    Hover: new HoverClass(tip, HoverTypes.Tip);
+                  Hover: new HoverClass(new TranClass(tlist, tlist.Length*max), HoverTypes.Tip);
                 }
               };
             }

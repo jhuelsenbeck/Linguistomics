@@ -125,26 +125,28 @@ class ModelFolderClass {
 //======================================================================
 
 class ExperimentClass: FactClass {
-  field              Name,
-                     FolderName;
-  DataSetClass       Data;
-  RuleClass          Rule;
-  ModelFolderClass   JC69,
-                     GTR,
-                     Custom;
-  ModelFolderClass[] Models;
-  var                RootFolder;
+  field               Name,
+                      FolderName;
+  DataSetClass        Data;
+  RuleClass           Rule;
+  ModelFolderClass    JC69,
+                      GTR,
+                      Custom;
+  ModelFolderClass[]  Models;
+  var                 RootFolder;
+  ExampleConceptClass ExampleConcept;
 
   Constructor(id, name, folder, DataSetClass data, RuleClass rule) {
     super.Constructor(id);
-    Data        = data;
-    Rule        = rule;
-    Name        = name;
-    FolderName  = folder;
-    RootFolder  = Info.ExperimentBase Folder(folder);
-    Custom      = new ModelFolderClass(this, "Custom");
-    JC69        = new ModelFolderClass(this, "JC69");
-    GTR         = new ModelFolderClass(this, "GTR");
+    Data           = data;
+    Rule           = rule;
+    Name           = name;
+    FolderName     = folder;
+    RootFolder     = Info.ExperimentBase Folder(folder);
+    Custom         = new ModelFolderClass(this, "Custom");
+    JC69           = new ModelFolderClass(this, "JC69");
+    GTR            = new ModelFolderClass(this, "GTR");
+    ExampleConcept = new ExampleConceptClass(data, Trial.ExampleConcept);
 
     Models = [
       Custom,
@@ -160,15 +162,28 @@ class ExperimentClass: FactClass {
 //    }
   }
 
-  static ShowComparison = Block {
-    Style.ShowTree(Lang.ConsensusTree, null, Trial.ConsensusTree);
+  MainRun = Custom.Posterior.Run[0];
+
+  GetDocuments = [
+    new SubmissionViewClass(this),
+    new PaperViewClass(this),
+    new ExperimentViewClass(this),
+    new DiagnosticsViewClass(this),
+    new SourceViewClass(this),
+    new JohnPresentationClass(this),
+    new DavidPresentationClass(this),
+  ];
+
+
+  ShowComparison = Block {
+    Style.ShowTree(Lang.ConsensusTree, null, MainRun.Tree);
     Style.ShowTree("Prior", null, Trial.PriorTree);
     Style.ShowTree("Commonly Accepted Romance Tree", null, LanguageBranches.Romance, Lang.Years);
   };
 
-  static void CreateFolders {
+  static void CreateAllFolders {
     (each Trial.Experiments).InitFolders;
-    OpenExplorer(Trial.Experiments[0].RootFolder);
+    OpenExplorer(Info.ExperimentBase);
   }
 }
 //======================================================================

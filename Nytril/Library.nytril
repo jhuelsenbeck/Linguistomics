@@ -202,15 +202,17 @@ class ConceptClass: FactClass {
 
 class CognateClass: FactClass {
   field        Name;
+  DataSetClass Data;
   ConceptClass Concept;
   WordClass[]  Words;
   var          MaxLength,
                Variable;
 
-  Constructor(ConceptClass concept, variable) {
+  Constructor(DataSetClass data, ConceptClass concept, variable) {
     super.Constructor(variable.GlobalVariablePath);
 
     Name      = variable.GlobalVariableName;
+    Data      = data;
     Concept   = concept;
     Variable  = variable;
     MaxLength = 0;
@@ -221,7 +223,7 @@ class CognateClass: FactClass {
     return Concept.Name + '-' + Name;
   }
 
-  override GetLayoutTip = AllWords.ShowConceptTable(this);
+  override GetLayoutTip = AllWords.ShowConceptTable(Data, this);
 
   override Compare(c, options) {
     var i = Concept.Compare(c.Concept, options);
@@ -354,7 +356,7 @@ class DataSetClass {
             }
             if (count > 1) {
               WordCount += count;
-              clist.Add(new CognateClass(concept, cognate));
+              clist.Add(new CognateClass(this, concept, cognate));
             }
           }
         }
