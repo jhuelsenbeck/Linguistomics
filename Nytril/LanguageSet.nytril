@@ -7,23 +7,38 @@ include "Concepts/Adjectives";
 include "Concepts/Numbers";
 include "Concepts/Misc";
 
-namespace Info;
+namespace Trial;
 
-RunFolder     = Folder("Run5");
-ResultsFolder = Folder("rwin");
-
-
-MainExperiment    = Info.Experiments.FirstElement;
+MainExperiment    = Experiments.FirstElement;
 MainExperimentRun = MainExperiment.Custom.Posterior.Run[0];
 ConsensusTree     = MainExperimentRun.Tree;
 
 IncludeWordGroups = Leipzig Swadesh100 Swadesh207;
 
-ExampleConcept  = Concepts.Woman;
-FigureConcept   = Concepts.What;
+ExampleConcept    = Concepts.Woman;
+FigureConcept     = Concepts.What;
+
+LanguageClass[] LanguageList = [
+  Latin,
+  Romanian,
+  Portuguese,
+  PortugueseBrazil,
+  Spanish,
+  Catalan,
+  French,
+  Walloon,
+  Friulian,
+  Italian,
+];
+
+PartitionRule  = new Partition2Class;
+Data           = new DataSetClass;
+CalcStatic     = new CalcRatesClass(Trial.PartitionRule);
+CalcExperiment = new CalcRatesClass(Trial.PartitionRule, new TransitionClass(Trial.PartitionRule, true));
+
 
 Experiments = [
-  new ExperimentClass(#8bbc5666-8f8d-49d9-b67d-fc12321ace43#, "All words", "All Words", DataSet, PartitionRule),
+  new ExperimentClass(#8bbc5666-8f8d-49d9-b67d-fc12321ace43#, "All words", "All Words", Data, PartitionRule),
 //  new ExperimentClass(#896d37be-ebe1-44a6-a94d-7eade795760a#, "No verbs", "NoVerbs", DataSet, PartitionRule),
 //  new ExperimentClass(#315e9dd6-3154-4d8e-b32f-6808ea685e7e#, "Leipzig-Swadesh100", "Leipzig", DataSet, PartitionRule),
 ];
@@ -56,19 +71,6 @@ PriorTree = Branch {
     }
   }
 };
-
-LanguageClass[] LanguageList = [
-  Latin,
-  Romanian,
-  Portuguese,
-  PortugueseBrazil,
-  Spanish,
-  Catalan,
-  French,
-  Walloon,
-  Friulian,
-  Italian,
-];
 
 NumberedTree = NBranch(19, 1) {
   NLeaf(Latin, 7);

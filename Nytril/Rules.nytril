@@ -27,7 +27,7 @@ class FilterClass {
       BorderB: 1;
       Name;
     };
-    SegmentDisplay.ShowFilterSegments(Rule, DataSet.UniqueSegments, this, ParAlignments.Left);
+    SegmentDisplay.ShowFilterSegments(Rule, Trial.Data.UniqueSegments, this, ParAlignments.Left);
   };
 }
 //======================================================================
@@ -368,7 +368,7 @@ class Partition2Class: RuleClass {
     Add(new SegmentListClass(this, "Non Sylabic Sonorant", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]));
     Add(new FeatureMaskClass(this, "Consonant", Vowel, NoFeature));
     GetFilters;
-    AssignPartitions(DataSet.UniqueSegments);
+    AssignPartitions(Trial.Data.UniqueSegments);
   }
 }
 //======================================================================
@@ -395,7 +395,7 @@ class PartitionHintClass {
       };
     };
     HBox {
-      SegmentDisplay.ShowFilterSegments(Rule, DataSet.UniqueSegments, p.Filter, ParAlignments.Center);
+      SegmentDisplay.ShowFilterSegments(Rule, Trial.Data.UniqueSegments, p.Filter, ParAlignments.Center);
     };
   };
 
@@ -433,7 +433,7 @@ class TransitionClass {
     if (read)
       ReadFrequencies;
     else
-      StaticFrequencies(DataSet.UniqueSegments, DataSet.TransitionCount);
+      StaticFrequencies(Trial.Data.UniqueSegments, Trial.Data.TransitionCount);
   }
 
   RandomArray {
@@ -539,7 +539,7 @@ class CalcRatesClass {
                   RateScale;
 
   Constructor(RuleClass rule, TransitionClass transition=null) {
-    Data       = DataSet;
+    Data       = Trial.Data;
     Rule       = rule;
     ArrowGap   = 2 pts;
     GapAngle   = 80.0 degrees;
@@ -709,10 +709,11 @@ class CalcRatesClass {
   CompareLength(l1, l2) = l2.Length - l1.Length;
 
   GetSorted {
-    var all  = new ListClass(128);
-    var t    = DataSet.TransitionCount;
-    foreach (var s0 in DataSet.PartSegments) {
-      foreach (var s1 in DataSet.PartSegments) {
+    var set = Data;
+    var all = new ListClass(128);
+    var t   = set.TransitionCount;
+    foreach (var s0 in set.PartSegments) {
+      foreach (var s1 in set.PartSegments) {
         if (s0.Index != s1.Index) {
           var tlist = t.GetValue(s0.Index, s1.Index);
           if (exists tlist && tlist.Length < Info.LinkMin)
@@ -735,7 +736,7 @@ class CalcRatesClass {
   };
 
   PartitionBox(SizeClass framesize, link) = Paragraph {
-    var segments = DataSet.PartSegments;
+    var segments = Trial.Data.PartSegments;
     var grid     = 0.125 pts;
     var gcolor   = 65%;
     var border   = 0.5 pts;

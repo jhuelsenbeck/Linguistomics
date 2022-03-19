@@ -3,7 +3,7 @@
 
 namespace Figures.FrequencyDiagramExperiment {
   Caption = FigureCaption {
-    var rule = CalcExperiment.Rule;
+    var rule = Trial.CalcExperiment.Rule;
 
     "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
@@ -12,14 +12,14 @@ namespace Figures.FrequencyDiagramExperiment {
   };
 
   Body = FigureBody {
-    CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
+    Trial.CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
 
 namespace Figures.FrequencyDiagramStatic {
   Caption = FigureCaption {
-    var rule = CalcStatic.Rule;
+    var rule = Trial.CalcStatic.Rule;
 
     "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
@@ -27,7 +27,7 @@ namespace Figures.FrequencyDiagramStatic {
   };
 
   Body = FigureBody {
-    CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
+    Trial.CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
@@ -43,7 +43,7 @@ namespace Figures.FrequencyBoxStatic {
   };
 
   Body = FigureBody {
-    CalcStatic.PartitionBox(Size(6.6 inches, 5 inches), true);
+    Trial.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches), true);
   };
 }
 //======================================================================
@@ -55,7 +55,7 @@ namespace Figures.SegmentFrequencies {
   };
 
   Body = FigureBody {
-    SegmentDisplay.FrequencyChart(DataSet, Size(DocMetrics.PageContent.Width, 2 inches));
+    SegmentDisplay.FrequencyChart(Trial.Data, Size(DocMetrics.PageContent.Width, 2 inches));
   };
 }
 
@@ -69,7 +69,7 @@ namespace Figures.ConsensusTree {
   Body = FigureBody {
     Style.TreeOptions {
       Width: DocMetrics.TreeFigureWidth;
-      Root: Info.ConsensusTree;
+      Root: Trial.ConsensusTree;
     }
   };
 }
@@ -83,13 +83,14 @@ namespace ExampleAnimals {
 //=====================================================================
 
 namespace ExampleConcept {
-  Cognate        = DataSet.GetCognate(Info.ExampleConcept);
+  Set            = Trial.Data;
+  Cognate        = Set.GetCognate(Trial.ExampleConcept);
   TaxonIndex     = 0;
-  Taxon          = DataSet.Taxa[TaxonIndex];
-  Callout        = DataSet.Taxa[3];
+  Taxon          = Set.Taxa[TaxonIndex];
+  Callout        = Set.Taxa[3];
   Name           = ToLower(Cognate.Concept.Name);
   ExLanguages    = [Languages.French, Languages.Portuguese, Languages.Catalan, Languages.Friulian, Languages.Romanian];
-  TaxonList      = DataSet.Taxa.FindSlice(t => ExLanguages.Contains(t.Language));
+  TaxonList      = Set.Taxa.FindSlice(t => ExLanguages.Contains(t.Language));
   LangNames      = (each TaxonList).Language;
   CalloutSegment = FirstLetter(Callout);
   LangWord       = Span {(each Cognate.Words[TaxonIndex].Segments).Ipa};
@@ -101,13 +102,13 @@ namespace ExampleConcept {
 
 namespace Figures.ExampleTree {
   Caption = FigureCaption {
-    "An example tree showing the relationships of {0} languages."(SampledLanguages(Info.LanguageList.Length));
+    "An example tree showing the relationships of {0} languages."(SampledLanguages(Trial.LanguageList.Length));
   };
 
   Body = FigureBody {
     TreeOptions {
       Width: 5 inches;
-      Root: Info.NumberedTree;
+      Root: Trial.NumberedTree;
     };
   };
 }
@@ -153,7 +154,7 @@ namespace Figures.Alignment {
   SegmentTable(aligned) = MatrixBlock {
     TextHeight: 9 pts;
 
-    foreach (var taxon in DataSet.Taxa) {
+    foreach (var taxon in Trial.Data.Taxa) {
       Row {
         TName(taxon);
         Cell {
@@ -181,7 +182,7 @@ namespace Figures.Alignment {
   };
 
   MapTable(map, text) = MatrixBlock {
-    foreach (var taxon in DataSet.Taxa) {
+    foreach (var taxon in Trial.Data.Taxa) {
       Row {
         TName(taxon);
         Cell {
@@ -288,7 +289,7 @@ namespace Figures.Alignment {
       HBox {
         MarginB: 4 pts;
         VAlign: VAligns.Bottom;
-        var size = Size(ArrowWidth, DataSet.Taxa.Length * 8 pts);
+        var size = Size(ArrowWidth, Trial.Data.Taxa.Length * 8 pts);
 
         ArrowFigure(size) {
           Transform: Affine(-1, 0, 0, 1, size.Width, 0);
@@ -367,7 +368,7 @@ namespace StateSection {
 //======================================================================
 
 namespace PaperSections.WordTransformation {
-  ModelName = Span {TextCase: TextCases.AllLower; PartitionRule.Name};
+  ModelName = Span {TextCase: TextCases.AllLower; Trial.PartitionRule.Name};
   Title     = "Understanding Word Transformation";
 
   Note = "Note that rates of change are much greater from one word segment to another when the change is within the word segment group than it is when the change is between word segments in different groups.";
@@ -510,7 +511,7 @@ namespace PaperSections.DataSummary {
   Body = Block {
     FirstPar {
       "We selected ";
-      DataSet.UsedConcepts.Length;
+      Trial.Data.UsedConcepts.Length;
       " concepts from the 200-word Swadesh list of basic vocabulary. ";
       "The initial set of data was downloaded from "; Wiktionary.Title; Citation{Wiktionary}; ", which was then manually checked for accuracy and augmented. ";
       "Words were double-checked against data from "; SoundComparisons.Title; Citation{SoundComparisons}; eos;
@@ -518,7 +519,7 @@ namespace PaperSections.DataSummary {
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; SQuote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; SQuoteEnd{"serious"};
       "They are assigned to the same cognate set because segmentally French "; textit{"grave"}; " descends from Latin "; textit{"gravis"}; eos;
-      "There are in total "; DataSet.UsedCognates.Length; " cognate sets, "; DataSet.WordCount; " word forms, using "; DataSet.UniqueCount; " unique segments. ";
+      "There are in total "; Trial.Data.UsedCognates.Length; " cognate sets, "; Trial.Data.WordCount; " word forms, using "; Trial.Data.UniqueCount; " unique segments. ";
       "Each word is represented phonemically with the IPA alphabet. ";
       "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by and for ancient languages such as Latin non-existent. ";
     };
@@ -561,8 +562,8 @@ namespace PaperSections.DataSummary {
 //======================================================================
 
 namespace TableFigures.ManualAlignment {
-  Concept     = Info.FigureConcept;
-  Cognate     = DataSet.GetCognate(Concept);
+  Concept     = Trial.FigureConcept;
+  Cognate     = Trial.Data.GetCognate(Concept);
   WordDisplay = SQuote{TextCase: TextCases.AllLower; Concept.GlobalVariableName};
 
   Caption = FigureCaption {
@@ -605,7 +606,7 @@ namespace PaperSections.ModelInference {
       ") and the expected number of sound substitutions "; ExpectedEvents; " that occur along each branch of the tree. ";
       "Language evolves along the branches of the tree according to the TKF91 model"; Citation {thorne91}; " which allows either a word segment transition, insertion, or deletion to occur in an instant of time. ";
       "Insertions and deletions occur at rates "; InsertionRate; " and "; DeletionRate; " respectively, with "; InsertionLessThanDeletion; eos;
-      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  DataSet.UniqueCount; " word segments). ";
+      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  Trial.Data.UniqueCount; " word segments). ";
       "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters "; Span {Bold; RateMatrixParams}; eos;
     };
 
@@ -636,7 +637,7 @@ namespace PaperSections.ModelInference {
       "We numerically approximate the marginal probability for a model using path sampling techniques"; Citation{Lartillot2006; xie2010}; eos;
     };
 
-    var rule = PartitionRule;
+    var rule = Trial.PartitionRule;
 
     BodyPar {
       "We examined three models of segmental transition. ";
@@ -650,15 +651,15 @@ namespace PaperSections.ModelInference {
         rule.Filters;
       };
       ") and has an intermediate number of parameters (";
-      DataSet.UniqueCount;
+      Trial.Data.UniqueCount;
       " parameters for the equilibrium distribution and ";
       (rule.Filters.Length-1)^2-1;
       " parameters describing rates among word segment groups); ";
       "and the third ("; SQuote{"GTR"}; ") is a model isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
       ", and has a large number of parameters (";
-      DataSet.UniqueCount;
+      Trial.Data.UniqueCount;
       " parameters for the equilibrium distribution and ";
-      Combinations(DataSet.UniqueCount, 2);
+      Combinations(Trial.Data.UniqueCount, 2);
       " exchangability parameters). ";
       "For both the second and third models, we consider the equilibrium frequencies of the model to be random variables with a flat Dirichlet prior distribution."
     };
@@ -670,7 +671,7 @@ namespace PaperSections.ModelInference {
 namespace PaperSections.DataCuration {
   Title = "Data Curation and Analyses";
 
-  Example = Info.ExampleConcept;
+  Example = Trial.ExampleConcept;
 
   Body = Block {
     FirstPar {
@@ -680,7 +681,7 @@ namespace PaperSections.DataCuration {
     };
 
     BodyPar {
-      "Words for the "; DataSet.Taxa.Length; " different human languages in our study, coded in standard unicode IPA, are organized into groups by concept, and then by cognate class. ";
+      "Words for the "; Trial.Data.Taxa.Length; " different human languages in our study, coded in standard unicode IPA, are organized into groups by concept, and then by cognate class. ";
       "For example, the concept "; SQuote{TextCase: TextCases.AllLower; Example.GlobalVariableName}; " is coded in the following way:";
     };
 
@@ -707,7 +708,7 @@ namespace PaperSections.DataCuration {
 
     BodyPar {
       "After the raw input is parsed, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
-      "The MCMC analyses runs for "; Span {Info.MainExperimentRun.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
+      "The MCMC analyses runs for "; Span {Trial.MainExperimentRun.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
       "Samples taken during the first 10% of the chain are discarded as the burn-in phase. ";
       "When the analysis is complete, the results are read back into the control program. ";
       "The resulting tables, trees and graphical figures are combined with narrative elements created by the authors to make the final paper and presentation materials. ";
@@ -776,7 +777,7 @@ namespace PaperSections.Methods {
     };
 
     BodyPar {
-      TreeFigure; " shows an example of a phylogeny for "; SampledLanguages(DataSet.Taxa.Length); " languages. ";
+      TreeFigure; " shows an example of a phylogeny for "; SampledLanguages(Trial.Data.Taxa.Length); " languages. ";
       "In the terminology of evolutionary biology, the tree is composed of "; SQuote{"nodes"}; " and "; SQuoteEnd{"branches"};
       "(By contrast, mathematicians call nodes and branches "; SQuote{"vertices"} " and "; SQuote{"edges,"}; " respectively.) ";
       "The nodes represent the tips of the tree, each of which is assigned a language, and the points on the tree where the languages diverge from one another. ";
@@ -812,9 +813,9 @@ namespace PaperSections.Methods {
       TreeFigure;
       " depicting only one of the possibilities. ";
       "In fact, for the case in which ";
-      SampledLanguages(DataSet.Taxa.Length);
+      SampledLanguages(Trial.Data.Taxa.Length);
       " languages are considered, there are "
-      BranchFormula(DataSet.Taxa.Length);
+      BranchFormula(Trial.Data.Taxa.Length);
       " possible trees relating the languages. ";
       "In general, the number of possible rooted trees is the product of the odd numbers up to, and including, ";
       MaxBranch;
@@ -1012,7 +1013,7 @@ namespace PaperSections.Methods {
       Ith;
       " language. ";
       "The segmental information for the ";
-      SampledLanguages(DataSet.Taxa.Length);
+      SampledLanguages(Trial.Data.Taxa.Length);
       " languages for the cognate class above for ";
       SQuote {ExampleConcept.Name}; " is:";
     };
@@ -1567,7 +1568,7 @@ SegmentTable(aligned) = BodyTable {
   Columns: [1.5 inches]*2;
 
   var words = ExampleConcept.Cognate.Words;
-  foreach (var taxon in DataSet.Taxa) {
+  foreach (var taxon in Trial.Data.Taxa) {
     Row {
       Cell {
         taxon.Language;
@@ -1593,9 +1594,9 @@ namespace PaperSections.Conclusion {
   };
 
   Body = Block {
-    AddVariable("Languages", DataSet.Taxa.Length);
-    AddVariable("Concepts", DataSet.UsedCognates.Length);
-    AddVariable("Unique Segments", DataSet.UniqueCount);
+    AddVariable("Languages", Trial.Data.Taxa.Length);
+    AddVariable("Concepts", Trial.Data.UsedCognates.Length);
+    AddVariable("Unique Segments", Trial.Data.UniqueCount);
   };
 }
 //======================================================================

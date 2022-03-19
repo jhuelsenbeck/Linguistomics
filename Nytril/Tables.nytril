@@ -35,7 +35,7 @@ class EulerDiagramClass {
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
 
-  FeatureSegments(features) = DataSet.DisplaySegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
+  FeatureSegments(features) = Trial.Data.DisplaySegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
 
   FeatureFrame(x, y, width, name, features) = Canvas {
     X: EX(x);
@@ -173,7 +173,7 @@ namespace DisplayWords {
       };
 
       var i = 0;
-      foreach (var cognate in DataSet.SortedCognates) {
+      foreach (var cognate in Trial.Data.SortedCognates) {
         foreach (var word in cognate.Words[taxon.Index]) {
           if (valid word.Segments)
             WordRow(word, i++);
@@ -184,7 +184,7 @@ namespace DisplayWords {
   };
 
   ShowWordsByLanguage {
-    return ShowLanguage(each DataSet.Taxa);
+    return ShowLanguage(each Trial.Data.Taxa);
   }
 }
 //======================================================================
@@ -220,7 +220,7 @@ namespace AllWords {
         (each cognates).GetTitle;
       };
 
-      AddRow(each DataSet.Taxa, cognates, textheight);
+      AddRow(each Trial.Data.Taxa, cognates, textheight);
     };
     Paragraph;
   };
@@ -232,7 +232,7 @@ namespace AllWords {
     TextHeight: textheight;
     var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * (textheight intu pixels)));
 
-    foreach (var cognates in (DataSet.SortedCognates / wordsperline)) {
+    foreach (var cognates in (Trial.Data.SortedCognates / wordsperline)) {
       if (EachIndex >= max)
         break;
       ConceptTable(textheight, wordsperline, cognates);
@@ -325,7 +325,7 @@ class TabOptionsClass {
   }
 
   MatchPlace(place) {
-    return DataSet.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
+    return Trial.Data.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
   }
 
   AddRow(HashSetClass set, places, f) = Row {
@@ -343,7 +343,7 @@ class TabOptionsClass {
         f;
     };
 
-    var all = DataSet.DisplaySegments;// + IPA.ImpossibleSegments;
+    var all = Trial.Data.DisplaySegments;// + IPA.ImpossibleSegments;
     foreach (var place in places)
       SegmentBlock(set, all.FindSlice(s => s.?Place == place and CheckFlags(s.Features, features)));
   };
@@ -432,7 +432,7 @@ namespace MatchingVowels {
     TextHeight: DocMetrics.BoxSize.Height;
 
     var filter  = segment => segment.Backness == backness and segment.Open == open and segment.Features.HasFlagMask(FeatureMask, features);
-    var matches = DataSet.DisplaySegments.FindSlice(filter);
+    var matches = Trial.Data.DisplaySegments.FindSlice(filter);
     switch (matches.Length) {
       case 0:
         break;
@@ -565,7 +565,7 @@ namespace MatchingOther {
     Table {
       Style.TableEdge;
       Columns: [DocMetrics.CellSize.Width, DocMetrics.PageContent.Width * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv;
-      var segments = DataSet.DisplaySegments.FindSlice(segment => not set.Contains(segment));
+      var segments = Trial.Data.DisplaySegments.FindSlice(segment => not set.Contains(segment));
       AddRow(each (segments / ColumnDiv));
     };
     Style.TableNotes;
@@ -582,7 +582,7 @@ namespace SegmentTree {
   };
 
   AddSegments(DictionaryClass set, name, predicate, width=3 inches) {
-    var segments = DataSet.DisplaySegments.FindSlice(predicate);
+    var segments = Trial.Data.DisplaySegments.FindSlice(predicate);
     if (valid segments) {
       var label = Frame {
         Width: width;

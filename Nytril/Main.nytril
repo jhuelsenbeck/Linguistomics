@@ -55,14 +55,6 @@ Authors = [
 ];
 //======================================================================
 
-DataSetClass DataSet       = new DataSetClass;
-RuleClass    PartitionRule = new Partition2Class;
-
-CalcStatic     = new CalcRatesClass(PartitionRule);
-CalcExperiment = new CalcRatesClass(PartitionRule, new TransitionClass(PartitionRule, true));
-
-//======================================================================
-
 namespace Info {
   LinkMin        = 5;
   EXEFolder      = Folders.Repository;
@@ -81,7 +73,7 @@ namespace Info {
 
 class SubmissionViewClass: BaseViewClass {
   Constructor {
-    super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Submission");
+    super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
   }
 
   FooterBlock = Block {
@@ -132,6 +124,7 @@ class SubmissionViewClass: BaseViewClass {
 class PaperViewClass: BaseViewClass {
   Constructor {
     super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
+    Title = "{0} for \"{1}\""(Name, Title);
   }
 
   HeaderBlock = Block {
@@ -143,7 +136,7 @@ class PaperViewClass: BaseViewClass {
 
   override GetMainDocument = MainDocument {
     var appendices = [
-      new AppendixClass(Lang.PartitionRules, PartitionRule.ShowPartitions),
+      new AppendixClass(Lang.PartitionRules, Trial.PartitionRule.ShowPartitions),
     ];
 
     PageSection {
@@ -189,8 +182,8 @@ class ExperimentViewClass: BaseViewClass {
   override GetMainDocument = MainDocument {
     var appendices = [
       new AppendixClass("Experimental Runs", ExperimentClass.ShowComparison),
-      new AppendixClass(Lang.UniqueSegments, SegmentDisplay.ShowSegmentAssignments(DataSet)),
-      new AppendixClass(Lang.PartitionRules, PartitionRule.ShowPartitions),
+      new AppendixClass(Lang.UniqueSegments, SegmentDisplay.ShowSegmentAssignments(Trial.Data)),
+      new AppendixClass(Lang.PartitionRules, Trial.PartitionRule.ShowPartitions),
     ];
 
     PageSection {
@@ -221,18 +214,18 @@ class DiagnosticsViewClass: BaseViewClass {
 
   override GetMainDocument = Style.MainDocument {
     var appendices = [
-      new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(DataSet)),
-      new AppendixClass(Lang.SegmentFrequencies, SegmentDisplay.FrequencyChart(DataSet, Size(DocMetrics.PageContent.Width, 3 inches))),
-      new AppendixClass("Prior Frequencies", CalcStatic.PartitionBlock),
+      new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(Trial.Data)),
+      new AppendixClass(Lang.SegmentFrequencies, SegmentDisplay.FrequencyChart(Trial.Data, Size(DocMetrics.PageContent.Width, 3 inches))),
+      new AppendixClass("Prior Frequencies", Trial.CalcStatic.PartitionBlock),
       new AppendixClass("Symbols", ShowSymbols),
-      new AppendixClass("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(DataSet)),
+      new AppendixClass("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(Trial.Data)),
       new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage),
       new AppendixClass("Segment Groups", ShowSegmentTables),
       new AppendixClass("Euler Feature Diagram", new EulerDiagramClass.FeatureChart),
-      new AppendixClass(Lang.IPAFullName, SegmentDisplay.SegmentTable(DataSet)),
+      new AppendixClass(Lang.IPAFullName, SegmentDisplay.SegmentTable(Trial.Data)),
       new AppendixClass("Feature Tree", SegmentTree.ShowTree),
       new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
-      new AppendixClass(Lang.Languages, SegmentDisplay.ShowLanguageDetails(DataSet)),
+      new AppendixClass(Lang.Languages, SegmentDisplay.ShowLanguageDetails(Trial.Data)),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
     ];
 
@@ -248,7 +241,7 @@ class SourceViewClass: BaseViewClass {
 
   override GetMainDocument = Style.MainDocument {
     var appendices = [
-      new AppendixClass("Tongue Twister Configuration", new ConfigFileClass(Info.MainExperiment, Info.MainExperimentRun).Show),
+      new AppendixClass("Tongue Twister Configuration", new ConfigFileClass(Trial.MainExperiment, Trial.MainExperimentRun).Show),
 //      new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
     ];
 
