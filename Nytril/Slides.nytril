@@ -6,10 +6,11 @@ namespace Slides.Questions {
   Title = Lang.Questions;
 
   Body(ExperimentClass experiment) = Paragraph {
+    var h = 150 pts;
     ParAlignment: ParAlignments.Center;
-    SpaceBefore: 1 inch;
+    SpaceBefore: (DocMetrics.SlideContent.Height - h) * 0.5;
     Figure {
-      TextHeight: 150 pts;
+      TextHeight: h;
       Fill: (Style.LightColor..Style.DarkColor) {Vertical: true};
       "?";
     }
@@ -36,7 +37,7 @@ namespace Slides.Alignment {
 
 namespace Slides.ShowResults {
   Title = Lang.ConsensusTree;
-  Body(ExperimentClass experiment)  = Style.TreeOptions {
+  Body(ExperimentClass experiment) = Style.TreeOptions {
     Width: DocMetrics.SlideContent.Width;
     Root: experiment.MainRun.Tree;
   };
@@ -44,27 +45,27 @@ namespace Slides.ShowResults {
 
 namespace Slides.LanguagesUsed {
   Title = Lang.Languages;
-  Body(ExperimentClass experiment)  = SegmentDisplay.ShowLanguages(experiment.Data);
+  Body(ExperimentClass experiment) = SegmentDisplay.ShowLanguages(experiment.Data);
 }
 
 namespace Slides.ConceptsUsed {
   Title = Lang.ConceptsExamples;
-  Body(ExperimentClass experiment) = AllWords.ShowTable(experiment.Data, 3);
+  Body(ExperimentClass experiment) = AllWords.ShowTable(11 pts, experiment.Data, 2);
 }
 
 namespace Slides.UniqueCharacters {
   Title = Lang.UniqueSegments;
-  Body(ExperimentClass experiment)  = SegmentDisplay.ShowSegmentAssignments(experiment.Data);
+  Body(ExperimentClass experiment) = SegmentDisplay.ShowSegmentAssignments(experiment.Data);
 }
 
 namespace Slides.SegmentFrequencies {
   Title = Lang.SegmentFrequencies;
-  Body(ExperimentClass experiment)  = SegmentDisplay.FrequencyChart(experiment.Data, Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 180 pts));
+  Body(ExperimentClass experiment) = SegmentDisplay.FrequencyChart(experiment.Data, Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 180 pts));
 }
 
 namespace Slides.PartitionRules {
   Title = Lang.PartitionRules;
-  Body(ExperimentClass experiment)  = experiment.Rule.ShowPartitions;
+  Body(ExperimentClass experiment) = experiment.Rule.ShowPartitions;
 }
 
 namespace Slides.PartitionDiagramExperiment {
@@ -108,17 +109,18 @@ class PresentationViewClass: BaseViewClass {
   }
 
   override GetMainDocument = Style.MainDocument {
+    var gap = (DocMetrics.SlideContent.Height - 2 inches) * 0.25;
     Block {
       LeftIndent: 1 inch;
 
       Paragraph {
         TextHeight: 40 pts;
-        SpaceBefore: 1.5 inches;
+        SpaceBefore: gap;
         Title;
       };
       Paragraph {
         TextHeight: 18 pts;
-        SpaceBefore: 1.5 inches;
+        SpaceBefore: gap*2;
         Author.First;
         Space;
         Author.Last;
