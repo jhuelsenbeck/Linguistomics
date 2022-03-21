@@ -199,7 +199,7 @@ class PaperViewClass: BaseViewClass {
 
   override GetMainDocument = MainDocument {
     var appendices = [
-      new AppendixClass(Lang.PartitionRules, Trial.PartitionRule.ShowPartitions),
+      new AppendixClass(Lang.PartitionRules, Experiment.Rule.ShowPartitions),
     ];
 
     PageSection {
@@ -230,9 +230,14 @@ class ExperimentViewClass: BaseViewClass {
     super.Constructor(experiment, #971c3e2a-d5f9-457e-871b-465ce475a150#, "Experiment");
   }
 
+  ShowComparison = Block {
+    Style.ShowTree("Commonly Accepted Romance Tree", null, LanguageBranches.Romance, Lang.Years);
+    (each Trial.Experiments).ShowExperiment;
+  };
+
   override GetMainDocument = MainDocument {
     var appendices = [
-      new AppendixClass("Experimental Runs", Experiment.ShowComparison),
+      new AppendixClass("Experimental Runs", ShowComparison),
       new AppendixClass(Lang.UniqueSegments, SegmentDisplay.ShowSegmentAssignments(Experiment.Data)),
       new AppendixClass(Lang.PartitionRules, Experiment.Rule.ShowPartitions),
     ];
@@ -267,7 +272,7 @@ class DiagnosticsViewClass: BaseViewClass {
     var appendices = [
       new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(Data)),
       new AppendixClass(Lang.SegmentFrequencies, SegmentDisplay.FrequencyChart(Data, Size(DocMetrics.PageContent.Width, 3 inches))),
-      new AppendixClass("Prior Frequencies", Trial.CalcStatic.PartitionBlock),
+      new AppendixClass("Prior Frequencies", Experiment.CalcStatic.PartitionBlock),
       new AppendixClass("Symbols", ShowSymbols),
       new AppendixClass("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(Data)),
       new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),

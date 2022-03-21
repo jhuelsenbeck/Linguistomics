@@ -3,7 +3,7 @@
 
 namespace Figures.FrequencyDiagramExperiment {
   Caption(ExperimentClass experiment) = FigureCaption {
-    var rule = Trial.CalcExperiment.Rule;
+    var rule = experiment.CalcExperiment.Rule;
 
     "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
@@ -12,14 +12,14 @@ namespace Figures.FrequencyDiagramExperiment {
   };
 
   Body(ExperimentClass experiment) = FigureBody {
-    Trial.CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
+    experiment.CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
 
 namespace Figures.FrequencyDiagramStatic {
   Caption(ExperimentClass experiment) = FigureCaption {
-    var rule = Trial.CalcStatic.Rule;
+    var rule = experiment.CalcStatic.Rule;
 
     "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
@@ -27,7 +27,7 @@ namespace Figures.FrequencyDiagramStatic {
   };
 
   Body(ExperimentClass experiment) = FigureBody {
-    Trial.CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
+    experiment.CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
@@ -43,7 +43,7 @@ namespace Figures.FrequencyBoxStatic {
   };
 
   Body(ExperimentClass experiment) = FigureBody {
-    Trial.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches));
+    experiment.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
@@ -116,13 +116,13 @@ class ExampleConceptClass {
 
 namespace Figures.ExampleTree {
   Caption(ExperimentClass experiment) = FigureCaption {
-    "An example tree showing the relationships of {0} languages."(SampledLanguages(Trial.LanguageList.Length));
+    "An example tree showing the relationships of {0} languages."(SampledLanguages(experiment.LanguageList.Length));
   };
 
   Body(ExperimentClass experiment) = FigureBody {
     TreeOptions {
       Width: 5 inches;
-      Root: Trial.NumberedTree;
+      Root: experiment.NumberedTree;
     };
   };
 }
@@ -382,20 +382,21 @@ namespace StateSection {
 //======================================================================
 
 namespace PaperSections.WordTransformation {
-  ModelName = Span {TextCase: TextCases.AllLower; Trial.PartitionRule.Name};
-  Title     = "Understanding Word Transformation";
-  Note      = "Note that rates of change are much greater from one word segment to another when the change is within the word segment group than it is when the change is between word segments in different groups.";
+  Title = "Understanding Word Transformation";
+  Note  = "Note that rates of change are much greater from one word segment to another when the change is within the word segment group than it is when the change is between word segments in different groups.";
 
   Body(ExperimentClass experiment) = Block {
+    var modelname = Span {TextCase: TextCases.AllLower; experiment.Rule.Name};
+
     FirstPar {
       "Marginal likelihoods under the three models of word transition were approximated using the stepping-stone path-sampling method";
       Citation {xie2010}; eos;
-      "The marginal likelihoods were NUMBER, NUMBER, and NUMBER under the Jukes-Cantor, "; ModelName; ", and GTR models, respectively. ";
-      "Hence, the "; ModelName; " model is best supported by the data.";
+      "The marginal likelihoods were NUMBER, NUMBER, and NUMBER under the Jukes-Cantor, "; modelname; ", and GTR models, respectively. ";
+      "Hence, the "; modelname; " model is best supported by the data.";
     };
 
     BodyPar {
-      "The "; ModelName; " model allows different rates for different groups of word segments, ";
+      "The "; modelname; " model allows different rates for different groups of word segments, ";
       FigureReference(experiment, Figures.FrequencyDiagramStatic); " summarizes the estimated rates of change from one segment grouping to another. ";
       Note;
     };
@@ -831,7 +832,7 @@ namespace PaperSections.Methods {
       French; " and "; Walloon; ", together, are more closely related to "; Friulian; " in the tree of "; treefigure; eos;
       "Both French and Walloon are equally related to "; Friulian; " because they both share the same common ancestor with ";
       Friulian; ", at the node numbered ";
-      LangNumber(Friulian); " in "; treefigure; eos;
+      experiment.LangNumber(Friulian); " in "; treefigure; eos;
       "It is important to realize that there are many possible ways in which the languages can be related to one another, with the tree of ";
       treefigure;
       " depicting only one of the possibilities. ";

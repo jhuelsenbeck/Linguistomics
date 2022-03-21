@@ -9,36 +9,14 @@ include "Concepts/Misc";
 
 namespace Trial;
 
-Experiments = [
-  new ExperimentClass(#8bbc5666-8f8d-49d9-b67d-fc12321ace43#, "All words", "All Words", Data, PartitionRule),
-//  new ExperimentClass(#896d37be-ebe1-44a6-a94d-7eade795760a#, "No verbs", "NoVerbs", DataSet, PartitionRule),
-//  new ExperimentClass(#315e9dd6-3154-4d8e-b32f-6808ea685e7e#, "Leipzig-Swadesh100", "Leipzig", DataSet, PartitionRule),
-];
+ExampleConcept = Concepts.Woman;
+FigureConcept  = Concepts.What;
 
-IncludeWordGroups = Leipzig Swadesh100 Swadesh207;
-ExampleConcept    = Concepts.Woman;
-FigureConcept     = Concepts.What;
+//======================================================================
 
-LanguageClass[] LanguageList = [
-  Latin,
-  Romanian,
-  Portuguese,
-  PortugueseBrazil,
-  Spanish,
-  Catalan,
-  French,
-  Walloon,
-  Friulian,
-  Italian,
-];
+BaseLanguages = [Latin, Romanian, Portuguese, Spanish, Catalan, French, Walloon, Friulian, Italian];
 
-PartitionRule  = new Partition2Class(Data);
-Data           = new DataSetClass;
-CalcStatic     = new CalcRatesClass(Data, PartitionRule);
-CalcExperiment = new CalcRatesClass(Data, PartitionRule, new TransitionClass(Data, PartitionRule, true));
-
-
-PriorTree = Branch {
+GetPriorTree(portuguese) = Branch {
   Leaf(Latin);
   Branch {
     Leaf(Romanian);
@@ -50,10 +28,7 @@ PriorTree = Branch {
         };
         Branch {
           Branch {
-            Branch {
-              Leaf(Portuguese);
-              Leaf(PortugueseBrazil);
-            };
+            portuguese;
             Leaf(Spanish);
           };
           Leaf(Catalan);
@@ -67,34 +42,40 @@ PriorTree = Branch {
   }
 };
 
-NumberedTree = NBranch(19, 1) {
-  NLeaf(Latin, 7);
-  NBranch(18, 1) {
-    NLeaf(Romanian, 6);
-    NBranch(17, 1) {
-      NBranch(16, 1) {
-        NBranch(15, 1) {
-          NLeaf(Walloon, 3);
-          NLeaf(French, 3);
-        };
-        NBranch(14, 1) {
-          NBranch(13, 1) {
-            NBranch(12, 1) {
-              NLeaf(Portuguese, 1);
-              NLeaf(PortugueseBrazil, 1);
-            };
-            NLeaf(Spanish, 2);
-          };
-          NLeaf(Catalan, 3);
-        }
-      };
-      NBranch(11, 1) {
-        NLeaf(Friulian, 4);
-        NLeaf(Italian, 4);
-      }
-    }
+class BrazilExperimentClass: ExperimentClass {
+  Constructor {
+    var list = BaseLanguages + [PortugueseBrazil];
+    var data = new DataSetClass(Leipzig Swadesh100 Swadesh207, list);
+    super.Constructor(#8bbc5666-8f8d-49d9-b67d-fc12321ace43#, "All words", "All Words", new Partition2Class(data));
+    LanguageList = list;
   }
-};
 
+  override PriorTree = GetPriorTree(Branch {Leaf(Portuguese); Leaf(PortugueseBrazil)});
+
+  override NumberedTree = GetNumberedTree(NBranch(12, 1) {NLeaf(Portuguese, 1); NLeaf(PortugueseBrazil, 1)});
+}
+
+//======================================================================
+
+class EuropeExperimentClass: ExperimentClass {
+  Constructor {
+    var data = new DataSetClass(Leipzig Swadesh100 Swadesh207, BaseLanguages);
+    super.Constructor(#896d37be-ebe1-44a6-a94d-7eade795760a#, "No B. Portuguese", "NoBrazilPortuguese", new Partition2Class(data));
+    LanguageList = BaseLanguages;
+  }
+
+  override PriorTree = GetPriorTree(Leaf(Portuguese));
+
+  override NumberedTree = GetNumberedTree(NLeaf(Portuguese, 2));
+}
+
+//======================================================================
+
+ExperimentClass[] Experiments = [
+//   new EuropeExperimentClass,
+   new BrazilExperimentClass,
+];
+
+//======================================================================
 
 

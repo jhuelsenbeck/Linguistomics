@@ -63,6 +63,8 @@ abstract class RuleClass {
   FilterClass[]    Filters,
                    FiltersPlus;
   PartitionClass[] Partitions;
+  SegmentClass[]   PartSegments;
+
   var              Name,
                    Matrix,
                    Numbers;
@@ -136,7 +138,15 @@ abstract class RuleClass {
         ++i;
       }
     }
-    Partitions = list.Values;
+    Partitions   = list.Values;
+    PartSegments = Data.UniqueSegments.Sort(true, ref ComparePartSegments);
+  }
+
+  static ComparePartSegments(SegmentClass s0, SegmentClass s1, options) {
+    var i = s1.PartitionIndex - s0.PartitionIndex;
+    if (i == 0)
+      i = s0.UsedCount - s1.UsedCount;
+    return i;
   }
 
   SegmentClass[] GetMatching(SegmentClass[] segments, FilterClass filter) = segments.FindSlice(segment => MatchesRule(filter, segment));
@@ -362,8 +372,7 @@ class Partition2Class: RuleClass {
     Add(new VowelListClass(data, this, [IPA.Segments.ah, IPA.Segments.A]));
     Add(new VowelListClass(data, this, [IPA.Segments.u, IPA.Segments.U]));
     Add(new VowelListClass(data, this, [IPA.Segments.oh, IPA.Segments.O]));
-// Removed because there is only one segment
-//    Add(new VowelListClass(this, [IPA.Segments.euh, IPA.Segments.LongOpenMidBackRounded]));
+    Add(new VowelListClass(data, this, [IPA.Segments.euh, IPA.Segments.LongOpenMidBackRounded]));
     Add(new VowelListClass(data, this, [IPA.Segments.eh, IPA.Segments.Eh]));
     Add(new VowelListClass(data, this, [IPA.Segments.uu, IPA.Segments.o]));
     Add(new FeatureMaskClass(data, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal));
@@ -712,7 +721,7 @@ class CalcRatesClass {
     }
   };
 
-  CompareLength(l1, l2) = l2.Length - l1.Length;
+  static CompareLength(l1, l2, options) = l2.Length - l1.Length;
 
   GetSorted {
     var set = Data;
@@ -744,11 +753,11 @@ class CalcRatesClass {
   };
 
   PartitionBox(SizeClass framesize) = Paragraph {
-    var segments = Data.PartSegments;
+    var segments = Rule.PartSegments;
     var grid     = 0.125 pts;
     var gcolor   = 65%;
     var border   = 0.5 pts;
-    var size     = framesize - border;
+    var size     = framesize - border*2;
     var d        = size / (segments.Length+1);
     Canvas {
       TextHeight: d.Width * 0.5;
