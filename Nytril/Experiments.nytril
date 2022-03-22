@@ -72,16 +72,16 @@ class RunClass {
     RunReader(mac, run);
   };
 
-  void WriteRuns(mac, run, ext) {
-    Write(RunReader(mac, run), RootFolder FileName("RunReader") ext);
-    Write(RunAll(mac, run), RootFolder FileName("RunAll") ext);
+  void WriteRuns(mac, run) {
+    Write(RunReader(mac, run), RootFolder + (mac ? FileName("MacRunReader" : "WinRunReader.bat")), FileFormats.Text);
+    Write(RunAll(mac, run), RootFolder + (mac ? FileName("MacRunAll" : "WinRunAll.bat")), FileFormats.Text);
   }
 
   void InitFolders(ExperimentClass experiment) {
     CreateFolder(RootFolder);
     CreateFolder(RunFolder);
-    WriteRuns(false, RunFolder, Extensions.Batch);
-    WriteRuns(true,  RunMacFolder, Extensions.Text);
+    WriteRuns(false, RunFolder);
+    WriteRuns(true,  RunMacFolder);
 
     Write(new ConfigFileClass(experiment, this).Show, RootFolder Info.ConfigFile);
   }
