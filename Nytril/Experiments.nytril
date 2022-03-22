@@ -1,4 +1,4 @@
-using Format, IO, Units;
+using Format, IO, Units, Languages;
 
 //======================================================================
 
@@ -124,28 +124,34 @@ class ModelFolderClass {
 
 //======================================================================
 
-class ExperimentClass: FactClass {
-  field              Name,
-                     FolderName;
-  DataSetClass       Data;
-  RuleClass          Rule;
-  ModelFolderClass   JC69,
-                     GTR,
-                     Custom;
-  ModelFolderClass[] Models;
-  var                RootFolder;
+abstract class ExperimentClass: FactClass {
+  field               Name,
+                      FolderName;
+  RuleClass           Rule;
+  DataSetClass        Data;
+  ModelFolderClass    JC69,
+                      GTR,
+                      Custom;
+  ModelFolderClass[]  Models;
+  LanguageClass[]     LanguageList;
+  ExampleConceptClass ExampleConcept;
+  CalcRatesClass      CalcStatic,
+                      CalcExperiment;
+  var                 RootFolder;
 
-  Constructor(id, name, folder, DataSetClass data, RuleClass rule) {
+  Constructor(id, name, folder, RuleClass rule) {
     super.Constructor(id);
-    Data        = data;
-    Rule        = rule;
-    Name        = name;
-    FolderName  = folder;
-    RootFolder  = Info.ExperimentBase Folder(folder);
-    Custom      = new ModelFolderClass(this, "Custom");
-    JC69        = new ModelFolderClass(this, "JC69");
-    GTR         = new ModelFolderClass(this, "GTR");
-
+    Rule           = rule;
+    Data           = rule.Data;
+    Name           = name;
+    FolderName     = folder;
+    RootFolder     = Info.ExperimentBase Folder(folder);
+    ExampleConcept = new ExampleConceptClass(Data, Trial.ExampleConcept);
+    CalcStatic     = new CalcRatesClass(Data, Rule);
+    CalcExperiment = new CalcRatesClass(Data, Rule, new TransitionClass(Data, Rule, true));
+    Custom         = new ModelFolderClass(this, "Custom");
+    JC69           = new ModelFolderClass(this, "JC69");
+    GTR            = new ModelFolderClass(this, "GTR");
     Models = [
       Custom,
       JC69,
@@ -153,22 +159,78 @@ class ExperimentClass: FactClass {
     ];
   }
 
+  abstract NumberedTree;
+  abstract PriorTree;
+
   void InitFolders {
-//    if (not FolderExists(RootFolder)) {
+    if (not FolderExists(RootFolder)) {
       CreateFolder(RootFolder);
       (each Models).InitFolders(this);
-//    }
+    }
   }
 
-  static ShowComparison = Block {
-    Style.ShowTree(Lang.ConsensusTree, null, Info.ConsensusTree);
-    Style.ShowTree("Prior", null, Info.PriorTree);
-    Style.ShowTree("Commonly Accepted Romance Tree", null, LanguageBranches.Romance, Lang.Years);
+  MainRun = Custom.Posterior.Run[0];
+
+  GetDocuments = [
+    new SubmissionViewClass(this),
+    new PaperViewClass(this),
+    new ExperimentViewClass(this),
+    new DiagnosticsViewClass(this),
+    new SourceViewClass(this),
+    new JohnPresentationClass(this),
+    new DavidPresentationClass(this),
+  ];
+
+  ShowExperiment = Block {
+    Style.Header1 {
+      "Experiment ";
+      EachOne;
+      Space;
+      Style.DQuote {Name};
+    };
+    Style.ShowTree(Lang.ConsensusTree, null, MainRun.Tree);
+    Style.ShowTree("Prior", null, PriorTree);
   };
 
-  static void CreateFolders {
-    (each Info.Experiments).InitFolders;
-    OpenExplorer(Info.Experiments[0].RootFolder);
+  LangNumber(LanguageClass language) = LanguageList.FindFirstIndex(language)+1;
+
+  NLeaf(LanguageClass language, length) = new NodeClass("{0} ({1})"(language, LangNumber(language))) {
+    BranchLength: length
+  };
+
+  NBranch(name, length) = new NodeClass(name) {
+    BranchLength: length
+  };
+
+  GetNumberedTree(portuguese) = NBranch(19, 1) {
+    NLeaf(Latin, 7);
+    NBranch(18, 1) {
+      NLeaf(Romanian, 6);
+      NBranch(17, 1) {
+        NBranch(16, 1) {
+          NBranch(15, 1) {
+            NLeaf(Walloon, 3);
+            NLeaf(French, 3);
+          };
+          NBranch(14, 1) {
+            NBranch(13, 1) {
+              portuguese;
+              NLeaf(Spanish, 2);
+            };
+            NLeaf(Catalan, 3);
+          }
+        };
+        NBranch(11, 1) {
+          NLeaf(Friulian, 4);
+          NLeaf(Italian, 4);
+        }
+      }
+    }
+  };
+
+  static void CreateAllFolders {
+    (each Trial.Experiments).InitFolders;
+    OpenExplorer(Info.ExperimentBase);
   }
 }
 //======================================================================

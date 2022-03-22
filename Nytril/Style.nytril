@@ -2,8 +2,9 @@
 //======================================================================
 
 namespace PaperSizes {
-  Letter = Size(8.5 inches, 11 inches);
-  A4     = Size(210 millimeters, 297 millimeters);
+  Letter    = Size(8.5 inches, 11 inches);
+  Slideshow = Size(11 inches, 6.1875 inches);
+  A4        = Size(210 millimeters, 297 millimeters);
 }
 //======================================================================
 
@@ -13,8 +14,8 @@ namespace DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == Docu
 }
 
 namespace DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.SlideShow) {
-  DocumentSize = PaperSizes.Letter.Landscape;
-  PageMargin   = Margin(0.5 inches, 1.5 inches, 0.5 inches, 0.75 inches);
+  DocumentSize = PaperSizes.Slideshow;
+  PageMargin   = Margin(0.5 inches, 1 inches, 0.5 inches, 0.5 inches);
 }
 
 namespace DocMetrics if (PaperSystem == PaperSystems.A and DocumentType == DocumentTypes.Normal) {
@@ -241,11 +242,11 @@ namespace Style {
     RefCounter("figure", figure.GlobalVariablePath);
   };
 
-  FigureReference(figure) = ShowFigureNumber(figure) {
-    Hover: new HoverClass(figure.GlobalVariablePath, HoverTypes.LocationMark, new FigureTipClass(figure));
+  FigureReference(ExperimentClass experiment, figure) = ShowFigureNumber(figure) {
+    Hover: new HoverClass(figure.GlobalVariablePath, HoverTypes.LocationMark, new FigureTipClass(experiment, figure));
   };
 
-  ShowFigureDoc(figure) = Block {
+  ShowFigureDoc(ExperimentClass experiment, figure) = Block {
     Paragraph {
       LocationMark: figure.GlobalVariablePath;
       SpaceBefore: 10 pts;
@@ -257,11 +258,11 @@ namespace Style {
         ShowFigureNumber(figure);
         eos;
       };
-      figure.Caption;
+      figure.Caption(experiment);
     };
 
     FigureBody {
-      figure.Body
+      figure.Body(experiment)
     };
   };
 
@@ -271,17 +272,17 @@ namespace Style {
     RefCounter("table", figure.GlobalVariablePath);
   };
 
-  ShowFigureSlide(figure, format=null) = Block {
-    figure.Caption;
+  ShowFigureSlide(ExperimentClass experiment, figure, format=null) = Block {
+    figure.Caption(experiment);
     Paragraph {
       ParAlignment: ParAlignments.Center;
       format;
-      figure.Body;
+      figure.Body(experiment);
     }
   };
 
-  ShowTable(table) = Block {
-    table.Body {
+  ShowTable(ExperimentClass experiment, table) = Block {
+    table.Body(experiment) {
       SpaceBefore: 10 pts;
       ParAlignment: ParAlignments.Center;
     };
@@ -295,7 +296,7 @@ namespace Style {
         ShowTableNumber(table);
         eos;
       };
-      table.Caption;
+      table.Caption(experiment);
     };
   };
 
@@ -496,7 +497,7 @@ namespace Style {
     return list[1..];
   }
 
-  ByYear(x, y) = x.BranchLength.Compare(y.BranchLength);
+  ByYear(x, y, options) = x.BranchLength.Compare(y.BranchLength);
 
 //  TimelineNodes = GetTimes(Info.LanguageTree).Sort(true, ByYear);
 
@@ -557,13 +558,6 @@ namespace Style {
       ValueAxis: ChartAxis;
       Root: root;
     };
-  };
-
-  ShowContent(content) = Block {
-    Header2 {
-      content.Title;
-    };
-    content.Body;
   };
 
   AppendixRow(appendix) = Paragraph {
@@ -688,143 +682,16 @@ namespace Style {
 }
 //======================================================================
 
-abstract class BaseViewClass: DocumentClass {
-  Constructor(id, name) {
-    super.Constructor(id, name);
-    Title = "Understanding Language Evolution Using an Event-Based Model";
-  }
-
-  abstract GetMainDocument;
-
-  override GetDocument {
-    AuthorLink to Authors;
-    Link to References;
-
-    return GetMainDocument;
-  }
-
-  ShowSymbols = Block {
-    (each Defs).Appendix;
-  };
-
-  FixedFrame(x, y, width, height) = Frame {
-    HRelative: HRelatives.Page;
-    VRelative: VRelatives.Page;
-    Wrapping: Wrappings.BehindText;
-    X: x;
-    Y: y;
-    Width: width;
-    Height: height;
-  };
-
-  Design(width, height, right, bar) = Canvas {
-    Height: height;
-
-    var x0 = 0;
-    var y0 = 0;
-    var t  = 0.10 height;
-    var x1 = 0.80 width;
-    var x2 = 0.90 width;
-    var p1 = Point((x2 + x1)*0.5, height * (right ? 0.25 : 0.75));
-
-    Figure {
-      Fill: bar;
-      FigurePath {
-        Closed: true;
-        LineTo(x0, t);
-        LineTo(x1, t);
-        QuadTo(p1, Point(x2, height));
-        LineTo(x2, height);
-        LineTo(x0, height);
-      }
-    };
-
-/*
-    Figure {
-      Fill: Style.RightBar;
-      FigurePath {
-        Closed: true;
-        LineTo(x1, y0);
-        LineTo(width, y0);
-        LineTo(width, height-t);
-        LineTo(x2, height-t);
-        QuadTo(p1, Point(x1, y0));
-      }
-    };
-*/
-    Figure {
-      Fill: Style.BarLine;
-      FigurePath {
-        Closed: true;
-        MoveTo(x0, y0);
-        LineTo(x1, y0);
-        QuadTo(p1, Point(x2, height-t));
-        LineTo(width, height-t);
-        LineTo(width, height);
-        LineTo(x2, height);
-        QuadTo(p1, Point(x1, t));
-        LineTo(x0, t);
-      }
-    };
-  };
-
-  HeaderBackground(title, width, height) = Design(width, height, true, Style.HeaderLeftBar) {
-    Frame {
-      Width: 0.75 width;
-      VAlignment: VAligns.Center;
-      X: DocMetrics.PageMargin.Left;
-      Paragraph {
-        TextHeight: 30 pts;
-        TextColor: Colors.White;
-        title;
-      };
-    };
-  };
-
-  FooterBackground(title, width, height, page) = Design(width, height, false, Style.LeftBar) {
-    Frame {
-      VAlignment: VAligns.Center;
-      X: DocMetrics.PageMargin.Left;
-      Width: DocMetrics.PageContent.Width;
-      Paragraph {
-        TabStops: [(DocMetrics.PageContent.Width) {Type: TabTypes.Right}];
-        TextHeight: 16 pts;
-        Span {
-          TextColor: 75%;
-          title
-        };
-        Tab;
-        Span {
-          TextColor: Style.HeaderBar1;
-          page;
-        }
-      }
-    }
-  };
-
-  AddSlideBlock(slide, page) = Block {
-    Paragraph {
-      PageBreakBefore: true;
-      FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
-        HeaderBackground(slide.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
-      };
-      FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
-        FooterBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
-      };
-    };
-    slide.Body;
-  };
-}
-//======================================================================
-
 class FigureTipClass {
-  var Figure;
+  var             Figure;
+  ExperimentClass Experiment;
 
-  Constructor(figure) {
-    Figure = figure;
+  Constructor(ExperimentClass experiment, figure) {
+    Experiment = experiment;
+    Figure     = figure;
   }
 
-  override GetLayoutTip = Style.ShowFigureDoc(Figure);
+  override GetLayoutTip = Style.ShowFigureDoc(Experiment, Figure);
 }
 
 //======================================================================

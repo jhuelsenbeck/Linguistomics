@@ -35,9 +35,9 @@ class EulerDiagramClass {
 
   FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
 
-  FeatureSegments(features) = DataSet.DisplaySegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
+  FeatureSegments(DataSetClass data, features) = data.DisplaySegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
 
-  FeatureFrame(x, y, width, name, features) = Canvas {
+  FeatureFrame(DataSetClass data, x, y, width, name, features) = Canvas {
     X: EX(x);
     Y: EY(y);
     Frame {
@@ -47,12 +47,12 @@ class EulerDiagramClass {
         Span {TitleStyle; name};
       Paragraph {
         Separator: Space;
-        (each FeatureSegments(features)).ShowSegment;
+        (each FeatureSegments(data, features)).ShowSegment;
       }
     }
   };
 
-  FeatureChart = Canvas {
+  FeatureChart(DataSetClass data) = Canvas {
     TextHeight: 16 pts;
 
     VNameFrame(Lang.Occlusive, 10, 0, 90, 34, Color(255, 238, 238)) {
@@ -113,26 +113,26 @@ class EulerDiagramClass {
       NameBox(Lang.Lateral, 90 degrees);
     };
 
-    FeatureFrame(11, 1, 84, Lang.Nasal, Nasal Occlusive);
-    FeatureFrame(12, 14, 17, Lang.Plosive, Stop Occlusive);
-    FeatureFrame(32, 14, 20, Lang.Affricate, Affricate Occlusive);
-    FeatureFrame(54, 20, 7, null, Affricate Occlusive Strident);
-    FeatureFrame(65, 18, 18, Lang.Sibilant, Affricate Occlusive Strident Sibilant);
-    FeatureFrame(14, 38, 22, Lang.Fricative, Fricative Obstruent Continuant);
-    FeatureFrame(54, 38, 6, null, Fricative Obstruent Continuant Strident);
-    FeatureFrame(64, 36, 20, null, Fricative Obstruent Continuant Strident Sibilant);
-    FeatureFrame(66, 44, 10, null, Fricative Obstruent Continuant Strident Rhotic Liquid);
-    FeatureFrame(80, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid);
-    FeatureFrame(12, 53, 19, Lang.Vowel, Vowel Vocoid Continuant);
-    FeatureFrame(36, 60, 19, Lang.SemiVowel, Vocoid Semivowel Approximant Continuant);
-    FeatureFrame(57, 62, 5, null, Vocoid Approximant);
-    FeatureFrame(66, 60, 10, null, Vocoid Approximant Rhotic Liquid);
-    FeatureFrame(82, 58, 5, null, Vocoid Approximant Rhotic Liquid Lateral);
-    FeatureFrame(54, 76, 10, null, Vibrant TapFlap);
-    FeatureFrame(66, 76, 10, null, Vibrant TapFlap Rhotic Liquid);
-    FeatureFrame(77, 77, 10, null, Vibrant TapFlap Rhotic Liquid Lateral);
-    FeatureFrame(54, 84, 10, null, Vibrant Trill);
-    FeatureFrame(66, 84, 10, null, Vibrant Trill Rhotic Liquid);
+    FeatureFrame(data, 11, 1, 84, Lang.Nasal, Nasal Occlusive);
+    FeatureFrame(data, 12, 14, 17, Lang.Plosive, Stop Occlusive);
+    FeatureFrame(data, 32, 14, 20, Lang.Affricate, Affricate Occlusive);
+    FeatureFrame(data, 54, 20, 7, null, Affricate Occlusive Strident);
+    FeatureFrame(data, 65, 18, 18, Lang.Sibilant, Affricate Occlusive Strident Sibilant);
+    FeatureFrame(data, 14, 38, 22, Lang.Fricative, Fricative Obstruent Continuant);
+    FeatureFrame(data, 54, 38, 6, null, Fricative Obstruent Continuant Strident);
+    FeatureFrame(data, 64, 36, 20, null, Fricative Obstruent Continuant Strident Sibilant);
+    FeatureFrame(data, 66, 44, 10, null, Fricative Obstruent Continuant Strident Rhotic Liquid);
+    FeatureFrame(data, 80, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid);
+    FeatureFrame(data, 12, 53, 19, Lang.Vowel, Vowel Vocoid Continuant);
+    FeatureFrame(data, 36, 60, 19, Lang.SemiVowel, Vocoid Semivowel Approximant Continuant);
+    FeatureFrame(data, 57, 62, 5, null, Vocoid Approximant);
+    FeatureFrame(data, 66, 60, 10, null, Vocoid Approximant Rhotic Liquid);
+    FeatureFrame(data, 82, 58, 5, null, Vocoid Approximant Rhotic Liquid Lateral);
+    FeatureFrame(data, 54, 76, 10, null, Vibrant TapFlap);
+    FeatureFrame(data, 66, 76, 10, null, Vibrant TapFlap Rhotic Liquid);
+    FeatureFrame(data, 77, 77, 10, null, Vibrant TapFlap Rhotic Liquid Lateral);
+    FeatureFrame(data, 54, 84, 10, null, Vibrant Trill);
+    FeatureFrame(data, 66, 84, 10, null, Vibrant Trill Rhotic Liquid);
   };
 }
 //======================================================================
@@ -161,7 +161,7 @@ namespace DisplayWords {
     d
   };
 
-  ShowLanguage(taxon) = Block {
+  ShowLanguage(DataSetClass data, TaxonClass taxon) = Block {
     Style.TitleBar {taxon.Language};
     Table {
       Edge: 0.5;
@@ -173,7 +173,7 @@ namespace DisplayWords {
       };
 
       var i = 0;
-      foreach (var cognate in DataSet.SortedCognates) {
+      foreach (var cognate in data.SortedCognates) {
         foreach (var word in cognate.Words[taxon.Index]) {
           if (valid word.Segments)
             WordRow(word, i++);
@@ -183,8 +183,8 @@ namespace DisplayWords {
     Paragraph;
   };
 
-  ShowWordsByLanguage {
-    return ShowLanguage(each DataSet.Taxa);
+  ShowWordsByLanguage(DataSetClass data) {
+    return ShowLanguage(data, each data.Taxa);
   }
 }
 //======================================================================
@@ -205,7 +205,7 @@ namespace AllWords {
     AddCell(taxon, each cognates, textheight)
   };
 
-  ConceptTable(textheight, wordsperline, CognateClass[] cognates) = HBox {
+  ConceptTable(DataSetClass data, textheight, wordsperline, CognateClass[] cognates) = HBox {
     var first = 84 pts;
     var w     = (DocMetrics.PageContent.Width - first) / wordsperline;
     Table {
@@ -220,22 +220,21 @@ namespace AllWords {
         (each cognates).GetTitle;
       };
 
-      AddRow(each DataSet.Taxa, cognates, textheight);
+      AddRow(each data.Taxa, cognates, textheight);
     };
     Paragraph;
   };
 
-  ShowConceptTable(CognateClass cognate) = ConceptTable(10 pts, 7, [cognate]);
+  ShowConceptTable(DataSetClass data, CognateClass cognate) = ConceptTable(data, 10 pts, 7, [cognate]);
 
-  ShowTable(max=1000000) = Block {
-    var textheight = 10 pts;
+  ShowTable(textheight, DataSetClass data, max=1000000) = Block {
     TextHeight: textheight;
     var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * (textheight intu pixels)));
 
-    foreach (var cognates in (DataSet.SortedCognates / wordsperline)) {
+    foreach (var cognates in (data.SortedCognates / wordsperline)) {
       if (EachIndex >= max)
         break;
-      ConceptTable(textheight, wordsperline, cognates);
+      ConceptTable(data, textheight, wordsperline, cognates);
     }
   };
 }
@@ -324,11 +323,11 @@ class TabOptionsClass {
            Manners.FindAny(manner => CheckFlags(segment.Features, manner | All));
   }
 
-  MatchPlace(place) {
-    return DataSet.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
+  MatchPlace(DataSetClass data, place) {
+    return data.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
   }
 
-  AddRow(HashSetClass set, places, f) = Row {
+  AddRow(DataSetClass data, HashSetClass set, places, f) = Row {
     var features = f | All;
     Cell {
       VAlign: VAligns.Center;
@@ -343,13 +342,13 @@ class TabOptionsClass {
         f;
     };
 
-    var all = DataSet.DisplaySegments;// + IPA.ImpossibleSegments;
+    var all = data.DisplaySegments;// + IPA.ImpossibleSegments;
     foreach (var place in places)
       SegmentBlock(set, all.FindSlice(s => s.?Place == place and CheckFlags(s.Features, features)));
   };
 
-  ShowTable(HashSetClass set) = Block {
-    var places = Places.FindSlice(place => MatchPlace(place));
+  ShowTable(DataSetClass data, HashSetClass set) = Block {
+    var places = Places.FindSlice(place => MatchPlace(data, place));
     Style.TitleBar {Title};
     Table {
       Style.TableEdge;
@@ -369,7 +368,7 @@ class TabOptionsClass {
           };
         }
       };
-      AddRow(set, places, each Manners);
+      AddRow(data, set, places, each Manners);
     };
 
     Style.TableNotes {
@@ -426,13 +425,13 @@ namespace MatchingConsonants {
 namespace MatchingVowels {
   FeatureMask = Vowel LongVowel Nasal Diphthong NonSylabic;
 
-  AddCell(HashSetClass set, open, backness, features) = Cell {
+  AddCell(DataSetClass data, HashSetClass set, open, backness, features) = Cell {
     Style.SegmentBottom;
     HAlign: HAligns.Center;
     TextHeight: DocMetrics.BoxSize.Height;
 
     var filter  = segment => segment.Backness == backness and segment.Open == open and segment.Features.HasFlagMask(FeatureMask, features);
-    var matches = DataSet.DisplaySegments.FindSlice(filter);
+    var matches = data.DisplaySegments.FindSlice(filter);
     switch (matches.Length) {
       case 0:
         break;
@@ -455,17 +454,17 @@ namespace MatchingVowels {
     }
   };
 
-  AddRow(HashSetClass set, open, features) = Row {
+  AddRow(DataSetClass data, HashSetClass set, open, features) = Row {
     Height: 16 pts;
     Cell {
       VAlign: VAligns.Center;
       Style.TitleBackground;
       open.Name;
     };
-    AddCell(set, open, each Backnesses, features)
+    AddCell(data, set, open, each Backnesses, features)
   };
 
-  ShowVowelTable(HashSetClass set, features) = Block {
+  ShowVowelTable(DataSetClass data, HashSetClass set, features) = Block {
     Style.TitleBar {Separator: "-"; each features};
     Table {
       HAlign: HAligns.Center;
@@ -481,11 +480,11 @@ namespace MatchingVowels {
           };
         }
       };
-      AddRow(set, each Opens, features);
+      AddRow(data, set, each Opens, features);
     };
   };
 
-  ShowTable(HashSetClass set) = Block {
+  ShowTable(DataSetClass data, HashSetClass set) = Block {
     var features = [
       Vowel,
       Vowel LongVowel,
@@ -498,7 +497,7 @@ namespace MatchingVowels {
     ];
 
     Lang.SymbolPairRounded;
-    ShowVowelTable(set, each features);
+    ShowVowelTable(data, set, each features);
   };
 }
 //======================================================================
@@ -560,12 +559,12 @@ namespace MatchingOther {
     AddCell(each segments)
   };
 
-  ShowTable(HashSetClass set) = Block {
+  ShowTable(DataSetClass data, HashSetClass set) = Block {
     Style.TitleBar {Lang.OtherSegments};
     Table {
       Style.TableEdge;
       Columns: [DocMetrics.CellSize.Width, DocMetrics.PageContent.Width * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv;
-      var segments = DataSet.DisplaySegments.FindSlice(segment => not set.Contains(segment));
+      var segments = data.DisplaySegments.FindSlice(segment => not set.Contains(segment));
       AddRow(each (segments / ColumnDiv));
     };
     Style.TableNotes;
@@ -581,8 +580,8 @@ namespace SegmentTree {
     Curvature: 20%;
   };
 
-  AddSegments(DictionaryClass set, name, predicate, width=3 inches) {
-    var segments = DataSet.DisplaySegments.FindSlice(predicate);
+  AddSegments(DataSetClass data, DictionaryClass set, name, predicate, width=3 inches) {
+    var segments = data.DisplaySegments.FindSlice(predicate);
     if (valid segments) {
       var label = Frame {
         Width: width;
@@ -610,57 +609,58 @@ namespace SegmentTree {
       return null;
   }
 
-  AddVowels(DictionaryClass set, backness) {
-    return AddSegments(set, backness.Name, s => s.Features.HasFlag(Vowel) and s.Backness == backness);
+  AddVowels(DataSetClass data, DictionaryClass set, backness) {
+    return AddSegments(data, set, backness.Name, s => s.Features.HasFlag(Vowel) and s.Backness == backness);
   }
 
-  AddFlag(DictionaryClass set, all, features, other) {
-    return AddSegments(set, other.Name, s => (not set.Contains(s)) and s.Features.HasFlagMask(all, features) and s.Features.HasFlagMask(other, other));
+  AddFlag(DataSetClass data, DictionaryClass set, all, features, other) {
+    return AddSegments(data, set, other.Name, s => (not set.Contains(s)) and s.Features.HasFlagMask(all, features) and s.Features.HasFlagMask(other, other));
   }
 
-  AddConsonants(DictionaryClass set, name, all, features) = AddNode(name) {
-    AddFlag(set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]);
+  AddConsonants(DataSetClass data, DictionaryClass set, name, all, features) = AddNode(name) {
+    AddFlag(data, set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]);
   };
 
-  AddVoicedPairs(DictionaryClass set, name, all, features) = AddNode(name) {
-    AddConsonants(set, Lang.Voiced, all Voiced, features Voiced);
-    AddConsonants(set, Lang.Voiceless, all Voiced, features);
+  AddVoicedPairs(DataSetClass data, DictionaryClass set, name, all, features) = AddNode(name) {
+    AddConsonants(data, set, Lang.Voiced, all Voiced, features Voiced);
+    AddConsonants(data, set, Lang.Voiceless, all Voiced, features);
   };
 
-  GetNodes = new NodeClass() {
+  GetNodes(DataSetClass data) = new NodeClass() {
     var set1 = new DictionaryClass(256);
     var set2 = new DictionaryClass(256);
     var all  = Vowel Pulmonic Affricate;
 
     AddNode(Lang.Vowels) {
-      AddVowels(set1, each Backnesses)
+      AddVowels(data, set1, each Backnesses)
     };
     AddNode(Lang.Affricates) {
-      AddVoicedPairs(set1, Lang.NonPulmonic, all, Affricate);
-      AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic Affricate);
+      AddVoicedPairs(data, set1, Lang.NonPulmonic, all, Affricate);
+      AddVoicedPairs(data, set1, Lang.Pulmonic, all, Pulmonic Affricate);
     };
     AddNode(Lang.Consonants) {
-      AddVoicedPairs(set1, Lang.Pulmonic, all, Pulmonic);
-      AddVoicedPairs(set1, Lang.NonPulmonic, all, NoFeature);
+      AddVoicedPairs(data, set1, Lang.Pulmonic, all, Pulmonic);
+      AddVoicedPairs(data, set1, Lang.NonPulmonic, all, NoFeature);
     };
-    AddSegments(set2, "Other", segment => true, 4 inches)
+    AddSegments(data, set2, "Other", segment => true, 4 inches)
   };
 
-  ShowTree = Paragraph {
+  ShowTree(DataSetClass data) = Paragraph {
     Tree {
       Width: 7 inches;
       LabelGap: 4 pts;
-      Root: GetNodes;
+      Root: GetNodes(data);
     }
   };
 }
 //======================================================================
 
 namespace SegmentDisplay {
-  CompareSegments(SegmentClass s0, SegmentClass s1) = s0.UsedCount.Compare(s1.UsedCount);
+  CompareSegments(SegmentClass s0, SegmentClass s1, options) = s0.UsedCount - s1.UsedCount;
 
   FrequencyChart(DataSetClass data, SizeClass size) = Chart {
     TextHeight: 11 pts;
+    Size: DocMetrics.SlideContent;
 
     var sorted = data.UniqueSegments.Sort(true, ref CompareSegments);
     Style.SansSerif;

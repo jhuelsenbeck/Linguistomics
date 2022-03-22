@@ -2,6 +2,23 @@ using Format, Units, Math, IO, LinkTypes;
 
 //======================================================================
 
+namespace Info {
+  LinkMin        = 5;
+  EXEFolder      = Folders.Repository;
+  EXERelative    = Folder("x64") Folder("release");
+  ReaderEXE      = EXEFolder Folder("IndellyReader") EXERelative FileName("indellyreader.exe");
+  MCMCEXE        = EXEFolder Folder("Indelly") EXERelative FileName("tonguetwister.exe");
+  MacFolder      = Folder("macfolder");
+
+  MacReaderEXE   = MacFolder FileName("indellyreader.app");
+  MacMCMCEXE     = MacFolder FileName("tonguetwister.app");
+  ImageFolder    = Folders.Source Folder("Images");
+  ExperimentBase = Folders.Repository Folder("Experiments");
+  ConfigFile     = FileName("config") Extensions.JSON;
+}
+
+//======================================================================
+
 class ConfigFileClass {
   ExperimentClass Experiment;
   RunClass        Run;
@@ -93,7 +110,7 @@ class ConfigFileClass {
     Span {
       Variable("Tree");
       Quote;
-      Nexus.Newick(Info.PriorTree);
+      Nexus.Newick(Experiment.PriorTree);
       ";"; Quote; ",";
     };
 

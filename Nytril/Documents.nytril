@@ -1,0 +1,310 @@
+using Format, Units, Math, Style, LinkTypes;
+
+//======================================================================
+
+abstract class BaseViewClass: DocumentClass {
+  ExperimentClass Experiment;
+  DataSetClass    Data;
+
+  Constructor(ExperimentClass experiment, id, name) {
+    super.Constructor(id, name);
+    Experiment = experiment;
+    Data       = experiment.Data;
+    Title      = "Understanding Language Evolution Using an Event-Based Model";
+  }
+
+  abstract GetMainDocument;
+
+  override GetDocument {
+    AuthorLink to Authors;
+    Link to References;
+
+    return GetMainDocument;
+  }
+
+  ShowContent(content) = Block {
+    Header2 {
+      content.Title;
+    };
+    content.Body(Experiment);
+  };
+
+  ShowSymbols = Block {
+    (each Defs).Appendix;
+  };
+
+  FixedFrame(x, y, width, height) = Frame {
+    HRelative: HRelatives.Page;
+    VRelative: VRelatives.Page;
+    Wrapping: Wrappings.BehindText;
+    X: x;
+    Y: y;
+    Width: width;
+    Height: height;
+  };
+
+  Design(width, height, right, bar) = Canvas {
+    Height: height;
+
+    var x0 = 0;
+    var y0 = 0;
+    var t  = 0.10 height;
+    var x1 = 0.80 width;
+    var x2 = 0.90 width;
+    var p1 = Point((x2 + x1)*0.5, height * (right ? 0.25 : 0.75));
+
+    Figure {
+      Fill: bar;
+      FigurePath {
+        Closed: true;
+        LineTo(x0, t);
+        LineTo(x1, t);
+        QuadTo(p1, Point(x2, height));
+        LineTo(x2, height);
+        LineTo(x0, height);
+      }
+    };
+
+    Figure {
+      Fill: Style.BarLine;
+      FigurePath {
+        Closed: true;
+        MoveTo(x0, y0);
+        LineTo(x1, y0);
+        QuadTo(p1, Point(x2, height-t));
+        LineTo(width, height-t);
+        LineTo(width, height);
+        LineTo(x2, height);
+        QuadTo(p1, Point(x1, t));
+        LineTo(x0, t);
+      }
+    };
+  };
+
+  HeaderBackground(title, width, height) = Design(width, height, true, Style.HeaderLeftBar) {
+    Frame {
+      Width: 0.75 width;
+      VAlignment: VAligns.Center;
+      X: DocMetrics.PageMargin.Left;
+      Paragraph {
+        TextHeight: 30 pts;
+        TextColor: Colors.White;
+        title;
+      };
+    };
+  };
+
+  FooterBackground(title, width, height, page) = Design(width, height, false, Style.LeftBar) {
+    Frame {
+      VAlignment: VAligns.Center;
+      X: DocMetrics.PageMargin.Left;
+      Width: DocMetrics.PageContent.Width;
+      Paragraph {
+        TabStops: [(DocMetrics.PageContent.Width) {Type: TabTypes.Right}];
+        TextHeight: 16 pts;
+        Span {
+          TextColor: 75%;
+          title
+        };
+        Tab;
+        Span {
+          TextColor: Style.HeaderBar1;
+          page;
+        }
+      }
+    }
+  };
+
+  AddSlideBlock(ExperimentClass experiment, slide, page) = Block {
+    Paragraph {
+      PageBreakBefore: true;
+      FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
+        HeaderBackground(slide.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
+      };
+      FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
+        FooterBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
+      };
+    };
+    slide.Body(experiment);
+  };
+}
+
+//======================================================================
+
+class SubmissionViewClass: BaseViewClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
+  }
+
+  FooterBlock = Block {
+    Paragraph {
+      ParAlignment: ParAlignments.Right;
+      PageNumber; "/"; PageCount;
+    }
+  };
+
+  override GetMainDocument = MainDocument {
+    PageSection {
+      Footer: FooterBlock {
+        Even: FooterBlock;
+        First: Block;
+      };
+
+      MainTitle {
+        Title;
+      };
+
+      ShowAuthorList(Authors);
+
+      Header1 {
+        Abstract.Title
+      };
+      Abstract.Body(Experiment);
+      ShowContent(PaperSections.Introduction);
+      Header1 {
+        Lang.Results
+      };
+
+      ShowContent(PaperSections.WordTransformation);
+      ShowContent(PaperSections.WordSegmentRelationships);
+      ShowContent(PaperSections.RomanceLanguagePhylogeny);
+      ShowContent(PaperSections.Discussion);
+      ShowContent(PaperSections.MethodsSummary);
+      ShowContent(PaperSections.DataSummary);
+      ShowContent(PaperSections.ModelInference);
+      ShowContent(PaperSections.DataCuration);
+      ShowContent(PaperSections.Acknowledgements);
+      ShowContent(PaperSections.Contributions);
+    };
+
+    ShowBibliography;
+    PageSection {
+      ShowFigureDoc(Experiment, Figures.FrequencyDiagramStatic);
+    }
+  };
+}
+//======================================================================
+
+class PaperViewClass: BaseViewClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
+  }
+
+  HeaderBlock = Block {
+    Span {
+      TextCase: TextCases.AllUpper;
+      Title;
+    }
+  };
+
+  override GetMainDocument = MainDocument {
+    var appendices = [
+      new AppendixClass(Lang.PartitionRules, Experiment.Rule.ShowPartitions),
+    ];
+
+    PageSection {
+      Header: HeaderBlock {
+        Distance: 0.125 inches;
+        MarginT: 0.125 inch;
+        Even: HeaderBlock;
+        First: Block;
+      };
+
+      MainTitle {
+        Title;
+      };
+
+      ShowContent(PaperSections.Introduction);
+      ShowContent(PaperSections.Methods);
+      ShowContent(PaperSections.Conclusion);
+    };
+
+    ShowBibliography;
+    ShowAppendix(each appendices);
+  };
+}
+//======================================================================
+
+class ExperimentViewClass: BaseViewClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #971c3e2a-d5f9-457e-871b-465ce475a150#, "Experiment");
+  }
+
+  ShowComparison = Block {
+    Style.ShowTree("Commonly Accepted Romance Tree", null, LanguageBranches.Romance, Lang.Years);
+    (each Trial.Experiments).ShowExperiment;
+  };
+
+  override GetMainDocument = MainDocument {
+    var appendices = [
+      new AppendixClass("Experimental Runs", ShowComparison),
+      new AppendixClass(Lang.UniqueSegments, SegmentDisplay.ShowSegmentAssignments(Experiment.Data)),
+      new AppendixClass(Lang.PartitionRules, Experiment.Rule.ShowPartitions),
+    ];
+
+    PageSection {
+      AppendixTitle {
+        Title;
+      };
+      AppendixRow(each appendices);
+    };
+    ShowAppendix(each appendices);
+  };
+}
+//======================================================================
+
+class DiagnosticsViewClass: BaseViewClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
+  }
+
+  ShowSegmentTables = Block {
+    var set = new HashSetClass(512, SegmentClass);
+    MatchingVowels.ShowTable(Data, set);
+    MatchingConsonants.PulmonicTable.ShowTable(Data, set);
+    MatchingConsonants.NonPulmonicTable.ShowTable(Data, set);
+    MatchingConsonants.PulmonicAffricatesTable.ShowTable(Data, set);
+    MatchingConsonants.EjectiveAffricatesTable.ShowTable(Data, set);
+    MatchingOther.ShowTable(Data, set);
+  };
+
+  override GetMainDocument = Style.MainDocument {
+    var appendices = [
+      new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(Data)),
+      new AppendixClass(Lang.SegmentFrequencies, SegmentDisplay.FrequencyChart(Data, Size(DocMetrics.PageContent.Width, 3 inches))),
+      new AppendixClass("Prior Frequencies", Experiment.CalcStatic.PartitionBlock),
+      new AppendixClass("Symbols", ShowSymbols),
+      new AppendixClass("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(Data)),
+      new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),
+      new AppendixClass("Segment Groups", ShowSegmentTables),
+      new AppendixClass("Euler Feature Diagram", new EulerDiagramClass.FeatureChart(Data)),
+      new AppendixClass(Lang.IPAFullName, SegmentDisplay.SegmentTable(Data)),
+      new AppendixClass("Feature Tree", SegmentTree.ShowTree(Data)),
+      new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
+      new AppendixClass(Lang.Languages, SegmentDisplay.ShowLanguageDetails(Data)),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(10 pts, Data)),
+    ];
+
+    ShowAppendix(each appendices);
+  };
+}
+//======================================================================
+
+class SourceViewClass: BaseViewClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Configuration File");
+  }
+
+  override GetMainDocument = Style.MainDocument {
+    var appendices = [
+      new AppendixClass(Name, new ConfigFileClass(Experiment, Experiment.MainRun).Show),
+//      new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
+    ];
+
+    ShowAppendix(each appendices);
+  };
+}
+//======================================================================
+
+
+

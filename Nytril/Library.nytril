@@ -4,8 +4,7 @@ using Format, Units, Math, IO, LinkTypes;
 class LanguageClass: FactClass {
   field Name,
         Cases;
-  var   Variable,
-        MapImage,
+  var   MapImage,
         MapAttribution;
 
   Constructor(id, name, cases=0) {
@@ -202,15 +201,17 @@ class ConceptClass: FactClass {
 
 class CognateClass: FactClass {
   field        Name;
+  DataSetClass Data;
   ConceptClass Concept;
   WordClass[]  Words;
   var          MaxLength,
                Variable;
 
-  Constructor(ConceptClass concept, variable) {
+  Constructor(DataSetClass data, ConceptClass concept, variable) {
     super.Constructor(variable.GlobalVariablePath);
 
     Name      = variable.GlobalVariableName;
+    Data      = data;
     Concept   = concept;
     Variable  = variable;
     MaxLength = 0;
@@ -221,7 +222,7 @@ class CognateClass: FactClass {
     return Concept.Name + '-' + Name;
   }
 
-  override GetLayoutTip = AllWords.ShowConceptTable(this);
+  override GetLayoutTip = AllWords.ShowConceptTable(Data, this);
 
   override Compare(c, options) {
     var i = Concept.Compare(c.Concept, options);
@@ -283,23 +284,29 @@ class WordPairClass {
 class DataSetClass {
   SegmentClass[] UniqueSegments,
                  SortedSegments,
-                 PartSegments;
+                 DisplaySegments;
   CognateClass[] UsedCognates,
                  SortedCognates;
   ConceptClass[] UsedConcepts;
   TaxonClass[]   Taxa;
   MatrixClass    TransitionCount;
-  var            DisplaySegments,
-                 MaxLanguageName,
+  var            MaxLanguageName,
                  WordCount,
                  SegmentCount,
                  UniqueCount,
                  TransitionMax;
 
-  Constructor {
+  Constructor(includewords, languages) {
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
+
+    var languageset = new DictionaryClass(languages.Length);
+    foreach (var l in languages) {
+      var n = l.GlobalVariableName;
+      languageset.Add(l, n);
+    }
+    Taxa = new TaxonClass(each languages);
 
     // Build a dictionary with IPA text as the key
     var dictionary = new DictionaryClass(256, SegmentClass);
@@ -308,9 +315,8 @@ class DataSetClass {
         dictionary.Add(segment, segment.Ipa);
     }
 
-    var set   = new DictionaryClass(1024);
-    var clist = new ListClass(1024, CognateClass);
-    var tlist = new ListClass(128, TaxonClass);
+    var set         = new DictionaryClass(1024);
+    var clist       = new ListClass(1024, CognateClass);
     var conceptlist = new ListClass(256, ConceptClass);
 
     foreach (var conceptvar in Concepts) {
@@ -319,7 +325,7 @@ class DataSetClass {
                  exists conceptvar.?WordGroup;
       System.Assert(good, "Improper concept", conceptvar);
 
-      if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(Info.IncludeWordGroups)) {
+      if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(includewords)) {
         var concept = new ConceptClass(conceptvar);
         conceptlist.Add(concept);
 
@@ -339,22 +345,18 @@ class DataSetClass {
             var count = 0;
             foreach (var word in cognate) {
               var n = word.GlobalVariableName;
-              if (set.Add(n, n)) {
-                var language = Languages.GetField(n);
-                if (valid language) {
+              if (languageset.Contains(n)) {
+                if (set.Add(n, n)) {
                   if (n.Length > MaxLanguageName)
                     MaxLanguageName = n.Length;
-                  tlist.Add(new TaxonClass(language));
                 }
-                else
-                  System.Assert(false, "Invalid language: {0}"(n));
+                if (valid word)
+                  ++count;
               }
-              if (valid word)
-                ++count;
             }
             if (count > 1) {
               WordCount += count;
-              clist.Add(new CognateClass(concept, cognate));
+              clist.Add(new CognateClass(this, concept, cognate));
             }
           }
         }
@@ -364,7 +366,7 @@ class DataSetClass {
     UsedConcepts   = conceptlist.Values.Sort(false);
     UsedCognates   = clist.Values;
     SortedCognates = UsedCognates.Sort(false);
-    Taxa           = tlist.Values;
+
 
     foreach (var cognate in UsedCognates)
       ComputeCognate(dictionary, cognate);
@@ -376,25 +378,15 @@ class DataSetClass {
 
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
     SortedSegments  = UniqueSegments.Sort(true, ref CompareAlpha);
-    PartSegments    = UniqueSegments.Sort(true, ref ComparePartSegments);
-
 
     GetFrequencies;
   }
 
-  ComparePartSegments(SegmentClass s0, SegmentClass s1) {
-    var i = s1.PartitionIndex - s0.PartitionIndex;
+  static CompareAlpha(SegmentClass s0, SegmentClass s1, options) {
+    var i = s0.Ipa.Length.Compare(s1.Ipa.Length);
     if (i == 0)
-      return s0.UsedCount - s1.UsedCount;
-    else
-      return i;
-  }
-
-  CompareAlpha(SegmentClass s0, SegmentClass s1) {
-    var cl = s0.Ipa.Length.Compare(s1.Ipa.Length);
-    if (cl == 0)
-      cl = -s0.Ipa.Compare(s1.Ipa);
-    return cl;
+      i = -s0.Ipa.Compare(s1.Ipa);
+    return i;
   }
 
   GetCognate(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);

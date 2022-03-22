@@ -2,8 +2,8 @@
 //======================================================================
 
 namespace Figures.FrequencyDiagramExperiment {
-  Caption = FigureCaption {
-    var rule = CalcExperiment.Rule;
+  Caption(ExperimentClass experiment) = FigureCaption {
+    var rule = experiment.CalcExperiment.Rule;
 
     "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
@@ -11,29 +11,29 @@ namespace Figures.FrequencyDiagramExperiment {
     PaperSections.WordTransformation.Note;
   };
 
-  Body = FigureBody {
-    CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
+  Body(ExperimentClass experiment) = FigureBody {
+    experiment.CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
 
 namespace Figures.FrequencyDiagramStatic {
-  Caption = FigureCaption {
-    var rule = CalcStatic.Rule;
+  Caption(ExperimentClass experiment) = FigureCaption {
+    var rule = experiment.CalcStatic.Rule;
 
     "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
     "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
     "The width of the lines is proportional to the rates of transition between each partition. ";
   };
 
-  Body = FigureBody {
-    CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
+  Body(ExperimentClass experiment) = FigureBody {
+    experiment.CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
 
 namespace Figures.FrequencyBoxStatic {
-  Caption = FigureCaption {
+  Caption(ExperimentClass experiment) = FigureCaption {
     "This chart shows the number of times that each segment (on the left vertical bar) differs from any other other segment in the same cognate set at the same aligned segment position. ";
     "The rates of transitions to gaps and from gaps are ignored. ";
     "The segments are grouped into partitions, represented by the  sections divided by lines. ";
@@ -42,34 +42,34 @@ namespace Figures.FrequencyBoxStatic {
     "The chart has diagonal symmetry.";
   };
 
-  Body = FigureBody {
-    CalcStatic.PartitionBox(Size(6.6 inches, 5 inches), true);
+  Body(ExperimentClass experiment) = FigureBody {
+    experiment.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches));
   };
 }
 //======================================================================
 
 namespace Figures.SegmentFrequencies {
-  Caption = FigureCaption {
+  Caption(ExperimentClass experiment) = FigureCaption {
     "Frequency of occurance of segments in the lexicon";
     Citation {Phoible};
   };
 
-  Body = FigureBody {
-    SegmentDisplay.FrequencyChart(DataSet, Size(DocMetrics.PageContent.Width, 2 inches));
+  Body(ExperimentClass experiment) = FigureBody {
+    SegmentDisplay.FrequencyChart(experiment.Data, Size(DocMetrics.PageContent.Width, 2 inches));
   };
 }
 
 //======================================================================
 
 namespace Figures.ConsensusTree {
-  Caption = FigureCaption {
+  Caption(ExperimentClass experiment) = FigureCaption {
     Lang.ConsensusTree;
   };
 
-  Body = FigureBody {
+  Body(ExperimentClass experiment) = FigureBody {
     Style.TreeOptions {
       Width: DocMetrics.TreeFigureWidth;
-      Root: Info.ConsensusTree;
+      Root: experiment.MainRun.Tree;
     }
   };
 }
@@ -82,17 +82,32 @@ namespace ExampleAnimals {
 }
 //=====================================================================
 
-namespace ExampleConcept {
-  Cognate        = DataSet.GetCognate(Info.ExampleConcept);
-  TaxonIndex     = 0;
-  Taxon          = DataSet.Taxa[TaxonIndex];
-  Callout        = DataSet.Taxa[3];
-  Name           = ToLower(Cognate.Concept.Name);
-  ExLanguages    = [Languages.French, Languages.Portuguese, Languages.Catalan, Languages.Friulian, Languages.Romanian];
-  TaxonList      = DataSet.Taxa.FindSlice(t => ExLanguages.Contains(t.Language));
-  LangNames      = (each TaxonList).Language;
-  CalloutSegment = FirstLetter(Callout);
-  LangWord       = Span {(each Cognate.Words[TaxonIndex].Segments).Ipa};
+class ExampleConceptClass {
+  var Concept,
+      Cognate,
+      TaxonIndex,
+      Taxon,
+      Callout,
+      Name,
+      ExLanguages,
+      TaxonList,
+      LangNames,
+      CalloutSegment,
+      LangWord;
+
+  Constructor(DataSetClass data, concept) {
+    Concept        = concept;
+    Cognate        = data.GetCognate(concept);
+    TaxonIndex     = 0;
+    Taxon          = data.Taxa[TaxonIndex];
+    Callout        = data.Taxa[3];
+    Name           = ToLower(Cognate.Concept.Name);
+    ExLanguages    = [Languages.French, Languages.Portuguese, Languages.Catalan, Languages.Friulian, Languages.Romanian];
+    TaxonList      = data.Taxa.FindSlice(t => ExLanguages.Contains(t.Language));
+    LangNames      = (each TaxonList).Language;
+    CalloutSegment = FirstLetter(Callout);
+    LangWord       = Span {(each Cognate.Words[TaxonIndex].Segments).Ipa};
+  }
 
   FirstLetter(TaxonClass taxon) = Cognate.Words[taxon.Index].Segments[0].ShowSegment;
   FirstLetters = FirstLetter(each TaxonList);
@@ -100,14 +115,14 @@ namespace ExampleConcept {
 //======================================================================
 
 namespace Figures.ExampleTree {
-  Caption = FigureCaption {
-    "An example tree showing the relationships of {0} languages."(SampledLanguages(Info.LanguageList.Length));
+  Caption(ExperimentClass experiment) = FigureCaption {
+    "An example tree showing the relationships of {0} languages."(SampledLanguages(experiment.LanguageList.Length));
   };
 
-  Body = FigureBody {
+  Body(ExperimentClass experiment) = FigureBody {
     TreeOptions {
       Width: 5 inches;
-      Root: Info.NumberedTree;
+      Root: experiment.NumberedTree;
     };
   };
 }
@@ -150,16 +165,16 @@ namespace Figures.Alignment {
     taxon.Language;
   };
 
-  SegmentTable(aligned) = MatrixBlock {
+  SegmentTable(ExperimentClass experiment, aligned) = MatrixBlock {
     TextHeight: 9 pts;
 
-    foreach (var taxon in DataSet.Taxa) {
+    foreach (var taxon in experiment.Data.Taxa) {
       Row {
         TName(taxon);
         Cell {
           IPAFamily;
           Span {
-            var word = ExampleConcept.Cognate.Words[taxon.Index];
+            var word = experiment.ExampleConcept.Cognate.Words[taxon.Index];
             var segs = aligned ? word.Padded : word.Segments;
             (each segs).ShowBlock;
           }
@@ -180,15 +195,15 @@ namespace Figures.Alignment {
     }
   };
 
-  MapTable(map, text) = MatrixBlock {
-    foreach (var taxon in DataSet.Taxa) {
+  MapTable(ExperimentClass experiment, map, text) = MatrixBlock {
+    foreach (var taxon in experiment.Data.Taxa) {
       Row {
         TName(taxon);
         Cell {
           var t = map[EachIndex];
           Span {
             if (text)
-              AlignSegments(ExampleConcept.Cognate.Words[taxon.Index].Segments, t);
+              AlignSegments(experiment.ExampleConcept.Cognate.Words[taxon.Index].Segments, t);
             else {
               Style.MonoFamily;
               t;
@@ -270,9 +285,9 @@ namespace Figures.Alignment {
     };
   };
 
-  HomBox(i, map) = NumBox(i, MapTable(map, false), MapTable(map, true));
+  HomBox(ExperimentClass experiment, i, map) = NumBox(i, MapTable(experiment, map, false), MapTable(experiment, map, true));
 
-  Caption = FigureCaption {
+  Caption(ExperimentClass experiment) = FigureCaption {
     "Alignments ";
     InParens {SegmentalAlignment};
     " are formed from the observed segments ";
@@ -281,14 +296,14 @@ namespace Figures.Alignment {
     InParens {HomologyMap}; eos;
   };
 
-  Body = FigureBody {
+  Body(ExperimentClass experiment) = FigureBody {
     VBox {
       Margin: 5 pts;
       HAlign: HAligns.Center;
       HBox {
         MarginB: 4 pts;
         VAlign: VAligns.Bottom;
-        var size = Size(ArrowWidth, DataSet.Taxa.Length * 8 pts);
+        var size = Size(ArrowWidth, experiment.Data.Taxa.Length * 8 pts);
 
         ArrowFigure(size) {
           Transform: Affine(-1, 0, 0, 1, size.Width, 0);
@@ -296,14 +311,14 @@ namespace Figures.Alignment {
         HBox {
           VAlign: VAligns.Top;
           LabelBox(SegmentalInfo);
-          ContentBox(SegmentTable(false)) {MarginB: ArrowMargin; MarginR: ArrowMargin};
+          ContentBox(SegmentTable(experiment, false)) {MarginB: ArrowMargin; MarginR: ArrowMargin};
         };
         ArrowFigure(size);
       };
       HBox {
-        HomBox(1, HMap1);
+        HomBox(experiment, 1, HMap1);
         Canvas {Width: 0.25 inches};
-        HomBox(2, HMap2);
+        HomBox(experiment, 2, HMap2);
       }
     };
   };
@@ -367,22 +382,22 @@ namespace StateSection {
 //======================================================================
 
 namespace PaperSections.WordTransformation {
-  ModelName = Span {TextCase: TextCases.AllLower; PartitionRule.Name};
-  Title     = "Understanding Word Transformation";
+  Title = "Understanding Word Transformation";
+  Note  = "Note that rates of change are much greater from one word segment to another when the change is within the word segment group than it is when the change is between word segments in different groups.";
 
-  Note = "Note that rates of change are much greater from one word segment to another when the change is within the word segment group than it is when the change is between word segments in different groups.";
+  Body(ExperimentClass experiment) = Block {
+    var modelname = Span {TextCase: TextCases.AllLower; experiment.Rule.Name};
 
-  Body  = Block {
     FirstPar {
       "Marginal likelihoods under the three models of word transition were approximated using the stepping-stone path-sampling method";
       Citation {xie2010}; eos;
-      "The marginal likelihoods were NUMBER, NUMBER, and NUMBER under the Jukes-Cantor, "; ModelName; ", and GTR models, respectively. ";
-      "Hence, the "; ModelName; " model is best supported by the data.";
+      "The marginal likelihoods were NUMBER, NUMBER, and NUMBER under the Jukes-Cantor, "; modelname; ", and GTR models, respectively. ";
+      "Hence, the "; modelname; " model is best supported by the data.";
     };
 
     BodyPar {
-      "The "; ModelName; " model allows different rates for different groups of word segments, ";
-      FigureReference(Figures.FrequencyDiagramStatic); " summarizes the estimated rates of change from one segment grouping to another. ";
+      "The "; modelname; " model allows different rates for different groups of word segments, ";
+      FigureReference(experiment, Figures.FrequencyDiagramStatic); " summarizes the estimated rates of change from one segment grouping to another. ";
       Note;
     };
   };
@@ -392,7 +407,7 @@ namespace PaperSections.WordTransformation {
 namespace PaperSections.WordSegmentRelationships {
   Title = "Word Segment Relationships";
 
-  Body = Block {
+  Body(ExperimentClass experiment) = Block {
     FirstPar {
       "Our method treats the relationships of word segments from one language to another as a random variable. ";
       "Figure [NUMBER] shows alignments for ten of the words we analyzed. ";
@@ -407,11 +422,11 @@ namespace PaperSections.WordSegmentRelationships {
 namespace PaperSections.RomanceLanguagePhylogeny {
   Title = "Romance Language Phylogeny";
 
-  Body = Block {
+  Body(ExperimentClass experiment) = Block {
     BodyPar {
       "The results of the MCMC analysis are shown below.";
     };
-    ShowFigureDoc(Figures.ConsensusTree);
+    ShowFigureDoc(experiment, Figures.ConsensusTree);
 //    ShowFigureDoc(Figures.MAPTree);
 //    ShowFigureDoc(Figures.MCCTree);
   };
@@ -423,11 +438,11 @@ namespace PaperSections.Discussion {
 
   SoundChange(op) = Span {IPA.Segments.ah.ShowDoc; op; IPA.Segments.oh.ShowDoc};
 
-  Body = Block {
+  Body(ExperimentClass experiment) = Block {
     FirstPar {
      "Despite a wealth of textual data from Latin and its medieval descendants, the phylogeny of Romance remains a challenge";
      Citation {hall1974; malkiel1978; koutna1990}; eos;
-     "The topology of our tree in "; FigureReference(Figures.ConsensusTree); " agrees with the prevailing views of the Romance phylogeny in most aspects. ";
+     "The topology of our tree in "; FigureReference(experiment, Figures.ConsensusTree); " agrees with the prevailing views of the Romance phylogeny in most aspects. ";
      "For instance, it recognizes that French and Walloon have undergone the greatest segmental change. ";
      "In addition, it identifies the Ibero-Romance (Spanish, European Portuguese, and Brazilian Portuguese) and Gallo-Romance (French, Walloon, and Catalan) clades. ";
      "In recent years a consensus appears to have emerged among specialists that Romanian was one of the first clades to form. ";
@@ -491,7 +506,7 @@ namespace PaperSections.Discussion {
 namespace PaperSections.MethodsSummary {
   Title = Lang.Methods;
 
-  Body = Block {
+  Body(ExperimentClass experiment) = Block {
     FirstPar {
       "A detailed description of the model and analyses can be found in the supplemental material, [reference]. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
@@ -507,10 +522,12 @@ namespace PaperSections.DataSummary {
   S = IPA.Segments.s.ShowDoc;
   W = TextIpa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
 
-  Body = Block {
+  Body(ExperimentClass experiment) = Block {
+    var data = experiment.Data;
+
     FirstPar {
       "We selected ";
-      DataSet.UsedConcepts.Length;
+      data.UsedConcepts.Length;
       " concepts from the 200-word Swadesh list of basic vocabulary. ";
       "The initial set of data was downloaded from "; Wiktionary.Title; Citation{Wiktionary}; ", which was then manually checked for accuracy and augmented. ";
       "Words were double-checked against data from "; SoundComparisons.Title; Citation{SoundComparisons}; eos;
@@ -518,7 +535,7 @@ namespace PaperSections.DataSummary {
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; SQuote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; SQuoteEnd{"serious"};
       "They are assigned to the same cognate set because segmentally French "; textit{"grave"}; " descends from Latin "; textit{"gravis"}; eos;
-      "There are in total "; DataSet.UsedCognates.Length; " cognate sets, "; DataSet.WordCount; " word forms, using "; DataSet.UniqueCount; " unique segments. ";
+      "There are in total "; data.UsedCognates.Length; " cognate sets, "; data.WordCount; " word forms, using "; data.UniqueCount; " unique segments. ";
       "Each word is represented phonemically with the IPA alphabet. ";
       "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by and for ancient languages such as Latin non-existent. ";
     };
@@ -538,7 +555,7 @@ namespace PaperSections.DataSummary {
       "In addition to being collected and classified, the data were also manually aligned, so that putatively historically related segments belong to the same column. ";
       "The manual alignments served as the starting point for the MCMC sampling procedure (see below), so our analyses did not condition on any particular alignment of word segments being correct. ";
       ShowTableNumber(TableFigures.ManualAlignment); " provides an illustrative example of the alignment for the concept ";
-      TableFigures.ManualAlignment.WordDisplay; eos;
+      TableFigures.ManualAlignment.WordDisplay(experiment); eos;
       "The ancestral Latin form "; TextIpa{"ˈkʷ-id"}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
       "In all of the descendant languages, the secondary articulation is lost. ";
       "In some languages, it becomes a consonant in its own right (i.e., the "; IPA.Segments.kw.ShowDoc; " of French and Walloon). ";
@@ -546,7 +563,7 @@ namespace PaperSections.DataSummary {
       IPA.Segments.kw.ShowSegment; "-id), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
     };
 
-    ShowTable(TableFigures.ManualAlignment);
+    ShowTable(experiment, TableFigures.ManualAlignment);
 
     BodyPar {
       "Our method models insertions, deletions, and transitions among segments. ";
@@ -561,15 +578,20 @@ namespace PaperSections.DataSummary {
 //======================================================================
 
 namespace TableFigures.ManualAlignment {
-  Concept     = Info.FigureConcept;
-  Cognate     = DataSet.GetCognate(Concept);
-  WordDisplay = SQuote{TextCase: TextCases.AllLower; Concept.GlobalVariableName};
-
-  Caption = FigureCaption {
-    "Manual alignment of the words for the concept "; WordDisplay; eos;
+  WordDisplay(ExperimentClass experiment) = SQuote {
+    TextCase: TextCases.AllLower;
+    Trial.FigureConcept.GlobalVariableName;
+    eos;
   };
 
-  Body = Table {
+  Caption(ExperimentClass experiment) = FigureCaption {
+    "Manual alignment of the words for the concept ";
+    WordDisplay(experiment);
+  };
+
+  Body(ExperimentClass experiment) = Table {
+    var cognate = experiment.Data.GetCognate(Trial.FigureConcept);
+
     Columns: [1.5 inches, 1.75 inches, 1.5 inch];
     Row {
       Padding: 0.5 pt;
@@ -577,7 +599,7 @@ namespace TableFigures.ManualAlignment {
       Lang.Language; Lang.PhonemicRep; Lang.Alignment;
     };
 
-    foreach (var word in Cognate.Words) {
+    foreach (var word in cognate.Words) {
       Row {
         word.Language;
         TextIpa {word};
@@ -596,7 +618,7 @@ namespace PaperSections.ModelInference {
 
   InsertionLessThanDeletion = Span {InsertionRate; Tex.lt; DeletionRate};
 
-  Body = Block {
+  Body(ExperimentClass experiment) = Block {
     FirstPar {
       "We assume that modern languages are related to one another through an unknown phylogenetic tree, ";
       UnknownTree;
@@ -605,7 +627,7 @@ namespace PaperSections.ModelInference {
       ") and the expected number of sound substitutions "; ExpectedEvents; " that occur along each branch of the tree. ";
       "Language evolves along the branches of the tree according to the TKF91 model"; Citation {thorne91}; " which allows either a word segment transition, insertion, or deletion to occur in an instant of time. ";
       "Insertions and deletions occur at rates "; InsertionRate; " and "; DeletionRate; " respectively, with "; InsertionLessThanDeletion; eos;
-      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  DataSet.UniqueCount; " word segments). ";
+      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  experiment.Data.UniqueCount; " word segments). ";
       "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters "; Span {Bold; RateMatrixParams}; eos;
     };
 
@@ -636,7 +658,7 @@ namespace PaperSections.ModelInference {
       "We numerically approximate the marginal probability for a model using path sampling techniques"; Citation{Lartillot2006; xie2010}; eos;
     };
 
-    var rule = PartitionRule;
+    var rule = experiment.Rule;
 
     BodyPar {
       "We examined three models of segmental transition. ";
@@ -650,15 +672,15 @@ namespace PaperSections.ModelInference {
         rule.Filters;
       };
       ") and has an intermediate number of parameters (";
-      DataSet.UniqueCount;
+      experiment.Data.UniqueCount;
       " parameters for the equilibrium distribution and ";
       (rule.Filters.Length-1)^2-1;
       " parameters describing rates among word segment groups); ";
       "and the third ("; SQuote{"GTR"}; ") is a model isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
       ", and has a large number of parameters (";
-      DataSet.UniqueCount;
+      experiment.Data.UniqueCount;
       " parameters for the equilibrium distribution and ";
-      Combinations(DataSet.UniqueCount, 2);
+      Combinations(experiment.Data.UniqueCount, 2);
       " exchangability parameters). ";
       "For both the second and third models, we consider the equilibrium frequencies of the model to be random variables with a flat Dirichlet prior distribution."
     };
@@ -670,9 +692,9 @@ namespace PaperSections.ModelInference {
 namespace PaperSections.DataCuration {
   Title = "Data Curation and Analyses";
 
-  Example = Info.ExampleConcept;
+  Body(ExperimentClass experiment) = Block {
+    var example = experiment.ExampleConcept;
 
-  Body = Block {
     FirstPar {
       "Our analyses is coordinated using a program written in the Nytril programming language"; Citation {nytrilprogram}; eos;
       "We created an automated framework for the experiment that comprises a reusable IPA library, word data, ";
@@ -680,11 +702,11 @@ namespace PaperSections.DataCuration {
     };
 
     BodyPar {
-      "Words for the "; DataSet.Taxa.Length; " different human languages in our study, coded in standard unicode IPA, are organized into groups by concept, and then by cognate class. ";
-      "For example, the concept "; SQuote{TextCase: TextCases.AllLower; Example.GlobalVariableName}; " is coded in the following way:";
+      "Words for the "; experiment.Data.Taxa.Length; " different human languages in our study, coded in standard unicode IPA, are organized into groups by concept, and then by cognate class. ";
+      "For example, the concept "; SQuote{TextCase: TextCases.AllLower; example.Name}; " is coded in the following way:";
     };
 
-    SourcePar(Example);
+    SourcePar(example.Concept);
 
     BodyPar {
       "The comments following the "; SQuote{"//"}; " are meant to be read by a reviewer, but have no effect on the analysis. ";
@@ -707,7 +729,7 @@ namespace PaperSections.DataCuration {
 
     BodyPar {
       "After the raw input is parsed, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
-      "The MCMC analyses runs for "; Span {Info.MainExperimentRun.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
+      "The MCMC analyses runs for "; Span {experiment.MainRun.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
       "Samples taken during the first 10% of the chain are discarded as the burn-in phase. ";
       "When the analysis is complete, the results are read back into the control program. ";
       "The resulting tables, trees and graphical figures are combined with narrative elements created by the authors to make the final paper and presentation materials. ";
@@ -720,7 +742,7 @@ namespace PaperSections.DataCuration {
 namespace PaperSections.Acknowledgements {
   Title = "Acknowledgements";
 
-  Body = Block {
+  Body(ExperimentClass experiment) = Block {
     FirstPar {
       "J.P.H. was supported through NSF (1759909) and the Koret Foundation. We thank Gerton Lunter for help with the TKF91 model.";
     }
@@ -732,7 +754,7 @@ namespace PaperSections.Acknowledgements {
 namespace PaperSections.Contributions {
   Title = "Author contributions statement";
 
-  Body = Block {
+  Body(ExperimentClass experiment) = Block {
     FirstPar {
       "D.M.G. collected data, S.H.M. developed the control software, and J.P.H. developed the MCMC software. All authors wrote the manuscript. ";
     }
@@ -741,12 +763,15 @@ namespace PaperSections.Contributions {
 
 //======================================================================
 
-TreeFigure      = FigureReference(Figures.ExampleTree);
-AlignmentFigure = FigureReference(Figures.Alignment);
 
 namespace PaperSections.Methods {
   Title = Lang.Methods;
-  Body  = Block {
+  Body(ExperimentClass experiment) = Block {
+    var treefigure      = FigureReference(experiment, Figures.ExampleTree);
+    var alignmentfigure = FigureReference(experiment, Figures.Alignment);
+    var ec              = experiment.ExampleConcept;
+
+
     FirstPar {
       "We use ancestral classes, in which the descendant forms are segmentally aligned. ";
       "It is important to note that our definition of cognate refers only to segmental descent. ";
@@ -776,7 +801,7 @@ namespace PaperSections.Methods {
     };
 
     BodyPar {
-      TreeFigure; " shows an example of a phylogeny for "; SampledLanguages(DataSet.Taxa.Length); " languages. ";
+      treefigure; " shows an example of a phylogeny for "; SampledLanguages(experiment.Data.Taxa.Length); " languages. ";
       "In the terminology of evolutionary biology, the tree is composed of "; SQuote{"nodes"}; " and "; SQuoteEnd{"branches"};
       "(By contrast, mathematicians call nodes and branches "; SQuote{"vertices"} " and "; SQuote{"edges,"}; " respectively.) ";
       "The nodes represent the tips of the tree, each of which is assigned a language, and the points on the tree where the languages diverge from one another. ";
@@ -784,37 +809,37 @@ namespace PaperSections.Methods {
       "The interior nodes are labeled "; TipLabelInterior; " in preorder sequence (i.e., ordered sequentially from the tips to the root). ";
       "The root node is always assigned the label "; TipLastLabel; eos;
       "We denote the ancestor of node "; NodeIndex; " as "; AncestorNode(NodeIndex); eos;
-      "In the tree of "; TreeFigure; ", the ancestor of node 3 is "; Equation {AncestorNode(3); Equals; 12}; eos;
+      "In the tree of "; treefigure; ", the ancestor of node 3 is "; Equation {AncestorNode(3); Equals; 12}; eos;
     };
 
     BodyPar {
-      "The branches connect the nodes of the tree and are represented as lines in "; TreeFigure; ". ";
+      "The branches connect the nodes of the tree and are represented as lines in "; treefigure; ". ";
       "The branch is assigned the label from its descendant node, so for example in the tree of ";
-      TreeFigure;
+      treefigure;
       ", the branch connecting nodes 12 and 13 is assigned the label 12. ";
     };
 
-    ShowFigureDoc(Figures.ExampleTree);
+    ShowFigureDoc(experiment, Figures.ExampleTree);
 
     BodyPar {
       "A phylogeny is an information-rich graph. ";
       "For one, it contains information on the relationships of the languages. ";
       "This topological information is denoted "; Topology; eos;
-      TreeFigure;
+      treefigure;
       " for example, suggests that "; French; " and ";  Walloon; " are each others’ closest relatives. ";
       "They are more closely related to each other than they are to any another language on the tree because they share a more recent common ancestor with each other than they do with any other language. ";
-      "This common ancestor is the node numbered 15 in "; TreeFigure; eos;
-      French; " and "; Walloon; ", together, are more closely related to "; Friulian; " in the tree of "; TreeFigure; eos;
+      "This common ancestor is the node numbered 15 in "; treefigure; eos;
+      French; " and "; Walloon; ", together, are more closely related to "; Friulian; " in the tree of "; treefigure; eos;
       "Both French and Walloon are equally related to "; Friulian; " because they both share the same common ancestor with ";
       Friulian; ", at the node numbered ";
-      LangNumber(Friulian); " in "; TreeFigure; eos;
+      experiment.LangNumber(Friulian); " in "; treefigure; eos;
       "It is important to realize that there are many possible ways in which the languages can be related to one another, with the tree of ";
-      TreeFigure;
+      treefigure;
       " depicting only one of the possibilities. ";
       "In fact, for the case in which ";
-      SampledLanguages(DataSet.Taxa.Length);
+      SampledLanguages(experiment.Data.Taxa.Length);
       " languages are considered, there are "
-      BranchFormula(DataSet.Taxa.Length);
+      BranchFormula(experiment.Data.Taxa.Length);
       " possible trees relating the languages. ";
       "In general, the number of possible rooted trees is the product of the odd numbers up to, and including, ";
       MaxBranch;
@@ -950,41 +975,41 @@ namespace PaperSections.Methods {
       "The word forms within each cognate class are phonemic representations based on the International Phonetic Alphabet (IPA) ";
       NeedsReview("IPA REFERENCE"); eos;
       "Consider the following word forms for one of the cognate classes for the concept ";
-      SQuote {ExampleConcept.Name};
+      SQuote {ec.Name};
     };
 
     BodyPar {
       Frame {
-        SegmentTable(true);
+        SegmentTable(experiment, true);
       }
     };
 
     BodyPar {
-      "The word for "; SQuote {ExampleConcept.Cognate.Concept.Name};  " in "; ExampleConcept.Taxon.Language; ", for example, is "
-      "/"; ExampleConcept.LangWord; "/. ";
-      "The matrix for the word "; ExampleConcept.Name; " also assumes that the fine-scale homology of the segments has been established. ";
-      "For example, the above matrix for the concept "; SQuote {ExampleConcept.Name};  " assumes that the first segment of the ";
-      TextList {ExampleConcept.LangNames};
+      "The word for "; SQuote {ec.Cognate.Concept.Name};  " in "; ec.Taxon.Language; ", for example, is "
+      "/"; ec.LangWord; "/. ";
+      "The matrix for the word "; ec.Name; " also assumes that the fine-scale homology of the segments has been established. ";
+      "For example, the above matrix for the concept "; SQuote {ec.Name};  " assumes that the first segment of the ";
+      TextList {ec.LangNames};
       " languages (respectively, ";
       TextList {
         Style.IPAFamily;
-        ExampleConcept.FirstLetters
+        ec.FirstLetters
       };
       ") are homologous. ";
       "The dashes indicate that there is no homologous segment at that potential position in the word. ";
       "Note that the first segment for the word ";
-      ExampleConcept.Name;
-      " in "; ExampleConcept.Callout.Language; " is also "; ExampleConcept.CalloutSegment; eos;
+      ec.Name;
+      " in "; ec.Callout.Language; " is also "; ec.CalloutSegment; eos;
       "Why wasn't the first segment from Italian considered to be homologous to the first segments in ";
-      TextList {ExampleConcept.LangNames};
+      TextList {ec.LangNames};
       "? ";
       "In this case, the alignment program chose the alignment that did not consider ";
-      SQuote {ExampleConcept.CalloutSegment}; " of "; ExampleConcept.Callout.Language; " as homologous to the ";
-      SQuote {ExampleConcept.CalloutSegment}; " of French based on the settings chosen by the user. ";
+      SQuote {ec.CalloutSegment}; " of "; ec.Callout.Language; " as homologous to the ";
+      SQuote {ec.CalloutSegment}; " of French based on the settings chosen by the user. ";
       "It may be that other alignments are nearly as good as the one that is illustrated. ";
-      AlignmentFigure;
+      alignmentfigure;
       " shows two possible alignments of the word "
-      ExampleConcept.Name;
+      ec.Name;
       eos;
     };
 
@@ -1012,24 +1037,24 @@ namespace PaperSections.Methods {
       Ith;
       " language. ";
       "The segmental information for the ";
-      SampledLanguages(DataSet.Taxa.Length);
+      SampledLanguages(experiment.Data.Taxa.Length);
       " languages for the cognate class above for ";
-      SQuote {ExampleConcept.Name}; " is:";
+      SQuote {ec.Name}; " is:";
     };
 
     BodyPar {
       Frame {
-        SegmentTable(false);
+        SegmentTable(experiment, false);
       }
     };
 
     BodyPar {
-      "Here, the segments for "; ExampleConcept.Taxon.Language; " would be ";
+      "Here, the segments for "; ec.Taxon.Language; " would be ";
       Equation {
         Segment sub 1;
         Equals;
         InParens {
-          ExampleConcept.LangWord
+          ec.LangWord
         }; eos;
       };
       "The alignment of the segments is accomplished by the use of a map, ";
@@ -1044,19 +1069,19 @@ namespace PaperSections.Methods {
           HomologyMap;
         };
       }; eos;
-      AlignmentFigure;
+      alignmentfigure;
       " shows an example of two alignments for the word ";
-      ExampleConcept.Name;
+      ec.Name;
       " that can be formed using two different homology maps. ";
     };
 
-    ShowFigureDoc(Figures.Alignment);
+    ShowFigureDoc(experiment, Figures.Alignment);
 
     BodyPar {
       "Ultimately, the linguist observes the phonetic (in the case of contemporary languages) or graphemic (in the case of corpus languages) forms of words, on the basis of which phonemic representations are posited. ";
       "The alignment, by contrast, is not directly observed. ";
       "There are many different ways in which the segments from a cognate word can be homologous. ";
-      "The example from the word "; ExampleConcept.Name; ", above, shows only one such way. ";
+      "The example from the word "; ec.Name; ", above, shows only one such way. ";
       "In this study, we develop the statistical and analytical machinery that allow us to marginalize over the segmental alignments. ";
       "Our method considers all possible segmental alignments of the word forms in a cognate class, weighting each such possibility by its probability under a model. ";
       "In this way, our method does not condition on any specific segmental alignment.";
@@ -1488,8 +1513,8 @@ namespace PaperSections.Methods {
       };
     };
     PageBreak;
-    ShowFigureDoc(Figures.FrequencyDiagramStatic);
-    ShowFigureDoc(Figures.SegmentFrequencies);
+    ShowFigureDoc(experiment, Figures.FrequencyDiagramStatic);
+    ShowFigureDoc(experiment, Figures.SegmentFrequencies);
   };
 }
 
@@ -1562,12 +1587,12 @@ InsertDelete(by) = Equation {
   DeletionRate;
 };
 
-SegmentTable(aligned) = BodyTable {
+SegmentTable(ExperimentClass experiment, aligned) = BodyTable {
   TextHeight: 10 pts;
   Columns: [1.5 inches]*2;
 
-  var words = ExampleConcept.Cognate.Words;
-  foreach (var taxon in DataSet.Taxa) {
+  var words = experiment.ExampleConcept.Cognate.Words;
+  foreach (var taxon in experiment.Data.Taxa) {
     Row {
       Cell {
         taxon.Language;
@@ -1592,10 +1617,11 @@ namespace PaperSections.Conclusion {
     value; Space; name;
   };
 
-  Body = Block {
-    AddVariable("Languages", DataSet.Taxa.Length);
-    AddVariable("Concepts", DataSet.UsedCognates.Length);
-    AddVariable("Unique Segments", DataSet.UniqueCount);
+  Body(ExperimentClass experiment) = Block {
+    var data = experiment.Data;
+    AddVariable("Languages", data.Taxa.Length);
+    AddVariable("Concepts", data.UsedCognates.Length);
+    AddVariable("Unique Segments", data.UniqueCount);
   };
 }
 //======================================================================

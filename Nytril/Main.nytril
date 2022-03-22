@@ -18,244 +18,26 @@ include "Introduction";
 include "Slides";
 include "Tables";
 include "Languages";
-include "graphics";
-include "citations";
+include "Graphics";
+include "Citations";
+include "Documents";
 
 //include "LanguagePhonetic";
 include "LanguageSet";
 //include "LanguageTest";
 //======================================================================
 
-Main.Documents = [
-  new SubmissionViewClass,
-  new PaperViewClass,
-  new ExperimentViewClass,
-  new DiagnosticsViewClass,
-  new SourceViewClass,
-  new JohnPresentationClass,
-  new DavidPresentationClass,
-];
+Main.Documents = Trial.Experiments.FirstElement.GetDocuments;
 
 void Main.Run {
-  ExperimentClass.CreateFolders;
+  ExperimentClass.CreateAllFolders;
 }
-
-Main.Facts = [
-  Authors,
-  References,
-  Defs,
-  Equations,
-];
-//======================================================================
 
 Authors = [
   People.DMGoldstein,
   People.SHMcCreight,
   People.JPHuelsenbeck,
 ];
-//======================================================================
-
-DataSetClass DataSet       = new DataSetClass;
-RuleClass    PartitionRule = new Partition2Class;
-
-CalcStatic     = new CalcRatesClass(PartitionRule);
-CalcExperiment = new CalcRatesClass(PartitionRule, new TransitionClass(PartitionRule, true));
 
 //======================================================================
-
-namespace Info {
-  LinkMin        = 5;
-  EXEFolder      = Folders.Repository;
-  EXERelative    = Folder("x64") Folder("release");
-  ReaderEXE      = EXEFolder Folder("IndellyReader") EXERelative FileName("indellyreader.exe");
-  MCMCEXE        = EXEFolder Folder("Indelly") EXERelative FileName("tonguetwister.exe");
-  MacFolder      = Folder("macfolder");
-
-  MacReaderEXE   = MacFolder FileName("indellyreader.app");
-  MacMCMCEXE     = MacFolder FileName("tonguetwister.app");
-  ImageFolder    = Folders.Source Folder("Images");
-  ExperimentBase = Folders.Repository Folder("Experiments");
-  ConfigFile     = FileName("config") Extensions.JSON;
-}
-//======================================================================
-
-class SubmissionViewClass: BaseViewClass {
-  Constructor {
-    super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Submission");
-  }
-
-  FooterBlock = Block {
-    Paragraph {
-      ParAlignment: ParAlignments.Right;
-      PageNumber; "/"; PageCount;
-    }
-  };
-
-  override GetMainDocument = MainDocument {
-    PageSection {
-      Footer: FooterBlock {
-        Even: FooterBlock;
-        First: Block;
-      };
-
-      MainTitle {
-        Title;
-      };
-
-      ShowAuthorList(Authors);
-
-      Header1 {Abstract.Title};
-      Abstract.Body;
-      ShowContent(PaperSections.Introduction);
-      Header1 {Lang.Results};
-
-      ShowContent(PaperSections.WordTransformation);
-      ShowContent(PaperSections.WordSegmentRelationships);
-      ShowContent(PaperSections.RomanceLanguagePhylogeny);
-      ShowContent(PaperSections.Discussion);
-      ShowContent(PaperSections.MethodsSummary);
-      ShowContent(PaperSections.DataSummary);
-      ShowContent(PaperSections.ModelInference);
-      ShowContent(PaperSections.DataCuration);
-      ShowContent(PaperSections.Acknowledgements);
-      ShowContent(PaperSections.Contributions);
-    };
-
-    ShowBibliography;
-    PageSection {
-      ShowFigureDoc(Figures.FrequencyDiagramStatic);
-    }
-  };
-}
-//======================================================================
-
-class PaperViewClass: BaseViewClass {
-  Constructor {
-    super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
-  }
-
-  HeaderBlock = Block {
-    Span {
-      TextCase: TextCases.AllUpper;
-      Title;
-    }
-  };
-
-  override GetMainDocument = MainDocument {
-    var appendices = [
-      new AppendixClass(Lang.PartitionRules, PartitionRule.ShowPartitions),
-    ];
-
-    PageSection {
-      Header: HeaderBlock {
-        Distance: 0.125 inches;
-        MarginT: 0.125 inch;
-        Even: HeaderBlock;
-        First: Block;
-      };
-
-      MainTitle {
-        Title;
-      };
-
-      ShowAuthorList(Authors);
-
-      Header1 {Abstract.Title};
-      Abstract.Body;
-
-      ShowContent(PaperSections.Introduction);
-      ShowContent(PaperSections.Methods);
-      ShowContent(PaperSections.Conclusion);
-
-
-//      Header2 {Lang.Authors};
-//      ShowAuthorFull(each Authors);
-
-//      Header2 {Lang.Appendices};
-//      AppendixRow(each appendices);
-    };
-
-    ShowBibliography;
-    ShowAppendix(each appendices);
-  };
-}
-//======================================================================
-
-class ExperimentViewClass: BaseViewClass {
-  Constructor {
-    super.Constructor(#971c3e2a-d5f9-457e-871b-465ce475a150#, "Experiment");
-  }
-
-  override GetMainDocument = MainDocument {
-    var appendices = [
-      new AppendixClass("Experimental Runs", ExperimentClass.ShowComparison),
-      new AppendixClass(Lang.UniqueSegments, SegmentDisplay.ShowSegmentAssignments(DataSet)),
-      new AppendixClass(Lang.PartitionRules, PartitionRule.ShowPartitions),
-    ];
-
-    PageSection {
-      AppendixTitle {
-        Title;
-      };
-      AppendixRow(each appendices);
-    };
-    ShowAppendix(each appendices);
-  };
-}
-//======================================================================
-
-class DiagnosticsViewClass: BaseViewClass {
-  Constructor {
-    super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
-  }
-
-  ShowSegmentTables = Block {
-    var set = new HashSetClass(512, SegmentClass);
-    MatchingVowels.ShowTable(set);
-    MatchingConsonants.PulmonicTable.ShowTable(set);
-    MatchingConsonants.NonPulmonicTable.ShowTable(set);
-    MatchingConsonants.PulmonicAffricatesTable.ShowTable(set);
-    MatchingConsonants.EjectiveAffricatesTable.ShowTable(set);
-    MatchingOther.ShowTable(set);
-  };
-
-  override GetMainDocument = Style.MainDocument {
-    var appendices = [
-      new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(DataSet)),
-      new AppendixClass(Lang.SegmentFrequencies, SegmentDisplay.FrequencyChart(DataSet, Size(DocMetrics.PageContent.Width, 3 inches))),
-      new AppendixClass("Prior Frequencies", CalcStatic.PartitionBlock),
-      new AppendixClass("Symbols", ShowSymbols),
-      new AppendixClass("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(DataSet)),
-      new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage),
-      new AppendixClass("Segment Groups", ShowSegmentTables),
-      new AppendixClass("Euler Feature Diagram", new EulerDiagramClass.FeatureChart),
-      new AppendixClass(Lang.IPAFullName, SegmentDisplay.SegmentTable(DataSet)),
-      new AppendixClass("Feature Tree", SegmentTree.ShowTree),
-      new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
-      new AppendixClass(Lang.Languages, SegmentDisplay.ShowLanguageDetails(DataSet)),
-      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable),
-    ];
-
-    ShowAppendix(each appendices);
-  };
-}
-//======================================================================
-
-class SourceViewClass: BaseViewClass {
-  Constructor {
-    super.Constructor(#7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Source");
-  }
-
-  override GetMainDocument = Style.MainDocument {
-    var appendices = [
-      new AppendixClass("Tongue Twister Configuration", new ConfigFileClass(Info.MainExperiment, Info.MainExperimentRun).Show),
-//      new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
-    ];
-
-    ShowAppendix(each appendices);
-  };
-}
-//======================================================================
-
-
 
