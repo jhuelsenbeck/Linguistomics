@@ -33,21 +33,28 @@ class RunClass {
   }
 
   ArgString(arg, text) = Span {
+    var path = String(text);
     if (valid arg) {
       "-";
       arg;
       Space;
     }
-    Quote;
-    text;
-    Quote;
-    Space;
+    var quote = path.FindFirstIndex(c => c == ' ') >= 0;
+    if (quote)
+      Quote;
+    path;
+    if (quote)
+      Quote;
   };
 
   Pause(mac) = mac ? "read -rsp $'Press enter to continue...\\n'" : "pause";
 
+  ArgSpan = Span {
+    Separator: Space;
+  };
+
   RunMCMC(mac, root) = TextBlock {
-    Span {
+    ArgSpan {
       ArgString(null, mac ? Info.MacMCMCEXE : Info.MCMCEXE);
       ArgString("d", Info.ConfigFile);
       ArgString("o", root OutFileName);
@@ -56,7 +63,7 @@ class RunClass {
   };
 
   RunReader(mac, root) = TextBlock {
-    Span {
+    ArgSpan {
       ArgString(null, mac ? Info.MacReaderEXE : Info.ReaderEXE);
       ArgString("i", root Info.ExecuteFolder);
       ArgString("o", root OutFileName);
