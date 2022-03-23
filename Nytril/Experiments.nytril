@@ -3,32 +3,28 @@ using Format, IO, Units, Languages;
 //======================================================================
 
 class RunClass {
-  static BaseFileName = Folder("out");
+  static OutFileName = Info.ExecuteFolder Folder("out");
 
-  var             Name,
-                  RootFolder,
-                  MacFolder,
-                  RunFolder,
-                  RunMacFolder,
-                  Generations,
-                  Print,
-                  Seed,
-                  Tree,
-                  Complete,
-                  Marginal;
-   ModeClass      Mode;
+  var        Name,
+             RootFolder,
+             Generations,
+             PreBurn,
+             Print,
+             Seed,
+             Tree,
+             Complete,
+             Marginal;
+   ModeClass Mode;
 
-  Constructor(ModeClass mode, name, generations, print, marginal) {
-    Name         = name;
-    Mode         = mode;
-    Generations  = generations;
-    Print        = print;
-    Marginal     = marginal;
-    RootFolder   = mode.RootFolder Folder(name);
-    MacFolder    = mode.MacFolder Folder(name);
-    RunFolder    = RootFolder Folder("Execute");
-    RunMacFolder = MacFolder Folder("Execute");
-    Seed         = Math.Random(0..0xFFFFFFFF);
+  Constructor(ModeClass mode, name, generations, preburn, print, marginal) {
+    Name        = name;
+    Mode        = mode;
+    Generations = generations;
+    PreBurn     = preburn;
+    Print       = print;
+    Marginal    = marginal;
+    RootFolder  = mode.RootFolder Folder(name);
+    Seed        = Math.Random(0..0xFFFFFFFF);
 
     var treefile = RootFolder FileName("consensus.tre");
     Complete = FileExists(treefile);
@@ -42,48 +38,51 @@ class RunClass {
       arg;
       Space;
     }
-    "\"";
+    Quote;
     text;
-    "\" ";
+    Quote;
+    Space;
   };
 
   Pause(mac) = mac ? "read -rsp $'Press enter to continue...\\n'" : "pause";
 
-  RunReader(mac, run) = TextBlock {
-    Span {
-      ArgString(null, mac ? Info.MacReaderEXE : Info.ReaderEXE);
-      ArgString("i", run);
-      ArgString("o", run BaseFileName);
-    };
-    Pause(mac);
-  };
-
-  RunMCMC(mac, run) = TextBlock {
+  RunMCMC(mac, root) = TextBlock {
     Span {
       ArgString(null, mac ? Info.MacMCMCEXE : Info.MCMCEXE);
       ArgString("d", Info.ConfigFile);
-      ArgString("o", run BaseFileName);
+      ArgString("o", root OutFileName);
     };
     Pause(mac);
   };
 
-  RunAll(mac, run) = TextBlock {
-    RunMCMC(mac, run);
-    RunReader(mac, run);
+  RunReader(mac, root) = TextBlock {
+    Span {
+      ArgString(null, mac ? Info.MacReaderEXE : Info.ReaderEXE);
+      ArgString("i", root Info.ExecuteFolder);
+      ArgString("o", root OutFileName);
+    };
+    Pause(mac);
   };
 
-  void WriteRuns(mac, run) {
-    Write(RunReader(mac, run), RootFolder + (mac ? FileName("MacRunReader" : "WinRunReader.bat")), FileFormats.Text);
-    Write(RunAll(mac, run), RootFolder + (mac ? FileName("MacRunAll" : "WinRunAll.bat")), FileFormats.Text);
+  RunAll(mac, root) = TextBlock {
+    RunMCMC(mac, root);
+    RunReader(mac, root);
+  };
+
+  void WriteRuns(path, mac, root, reader, all) {
+    Write(RunReader(mac, root), path FileName(reader), FileFormats.ANSI);
+    Write(RunAll(mac, root), path FileName(all), FileFormats.ANSI);
   }
 
   void InitFolders(ExperimentClass experiment) {
-    CreateFolder(RootFolder);
-    CreateFolder(RunFolder);
-    WriteRuns(false, RunFolder);
-    WriteRuns(true,  RunMacFolder);
+    var path = Folders.Repository RootFolder;
 
-    Write(new ConfigFileClass(experiment, this).Show, RootFolder Info.ConfigFile);
+    CreateFolder(path);
+    CreateFolder(path Info.ExecuteFolder);
+    WriteRuns(path, false, path, "WinRunReader.bat", "WinRunAll.bat");
+    WriteRuns(path, true, Info.ExperimentFolder RootFolder, "MacRunReader.", "MacRunAll.");
+
+    Write(new ConfigFileClass(experiment, this).Show, path Info.ConfigFile);
   }
 }
 
@@ -91,21 +90,19 @@ class RunClass {
 
 class ModeClass {
   var              Name,
-                   RootFolder,
-                   MacFolder;
+                   RootFolder;
   ModelFolderClass Model;
   RunClass[]       Run;
 
-  Constructor(ModelFolderClass model, name, generations, print, marginal) {
+  Constructor(ModelFolderClass model, name, generations, preburn, print, marginal) {
     Name       = name;
     Model      = model;
     RootFolder = model.RootFolder Folder(name);
-    MacFolder  = model.MacFolder Folder(name);
-    Run        = new RunClass(this, each ["Run1", "Run2"], generations, print, marginal);
+    Run        = new RunClass(this, each ["Run1", "Run2"], generations, preburn, print, marginal);
   }
 
   void InitFolders(ExperimentClass experiment) {
-    CreateFolder(RootFolder);
+    CreateFolder(Folders.Repository RootFolder);
     (each Run).InitFolders(experiment);
   }
 }
@@ -114,21 +111,20 @@ class ModeClass {
 
 class ModelFolderClass {
   var       Name,
-            RootFolder,
-            MacFolder;
+            RootFolder;
   ModeClass Posterior,
             Marginal;
 
   Constructor(ExperimentClass experiment, name) {
     Name       = name;
     RootFolder = experiment.RootFolder Folder(name);
-    MacFolder  = experiment.MacFolder Folder(name);
-    Posterior  = new ModeClass(this, "Posterior", 1_000_000, 1000, false);
-    Marginal   = new ModeClass(this, "Marginal", 50_000, 100, true);
+//    Posterior  = new ModeClass(this, "Posterior", 1_000_000, 20_000, 1000, false);
+    Posterior  = new ModeClass(this, "Posterior", 10_000, 1000, 1000, false);
+    Marginal   = new ModeClass(this, "Marginal", 50_000, 5000, 100, true);
   }
 
   void InitFolders(ExperimentClass experiment) {
-    CreateFolder(RootFolder);
+    CreateFolder(Folders.Repository RootFolder);
     Posterior.InitFolders(experiment);
     Marginal.InitFolders(experiment);
   }
@@ -158,8 +154,7 @@ abstract class ExperimentClass: FactClass {
     Data           = rule.Data;
     Name           = name;
     FolderName     = folder;
-    RootFolder     = Folders.Repository Folder("Experiments") Folder(folder);
-    MacFolder      = Folder("Experiments") Folder(folder);
+    RootFolder     = Folder("Experiments") Folder(folder);
     ExampleConcept = new ExampleConceptClass(Data, Trial.ExampleConcept);
     CalcStatic     = new CalcRatesClass(Data, Rule);
     CalcExperiment = new CalcRatesClass(Data, Rule, new TransitionClass(Data, Rule, true));
@@ -178,7 +173,7 @@ abstract class ExperimentClass: FactClass {
 
   void InitFolders {
 //    if (not FolderExists(RootFolder)) {
-      CreateFolder(RootFolder);
+      CreateFolder(Folders.Repository RootFolder);
       (each Models).InitFolders(this);
 //    }
   }
