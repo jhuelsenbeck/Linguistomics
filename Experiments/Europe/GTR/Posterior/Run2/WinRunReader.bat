@@ -1,2 +1,2 @@
-"C:/Users/shawn/Documents/Code/Linguistomics/IndellyReader/x64/release/indellyreader.exe" -i "C:/Users/shawn/Documents/Code/Linguistomics/Experiments/Europe/GTR/Posterior/Run2/Execute" -o "C:/Users/shawn/Documents/Code/Linguistomics/Experiments/Europe/GTR/Posterior/Run2/Execute/out" 
+"Z:/Documents/GitHub/Linguistomics/IndellyReader/x64/release/indellyreader.exe" -i "Z:/Documents/GitHub/Linguistomics/Experiments/Europe/GTR/Posterior/Run2/Execute" -o "Z:/Documents/GitHub/Linguistomics/Experiments/Europe/GTR/Posterior/Run2/Execute/out" 
 pause
