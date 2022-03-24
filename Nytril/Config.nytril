@@ -3,18 +3,19 @@ using Format, Units, Math, IO, LinkTypes;
 //======================================================================
 
 namespace Info {
-  LinkMin        = 5;
-  EXEFolder      = Folders.Repository;
-  EXERelative    = Folder("x64") Folder("release");
-  ReaderEXE      = EXEFolder Folder("IndellyReader") EXERelative FileName("indellyreader.exe");
-  MCMCEXE        = EXEFolder Folder("Indelly") EXERelative FileName("tonguetwister.exe");
-  MacFolder      = Folder("macfolder");
+  LinkMin          = 5;
+  EXEFolder        = Folders.Repository;
+  EXERelative      = Folder("x64") Folder("release");
+  ReaderEXE        = EXEFolder Folder("IndellyReader") EXERelative FileName("indellyreader.exe");
+  MCMCEXE          = EXEFolder Folder("Indelly") EXERelative FileName("tonguetwister.exe");
+  MacFolder        = Folder("../../../../../MacOS_bin");
 
-  MacReaderEXE   = MacFolder FileName("indellyreader.app");
-  MacMCMCEXE     = MacFolder FileName("tonguetwister.app");
-  ImageFolder    = Folders.Source Folder("Images");
-  ExperimentBase = Folders.Repository Folder("Experiments");
-  ConfigFile     = FileName("config") Extensions.JSON;
+  MacReaderEXE     = MacFolder FileName("indellyreader");
+  MacMCMCEXE       = MacFolder FileName("tonguetwister");
+  ImageFolder      = Folders.Source Folder("Images");
+  ConfigFile       = FileName("config") Extensions.JSON;
+  ExecuteFolder    = Folder("Execute");
+  ExperimentFolder = Folder("Experiments");
 }
 
 //======================================================================
@@ -120,15 +121,15 @@ class ConfigFileClass {
       Span {Variable("NumberOfStates"); data.UniqueSegments.Length; CommaSpace};
 
       Span {Variable("McmcSettings"); "{"};
-        StringVar("Model", ToLower(Run.Mode.Name));
+        StringVar("Model", ToLower(Run.Mode.Model.Name));
         BoolVar("OnlyCompleteWords", false);
         AddVar("Seed", Run.Seed);
-        BoolVar("CalcMarginal", false);
+        BoolVar("CalcMarginal", Run.Marginal);
         AddVar("PrintFreq", Run.Print);
         if (Run.Marginal) {
           AddVar("NumTunings", 2);
           AddVar("TuneLength", 1000);
-          AddVar("PreburnLength", 20_000);
+          AddVar("PreburnLength", Run.PreBurn);
           AddVar("StoneSampleLength", 10_000);
           AddVar("StoneSampleFreq", 50);
         }

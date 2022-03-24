@@ -69,7 +69,7 @@ class DefClass: FactClass {
     Description = description;
   }
 
-  override GetLayoutDoc = Span {
+  override GetLayoutDoc = Style.Equation {
     Hover: new HoverClass(this, HoverTypes.Tip);
     Symbol;
     Link to this;
@@ -108,19 +108,21 @@ class DefClass: FactClass {
 
 class EquationClass: FactClass {
   field Name;
-  var   Line;
+  var   Formula;
 
   Constructor(id, name) {
     super.Constructor(id);
     Name = name;
   }
 
-  override GetLayoutDoc = Span {
-    Line;
-    Link to this;
-  };
+  override GetLayoutDoc = Formula {Link to this};
 
   override GetLayoutFact = GetLayoutTip;
+
+  Display = Style.EquationPar {
+    Link to this;
+    Formula;
+  };
 
   override GetLayoutTip = Block {
     Paragraph {
@@ -131,7 +133,7 @@ class EquationClass: FactClass {
     };
     Paragraph {
       LeftIndent: 24 pts;
-      Line {TextStacked: true};
+      Formula {TextStacked: true};
     }
   };
 }
@@ -667,16 +669,14 @@ namespace Style {
     text;
   };
 
-  Equation = HBox {
-    VAlign: VAligns.Center;
+  Equation = Span {
     TextEquation: true;
   };
 
   EquationPar = Paragraph {
     SpaceBefore: 10 pts;
-    TextEquation: true;
-    TextStacked: true;
     ParAlignment: ParAlignments.Center;
+    TextStacked: true;
     TextHeight: 12 pts;
   };
 }
