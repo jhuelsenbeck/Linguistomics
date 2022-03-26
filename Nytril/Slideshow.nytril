@@ -12,87 +12,18 @@ class SlideClass {
   }
 
   virtual Body(PresentationClass presentation) {
-
-  }
-}
-
-class IntroSlideClass: SlideClass {
-  var Author;
-
-  Constructor(title, author) {
-    super.Constructor(title, AllTypes);
-    Author = author;
   }
 
-  override Body(PresentationClass presentation) = Paragraph {
-    var gap = (DocMetrics.SlideContent.Height - 2 inches) * 0.25;
-    Block {
-      LeftIndent: 1 inch;
-
-      Paragraph {
-        TextHeight: 40 pts;
-        SpaceBefore: gap;
-        Title;
-      };
-      Paragraph {
-        TextHeight: 18 pts;
-        SpaceBefore: gap*2;
-        Author.First;
-        Space;
-        Author.Last;
-      };
-      var department = Author.FindFirstFact(DepartmentLink);
-      if (valid department) {
-        Paragraph {
-          TextHeight: 14 pts;
-          department.Name;
-        };
-        var org = department.FindFirstFact(DepartmentLink);
-        if (valid org) {
-          Paragraph {
-            TextHeight: 14 pts;
-            org.Name;
-          };
-        }
-      }
-      Paragraph {
-        TextHeight: 12 pts;
-        var email = Author.FindFirstFact(WorkEmailLink);
-        if (valid email)
-          email.Value;
-      };
-    };
-  };
-}
-//======================================================================
-
-class EndSlideClass: SlideClass {
-  Constructor {
-    super.Constructor(Lang.Questions, AllTypes);
-  }
-
-  override Body(PresentationClass presentation) = Paragraph {
-    var h = 150 pts;
-    ParAlignment: ParAlignments.Center;
-    SpaceBefore: (DocMetrics.SlideContent.Height - h) * 0.5;
-    Figure {
-      TextHeight: h;
-      Fill: (Style.LightColor..Style.DarkColor) {Vertical: true};
-      "?";
-    }
+  virtual AddSlidePage(PresentationClass presentation, page) = Block {
+    Body(presentation);
   };
 }
 
 //======================================================================
 
-class PresentationClass: BaseViewClass {
-  var         SlideDeck;
-  PersonClass Author;
-
-  Constructor(ExperimentClass experiment, id, title, PersonClass author) {
-    super.Constructor(experiment, id, title);
-    DocumentType = ConfigurationClass.DocumentTypes.SlideShow;
-    Author       = author;
+class FancySlideClass: SlideClass {
+  Constructor(title, type) {
+    super.Constructor(title, type);
   }
 
   FixedFrame(x, y, width, height) = Frame {
@@ -177,18 +108,116 @@ class PresentationClass: BaseViewClass {
     }
   };
 
-  AddSlideBlock(slide, page) = Block {
+  override AddSlidePage(PresentationClass presentation, page) = Block {
     Paragraph {
       PageBreakBefore: true;
       FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
-        HeaderBackground(slide.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
+        HeaderBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
       };
       FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
         FooterBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
       };
     };
-    slide.Body(this);
+    Body(presentation);
   };
+
+}
+
+//======================================================================
+
+class IntroSlideClass: SlideClass {
+  var Author;
+
+  Constructor(title, author) {
+    super.Constructor(title, AllTypes);
+    Author = author;
+  }
+
+  override Body(PresentationClass presentation) = Paragraph {
+    var gap = (DocMetrics.SlideContent.Height - 2 inches) * 0.25;
+    Block {
+      LeftIndent: 1 inch;
+
+      Paragraph {
+        TextHeight: 40 pts;
+        SpaceBefore: gap;
+        Title;
+      };
+      Paragraph {
+        TextHeight: 18 pts;
+        SpaceBefore: gap*2;
+        Author.First;
+        Space;
+        Author.Last;
+      };
+      var department = Author.FindFirstFact(DepartmentLink);
+      if (valid department) {
+        Paragraph {
+          TextHeight: 14 pts;
+          department.Name;
+        };
+        var org = department.FindFirstFact(DepartmentLink);
+        if (valid org) {
+          Paragraph {
+            TextHeight: 14 pts;
+            org.Name;
+          };
+        }
+      }
+      Paragraph {
+        TextHeight: 12 pts;
+        var email = Author.FindFirstFact(WorkEmailLink);
+        if (valid email)
+          email.Value;
+      };
+    };
+  };
+}
+//======================================================================
+
+class EndSlideClass: FancySlideClass {
+  Constructor {
+    super.Constructor(Lang.Questions, AllTypes);
+  }
+
+  override Body(PresentationClass presentation) = Paragraph {
+    var h = 150 pts;
+    ParAlignment: ParAlignments.Center;
+    SpaceBefore: (DocMetrics.SlideContent.Height - h) * 0.5;
+    Figure {
+      TextHeight: h;
+      Fill: (Style.LightColor..Style.DarkColor) {Vertical: true};
+      "?";
+    }
+  };
+}
+
+//======================================================================
+
+class VarSlideClass: FancySlideClass {
+  var Variable;
+
+  Constructor(variable) {
+    super.Constructor(variable.Title, variable.Type);
+    Variable = variable;
+  }
+
+  override Body(PresentationClass presentation) = Paragraph {
+    Variable.Body(presentation);
+  };
+}
+
+//======================================================================
+
+class PresentationClass: BaseViewClass {
+  SlideClass[] SlideDeck;
+  PersonClass  Author;
+
+  Constructor(ExperimentClass experiment, id, title, PersonClass author) {
+    super.Constructor(experiment, id, title);
+    DocumentType = ConfigurationClass.DocumentTypes.SlideShow;
+    Author       = author;
+  }
 
   ShowFigureSlide(figure, format=null) = Block {
     figure.Caption(Experiment);
@@ -200,14 +229,12 @@ class PresentationClass: BaseViewClass {
   };
 
   override GetMainDocument = Style.MainDocument {
-    var slides = [new IntroSlideClass(Title, Author)] + SlideDeck + [new EndSlideClass];
+    var slides = [new IntroSlideClass(Title, Author)] +
+                 SlideDeck +
+                 [new EndSlideClass];
 
-    foreach (var slide in slides) {
-      if (EachIndex > 0)
-        AddSlideBlock(slide, EachIndex);
-      else
-        slide.Body(this);
-    }
+    foreach (var slide in slides)
+      slide.AddSlidePage(this, EachIndex);
   };
 }
 //======================================================================
