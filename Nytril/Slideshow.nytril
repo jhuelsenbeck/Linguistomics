@@ -1,0 +1,214 @@
+using Format, Units, Math, LinkTypes;
+
+//======================================================================
+
+class SlideClass {
+  var Title,
+      Type;
+
+  Constructor(title, type) {
+    Title = title;
+    Type  = type;
+  }
+
+  virtual Body(PresentationClass presentation) {
+
+  }
+}
+
+class IntroSlideClass: SlideClass {
+  var Author;
+
+  Constructor(title, author) {
+    super.Constructor(title, AllTypes);
+    Author = author;
+  }
+
+  override Body(PresentationClass presentation) = Paragraph {
+    var gap = (DocMetrics.SlideContent.Height - 2 inches) * 0.25;
+    Block {
+      LeftIndent: 1 inch;
+
+      Paragraph {
+        TextHeight: 40 pts;
+        SpaceBefore: gap;
+        Title;
+      };
+      Paragraph {
+        TextHeight: 18 pts;
+        SpaceBefore: gap*2;
+        Author.First;
+        Space;
+        Author.Last;
+      };
+      var department = Author.FindFirstFact(DepartmentLink);
+      if (valid department) {
+        Paragraph {
+          TextHeight: 14 pts;
+          department.Name;
+        };
+        var org = department.FindFirstFact(DepartmentLink);
+        if (valid org) {
+          Paragraph {
+            TextHeight: 14 pts;
+            org.Name;
+          };
+        }
+      }
+      Paragraph {
+        TextHeight: 12 pts;
+        var email = Author.FindFirstFact(WorkEmailLink);
+        if (valid email)
+          email.Value;
+      };
+    };
+  };
+}
+//======================================================================
+
+class EndSlideClass: SlideClass {
+  Constructor {
+    super.Constructor(Lang.Questions, AllTypes);
+  }
+
+  override Body(PresentationClass presentation) = Paragraph {
+    var h = 150 pts;
+    ParAlignment: ParAlignments.Center;
+    SpaceBefore: (DocMetrics.SlideContent.Height - h) * 0.5;
+    Figure {
+      TextHeight: h;
+      Fill: (Style.LightColor..Style.DarkColor) {Vertical: true};
+      "?";
+    }
+  };
+}
+
+//======================================================================
+
+class PresentationClass: BaseViewClass {
+  var         SlideDeck;
+  PersonClass Author;
+
+  Constructor(ExperimentClass experiment, id, title, PersonClass author) {
+    super.Constructor(experiment, id, title);
+    DocumentType = ConfigurationClass.DocumentTypes.SlideShow;
+    Author       = author;
+  }
+
+  FixedFrame(x, y, width, height) = Frame {
+    HRelative: HRelatives.Page;
+    VRelative: VRelatives.Page;
+    Wrapping: Wrappings.BehindText;
+    X: x;
+    Y: y;
+    Width: width;
+    Height: height;
+  };
+
+  Design(width, height, right, bar) = Canvas {
+    Height: height;
+
+    var x0 = 0;
+    var y0 = 0;
+    var t  = 0.10 height;
+    var x1 = 0.80 width;
+    var x2 = 0.90 width;
+    var p1 = Point((x2 + x1)*0.5, height * (right ? 0.25 : 0.75));
+
+    Figure {
+      Fill: bar;
+      FigurePath {
+        Closed: true;
+        LineTo(x0, t);
+        LineTo(x1, t);
+        QuadTo(p1, Point(x2, height));
+        LineTo(x2, height);
+        LineTo(x0, height);
+      }
+    };
+
+    Figure {
+      Fill: Style.BarLine;
+      FigurePath {
+        Closed: true;
+        MoveTo(x0, y0);
+        LineTo(x1, y0);
+        QuadTo(p1, Point(x2, height-t));
+        LineTo(width, height-t);
+        LineTo(width, height);
+        LineTo(x2, height);
+        QuadTo(p1, Point(x1, t));
+        LineTo(x0, t);
+      }
+    };
+  };
+
+  HeaderBackground(title, width, height) = Design(width, height, true, Style.HeaderLeftBar) {
+    Frame {
+      Width: 0.75 width;
+      VAlignment: VAligns.Center;
+      X: DocMetrics.PageMargin.Left;
+      Paragraph {
+        TextHeight: 30 pts;
+        TextColor: Colors.White;
+        title;
+      };
+    };
+  };
+
+  FooterBackground(title, width, height, page) = Design(width, height, false, Style.LeftBar) {
+    Frame {
+      VAlignment: VAligns.Center;
+      X: DocMetrics.PageMargin.Left;
+      Width: DocMetrics.PageContent.Width;
+      Paragraph {
+        TabStops: [(DocMetrics.PageContent.Width) {Type: TabTypes.Right}];
+        TextHeight: 16 pts;
+        Span {
+          TextColor: 75%;
+          title
+        };
+        Tab;
+        Span {
+          TextColor: Style.HeaderBar1;
+          page;
+        }
+      }
+    }
+  };
+
+  AddSlideBlock(slide, page) = Block {
+    Paragraph {
+      PageBreakBefore: true;
+      FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
+        HeaderBackground(slide.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
+      };
+      FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
+        FooterBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
+      };
+    };
+    slide.Body(this);
+  };
+
+  ShowFigureSlide(figure, format=null) = Block {
+    figure.Caption(Experiment);
+    Paragraph {
+      ParAlignment: ParAlignments.Center;
+      format;
+      figure.Body(Experiment);
+    }
+  };
+
+  override GetMainDocument = Style.MainDocument {
+    var slides = [new IntroSlideClass(Title, Author)] + SlideDeck + [new EndSlideClass];
+
+    foreach (var slide in slides) {
+      if (EachIndex > 0)
+        AddSlideBlock(slide, EachIndex);
+      else
+        slide.Body(this);
+    }
+  };
+}
+//======================================================================
+

@@ -1,189 +1,112 @@
-using Format, Units, Math, IO, LinkTypes;
+using Format, Units, Slides, ShowTypes;
+
+flags ShowTypes {
+  None,
+  Linguist,
+  Biologist,
+}
+
+AllTypes = Linguist Biologist;
 
 //======================================================================
 
-namespace Slides.Questions {
-  Title = Lang.Questions;
-
-  Body(ExperimentClass experiment) = Paragraph {
-    var h = 150 pts;
-    ParAlignment: ParAlignments.Center;
-    SpaceBefore: (DocMetrics.SlideContent.Height - h) * 0.5;
-    Figure {
-      TextHeight: h;
-      Fill: (Style.LightColor..Style.DarkColor) {Vertical: true};
-      "?";
-    }
-  };
-}
-
 namespace Slides.Introduction {
   Title = PaperSections.Introduction.Title;
-  Body(ExperimentClass experiment)  = Block {
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = Block {
     PaperSections.Introduction.Slide;
-    Style.ShowTable(experiment, TableFigures.Cognates);
+    Style.ShowTable(presentation.Experiment, TableFigures.Cognates);
   };
 }
 
 namespace Slides.ExampleTree {
   Title = "Example Tree";
-  Body(ExperimentClass experiment) = Style.ShowFigureSlide(experiment, Figures.ExampleTree);
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = presentation.ShowFigureSlide(Figures.ExampleTree);
 }
 
 namespace Slides.Alignment {
   Title = Lang.Alignment;
-  Body(ExperimentClass experiment) = Style.ShowFigureSlide(experiment, Figures.Alignment, TextHeight: 5 pts);
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = presentation.ShowFigureSlide(Figures.Alignment, TextHeight: 5 pts);
 }
 
 namespace Slides.ShowResults {
   Title = Lang.ConsensusTree;
-  Body(ExperimentClass experiment) = Style.TreeOptions {
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = Style.TreeOptions {
     Width: DocMetrics.SlideContent.Width;
-    Root: experiment.MainRun.Tree;
+    Root: presentation.Experiment.MainRun.Tree;
   };
 }
 
 namespace Slides.LanguagesUsed {
   Title = Lang.Languages;
-  Body(ExperimentClass experiment) = SegmentDisplay.ShowLanguages(experiment.Data);
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = SegmentDisplay.ShowLanguages(presentation.Experiment.Data);
 }
 
 namespace Slides.ConceptsUsed {
   Title = Lang.ConceptsExamples;
-  Body(ExperimentClass experiment) = AllWords.ShowTable(11 pts, experiment.Data, 2);
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = AllWords.ShowTable(11 pts, presentation.Experiment.Data, 2);
 }
 
 namespace Slides.UniqueCharacters {
   Title = Lang.UniqueSegments;
-  Body(ExperimentClass experiment) = SegmentDisplay.ShowSegmentAssignments(experiment.Data);
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = SegmentDisplay.ShowSegmentAssignments(presentation.Experiment.Data);
 }
 
 namespace Slides.SegmentFrequencies {
   Title = Lang.SegmentFrequencies;
-  Body(ExperimentClass experiment) = SegmentDisplay.FrequencyChart(experiment.Data, Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height));
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = SegmentDisplay.FrequencyChart(presentation.Experiment.Data, Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height));
 }
 
 namespace Slides.PartitionRules {
   Title = Lang.PartitionRules;
-  Body(ExperimentClass experiment) = experiment.Rule.ShowPartitions;
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = presentation.Experiment.Rule.ShowPartitions;
 }
 
 namespace Slides.PartitionDiagramExperiment {
   Title = Lang.TransitionRates;
-  Body(ExperimentClass experiment) = Block {
-    Figures.FrequencyDiagramStatic.Caption;
-    experiment.CalcExperiment.PartitionDiagram(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 40 pts));
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = Block {
+    Figures.FrequencyDiagramStatic.Caption(presentation.Experiment);
+    presentation.Experiment.CalcExperiment.PartitionDiagram(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 40 pts));
   };
 }
 
 namespace Slides.PartitionDiagramStatic {
   Title = Lang.StaticRates;
-  Body(ExperimentClass experiment) = Block {
-    Figures.FrequencyDiagramStatic.Caption(experiment);
-    experiment.CalcStatic.PartitionDiagram(DocMetrics.SlideContent);
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = Block {
+    Figures.FrequencyDiagramStatic.Caption(presentation.Experiment);
+    presentation.Experiment.CalcStatic.PartitionDiagram(DocMetrics.SlideContent);
   };
 }
 
 namespace Slides.PartitionBoxStatic {
   Title = "Segment Transition Rates";
-  Body(ExperimentClass experiment) = Block {
-    Figures.FrequencyBoxStatic.Caption(experiment);
-    experiment.CalcStatic.PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 20 pts));
+  Type  = Linguist Biologist;
+
+  Body(PresentationClass presentation) = Block {
+    Figures.FrequencyBoxStatic.Caption(presentation.Experiment);
+    presentation.Experiment.CalcStatic.PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 20 pts));
   };
-}
-//======================================================================
-
-class PresentationViewClass: BaseViewClass {
-  var SlideList,
-      Author;
-
-  Constructor(ExperimentClass experiment, id, title, author) {
-    super.Constructor(experiment, id, title);
-    DocumentType = ConfigurationClass.DocumentTypes.SlideShow;
-    Author       = author;
-    SlideList    = new ListClass(64);
-  }
-
-  void AddSlide(slide) {
-    SlideList.Add(slide);
-  }
-
-  override GetMainDocument = Style.MainDocument {
-    var gap = (DocMetrics.SlideContent.Height - 2 inches) * 0.25;
-    Block {
-      LeftIndent: 1 inch;
-
-      Paragraph {
-        TextHeight: 40 pts;
-        SpaceBefore: gap;
-        Title;
-      };
-      Paragraph {
-        TextHeight: 18 pts;
-        SpaceBefore: gap*2;
-        Author.First;
-        Space;
-        Author.Last;
-      };
-      var department = Author.FindFirstFact(DepartmentLink);
-      if (valid department) {
-        Paragraph {
-          TextHeight: 14 pts;
-          department.Name;
-        };
-        var org = department.FindFirstFact(DepartmentLink);
-        if (valid org) {
-          Paragraph {
-            TextHeight: 14 pts;
-            org.Name;
-          };
-        }
-      }
-      Paragraph {
-        TextHeight: 12 pts;
-        var email = Author.FindFirstFact(WorkEmailLink);
-        if (valid email)
-          email.Value;
-      };
-    };
-
-    foreach (var slide in SlideList)
-      AddSlideBlock(Experiment, slide, EachOne);
-  };
-}
-//======================================================================
-
-class JohnPresentationClass: PresentationViewClass {
-  Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", People.JPHuelsenbeck);
-    AddSlide(Slides.Introduction);
-    AddSlide(Slides.LanguagesUsed);
-    AddSlide(Slides.ExampleTree);
-    AddSlide(Slides.Alignment);
-    AddSlide(Slides.UniqueCharacters);
-    AddSlide(Slides.SegmentFrequencies);
-    AddSlide(Slides.PartitionRules);
-    AddSlide(Slides.PartitionDiagramStatic);
-    AddSlide(Slides.ShowResults);
-    AddSlide(Slides.Questions);
-  }
-}
-//======================================================================
-
-class DavidPresentationClass: PresentationViewClass {
-  Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "David's Presentation", People.DMGoldstein);
-    AddSlide(Slides.Introduction);
-    AddSlide(Slides.LanguagesUsed);
-    AddSlide(Slides.ConceptsUsed);
-    AddSlide(Slides.UniqueCharacters);
-    AddSlide(Slides.SegmentFrequencies);
-    AddSlide(Slides.PartitionRules);
-    AddSlide(Slides.PartitionDiagramStatic);
-    AddSlide(Slides.PartitionBoxStatic);
-    AddSlide(Slides.ShowResults);
-    AddSlide(Slides.Questions);
-  }
 }
 //======================================================================
 

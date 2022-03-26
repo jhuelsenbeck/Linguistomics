@@ -33,100 +33,6 @@ abstract class BaseViewClass: DocumentClass {
     (each Defs).Appendix;
   };
 
-  FixedFrame(x, y, width, height) = Frame {
-    HRelative: HRelatives.Page;
-    VRelative: VRelatives.Page;
-    Wrapping: Wrappings.BehindText;
-    X: x;
-    Y: y;
-    Width: width;
-    Height: height;
-  };
-
-  Design(width, height, right, bar) = Canvas {
-    Height: height;
-
-    var x0 = 0;
-    var y0 = 0;
-    var t  = 0.10 height;
-    var x1 = 0.80 width;
-    var x2 = 0.90 width;
-    var p1 = Point((x2 + x1)*0.5, height * (right ? 0.25 : 0.75));
-
-    Figure {
-      Fill: bar;
-      FigurePath {
-        Closed: true;
-        LineTo(x0, t);
-        LineTo(x1, t);
-        QuadTo(p1, Point(x2, height));
-        LineTo(x2, height);
-        LineTo(x0, height);
-      }
-    };
-
-    Figure {
-      Fill: Style.BarLine;
-      FigurePath {
-        Closed: true;
-        MoveTo(x0, y0);
-        LineTo(x1, y0);
-        QuadTo(p1, Point(x2, height-t));
-        LineTo(width, height-t);
-        LineTo(width, height);
-        LineTo(x2, height);
-        QuadTo(p1, Point(x1, t));
-        LineTo(x0, t);
-      }
-    };
-  };
-
-  HeaderBackground(title, width, height) = Design(width, height, true, Style.HeaderLeftBar) {
-    Frame {
-      Width: 0.75 width;
-      VAlignment: VAligns.Center;
-      X: DocMetrics.PageMargin.Left;
-      Paragraph {
-        TextHeight: 30 pts;
-        TextColor: Colors.White;
-        title;
-      };
-    };
-  };
-
-  FooterBackground(title, width, height, page) = Design(width, height, false, Style.LeftBar) {
-    Frame {
-      VAlignment: VAligns.Center;
-      X: DocMetrics.PageMargin.Left;
-      Width: DocMetrics.PageContent.Width;
-      Paragraph {
-        TabStops: [(DocMetrics.PageContent.Width) {Type: TabTypes.Right}];
-        TextHeight: 16 pts;
-        Span {
-          TextColor: 75%;
-          title
-        };
-        Tab;
-        Span {
-          TextColor: Style.HeaderBar1;
-          page;
-        }
-      }
-    }
-  };
-
-  AddSlideBlock(ExperimentClass experiment, slide, page) = Block {
-    Paragraph {
-      PageBreakBefore: true;
-      FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
-        HeaderBackground(slide.Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
-      };
-      FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
-        FooterBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
-      };
-    };
-    slide.Body(experiment);
-  };
 }
 
 //======================================================================
@@ -303,6 +209,22 @@ class SourceViewClass: BaseViewClass {
 
     ShowAppendix(each appendices);
   };
+}
+//======================================================================
+
+class JohnPresentationClass: PresentationClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", People.JPHuelsenbeck);
+    SlideDeck = Slides.FindSlice(s => s.Type.HasFlag(ShowTypes.Biologist));
+ }
+}
+//======================================================================
+
+class DavidPresentationClass: PresentationClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "David's Presentation", People.DMGoldstein);
+    SlideDeck = Slides.FindSlice(s => s.Type.HasFlag(ShowTypes.Linguist));
+  }
 }
 //======================================================================
 
