@@ -108,7 +108,7 @@ class FancySlideClass: SlideClass {
     }
   };
 
-  override AddSlidePage(PresentationClass presentation, page) = Block {
+  FullPage(PresentationClass presentation, page) = Block {
     Paragraph {
       PageBreakBefore: true;
       FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
@@ -118,9 +118,12 @@ class FancySlideClass: SlideClass {
         FooterBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
       };
     };
-    Body(presentation);
   };
 
+  override AddSlidePage(PresentationClass presentation, page) = Block {
+    FullPage(presentation, page);
+    Body(presentation);
+  };
 }
 
 //======================================================================
@@ -133,43 +136,41 @@ class IntroSlideClass: SlideClass {
     Author = author;
   }
 
-  override Body(PresentationClass presentation) = Paragraph {
+  override Body(PresentationClass presentation) = Block {
     var gap = (DocMetrics.SlideContent.Height - 2 inches) * 0.25;
-    Block {
-      LeftIndent: 1 inch;
+    LeftIndent: 1 inch;
 
+    Paragraph {
+      TextHeight: 40 pts;
+      SpaceBefore: gap;
+      Title;
+    };
+    Paragraph {
+      TextHeight: 18 pts;
+      SpaceBefore: gap*2;
+      Author.First;
+      Space;
+      Author.Last;
+    };
+    var department = Author.FindFirstFact(DepartmentLink);
+    if (valid department) {
       Paragraph {
-        TextHeight: 40 pts;
-        SpaceBefore: gap;
-        Title;
+        TextHeight: 14 pts;
+        department.Name;
       };
-      Paragraph {
-        TextHeight: 18 pts;
-        SpaceBefore: gap*2;
-        Author.First;
-        Space;
-        Author.Last;
-      };
-      var department = Author.FindFirstFact(DepartmentLink);
-      if (valid department) {
+      var org = department.FindFirstFact(DepartmentLink);
+      if (valid org) {
         Paragraph {
           TextHeight: 14 pts;
-          department.Name;
+          org.Name;
         };
-        var org = department.FindFirstFact(DepartmentLink);
-        if (valid org) {
-          Paragraph {
-            TextHeight: 14 pts;
-            org.Name;
-          };
-        }
       }
-      Paragraph {
-        TextHeight: 12 pts;
-        var email = Author.FindFirstFact(WorkEmailLink);
-        if (valid email)
-          email.Value;
-      };
+    }
+    Paragraph {
+      TextHeight: 12 pts;
+      var email = Author.FindFirstFact(WorkEmailLink);
+      if (valid email)
+        email.Value;
     };
   };
 }
@@ -180,15 +181,17 @@ class EndSlideClass: FancySlideClass {
     super.Constructor(Lang.Questions, AllTypes);
   }
 
-  override Body(PresentationClass presentation) = Paragraph {
-    var h = 150 pts;
-    ParAlignment: ParAlignments.Center;
-    SpaceBefore: (DocMetrics.SlideContent.Height - h) * 0.5;
-    Figure {
-      TextHeight: h;
-      Fill: (Style.LightColor..Style.DarkColor) {Vertical: true};
-      "?";
-    }
+  override Body(PresentationClass presentation) = Block {
+    Paragraph {
+      var h = 150 pts;
+      ParAlignment: ParAlignments.Center;
+      SpaceBefore: (DocMetrics.SlideContent.Height - h) * 0.5;
+      Figure {
+        TextHeight: h;
+        Fill: (Style.LightColor..Style.DarkColor) {Vertical: true};
+        "?";
+      }
+    };
   };
 }
 
@@ -202,11 +205,47 @@ class VarSlideClass: FancySlideClass {
     Variable = variable;
   }
 
-  override Body(PresentationClass presentation) = Paragraph {
+  override Body(PresentationClass presentation) = Block {
     Variable.Body(presentation);
   };
 }
 
+//======================================================================
+
+class VarItemsClass: VarSlideClass {
+  var Items,
+      TotalHeight;
+
+  Constructor(PresentationClass presentation, variable) {
+    super.Constructor(variable);
+    Items = variable.Items;
+
+    var height = 0.0;
+    foreach (var item in Items)
+      height += LayoutSize(item.Body(presentation)).Height;
+    TotalHeight = height;
+  }
+
+  ShowSet(PresentationClass presentation, page, count, delta) = Block {
+    FullPage(presentation, page);
+    ListBlock {
+      for (var i = 0; i < count; ++i) {
+        Frame {
+          MarginB: delta;
+          Items[i].Body(presentation);
+        };
+      }
+    }
+   };
+
+  override AddSlidePage(PresentationClass presentation, page) = Block {
+    var delta = 0.0;
+    if (Items.Length > 1 && TotalHeight < DocMetrics.SlideContent.Height)
+      delta = Math.Min([10 pts, (DocMetrics.SlideContent.Height - TotalHeight) / (Items.Length-1)]);
+    for (var i = 1; i <= Items.Length; ++i)
+      ShowSet(presentation, page, i, delta);
+  };
+}
 //======================================================================
 
 class PresentationClass: BaseViewClass {
@@ -236,6 +275,14 @@ class PresentationClass: BaseViewClass {
     foreach (var slide in slides)
       slide.AddSlidePage(this, EachIndex);
   };
+
+  ChooseSlideType(variable) {
+    var items = variable.?Items;
+    if (exists items)
+      return new VarItemsClass(this, variable);
+    else
+      return new VarSlideClass(variable);
+  }
 }
 //======================================================================
 
