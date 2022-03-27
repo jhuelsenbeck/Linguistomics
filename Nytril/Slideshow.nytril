@@ -212,43 +212,93 @@ class VarSlideClass: FancySlideClass {
 
 //======================================================================
 
+class SlideItemClass {
+  var Height,
+      Content,
+      Number;
+
+   Constructor(PresentationClass presentation, item, number) {
+     Content = Frame {
+       Width: DocMetrics.SlideContent.Width - PresentationClass.ItemIndent;
+       item.Body(presentation);
+     };
+     Height = LayoutSize(Content).Height;
+     Number = number;
+   }
+}
+
+class SlideGroupClass {
+  var Items;
+
+  Constructor {
+    Items = new ListClass(8, SlideItemClass);
+  }
+}
+
 class VarItemsClass: VarSlideClass {
-  var Items,
-      TotalHeight;
+  var Groups;
 
   Constructor(PresentationClass presentation, variable) {
     super.Constructor(variable);
-    Items = variable.Items;
+    Groups = new ListClass(8, SlideGroupClass);
+
+    var group = new SlideGroupClass;
+    Groups.Add(group);
 
     var height = 0.0;
-    foreach (var item in Items)
-      height += LayoutSize(item.Body(presentation)).Height;
-    TotalHeight = height;
+    foreach (var iv in variable.Items) {
+      var item = new SlideItemClass(presentation, iv, EachOne);
+      if (group.Items.Length > 0 && height + item.Height >= DocMetrics.SlideContent.Height) {
+        group = new SlideGroupClass;
+        Groups.Add(group);
+        height = 0.0;
+      }
+      group.Items.Add(item);
+      height += item.Height + PresentationClass.ItemSpacer;
+    }
   }
 
-  ShowSet(PresentationClass presentation, page, count, delta) = Block {
+  ShowSet(PresentationClass presentation, SlideGroupClass group, page, count, number) = Block {
     FullPage(presentation, page);
-    ListBlock {
-      for (var i = 0; i < count; ++i) {
-        Frame {
-          MarginB: delta;
-          Items[i].Body(presentation);
+    for (var i = 0; i < count; ++i) {
+      HBox {
+        var item = group.Items[i];
+        VAlign: VAligns.Center;
+        Height: item.Height;
+        HBox {
+          Width: PresentationClass.ItemIndent;
+          Paragraph {
+            TextHeight: 14 pts;
+            Tex.bullet;
+            if (item.Number != number+count)
+              TextColor: Colors.LightGray;
+          };
         };
+
+        item.Content {
+          Border: 1;
+          Height: item.Height;
+        };
+        MarginB: PresentationClass.ItemSpacer;
       }
     }
-   };
+  };
 
   override AddSlidePage(PresentationClass presentation, page) = Block {
-    var delta = 0.0;
-    if (Items.Length > 1 && TotalHeight < DocMetrics.SlideContent.Height)
-      delta = Math.Min([10 pts, (DocMetrics.SlideContent.Height - TotalHeight) / (Items.Length-1)]);
-    for (var i = 1; i <= Items.Length; ++i)
-      ShowSet(presentation, page, i, delta);
+    var number = 0;
+    foreach (var group in Groups) {
+      for (var i = 1; i <= group.Items.Length; ++i)
+        ShowSet(presentation, group, page, i, number);
+      number += group.Items.Length;
+    }
   };
 }
 //======================================================================
 
 class PresentationClass: BaseViewClass {
+  static ItemIndent = 0.25 inches;
+  static ItemSpacer = 10 pts;
+
   SlideClass[] SlideDeck;
   PersonClass  Author;
 
