@@ -219,6 +219,7 @@ class SlideItemClass {
 
    Constructor(PresentationClass presentation, item, number) {
      Content = Frame {
+       Style.MainStyle;
        Width: DocMetrics.SlideContent.Width - PresentationClass.ItemIndent;
        item.Body(presentation);
      };
@@ -260,28 +261,31 @@ class VarItemsClass: VarSlideClass {
 
   ShowSet(PresentationClass presentation, SlideGroupClass group, page, count, number) = Block {
     FullPage(presentation, page);
-    for (var i = 0; i < count; ++i) {
-      HBox {
-        var item = group.Items[i];
-        VAlign: VAligns.Center;
-        Height: item.Height;
-        HBox {
-          Width: PresentationClass.ItemIndent;
-          Paragraph {
-            TextHeight: 14 pts;
-            Tex.bullet;
-            if (item.Number != number+count)
-              TextColor: Colors.LightGray;
-          };
-        };
+    Table {
+      Columns: [PresentationClass.ItemIndent, DocMetrics.SlideContent.Width - PresentationClass.ItemIndent];
+      for (var i = 0; i < count; ++i) {
+        Row {
+          var item = group.Items[i];
+          Cell {
+            VAlign: VAligns.Center;
+            Paragraph {
+              if (item.Number != number+count) {
+                Tex.blackcirc;
+                TextColor: Colors.LightGray;
+              }
+              else
+                Tex.circ;
 
-        item.Content {
-          Border: 1;
-          Height: item.Height;
-        };
-        MarginB: PresentationClass.ItemSpacer;
+            };
+            Paragraph;
+          };
+          Cell {
+            item.Content;
+            PaddingB: PresentationClass.ItemSpacer;
+          };
+        }
       }
-    }
+    };
   };
 
   override AddSlidePage(PresentationClass presentation, page) = Block {
