@@ -2,28 +2,22 @@ using Format, Units, Math, LinkTypes;
 
 //======================================================================
 
-class SlideClass {
-  var Title,
-      Type;
-
-  Constructor(title, type) {
-    Title = title;
-    Type  = type;
+class SlideStyleClass {
+  Constructor {
   }
 
-  virtual Body(PresentationClass presentation) {
-  }
-
-  virtual AddSlidePage(PresentationClass presentation, page) = Block {
-    Body(presentation);
-  };
+  virtual HeaderFooter(title, PresentationClass presentation, page) = null;
 }
+
+
+SlideStyles.Plain = new SlideStyleClass;
+SlideStyles.Fancy = new FancySlideClass;
 
 //======================================================================
 
-class FancySlideClass: SlideClass {
-  Constructor(title, type) {
-    super.Constructor(title, type);
+class FancySlideClass: SlideStyleClass {
+  Constructor {
+    super.Constructor;
   }
 
   FixedFrame(x, y, width, height) = Frame {
@@ -108,20 +102,51 @@ class FancySlideClass: SlideClass {
     }
   };
 
-  FullPage(PresentationClass presentation, page) = Block {
+  override HeaderFooter(title, PresentationClass presentation, page) = Block {
     Paragraph {
       PageBreakBefore: true;
       FixedFrame(0, 0, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader) {
-        HeaderBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
+        HeaderBackground(title, DocMetrics.DocumentSize.Width, DocMetrics.SlideHeader)
       };
       FixedFrame(0, DocMetrics.DocumentSize.Height - DocMetrics.SlideFooter, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter) {
-        FooterBackground(Title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
+        FooterBackground(title, DocMetrics.DocumentSize.Width, DocMetrics.SlideFooter, page);
       };
     };
   };
+}
+//======================================================================
+
+class SlideClass {
+  var Title,
+      Type,
+      SlideStyle;
+
+  Constructor(title, type, SlideStyleClass style) {
+    Title      = title;
+    Type       = type;
+    SlideStyle = style;
+  }
+
+  virtual Body(PresentationClass presentation) {
+  }
+
+  virtual AddSlidePage(PresentationClass presentation, page) = Block {
+    Body(presentation);
+  };
+}
+
+//======================================================================
+
+class PlainSlideClass: SlideClass {
+  Constructor(title, type, style) {
+    super.Constructor(title, type, SlideStyleClass style);
+  }
+
+
+  virtual HeaderFooter(title, PresentationClass presentation, page) = null;
 
   override AddSlidePage(PresentationClass presentation, page) = Block {
-    FullPage(presentation, page);
+    SlideStyle.HeaderFooter(Title, presentation, page);
     Body(presentation);
   };
 }
@@ -131,8 +156,8 @@ class FancySlideClass: SlideClass {
 class IntroSlideClass: SlideClass {
   var Author;
 
-  Constructor(title, author) {
-    super.Constructor(title, AllTypes);
+  Constructor(title, author, SlideStyleClass style) {
+    super.Constructor(title, AllTypes, style);
     Author = author;
   }
 
@@ -176,9 +201,9 @@ class IntroSlideClass: SlideClass {
 }
 //======================================================================
 
-class EndSlideClass: FancySlideClass {
-  Constructor {
-    super.Constructor(Lang.Questions, AllTypes);
+class EndSlideClass: SlideClass {
+  Constructor(SlideStyleClass style) {
+    super.Constructor(Lang.Questions, AllTypes, style);
   }
 
   override Body(PresentationClass presentation) = Block {
@@ -197,11 +222,11 @@ class EndSlideClass: FancySlideClass {
 
 //======================================================================
 
-class VarSlideClass: FancySlideClass {
+class VarSlideClass: SlideClass {
   var Variable;
 
-  Constructor(variable) {
-    super.Constructor(variable.Title, variable.Type);
+  Constructor(PresentationClass presentation, variable) {
+    super.Constructor(variable.Title, variable.Type, presentation.SlideStyle);
     Variable = variable;
   }
 
@@ -237,10 +262,24 @@ class SlideGroupClass {
 }
 
 class VarItemsClass: VarSlideClass {
-  var Groups;
+  static  TitleHeight = 30 pts;
+
+  var Intro,
+      Groups;
 
   Constructor(PresentationClass presentation, variable) {
-    super.Constructor(variable);
+    super.Constructor(presentation, variable);
+    Intro = Frame {
+      Width: DocMetrics.SlideContent.Width - PresentationClass.ItemIndent;
+      Paragraph {
+        ParAlignment:ParAlignments.Center;
+        SpaceBefore: DocMetrics.SlideContent.Height  * 0.5  - TitleHeight;
+        Style.MainFamily;
+        TextHeight: TitleHeight;
+        Title;
+      };
+    };
+
     Groups = new ListClass(8, SlideGroupClass);
 
     var group = new SlideGroupClass;
@@ -260,7 +299,7 @@ class VarItemsClass: VarSlideClass {
   }
 
   ShowSet(PresentationClass presentation, SlideGroupClass group, page, count, number) = Block {
-    FullPage(presentation, page);
+    SlideStyle.HeaderFooter(Title, presentation, page);
     Table {
       Columns: [PresentationClass.ItemIndent, DocMetrics.SlideContent.Width - PresentationClass.ItemIndent];
       for (var i = 0; i < count; ++i) {
@@ -290,6 +329,9 @@ class VarItemsClass: VarSlideClass {
 
   override AddSlidePage(PresentationClass presentation, page) = Block {
     var number = 0;
+    SlideStyle.HeaderFooter(null, presentation, page++);
+    Intro;
+
     foreach (var group in Groups) {
       for (var i = 1; i <= group.Items.Length; ++i)
         ShowSet(presentation, group, page, i, number);
@@ -303,13 +345,15 @@ class PresentationClass: BaseViewClass {
   static ItemIndent = 0.25 inches;
   static ItemSpacer = 10 pts;
 
-  SlideClass[] SlideDeck;
-  PersonClass  Author;
+  SlideClass[]    SlideDeck;
+  PersonClass     Author;
+  SlideStyleClass SlideStyle;
 
   Constructor(ExperimentClass experiment, id, title, PersonClass author) {
     super.Constructor(experiment, id, title);
     DocumentType = ConfigurationClass.DocumentTypes.SlideShow;
     Author       = author;
+    SlideStyle   = SlideStyles.Fancy;
   }
 
   ShowFigureSlide(figure, format=null) = Block {
@@ -322,9 +366,9 @@ class PresentationClass: BaseViewClass {
   };
 
   override GetMainDocument = Style.MainDocument {
-    var slides = [new IntroSlideClass(Title, Author)] +
+    var slides = [new IntroSlideClass(Title, Author, SlideStyle)] +
                  SlideDeck +
-                 [new EndSlideClass];
+                 [new EndSlideClass(SlideStyle)];
 
     foreach (var slide in slides)
       slide.AddSlidePage(this, EachIndex);
@@ -335,7 +379,7 @@ class PresentationClass: BaseViewClass {
     if (exists items)
       return new VarItemsClass(this, variable);
     else
-      return new VarSlideClass(variable);
+      return new VarSlideClass(this, variable);
   }
 }
 //======================================================================
