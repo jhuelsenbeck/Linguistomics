@@ -2,6 +2,15 @@ using Format, Units, Slides;
 
 //======================================================================
 
+class JohnPresentationClass: ShowClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", [People.JPHuelsenbeck]);
+    Design    = new FancyDesignClass;
+    SlideDeck = AddSlideGroup(Slides);
+  }
+}
+//======================================================================
+
 namespace Slides.Introduction {
   Title = PaperSections.Introduction.Title;
 
@@ -29,7 +38,7 @@ namespace Slides.ShowResults {
   Title = Lang.ConsensusTree;
 
   Body(ShowClass show) = Style.TreeOptions {
-    Width: DocMetrics.SlideContent.Width;
+    Width: show.Design.SlideContent.Width;
     Root: show.Experiment.MainRun.Tree;
   };
 }
@@ -37,7 +46,7 @@ namespace Slides.ShowResults {
 namespace Slides.LanguagesUsed {
   Title = Lang.Languages;
 
-  Body(ShowClass show) = SegmentDisplay.ShowLanguages(show.Experiment.Data);
+  Body(ShowClass show) = SegmentDisplay.ShowLanguages(show.Experiment.Data, show.Design.SlideContent);
 }
 
 namespace Slides.ConceptsUsed {
@@ -55,7 +64,7 @@ namespace Slides.UniqueCharacters {
 namespace Slides.SegmentFrequencies {
   Title = Lang.SegmentFrequencies;
 
-  Body(ShowClass show) = SegmentDisplay.FrequencyChart(show.Experiment.Data, Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height));
+  Body(ShowClass show) = SegmentDisplay.FrequencyChart(show.Experiment.Data, show.Design.SlideContent);
 }
 
 namespace Slides.PartitionRules {
@@ -69,7 +78,7 @@ namespace Slides.PartitionDiagramExperiment {
 
   Body(ShowClass show) = Block {
     Figures.FrequencyDiagramStatic.Caption(show.Experiment);
-    show.Experiment.CalcExperiment.PartitionDiagram(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 40 pts));
+    show.Experiment.CalcExperiment.PartitionDiagram(Size(show.Design.SlideContent.Width, show.Design.SlideContent.Height - 40 pts));
   };
 }
 
@@ -78,7 +87,7 @@ namespace Slides.PartitionDiagramStatic {
 
   Body(ShowClass show) = Block {
     Figures.FrequencyDiagramStatic.Caption(show.Experiment);
-    show.Experiment.CalcStatic.PartitionDiagram(DocMetrics.SlideContent);
+    show.Experiment.CalcStatic.PartitionDiagram(show.Design.SlideContent);
   };
 }
 
@@ -87,7 +96,7 @@ namespace Slides.PartitionBoxStatic {
 
   Body(ShowClass show) = Block {
     Figures.FrequencyBoxStatic.Caption(show.Experiment);
-    show.Experiment.CalcStatic.PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 20 pts));
+    show.Experiment.CalcStatic.PartitionBox(Size(show.Design.SlideContent.Width, show.Design.SlideContent.Height - 20 pts));
   };
 }
 //======================================================================
