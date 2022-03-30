@@ -555,10 +555,12 @@ class ShowClass: BaseViewClass {
           var figure = topic.?Figure;
           if (exists figure)
             s = new FigureSlideClass(this, ts, topic);
-          else {
+          else if (exists topic.?Items) {
             var pause = topic.?Pause;
             s = new TopicSlidesClass(this, ts, slidevar, topic, exists pause and pause);
           }
+          else
+            s = new SingleSlideClass(this, topic);
           list.Add(s);
         }
       }

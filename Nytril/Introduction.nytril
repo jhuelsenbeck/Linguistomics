@@ -118,10 +118,14 @@ namespace PaperSections.Introduction {
 
 //======================================================================
 
-LanguageLine(LanguageClass language, text, code) = Row {
+LanguageLine(LanguageClass language, text, binary, code) = Row {
   language;
   TextIpa {text};
-  code;
+  if (binary)
+    [0, 0, 0].Substitute(code-1, 1);
+  else
+    code;
+
 };
 
 LanguageTable = Table {
@@ -146,42 +150,47 @@ namespace TableFigures.Cognates {
       Lang.IPA;
       Lang.Coding;
     };
-    LanguageLine(Languages.English, "hænd", 0);
-    LanguageLine(Languages.German, "hant", 0);
-    LanguageLine(Languages.French, "mẽ", 1);
-    LanguageLine(Languages.Spanish, "mano", 1);
-    LanguageLine(Languages.Italian, "maːno", 1);
-    LanguageLine(Languages.Russian, "rʊka", 2);
-    LanguageLine(Languages.Polish, "rɛŋka", 2);
+    LanguageLine(Languages.English, "hænd", false, 0);
+    LanguageLine(Languages.German, "hant", false, 0);
+    LanguageLine(Languages.French, "mẽ", false, 1);
+    LanguageLine(Languages.Spanish, "mano", false, 1);
+    LanguageLine(Languages.Italian, "maːno", false, 1);
+    LanguageLine(Languages.Russian, "rʊka", false, 2);
+    LanguageLine(Languages.Polish, "rɛŋka", false, 2);
   };
 }
 
 //======================================================================
+
+FatherTable(binary) = LanguageTable {
+  Columns: [2 inches, 1 inch] + [1 inches {HAlign: HAligns.Center}] * (binary ? 3 : 1);
+  LanguageTitleRow {
+    Lang.Language;
+    SQuote {"father"};
+    if (binary)
+      "Code {0}"(each 1..3);
+    else
+      "Cognate Class";
+  };
+  LanguageLine(Languages.Old_English, "fæder", binary, 1);
+  LanguageLine(Languages.Latin, "pater", binary, 1);
+  LanguageLine(Languages.Greek, "πατήρ", binary, 1);
+  LanguageLine(Languages.Sanskrit, "pitṛ́", binary, 1);
+  LanguageLine(Languages.Old_Irish, "athir", binary, 1);
+  LanguageLine(Languages.Armenian, "hayr", binary, 1);
+  LanguageLine(Languages.Tocharian_A, "pācar", binary, 1);
+  LanguageLine(Languages.Tocharian_B, "pācer", binary, 1);
+  LanguageLine(Languages.Lithuanian, "tėvas", binary, 2);
+  LanguageLine(Languages.Old_Church_Slavic, "отьць", binary, 3);
+  LanguageLine(Languages.Russian, "отец", binary, 3);
+};
 
 namespace TableFigures.MultiStateCharacter {
   Caption(ExperimentClass experiment) = FigureCaption {
     "Multistate cognate classes";
   };
 
-  Body(ExperimentClass experiment) = LanguageTable {
-    Columns: [2 inches, 1 inch, 2 inches {HAlign: HAligns.Center}];
-    LanguageTitleRow {
-      Lang.Language;
-      SQuote {"father"};
-      "Cognate Class";
-    };
-    LanguageLine(Languages.Old_English, "fæder", 1);
-    LanguageLine(Languages.Latin, "pater", 1);
-    LanguageLine(Languages.Greek, "πατήρ", 1);
-    LanguageLine(Languages.Sanskrit, "pitṛ́", 1);
-    LanguageLine(Languages.Old_Irish, "athir", 1);
-    LanguageLine(Languages.Armenian, "hayr", 1);
-    LanguageLine(Languages.Tocharian_A, "pācar", 1);
-    LanguageLine(Languages.Tocharian_B, "pācer", 1);
-    LanguageLine(Languages.Lithuanian, "tėvas", 2);
-    LanguageLine(Languages.Old_Church_Slavic, "отьць", 3);
-    LanguageLine(Languages.Russian, "отец", 3);
-  };
+  Body(ExperimentClass experiment) = FatherTable(false);
 }
 
 //======================================================================
@@ -191,25 +200,7 @@ namespace TableFigures.BinaryRepresentation {
     "Binary cognate classes";
   };
 
-  Body(ExperimentClass experiment) = LanguageTable {
-    Columns: [2 inches, 1 inch] + [1 inches {HAlign: HAligns.Center}]*3;
-    LanguageTitleRow {
-      Lang.Language;
-      SQuote {"father"};
-      "Class {0}"(each 1..3);
-    };
-    LanguageLine(Languages.Old_English, "fæder", [1, 0, 0]);
-    LanguageLine(Languages.Latin, "pater", [1, 0, 0]);
-    LanguageLine(Languages.Greek, "πατήρ", [1, 0, 0]);
-    LanguageLine(Languages.Sanskrit, "pitṛ́", [1, 0, 0]);
-    LanguageLine(Languages.Old_Irish, "athir", [1, 0, 0]);
-    LanguageLine(Languages.Armenian, "hayr", [1, 0, 0]);
-    LanguageLine(Languages.Tocharian_A, "pācar", [1, 0, 0]);
-    LanguageLine(Languages.Tocharian_B, "pācer", [1, 0, 0]);
-    LanguageLine(Languages.Lithuanian, "tėvas", [0, 1, 0]);
-    LanguageLine(Languages.Old_Church_Slavic, "отьць", [0, 0, 1]);
-    LanguageLine(Languages.Russian, "отец", [0, 0, 1]);
-  };
+  Body(ExperimentClass experiment) = FatherTable(true);
 }
 
 //======================================================================
