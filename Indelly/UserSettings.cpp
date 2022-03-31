@@ -11,7 +11,7 @@
 UserSettings::UserSettings(void) {
 
     // dafault values
-    numChains                   = 8;
+    numChains                   = 1;
     temperature                 = 0.1;
     dataFile                    = "";
     outFile                     = "";
@@ -84,6 +84,10 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 }
             else if (arg == "-e")
                 seed = atoi(cmd.c_str());
+            else if (arg == "-nc")
+                numChains = atoi(cmd.c_str());
+            else if (arg == "-h")
+                temperature = atof(cmd.c_str());
             else if (arg == "-n")
                 numMcmcCycles = atoi(cmd.c_str());
             else if (arg == "-p")
@@ -232,6 +236,14 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         it2 = jsonSettings.find("StoneSampleFreq");
         if (it2 != jsonSettings.end())
             sampleToStoneFrequency = jsonSettings["StoneSampleFreq"];
+
+        it2 = jsonSettings.find("NumChains");
+        if (it2 != jsonSettings.end())
+            numChains = jsonSettings["NumChains"];
+
+        it2 = jsonSettings.find("Temperature");
+        if (it2 != jsonSettings.end())
+            temperature = jsonSettings["Temperature"];
         }
 }
 
@@ -261,6 +273,8 @@ void UserSettings::print(void) {
     if (calculateMarginalLikelihood == false)
         {
         std::cout << "   * Calculate marginal likelihood           = no" << std::endl;
+        std::cout << "   * Number of chains (MC)^3                 = " << numChains << std::endl;
+        std::cout << "   * Temperature                             = " << temperature << std::endl;
         std::cout << "   * Number of MCMC cycles                   = " << numMcmcCycles << std::endl;
         std::cout << "   * Print-to-screen frequency               = " << printFrequency << std::endl;
         std::cout << "   * Chain sample frequency                  = " << sampleFrequency << std::endl;
@@ -290,6 +304,8 @@ void UserSettings::usage(void) {
     std::cout << "   * -i                      -- Number of gamma indel categories (=1 is no indel rate variation)" << std::endl;
     std::cout << "   * -z / CalcMarginal       -- Calculate marginal likelihood (no/yes)" << std::endl;
     std::cout << "   * -e / Seed               -- Seed for pseudo random number generator" << std::endl;
+    std::cout << "   * -nc / NumChains         -- Number of Markov chains for (MC)^3" << std::endl;
+    std::cout << "   * -h / Temperature        -- Temperature for (MC)^3" << std::endl;
     std::cout << "   * -n / NumCycles          -- Number of MCMC cycles" << std::endl;
     std::cout << "   * -p / PrintFreq          -- Print-to-screen frequency" << std::endl;
     std::cout << "   * -s / SampleFreq         -- Chain sample frequency" << std::endl;
