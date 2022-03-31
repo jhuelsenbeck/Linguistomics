@@ -206,8 +206,8 @@ double ParameterIndelRates::update(void) {
         }
 
     // set flags indicating the transition probabilities are not affected
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.setNeedsUpdate(false);
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->setNeedsUpdate(false);
     updateChangesTransitionProbabilities = false;
 
     modelPtr->setUpdateLikelihood();

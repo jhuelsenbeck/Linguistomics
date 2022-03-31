@@ -70,7 +70,7 @@ class LikelihoodCalculator {
 
         RbBitSet                        taxonMask;
         ParameterAlignment*             data;
-        Model*                          model;
+        Model*                          modelPtr;
         
         Tree*                           tree;
         std::vector<Node*>              des;       // instantiated once on construction and modified via reference
@@ -86,7 +86,6 @@ class LikelihoodCalculator {
         int                             unalignableRegionSize;
         const int                       maxUnalignableDimension  = 10, maxUnalignableDimension1 = maxUnalignableDimension + 1;
         
-        TransitionProbabilities*        transitionProbabilityFactory;
         DoubleMatrix**                  transitionProbabilities;
         std::vector<double>             stateEquilibriumFrequencies; // resized once on construction of object and modified via reference
         int                             numStates, numStates1;

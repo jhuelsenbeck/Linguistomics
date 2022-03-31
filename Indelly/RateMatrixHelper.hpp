@@ -33,10 +33,8 @@ class Partition;
 class RateMatrixHelper {
 
     public:
-        static RateMatrixHelper&                rateMatrixHelper(void) {
-                                                    static RateMatrixHelper rmh;
-                                                    return rmh;
-                                                }
+                                                RateMatrixHelper(void);
+                                               ~RateMatrixHelper(void);
         std::set<int>&                          getGroup(int idx) { return stateGroupings[idx]; }
         std::map<GroupPair,int, CompGroupPair>& getGroupIndices(void) { return groupIndices; }
         std::vector<std::string>                getLabels(void);
@@ -49,8 +47,6 @@ class RateMatrixHelper {
         void                                    printMap(void);
         
     private:
-                                                RateMatrixHelper(void);
-                                               ~RateMatrixHelper(void);
         int**                                   m;
         int                                     numStates;
         bool                                    isInitialized;

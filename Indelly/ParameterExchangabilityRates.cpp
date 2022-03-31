@@ -8,13 +8,13 @@
 #include "RateMatrix.hpp"
 #include "TransitionProbabilities.hpp"
 
-double ParameterExchangabilityRates::minVal = 0.001;
+double ParameterExchangabilityRates::minVal = 0.00001;
 
 
 
 ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns) : Parameter(r, m, n) {
 
-    std::cout << "   * Setting up exchangeability rates parameter " << std::endl;
+    std::cout << "   * Setting up GTR exchangeability rates parameter " << std::endl;
 
     updateChangesRateMatrix = true;
 
@@ -59,7 +59,6 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
         alpha[i] = 1.0;
     Probability::Dirichlet::rv(rv, alpha, rates[0]);
     rates[1] = rates[0];
-    
 }
 
 ParameterExchangabilityRates::~ParameterExchangabilityRates(void) {
@@ -68,7 +67,8 @@ ParameterExchangabilityRates::~ParameterExchangabilityRates(void) {
 
 void ParameterExchangabilityRates::accept(void) {
 
-    rates[1] = rates[0];
+    for (int i=0; i<numRates; i++)
+        rates[1][i] = rates[0][i];
 }
 
 void ParameterExchangabilityRates::fillParameterValues(double* x, int& start, int maxNumValues) {
@@ -116,7 +116,6 @@ std::string ParameterExchangabilityRates::getString(void) {
 double ParameterExchangabilityRates::lnPriorProbability(void) {
 
     return Probability::Helper::lnGamma(numRates-1);
-    
 }
 
 void ParameterExchangabilityRates::print(void) {
@@ -149,17 +148,28 @@ std::vector<int> ParameterExchangabilityRates::randomlyChooseIndices(int k, int 
 
 void ParameterExchangabilityRates::reject(void) {
 
-    rates[0] = rates[1];
+    for (int i=0; i<numRates; i++)
+        rates[0][i] = rates[1][i];
     modelPtr->flipActiveLikelihood();
 }
 
 double ParameterExchangabilityRates::update(void) {
 
-    lastUpdateType = "exchangeability rates";
+    lastUpdateType = "exchangeability rates (k=";
 
-    //int k = numRates;
+    // choose the number of rates to update
     int k = 1;
+    double u = rv->uniformRv();
+    if (u <= 0.5)
+        k = 1;
+    else if (u > 0.5 && u <= 0.9)
+        k = 10;
+    else
+        k = numRates;
+        
+    lastUpdateType += std::to_string(k) + ")";
     
+    // update the rates
     double lnP = 0.0;
     if (k == 1)
         {
@@ -242,7 +252,7 @@ double ParameterExchangabilityRates::update(void) {
         }
     else
         {
-        double alpha0 = 2000.0;
+        double alpha0 = 4000.0;
         // update all of the rates
         std::vector<double>& oldValues = rates[0];
         std::vector<double> alphaForward(numRates);
@@ -263,15 +273,15 @@ double ParameterExchangabilityRates::update(void) {
         }
     
     // update the rate matrix and transition probabilities
-    RateMatrix& rmat = RateMatrix::rateMatrix();
-    rmat.flipActiveValues();
-    rmat.updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
+    RateMatrix* rmat = modelPtr->getRateMatrix();
+    rmat->flipActiveValues();
+    rmat->updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
 
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
     
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
@@ -289,15 +299,15 @@ double ParameterExchangabilityRates::updateFromPrior(void) {
     Probability::Dirichlet::rv(rv, alpha, rates[0]);
 
     // update the rate matrix and transition probabilities
-    RateMatrix& rmat = RateMatrix::rateMatrix();
-    rmat.flipActiveValues();
-    rmat.updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
+    RateMatrix* rmat = modelPtr->getRateMatrix();
+    rmat->flipActiveValues();
+    rmat->updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
 
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
 
     return 0.0;
 }

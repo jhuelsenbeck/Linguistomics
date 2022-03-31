@@ -238,15 +238,15 @@ double ParameterEquilibirumFrequencies::update(void) {
         }
     
     // update the rate matrix and transition probabilities
-    RateMatrix& rmat = RateMatrix::rateMatrix();
-    rmat.flipActiveValues();
-    rmat.updateRateMatrix(modelPtr->getExchangabilityRates(), freqs[0]);
+    RateMatrix* rmat = modelPtr->getRateMatrix();
+    rmat->flipActiveValues();
+    rmat->updateRateMatrix(modelPtr->getExchangabilityRates(), freqs[0]);
 
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
 
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
@@ -262,15 +262,15 @@ double ParameterEquilibirumFrequencies::updateFromPrior(void) {
     Probability::Dirichlet::rv(rv, alpha, freqs[0]);
 
     // update the rate matrix and transition probabilities
-    RateMatrix& rmat = RateMatrix::rateMatrix();
-    rmat.flipActiveValues();
-    rmat.updateRateMatrix(modelPtr->getExchangabilityRates(), freqs[0]);
+    RateMatrix* rmat = modelPtr->getRateMatrix();
+    rmat->flipActiveValues();
+    rmat->updateRateMatrix(modelPtr->getExchangabilityRates(), freqs[0]);
 
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
 
     return 0.0;
 }

@@ -3,7 +3,7 @@
 
 namespace PaperSizes {
   Letter    = Size(8.5 inches, 11 inches);
-  Slideshow = Size(11 inches, 6.1875 inches);
+  Slideshow = Size(11 inches, 7 inches);
   A4        = Size(210 millimeters, 297 millimeters);
 }
 //======================================================================
@@ -39,9 +39,6 @@ namespace DocMetrics {
   Gutter          = 0;
   SegmentColumns  = 4;
   SegmentSize     = 40 pts;
-  SlideFooter     = 0.5 inches;
-  SlideHeader     = 0.75 inches;
-  SlideContent    = Size(PageContent.Width, PageContent.Height - SlideFooter);
 }
 //======================================================================
 
@@ -68,6 +65,8 @@ class DefClass: FactClass {
     Name        = name;
     Description = description;
   }
+
+  override GetIcon = MaterialIcons.subscript;
 
   override GetLayoutDoc = Style.Equation {
     Hover: new HoverClass(this, HoverTypes.Tip);
@@ -114,6 +113,8 @@ class EquationClass: FactClass {
     super.Constructor(id);
     Name = name;
   }
+
+  override GetIcon = MaterialIcons.functions;
 
   override GetLayoutDoc = Formula {Link to this};
 
@@ -203,13 +204,16 @@ namespace Style {
   DQuoteEnd            = Span {Begin: "“"; End: ".” "};
   textit               = Span {Italic};
   TextIpa              = Span {IPAFamily; Begin:"/"; End:"/"};
+  MainStyle = {
+    MainFamily;
+    TextHeight: 9 pts;
+  };
 
   MainDocument = Document {
     RefStyle: ReferenceStyle;
     Size: DocMetrics.DocumentSize;
     Margin: DocMetrics.PageMargin;
-    MainFamily;
-    TextHeight: 9 pts;
+    MainStyle;
   };
 
   MainTitle = Paragraph {
@@ -229,6 +233,15 @@ namespace Style {
   FigureBody = Paragraph {
     ParAlignment: ParAlignments.Center;
     SpaceAfter: 6 pts;
+  };
+
+  LanguageTable = Table {
+    Padding: 2;
+    EdgeTB: 2 pts;
+  };
+
+  LanguageTitleRow = Row {
+    EdgeB: 1 pts;
   };
 
   FigureTable = Table {
@@ -272,15 +285,6 @@ namespace Style {
     Lang.Table;
     Space;
     RefCounter("table", figure.GlobalVariablePath);
-  };
-
-  ShowFigureSlide(ExperimentClass experiment, figure, format=null) = Block {
-    figure.Caption(experiment);
-    Paragraph {
-      ParAlignment: ParAlignments.Center;
-      format;
-      figure.Body(experiment);
-    }
   };
 
   ShowTable(ExperimentClass experiment, table) = Block {
@@ -536,7 +540,7 @@ namespace Style {
     Marker: BranchMarker;
   };
 
-  ShowTree(title, subtitle, root, axis=null) = VBox {
+  ShowTree(title, subtitle, root, width, axis=null) = VBox {
     Corner: 8 pts;
     MarginB: 20 pts;
     PaddingLR: 15 pts;
@@ -555,7 +559,7 @@ namespace Style {
     }
 
     TreeOptions {
-      Width: DocMetrics.TreeFigureWidth;
+      Width: width;
       ValueLabel: axis ?? "Branches";
       ValueAxis: ChartAxis;
       Root: root;

@@ -118,33 +118,78 @@ namespace PaperSections.Introduction {
 
 //======================================================================
 
+LanguageLine(LanguageClass language, text, binary, code) = Row {
+  language;
+  TextIpa {text};
+  if (binary)
+    [0, 0, 0].Substitute(code-1, 1);
+  else
+    code;
+};
+
 namespace TableFigures.Cognates {
   Caption(ExperimentClass experiment) = FigureCaption {
     "Coding of lexical cognates for the word "; textit{"hand"}; eos;
   };
 
-  Line(LanguageClass language, text, code) = Row {
-    language;
-    TextIpa {text};
-    code;
+  Body(ExperimentClass experiment) = LanguageTable {
+    Columns: [1 inch, 1 inch, 0.6 inches];
+    LanguageTitleRow {
+      Lang.Language;
+      Lang.IPA;
+      Lang.Coding;
+    };
+    LanguageLine(Languages.English, "hænd", false, 0);
+    LanguageLine(Languages.German, "hant", false, 0);
+    LanguageLine(Languages.French, "mẽ", false, 1);
+    LanguageLine(Languages.Spanish, "mano", false, 1);
+    LanguageLine(Languages.Italian, "maːno", false, 1);
+    LanguageLine(Languages.Russian, "rʊka", false, 2);
+    LanguageLine(Languages.Polish, "rɛŋka", false, 2);
+  };
+}
+
+//======================================================================
+
+FatherTable(binary) = LanguageTable {
+  Columns: [2 inches, 1 inch] + (binary ? [0.9 inches {HAlign: HAligns.Center}] * 3 : [1.5 inches {HAlign: HAligns.Center}]);
+  LanguageTitleRow {
+    Lang.Language;
+    SQuote {"father"};
+    if (binary)
+      "Code {0}"(each 1..3);
+    else
+      "Cognate Class";
+  };
+  LanguageLine(Languages.Old_English, "fæder", binary, 1);
+  LanguageLine(Languages.Latin, "pater", binary, 1);
+  LanguageLine(Languages.Greek, "πατήρ", binary, 1);
+  LanguageLine(Languages.Sanskrit, "pitṛ́", binary, 1);
+  LanguageLine(Languages.Old_Irish, "athir", binary, 1);
+  LanguageLine(Languages.Armenian, "hayr", binary, 1);
+  LanguageLine(Languages.Tocharian_A, "pācar", binary, 1);
+  LanguageLine(Languages.Tocharian_B, "pācer", binary, 1);
+  LanguageLine(Languages.Lithuanian, "tėvas", binary, 2);
+  LanguageLine(Languages.Old_Church_Slavic, "отьць", binary, 3);
+  LanguageLine(Languages.Russian, "отец", binary, 3);
+};
+
+namespace TableFigures.MultiStateCharacter {
+  Caption(ExperimentClass experiment) = FigureCaption {
+    "Multistate cognate classes";
   };
 
-  Body(ExperimentClass experiment) = Table {
-    Columns: [1 inch, 1 inch, 0.6 inches];
-    Row {
-      EdgeB: 0.5 pts;
-      "Language";
-      "IPA";
-      "Coding";
-    };
-    Line(Languages.English, "hænd", 0);
-    Line(Languages.German, "hant", 0);
-    Line(Languages.French, "mẽ", 1);
-    Line(Languages.Spanish, "mano", 1);
-    Line(Languages.Italian, "maːno", 1);
-    Line(Languages.Russian, "rʊka", 2);
-    Line(Languages.Polish, "rɛŋka", 2);
+  Body(ExperimentClass experiment) = FatherTable(false);
+}
+
+//======================================================================
+
+namespace TableFigures.BinaryRepresentation {
+  Caption(ExperimentClass experiment) = FigureCaption {
+    "Binary cognate classes";
   };
+
+  Body(ExperimentClass experiment) = FatherTable(true);
 }
 
 //======================================================================

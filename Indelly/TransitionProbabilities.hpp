@@ -31,10 +31,8 @@ struct TransitionProbabilitiesInfo {
 class TransitionProbabilities {
 
     public:
-        static TransitionProbabilities&                 transitionProbabilties(void) {
-                                                            static TransitionProbabilities tp;
-                                                            return tp;
-                                                        }
+                                                        TransitionProbabilities(void);
+                                                       ~TransitionProbabilities(void);
         bool                                            areTransitionProbabilitiesValid(double tolerance);
         void                                            flipActive(void);
         int                                             getNumNodes(void) { return numNodes; }
@@ -49,8 +47,6 @@ class TransitionProbabilities {
         void                                            setTransitionProbabilities(void);
     
     private:
-                                                        TransitionProbabilities(void);
-                                                       ~TransitionProbabilities(void);
                                                         TransitionProbabilities(const TransitionProbabilities& tp) = delete;
         void                                            setTransitionProbabilitiesJc69(void);
         void                                            setTransitionProbabilitiesUsingPadeMethod(void);

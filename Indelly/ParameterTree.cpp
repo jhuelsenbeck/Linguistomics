@@ -446,10 +446,10 @@ double ParameterTree::updateBrlenProportions(void) {
     
     // update the transition probabilities
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
 
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
@@ -595,10 +595,10 @@ double ParameterTree::updateNni(void) {
 
     // update the transition probabilities
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
 
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
@@ -644,10 +644,10 @@ double ParameterTree::updateTreeLength(void) {
 
     // update the transition probabilities
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
 
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
@@ -672,10 +672,10 @@ double ParameterTree::updateTopologyFromPrior(void) {
 
     // update the transition probabilities
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
 

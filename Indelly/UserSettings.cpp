@@ -11,6 +11,8 @@
 UserSettings::UserSettings(void) {
 
     // dafault values
+    numChains                   = 8;
+    temperature                 = 0.1;
     dataFile                    = "";
     outFile                     = "";
     checkPointFrequency         = 10000;

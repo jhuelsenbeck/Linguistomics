@@ -20,6 +20,7 @@ class UserSettings {
         double                  getBranchLengthLambda(void) { return branchLengthLambda; }
         int                     getBurninLength(void) { return burninLength; }
         std::string             getOutFile(void) { return outFile; }
+        int                     getNumChains(void) { return numChains; }
         int                     getNumMcmcCycles(void) { return numMcmcCycles; }
         int                     getNumIndelCategories(void) { return numIndelCategories; }
         int                     getNumRateCategories(void) { return numRateCategories; }
@@ -31,6 +32,7 @@ class UserSettings {
         int                     getSampleToStoneFrequency(void) { return sampleToStoneFrequency; }
         uint32_t                getSeed(void) { return seed; }
         int                     getSubstitutionModel(void) { return substitutionModel; }
+        double                  getTemperature(void) { return temperature; }
         int                     getTuneLength(void) { return tuneLength; }
         void                    print(void);
         void                    readCommandLineArguments(int argc, char* argv[]);
@@ -61,6 +63,8 @@ class UserSettings {
         int                     sampleLength;
         int                     sampleToStoneFrequency;
         uint32_t                seed;
+        int                     numChains;
+        double                  temperature;
 };
 
 #endif

@@ -15,13 +15,17 @@ class ParameterAlignment;
 class ParameterTree;
 class Partition;
 class RandomVariable;
+class RateMatrix;
+class RateMatrixHelper;
+class TransitionProbabilities;
 class Tree;
 class UserSettings;
 
 
 class WordLnLikeTask: public ThreadTask {
+
     public:
-                              WordLnLikeTask();
+                              WordLnLikeTask(void);
         void                  Init(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL);
         virtual void          Run(MathCache& cache);
 
@@ -39,6 +43,7 @@ class Model {
                                                 explicit Model(RandomVariable* r, ThreadPool& threadPool);
                                                ~Model(void);
         void                                    accept(void);
+        void                                    fillParameterValues(double* x, int n);
         void                                    flipActiveLikelihood(void);
         void                                    flipActiveLikelihood(int idx);
         std::string                             getLastUpdate(void);
@@ -49,14 +54,16 @@ class Model {
         std::vector<double>&                    getEquilibriumFrequencies(void);
         std::vector<double>&                    getExchangabilityRates(void);
         std::vector<double>&                    getIndelGammaRates(void);
+        int                                     getIndex(void) { return index; }
         double                                  getInsertionRate(void);
         int                                     getNumAlignments(void);
         std::string                             getParameterHeader(void);
         std::string                             getParameterString(void);
-        void                                    fillParameterValues(double* x, int n);
         ParameterTree*                          getParameterTree(void);
         int                                     getNumParameterValues(void);
+        RateMatrix*                             getRateMatrix(void) { return rateMatrix; }
         std::string                             getStateSetsJsonString(void);
+        TransitionProbabilities*                getTransitionProbabilities(void) { return transitionProbabilities; }
         Tree*                                   getTree(void);
         Tree*                                   getTree(RbBitSet& mask);
         Tree*                                   getTree(const RbBitSet& mask);
@@ -64,6 +71,7 @@ class Model {
         double                                  lnLikelihood(void);
         double                                  lnPriorProbability(void);
         void                                    reject(void);
+        void                                    setIndex(int x) { index = x; }
         void                                    setUpdateLikelihood(void);
         void                                    setUpdateLikelihood(int idx);
         double                                  update(void);
@@ -90,9 +98,13 @@ class Model {
         std::vector<std::string>                canonicalTaxonList;
         WordLnLikeTask*                         taskList;
         ThreadPool                              &threadPool;
+        RateMatrix*                             rateMatrix;
+        RateMatrixHelper*                       rateMatrixHelper;
+        TransitionProbabilities*                transitionProbabilities;
         size_t                                  taskMax;
         int                                     updatedParameterIdx;
         int                                     substitutionModel;
+        int                                     index;
 };
 
 #endif
