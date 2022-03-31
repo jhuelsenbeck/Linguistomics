@@ -13,27 +13,32 @@ class Mcmc {
 
     public:
                             Mcmc(void) = delete;
-                            Mcmc(Model* m, RandomVariable* r);
+                            Mcmc(Model** m, RandomVariable* r);
         void                run(void);
     
     private:
         std::vector<double> calculatePowers(int numStones, double alpha, double beta);
+        void                chooseModelsToSwap(int& idx1, int& idx2);
         void                closeOutputFiles(void);
         std::string         formattedTime(std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
         void                initialize(void);
+        Model*              getColdModel(void);
         int                 numDigits(double lnX);
         void                openOutputFiles(void);
         int                 phaseLength(std::string phs);
-        void                print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
+        double              power(int idx);
+        void                print(int gen, double* curLnL, double* curLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
         double              safeExponentiation(double lnX);
         void                sample(int gen, double lnL, double lnP);
         void                runPathSampling(void);
         void                runPosterior(void);
-        Model*              modelPtr;
+        Model**             modelPtr;
         RandomVariable*     rv;
+        int                 numChains;
         int                 numMcmcCycles;
         int                 printFrequency;
         int                 sampleFrequency;
+        double              temperature;
         std::ofstream*      algnJsonStrm;
         std::ofstream       parmStrm;
         std::ofstream       treeStrm;

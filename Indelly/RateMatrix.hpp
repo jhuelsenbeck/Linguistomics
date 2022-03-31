@@ -4,25 +4,23 @@
 #include <vector>
 #include "Container.hpp"
 
+class RateMatrixHelper;
 
 
 class RateMatrix {
 
     public:
-        static RateMatrix&      rateMatrix(void) {
-                                    static RateMatrix m;
-                                    return m;
-                                }
+                                RateMatrix(void);
+                               ~RateMatrix(void);
         std::vector<double>&    getEquilibriumFrequencies(void) { return equilibriumFrequencies[activeMatrix]; }
         DoubleMatrix&           getRateMatrix(void) { return *Q[activeMatrix]; }
         void                    flipActiveValues(void);
-        void                    initialize(int d);
+        void                    initialize(int d, RateMatrixHelper* h);
         void                    updateRateMatrix(std::vector<double>& rates, std::vector<double>& f);
         
     private:
-                                RateMatrix(void);
                                 RateMatrix(const RateMatrix&) = delete;
-                               ~RateMatrix(void);
+        RateMatrixHelper*       rateMatrixHelper;
         int                     numStates;
         int                     activeMatrix;
         DoubleMatrix*           Q[2];

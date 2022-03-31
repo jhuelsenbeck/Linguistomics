@@ -14,7 +14,7 @@ double ParameterExchangabilityRates::minVal = 0.00001;
 
 ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns) : Parameter(r, m, n) {
 
-    std::cout << "   * Setting up exchangeability rates parameter " << std::endl;
+    std::cout << "   * Setting up GTR exchangeability rates parameter " << std::endl;
 
     updateChangesRateMatrix = true;
 
@@ -273,15 +273,15 @@ double ParameterExchangabilityRates::update(void) {
         }
     
     // update the rate matrix and transition probabilities
-    RateMatrix& rmat = RateMatrix::rateMatrix();
-    rmat.flipActiveValues();
-    rmat.updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
+    RateMatrix* rmat = modelPtr->getRateMatrix();
+    rmat->flipActiveValues();
+    rmat->updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
 
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
     
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
@@ -299,15 +299,15 @@ double ParameterExchangabilityRates::updateFromPrior(void) {
     Probability::Dirichlet::rv(rv, alpha, rates[0]);
 
     // update the rate matrix and transition probabilities
-    RateMatrix& rmat = RateMatrix::rateMatrix();
-    rmat.flipActiveValues();
-    rmat.updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
+    RateMatrix* rmat = modelPtr->getRateMatrix();
+    rmat->flipActiveValues();
+    rmat->updateRateMatrix(rates[0], modelPtr->getEquilibriumFrequencies());
 
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
 
     return 0.0;
 }

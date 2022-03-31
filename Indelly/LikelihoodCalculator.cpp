@@ -17,13 +17,11 @@ LikelihoodCalculator::LikelihoodCalculator(ParameterAlignment* a, Model* m) {
 
     // memory addresses of important objects
     data = a;
-    model = m;
-    TransitionProbabilities& tp = TransitionProbabilities::transitionProbabilties();
-    transitionProbabilityFactory = &tp;
+    modelPtr = m;
     sequences = data->getRawSequenceMatrix();
 
     numStates = data->getNumStates();
-    numStates1 = numStates+1;
+    numStates1 = numStates + 1;
     taxonMask = data->getTaxonMask();
     numTaxa = (int)taxonMask.getNumberSetBits();
     numNodes = 2 * numTaxa - 1;
@@ -167,17 +165,17 @@ void LikelihoodCalculator::initialize(void) {
     //alignment = data->getIndelMatrix();
     data->getIndelMatrix(alignment);
     unalignableRegionSize = 0;
-    tree = model->getTree(taxonMask);
+    tree = modelPtr->getTree(taxonMask);
 
     RbBitSet bs = data->getTaxonMask();
-    transitionProbabilities = transitionProbabilityFactory->getTransitionProbabilities(bs);
+    transitionProbabilities = modelPtr->getTransitionProbabilities()->getTransitionProbabilities(bs);
     std::vector<Node*>& downPassSequence = tree->getDownPassSequence();
     for (int n=0; n<downPassSequence.size(); n++)
         {
         Node* p = downPassSequence[n];
         p->setTransitionProbability( transitionProbabilities[p->getIndex()] );
         }
-    transitionProbabilityFactory->getStationaryFrequencies(stateEquilibriumFrequencies);
+    modelPtr->getTransitionProbabilities()->getStationaryFrequencies(stateEquilibriumFrequencies);
     setBirthDeathProbabilities();
 }
 
@@ -870,8 +868,8 @@ void LikelihoodCalculator::returnToPool(IntVector* v) {
 
 void LikelihoodCalculator::setBirthDeathProbabilities(void) {
 
-    indelProbs.insertionRate = model->getInsertionRate();
-    indelProbs.deletionRate  = model->getDeletionRate();
+    indelProbs.insertionRate = modelPtr->getInsertionRate();
+    indelProbs.deletionRate  = modelPtr->getDeletionRate();
 
     indelProbs.immortalProbability= 1.0;
     std::vector<Node*>& dpSequence = tree->getDownPassSequence();

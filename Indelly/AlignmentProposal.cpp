@@ -443,9 +443,9 @@ double AlignmentProposal::propose(AlnMatrix* newAlignment, AlnMatrix* oldAlignme
         }
 
     // get transition probabilities
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    DoubleMatrix** tiProbs = tip.getTransitionProbabilities(taxonMask);
-    std::vector<double>& stationaryFrequencies = tip.getStationaryFrequencies();
+    TransitionProbabilities* tip = model->getTransitionProbabilities();
+    DoubleMatrix** tiProbs = tip->getTransitionProbabilities(taxonMask);
+    std::vector<double>& stationaryFrequencies = tip->getStationaryFrequencies();
 
     // sort children
     std::vector<int> sorter(numNodes);
