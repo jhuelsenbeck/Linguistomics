@@ -7,6 +7,7 @@ class DavidPresentationClass: ShowClass {
     super.Constructor(experiment, #75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "David's Presentation", Authors);
     Title     = "From phonology to phylogeny\nA new framework for phylogenetic inference";
     Design    = new ProgressDesignClass;
+//    Design    = new FancyDesignClass;
     SlideDeck = AddSlideGroup(DavidSlides);
   }
 }
@@ -93,7 +94,7 @@ namespace DavidSlides.Introduction {
     Title = "My Colaborators";
 
     Body(ShowClass show) = Block {
-      LeftIndent: show.Design.ItemsIndent;
+      LeftIndent: show.Design.ItemIndent;
       TextHeight: 18 pts;
       Separator: Paragraph;
       CitationLib.GetFullName(each show.AuthorList.FindSlice(p => p != People.DMGoldstein));
@@ -142,7 +143,205 @@ namespace DavidSlides.PreviousResearch {
       Citation {References.BouchardCote2013}; ")";
     };
   }
+
+  namespace Topics.Topic2 {
+    Title = "Problem 1";
+    Pause = true;
+
+    Items.Item1.Text = Span {
+      "The models of linguistic change in these studies only accommodate ";
+      "transitions (i.e., changes from one segment to another).";
+    };
+
+    Items.Item2.Text = Span {
+      "Insertions and deletions are not directly modeled.";
+    };
+
+    Items.Item3.Text = Span {
+      "One way around this is to create a character (e.g., 0) that is used as the ";
+      "end state for deletions and the starting state for insertions";
+    };
+  }
+
+  namespace Topics.Topic3 {
+    Title = "Problem 2";
+    Pause = true;
+
+    Items.Item1.Text = Span {
+      "Most phylogenetic software limits the size of the character matrix.";
+    };
+
+    Items.Item2.Text = Span {
+      "If you have e.g. 90 unique segments in a dataset, you need a 90x90 matrix to model their transitions";
+    };
+  }
+
+  namespace Topics.Topic4 {
+    Title = "No phylogenetic signal?";
+    Pause = true;
+
+    Items.Item1.Text = Span {
+      "Traditional subgrouping has been wary of using phonological data";
+    };
+
+    Items.Item2.Text = Span {
+      "The worry is that the phylogenetic signal can be noisy on account of homoplasy";
+    };
+
+    Items.Item3.Text = Span {
+      "Multiple languages can undergo common sound changes, which will create the illusion of a shared innovation"
+    };
+
+    Items.Item4.Text = Span {
+      "Homoplasy is certainly a challenge but the models used in ";
+      "Bayesian phylogenetics are equipped to deal with this phenomenon";
+    };
+  }
+
+  namespace Topics.Topic5 {
+    Title = "Romance phylogenetics";
+    Pause = true;
+
+    Items.Item1.Text = Span {
+      "Sardinian widely believed to have formed first, followed by Romanian.";
+    };
+
+    Items.Item2.Text = Span {
+      "There’s much more uncertainty after that";
+    };
+
+    Items.Item3.Body(ShowClass show) = Span {
+      Style.ShowTree("Romance phylogeny", null, show.Experiment.PriorTree, show.Design.ItemWidth);
+    };
+
+    Items.Item4.Text = Span {
+      "Chang et al lexical data; others";
+    };
+
+    Items.Item5.Text = Span {
+      "Jaeger’s shit study";
+    };
+  }
 }
 
+
+namespace DavidSlides.TheData {
+  Title = "The Data";
+
+  namespace Topics.Topic1 {
+    Title = "Overview";
+    Pause = true;
+
+    Items.Item1.Body(ShowClass show) = Span {
+      show.Design.ItemTextFormat;
+      show.Data.Taxa.Length - 1;
+      " Romance languages plus Latin as an outgroup";
+    };
+
+    Items.Item2.Body(ShowClass show) = Span {
+      show.Design.ItemTextFormat;
+      show.Data.WordCount;
+      " words";
+    };
+
+    Items.Item3.Body(ShowClass show) = Span {
+      show.Design.ItemTextFormat;
+      show.Data.UniqueSegments.Length;
+      " unique segments";
+    };
+
+    Items.Item4.Text = Span {
+      "How many word forms from each language";
+    };
+
+    Items.Item5.Text = Span {
+      "Distribution of segments?";
+    };
+
+    Items.Item6.Text = Span {
+      "functional load; locus of sound change/deletion; simple probability of "
+      "transition between two segments or segmental stability -Comparison of rate "
+      "matrices -differences in representation e.g. not all phonemic descriptions "
+      "agree";
+    };
+  }
+
+  namespace Topics.Topic2 {
+    Title = "Data selection and representation";
+    Pause = true;
+
+    Items.Item1.Text = Span {
+      "Meaning: set of concepts (";
+      Span {
+        Separator: CommaSpace;
+        (each WordGroups[1..]).Name;
+      };
+      ")";
+    };
+
+    Items.Item2.Text = Span {
+      "Form: set of cognate word-forms for each concept (no borrowings!)";
+    };
+
+    Items.Item3.Text = Span {
+      "Alignment: homologous segments are aligned"
+    };
+  }
+
+  namespace Topics.Topic3 {
+    Title = "Concept lists";
+    Pause = true;
+
+    Items.Item1.Text = Span {
+      "Trade-off between sampling and resistance to borrowing";
+    };
+
+    Items.Item2.Text = Span {
+      "Swadesh 207-word list samples far more segments than LJ but is more vulnerable to undetected borrowings";
+    };
+
+    Items.Item3.Text = Span {
+      "LJ is better insulated against undetected borrowing, but the smaller ";
+      "dataset means that you risk not sampling crucial sound correspondences";
+    };
+  }
+
+  namespace Topics.Topic4 {
+    Title = "Issues raised by segmental data";
+    Pause = true;
+
+    Items.Item1.Text = Span {
+      "Phonemic or phonetic data? Phonetic data closer to linguistic reality, ";
+      "but harder (if not impossible) to determine for extinct languages. There ";
+      "will be more homoplasy with phonetic data.";
+    };
+
+    Items.Item2.Text = Span {
+      "Supersegmental properties? Only way to incorporate this at this "
+      "moment is to treat each segment + diacritic combination as a unique segment.";
+    };
+
+    Items.Item3.Text = Span {
+      "LJ is better insulated against undetected borrowing, but the smaller ";
+      "dataset means that you risk not sampling crucial sound correspondences";
+    };
+
+    Items.Item4.Text = Span {
+      "Sampling? Are the most important sound correspondences sufficiently "
+      "sampled? (Dockum and Bowern 2019, LIST) "
+      "???? Hruschka et al. 2015—lots of asymmetry in sound changes"
+    };
+
+    Items.Item5.Text = Span {
+      "aligned correspondence sets List 2019"
+    };
+  }
+
+  namespace Topics.Topic5 {
+    Title  = "An example of an aligned cognate set";
+    Figure = TableFigures.ManualAlignment;
+  }
+
+}
 //======================================================================
 

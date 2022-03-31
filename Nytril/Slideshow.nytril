@@ -9,12 +9,13 @@ class ShowDesignClass {
       SlideContent,
       HeaderGap,
       SlideMargin,
-      ItemTextHeight,
+      ItemTextFormat,
       BulletIndent,
       BulletSize,
       BulletDone,
       BulletCurrent,
-      ItemsIndent,
+      ItemIndent,
+      ItemWidth,
       TotalIndent,
       ItemSpacer,
       TitleHeight,
@@ -28,12 +29,13 @@ class ShowDesignClass {
     SlidePage      = DocMetrics.DocumentSize;
     SlideMargin    = Margin(DocMetrics.PageMargin.Left, SlideHeader + HeaderGap, DocMetrics.PageMargin.Right, SlideFooter);
     SlideContent   = Size(DocMetrics.PageContent.Width, DocMetrics.DocumentSize.Height - header - footer - HeaderGap*2);
-    ItemTextHeight = 20 pts;
+    ItemTextFormat = {TextHeight: 20 pts};
     BulletIndent   = 0.25 inches;
     BulletDone     = Tex.blacksquare;
     BulletCurrent  = Tex.blacktriangleright;
-    ItemsIndent    = 1 inch;
-    TotalIndent    = ItemsIndent + BulletIndent;
+    ItemIndent     = 1 inch;
+    TotalIndent    = ItemIndent + BulletIndent;
+    ItemWidth      = SlideContent.Width - TotalIndent - SlideMargin.Left - SlideMargin.Right;
     ItemSpacer     = 10 pts;
     TitleHeight    = 30 pts;
     BodyHeight     = 18 pts;
@@ -371,11 +373,11 @@ class SlideItemClass {
    Constructor(ShowClass show, item, number) {
      Content = Frame {
        Style.MainStyle;
-       Width: show.Design.SlideContent.Width - show.Design.TotalIndent;
+       Width: show.Design.ItemWidth;
        var text = item.?Text;
        if (exists text) {
          Paragraph {
-           TextHeight: show.Design.ItemTextHeight;
+           show.Design.ItemTextFormat;
            text;
          };
        }
@@ -460,13 +462,13 @@ class TopicSlidesClass: SlideClass {
     Table {
       LeftIndent: 1 inch;
 
-      Columns: [Design.BulletIndent, Design.SlideContent.Width - Design.TotalIndent];
+      Columns: [Design.BulletIndent, Design.ItemWidth];
       for (var i = 0; i < count; ++i) {
         Row {
           var item = group.Items[i];
           Cell {
             Paragraph {
-              TextHeight: Design.ItemTextHeight;
+              Design.ItemTextFormat;
               if (item.Number == number+count)
                 Design.BulletCurrent;
               else
