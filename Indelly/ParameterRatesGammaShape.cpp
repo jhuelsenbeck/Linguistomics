@@ -95,10 +95,10 @@ double ParameterRatesGammaShape::update(void) {
     Probability::Gamma::discretization(rates[0], alpha[0], alpha[0], numCategories, false);
 
     updateChangesTransitionProbabilities = true;
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.flipActive();
-    tip.setNeedsUpdate(true);
-    tip.setTransitionProbabilities();
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->flipActive();
+    tip->setNeedsUpdate(true);
+    tip->setTransitionProbabilities();
 
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();

@@ -7,9 +7,10 @@
 
 
 class MathCache {
+
     public:
-                      MathCache();
-                      ~MathCache();
+                      MathCache(void);
+                     ~MathCache(void);
         void          backSubstitutionRow(DoubleMatrix& U, double* b);
         void          computeLandU(DoubleMatrix& A, DoubleMatrix& L, DoubleMatrix& U);
         void          forwardSubstitutionRow(DoubleMatrix& L, double* b);

@@ -28,11 +28,12 @@ void RateMatrix::flipActiveValues(void) {
         activeMatrix = 0;
 }
 
-void RateMatrix::initialize(int d) {
+void RateMatrix::initialize(int d, RateMatrixHelper* h) {
 
     if (isInitialized == true)
         return;
         
+    rateMatrixHelper = h;
     numStates = d;
     activeMatrix = 0;
 
@@ -72,8 +73,7 @@ void  RateMatrix::updateRateMatrix(std::vector<double>& rates, std::vector<doubl
     else
         {
         // custom model
-        RateMatrixHelper& helper = RateMatrixHelper::rateMatrixHelper();
-        int** map = helper.getMap();
+        int** map = rateMatrixHelper->getMap();
         for (int i=0; i<numStates; i++)
             {
             for (int j=i+1; j<numStates; j++)

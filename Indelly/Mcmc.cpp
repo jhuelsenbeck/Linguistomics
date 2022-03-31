@@ -18,7 +18,7 @@
 
 
 
-Mcmc::Mcmc(Model* m, RandomVariable* r) {
+Mcmc::Mcmc(Model** m, RandomVariable* r) {
 
     modelPtr      = m;
     rv            = r;
@@ -26,6 +26,8 @@ Mcmc::Mcmc(Model* m, RandomVariable* r) {
     maxPriorPrint = 0;
     
     UserSettings& settings = UserSettings::userSettings();
+    numChains            = settings.getNumChains();
+    temperature          = settings.getTemperature();
     numMcmcCycles        = settings.getNumMcmcCycles();
     printFrequency       = settings.getPrintFrequency();
     sampleFrequency      = settings.getSampleFrequency();
@@ -54,12 +56,23 @@ std::vector<double> Mcmc::calculatePowers(int numStones, double alpha, double be
     return pwrs;
 }
 
+void Mcmc::chooseModelsToSwap(int& idx1, int& idx2) {
+
+    if (numChains == 1)
+        Msg::error("Cannot swap when there is only one chain");
+        
+    idx1 = rv->uniformRv() * numChains;
+    do {
+        idx2 = rv->uniformRv() * numChains;
+        } while (idx2 == idx1);
+}
+
 void Mcmc::closeOutputFiles(void) {
 
     parmStrm.close();
     treeStrm.close();
 
-    std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
+    std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
     for (int i=0; i<alns.size(); i++)
         algnJsonStrm[i].close();
     delete [] algnJsonStrm;
@@ -89,10 +102,20 @@ std::string Mcmc::formattedTime(std::chrono::high_resolution_clock::time_point& 
     return tStr;
 }
 
+Model* Mcmc::getColdModel(void) {
+
+    for (int chain=0; chain<numChains; chain++)
+        {
+        if (modelPtr[chain]->getIndex() == 0)
+            return modelPtr[chain];
+        }
+    return NULL;
+}
+
 void Mcmc::initialize(void) {
 
     openOutputFiles();
-    numParmValues = modelPtr->getNumParameterValues();
+    numParmValues = modelPtr[0]->getNumParameterValues();
     parmValues = new double[numParmValues];
     for (int i=0; i<numParmValues; i++)
         parmValues[i] = 0.0;
@@ -120,7 +143,7 @@ void Mcmc::openOutputFiles(void) {
     if (!treeStrm)
         Msg::error("Cannot open file \"" + treeFileName + "\"");
   
-    std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
+    std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
     auto outsize = alns.size();
     algnJsonStrm = new std::ofstream[outsize];
     for (int i=0; i< outsize; i++)
@@ -144,21 +167,40 @@ int Mcmc::phaseLength(std::string phs) {
         return sampleLength;
 }
 
-void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double newLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
+double Mcmc::power(int idx) {
 
-    if (numDigits(curLnL) > maxLikePrint)
-        maxLikePrint = numDigits(curLnL);
-    if (numDigits(newLnL) > maxLikePrint)
-        maxLikePrint = numDigits(newLnL);
-    if (numDigits(curLnP) > maxPriorPrint)
-        maxPriorPrint = numDigits(curLnP);
-    if (numDigits(newLnP) > maxPriorPrint)
-        maxPriorPrint = numDigits(newLnP);
+    return 1.0 / (1.0 + temperature * modelPtr[idx]->getIndex());
+}
+
+void Mcmc::print(int gen, double* curLnL, double* curLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
+
+    for (int chain=0; chain<numChains; chain++)
+        {
+        if (numDigits(curLnL[chain]) > maxLikePrint)
+            maxLikePrint = numDigits(curLnL[chain]);
+        if (numDigits(curLnP[chain]) > maxPriorPrint)
+            maxPriorPrint = numDigits(curLnP[chain]);
+        }
 
     std::cout << std::fixed << std::setprecision(3);
     std::cout << "   * ";
     std::cout << std::setw(maxGenPrint) << gen << " --   ";
-    std::cout << std::setw(maxLikePrint + 5) << curLnL << " -> " << std::setw(maxLikePrint + 5) << newLnL << "   ";
+    for (int chain=0; chain<numChains; chain++)
+        {
+        bool isCold = false;
+        if (modelPtr[chain] == getColdModel())
+            isCold = true;
+        if (isCold == true)
+            std::cout << "[";
+        else
+            std::cout << "(";
+        std::cout << std::setw(maxLikePrint + 5) << curLnL[chain];
+        if (isCold == true)
+            std::cout << "] ";
+        else
+            std::cout << ") ";
+        }
+    //std::cout << std::setw(maxLikePrint + 5) << curLnL << " -> " << std::setw(maxLikePrint + 5) << newLnL << "   ";
 
     // estimate time remaining based on time to this point
     std::chrono::duration<double> durationSecs  = std::chrono::duration_cast<std::chrono::seconds>(t1 - t2);
@@ -190,19 +232,21 @@ void Mcmc::print(int gen, double curLnL, double newLnL, double curLnP, double ne
     std::cout << " remaining  ";
 
     //std::cout << std::setw(maxPriorPrint + 5) << curLnP << " -> " << std::setw(maxPriorPrint + 5) << newLnP << "   ";
+#   if 0
     if (accept == true)
         std::cout << "Accepted ";
     else
         std::cout << "Rejected ";
-    std::cout << modelPtr->getUpdatedParameterName();
+    std::cout << getColdModel()->getUpdatedParameterName();
     std::cout << " parameter";
-    std::string updateType = modelPtr->getLastUpdate();
+    std::string updateType = getColdModel()->getLastUpdate();
     if (updateType != "")
         {
         std::cout << " (";
         std::cout << updateType;
         std::cout << " update)";
         }
+#   endif
     std::cout << std::endl;
 }
 
@@ -217,6 +261,7 @@ void Mcmc::run(void) {
 
 void Mcmc::runPathSampling(void) {
 
+#   if 0
     // initialize the chain
     initialize();
     
@@ -316,6 +361,7 @@ void Mcmc::runPathSampling(void) {
     // clean up
     closeOutputFiles();
     delete [] parmValues;
+#   endif
 }
 
 void Mcmc::runPosterior(void) {
@@ -325,53 +371,96 @@ void Mcmc::runPosterior(void) {
     // initialize the chain
     initialize();
     
-    modelPtr->setUpdateLikelihood();
-    double curLnL = modelPtr->lnLikelihood();
-    double curLnP = modelPtr->lnPriorProbability();
+    for (int chain=0; chain<numChains; chain++)
+        modelPtr[chain]->setUpdateLikelihood();
+    
+    double* curLnL = new double[numChains];
+    double* curLnP = new double[numChains];
+    for (int chain=0; chain<numChains; chain++)
+        {
+        curLnL[chain] = modelPtr[chain]->lnLikelihood();
+        curLnP[chain] = modelPtr[chain]->lnPriorProbability();
+        }
+        
     UpdateInfo& updateInfo = UpdateInfo::updateInfo();
 
     // Metropolis-Hastings algorithm
     auto start = std::chrono::high_resolution_clock::now();
     for (int n=1; n<=numMcmcCycles; n++)
         {
-        // propose a new value for the chain
-        double lnProposalRatio = modelPtr->update();
         
-        // calculate the likelihood and prior ratios (natural log scale)
-        double newLnL = modelPtr->lnLikelihood();
-        double lnLikelihoodRatio = newLnL - curLnL;
-        double newLnP = modelPtr->lnPriorProbability();
-        double lnPriorRatio = newLnP - curLnP;
-        
-        // accept or reject the state
-        bool accept = false;
-        if ( log(rv->uniformRv()) < lnLikelihoodRatio + lnPriorRatio + lnProposalRatio )
-            accept = true;
-        
-        // print to the screen to give the user some clue where the chain is
-        if (n == 1 || n == numMcmcCycles || n % printFrequency == 0)
+        for (int chain=0; chain<numChains; chain++)
             {
-            auto timePt = std::chrono::high_resolution_clock::now();
-            print(n, curLnL, newLnL, curLnP, newLnP, accept, timePt, start);
+            // propose a new value for the chain
+            double lnProposalRatio = modelPtr[chain]->update();
+            
+            // calculate the likelihood and prior ratios (natural log scale)
+            double newLnL = modelPtr[chain]->lnLikelihood();
+            double lnLikelihoodRatio = newLnL - curLnL[chain];
+            double newLnP = modelPtr[chain]->lnPriorProbability();
+            double lnPriorRatio = newLnP - curLnP[chain];
+            
+            // accept or reject the state
+            bool accept = false;
+            if ( log(rv->uniformRv()) < lnLikelihoodRatio + lnPriorRatio + lnProposalRatio )
+                accept = true;
+            
+            // print to the screen to give the user some clue where the chain is
+            if (chain + 1 == numChains && (n == 1 || n == numMcmcCycles || n % printFrequency == 0))
+                {
+                auto timePt = std::chrono::high_resolution_clock::now();
+                print(n, curLnL, curLnP, accept, timePt, start);
+                }
+            
+            // update the state of the chain
+            if (accept == false)
+                {
+                modelPtr[chain]->reject();
+                updateInfo.reject(modelPtr[chain]->getLastUpdate());
+                }
+            else
+                {
+                modelPtr[chain]->accept();
+                updateInfo.accept(modelPtr[chain]->getLastUpdate());
+                curLnL[chain] = newLnL;
+                curLnP[chain] = newLnP;
+                }
+            
+            // sample the chain, printing the current state to files
+            if (modelPtr[chain] == getColdModel() && (n == 1 || n == numMcmcCycles || n % sampleFrequency == 0))
+                sample(n, curLnL[chain], curLnP[chain]);
+            }
+            
+        // attempt to swap
+        if (numChains > 1)
+            {
+            // choose two chains to sawp
+            int idx1, idx2;
+            chooseModelsToSwap(idx1, idx2);
+            double lnR  = power(idx2) * (curLnL[idx1] + curLnP[idx1]) + power(idx1) * (curLnL[idx2] + curLnP[idx2]); // swapped state
+                   lnR -= power(idx1) * (curLnL[idx1] + curLnP[idx1]) + power(idx2) * (curLnL[idx2] + curLnP[idx2]); // original condition
+            if ( log(rv->uniformRv()) < lnR )
+                {
+                int chainIndex1 = modelPtr[idx1]->getIndex();
+                int chainIndex2 = modelPtr[idx2]->getIndex();
+                modelPtr[idx1]->setIndex(chainIndex2);
+                modelPtr[idx2]->setIndex(chainIndex1);
+                if (chainIndex1 < chainIndex2)
+                    updateInfo.accept("Swap(" + std::to_string(chainIndex1) + "," + std::to_string(chainIndex2) + ")");
+                else
+                    updateInfo.accept("Swap(" + std::to_string(chainIndex2) + "," + std::to_string(chainIndex1) + ")");
+                }
+            else
+                {
+                int chainIndex1 = modelPtr[idx1]->getIndex();
+                int chainIndex2 = modelPtr[idx2]->getIndex();
+                if (chainIndex1 < chainIndex2)
+                    updateInfo.reject("Swap(" + std::to_string(chainIndex1) + "," + std::to_string(chainIndex2) + ")");
+                else
+                    updateInfo.reject("Swap(" + std::to_string(chainIndex2) + "," + std::to_string(chainIndex1) + ")");
+                }
             }
         
-        // update the state of the chain
-        if (accept == false)
-            {
-            modelPtr->reject();
-            updateInfo.reject(modelPtr->getLastUpdate());
-            }
-        else
-            {
-            modelPtr->accept();
-            updateInfo.accept(modelPtr->getLastUpdate());
-            curLnL = newLnL;
-            curLnP = newLnP;
-            }
-        
-        // sample the chain, printing the current state to files
-        if (n == 1 || n == numMcmcCycles || n % sampleFrequency == 0)
-            sample(n, curLnL, curLnP);
         }
     auto stop = std::chrono::high_resolution_clock::now();
         
@@ -385,6 +474,8 @@ void Mcmc::runPosterior(void) {
     // clean up
     closeOutputFiles();
     delete [] parmValues;
+    delete [] curLnL;
+    delete [] curLnP;
 }
 
 double Mcmc::safeExponentiation(double lnX) {
@@ -399,7 +490,7 @@ double Mcmc::safeExponentiation(double lnX) {
 
 void Mcmc::sample(int gen, double lnL, double lnP) {
 
-    Tree* t = modelPtr->getTree();
+    Tree* t = getColdModel()->getTree();
     double tl = t->getTreeLength();
     std::string ts = t->getNewick(6);
     
@@ -409,7 +500,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         parmStrm << "lnL\t";
         parmStrm << "lnP\t";
         parmStrm << "TL\t";
-        parmStrm << modelPtr->getParameterHeader();
+        parmStrm << getColdModel()->getParameterHeader();
         parmStrm << std::endl;
 
         std::vector<std::string>& tn = t->getTaxonNames();
@@ -425,10 +516,10 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
             treeStrm << std::endl;
             }
 
-        std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
+        std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
         for (int i=0; i<alns.size(); i++)
             {
-            std::string stateSetsStr = modelPtr->getStateSetsJsonString();
+            std::string stateSetsStr = getColdModel()->getStateSetsJsonString();
             if (stateSetsStr != "")
                 {
                 algnJsonStrm[i] << "{" << stateSetsStr;
@@ -453,7 +544,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     parmStrm << parmStr << std::endl;
 #   else
     std::cout << std::fixed << std::setprecision(8);
-    modelPtr->fillParameterValues(parmValues, numParmValues);
+    getColdModel()->fillParameterValues(parmValues, numParmValues);
     parmStrm << gen << '\t';
     parmStrm << lnL << '\t';
     parmStrm << lnP << '\t';
@@ -474,7 +565,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
 #   endif
     
     // output to alignment file
-    std::vector<ParameterAlignment*> alns = modelPtr->getAlignments();
+    std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
     for (int i=0; i<alns.size(); i++)
         {
         //algnJsonStrm[i] << alns[i]->getJsonString();

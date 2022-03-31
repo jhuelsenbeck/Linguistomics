@@ -354,8 +354,8 @@ double ParameterAlignment::update(void) {
     double lnProposalRatio = alignmentProposal->propose(alignment[0], alignment[1], 0.5);
 
     // set flags indicating the transition probabilities are not affected
-    TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-    tip.setNeedsUpdate(false);
+    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+    tip->setNeedsUpdate(false);
     updateChangesTransitionProbabilities = false;
     
     modelPtr->setUpdateLikelihood(index);

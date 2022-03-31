@@ -19,6 +19,7 @@
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
 #include "UserSettings.hpp"
+
 //==============================================================================================
 
 WordLnLikeTask::WordLnLikeTask() {
@@ -41,12 +42,11 @@ void WordLnLikeTask::Run(MathCache& cache) {
 //==============================================================================================
 
 
-Model::Model(RandomVariable* r, ThreadPool& pool):
-    threadPool(pool)
-{
+Model::Model(RandomVariable* r, ThreadPool& pool) : threadPool(pool) {
 
     std::cout << "   Model" << std::endl;
     rv = r;
+    rateMatrixHelper = NULL;
     partitionInfo = NULL;
     taskList = NULL;
     taskMax = 1;
@@ -72,6 +72,7 @@ Model::Model(RandomVariable* r, ThreadPool& pool):
 }
 
 Model::~Model(void) {
+
     delete[] taskList;
     delete [] threadLnL;
     for (int i=0; i<parameters.size(); i++)
@@ -79,10 +80,14 @@ Model::~Model(void) {
     for (int i=0; i<wordLikelihoodCalculators.size(); i++)
         delete wordLikelihoodCalculators[i];
     delete partitionInfo;
-
+    delete transitionProbabilities;
+    delete rateMatrix;
+    if (rateMatrixHelper != NULL)
+        delete rateMatrixHelper;
 }
 
 WordLnLikeTask* Model::GetTaskList(size_t count) {
+
     if (count > taskMax) 
         {
         // Increment size in powers of 2 to reduce reallocations
@@ -116,11 +121,13 @@ void Model::fillParameterValues(double* x, int n) {
 }
 
 void Model::flipActiveLikelihood(void) {
+
     for (int i=0; i<activeLikelihood.size(); i++)
         activeLikelihood[i] ^= 1; 
 }
 
 void Model::flipActiveLikelihood(int idx) {
+
     activeLikelihood[idx] ^= 1;  // Flip from (0 to 1) or (1 to 0)
 }
 
@@ -353,7 +360,8 @@ Tree* Model::getTree(const RbBitSet& mask) {
 
 std::string Model::getUpdatedParameterName(void) {
 
-    return parameters[updatedParameterIdx]->getName();
+    std::string str = parameters[updatedParameterIdx]->getName() + " [" + std::to_string(index) + "]";
+    return str;
 }
 
 std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
@@ -492,9 +500,9 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         partitionInfo = new Partition(jsonPart);
         //partitionInfo->print();
             
-        RateMatrixHelper& helper = RateMatrixHelper::rateMatrixHelper();
-        helper.initialize(numStates, partitionInfo);
-        helper.print();
+        rateMatrixHelper = new RateMatrixHelper;
+        rateMatrixHelper->initialize(numStates, partitionInfo);
+        rateMatrixHelper->print();
         //helper.printMap();
         
         initializeStateSets(jsonPart);
@@ -557,8 +565,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     else if (substitutionModel == custom)
         {
         // set up exchangability parameters
-        RateMatrixHelper& helper = RateMatrixHelper::rateMatrixHelper();
-        std::vector<std::string> labels = helper.getLabels();
+        std::vector<std::string> labels = rateMatrixHelper->getLabels();
         
         Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates, labels);
         pExchange->setProposalProbability(5.0);
@@ -625,17 +632,17 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
     UserSettings& settings = UserSettings::userSettings();
     
     // set up the rate matrix
-    RateMatrix& rmat = RateMatrix::rateMatrix();
-    rmat.initialize(numStates);
+    rateMatrix = new RateMatrix;
+    rateMatrix->initialize(numStates, rateMatrixHelper);
     if (settings.getSubstitutionModel() != jc69)
-        rmat.updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
+        rateMatrix->updateRateMatrix(getExchangabilityRates(), getEquilibriumFrequencies());
     
     // initialize the transition probabilities
-    TransitionProbabilities& tProbs = TransitionProbabilities::transitionProbabilties();
-    tProbs.initialize( this, &threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
-    tProbs.setNeedsUpdate(true);
-    tProbs.setTransitionProbabilities();
-    if (tProbs.areTransitionProbabilitiesValid(0.000001) == false)
+    transitionProbabilities = new TransitionProbabilities;
+    transitionProbabilities->initialize( this, &threadPool, wordAlignments, getTree()->getNumNodes(), numStates, settings.getSubstitutionModel() );
+    transitionProbabilities->setNeedsUpdate(true);
+    transitionProbabilities->setTransitionProbabilities();
+    if (transitionProbabilities->areTransitionProbabilitiesValid(0.000001) == false)
         Msg::error("Row sums of transition probabilities are not equal to 1.0");
 }
 
@@ -711,13 +718,11 @@ void Model::reject(void) {
     if (parm->getUpdateChangesRateMatrix() == true)
         {
         // flip rate matrix index to original state
-        RateMatrix& rmat = RateMatrix::rateMatrix();
-        rmat.flipActiveValues();
+        rateMatrix->flipActiveValues();
         }
     if (parm->getUpdateChangesTransitionProbabilities() == true)
         {
-        TransitionProbabilities& tip = TransitionProbabilities::transitionProbabilties();
-        tip.flipActive();
+        transitionProbabilities->flipActive();
         }
 }
 

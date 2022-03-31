@@ -344,8 +344,8 @@ void TransitionProbabilities::setTransitionProbabilitiesJc69(void) {
 
 void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
 
-    RateMatrix& rmat = RateMatrix::rateMatrix();
-    DoubleMatrix& Q = rmat.getRateMatrix();
+    RateMatrix* rmat = modelPtr->getRateMatrix();
+    DoubleMatrix& Q = rmat->getRateMatrix();
 
     auto tasks = new TransitionProbabilitiesTask[transProbs.size()];
     auto task = tasks;
@@ -364,7 +364,7 @@ void TransitionProbabilities::setTransitionProbabilitiesUsingPadeMethod(void) {
     threadPool->Wait();
     delete[] tasks;
         
-    auto& rmatFreqs = rmat.getEquilibriumFrequencies();
+    auto& rmatFreqs = rmat->getEquilibriumFrequencies();
     for (int i=0; i<numStates; i++)
         stationaryFreqs[activeProbs][i] = rmatFreqs[i];
 }
