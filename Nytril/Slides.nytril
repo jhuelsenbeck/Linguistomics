@@ -1,135 +1,104 @@
-using Format, Units, Slides, ShowTypes;
+using Format, Units, Slides;
 
-flags ShowTypes {
-  None,
-  Linguist,
-  Biologist,
+//======================================================================
+
+class JohnPresentationClass: ShowClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", [People.JPHuelsenbeck]);
+    Design    = new FancyDesignClass;
+    SlideDeck = AddSlideGroup(Slides);
+  }
 }
-
-AllTypes = Linguist Biologist;
-
 //======================================================================
 
 namespace Slides.Introduction {
   Title = PaperSections.Introduction.Title;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = Block {
+  Body(ShowClass show) = Block {
     PaperSections.Introduction.Slide;
-    Style.ShowTable(presentation.Experiment, TableFigures.Cognates);
+    Style.ShowTable(show.Experiment, TableFigures.Cognates);
   };
-}
-
-namespace Slides.GimmeBackMyBullets {
-  Title = "Gimme back my bullets";
-  Type  = Linguist Biologist;
-
-  Items.One.Body(PresentationClass presentation) = Paragraph {
-    "One "*90;
-  };
-
-  namespace Items.Two {
-    Body(PresentationClass presentation) = "Two " * 140;
-  }
-
-  namespace Items.Three {
-    Body(PresentationClass presentation) = "Three " * 250;
-  }
-
-  namespace Items.Four {
-    Body(PresentationClass presentation) = "Four " * 500;
-  }
 }
 
 namespace Slides.ExampleTree {
   Title = "Example Tree";
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = Block {
-    presentation.ShowFigureSlide(Figures.ExampleTree);
+  Body(ShowClass show) = Block {
+    show.ShowFigureSlide(Figures.ExampleTree);
   };
 }
 
 namespace Slides.Alignment {
   Title = Lang.Alignment;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = presentation.ShowFigureSlide(Figures.Alignment, TextHeight: 5 pts);
+  Body(ShowClass show) = show.ShowFigureSlide(Figures.Alignment, TextHeight: 5 pts);
 }
 
 namespace Slides.ShowResults {
   Title = Lang.ConsensusTree;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = Style.TreeOptions {
-    Width: DocMetrics.SlideContent.Width;
-    Root: presentation.Experiment.MainRun.Tree;
+  Body(ShowClass show) = Style.TreeOptions {
+    Width: show.Design.SlideContent.Width;
+    Root: show.Experiment.MainRun.Tree;
   };
 }
 
 namespace Slides.LanguagesUsed {
   Title = Lang.Languages;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = SegmentDisplay.ShowLanguages(presentation.Experiment.Data);
+  Body(ShowClass show) = SegmentDisplay.ShowLanguages(show.Experiment.Data, show.Design.SlideContent);
 }
 
 namespace Slides.ConceptsUsed {
   Title = Lang.ConceptsExamples;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = AllWords.ShowTable(11 pts, presentation.Experiment.Data, 2);
+  Body(ShowClass show) = AllWords.ShowTable(11 pts, show.Experiment.Data, 2);
 }
 
 namespace Slides.UniqueCharacters {
   Title = Lang.UniqueSegments;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = SegmentDisplay.ShowSegmentAssignments(presentation.Experiment.Data);
+  Body(ShowClass show) = SegmentDisplay.ShowSegmentAssignments(show.Experiment.Data);
 }
 
 namespace Slides.SegmentFrequencies {
   Title = Lang.SegmentFrequencies;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = SegmentDisplay.FrequencyChart(presentation.Experiment.Data, Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height));
+  Body(ShowClass show) = SegmentDisplay.FrequencyChart(show.Experiment.Data, show.Design.SlideContent);
 }
 
 namespace Slides.PartitionRules {
   Title = Lang.PartitionRules;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = presentation.Experiment.Rule.ShowPartitions;
+  Body(ShowClass show) = show.Experiment.Rule.ShowPartitions;
 }
 
 namespace Slides.PartitionDiagramExperiment {
   Title = Lang.TransitionRates;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = Block {
-    Figures.FrequencyDiagramStatic.Caption(presentation.Experiment);
-    presentation.Experiment.CalcExperiment.PartitionDiagram(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 40 pts));
+  Body(ShowClass show) = Block {
+    Figures.FrequencyDiagramStatic.Caption(show.Experiment);
+    show.Experiment.CalcExperiment.PartitionDiagram(Size(show.Design.SlideContent.Width, show.Design.SlideContent.Height - 40 pts));
   };
 }
 
 namespace Slides.PartitionDiagramStatic {
   Title = Lang.StaticRates;
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = Block {
-    Figures.FrequencyDiagramStatic.Caption(presentation.Experiment);
-    presentation.Experiment.CalcStatic.PartitionDiagram(DocMetrics.SlideContent);
+  Body(ShowClass show) = Block {
+    Figures.FrequencyDiagramStatic.Caption(show.Experiment);
+    show.Experiment.CalcStatic.PartitionDiagram(show.Design.SlideContent);
   };
 }
 
 namespace Slides.PartitionBoxStatic {
   Title = "Segment Transition Rates";
-  Type  = Linguist Biologist;
 
-  Body(PresentationClass presentation) = Block {
-    Figures.FrequencyBoxStatic.Caption(presentation.Experiment);
-    presentation.Experiment.CalcStatic.PartitionBox(Size(DocMetrics.SlideContent.Width, DocMetrics.SlideContent.Height - 20 pts));
+  Body(ShowClass show) = Block {
+    Figures.FrequencyBoxStatic.Caption(show.Experiment);
+    show.Experiment.CalcStatic.PartitionBox(Size(show.Design.SlideContent.Width, show.Design.SlideContent.Height - 20 pts));
   };
 }
 //======================================================================
+
 
