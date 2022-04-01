@@ -234,7 +234,7 @@ abstract class CitationStyleClass: ReferenceStyleClass {
 
   virtual GetDateFormat = ["yyyy", "MMMM yyyy", "dd MMMM, yyyy"];
 
-  virtual GetPubDateFormat = ["yyyy", "yyyy", "yyyy"];
+  virtual GetPubDateFormat = ["yyyy", "MMM yyyy", "dd MMM, yyyy"];
 
   GetItalic(attribute, separator = null) = Span {
     if (valid attribute) {
@@ -322,7 +322,6 @@ abstract class CitationStyleClass: ReferenceStyleClass {
         };
         Space;
       }
-      "In ";
       if (valid editors) {
         WriteNames(editors);
         if (editors.Length == 1)
@@ -530,9 +529,10 @@ abstract class CitationStyleClass: ReferenceStyleClass {
 
   virtual EndnoteBody(ReferenceClass reference) = Span {
     WriteNames(reference.FindFacts(AuthorLink));
+    "In ";
     ShowTitle(reference);
-    GetEdTrans(reference);
     DelimCommaSpace {Italic; reference.BookTitle};
+    GetEdTrans(reference);
     ShowWebsite(reference, null, null, "Retrieved ", " from ", Space);
     ShowPublisherDate(reference);
   };

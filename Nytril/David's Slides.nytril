@@ -26,7 +26,10 @@ namespace DavidSlides.Introduction {
     };
 
     Items.Item2.Text = Span {
-      "Nowhere is this more true than in the case of phylogenetics (Hoffmann et al. 2021, Greenhill et al. 2021)";
+      "Nowhere is this more true than in the case of phylogenetics (";
+      "Hoffmann et al. 2021";  Citation {References.hoffmann2021}; CommaSpace;
+      "Greenhill et al. 2021"; Citation {References.greenhill2021};
+      ")";
     };
 
     Items.Item3.Text = Span {
@@ -112,6 +115,17 @@ namespace DavidSlides.Introduction {
     Items.Item2.Text = Span {
       "How can this framework contribute to phonological theory?";
     };
+  }
+
+  namespace Topics.Topic9 {
+    Title = "Roadmap";
+
+    AddMap(item) = {
+      Numbered: EachOne;
+      Text: item.Title;
+    };
+
+    Items = AddMap(each DavidSlides[1..]);
   }
 
 }
@@ -328,8 +342,10 @@ namespace DavidSlides.TheData {
 
     Items.Item4.Text = Span {
       "Sampling? Are the most important sound correspondences sufficiently "
-      "sampled? (Dockum and Bowern 2019, LIST) "
-      "???? Hruschka et al. 2015—lots of asymmetry in sound changes"
+      "sampled? (Dockum and Bowern 2019"; Citation {References.Dockum2019};
+      ", LIST"; Citation {References.List2019}; ")";
+      " ???? Hruschka et al. 2015";  Citation {References.Hruschka2015};
+      "  —lots of asymmetry in sound changes"
     };
 
     Items.Item5.Text = Span {
@@ -383,18 +399,30 @@ namespace DavidSlides.Methods {
       "The observations are aligned phonemic segments";
     };
 
-    Items.Item2.Text = Frame {
-      Paragraph {
-        "In an instant of time, there are three possible events:";
-      };
-
-      NumberedList {
-        "Transition from one segment to another";
-        "Transition from one segment to another";
-        "Deletion of a segment";
-      };
+    Items.Item2.Text = Span {
+      "In an instant of time, there are three possible events:";
     };
 
+    namespace Items.Item3 {
+      Numbered = 1;
+      Text = Span {
+        "Transition from one segment to another";
+      };
+    }
+
+    namespace Items.Item4 {
+      Numbered = 2;
+      Text = Span {
+        "Insertion of a segment";
+      };
+    }
+
+    namespace Items.Item5 {
+      Numbered = 3;
+      Text = Span {
+        "Deletion of a segment";
+      };
+    }
   }
 
   namespace Topics.Topic2 {
@@ -432,14 +460,346 @@ namespace DavidSlides.Methods {
 
     Items.Item7.Text = Span {
       "The sequence length is a geometrically distributed random variable with parameter "
-      Defs.InsertionRate; "/"; Defs.DeletionRate;
+      Defs.InsertionRate; Divide; Defs.DeletionRate;
     };
 
     Items.Item8.Text = Span {
       "We use Markov Chain Monte Carlo (MCMC) to sample all of the parameters, including word alignments";
     };
+  }
 
+  namespace Topics.Topic3 {
+    Title = "Substitution model";
+  }
+
+  namespace Topics.Topic4 {
+    Title = "Priors on model parameters";
+
+    Items.Item1.Text = Span {
+      Defs.Topology; " ~ Uniform";
+    };
+
+    Items.Item2.Text = Span {
+      EllipsisList {
+        Defs.ExpectedEvents sub 1;
+        Defs.ExpectedEvents sub 2;
+        Defs.ExpectedEvents sub "2n-3";
+      };
+      " ~ i.i.d. Exponential(α)";
+    };
+
+    Items.Item3.Text = Span {
+      EllipsisList {
+        Defs.EquilibriumDistribution sub 0;
+        Defs.EquilibriumDistribution sub 1;
+        Defs.EquilibriumDistribution sub "s - 1";
+      };
+      " ~ Dirichlet(1, 1, … , 1)";
+    };
+
+    Items.Item4.Text = Span {
+      Defs.InsertionRate; CommaSpace; Defs.DeletionRate;
+      " ~ i.i.d. Exponentials with ";
+      Defs.InsertionRate; Tex.lt; Defs.DeletionRate;
+    };
+
+    Items.Item5.Text = Span {
+      EllipsisList {
+        Defs.DirichletRate sub 1;
+        Defs.DirichletRate sub 2;
+        Defs.DirichletRate sub 3;
+      };
+      " ~ Dirichlet(1, 1, … , 1)"
+    };
+  }
+
+  namespace Topics.Topic5 {
+    Title = "Alignment";
+
+    Items.Item1.Text = Span {
+      "alignment should not be treated as an observation";
+    };
+
+    Items.Item2.Text = Span {
+      "how do you split up the alignments? how do you calculate the probability of the alignments?";
+    };
+  }
+
+  namespace Topics.Topic6 {
+    Title = "Bayes’ Theorem";
+
+    Items.Item1.Body(ShowClass show) = Block {
+      show.Design.ItemTextFormat;
+      Paragraph {
+        "What is the probability of an unobserved phenomenon—such as a "
+        "phylogenetic tree, a rate of change, or an alignment—given the ";
+        "observable data and our prior assumptions?";
+      };
+      Paragraph;
+      Equations.PosteriorProbabilityDistribution.Display {
+        TextHeight: 18 pts;
+      };
+    };
+  }
+
+  namespace Topics.Topic7 {
+    Title = "Rate matrix";
+
+    Items.Item1.Text = Span {
+      "Transitions are modeled as CTMCs";
+    };
+
+    Items.Item2.Text = Span {
+      "GTR ";
+      Defs.EquilibriumDistribution sub sym.i;
+      " for ";
+      sym.i;
+      " states";
+    };
+
+    Items.Item3.Text = Span {
+      sym.i; " choose 2 for exchangability rates";
+    };
+
+    Items.Item4.Text = Span {
+      "Poisson model is glorified JC model? What does that mean?";
+    };
+
+    Items.Item5.Text = Span {
+      "absorbing boundary?";
+    };
+
+    Items.Item6.Text = Span {
+      "Avg. rate of change from ";
+      sym.i;
+      " to ";
+      sym.j;
+      ColonSpace;
+      Defs.EquilibriumDistribution sub sym.i;
+      TimesDot;
+      sym.qij;
+    };
+
+    Items.Item7.Text = Span {
+      "GTR ";
+      sym.qij;
+      Equals;
+      sym.r sub sym.ij;
+      TimesDot;
+      Defs.EquilibriumDistribution sub sym.j;
+    };
+
+    Items.Item8.Text = Span {
+      "this is not normal; this is what gets us time reversability";
+    };
+
+    Items.Item9.Text = Span {
+      "exponetation PADE method not the eigen system";
+    };
+  }
+
+  namespace Topics.Topic8 {
+    Title = "Incomplete sampling";
+
+    Items.Item1.Text = Span {
+      "HOW EXACTLY ARE DATA HANDLED/TREES INFERRED FOR COGNATE "
+      "SETS W/O FULL REPRESENTATION AMONG LANGS?\n";
+      "Deals with incompletely sampled cognates using subtrees of a canonical tree "
+      "with all 10 languages";
+    };
+  }
+
+  namespace Topics.Topic9 {
+    Title = "Nytril/Workflow?";
   }
 }
 //======================================================================
+
+namespace DavidSlides.Results {
+  Title = "Results";
+
+  namespace Topics.Topic1 {
+    Title = "Tree Topology";
+  }
+
+  namespace Topics.Topic2 {
+    Title = "MCC tree";
+
+    Body(ShowClass show) = Block {
+      ShowTree(null, null, show.Experiment.MainRun.Tree, show.Design.ItemWidth) {
+        MarginL: show.Design.ItemIndent;
+      }
+    };
+  }
+
+  namespace Topics.Topic3 {
+    Title = "Transition probabilities";
+
+    Items.Item1.Text = Span {
+      "Total number of word forms in each language; this reveals bias in the ";
+      "dataset? Gaps are not due to ignorance except occasionally in the case ";
+      "of Latin. They are due either to borrowing or actual lexical loss.";
+    };
+
+    Items.Item2.Text = Span {
+      "Total number of nouns in each language, total number of verbs in each language";
+    };
+
+    Items.Item3.Text = Span {
+      "Correlation between total number of segments in each language and "
+      "root to tip length for each language? Will this show you the role that deletions are playing?";
+    };
+
+    Items.Item4.Text = Span {
+      "Number of verbs in each language?";
+    };
+  }
+
+  namespace Topics.Topic4 {
+    Title = "Functional load";
+
+    Items.Item1.Text = Span {
+      "How to quantify functional load?";
+    };
+  }
+
+  namespace Topics.Topic5 {
+    Title = "Segmental stability";
+  }
+
+  namespace Topics.Topic6 {
+    Title = "The locus of deletions";
+
+    Items.Item1.Text = Span {
+      "Kessler 2007?"; Citation {References.Kessler2007};
+    };
+
+    Items.Item2.Text = Span {
+      "in q and a of Macklin-Cordes 2021, andrea ceolin mentioned that ringe ";
+      "and kessler had discovered that there is more phylogenetic signal in the";
+      "beginnings than in the ends of words";
+    };
+
+    Items.Item3.Text = Span {
+      "Sound change is targeting word ends";
+    };
+
+    Items.Item4.Text = Span {
+      "erich round talk? Tresoldi 2022"; Citation {References.Tresoldi2022};
+    };
+
+    Items.Item5.Text = Span {
+      "Greenhill and Mattis-List LexiBank project";
+    };
+
+    Items.Item6.Text = Span {
+      "Wedel et al. 2019"; Citation {References.Wedel2019};
+    };
+  }
+}
+//======================================================================
+
+namespace DavidSlides.Discussion {
+  Title = "Discussion";
+
+  namespace Topics.Topic1 {
+    Title = "Romance phylogeny";
+
+    Items.Item1.Text = Span {
+      "The MCC tree recovers widely agreed upon relationships, such as ";
+      "Ibero-Romance (Spanish and Portuguese) and Walloon and French.";
+    };
+
+    Items.Item2.Text = Span {
+      "Where is Catalan?";
+    };
+
+    Items.Item3.Text = Span {
+      "Where is Romanian?";
+    };
+
+    Items.Item4.Text = Span {
+      "picture may change with the incorportation of Sardinian";
+    };
+
+    Items.Item5.Text = Span {
+      "we’ll have to get Sardinian in there";
+    };
+  }
+
+  namespace Topics.Topic2 {
+    Title = "Segmental sampling";
+
+    Items.Item1.Text = Block {
+      Paragraph {
+        "you have to think both about segmental sampling and about "
+        "correspondence-set sampling?";
+      };
+      Paragraph {
+        "Dockum and Bowern 2019: swadesh lists not long enough - are they just ";
+        "sampling one cognate class per concept? - you have to get the basic phonemic inventory";
+      }
+    };
+
+    Items.Item2.Text = Span {
+      "How well are we sampling the phonology of each language?";
+    };
+
+    Items.Item3.Text = Span {
+      "Simon mentioned that phonemes follow a zipf distribution. do we have to do anything to take this into account?";
+    };
+
+    Items.Item4.Text = Span {
+      "Is the sample of segments in our dataset representative of the language as a whole";
+    };
+
+    Items.Item5.Text = Span {
+      "E.g. if you don’t sample the right Romanian words you won’t be able to infer crucial vowel changes";
+    };
+  }
+
+  namespace Topics.Topic3 {
+    Title = "Implications for sound change";
+  }
+
+  namespace Topics.Topic4 {
+    Title = "Major changes?";
+  }
+}
+//======================================================================
+
+namespace DavidSlides.Conclusion {
+  Title = "Conclusion";
+
+  namespace Topics.Topic1 {
+    Title = "Main takeways";
+  }
+
+  namespace Topics.Topic22 {
+    Title = "Future work";
+
+    Items.Item1.Text = Span {
+      "metathesis";
+    };
+
+    Items.Item2.Text = Span {
+      "sensitivity to neighboring sounds";
+    };
+
+    Items.Item3.Text = Span {
+      "stress";
+    };
+
+    Items.Item4.Text = Span {
+      "scale up the number of languages";
+    };
+
+    Items.Item5.Text = Span {
+      "divergence-time estimation";
+    };
+  }
+}
+//======================================================================
+
+
 
