@@ -400,6 +400,10 @@ void Mcmc::runPosterior(void) {
             double newLnP = modelPtr[chain]->lnPriorProbability();
             double lnPriorRatio = newLnP - curLnP[chain];
             
+            double myPower = power(chain);
+            lnLikelihoodRatio *= myPower;
+            lnPriorRatio *= myPower;
+
             // accept or reject the state
             bool accept = false;
             if ( log(rv->uniformRv()) < lnLikelihoodRatio + lnPriorRatio + lnProposalRatio )

@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     for (int i=0; i<settings.getNumChains(); i++)
         {
         model[i] = new Model(rv, threadPool);
-        model[i]->setIndex(i);
+        model[i]->setIndex(i); 
         }
     
     // run the Markov chain Monte Carlo algorithm

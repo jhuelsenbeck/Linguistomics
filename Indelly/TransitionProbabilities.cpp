@@ -67,19 +67,19 @@ class TransitionProbabilitiesTask: public ThreadTask {
 
             double maxAValue = 0.0;
             for (int i = 0; i < numStates; i++)
-            {
+                {
                 auto ai = (*A)(i, i);
                 maxAValue = (maxAValue > ai) ? maxAValue : ai;
-            }
+                }
 
             int y = logBase2Plus1(maxAValue);
             int j = ((0 > y) ? 0 : y);
 
             A->divideByPowerOfTwo(j);
-
+            
             double c = 1.0;
             for (int k = 1; k <= qValue; k++)
-            {
+                {
                 c = c * (qValue - k + 1.0) / ((2.0 * qValue - k + 1.0) * k);
 
                 /* X = AX */
@@ -94,7 +94,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
                 if (negativeFactor == -1)
                     cX->multiply(negativeFactor);
                 D->add(*cX);
-            }
+                }
 
             cache.gaussianElimination(*D, *N, *probs);
 
