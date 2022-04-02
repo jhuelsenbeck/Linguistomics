@@ -3,7 +3,7 @@
 
 namespace PaperSizes {
   Letter    = Size(8.5 inches, 11 inches);
-  Slideshow = Size(11 inches, 7 inches);
+  Slideshow = Size(11 inches, 7.5 inches);
   A4        = Size(210 millimeters, 297 millimeters);
 }
 //======================================================================
@@ -69,8 +69,10 @@ class DefClass: FactClass {
   override GetIcon = MaterialIcons.subscript;
 
   override GetLayoutDoc = Style.Equation {
-    Hover: new HoverClass(this, HoverTypes.Tip);
-    Symbol;
+    Span {
+      Symbol;
+      Hover: new HoverClass(this, HoverTypes.Tip);
+    };
     Link to this;
   };
 
@@ -84,7 +86,9 @@ class DefClass: FactClass {
     Paragraph {
       Bold; Name;
     };
-    Description;
+    Paragraph {
+      Description;
+    };
   };
 
   Appendix = Block {
@@ -544,18 +548,20 @@ namespace Style {
     Corner: 8 pts;
     MarginB: 20 pts;
     PaddingLR: 15 pts;
-    Border: 0.5 pts {Color: 90%};
-    Style.Header1 {
-      HAlignment: HAligns.Center;
-      title;
-    };
-    if (valid subtitle) {
-      Paragraph {
-        TextHeight: 10 pts;
+    if (exists title) {
+      Border: 0.5 pts {Color: 90%};
+      Style.Header1 {
         HAlignment: HAligns.Center;
-        subtitle;
+        title;
       };
-      Paragraph;
+      if (valid subtitle) {
+        Paragraph {
+          TextHeight: 10 pts;
+          HAlignment: HAligns.Center;
+          subtitle;
+        };
+        Paragraph;
+      }
     }
 
     TreeOptions {

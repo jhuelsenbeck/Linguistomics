@@ -87,21 +87,20 @@ class ProgressDesignClass: ShowDesignClass {
         MarginLR: 24 pts;
         MarginT: 12 pts;
         MarginB: 12 pts;
-        Separation: 24 pts;
+        Separation: 9 pts;
 
         var index = 0;
         foreach (var group in show.Groups) {
           VBox {
-            TextHeight: 14 pts;
+            TextHeight: 10 pts;
             group.Title;
             HBox {
-              TextHeight: 18 pts;
-        //      Separation: 3 pts;
+              TextFamily: Main.MathFamily;
               foreach (var item in group.Items) {
                 if (index+1 < item.Index)
                   Tex.blackcirc;
                 else
-                  Tex.circ;
+                  Tex.bigcirc;
                 ++index;
               }
             };
@@ -349,6 +348,37 @@ class EndSlideClass: SlideClass {
 
 //======================================================================
 
+class BibSlideClass: SlideClass {
+  Constructor(ShowClass show) {
+    super.Constructor(show, Lang.References);
+  }
+
+  override AddSlidePage(page) = Block {
+    PageBreak;
+    Bibliography {
+      Title: Lang.References;
+    };
+  };
+}
+
+//======================================================================
+
+ShowItem(ShowClass show, item) {
+   var text = item.?Text;
+   if (exists text) {
+     return Block {
+       show.Design.ItemTextFormat;
+       text;
+     };
+   }
+   else {
+     return Block {
+       Style.MainStyle;
+       item.?Body(show);
+     };
+   }
+}
+
 class SingleSlideClass: SlideClass {
   var Variable;
 
@@ -357,9 +387,7 @@ class SingleSlideClass: SlideClass {
     Variable = variable;
   }
 
-  override ShowBody = Block {
-    Variable.Body(Show);
-  };
+  override ShowBody = ShowItem(Show, Variable);
 }
 
 //======================================================================
@@ -368,21 +396,14 @@ class SlideItemClass {
   var Height,
       Content,
       Number,
+      Numbered,
       Index;
 
    Constructor(ShowClass show, item, number) {
+     Numbered = item.?Numbered ?? 0;
      Content = Frame {
-       Style.MainStyle;
        Width: show.Design.ItemWidth;
-       var text = item.?Text;
-       if (exists text) {
-         Paragraph {
-           show.Design.ItemTextFormat;
-           text;
-         };
-       }
-       else
-          item.Body(show);
+       ShowItem(show, item);
      };
      Height = LayoutSize(Content).Height;
      Number = number;
@@ -460,7 +481,7 @@ class TopicSlidesClass: SlideClass {
     Design.HeaderFooter(Show, Topic.Title, page);
 
     Table {
-      LeftIndent: 1 inch;
+      LeftIndent: Design.ItemIndent;
 
       Columns: [Design.BulletIndent, Design.ItemWidth];
       for (var i = 0; i < count; ++i) {
@@ -469,7 +490,14 @@ class TopicSlidesClass: SlideClass {
           Cell {
             Paragraph {
               Design.ItemTextFormat;
-              if (item.Number == number+count)
+              if (item.Numbered > 0) {
+                HBox {
+                  PaddingLR: 2 pts;
+                  Background: 80%;
+                  item.Numbered;
+                };
+              }
+              else if (item.Number == number+count)
                 Design.BulletCurrent;
               else
                 Design.BulletDone;
@@ -535,7 +563,7 @@ class ShowClass: BaseViewClass {
 
     var slides = [new IntroSlideClass(this, Title)] +
                  SlideDeck +
-                 [new EndSlideClass(this)];
+                 [new EndSlideClass(this), new BibSlideClass(this)];
 
     foreach (var slide in slides)
       slide.AddSlidePage(EachIndex);
