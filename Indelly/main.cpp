@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     // instantiate the random number generator
     RandomVariable* rv = NULL;
     if (settings.getSeed() == 0)
-        rv = new RandomVariable(1);
+        rv = new RandomVariable;
     else
         rv = new RandomVariable(settings.getSeed());
         
