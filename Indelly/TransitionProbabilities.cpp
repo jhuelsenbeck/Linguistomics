@@ -26,12 +26,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
             numStates  = 0;
             Tree       = NULL;
             Q          = NULL;
-            A          = NULL;
             P          = NULL;
-            D          = NULL;
-            N          = NULL;
-            X          = NULL;
-            cX         = NULL;
         }
         
         void init(Tree* tree, DoubleMatrix* q, TransitionProbabilitiesInfo& info, int activeProbs) {
@@ -39,12 +34,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
             numStates  = info.numStates;
             Tree       = tree;
             Q          = q;
-            A          = info.a_mat;
             P          = info.probs[activeProbs];
-            D          = info.d_mat;
-            N          = info.n_mat;
-            X          = info.x_mat;
-            cX         = info.cX_mat;
         }
 
         /* The method approximates the matrix exponential, P = e^A, using
@@ -56,26 +46,29 @@ class TransitionProbabilitiesTask: public ThreadTask {
            The method has the advantage of error control. The error is controlled by
            setting qValue appropriately (using the function SetQValue). */
         void computeMatrixExponential(MathCache& cache, int qValue, double v, DoubleMatrix* probs) {
+            assert(probs->getNumRows() == probs->getNumCols());
+            auto size = probs->getNumRows();
+
+            auto d  = cache.pushMatrix(size);
+            auto n  = cache.pushMatrix(size);
+            auto a  = cache.pushMatrix(size);
+            auto x  = cache.pushMatrix(size);
+            auto cx = cache.pushMatrix(size);
+
 
             // A is the matrix Q * v and p = exp(a)
-            Q->multiply(v, *A);
+            Q->multiply(v, *a);
 
             // set up identity matrices
-            D->setIdentity();
-            N->setIdentity();
-            X->setIdentity();
+            d->setIdentity();
+            n->setIdentity();
+            x->setIdentity();
 
-            double maxAValue = 0.0;
-            for (int i = 0; i < numStates; i++)
-                {
-                auto ai = (*A)(i, i);
-                maxAValue = (maxAValue > ai) ? maxAValue : ai;
-                }
-
+            auto maxAValue = a->maxDiagonal();
             int y = logBase2Plus1(maxAValue);
-            int j = ((0 > y) ? 0 : y);
+            int j = y < 0 ? 0 : y;
 
-            A->divideByPowerOfTwo(j);
+            a->divideByPowerOfTwo(j);
             
             double c = 1.0;
             for (int k = 1; k <= qValue; k++)
@@ -83,29 +76,27 @@ class TransitionProbabilitiesTask: public ThreadTask {
                 c = c * (qValue - k + 1.0) / ((2.0 * qValue - k + 1.0) * k);
 
                 /* X = AX */
-                cache.multiply(*A, *X);
+                cache.multiply(*a, *x);
 
                 /* N = N + cX */
-                X->multiply(c, *cX);
-                N->add(*cX);
+                x->multiply(c, *cx);
+                n->add(*cx);
 
                 /* D = D + (-1)^k*cX */
                 int negativeFactor = (k % 2 == 0 ? 1 : -1);
                 if (negativeFactor == -1)
-                    cX->multiply(negativeFactor);
-                D->add(*cX);
+                    cx->multiply(negativeFactor);
+                d->add(*cx);
                 }
 
-            cache.gaussianElimination(*D, *N, *probs);
-
-
-            // There is a faster way to do this if j is >= 4 routinely 
-            for (int k = 0; k < j; k++)
-                cache.multiply(*probs, *probs);
-
+            cache.gaussianElimination(*d, *n, *probs);
+            if (j > 0)
+              cache.power(*probs, j+1);
 
             for (auto p = probs->begin(), end = probs->end(); p < end; ++p)
                 *p = fabs(*p);
+
+            cache.popMatrix(5);
         }
 
         virtual void Run(MathCache& cache) {
@@ -128,12 +119,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
         int             numStates;
         Tree*           Tree;
         DoubleMatrix*   Q;
-        DoubleMatrix*   A;
         DoubleMatrix**  P;
-        DoubleMatrix*   D;
-        DoubleMatrix*   N;
-        DoubleMatrix*   X;
-        DoubleMatrix*   cX;
 };
 
 
@@ -157,11 +143,6 @@ TransitionProbabilities::~TransitionProbabilities(void) {
         {
         for (int s=0; s<2; s++)
             delete [] it->second.probs[s];
-        delete it->second.a_mat;
-        delete it->second.d_mat;
-        delete it->second.n_mat;
-        delete it->second.x_mat;
-        delete it->second.cX_mat;
         }
 }
 
@@ -251,11 +232,6 @@ void TransitionProbabilities::initialize(Model* m, ThreadPool* pool, std::vector
                     info.probs[s][mi]->setIdentity();
                     }
                 }
-            info.a_mat = new DoubleMatrix(numStates, numStates);
-            info.d_mat = new DoubleMatrix(numStates, numStates);
-            info.n_mat = new DoubleMatrix(numStates, numStates);
-            info.x_mat = new DoubleMatrix(numStates, numStates);
-            info.cX_mat = new DoubleMatrix(numStates, numStates);
 
             transProbs.insert( std::make_pair(mask,info) );
             }

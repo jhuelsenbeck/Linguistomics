@@ -61,9 +61,9 @@ void Mcmc::chooseModelsToSwap(int& idx1, int& idx2) {
     if (numChains == 1)
         Msg::error("Cannot swap when there is only one chain");
         
-    idx1 = rv->uniformRv() * numChains;
+    idx1 = (int)(rv->uniformRv() * numChains);
     do {
-        idx2 = rv->uniformRv() * numChains;
+        idx2 = (int)(rv->uniformRv() * numChains);
         } while (idx2 == idx1);
 }
 
@@ -172,7 +172,7 @@ double Mcmc::power(int idx) {
     return 1.0 / (1.0 + temperature * modelPtr[idx]->getIndex());
 }
 
-void Mcmc::print(int gen, double* curLnL, double* curLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
+void Mcmc::print(int gen, double* curLnL, double* curLnP, bool /*accept*/, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
 
     for (int chain=0; chain<numChains; chain++)
         {

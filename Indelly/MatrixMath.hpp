@@ -16,9 +16,11 @@ class MathCache {
         void          forwardSubstitutionRow(DoubleMatrix& L, double* b);
         void          gaussianElimination(DoubleMatrix& A, DoubleMatrix& B, DoubleMatrix& X);
         void          multiply(DoubleMatrix& A, DoubleMatrix& B);
+        void          power(DoubleMatrix& m, int power);
 
         DoubleMatrix* pushMatrix(size_t rows, size_t columns);
-        void          popMatrix();
+        DoubleMatrix* pushMatrix(size_t size);
+        void          popMatrix(int n);
         DoubleArray*  pushArray(size_t size);
         void          popArray();
 

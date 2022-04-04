@@ -19,11 +19,6 @@ struct TransitionProbabilitiesInfo {
     int             numMatrices;
     int             numStates;
     DoubleMatrix**  probs[2];
-    DoubleMatrix*   a_mat;
-    DoubleMatrix*   d_mat;
-    DoubleMatrix*   n_mat;
-    DoubleMatrix*   x_mat;
-    DoubleMatrix*   cX_mat;
 };
 
 

@@ -11,19 +11,26 @@ MathCache::~MathCache() {
 
 DoubleMatrix* MathCache::pushMatrix(size_t rows, size_t columns) {
     assert(matrixCount < bufferSize -1);
-    auto m = &matrixBuffer[matrixCount++];
+    auto m = matrixBuffer + matrixCount++;
     m->create(rows, columns);
     return m;
 }
 
-void MathCache::popMatrix() {
-    assert(matrixCount > 0);
-    --matrixCount;
+DoubleMatrix* MathCache::pushMatrix(size_t size) {
+    assert(matrixCount < bufferSize - 1);
+    auto m = matrixBuffer + matrixCount++;
+    m->create(size);
+    return m;
+}
+
+void MathCache::popMatrix(int n) {
+    assert(matrixCount >= n);
+    matrixCount -= n;
 }
 
 DoubleArray* MathCache::pushArray(size_t size) {
     assert(arrayCount < bufferSize - 1);
-    auto a = &arrayBuffer[arrayCount++];
+    auto a = arrayBuffer + arrayCount++;
     a->create(size);
     return a;
 }
@@ -48,7 +55,7 @@ void MathCache::backSubstitutionRow(DoubleMatrix& U, double* b) {
 
 
     for (int i = n - 2; i >= 0; i--)
-    {
+        {
         u     -= n;
         urow  -= n;
         udiag -= np1;
@@ -61,21 +68,21 @@ void MathCache::backSubstitutionRow(DoubleMatrix& U, double* b) {
 
         *bp = (*bp - dotProduct) / *udiag;
         --bp;
-    }
+        }
 }
 
 void MathCache::forwardSubstitutionRow(DoubleMatrix& L, double* const b) {
-    auto lrows = L.getNumRows();
-    auto lcols = L.getNumCols();
+    auto lrows  = L.getNumRows();
+    auto lcols  = L.getNumCols();
     auto lcols1 = lcols+1;
-    auto lrow = L.begin();
-    auto ldiag = lrow;
-    auto bp = b;
+    auto lrow   = L.begin();
+    auto ldiag  = lrow;
+    auto bp     = b;
 
     *bp++ /= *lrow;
     for (size_t i = 1; i < lrows; i++)
-    {
-        lrow += lcols;
+        {
+        lrow  += lcols;
         ldiag += lcols1;
 
         double dotProduct = 0.0;
@@ -84,86 +91,110 @@ void MathCache::forwardSubstitutionRow(DoubleMatrix& L, double* const b) {
 
         *bp = (*bp - dotProduct) / *ldiag;
         ++bp;
-    }
+        }
 }
 
 void MathCache::computeLandU(DoubleMatrix& A, DoubleMatrix& L, DoubleMatrix& U) {
-
-    size_t n = A.getNumRows();
+    auto n      = A.getNumRows();
+    auto abegin = A.begin();
+    auto end    = A.end();
+    auto n1     = n + 1;
+    auto ajj    = abegin;
+    auto akj0   = abegin;
 
     for (size_t j = 0; j < n; j++)
-    {
-        for (size_t k = 0; k < j; k++)
-            for (size_t i = k + 1; i < j; i++)
-                A(i, j) -= A(i, k) * A(k, j);
+        {
+        auto akj = akj0;
+        for (size_t k = 0; k < j; k++, akj += n)
+            {
+            auto k1  = k + 1;
+            auto aij = A.getPointer(k1, j);
+            auto aik = A.getPointer(k1, k);
+            for (size_t i = k1; i < j; i++)
+                {
+                *aij -= *aik * *akj;
+                aij  += n;
+                aik  += n;
+                }
+            }
 
-        for (size_t k = 0; k < j; k++)
+        akj = akj0;
+        for (size_t k = 0; k < j; k++, akj += n)
+            {   
+            auto aij = ajj;
+            auto aik = A.getPointer(j, k);
             for (size_t i = j; i < n; i++)
-                A(i, j) -= A(i, k) * A(k, j);
+                {
+                *aij -= *aik * *akj;
+                aij  += n;
+                aik  += n;
+                }
+        }
 
-        for (size_t m = j + 1; m < n; m++)
-            A(m, j) /= A(j, j);
-    }
+
+        auto amj = A.getPointer(j + 1, j);
+        while (amj < end) 
+            {
+            *amj /= *ajj;
+            amj  += n;
+            }
+
+        ajj += n1;
+        ++akj0;
+        }
 
     auto u = U.begin();
     auto l = L.begin();
-    auto a = A.begin();
+    auto a = abegin;
     for (size_t row = 0; row < n; row++)
-    {
-        for (size_t col = 0; col < n; col++)
         {
+        for (size_t col = 0; col < n; col++)
+            {
             if (row <= col)
-            {
+                {
                 *u = *a;
-                *l = (row == col ? 1.0 : 0.0);
-            }
+                *l = row == col ? 1.0 : 0.0;
+                }
             else
-            {
+                {
                 *l = *a;
                 *u = 0.0;
-            }
+                }
 
             ++l;
             ++u;
             ++a;
+            }
         }
-    }
 }
 
 void MathCache::gaussianElimination(DoubleMatrix& A, DoubleMatrix& B, DoubleMatrix& X) {
+    assert(A.getNumRows() == A.getNumCols());
+    auto n    = A.getNumRows();
+    auto b    = pushArray(n)->begin();
+    auto bend = b + n;
+    auto l    = pushMatrix(n);
+    auto s    = pushMatrix(n);
 
-    auto n  = A.getNumRows();
-    auto b  = pushArray(n)->begin();
+    computeLandU(A, *l, *s);
 
-    auto L = pushMatrix(n, n);
-    auto scratch2 = pushMatrix(n, n);
-
-    computeLandU(A, *L, *scratch2);
-
-    auto brow = B.begin();
-    auto xrow = X.begin();
-
-    for (int k = 0; k < n; k++)
+    for (auto xrow = X.begin(), brow = B.begin(), xend = xrow + n; xrow < xend; ++xrow, ++brow)
         {
-        for (auto bp = b, bend = b + n, br = brow; bp < bend; ++bp, br += n)
+        for (auto bp = b, br = brow; bp < bend; ++bp, br += n)
             *bp = *br;
 
         /* Answer of Ly = b (which is solving for y) is copied into b. */
-        forwardSubstitutionRow(*L, b);
+        forwardSubstitutionRow(*l, b);
 
         /* Answer of Ux = y (solving for x and the y was copied into b above)
            is also copied into b. */
-        backSubstitutionRow(*scratch2, b);
+        backSubstitutionRow(*s, b);
 
-        for (auto bp = b, bend = b + n, xr = xrow; bp < bend; ++bp, xr += n)
+        for (auto bp = b, xr = xrow; bp < bend; ++bp, xr += n)
             *xr = *bp;
-
-        ++brow;
-        ++xrow;
         }
 
-    popMatrix();
-    popMatrix();
+    popMatrix(2);
     popArray();
 }
 
@@ -171,5 +202,103 @@ void MathCache::multiply(DoubleMatrix& A, DoubleMatrix& B) {
     auto m = pushMatrix(A.getNumCols(), B.getNumRows());
     A.multiply(B, *m);
     B.copy(*m);
-    popMatrix();
+    popMatrix(1);
 }
+
+// Raise m to an integer power
+void MathCache::power(DoubleMatrix& m, int power) {
+    assert(m.getNumRows() == m.getNumCols());
+    auto n = m.getNumRows();
+
+    // Handle the common low-power cases directly
+    switch (power) {
+      case 0:
+          m.setIdentity();
+          break;
+
+      case 1:
+          break;
+
+      case 2: 
+          {
+          auto t = pushMatrix(n);
+          m.multiply(m, *t);
+          m.copy(*t);
+          popMatrix(1);
+          }
+          break;
+
+      case 3: 
+          {
+          auto t = pushMatrix(n);
+          m.multiply(m, *t);
+          multiply(*t, m);
+          popMatrix(1);
+          }
+          break;
+
+      case 4: 
+          {
+          auto t = pushMatrix(n);
+          m.multiply(m, *t);
+          t->multiply(*t, m);
+          popMatrix(1);
+          }
+          break;
+
+      default: 
+          {
+          // As long as there are 1-bits left in the power integer
+          // Calculate even powers of 2 
+          // Accumulate the result in "m"
+
+          #ifdef _DEBUG
+          auto tm = pushMatrix(size);
+          tm->copy(m);
+          #endif
+
+
+          auto t    = pushMatrix(n);
+          auto even = pushMatrix(n);
+          even->copy(m);
+          bool first = false;
+
+          for (;;)
+              {
+              if ((power & 1) > 0) 
+                  {
+                  if (first) 
+                      {
+                      m.multiply(*even, *t);
+                      m.copy(*t);
+                      }
+                  else 
+                      {
+                      first = true;
+                      m.copy(*even);
+                      }
+                  }
+              power >>= 1;
+              if (power > 0) 
+                  {
+                  even->multiply(*even, *t);
+                  even->copy(*t);
+                  }
+              else
+                  break;
+              }
+
+          popMatrix(2);
+
+          #ifdef _DEBUG
+          while (--power > 0)
+              multiply(*tm, *tm);
+          assert(m == *tm);
+          #endif
+          break;
+
+        }
+    }
+}
+
+

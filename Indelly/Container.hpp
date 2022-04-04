@@ -196,6 +196,7 @@ class MatrixTemplate : public BufferTemplate<T> {
         explicit MatrixTemplate(const MatrixTemplate<T>& m) :
             BufferTemplate<T>::BufferTemplate(m) 
         {
+
             numRows = m.numRows;
             numCols = m.numCols;
         }
@@ -219,6 +220,11 @@ class MatrixTemplate : public BufferTemplate<T> {
         size_t getNumCols() const { return numCols; }
         T* getRow(int r) { return this->begin() + r * numCols; }
 
+
+        T* getPointer(size_t r, size_t c) {
+
+            return this->begin() + (r * numCols + c);
+        }
 
         T getValue(size_t r, size_t c) const {
 
@@ -261,10 +267,21 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void create(size_t nr, size_t nc) {
+            if (numRows != nr || numCols != nc) 
+                { 
+                BufferTemplate<T>::create(nr * nc);
+                numRows = nr;
+                numCols = nc;
+                }
+        }
 
-            BufferTemplate<T>::create(nr * nc);
-            numRows = nr;
-            numCols = nc;
+        void create(size_t n) {
+            if (numRows != n || numCols != n) 
+                {
+                BufferTemplate<T>::create(n * n);
+                numRows = n;
+                numCols = n;
+                }
         }
 
         void setIdentity() {
@@ -274,6 +291,18 @@ class MatrixTemplate : public BufferTemplate<T> {
             auto cols1 = getNumCols() + 1;
             for (auto end = this->end(), c = this->begin(); c < end; c += cols1)
                 *c = 1;
+        }
+
+        double maxDiagonal() {
+            assert(numRows == numCols);
+            auto cols1 = getNumCols() + 1;
+            T max = 0;
+            for (auto end = this->end(), c = this->begin(); c < end; c += cols1)
+                {
+                if (*c > max)
+                    max = *c;
+                }
+            return max;
         }
 
         bool operator==(const MatrixTemplate<T>& m) const {
