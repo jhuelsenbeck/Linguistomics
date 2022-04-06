@@ -151,7 +151,9 @@ abstract class RuleClass {
     return i;
   }
 
-  SegmentClass[] GetMatching(SegmentClass[] segments, FilterClass filter) = segments.FindSlice(segment => MatchesRule(filter, segment));
+  SegmentClass[] GetMatching(SegmentClass[] segments, FilterClass filter) {
+    return segments.FindSlice(segment => MatchesRule(filter, segment));
+  }
 
   ShowPartitions = Block {
     Paragraph {
@@ -290,77 +292,6 @@ class VowelListClass: SegmentListClass {
   }
 
   override Matches(SegmentClass segment) = List.FindAny(segment);
-}
-//======================================================================
-
-class DiphthongRuleClass: RuleClass {
-  Constructor(DataSetClass data, RuleClass rule) {
-    super.Constructor(data, rule, "Diphthongs Separated");
-    Add(new FeatureMaskClass(rule, "Diphthong", Diphthong, Diphthong));
-  }
-
-  override GetFilterIndex(SegmentClass segment) {
-    var c = FilterList.Length;
-    if (segment.Features.HasFlag(Diphthong))
-      return c;
-    FilterList.Add(new SingleFilterClass(segment));
-    return c;
-  }
-}
-//======================================================================
-
-class DiphthongPairRuleClass: RuleClass {
-  Constructor(DataSetClass data, RuleClass rule) {
-    super.Constructor(data, rule, "Diphthongs Paired with Vowels");
-  }
-
-  override void AssignCharacters(SegmentClass[] segments) {
-    var count = 0;
-    foreach (var segment in segments) {
-      var dr = segment.Root;
-      if (valid dr and segment.Features.HasFlag(Diphthong)) {
-        var fi = -1;
-        foreach (var f in FilterList) {
-          if (f.Matches(segment)) {
-            fi = EachIndex;
-            break;
-          }
-        }
-        if (fi < 0) {
-          SetSegmentCharacter(segment, count);
-          SetSegmentCharacter(dr, count);
-          Add(new DiphthongFilterClass(dr));
-          ++count;
-        }
-        else
-          SetSegmentCharacter(segment, fi);
-      }
-    }
-
-    foreach (var segment in segments) {
-      if (segment.Index < 0) {
-        SetSegmentCharacter(segment, count++);
-        Add(new SingleFilterClass(segment));
-      }
-    }
-    GetFilters;
-  }
-}
-//======================================================================
-
-class SingletonRuleClass: RuleClass {
-  Constructor(DataSetClass data) {
-    super.Constructor(data, "Each segment gets a different number");
-    Numbers = true;
-  }
-
-  override void AssignCharacters(SegmentClass[] segments) {
-    foreach (var segment in segments) {
-      SetSegmentCharacter(segment, EachIndex);
-      Add(new SingleFilterClass(this, segment));
-    }
-    GetFilters;
-  }
 }
 //======================================================================
 
