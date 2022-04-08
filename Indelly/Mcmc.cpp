@@ -71,11 +71,6 @@ void Mcmc::closeOutputFiles(void) {
 
     parmStrm.close();
     treeStrm.close();
-
-    std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
-    for (int i=0; i<alns.size(); i++)
-        algnJsonStrm[i].close();
-    delete [] algnJsonStrm;
 }
 
 std::string Mcmc::formattedTime(std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
@@ -142,17 +137,6 @@ void Mcmc::openOutputFiles(void) {
     treeStrm.open( treeFileName.c_str(), std::ios::out );
     if (!treeStrm)
         Msg::error("Cannot open file \"" + treeFileName + "\"");
-  
-    std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
-    auto outsize = alns.size();
-    algnJsonStrm = new std::ofstream[outsize];
-    for (int i=0; i< outsize; i++)
-        {
-        std::string fn = outPath + "." + alns[i]->getName() + ".aln";
-        algnJsonStrm[i].open( fn.c_str(), std::ios::out );
-        if (!algnJsonStrm[i])
-            Msg::error("Cannot open file \"" + fn + "\"");
-        }
 }
 
 int Mcmc::phaseLength(std::string phs) {
@@ -494,12 +478,16 @@ double Mcmc::safeExponentiation(double lnX) {
 
 void Mcmc::sample(int gen, double lnL, double lnP) {
 
+    UserSettings& settings = UserSettings::userSettings();
+    std::string outPath = settings.getOutFile();
+
     Tree* t = getColdModel()->getTree();
     double tl = t->getTreeLength();
     std::string ts = t->getNewick(6);
     
     if (gen == 1)
         {
+        // output header information to the .tsv file containing parameter values
         parmStrm << "Gen\t";
         parmStrm << "lnL\t";
         parmStrm << "lnP\t";
@@ -507,6 +495,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         parmStrm << getColdModel()->getParameterHeader();
         parmStrm << std::endl;
 
+        // output leading information for the NEXUS-formatted tree file, with translation block
         std::vector<std::string>& tn = t->getTaxonNames();
         treeStrm << "begin trees;" << std::endl;
         treeStrm << "   translate" << std::endl;
@@ -520,33 +509,32 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
             treeStrm << std::endl;
             }
 
+        // output leading information for the JSON-formatted file containing the alignment
         std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
         for (int i=0; i<alns.size(); i++)
             {
+            std::string fn = outPath + "." + alns[i]->getName() + ".aln";
+            std::ofstream alnStream( fn.c_str(), std::ios::out);
+            if (!alnStream)
+                Msg::error("Problem opening alignment file " + fn + " for initial output");
+
             std::string stateSetsStr = getColdModel()->getStateSetsJsonString();
             if (stateSetsStr != "")
                 {
-                algnJsonStrm[i] << "{" << stateSetsStr;
-                algnJsonStrm[i] << ", \"Samples\": [\n";
+                alnStream << "{" << stateSetsStr;
+                alnStream << ", \"Samples\": [\n";
                 }
             else
                 {
-                algnJsonStrm[i] << "{\"Samples\": [\n";
+                alnStream << "{\"Samples\": [\n";
                 }
-            algnJsonStrm[i] << alns[i]->getJsonString() << "," << std::endl;
+            alnStream << alns[i]->getJsonString() << "," << std::endl;
+            
+            alnStream.close();
             }
         }
         
     // output to parameter file
-#   if 0
-    std::string parmStr = "";
-    parmStr += std::to_string(gen) + '\t';
-    parmStr += std::to_string(lnL) + '\t';
-    parmStr += std::to_string(lnP) + '\t';
-    parmStr += std::to_string(tl)  + '\t';
-    parmStr += modelPtr->getParameterString();
-    parmStrm << parmStr << std::endl;
-#   else
     std::cout << std::fixed << std::setprecision(8);
     getColdModel()->fillParameterValues(parmValues, numParmValues);
     parmStrm << gen << '\t';
@@ -556,30 +544,28 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     for (int i=0; i<numParmValues; i++)
         parmStrm << parmValues[i] << '\t';
     parmStrm << std::endl;
-#   endif
     
     // output to tree file
-#   if 1
     treeStrm << "   tree t_" << gen << " = " << ts << ";";
     treeStrm << std::endl;
-#   else
-    treeStrm << "   tree t_" << gen << " = ";
-    t->newickStream(treeStrm, 6);
-    treeStrm  << ts << ";" << std::endl;
-#   endif
+    if (gen == numMcmcCycles)
+        treeStrm << "end;" << std::endl;
     
     // output to alignment file
     std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
     for (int i=0; i<alns.size(); i++)
         {
+        std::string fn = outPath + "." + alns[i]->getName() + ".aln";
+        std::ofstream alnStream( fn.c_str(), std::ios::app);
+        if (!alnStream)
+            Msg::error("Problem opening alignment file " + fn + " for appended output");
+
         //algnJsonStrm[i] << alns[i]->getJsonString();
-        alns[i]->jsonStream(algnJsonStrm[i]);
+        alns[i]->jsonStream( alnStream );
         if (gen == numMcmcCycles)
-            algnJsonStrm[i] << "]\n}" << std::endl;
+            alnStream << "]\n}" << std::endl;
         else
-            algnJsonStrm[i] << "," << std::endl;
+            alnStream << "," << std::endl;
+        alnStream.close();
         }
-    
-    if (gen == numMcmcCycles)
-        treeStrm << "end;" << std::endl;
 }

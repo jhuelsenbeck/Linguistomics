@@ -39,7 +39,6 @@ class Mcmc {
         int                 printFrequency;
         int                 sampleFrequency;
         double              temperature;
-        std::ofstream*      algnJsonStrm;
         std::ofstream       parmStrm;
         std::ofstream       treeStrm;
         double*             parmValues;

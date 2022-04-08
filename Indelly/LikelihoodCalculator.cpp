@@ -472,7 +472,7 @@ void LikelihoodCalculator::pruneBranch(Node* p) {
         // Case 2: One homology family Spanning tree intersects one of the child edges, i.e.
         //        'homologous' nucleotide must travel down a specific edge.
         int homologousChildIdx, inhomologousChildIdx;
-        DoubleMatrix* tpHomologous = NULL;
+        DoubleMatrix* tpHomologous   = NULL;
         DoubleMatrix* tpInhomologous = NULL;
         if (nodeHomologyI == indelCombos.nodeHomology[lftChildIdx])
             {
@@ -495,8 +495,8 @@ void LikelihoodCalculator::pruneBranch(Node* p) {
         double homologousProb_ihIdx = indelProbs.homologousProbability[inhomologousChildIdx];
         double nonHomologousProb    = indelProbs.nonHomologousProbability[inhomologousChildIdx];
         double rhtStartProb         = extinctionProb * fI[inhomologousChildIdx][numStates];
-        double* tiHomologous        = &(*tpHomologous)(0,0);
-        double* tinonHomologous     = &(*tpInhomologous)(0,0);
+        double* tiHomologous        = &(*tpHomologous)(0,0); // we assume row-major order
+        double* tiNonHomologous     = &(*tpInhomologous)(0,0);
         double* freqsStart          = &stateEquilibriumFrequencies[0];
         double* freqsEnd            = freqsStart + numStates;
         double* clH_hIdxStart       = fH[homologousChildIdx];
@@ -516,10 +516,10 @@ void LikelihoodCalculator::pruneBranch(Node* p) {
                 {
                 lft += (*clH_hIdx) * homologousProb_hIdx * (*tiHomologous);
                 rht += ((*clH_ihIdx) + (*clI_ihIdx)) * (nonHomologousProb - extinctionProb * birthProb) * (*freq) +
-                       (*clI_ihIdx) * homologousProb_ihIdx * (*tinonHomologous);
+                       (*clI_ihIdx) * homologousProb_ihIdx * (*tiNonHomologous);
                        
                 tiHomologous++;
-                tinonHomologous++;
+                tiNonHomologous++;
                 clH_hIdx++;
                 clH_ihIdx++;
                 clI_ihIdx++;
