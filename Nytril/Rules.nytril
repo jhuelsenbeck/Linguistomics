@@ -170,7 +170,7 @@ abstract class RuleClass {
         TabStops: [0.35 inch];
         LeftIndent: 2.85 inches;
         FirstIndent: -2.85 inches;
-        EachOne;
+        each1;
         ")"
         Tab;
         partition.Filter.Name;
@@ -510,13 +510,13 @@ class CalcRatesClass {
 
     var mult = 2.0 * Graphics.OneEighty / Rule.Partitions.Length;
     foreach (var partition in Rule.Partitions) {
-      partition.Angle  = mult * EachIndex - Graphics.Ninety;
-      partition.Radius = Sqrt(Real(Transition.Frequencies[EachIndex])) * fmax;
+      partition.Angle  = mult * each0 - Graphics.Ninety;
+      partition.Radius = Sqrt(Real(Transition.Frequencies[each0])) * fmax;
     }
 
     var maxradius = 0.0;
     foreach (var partition in Rule.Partitions)
-      maxradius = Max([maxradius, partition.Radius + Transition.Rates[EachIndex][EachIndex] * RateScale]);
+      maxradius = Max([maxradius, partition.Radius + Transition.Rates[each0][each0] * RateScale]);
     maxradius = MaxExtent - maxradius - LoopRadius - LoopDistance - ArrowGap;
 
     foreach (var partition in Rule.Partitions)
@@ -531,9 +531,9 @@ class CalcRatesClass {
     Size: size;
 
     foreach (var p1 in Rule.Partitions) {
-      var pi = EachIndex;
+      var pi = each0;
       foreach (var p2 in Rule.Partitions) {
-        var  rate = Transition.Rates[pi][EachIndex];
+        var  rate = Transition.Rates[pi][each0];
         var  hint = new PartitionHintClass(Data, Rule, rate, p1, p2);
         var  line = new LineStyleClass(rate * RateScale, 0.25, 1);
         var  r    = rate * RateScale / MaxLine;
@@ -546,7 +546,7 @@ class CalcRatesClass {
             Hover: new HoverClass(hint, HoverTypes.Tip);
           };
         }
-        else if (EachIndex < pi) {
+        else if (each0 < pi) {
           var angle = Graphics.GetAngle(p1.Center, p2.Center);
           var c1    = Graphics.Adjust(p1.Center, p1.Radius - ArrowGap, angle);
           var c2    = Graphics.Adjust(p2.Center, p2.Radius - ArrowGap, angle + Graphics.OneEighty);
@@ -563,7 +563,7 @@ class CalcRatesClass {
       var fsize = p1.Radius*2;
 
       Figure {
-        Fill: ChartColor(EachIndex);
+        Fill: ChartColor(each0);
         Stroke: 0.5 pt;
         Ellipse(Rect(pos, fsize));
         Hover: new HoverClass(p1, HoverTypes.Tip);
@@ -606,14 +606,14 @@ class CalcRatesClass {
           foreach (var partition in Rule.Partitions) {
             Row {
               Span {
-                EachOne;
+                each1;
                 ". ";
               };
               Paragraph {
                 LeftIndent: 15 pts;
                 FirstIndent: -15 pts;
                 Figure {
-                  Fill: ChartColor(EachIndex);
+                  Fill: ChartColor(each0);
                   Ellipse(Rect(0, 10 pts));
                 };
                 partition.Filter;

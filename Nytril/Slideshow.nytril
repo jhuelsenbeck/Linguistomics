@@ -42,7 +42,7 @@ class ShowDesignClass {
 
   }
 
-  virtual HeaderFooter(ShowClass show, title, page) = Block {
+  virtual HeaderFooter(ShowClass show, SlideItemClass item, title, page) = Block {
     Paragraph {
       PageBreakBefore: true;
     };
@@ -68,20 +68,20 @@ class ProgressDesignClass: ShowDesignClass {
     super.Constructor(1.5 inches, 0.36 inches);
   }
 
-  override HeaderFooter(ShowClass show, title, page) = Block {
+  override HeaderFooter(ShowClass show, SlideItemClass item, title, page) = Block {
     Paragraph {
       PageBreakBefore: true;
 
       FixedFrame(0, 0, SlidePage.Width, SlideHeader) {
-        HeaderBackground(show, title, SlidePage.Width, SlideHeader, page);
+        HeaderBackground(show, item, title, SlidePage.Width, SlideHeader, page);
       };
       FixedFrame(0, SlidePage.Height - SlideFooter, SlidePage.Width, SlideFooter) {
-        FooterBackground(title, SlidePage.Width, SlideFooter, page);
+        FooterBackground(show, item, title, SlidePage.Width, SlideFooter, page);
       };
     };
   };
 
-  HeaderBackground(ShowClass show, title, width, height, page) = Block {
+  HeaderBackground(ShowClass show, SlideItemClass item, title, width, height, page) = Block {
     Paragraph {
       HBox {
         MarginLR: 24 pts;
@@ -89,22 +89,27 @@ class ProgressDesignClass: ShowDesignClass {
         MarginB: 12 pts;
         Separation: 9 pts;
 
-        var index = 0;
-        foreach (var group in show.Groups) {
-          VBox {
-            TextHeight: 10 pts;
-            group.Title;
-            HBox {
-              TextFamily: Main.MathFamily;
-              foreach (var item in group.Items) {
-                if (index+1 < item.Index)
-                  Tex.blackcirc;
-                else
-                  Tex.bigcirc;
-                ++index;
-              }
+        if (valid item) {
+          foreach (var group in show.Groups) {
+            VBox {
+              TextHeight: 10 pts;
+              group.Title;
+              HBox {
+                TextFamily: Main.MathFamily;
+
+                var pn = -1;
+                foreach (var i in group.Items) {
+                  if (pn != item.Page) {
+                    pn = item.Page;
+                    if (valid item and group.Index < item.Index)
+                      Tex.blackcirc;
+                    else
+                      Tex.bigcirc;
+                  }
+                }
+              };
             };
-          };
+          }
         }
       }
     };
@@ -116,7 +121,7 @@ class ProgressDesignClass: ShowDesignClass {
     };
   };
 
-  FooterBackground(title, width, height, page) = Paragraph {
+  FooterBackground(ShowClass show, SlideItemClass item, title, width, height, page) = Paragraph {
     RightIndent: 10 pts;
     ParAlignment: ParAlignments.Right;
     TextHeight: 16 pts;
@@ -132,16 +137,16 @@ class FancyDesignClass: ShowDesignClass {
     super.Constructor(0.75 inches, 0.5 inches);
   }
 
-  override HeaderFooter(ShowClass show, title, page) = Block {
+  override HeaderFooter(ShowClass show, SlideItemClass item, title, page) = Block {
     Paragraph {
       PageBreakBefore: true;
 
       if (page > 0) {
         FixedFrame(0, 0, SlidePage.Width, SlideHeader) {
-          HeaderBackground(title, SlidePage.Width, SlideHeader)
+          HeaderBackground(show, item, title, SlidePage.Width, SlideHeader)
         };
         FixedFrame(0, SlidePage.Height -SlideFooter, SlidePage.Width, SlideFooter) {
-          FooterBackground(title, SlidePage.Width, SlideFooter, page);
+          FooterBackground(show, item, title, SlidePage.Width, SlideFooter, page);
         };
       }
     };
@@ -185,7 +190,7 @@ class FancyDesignClass: ShowDesignClass {
     };
   };
 
-  HeaderBackground(title, width, height) = Design(width, height, true, Style.HeaderLeftBar) {
+  HeaderBackground(ShowClass show, SlideItemClass item, title, width, height) = Design(width, height, true, Style.HeaderLeftBar) {
     Frame {
       Width: 0.75 width;
       VAlignment: VAligns.Center;
@@ -198,7 +203,7 @@ class FancyDesignClass: ShowDesignClass {
     };
   };
 
-  FooterBackground(title, width, height, page) = Design(width, height, false, Style.LeftBar) {
+  FooterBackground(ShowClass show, SlideItemClass item, title, width, height, page) = Design(width, height, false, Style.LeftBar) {
     Frame {
       VAlignment: VAligns.Center;
       X: DocMetrics.PageMargin.Left;
@@ -235,7 +240,7 @@ class SlideClass {
   virtual ShowBody = null;
 
   virtual AddSlidePage(page) = Block {
-    Design.HeaderFooter(Show, Title, page);
+    Design.HeaderFooter(Show, null, Title, page);
     ShowBody;
   };
 }
@@ -243,15 +248,17 @@ class SlideClass {
 //======================================================================
 
 class TitleSlideClass: SlideClass {
-  var Items;
+  var       Index;
+  ListClass Items;
 
-  Constructor(ShowClass show, variable) {
+  Constructor(ShowClass show, variable, index) {
     super.Constructor(show, variable.Title);
+    Index = index;
     Items = new ListClass(32, SlideItemClass);
   }
 
   override AddSlidePage(page) = Block {
-    Design.HeaderFooter(Show, null, page++);
+    Design.HeaderFooter(Show, Items[0], null, page++);
     Paragraph {
       ParAlignment:ParAlignments.Center;
       SpaceBefore: 1 inch;
@@ -274,7 +281,7 @@ class IntroSlideClass: SlideClass {
   }
 
   override AddSlidePage(page) = Block {
-    Design.HeaderFooter(Show, null, page++);
+    Design.HeaderFooter(Show, null, null, page++);
     ShowBody;
   };
 
@@ -291,7 +298,7 @@ class IntroSlideClass: SlideClass {
 
     foreach (var author in Show.AuthorList) {
       Paragraph {
-        SpaceBefore: EachIndex > 0 ? NameGap : gap;
+        SpaceBefore: each0 > 0 ? NameGap : gap;
         author.First;
         Space;
         author.Last;
@@ -363,8 +370,8 @@ class BibSlideClass: SlideClass {
 
 //======================================================================
 
-ShowItem(ShowClass show, item) {
-   var text = item.?Text;
+ShowItem(ShowClass show, variable) {
+   var text = variable.?Text;
    if (exists text) {
      return Block {
        show.Design.ItemTextFormat;
@@ -374,7 +381,7 @@ ShowItem(ShowClass show, item) {
    else {
      return Block {
        Style.MainStyle;
-       item.?Body(show);
+       variable.?Body(show);
      };
    }
 }
@@ -395,18 +402,20 @@ class SingleSlideClass: SlideClass {
 class SlideItemClass {
   var Height,
       Content,
-      Number,
+      Page,
       Numbered,
+      Number,
       Index;
 
-   Constructor(ShowClass show, item, number) {
-     Numbered = item.?Numbered ?? 0;
+   Constructor(ShowClass show, variable, number) {
+     Number   = number;
+     Numbered = variable.?Numbered ?? 0;
      Content = Frame {
        Width: show.Design.ItemWidth;
-       ShowItem(show, item);
+       ShowItem(show, variable);
      };
      Height = LayoutSize(Content).Height;
-     Number = number;
+     Page   = show.PageNumber;
      Index  = show.SlideIndex;
    }
 }
@@ -414,10 +423,14 @@ class SlideItemClass {
 //======================================================================
 
 class SlideGroupClass {
-  var Items;
+  ListClass      Items;
+  SlideItemClass Item;
+  var            Page;
 
-  Constructor {
+  Constructor(ShowClass show, variable) {
     Items = new ListClass(8, SlideItemClass);
+    Item  = new SlideItemClass(show, variable, 0);
+    Page  = show.PageNumber;
   }
 }
 
@@ -432,7 +445,7 @@ class FigureSlideClass: SlideClass {
   }
 
   override AddSlidePage(page) = Block {
-    Design.HeaderFooter(Show, Title, page);
+    Design.HeaderFooter(Show, null, Title, page);
     Paragraph {
       ParAlignment: ParAlignments.Center;
       Frame {
@@ -459,16 +472,16 @@ class TopicSlidesClass: SlideClass {
 
     Groups = new ListClass(8, SlideGroupClass);
 
-    var group = new SlideGroupClass;
+    var group = new SlideGroupClass(show, topic);
     Groups.Add(group);
 
     var height = 0.0;
     foreach (var iv in topic.Items) {
-      var item = new SlideItemClass(show, iv, EachOne);
-      ++show.SlideIndex;
+      var item = new SlideItemClass(show, iv, each1);
       main.Items.Add(item);
-      if (group.Items.Length > 0 && height + item.Height >= Design.SlideContent.Height) {
-        group = new SlideGroupClass;
+      if (group.Items.Length > 0 and height + item.Height >= Design.SlideContent.Height) {
+        group = new SlideGroupClass(show, topic);
+        ++show.PageNumber;
         Groups.Add(group);
         height = 0.0;
       }
@@ -477,8 +490,8 @@ class TopicSlidesClass: SlideClass {
     }
   }
 
-  ShowSet(SlideGroupClass group, page, count, number) = Block {
-    Design.HeaderFooter(Show, Topic.Title, page);
+  ShowSet(SlideGroupClass group, SlideItemClass item, page, count, number) = Block {
+    Design.HeaderFooter(Show, item, Topic.Title, page);
 
     Table {
       LeftIndent: Design.ItemIndent;
@@ -486,18 +499,18 @@ class TopicSlidesClass: SlideClass {
       Columns: [Design.BulletIndent, Design.ItemWidth];
       for (var i = 0; i < count; ++i) {
         Row {
-          var item = group.Items[i];
+          var gi = group.Items[i];
           Cell {
             Paragraph {
               Design.ItemTextFormat;
-              if (item.Numbered > 0) {
+              if (gi.Numbered > 0) {
                 HBox {
                   PaddingLR: 2 pts;
                   Background: 80%;
-                  item.Numbered;
+                  gi.Numbered;
                 };
               }
-              else if (item.Number == number+count)
+              else if (gi.Number == number+count)
                 Design.BulletCurrent;
               else
                 Design.BulletDone;
@@ -505,7 +518,7 @@ class TopicSlidesClass: SlideClass {
             Paragraph;
           };
           Cell {
-            item.Content;
+            gi.Content;
             PaddingB: Design.ItemSpacer;
           };
         }
@@ -517,14 +530,15 @@ class TopicSlidesClass: SlideClass {
     if (Pause) {
       var number = 0;
       foreach (var group in Groups) {
-        for (var i = 1; i <= group.Items.Length; ++i)
-          ShowSet(group, page, i, number);
+        var i = 0;
+        foreach (var item in group.Items)
+          ShowSet(group, item, page, each1, number);
         number += group.Items.Length;
       }
     }
     else {
       var group = Groups.FirstElement;
-      ShowSet(group, page, group.Items.Length, group.Items.Length);
+      ShowSet(group, group.Item, page, group.Items.Length, group.Items.Length);
     }
   };
 }
@@ -535,7 +549,8 @@ class ShowClass: BaseViewClass {
   PersonClass[]     AuthorList;
   ShowDesignClass   Design;
   TitleSlideClass[] Groups;
-  var               SlideIndex;
+  var               PageNumber,
+                    SlideIndex;
 
   Constructor(ExperimentClass experiment, id, title, PersonClass[] authors) {
     super.Constructor(experiment, id, title);
@@ -543,6 +558,7 @@ class ShowClass: BaseViewClass {
     AuthorList   = authors;
     Design       = SlideDesigns.Plain;
     SlideIndex   = 0;
+    PageNumber   = 0;
   }
 
   ShowFigureSlide(figure, format=null) = Block {
@@ -566,17 +582,16 @@ class ShowClass: BaseViewClass {
                  [new EndSlideClass(this), new BibSlideClass(this)];
 
     foreach (var slide in slides)
-      slide.AddSlidePage(EachIndex);
+      slide.AddSlidePage(each0);
   };
 
   AddSlideGroup(slidesvar) {
-    var list = new ListClass(128);
+    var list   = new ListClass(128);
     var groups = new ListClass(32, TitleSlideClass);
-    var index  = 0;
     foreach (var slidevar in slidesvar) {
       var topics = slidevar.?Topics;
       if (exists topics) {
-        var ts = new TitleSlideClass(this, slidevar);
+        var ts = new TitleSlideClass(this, slidevar, each0);
         groups.Add(ts);
         list.Add(ts);
 
