@@ -290,21 +290,25 @@ class WordPairClass {
 //======================================================================
 
 class DataSetClass {
-  SegmentClass[] UniqueSegments,
-                 SortedSegments,
-                 DisplaySegments;
-  CognateClass[] UsedCognates,
-                 SortedCognates;
-  ConceptClass[] UsedConcepts;
-  TaxonClass[]   Taxa;
-  MatrixClass    TransitionCount;
-  var            MaxLanguageName,
-                 WordCount,
-                 SegmentCount,
-                 UniqueCount,
-                 TransitionMax;
+  LanguageClass[] Languages;
+  SegmentClass[]  UniqueSegments,
+                  SortedSegments,
+                  DisplaySegments;
+  CognateClass[]  UsedCognates,
+                  SortedCognates;
+  ConceptClass[]  UsedConcepts;
+  TaxonClass[]    Taxa;
+  MatrixClass     TransitionCount;
+  var             Description,
+                  MaxLanguageName,
+                  WordCount,
+                  SegmentCount,
+                  UniqueCount,
+                  TransitionMax;
 
-  Constructor(includewords, languages) {
+  Constructor(includewords, LanguageClass[] languages, description) {
+    Languages       = languages;
+    Description     = description;
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
@@ -317,15 +321,15 @@ class DataSetClass {
     Taxa = new TaxonClass(each languages);
 
     // Build a dictionary with IPA text as the key
-    var dictionary = new DictionaryClass(256, SegmentClass);
+    var dictionary = new DictionaryClass<SegmentClass>(256);
     foreach (var segment in IPA.Segments) {
       if (valid segment.Ipa)
         dictionary.Add(segment, segment.Ipa);
     }
 
     var set         = new DictionaryClass(1024);
-    var clist       = new ListClass(1024, CognateClass);
-    var conceptlist = new ListClass(256, ConceptClass);
+    var clist       = new ListClass<CognateClass>(1024);
+    var conceptlist = new ListClass<ConceptClass>(256);
 
     foreach (var conceptvar in Concepts) {
       var good = exists conceptvar.?Confidence and
@@ -397,10 +401,10 @@ class DataSetClass {
     return i;
   }
 
-  GetCognate(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);
+  CognateClass GetCognate(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);
 
   SegmentClass[] GetUniqueSegments {
-    var set = new HashSetClass(512, SegmentClass);
+    var set = new HashSetClass<SegmentClass>(512);
     foreach (var cognate in UsedCognates) {
       foreach (var word in cognate.Words) {
         foreach (var segment in word.Segments) {
@@ -413,7 +417,7 @@ class DataSetClass {
   }
 
   void ComputeCognate(DictionaryClass dictionary, CognateClass cognate) {
-    var words     = new ListClass(Taxa.Length);
+    var words     = new ListClass<WordClass>(Taxa.Length);
     var maxlength = 0;
 
     foreach (var taxon in Taxa) {

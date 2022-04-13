@@ -254,7 +254,7 @@ class TitleSlideClass: SlideClass {
   Constructor(ShowClass show, variable, index) {
     super.Constructor(show, variable.Title);
     Index = index;
-    Items = new ListClass(32, SlideItemClass);
+    Items = new ListClass<SlideItemClass>(32);
   }
 
   override AddSlidePage(page) = Block {
@@ -428,7 +428,7 @@ class SlideGroupClass {
   var            Page;
 
   Constructor(ShowClass show, variable) {
-    Items = new ListClass(8, SlideItemClass);
+    Items = new ListClass<SlideItemClass>(8);
     Item  = new SlideItemClass(show, variable, 0);
     Page  = show.PageNumber;
   }
@@ -470,7 +470,7 @@ class TopicSlidesClass: SlideClass {
     Topic = topic;
     Pause = pause;
 
-    Groups = new ListClass(8, SlideGroupClass);
+    Groups = new ListClass<SlideGroupClass>(8);
 
     var group = new SlideGroupClass(show, topic);
     Groups.Add(group);
@@ -586,8 +586,8 @@ class ShowClass: BaseViewClass {
   };
 
   AddSlideGroup(slidesvar) {
-    var list   = new ListClass(128);
-    var groups = new ListClass(32, TitleSlideClass);
+    var list   = new ListClass<SlideClass>(128);
+    var groups = new ListClass<TitleSlideClass>(32);
     foreach (var slidevar in slidesvar) {
       var topics = slidevar.?Topics;
       if (exists topics) {
@@ -596,7 +596,7 @@ class ShowClass: BaseViewClass {
         list.Add(ts);
 
         foreach (var topic in topics) {
-          var s;
+          SlideClass s;
           var figure = topic.?Figure;
           if (exists figure)
             s = new FigureSlideClass(this, ts, topic);

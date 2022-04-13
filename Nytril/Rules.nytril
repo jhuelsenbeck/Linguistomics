@@ -75,11 +75,7 @@ abstract class RuleClass {
     Data       = data;
     Name       = name;
     Numbers    = false;
-    FilterList = new ListClass(128);
-  }
-
-  void Add(FilterClass filter) {
-    FilterList.Add(filter);
+    FilterList = new ListClass<FilterClass>(128);
   }
 
   MatchesRule(FilterClass filter, SegmentClass segment) {
@@ -113,7 +109,7 @@ abstract class RuleClass {
 
   void GetFilters {
     Filters = FilterList.Values;
-    Add(new FilterClass(Data, this, "Residue"));
+    FilterList.Add(new FilterClass(Data, this, "Residue"));
     FiltersPlus = FilterList.Values;
   }
 
@@ -129,7 +125,7 @@ abstract class RuleClass {
   }
 
   void AssignPartitions(SegmentClass[] segments) {
-    var list = new ListClass(segments.Length, PartitionClass);
+    var list = new ListClass<PartitionClass>(segments.Length);
     var i    = 0;
     foreach (var filter in FiltersPlus) {
       var find = GetMatching(segments, filter);
@@ -300,19 +296,19 @@ class Partition2Class: RuleClass {
     super.Constructor(data, "Linguistically Informed");
     Numbers = true;
 
-    Add(new VowelListClass(data, this, [IPA.Segments.ay, IPA.Segments.ai]));
-    Add(new VowelListClass(data, this, [IPA.Segments.e, IPA.Segments.E]));
-    Add(new VowelListClass(data, this, [IPA.Segments.ah, IPA.Segments.A]));
-    Add(new VowelListClass(data, this, [IPA.Segments.u, IPA.Segments.U]));
-    Add(new VowelListClass(data, this, [IPA.Segments.oh, IPA.Segments.O]));
-    Add(new VowelListClass(data, this, [IPA.Segments.euh, IPA.Segments.LongOpenMidBackRounded]));
-    Add(new VowelListClass(data, this, [IPA.Segments.eh, IPA.Segments.Eh]));
-    Add(new VowelListClass(data, this, [IPA.Segments.uu, IPA.Segments.o]));
-    Add(new FeatureMaskClass(data, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal));
-    Add(new FeatureMaskClass(data, this, "Vowel", Vowel, Vowel));
-    Add(new FeatureMaskClass(data, this, "Nasal Consonant", Nasal, Nasal));
-    Add(new SegmentListClass(data, this, "Non Sylabic Sonorant", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]));
-    Add(new FeatureMaskClass(data, this, "Consonant", Vowel, NoFeature));
+    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.ay, IPA.Segments.ai]));
+    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.e, IPA.Segments.E]));
+    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.ah, IPA.Segments.A]));
+    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.u, IPA.Segments.U]));
+    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.oh, IPA.Segments.O]));
+    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.euh, IPA.Segments.LongOpenMidBackRounded]));
+    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.eh, IPA.Segments.Eh]));
+    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.uu, IPA.Segments.o]));
+    FilterList.Add(new FeatureMaskClass(data, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal));
+    FilterList.Add(new FeatureMaskClass(data, this, "Vowel", Vowel, Vowel));
+    FilterList.Add(new FeatureMaskClass(data, this, "Nasal Consonant", Nasal, Nasal));
+    FilterList.Add(new SegmentListClass(data, this, "Non Sylabic Sonorant", [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]));
+    FilterList.Add(new FeatureMaskClass(data, this, "Consonant", Vowel, NoFeature));
     GetFilters;
     AssignPartitions(data.UniqueSegments);
   }
@@ -693,7 +689,7 @@ class CalcRatesClass {
     var size     = framesize - border*2;
     var d        = size / (segments.Length+1);
     Canvas {
-      TextHeight: d.Height * 0.9;
+      TextHeight: d.Height * 0.6;
       Border: border;
 
       var t   = Data.TransitionCount;

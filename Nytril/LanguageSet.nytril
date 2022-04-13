@@ -14,8 +14,6 @@ FigureConcept  = Concepts.Stone;
 
 //======================================================================
 
-BaseLanguages = [Latin, Romanian, Portuguese, Spanish, Catalan, French, Walloon, Friulian, Italian];
-
 GetPriorTree(portuguese) = Branch {
   Leaf(Latin);
   Branch {
@@ -42,14 +40,14 @@ GetPriorTree(portuguese) = Branch {
   }
 };
 
-ActiveWordGroups = Swadesh100 /*Leipzig Swadesh207*/;
+//======================================================================
+
+LanguageClass[] Romance = [Latin, Romanian, Portuguese, Spanish, Catalan, French, Walloon, Friulian, Italian];
 
 class EuropeBrazilExperimentClass: ExperimentClass {
   Constructor {
-    var list = BaseLanguages + [PortugueseBrazil];
-    var data = new DataSetClass(ActiveWordGroups, list);
+    var data = new DataSetClass(Swadesh100 Leipzig Swadesh207, Romance + [PortugueseBrazil], "207-word Swadesh list of basic vocabulary");
     super.Constructor(#8bbc5666-8f8d-49d9-b67d-fc12321ace43#, "Europe Brazil", "EuropeBrazil", new Partition2Class(data));
-    LanguageList = list;
   }
 
   override PriorTree = GetPriorTree(Branch {Leaf(Portuguese); Leaf(PortugueseBrazil)});
@@ -61,9 +59,8 @@ class EuropeBrazilExperimentClass: ExperimentClass {
 
 class EuropeExperimentClass: ExperimentClass {
   Constructor {
-    var data = new DataSetClass(ActiveWordGroups, BaseLanguages);
+    var data = new DataSetClass(Swadesh100 /*Leipzig Swadesh207*/, Romance, "100-word Swadesh list of basic vocabulary");
     super.Constructor(#896d37be-ebe1-44a6-a94d-7eade795760a#, "Europe", "Europe", new Partition2Class(data));
-    LanguageList = BaseLanguages;
   }
 
   override PriorTree = GetPriorTree(Leaf(Portuguese));
