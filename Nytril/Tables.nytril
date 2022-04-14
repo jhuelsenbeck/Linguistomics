@@ -296,7 +296,7 @@ class TabOptionsClass {
 
   MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Features.HasFlag(Voiced) == matches[1].Features.HasFlag(Voiced));
 
-  SegmentBlock(HashSetClass set, matches) = Cell {
+  SegmentBlock(SegmentSetClass set, matches) = Cell {
     Style.SegmentBottom;
     if (valid matches) {
       if (matches.Length == 1 and matches[0].Impossible)
@@ -327,7 +327,7 @@ class TabOptionsClass {
     return data.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
   }
 
-  AddRow(DataSetClass data, HashSetClass set, places, f) = Row {
+  AddRow(DataSetClass data, SegmentSetClass set, places, f) = Row {
     var features = f | All;
     Cell {
       VAlign: VAligns.Center;
@@ -347,7 +347,7 @@ class TabOptionsClass {
       SegmentBlock(set, all.FindSlice(s => s.?Place == place and CheckFlags(s.Features, features)));
   };
 
-  ShowTable(DataSetClass data, HashSetClass set) = Block {
+  ShowTable(DataSetClass data, SegmentSetClass set) = Block {
     var places = Places.FindSlice(place => MatchPlace(data, place));
     Style.TitleBar {Title};
     Table {
@@ -425,7 +425,7 @@ namespace MatchingConsonants {
 namespace MatchingVowels {
   FeatureMask = Vowel LongVowel Nasal Diphthong NonSylabic;
 
-  AddCell(DataSetClass data, HashSetClass set, open, backness, features) = Cell {
+  AddCell(DataSetClass data, SegmentSetClass set, open, backness, features) = Cell {
     Style.SegmentBottom;
     HAlign: HAligns.Center;
     TextHeight: DocMetrics.BoxSize.Height;
@@ -454,7 +454,7 @@ namespace MatchingVowels {
     }
   };
 
-  AddRow(DataSetClass data, HashSetClass set, open, features) = Row {
+  AddRow(DataSetClass data, SegmentSetClass set, open, features) = Row {
     Height: 16 pts;
     Cell {
       VAlign: VAligns.Center;
@@ -464,7 +464,7 @@ namespace MatchingVowels {
     AddCell(data, set, open, each Backnesses, features)
   };
 
-  ShowVowelTable(DataSetClass data, HashSetClass set, features) = Block {
+  ShowVowelTable(DataSetClass data, SegmentSetClass set, features) = Block {
     Style.TitleBar {Separator: "-"; each features};
     Table {
       HAlign: HAligns.Center;
@@ -484,7 +484,7 @@ namespace MatchingVowels {
     };
   };
 
-  ShowTable(DataSetClass data, HashSetClass set) = Block {
+  ShowTable(DataSetClass data, SegmentSetClass set) = Block {
     var features = [
       Vowel,
       Vowel LongVowel,
@@ -559,7 +559,7 @@ namespace MatchingOther {
     AddCell(each segments)
   };
 
-  ShowTable(DataSetClass data, HashSetClass set) = Block {
+  ShowTable(DataSetClass data, SegmentSetClass set) = Block {
     Style.TitleBar {Lang.OtherSegments};
     Table {
       Style.TableEdge;
