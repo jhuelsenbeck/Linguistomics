@@ -170,7 +170,7 @@ void ParameterIndelRates::reject(void) {
     modelPtr->flipActiveLikelihood();
 }
 
-double ParameterIndelRates::update(void) {    
+double ParameterIndelRates::update(int) {    
     
     double lnProposalProbability = 0.0;
     double u = rv->uniformRv();

@@ -83,7 +83,7 @@ void ParameterIndelGammaShape::reject(void) {
     modelPtr->flipActiveLikelihood();
 }
 
-double ParameterIndelGammaShape::update(void) {
+double ParameterIndelGammaShape::update(int) {
 
     lastUpdateType = "indel shape parameter";
     

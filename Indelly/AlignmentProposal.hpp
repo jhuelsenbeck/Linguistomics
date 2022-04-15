@@ -22,7 +22,6 @@ class AlignmentProposal {
                                             AlignmentProposal(void) = delete;
                                             AlignmentProposal(ParameterAlignment* a, Tree* t, RandomVariable* r, Model* m, double expnt, double gp);
                                            ~AlignmentProposal(void);
-      //double                              propose(std::vector<std::vector<int> >& newAlignment, double iP);
         double                              propose(AlnMatrix* newAlignment, AlnMatrix* oldAlignment, double iP);
                 
     private:

@@ -125,7 +125,7 @@ void ParameterEquilibirumFrequencies::reject(void) {
 
 }
 
-double ParameterEquilibirumFrequencies::update(void) {
+double ParameterEquilibirumFrequencies::update(int) {
 
     lastUpdateType = "equilibrium frequencies";
 

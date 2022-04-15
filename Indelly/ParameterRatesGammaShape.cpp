@@ -82,7 +82,7 @@ void ParameterRatesGammaShape::reject(void) {
     modelPtr->flipActiveLikelihood();
 }
 
-double ParameterRatesGammaShape::update(void) {
+double ParameterRatesGammaShape::update(int) {
 
     lastUpdateType = "gamma shape parameter";
     

@@ -25,7 +25,7 @@ class ParameterExchangabilityRates : public Parameter {
         double                          lnPriorProbability(void);
         void                            print(void);
         void                            reject(void);
-        double                          update(void);
+        double                          update(int iter);
         
     private:
         std::vector<int>                randomlyChooseIndices(int k, int n);

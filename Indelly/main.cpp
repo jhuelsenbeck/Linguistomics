@@ -5,14 +5,8 @@
 #include "UserSettings.hpp"
 #include "Threads.hpp"
 
-void printHeader() {
+void printHeader(void);
 
-    std::cout << "   TongueTwister 1.0" << std::endl;
-    std::cout << "   * John P. Huelsenbeck (University of California, Berkeley)" << std::endl;
-    std::cout << "   * Shawn McCreight (University of California, Berkeley)" << std::endl;
-    std::cout << "   * David Goldstein (University of California, Los Angeles)" << std::endl;
-    std::cout << std::endl;
-}
 
 
 int main(int argc, char* argv[]) {
@@ -55,3 +49,11 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+void printHeader(void) {
+
+    std::cout << "   TongueTwister 1.0" << std::endl;
+    std::cout << "   * John P. Huelsenbeck (University of California, Berkeley)" << std::endl;
+    std::cout << "   * Shawn McCreight (University of California, Berkeley)" << std::endl;
+    std::cout << "   * David Goldstein (University of California, Los Angeles)" << std::endl;
+    std::cout << std::endl;
+}

@@ -36,17 +36,19 @@ int main(int argc, char* argv[]) {
         #endif
         bool show = false;
         
+        std::cout << filePath << std::endl;
+        
         if (fileExtension == ".tsv")
             {
             show = true;
-            summary.readTsvFile(filePath, settings.getBurnIn());
+            //summary.readTsvFile(filePath, settings.getBurnIn());
             }
         else if (fileExtension == ".aln")
             {
             show = true;
-            summary.readAlnFile(filePath, settings.getBurnIn());
+            //summary.readAlnFile(filePath, settings.getBurnIn());
             }
-        else if (fp.filename() == "out.tre")
+        else if (fileExtension == ".tre")
             {
             show = true;
             summary.readTreFile(filePath, settings.getBurnIn());

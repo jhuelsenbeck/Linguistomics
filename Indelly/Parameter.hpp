@@ -31,7 +31,7 @@ class Parameter {
         void                setProposalProbability(double x) { proposalProbability = x; }
         void                setUpdateChangesRateMatrix(bool tf) { updateChangesRateMatrix = tf; }
         void                setUpdateChangesTransitionProbabilities(bool tf) { updateChangesTransitionProbabilities = tf; }
-        virtual double      update(void) = 0;
+        virtual double      update(int iter) = 0;
         
     protected:
         std::string         parmName;

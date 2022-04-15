@@ -39,7 +39,7 @@ class WordLnLikeTask: public ThreadTask {
 class Model {
 
     public:
-                                                Model() = delete;
+                                                Model(void) = delete;
                                                 explicit Model(RandomVariable* r, ThreadPool& threadPool);
                                                ~Model(void);
         void                                    accept(void);
@@ -74,7 +74,7 @@ class Model {
         void                                    setIndex(int x) { index = x; }
         void                                    setUpdateLikelihood(void);
         void                                    setUpdateLikelihood(int idx);
-        double                                  update(void);
+        double                                  update(int iter);
             
     private:
         std::vector<Alignment*>                 initializeAlignments(nlohmann::json& j);

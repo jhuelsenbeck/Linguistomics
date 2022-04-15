@@ -153,7 +153,7 @@ void ParameterExchangabilityRates::reject(void) {
     modelPtr->flipActiveLikelihood();
 }
 
-double ParameterExchangabilityRates::update(void) {
+double ParameterExchangabilityRates::update(int) {
 
     lastUpdateType = "exchangeability rates (k=";
 

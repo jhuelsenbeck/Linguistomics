@@ -1,15 +1,18 @@
 #include "MatrixMath.hpp"
 #include "Msg.hpp"
 
-MathCache::MathCache() {
+MathCache::MathCache(void) {
+
     matrixCount = 0; 
     arrayCount = 0;
 }
 
-MathCache::~MathCache() {
+MathCache::~MathCache(void) {
+
 }
 
 DoubleMatrix* MathCache::pushMatrix(size_t rows, size_t columns) {
+
     assert(matrixCount < bufferSize -1);
     auto m = matrixBuffer + matrixCount++;
     m->create(rows, columns);
@@ -17,6 +20,7 @@ DoubleMatrix* MathCache::pushMatrix(size_t rows, size_t columns) {
 }
 
 DoubleMatrix* MathCache::pushMatrix(size_t size) {
+
     assert(matrixCount < bufferSize - 1);
     auto m = matrixBuffer + matrixCount++;
     m->create(size);
@@ -24,11 +28,13 @@ DoubleMatrix* MathCache::pushMatrix(size_t size) {
 }
 
 void MathCache::popMatrix(int n) {
+
     assert(matrixCount >= n);
     matrixCount -= n;
 }
 
 DoubleArray* MathCache::pushArray(size_t size) {
+
     assert(arrayCount < bufferSize - 1);
     auto a = arrayBuffer + arrayCount++;
     a->create(size);
@@ -36,6 +42,7 @@ DoubleArray* MathCache::pushArray(size_t size) {
 }
 
 void MathCache::popArray() {
+
     assert(arrayCount > 0);
     --arrayCount;
 }
@@ -72,6 +79,7 @@ void MathCache::backSubstitutionRow(DoubleMatrix& U, double* b) {
 }
 
 void MathCache::forwardSubstitutionRow(DoubleMatrix& L, double* const b) {
+
     auto lrows  = L.getNumRows();
     auto lcols  = L.getNumCols();
     auto lcols1 = lcols+1;
@@ -95,6 +103,7 @@ void MathCache::forwardSubstitutionRow(DoubleMatrix& L, double* const b) {
 }
 
 void MathCache::computeLandU(DoubleMatrix& A, DoubleMatrix& L, DoubleMatrix& U) {
+
     auto n      = A.getNumRows();
     auto abegin = A.begin();
     auto end    = A.end();
@@ -130,7 +139,6 @@ void MathCache::computeLandU(DoubleMatrix& A, DoubleMatrix& L, DoubleMatrix& U) 
                 aik  += n;
                 }
         }
-
 
         auto amj = A.getPointer(j + 1, j);
         while (amj < end) 
@@ -169,7 +177,9 @@ void MathCache::computeLandU(DoubleMatrix& A, DoubleMatrix& L, DoubleMatrix& U) 
 }
 
 void MathCache::gaussianElimination(DoubleMatrix& A, DoubleMatrix& B, DoubleMatrix& X) {
+
     assert(A.getNumRows() == A.getNumCols());
+    
     auto n    = A.getNumRows();
     auto b    = pushArray(n)->begin();
     auto bend = b + n;
@@ -199,6 +209,7 @@ void MathCache::gaussianElimination(DoubleMatrix& A, DoubleMatrix& B, DoubleMatr
 }
 
 void MathCache::multiply(DoubleMatrix& A, DoubleMatrix& B) {
+
     auto m = pushMatrix(A.getNumCols(), B.getNumRows());
     A.multiply(B, *m);
     B.copy(*m);
@@ -207,6 +218,7 @@ void MathCache::multiply(DoubleMatrix& A, DoubleMatrix& B) {
 
 // Raise m to an integer power
 void MathCache::power(DoubleMatrix& m, int power) {
+
     assert(m.getNumRows() == m.getNumCols());
     auto n = m.getNumRows();
 

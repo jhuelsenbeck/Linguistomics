@@ -376,7 +376,7 @@ void Mcmc::runPosterior(void) {
         for (int chain=0; chain<numChains; chain++)
             {
             // propose a new value for the chain
-            double lnProposalRatio = modelPtr[chain]->update();
+            double lnProposalRatio = modelPtr[chain]->update(n);
             
             // calculate the likelihood and prior ratios (natural log scale)
             double newLnL = modelPtr[chain]->lnLikelihood();
@@ -488,10 +488,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     if (gen == 1)
         {
         // output header information to the .tsv file containing parameter values
-        parmStrm << "Gen\t";
-        parmStrm << "lnL\t";
-        parmStrm << "lnP\t";
-        parmStrm << "TL\t";
+        parmStrm << "Gen\t" << "lnL\t" << "lnP\t" << "TL\t";
         parmStrm << getColdModel()->getParameterHeader();
         parmStrm << std::endl;
 
@@ -537,10 +534,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     // output to parameter file
     std::cout << std::fixed << std::setprecision(8);
     getColdModel()->fillParameterValues(parmValues, numParmValues);
-    parmStrm << gen << '\t';
-    parmStrm << lnL << '\t';
-    parmStrm << lnP << '\t';
-    parmStrm << tl << '\t';
+    parmStrm << gen << '\t' << lnL << '\t'<< lnP << '\t'<< tl << '\t';
     for (int i=0; i<numParmValues; i++)
         parmStrm << parmValues[i] << '\t';
     parmStrm << std::endl;
@@ -551,7 +545,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     if (gen == numMcmcCycles)
         treeStrm << "end;" << std::endl;
     
-    // output to alignment file
+    // output to alignment files
     std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
     for (int i=0; i<alns.size(); i++)
         {
@@ -560,7 +554,6 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         if (!alnStream)
             Msg::error("Problem opening alignment file " + fn + " for appended output");
 
-        //algnJsonStrm[i] << alns[i]->getJsonString();
         alns[i]->jsonStream( alnStream );
         if (gen == numMcmcCycles)
             alnStream << "]\n}" << std::endl;

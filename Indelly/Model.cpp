@@ -737,7 +737,7 @@ void Model::setUpdateLikelihood(int idx) {
     updateLikelihood[idx] = true;
 }
 
-double Model::update(void) {
+double Model::update(int iter) {
 
     double u = rv->uniformRv();
     double sum = 0.0;
@@ -747,7 +747,7 @@ double Model::update(void) {
         if (u < sum)
             {
             updatedParameterIdx = i;
-            return parameters[i]->update();
+            return parameters[i]->update(iter);
             }
         }
     Msg::error("Failed to pick a parameter to update");

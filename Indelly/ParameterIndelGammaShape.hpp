@@ -26,7 +26,7 @@ class ParameterIndelGammaShape : public Parameter {
         std::vector<double>&    getRates(void) { return rates[0]; }
         void                    print(void);
         void                    reject(void);
-        double                  update(void);
+        double                  update(int iter);
     
     protected:
         double                  alpha[2];

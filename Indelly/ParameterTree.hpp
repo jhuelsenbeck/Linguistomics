@@ -39,7 +39,7 @@ class ParameterTree : public Parameter {
         void                            printNewick(void);
         std::string                     getString(void);
         void                            reject(void);
-        double                          update(void);
+        double                          update(int iter);
         void                            updateSubtrees(void);
                 
     private:

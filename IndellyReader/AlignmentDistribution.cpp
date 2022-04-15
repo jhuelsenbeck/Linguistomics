@@ -23,7 +23,8 @@ AlignmentDistribution::AlignmentDistribution(RandomVariable* r, Partition* p) {
 
 AlignmentDistribution::~AlignmentDistribution(void) {
 
-    delete partition;
+    if (partition != NULL)
+        delete partition;
 }
 
 void AlignmentDistribution::addAlignment(Alignment* aln) {
@@ -147,7 +148,7 @@ void AlignmentDistribution::print(Alignment* aln) {
             {
             int charCode = aln->getCharCode(i, j);
             int subsetIndex = charCode;
-            if (subsetIndex != -1)
+            if (subsetIndex != -1 && partition != NULL)
                 subsetIndex = partition->indexOfSubsetWithValue(charCode);
             if (charCode == -1)
                 std::cout << " - ";

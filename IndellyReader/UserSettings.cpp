@@ -12,7 +12,7 @@ UserSettings::UserSettings(void) {
     // dafault values
     inFile  = "";
     outFile = "";
-    burnIn  = 0;
+    burnIn  = 5000;
 }
 
 void UserSettings::readCommandLineArguments(int argc, char* argv[]) {

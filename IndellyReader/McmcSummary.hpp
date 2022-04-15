@@ -43,6 +43,7 @@ class McmcSummary {
         std::vector<AlignmentDistribution*>     alignments;
         std::map<RbBitSet,ParameterStatistics*> partitions;
         Tree*                                   conTree;
+        bool                                    hasPartitions;
         Partition*                              statePartitions;
 };
 

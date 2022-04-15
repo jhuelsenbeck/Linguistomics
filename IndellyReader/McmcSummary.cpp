@@ -378,10 +378,18 @@ void McmcSummary::readAlnFile(std::string fn, int /*bi*/) {
     std::string cognateName = getCognateName(fn);
         
     auto it = j.find("PartitionSets");
+    hasPartitions = true;
+    Partition* part = NULL;
     if (it == j.end())
-        Msg::error("Could not find partition set in the JSON file");
-    nlohmann::json jsPart = j["PartitionSets"];
-    Partition* part = new Partition(jsPart);
+        {
+        hasPartitions = false;
+        //Msg::error("Could not find partition set in the JSON file");
+        }
+    if (hasPartitions == true)
+        {
+        nlohmann::json jsPart = j["PartitionSets"];
+        part = new Partition(jsPart);
+        }
 
     AlignmentDistribution* dist = new AlignmentDistribution(rv, part);
     alignments.push_back(dist);
@@ -418,13 +426,14 @@ void McmcSummary::readConfigFile(std::string fn) {
     auto it = j.find("PartitionSets");
     if (it == j.end())
         {
-        Msg::warning("Could not find partition set in the JSON file");
+        Msg::warning("Could not find partition set in the JSON configuration file");
         statePartitions = NULL;
         }
     else
         {
         nlohmann::json jsPart = j["PartitionSets"];
         statePartitions = new Partition(jsPart);
+        //statePartitions = NULL;
         }
 }
 
@@ -490,7 +499,7 @@ void McmcSummary::readTreFile(std::string fn, int /*bi*/) {
                         std::string newickStr = interpretTreeString(treeString);
                         //std::cout << "Tree: \"" << newickStr << "\"" << std::endl;
                         Tree t(newickStr, translateMap);
-                        //t.print();
+                        t.print();
                         std::map<RbBitSet,double> parts = t.getPartitions();
                         addPartion(parts);
                         treeString = "";

@@ -24,7 +24,7 @@ class ParameterRatesGammaShape : public Parameter {
         double              lnPriorProbability(void);
         void                print(void);
         void                reject(void);
-        double              update(void);
+        double              update(int iter);
     
     protected:
         double              alpha[2];

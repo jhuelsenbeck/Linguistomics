@@ -12,6 +12,7 @@
 #include "RandomVariable.hpp"
 #include "TransitionProbabilities.hpp"
 #include "Tree.hpp"
+#include "UserSettings.hpp"
 
 #undef DEBUG_LOCAL
 
@@ -374,13 +375,22 @@ void ParameterTree::reject(void) {
     modelPtr->flipActiveLikelihood();
 }
 
-double ParameterTree::update(void) {
+double ParameterTree::update(int iter) {
+    
+    UserSettings& settings = UserSettings::userSettings();
     
     // pick a tree parameter to update
+    double probNni   = 0.50;
+    double probBrlen = 0.25;
+    if (iter < settings.getNumMcmcCycles() * 0.25)
+        {
+        probNni = 0.0;
+        probBrlen = 0.75;
+        }
     double u = rv->uniformRv();
-    if (u <= 0.50)
+    if (u <= probNni)
         return updateNni();
-    else if (u > 0.50 && u <= 0.75)
+    else if (u > probNni && u <= probNni + probBrlen)
         return updateBrlenProportions();
     else
         return updateTreeLength();

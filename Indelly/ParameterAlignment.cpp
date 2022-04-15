@@ -346,7 +346,7 @@ void ParameterAlignment::reject(void) {
     modelPtr->flipActiveLikelihood(index);
 }
 
-double ParameterAlignment::update(void) {
+double ParameterAlignment::update(int) {
 
     lastUpdateType = "alignment for " + parmName;
 
