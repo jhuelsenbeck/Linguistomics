@@ -653,14 +653,15 @@ class CalcRatesClass {
   static CompareLength(l1, l2, options) = l2.Length - l1.Length;
 
   GetSorted {
-    var set = Data;
-    var all = new ListClass(128);
-    var t   = set.TransitionCount;
-    foreach (var s0 in set.PartSegments) {
-      foreach (var s1 in set.PartSegments) {
+    var all      = new ListClass(128);
+    var t        = Data.TransitionCount;
+    var segments = Rule.PartSegments;
+
+    foreach (var s0 in segments) {
+      foreach (var s1 in segments) {
         if (s0.Index != s1.Index) {
           var tlist = t.GetValue(s0.Index, s1.Index);
-          if (exists tlist && tlist.Length < Info.LinkMin)
+          if (valid tlist and tlist.Length < Info.LinkMin)
             all.Add(tlist);
         }
       }

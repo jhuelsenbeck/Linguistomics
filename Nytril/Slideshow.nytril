@@ -423,13 +423,13 @@ class SlideItemClass {
 //======================================================================
 
 class SlideGroupClass {
-  ListClass      Items;
-  SlideItemClass Item;
-  var            Page;
+  ListClass<SlideItemClass> Items;
+  SlideItemClass            Item;
+  var                       Page;
 
   Constructor(ShowClass show, variable) {
-    Items = new ListClass<SlideItemClass>(8);
-    Item  = new SlideItemClass(show, variable, 0);
+    Items = new(8);
+    Item  = new(show, variable, 0);
     Page  = show.PageNumber;
   }
 }
@@ -460,20 +460,19 @@ class FigureSlideClass: SlideClass {
 //======================================================================
 
 class TopicSlidesClass: SlideClass {
-  var Category,
-      Topic,
-      Groups,
-      Pause;
+  SlideGroupClass[] Groups;
+  var               Category,
+                    Topic,
+                    Pause;
 
   Constructor(ShowClass show, TitleSlideClass main, category, topic, pause) {
     super.Constructor(show, category.Title);
     Topic = topic;
     Pause = pause;
 
-    Groups = new ListClass<SlideGroupClass>(8);
-
-    var group = new SlideGroupClass(show, topic);
-    Groups.Add(group);
+    var groups = new ListClass<SlideGroupClass>(32);
+    var group  = new SlideGroupClass(show, topic);
+    groups.Add(group);
 
     var height = 0.0;
     foreach (var iv in topic.Items) {
@@ -482,12 +481,14 @@ class TopicSlidesClass: SlideClass {
       if (group.Items.Length > 0 and height + item.Height >= Design.SlideContent.Height) {
         group = new SlideGroupClass(show, topic);
         ++show.PageNumber;
-        Groups.Add(group);
+        groups.Add(group);
         height = 0.0;
       }
       group.Items.Add(item);
       height += item.Height + Design.ItemSpacer;
     }
+
+    Groups = groups.Values;
   }
 
   ShowSet(SlideGroupClass group, SlideItemClass item, page, count, number) = Block {
