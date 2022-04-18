@@ -16,7 +16,7 @@ class FilterClass {
 
   virtual Matches(SegmentClass segment) = true;
 
-  override GetLayoutDoc = Span {
+  override GetLayoutSpan = Span {
     Hover: new HoverClass(this, HoverTypes.Tip);
     Name;
   };
@@ -60,22 +60,21 @@ class PartitionClass: FactClass {
 //======================================================================
 
 abstract class RuleClass {
-  DataSetClass     Data;
-  ListClass        FilterList;
-  FilterClass[]    Filters,
-                   FiltersPlus;
-  PartitionClass[] Partitions;
-  SegmentClass[]   PartSegments;
-
-  var              Name,
-                   Matrix,
-                   Numbers;
+  DataSetClass           Data;
+  ListClass<FilterClass> FilterList;
+  FilterClass[]          Filters,
+                         FiltersPlus;
+  PartitionClass[]       Partitions;
+  SegmentClass[]         PartSegments;
+  var                    Name,
+                         Matrix,
+                         Numbers;
 
   Constructor(DataSetClass data, name) {
     Data       = data;
     Name       = name;
     Numbers    = false;
-    FilterList = new ListClass<FilterClass>(128);
+    FilterList = new(128);
   }
 
   MatchesRule(FilterClass filter, SegmentClass segment) {

@@ -3,43 +3,42 @@ using Format, Units, Math, LinkTypes;
 //======================================================================
 
 class ShowDesignClass {
-  var SlideFooter,
-      SlideHeader,
-      SlidePage,
-      SlideContent,
-      HeaderGap,
-      SlideMargin,
-      ItemTextFormat,
-      BulletIndent,
-      BulletSize,
-      BulletDone,
-      BulletCurrent,
-      ItemIndent,
-      ItemWidth,
-      TotalIndent,
-      ItemSpacer,
-      TitleHeight,
-      BodyHeight;
+  SizeClass   SlidePage,
+              SlideContent;
+  MarginClass SlideMargin;
+  var         SlideFooter,
+              SlideHeader,
+              HeaderGap,
+              ItemTextFormat,
+              BulletIndent,
+              BulletSize,
+              BulletDone,
+              BulletCurrent,
+              ItemIndent,
+              ItemWidth,
+              TotalIndent,
+              ItemSpacer,
+              TitleHeight,
+              BodyHeight;
 
 
   Constructor(header, footer) {
     HeaderGap      = 12 pts;
+    ItemSpacer     = 10 pts;
+    TitleHeight    = 30 pts;
+    BodyHeight     = 18 pts;
+    BulletIndent   = 0.25 inches;
+    ItemIndent     = 1 inch;
     SlideHeader    = header;
     SlideFooter    = footer;
     SlidePage      = DocMetrics.DocumentSize;
     SlideMargin    = Margin(DocMetrics.PageMargin.Left, SlideHeader + HeaderGap, DocMetrics.PageMargin.Right, SlideFooter);
     SlideContent   = Size(DocMetrics.PageContent.Width, DocMetrics.DocumentSize.Height - header - footer - HeaderGap*2);
     ItemTextFormat = {TextHeight: 20 pts};
-    BulletIndent   = 0.25 inches;
     BulletDone     = Tex.blacksquare;
     BulletCurrent  = Tex.blacktriangleright;
-    ItemIndent     = 1 inch;
     TotalIndent    = ItemIndent + BulletIndent;
     ItemWidth      = SlideContent.Width - TotalIndent - SlideMargin.Left - SlideMargin.Right;
-    ItemSpacer     = 10 pts;
-    TitleHeight    = 30 pts;
-    BodyHeight     = 18 pts;
-
   }
 
   virtual HeaderFooter(ShowClass show, SlideItemClass item, title, page) = Block {
@@ -59,7 +58,7 @@ class ShowDesignClass {
   };
 }
 
-SlideDesigns.Plain = new ShowDesignClass(0, 0);
+ShowDesignClass SlideDesigns.Plain = new(0, 0);
 
 //======================================================================
 
@@ -248,13 +247,13 @@ class SlideClass {
 //======================================================================
 
 class TitleSlideClass: SlideClass {
-  var       Index;
-  ListClass Items;
+  var                       Index;
+  ListClass<SlideItemClass> Items;
 
   Constructor(ShowClass show, variable, index) {
     super.Constructor(show, variable.Title);
     Index = index;
-    Items = new ListClass<SlideItemClass>(32);
+    Items = new(32);
   }
 
   override AddSlidePage(page) = Block {

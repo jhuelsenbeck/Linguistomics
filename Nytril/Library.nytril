@@ -18,7 +18,7 @@ class LanguageClass: FactClass {
   virtual Description = null;
   virtual Details = null;
 
-  override GetLayoutDoc = Span {
+  override GetLayoutSpan = Span {
     Hover: new HoverClass(this, HoverTypes.Tip);
     Name;
   };
@@ -67,6 +67,8 @@ class LanguageClass: FactClass {
 
 //======================================================================
 
+typedef SegmentDictionary DictionaryClass<SegmentClass>;
+
 class WordClass: FactClass {
   field          Plain,
                  Text,
@@ -77,7 +79,7 @@ class WordClass: FactClass {
                  Aligned,
                  Padded;
 
-  Constructor(dictionary, LanguageClass language, CognateClass cognate, text) {
+  Constructor(SegmentDictionary dictionary, LanguageClass language, CognateClass cognate, text) {
     super.Constructor(text+cognate.Concept.Name+cognate.Name+language.Name);
 
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
@@ -98,6 +100,7 @@ class WordClass: FactClass {
 
       Link.Connect(this, Segments);
       Link.Connect(this, cognate);
+      Link.Connect(this, language);
     }
     else {
       Segments     = [];
@@ -114,7 +117,7 @@ class WordClass: FactClass {
     Cognate.GetTitle;
   };
 
-  override GetLayoutDoc = Span {
+  override GetLayoutSpan = Span {
     foreach (var s in Segments) {
       if (!s.Punctuation)
         s.Ipa;
@@ -313,7 +316,7 @@ class DataSetClass {
     SegmentCount    = 0;
     MaxLanguageName = 0;
 
-    var languageset = new DictionaryClass(languages.Length);
+    var languageset = new DictionaryClass<LanguageClass>(languages.Length);
     foreach (var l in languages) {
       var n = l.GlobalVariableName;
       languageset.Add(l, n);
@@ -321,7 +324,7 @@ class DataSetClass {
     Taxa = new TaxonClass(each languages);
 
     // Build a dictionary with IPA text as the key
-    var dictionary = new DictionaryClass<SegmentClass>(256);
+    var dictionary = new SegmentDictionary(256);
     foreach (var segment in IPA.Segments) {
       if (valid segment.Ipa)
         dictionary.Add(segment, segment.Ipa);
@@ -416,7 +419,7 @@ class DataSetClass {
     return set.Values;
   }
 
-  void ComputeCognate(DictionaryClass dictionary, CognateClass cognate) {
+  void ComputeCognate(SegmentDictionary dictionary, CognateClass cognate) {
     var words     = new ListClass<WordClass>(Taxa.Length);
     var maxlength = 0;
 
