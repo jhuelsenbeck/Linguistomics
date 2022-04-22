@@ -2,7 +2,7 @@ using Format, IO, Units, Languages;
 
 //======================================================================
 
-class RunClass {
+class RunExperimentClass {
   static OutFileName = Info.ExecuteFolder Folder("out");
 
   var        Name,
@@ -96,16 +96,16 @@ class RunClass {
 //======================================================================
 
 class ModeClass {
-  var              Name,
-                   RootFolder;
-  ModelFolderClass Model;
-  RunClass[]       Run;
+  var                  Name,
+                       RootFolder;
+  ModelFolderClass     Model;
+  RunExperimentClass[] Run;
 
   Constructor(ModelFolderClass model, name, generations, preburn, print, marginal) {
     Name       = name;
     Model      = model;
     RootFolder = model.RootFolder Folder(name);
-    Run        = new RunClass(this, each ["Run1", "Run2"], generations, preburn, print, marginal);
+    Run        = new RunExperimentClass(this, each ["Run1", "Run2"], generations, preburn, print, marginal);
   }
 
   void InitFolders(ExperimentClass experiment) {
@@ -134,6 +134,23 @@ class ModelFolderClass {
     Posterior.InitFolders(experiment);
     Marginal.InitFolders(experiment);
   }
+}
+
+//======================================================================
+
+class RunInitClass: RunClass {
+  var Experiment;
+
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment.FactId, experiment.Name);
+    Experiment = experiment;
+  }
+
+  override void Execute {
+    Experiment.InitFolders;
+  }
+
+  override AskQuestion = "Overwrite configuration files for experiment \"{0}\"?"(Name);
 }
 
 //======================================================================
