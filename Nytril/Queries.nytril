@@ -1,0 +1,26 @@
+using QueryLibrary, SegmentFeatures;
+
+namespace QueryLibrary {
+  NasalConsonants = MatchAll SegmentClass {
+    Features: FlagMask(Vowel Nasal, Nasal);
+  };
+}
+
+QueryClass Main.Queries.Q1 = new (#230e1353-95df-4493-b36f-73a3cc1fabc3#, "Nasal consonants") {
+  Query: NasalConsonants;
+};
+
+
+QueryClass Main.Queries.Q2 = new (#142eb327-bdb4-4701-871c-eea5c1c6c361#, "Portuguese words with nasal consonants and diphthongs") {
+  Query: MatchAny WordClass {
+    MatchAll {
+      MatchAll Languages.Portuguese;
+      NasalConsonants;
+      MatchAll SegmentClass {
+        Features: Diphthong;
+      };
+    }
+  }
+};
+
+
