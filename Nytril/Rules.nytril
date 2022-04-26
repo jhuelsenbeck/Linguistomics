@@ -53,7 +53,7 @@ class PartitionClass: FactClass {
     LinkTypes.Link.Connect(this, segments);
   }
 
-  override GetIcon = MaterialIcons.group_work;
+  override GetIcon = Icons.sort;
 
   override GetLayoutTip = Filter.GetLayoutTip;
 }
@@ -150,31 +150,36 @@ abstract class RuleClass {
     return segments.FindSlice(segment => MatchesRule(filter, segment));
   }
 
-  ShowPartitions = Block {
-    Paragraph {
-      TextHeight: 16 pts;
-      "Model: ";
-      Style.DQuote {Name};
-      BorderB: 1;
+  ShowPartitions = Table {
+    Columns: [0.5 inch, 2 inches, 5 inches];
+    TextHeight: 12 pts;
+    EdgeB: 1;
+
+    Row {
+      EdgeB: 1;
+      Cell {
+        ColSpan: 3;
+        TextHeight: 16 pts;
+        Span {
+          "Model: ";
+          Style.DQuote {Name};
+        };
+      };
     };
 
     foreach (var partition in Partitions) {
-      Paragraph {
-        TextHeight: 12 pts;
-        SpaceBefore: 4 pts;
-        TabStops: [0.35 inch];
-        LeftIndent: 2.85 inches;
-        FirstIndent: -2.85 inches;
-        each1;
-        ")"
-        Tab;
+      Row {
+        Cell {
+          HAlign: HAligns.Right;
+          Span {each1; ")"};
+          PaddingR: 3 pts;
+        };
         partition.Filter.Name;
-        Tab;
         Span {
           Separator: Space;
           (each partition.Segments).ShowSegment;
-        }
-      }
+        };
+      };
     }
   };
 
