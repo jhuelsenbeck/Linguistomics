@@ -1,1 +1,0 @@
-"../../RevBayes/rb.exe" "../run/run3/gettrees.rev"
