@@ -171,7 +171,7 @@ abstract class RuleClass {
       Row {
         Cell {
           HAlign: HAligns.Right;
-          Span {each1; ")"};
+          Span {each1; ") "};
           PaddingR: 3 pts;
         };
         partition.Filter.Name;
@@ -295,26 +295,20 @@ class VowelListClass: SegmentListClass {
 }
 //======================================================================
 
-class Partition2Class: RuleClass {
+class NaturalPartitionClass: RuleClass {
   Constructor(DataSetClass data) {
-    super.Constructor(data, "Linguistically Informed");
+    super.Constructor(data, "Natural Class");
     Numbers = true;
 
-    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.ay, IPA.Segments.ai]));
-    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.e, IPA.Segments.E]));
-    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.ah, IPA.Segments.A]));
-    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.u, IPA.Segments.U]));
-    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.oh, IPA.Segments.O]));
-    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.euh, IPA.Segments.LongOpenMidBackRounded]));
-    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.eh, IPA.Segments.Eh]));
-    FilterList.Add(new VowelListClass(data, this, [IPA.Segments.uu, IPA.Segments.o]));
+    FilterList.Add(new FeatureMaskClass(data, this, "Long Vowel", Vowel LongVowel, Vowel LongVowel));
     FilterList.Add(new FeatureMaskClass(data, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal));
-    FilterList.Add(new FeatureMaskClass(data, this, "Vowel", Vowel, Vowel));
+    FilterList.Add(new FeatureMaskClass(data, this, "Diphthong", Diphthong, Diphthong));
+    FilterList.Add(new FeatureMaskClass(data, this, "Short Vowel", Vowel, Vowel));
     FilterList.Add(new FeatureMaskClass(data, this, "Nasal Consonant", Nasal, Nasal));
-    FilterList.Add(new SegmentListClass(data, this, "Non Sylabic Sonorant",
-      [IPA.Segments.l, IPA.Segments.r, IPA.Segments.n, IPA.Segments.m, IPA.Segments.jg, IPA.Segments.w]
-    )
-    );
+    FilterList.Add(new FeatureMaskClass(data, this, "Liquid", Vowel Liquid, Liquid));
+    FilterList.Add(new FeatureMaskClass(data, this, "Approximant", Vowel Approximant, Approximant));
+    FilterList.Add(new FeatureMaskClass(data, this, "Affricate", Vowel Affricate, Affricate));
+    FilterList.Add(new FeatureMaskClass(data, this, "Fricatives", Vowel Fricative, Fricative));
     FilterList.Add(new FeatureMaskClass(data, this, "Consonant", Vowel, NoFeature));
     GetFilters;
     AssignPartitions(data.UniqueSegments);
@@ -511,7 +505,7 @@ class CalcRatesClass {
 
     RateScale = MaxLine / Max(Max(each Transition.Rates));
 
-    var mult = 2.0 * Graphics.OneEighty / Rule.Partitions.Length;
+    var mult = 2.0 * Math.PI / Rule.Partitions.Length;
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;
       partition.Radius = Sqrt(Real(Transition.Frequencies[each0])) * fmax;
@@ -534,27 +528,29 @@ class CalcRatesClass {
     Size: size;
 
     foreach (var p1 in Rule.Partitions) {
-      var pi = each0;
+      var i = each0;
       foreach (var p2 in Rule.Partitions) {
-        var  rate = Transition.Rates[pi][each0];
+        var  rate = Transition.Rates[i][each0];
         var  hint = new PartitionHintClass(Data, Rule, rate, p1, p2);
-        var  line = new LineStyleClass(rate * RateScale, 0.25, 1);
         var  r    = rate * RateScale / MaxLine;
-        var  frac = (100.0 * Math.Max([0.0, 1.0 - r]))%;
-        line.LineColor = Color(frac, frac, frac, (50*(r + 1))%);
+        var  frac = 255.0 * r;
+        var  line1 = new LineStyleClass(rate * RateScale, 0.25, 1) {
+          LineColor: Color(frac, frac, frac)
+        };
+        var line2 = new LineStyleClass(rate * RateScale, 0.25, 1);
 
         if (p1 == p2) {
-          var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line.LineSize*0.5, p1.Angle);
-          Graphics.CircleLine(line, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
+          var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line2.LineSize*0.5, p1.Angle);
+          Graphics.CircleLine(line2, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
             Hover: new HoverClass(hint, HoverTypes.Tip);
           };
         }
-        else if (each0 < pi) {
+        else if (each0 < i) {
           var angle = Graphics.GetAngle(p1.Center, p2.Center);
           var c1    = Graphics.Adjust(p1.Center, p1.Radius - ArrowGap, angle);
           var c2    = Graphics.Adjust(p2.Center, p2.Radius - ArrowGap, angle + Graphics.OneEighty);
 
-          Graphics.Line(line, c1, c2) {
+          Graphics.Line(line1, c1, c2) {
             Hover: new HoverClass(hint, HoverTypes.Tip);
           };
         }
@@ -603,24 +599,20 @@ class CalcRatesClass {
 
       VBox {
         Table {
-          TextHeight: 10 pts;
-          Columns: [20 pts, 1 inch];
+          TextHeight: 12 pts;
+          Columns: [22 pts {HAlign: HAligns.Right;}, 12 pts, 0.75 inch];
 
           foreach (var partition in Rule.Partitions) {
             Row {
               Span {
                 each1;
-                ". ";
+                Space;
               };
-              Paragraph {
-                LeftIndent: 15 pts;
-                FirstIndent: -15 pts;
-                Figure {
-                  Fill: ChartColor(each0);
-                  Ellipse(Rect(0, 10 pts));
-                };
-                partition.Filter;
-              }
+              Cell {
+                TextColor: ChartColor(each0);
+                Tex.blackcirc;
+              };
+              partition.Filter;
             }
           }
         };
