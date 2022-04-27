@@ -474,7 +474,7 @@ class TopicSlidesClass: SlideClass {
     groups.Add(group);
 
     var height = 0.0;
-    foreach (var iv in topic.Items) {
+    foreach (var iv in show.GetTopicItems(topic)) {
       var item = new SlideItemClass(show, iv, each1);
       main.Items.Add(item);
       if (group.Items.Length > 0 and height + item.Height >= Design.SlideContent.Height) {
@@ -549,7 +549,8 @@ class ShowClass: BaseViewClass {
   PersonClass[]     AuthorList;
   ShowDesignClass   Design;
   TitleSlideClass[] Groups;
-  var               PageNumber,
+  var               TypeFlags,
+                    PageNumber,
                     SlideIndex;
 
   Constructor(ExperimentClass experiment, id, title, PersonClass[] authors) {
@@ -559,6 +560,14 @@ class ShowClass: BaseViewClass {
     Design       = SlideDesigns.Plain;
     SlideIndex   = 0;
     PageNumber   = 0;
+    TypeFlags    = 0;
+  }
+
+  GetTopicItems(topic) {
+    var items = topic.?Items;
+    if (not exists items)
+      items = topic.?GetItems(this);
+    return items ?? [];
   }
 
   ShowFigureSlide(figure, format=null) = Block {
@@ -585,32 +594,44 @@ class ShowClass: BaseViewClass {
       slide.AddSlidePage(each0);
   };
 
+  CanInclude(slide) {
+    return TypeFlags == 0 or not valid slide.?Type or (Integer(slide.Type) & TypeFlags) != 0;
+  }
+
   AddSlideGroup(slidesvar) {
+    var types  = Integer(TypeFlags);
     var list   = new ListClass<SlideClass>(128);
     var groups = new ListClass<TitleSlideClass>(32);
     foreach (var slidevar in slidesvar) {
-      var topics = slidevar.?Topics;
-      if (exists topics) {
-        var ts = new TitleSlideClass(this, slidevar, each0);
-        groups.Add(ts);
-        list.Add(ts);
+      if (CanInclude(slidevar)) {
+        var topics = slidevar.?Topics;
+        if (exists topics) {
+          var ts = new TitleSlideClass(this, slidevar, each0);
+          groups.Add(ts);
+          list.Add(ts);
 
-        foreach (var topic in topics) {
-          SlideClass s;
-          var figure = topic.?Figure;
-          if (exists figure)
-            s = new FigureSlideClass(this, ts, topic);
-          else if (exists topic.?Items) {
-            var pause = topic.?Pause;
-            s = new TopicSlidesClass(this, ts, slidevar, topic, exists pause and pause);
+          foreach (var topic in topics) {
+            if (CanInclude(topic)) {
+              SlideClass s;
+              var figure = topic.?Figure;
+              if (exists figure)
+                s = new FigureSlideClass(this, ts, topic);
+              else {
+                var items = GetTopicItems(topic);
+                if (items.Length > 0) {
+                  var pause = topic.?Pause;
+                  s = new TopicSlidesClass(this, ts, slidevar, topic, exists pause and pause);
+                }
+                else
+                  s = new SingleSlideClass(this, topic);
+              }
+              list.Add(s);
+            }
           }
-          else
-            s = new SingleSlideClass(this, topic);
-          list.Add(s);
         }
+        else
+          list.Add(new SingleSlideClass(this, slidevar));
       }
-      else
-        list.Add(new SingleSlideClass(this, slidevar));
     }
     Groups = groups.Values;
     return list.Values;

@@ -532,7 +532,7 @@ class DataSetClass {
   void GetFrequencies {
     TransitionCount = GetTransitionsCount;
 
-    var set = new DictionaryClass(1024);
+    var set = new DictionaryClass<SegmentDataClass>(1024);
     foreach (var sd in SegmentFrequencyData)
       set.Add(sd, sd.Text);
 
@@ -546,11 +546,13 @@ class DataSetClass {
       }
     }
     if (sum > 0) {
-      sum = 1.0 / sum;
+      sum = 100.0 / sum;
+
+      var seg = 100.0 / SegmentCount;
 
       foreach (var s in UniqueSegments) {
-        s.NormalFrequency = s.Frequency * sum * 100.0;
-        s.UsedFrequency   = s.UsedCount / SegmentCount * 100.0;
+        s.NormalFrequency = sum * s.Frequency;
+        s.UsedFrequency   = seg * s.UsedCount;
       }
     }
   }

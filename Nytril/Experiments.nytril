@@ -210,13 +210,49 @@ abstract class ExperimentClass: FactClass {
     new ExperimentViewClass(this),
     new DiagnosticsViewClass(this),
     new SourceViewClass(this),
-    new DavidPresentationClass(this),
+    new DavidLinguisticPresentationClass(this),
+    new DavidBioPresentationClass(this),
     new JohnPresentationClass(this),
   ];
 
+  CalculateLoad(SegmentClass[] segments, sum) {
+    return sum;
+  }
+
+  ShowFunctionalLoad = Block {
+    Style.Header1 {
+      "Functional Load of \"{0}\" model"(Rule.Name);
+    };
+
+    Table {
+      Columns: [1.5 inch, 1 inch {HAlign: HAligns.Right}];
+      Row {
+        Lang.Partition;
+        Lang.FrequencyPercent;
+        Lang.FunctionalLoad;
+      };
+
+      foreach (var part in Rule.Partitions) {
+        var sum = Math.Sum((each part.Segments).UsedFrequency);
+        Row {
+          part.Name;
+          Cell {
+            TextDigits: 2;
+            sum;
+          };
+          Cell {
+            TextDigits: 2;
+            CalculateLoad(part.Segments, sum);
+          }
+        };
+      }
+    }
+  };
+
   ShowExperiment = Block {
     Style.Header1 {
-      "Experiment ";
+      Lang.Experiment;
+      Space;
       each1;
       Space;
       Style.DQuote {Name};
