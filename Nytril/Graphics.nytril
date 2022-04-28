@@ -12,28 +12,24 @@ class LineStyleClass {
       LineColor;
 
   Constructor(size, width=1.4, length=1.8) {
-    LineSize  = Real(size);
+    LineSize  = size;
     LineColor = Colors.Black;
     Flat      = LineSize * width;
     Tip       = LineSize * length;
     Side      = 0.5 * LineSize + Flat;
-    if (Tip == 0)
-      Angle = Graphics.Ninety;
-    else
-      Angle  = ArcTan(Side / Tip);
-    Edge     = Sqrt(Side^2 + Tip^2);
+    Angle     = ArcTan2(Side, Tip);
+    Edge      = Sqrt(Side*Side + Tip*Tip);
   }
 }
 //======================================================================
 
 namespace Graphics {
-  OneEighty = 180 degrees;
+  OneEighty = PI;
   Half      = 0.5;
   Ninety    = Half * OneEighty;
   FortyFive = 0.25 * OneEighty;
 
   ExtendPoint(PointClass center, r, angle) {
-    angle = Real(angle);
     return Point(center.X + r * Cos(angle), center.Y + r * Sin(angle));
   }
 
@@ -46,7 +42,7 @@ namespace Graphics {
   }
 
   Line(LineStyleClass line, PointClass p1, PointClass p2) = Figure {
-    Stroke: line.LineSize {Color: line.LineColor; LineCap: LineCaps.Round};
+    Stroke: line.LineSize {Color: line.LineColor; LineCap: LineCaps.Flat};
     FigurePath {
       p1;
       LineTo(p2);
@@ -82,7 +78,7 @@ namespace Graphics {
   };
 
   CircleLine(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure {
-    Stroke: line.LineSize {Color: line.LineColor; LineCap: LineCaps.Round};
+    Stroke: line.LineSize {Color: line.LineColor; LineCap: LineCaps.Flat};
 
     var angle1 = angle + anglegap;
     var angle2 = angle - anglegap;

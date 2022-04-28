@@ -486,7 +486,7 @@ class CalcRatesClass {
   Constructor(DataSetClass data, RuleClass rule, TransitionClass transition=null) {
     Data       = data;
     Rule       = rule;
-    ArrowGap   = 2 pts;
+    ArrowGap   = 4 pts;
     GapAngle   = 80.0 degrees;
     Transition = transition ?? new TransitionClass(Data, rule);
   }
@@ -508,7 +508,7 @@ class CalcRatesClass {
     var mult = 2.0 * Math.PI / Rule.Partitions.Length;
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;
-      partition.Radius = Sqrt(Real(Transition.Frequencies[each0])) * fmax;
+      partition.Radius = Sqrt(Transition.Frequencies[each0]) * fmax;
     }
 
     var maxradius = 0.0;
@@ -535,20 +535,20 @@ class CalcRatesClass {
         var  r    = rate * RateScale / MaxLine;
         var  frac = 255.0 * r;
         var  line1 = new LineStyleClass(rate * RateScale, 0.25, 1) {
-          LineColor: Color(frac, frac, frac)
+          LineColor: Color(0, 0, 0, frac)
         };
         var line2 = new LineStyleClass(rate * RateScale, 0.25, 1);
 
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line2.LineSize*0.5, p1.Angle);
-          Graphics.CircleLine(line2, c, LoopRadius, p1.Angle - Graphics.OneEighty, GapAngle) {
+          Graphics.CircleLine(line2, c, LoopRadius + line2.LineSize, p1.Angle + Graphics.OneEighty, GapAngle) {
             Hover: new HoverClass(hint, HoverTypes.Tip);
           };
         }
         else if (each0 < i) {
           var angle = Graphics.GetAngle(p1.Center, p2.Center);
-          var c1    = Graphics.Adjust(p1.Center, p1.Radius - ArrowGap, angle);
-          var c2    = Graphics.Adjust(p2.Center, p2.Radius - ArrowGap, angle + Graphics.OneEighty);
+          var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle + Graphics.OneEighty);
+          var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle);
 
           Graphics.Line(line1, c1, c2) {
             Hover: new HoverClass(hint, HoverTypes.Tip);
@@ -600,7 +600,7 @@ class CalcRatesClass {
       VBox {
         Table {
           TextHeight: 12 pts;
-          Columns: [22 pts {HAlign: HAligns.Right;}, 12 pts, 0.75 inch];
+          Columns: [22 pts {HAlign: HAligns.Right;}, 12 pts, 1 inch];
 
           foreach (var partition in Rule.Partitions) {
             Row {
