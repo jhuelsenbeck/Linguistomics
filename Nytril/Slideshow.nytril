@@ -100,11 +100,11 @@ class ProgressDesignClass: ShowDesignClass {
     MarginT: 12 pts;
     MarginB: 12 pts;
 
-    var i = 0;
     foreach (var group in show.Groups) {
       VBox {
         group.Title;
         HBox {
+          var i = group.StartCount;
           for (var j = 0; j < group.CompleteCount; ++j) {
             if (i < show.PageIndex)
               Tex.blackcirc;
@@ -114,7 +114,6 @@ class ProgressDesignClass: ShowDesignClass {
           }
         };
       };
-      ++i;
     }
   };
 
@@ -148,7 +147,7 @@ class ProgressDesignClass: ShowDesignClass {
     TextHeight: 16 pts;
     show.PageIndex+1;
     " / ";
-    PageCount;
+    show.PageTotal;
   };
 }
 //======================================================================
@@ -276,17 +275,23 @@ class SlideClass {
     ShowBody(show);
     show.PageIndex++;
   };
+
+  virtual void CountSlidePage(ShowClass show) {
+    show.PageTotal++;
+  }
 }
 
 //======================================================================
 
 class TitleSlideClass: SlideClass {
   ListClass<SlideItemClass> Items;
-  var                       CompleteCount;
+  var                       StartCount,
+                            CompleteCount;
 
   Constructor(variable) {
     super.Constructor(variable.Title, null);
     Items         = new(32);
+    StartCount    = 0;
     CompleteCount = 0;
   }
 
@@ -370,11 +375,23 @@ class EndSlideClass: SlideClass {
     super.Constructor(Lang.Questions, null);
   }
 
+  override AddSlidePage(ShowClass show, title, footer) = Block {
+    ShowBody(show);
+  };
+
   override ShowBody(ShowClass show) = Block {
+    ParAlignment: ParAlignments.Center;
+    Paragraph {
+      PageBreakBefore: true;
+
+      TextHeight: 50 pts;
+      Lang.Questions;
+    };
+
     Paragraph {
       var h = 150 pts;
-      ParAlignment: ParAlignments.Center;
-      SpaceBefore: (show.Design.SlideContent.Height - h) * 0.5;
+      SpaceBefore: (show.Design.SlideContent.Height - h) * 0.25;
+
       Figure {
         TextHeight: h;
         Fill: (Colors.LightGreen..Colors.DarkGreen) {Vertical: true};
@@ -417,6 +434,8 @@ ShowItem(ShowClass show, variable) {
      };
    }
 }
+
+//======================================================================
 
 class SingleSlideClass: SlideClass {
   var Variable;
@@ -490,10 +509,10 @@ class FigureSlideClass: SlideClass {
 //======================================================================
 
 class TopicSlidesClass: SlideClass {
-  SlideGroupClass[] Groups;
-  var               Main,
-                    Topic,
-                    Pause;
+  ListClass<SlideGroupClass> Groups;
+  var                        Main,
+                             Topic,
+                             Pause;
 
   Constructor(ShowClass show, TitleSlideClass main, variable, topic, pause) {
     super.Constructor(null, null);
@@ -501,9 +520,9 @@ class TopicSlidesClass: SlideClass {
     Main  = main;
     Pause = pause;
 
-    var groups = new ListClass<SlideGroupClass>(32);
+    Groups = new(32);
     var group  = new SlideGroupClass(show, topic);
-    groups.Add(group);
+    Groups.Add(group);
 
     var height = 0.0;
     foreach (var iv in show.GetTopicItems(topic)) {
@@ -511,16 +530,13 @@ class TopicSlidesClass: SlideClass {
       main.Items.Add(item);
 
       if (group.Items.Length > 0 and height + item.Height >= show.Design.SlideContent.Height) {
-        ++show.CompleteCount;
         group = new SlideGroupClass(show, topic);
-        groups.Add(group);
+        Groups.Add(group);
         height = 0.0;
       }
       group.Items.Add(item);
       height += item.Height + show.Design.ItemSpacer;
     }
-
-    Groups = groups.Values;
   }
 
   ShowSet(ShowClass show, title, footer, SlideGroupClass group, count, number) = Block {
@@ -564,9 +580,8 @@ class TopicSlidesClass: SlideClass {
     if (Pause) {
       var number = 0;
       foreach (var group in Groups) {
-        foreach (var item in group.Items) {
+        foreach (var item in group.Items)
           ShowSet(show, group.Title, Main.Title, group, each1, number);
-        }
         number += group.Items.Length;
         show.PageIndex++;
       }
@@ -577,6 +592,13 @@ class TopicSlidesClass: SlideClass {
       show.PageIndex++;
     }
   };
+
+  override void CountSlidePage(ShowClass show) {
+    if (Pause)
+      show.PageTotal += Groups.Length;
+    else
+      show.PageTotal++;
+  }
 }
 //======================================================================
 
@@ -586,6 +608,7 @@ class ShowClass: BaseViewClass {
   ShowDesignClass            Design;
   var                        TypeFlags,
                              PageIndex,
+                             PageTotal,
                              CompleteCount;
   ListClass<TitleSlideClass> Groups;
 
@@ -621,6 +644,9 @@ class ShowClass: BaseViewClass {
     Margin: Design.SlideMargin;
     Style.MainStyle;
 
+    PageTotal = 1;
+    foreach (var slide in SlideDeck)
+      slide.CountSlidePage(this);
 
     PageIndex = 0;
     AddSlide(new IntroSlideClass(Title));
@@ -647,7 +673,6 @@ class ShowClass: BaseViewClass {
 
         var topics = slidevar.?Topics;
         if (exists topics) {
-          ++CompleteCount;
           var ts = new TitleSlideClass(slidevar);
           Groups.Add(ts);
           SlideDeck.Add(ts);
@@ -672,6 +697,7 @@ class ShowClass: BaseViewClass {
               SlideDeck.Add(s);
             }
           }
+          ts.StartCount    = first;
           ts.CompleteCount = CompleteCount - first;
         }
         else
