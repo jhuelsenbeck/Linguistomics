@@ -292,7 +292,7 @@ class TitleSlideClass: SlideClass {
 
   override AddSlidePage(ShowClass show, title, footer) = Block {
     show.Design.HeaderFooter(show, this, null, null);
-    show.Design.TitlePage(Title, Colors.Black);
+    show.Design.TitlePage(title, Colors.Black);
     show.PageIndex++;
   };
 }
@@ -300,30 +300,32 @@ class TitleSlideClass: SlideClass {
 //======================================================================
 
 class IntroSlideClass: SlideClass {
-  static NameHeight  = 18 pts;
-  static TitleHeight = 32 pts;
-  static NameGap     = 10 pts;
+  static NameHeight = 18 pts;
+  static NameGap    = 10 pts;
 
   Constructor(title) {
     super.Constructor(title, null);
   }
 
   override AddSlidePage(ShowClass show, title, footer) = Block {
-    show.Design.HeaderFooter(show, this, title, footer);
+    show.Design.HeaderFooter(show, this, null, null);
     ShowBody(show);
     show.PageIndex++;
   };
 
   override ShowBody(ShowClass show) = Block {
-    var gap = (show.Design.SlideContent.Height - TitleHeight*2 - (NameGap+NameHeight)*(show.AuthorList.Length+1)) * 0.25;
+    var title = Paragraph {
+      TextHeight: 32 pts;
+      show.Title;
+    };
+
+    var gap = (show.Design.SlideContent.Height - LayoutSize(title).Height - (NameGap+NameHeight)*(show.AuthorList.Length+1)) * 0.25;
 
     ParAlignment: ParAlignments.Center;
-    TextHeight: NameHeight;
+    title;
 
-    Paragraph {
-      TextHeight: TitleHeight;
-      Title;
-    };
+
+    TextHeight: NameHeight;
 
     foreach (var author in show.AuthorList) {
       Paragraph {
