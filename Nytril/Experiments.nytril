@@ -102,7 +102,7 @@ class ModeClass {
   RunExperimentClass[] Run;
 
   Constructor(ModelFolderClass model, name, generations, preburn, print, marginal) {
-    Name       = name;
+    Name       = model.Name + "-" + name;
     Model      = model;
     RootFolder = model.RootFolder Folder(name);
     Run        = new RunExperimentClass(this, each ["Run1", "Run2"], generations, preburn, print, marginal);
@@ -122,9 +122,9 @@ class ModelFolderClass {
   ModeClass Posterior,
             Marginal;
 
-  Constructor(ExperimentClass experiment, name) {
-    Name       = name;
-    RootFolder = experiment.RootFolder Folder(name);
+  Constructor(ExperimentClass experiment, folder, name=null) {
+    Name       = name ?? folder;
+    RootFolder = experiment.RootFolder Folder(folder);
     Posterior  = new ModeClass(this, "Posterior", 1_000_000, 20_000, 1000, false);
     Marginal   = new ModeClass(this, "Marginal", 50_000, 5000, 100, true);
   }
@@ -180,7 +180,7 @@ abstract class ExperimentClass: FactClass {
     ExampleConcept = new ExampleConceptClass(Data, Trial.ExampleConcept);
     CalcStatic     = new CalcRatesClass(Data, Rule);
     CalcExperiment = new CalcRatesClass(Data, Rule, new TransitionClass(Data, Rule, true));
-    Custom         = new ModelFolderClass(this, "Custom");
+    Custom         = new ModelFolderClass(this, "Custom", rule.Name);
     JC69           = new ModelFolderClass(this, "JC69");
     GTR            = new ModelFolderClass(this, "GTR");
     Models = [
@@ -249,6 +249,31 @@ abstract class ExperimentClass: FactClass {
     }
   };
 
+  ShowTrees(ModelFolderClass folder) = Block {
+    var any = false;
+    foreach (var r in folder.Posterior.Run) {
+      if (valid r.Tree) {
+        any = true;
+        break;
+      }
+    }
+    if (any) {
+      var w = DocMetrics.TreeFigureWidth;
+
+      Style.Header1 {
+        Lang.Model;
+        ColonSpace;
+        folder.Name;
+      };
+
+      foreach (var r in folder.Posterior.Run) {
+        if (valid r.Tree)
+          Style.ShowTree("Run {0}"(each1), null, r.Tree, w);
+      }
+    }
+  };
+
+
   ShowExperiment = Block {
     Style.Header1 {
       Lang.Experiment;
@@ -258,11 +283,10 @@ abstract class ExperimentClass: FactClass {
       Style.DQuote {Name};
     };
 
-    var w = DocMetrics.TreeFigureWidth;
-    Style.ShowTree("Prior", null, PriorTree, w);
-    Style.ShowTree("Tree 1", null, Custom.Posterior.Run[0].Tree, w);
-    Style.ShowTree("Tree 2", null, Custom.Posterior.Run[1].Tree, w);
-    Style.ShowTree("GTR", null, GTR.Posterior.Run[0].Tree, w);
+    Style.ShowTree("Prior", null, PriorTree, DocMetrics.TreeFigureWidth);
+    ShowTrees(Custom);
+    ShowTrees(JC69);
+    ShowTrees(GTR);
   };
 
   LangNumber(LanguageClass language) = Data.Languages.FindFirstIndex(language)+1;
