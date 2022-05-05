@@ -71,8 +71,7 @@ typedef SegmentDictionary DictionaryClass<SegmentClass>;
 
 class WordClass: FactClass {
   field          Plain,
-                 Text,
-                 SegmentCount;
+                 Text;
   LanguageClass  Language;
   CognateClass   Cognate;
   SegmentClass[] Segments,
@@ -80,19 +79,18 @@ class WordClass: FactClass {
                  Padded;
 
   Constructor(SegmentDictionary dictionary, LanguageClass language, CognateClass cognate, text) {
-    super.Constructor(text+cognate.Concept.Name+cognate.Name+language.Name);
+    super.Constructor(valid cognate ? text+cognate.Concept.Name+cognate.Name+language.Name : #71f32657-a37c-4f1d-abba-87b928e9d80b#);
 
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
-    Text       = text.GetString(NormalizationForms.FormC);
-    Plain      = Text.FindSlice(c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
-    Language   = language;
-    Cognate    = cognate;
+    Text     = text.GetString(NormalizationForms.FormC);
+    Plain    = Text.FindSlice(c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
+    Language = language;
+    Cognate  = cognate;
 
     if (valid Text) {
       var segments = dictionary.FindTokens(Text, IPA.NoSegment);
-      Aligned      = segments.FindSlice(s => s.Gap or (not s.Punctuation));
-      Segments     = segments.FindSlice(s => not s.Punctuation);
-      SegmentCount = Segments.Length;
+      Aligned  = segments.FindSlice(s => s.Gap or (not s.Punctuation));
+      Segments = segments.FindSlice(s => not s.Punctuation);
 
       // Test that the word's text is the same as the segments converted back into text
       var view = Span {(each segments).Ipa};
@@ -101,11 +99,11 @@ class WordClass: FactClass {
       Link.Connect(this, Segments);
       Link.Connect(this, cognate);
       Link.Connect(this, language);
+      Link.Connect(language, cognate);
     }
     else {
-      Segments     = [];
-      Aligned      = [];
-      SegmentCount = 0;
+      Segments = [];
+      Aligned  = [];
     }
   }
 
@@ -248,13 +246,15 @@ class CognateClass: FactClass {
 
 class TaxonClass {
   var           Variable,
-                Index;
+                Index,
+                WordCount;
   LanguageClass Language;
 
   Constructor(LanguageClass language) {
-    Index    = each0;
-    Language = language;
-    Variable = language.GlobalVariableName;
+    Index     = each0;
+    WordCount = 0;
+    Language  = language;
+    Variable  = language.GlobalVariableName;
   }
 
   override GetLayoutTip = Span {
@@ -295,21 +295,24 @@ class WordPairClass {
 //======================================================================
 
 class DataSetClass {
-  LanguageClass[] Languages;
-  SegmentClass[]  UniqueSegments,
-                  SortedSegments,
-                  DisplaySegments;
-  CognateClass[]  UsedCognates,
-                  SortedCognates;
-  ConceptClass[]  UsedConcepts;
-  TaxonClass[]    Taxa;
-  MatrixClass     TransitionCount;
-  var             Description,
-                  MaxLanguageName,
-                  WordCount,
-                  SegmentCount,
-                  UniqueCount,
-                  TransitionMax;
+  LanguageClass[]             Languages;
+  SegmentClass[]              UniqueSegments,
+                              SortedSegments,
+                              DisplaySegments;
+  CognateClass[]              UsedCognates,
+                              SortedCognates;
+  ConceptClass[]              UsedConcepts;
+  TaxonClass[]                Taxa;
+  MatrixClass                 TransitionCount;
+  DictionaryClass<TaxonClass> TaxonSet;
+  WordClass                   DefWord;
+  VectorClass                 WordList;
+  var                         Description,
+                              MaxLanguageName,
+                              WordCount,
+                              SegmentCount,
+                              UniqueCount,
+                              TransitionMax;
 
   Constructor(includewords, LanguageClass[] languages, description) {
     Languages       = languages;
@@ -317,13 +320,21 @@ class DataSetClass {
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
+    DefWord         = new(null, languages[0], null, Empty);
 
-    var languageset = new DictionaryClass<LanguageClass>(languages.Length);
+
+    TaxonSet = new(languages.Length);
+    ListClass<TaxonClass> tlist = new(languages.Length);
+
     foreach (var l in languages) {
-      var n = l.GlobalVariableName;
-      languageset.Add(l, n);
+      var taxon = new TaxonClass(l);
+      tlist.Add(taxon);
+      TaxonSet.Add(taxon, taxon.Variable);
+      if (taxon.Variable.Length > MaxLanguageName)
+        MaxLanguageName = taxon.Variable.Length;
     }
-    Taxa = new TaxonClass(each languages);
+    Taxa     = tlist.Values;
+    WordList = VectorInit(null, Taxa.Length);
 
     // Build a dictionary with IPA text as the key
     var dictionary = new SegmentDictionary(256);
@@ -332,7 +343,6 @@ class DataSetClass {
         dictionary.Add(segment, segment.Ipa);
     }
 
-    var set         = new DictionaryClass(1024);
     var clist       = new ListClass<CognateClass>(1024);
     var conceptlist = new ListClass<ConceptClass>(256);
 
@@ -361,15 +371,8 @@ class DataSetClass {
           if (inc) {
             var count = 0;
             foreach (var word in cognate) {
-              var n = word.GlobalVariableName;
-              if (languageset.Contains(n)) {
-                if (set.Add(n, n)) {
-                  if (n.Length > MaxLanguageName)
-                    MaxLanguageName = n.Length;
-                }
-                if (valid word)
-                  ++count;
-              }
+              if (valid word and TaxonSet.Contains(word.GlobalVariableName))
+                ++count;
             }
             if (count > 1) {
               WordCount += count;
@@ -422,31 +425,25 @@ class DataSetClass {
   }
 
   void ComputeCognate(SegmentDictionary dictionary, CognateClass cognate) {
-    var words     = new ListClass<WordClass>(Taxa.Length);
+    WordList.Init(DefWord);
     var maxlength = 0;
 
-    foreach (var taxon in Taxa) {
-      var word = null;
-      foreach (var langword in cognate.Variable) {
-        LinkTypes.Link.Connect(taxon.Language, cognate);
+    foreach (var langword in cognate.Variable) {
+      var taxon = TaxonSet.FindKey(langword.GlobalVariableName);
+      if (valid taxon) {
+        var word = new WordClass(dictionary, taxon.Language, cognate, langword);
+        maxlength = Math.Max([maxlength, word.Aligned.Length]);
 
-        if (langword.GlobalVariableName == taxon.Variable) {
-          var w = new WordClass(dictionary, taxon.Language, cognate, langword);
-          maxlength = Math.Max([maxlength, w.Aligned.Length]);
-
-          foreach (var s in w.Segments) {
-            ++SegmentCount;
-            ++s.UsedCount;
-          }
-
-          word = w;
-          break;
+        foreach (var s in word.Segments) {
+          ++SegmentCount;
+          ++s.UsedCount;
         }
+        taxon.WordCount++;
+        WordList.SetValue(taxon.Index, word);
       }
-      words.Add(word ?? new WordClass(dictionary, taxon.Language, cognate, Empty));
     }
 
-    cognate.Words     = words.Values;
+    cognate.Words     = WordList.Values;
     cognate.MaxLength = maxlength;
 
     foreach (var word in cognate.Words) {

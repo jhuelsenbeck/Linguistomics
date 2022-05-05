@@ -12,6 +12,8 @@ class WordClass {
   }
 }
 
+//Main.Run = new MyDocClass.Out;
+
 //================================================================
 
 class ConceptClass {
@@ -20,35 +22,33 @@ class ConceptClass {
 
   Constructor(name) {
     Name  = name;
-    Words = new DictionaryClass(16, WordClass);
+    Words = new DictionaryClass<WordClass>(16);
   }
 }
 
 //================================================================
 
 class LogSchemaClass: SchemaClass {
-  var Language,
-      Concept,
-      Text,
-      Spelling,
-      Concepts;
-
+  DB.FieldClass                 Language,
+                                Concept,
+                                Text,
+                                Spelling;
+  DictionaryClass<ConceptClass> Concepts;
 
   Constructor {
     super.Constructor("log");
-    Language = new FieldClass("Language", ValueTypes.String);
-    Concept  = new FieldClass("Concept", ValueTypes.String);
-    Text     = new FieldClass("Text", ValueTypes.String);
-    Spelling = new FieldClass("Spelling", ValueTypes.String);
+    Concepts = new(1024);
+    Language = new("Language", ValueTypes.String);
+    Concept  = new("Concept", ValueTypes.String);
+    Text     = new("Text", ValueTypes.String);
+    Spelling = new("Spelling", ValueTypes.String);
     AddField(Language);
     AddField(Concept);
     AddField(Text);
     AddField(Spelling);
-
-    Concepts = new DictionaryClass(1024, ConceptClass);
   }
 
-  GetData(view) {
+  void GetData(view) {
     foreach (var row in view) {
       var cname = row.FindValue(Concept);
       var concept = Concepts.FindKey(cname);
@@ -140,5 +140,4 @@ Main.Documents = [
   new MyDocClass
 ];
 
-Main.Run = new MyDocClass.Out;
 

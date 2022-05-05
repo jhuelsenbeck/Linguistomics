@@ -62,13 +62,13 @@ class LogSchemaClass: SchemaClass {
     AddField(Text);
     AddField(Code);
 
-    var list = new ListClass(2048, SegmentClass);
+    var list = new ListClass<SegmentClass>(2048);
     var view = ReadTextFile(res "BIPA.txt", true);
     foreach (var row in view)
       list.Add(new SegmentClass(row.FindValue(Description), row.FindValue(Text), row.FindValue(Code)));
     Segments  = list.Values;
 
-    var fset = new DictionaryClass(128, FeatureClass);
+    var fset = new DictionaryClass<FeatureClass>(128);
     foreach (var s in Segments) {
       From = MouthPlacements.None;
       Via  = MouthPlacements.None;
@@ -293,5 +293,5 @@ Main.Documents = [
   new MyDocClass
 ];
 
-Main.Run = new MyDocClass.Out;
+//Main.Run = new MyDocClass.Out;
 

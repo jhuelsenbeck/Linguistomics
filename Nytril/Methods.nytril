@@ -609,6 +609,35 @@ namespace TableFigures.ManualAlignment {
 
 //======================================================================
 
+namespace TableFigures.WordCountTable {
+  WordDisplay(ExperimentClass experiment) = SQuote {
+    TextCase: TextCases.AllLower;
+    Trial.FigureConcept.GlobalVariableName;
+    eos;
+  };
+
+  Caption(ExperimentClass experiment) = FigureCaption {
+    "Manual alignment of the words for the concept ";
+    WordDisplay(experiment);
+  };
+
+  Body(ExperimentClass experiment) = LanguageTable {
+    Columns: [1.5 inches, 1 inches];
+    LanguageTitleRow {
+      Lang.Language; Lang.WordForms;
+    };
+
+    foreach (var taxon in experiment.Data.Taxa) {
+      Row {
+        taxon.Language;
+        taxon.Language.FindFacts(WordClass).Length;
+      };
+    }
+  };
+}
+
+//======================================================================
+
 namespace PaperSections.ModelInference {
   Title = "Model and Statistical Inference";
 
@@ -687,7 +716,7 @@ namespace PaperSections.DataCuration {
   Title = "Data Curation and Analyses";
 
   Body(ExperimentClass experiment) = Block {
-    var example = experiment.ExampleConcept;
+    var example = experiment.DataConcept;
 
     FirstPar {
       "Our analyses is coordinated using a program written in the Nytril programming language"; Citation {nytrilprogram}; eos;
