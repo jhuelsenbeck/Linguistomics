@@ -102,6 +102,13 @@ AncestorNode(i) = Equation {
     i;
   };
 };
+
+//======================================================================
+
+Condition = HBox {
+  Separator: Tex.vert;
+};
+
 //======================================================================
 
 namespace Defs {
@@ -140,317 +147,340 @@ namespace Defs {
   DefClass DirichletRate           = new(#aba00649-6075-4f81-860d-8d92dede6ca8#, "r", "Dirichlet Rate", "");
 }
 
-Condition = HBox {
-  Separator: Tex.vert;
+//======================================================================
+
+EquationClass Equations.UnknownTree = new(#c070ccfe-ee29-41be-9064-6dc6ccaa5995#, "Unknown Tree") {
+  Formula: Equation {
+     Phylogeny;
+     Equals;
+     Arguments {
+       Topology;
+       ExpectedEvents;
+     }
+  };
 };
 
-namespace Equations {
-  EquationClass UnknownTree = new(#c070ccfe-ee29-41be-9064-6dc6ccaa5995#, "Unknown Tree") {
-    Formula: Equation {
-       Phylogeny;
-       Equals;
-       Arguments {
-         Topology;
-         ExpectedEvents;
-       }
+EquationClass Equations.LiklihoodFunction = new(#4a58876a-8295-4ea2-830a-bc1f39cd1634#, "Liklihood Function") {
+  Formula: Equation {
+    FunctionF;
+    Arguments {
+      Condition {SegmentalInfo; Phylogeny};
+      InsertionRate;
+      DeletionRate;
+      RateMatrixParams;
     };
   };
+};
 
-  EquationClass LiklihoodFunction = new(#4a58876a-8295-4ea2-830a-bc1f39cd1634#, "Liklihood Function") {
-    Formula: Equation {
-      FunctionF;
-      Arguments {
-        Condition {SegmentalInfo; Phylogeny};
-        InsertionRate;
-        DeletionRate;
-        RateMatrixParams;
-      };
+EquationClass Equations.MarginalLiklihood = new(#311eaf7f-7d9e-4569-868f-eda0cc0ac959#, "Marginal Liklihood") {
+  Formula: Equation {
+    FunctionF;
+    Arguments {
+      SegmentalInfo;
     };
   };
+};
 
-  EquationClass MarginalLiklihood = new(#311eaf7f-7d9e-4569-868f-eda0cc0ac959#, "Marginal Liklihood") {
-    Formula: Equation {
-      FunctionF;
-      Arguments {
-        SegmentalInfo;
-      };
+EquationClass Equations.BayesianEstimation = new(#a6660b63-6222-4967-93f4-589f47b986ce#, "Bayesian Estimation") {
+  Formula: Equation {
+    FunctionF;
+    Arguments {
+      Phylogeny;
+      InsertionRate;
+      DeletionRate;
+      Condition{RateMatrixParams; SegmentalInfo};
     };
-  };
-
-  EquationClass BayesianEstimation = new(#a6660b63-6222-4967-93f4-589f47b986ce#, "Bayesian Estimation") {
-    Formula: Equation {
-      FunctionF;
-      Arguments {
-        Phylogeny;
-        InsertionRate;
-        DeletionRate;
-        Condition{RateMatrixParams; SegmentalInfo};
-      };
-      Equals;
-      Fraction {
-        LiklihoodFunction;
-        Span {
-          FunctionF;
-          Arguments {
-            Phylogeny;
-            InsertionRate;
-            DeletionRate;
-            RateMatrixParams;
-          };
+    Equals;
+    Fraction {
+      LiklihoodFunction;
+      Span {
+        FunctionF;
+        Arguments {
+          Phylogeny;
+          InsertionRate;
+          DeletionRate;
+          RateMatrixParams;
         };
+      };
 
-        Span {
-          FunctionF;
-          Arguments {
-            SegmentalInfo;
-          };
+      Span {
+        FunctionF;
+        Arguments {
+          SegmentalInfo;
         };
       };
     };
   };
+};
 
-  EquationClass ExpectedEventsPerBranch = new(#64e8f644-cd4b-45f6-ba4a-8c947a356458#, "Expected Events per Branch") {
-    Formula: Equation {
-      ExpectedEvents;
-      Equals;
-      InParens {
-        Time sub (Tex.sigma sub sym.i);
-        Minus;
-        Time sub sym.i;
-      };
-      Tex.times;
-      SubstitutionRate sub sym.i;
+EquationClass Equations.ExpectedEventsPerBranch = new(#64e8f644-cd4b-45f6-ba4a-8c947a356458#, "Expected Events per Branch") {
+  Formula: Equation {
+    ExpectedEvents;
+    Equals;
+    InParens {
+      Time sub (Tex.sigma sub sym.i);
+      Minus;
+      Time sub sym.i;
+    };
+    Tex.times;
+    SubstitutionRate sub sym.i;
+  };
+};
+
+EquationClass Equations.PossibleTrees = new(#38134545-1719-4b8b-9af4-cb18eab9d09e#, "Possible Rooted Trees") {
+  Formula: Equation {
+    BN;
+    Equals;
+    InParens {MaxBranch};
+    "!!";
+    Equals;
+    ProductList {
+      1; 3; MaxBranch;
     };
   };
+};
 
-  EquationClass PossibleTrees = new(#38134545-1719-4b8b-9af4-cb18eab9d09e#, "Possible Rooted Trees") {
-    Formula: Equation {
-      BN;
-      Equals;
-      InParens {MaxBranch};
-      "!!";
-      Equals;
-      ProductList {
-        1; 3; MaxBranch;
-      };
-    };
-  };
-
-  EquationClass InDelDistribution = new(#db4b99ec-6725-4b11-b873-f8ab6698ac16#, "Indel Distribution") {
-    Formula: Equation {
-      RateParameter;
-      Equals;
-      Negative;
-      Summation {
-        Lower: sym.i;
-        InParens {sym.ni; sym.qii};
-        Plus;
-        WordLength;
-        InsertionRate;
-        Plus;
-        InParens {WordLength; Minus; 1};
-        SubstitutionRate;
-      };
-    };
-  };
-
-  EquationClass InDelProbability = new(#01728f12-67b4-4bd0-ab13-e4124d4ac7ae#, "In-Del Probability") {
-    Formula: Equation {
-      Negative;
-      Summation {
-        Lower: sym.i;
-        InParens {sym.ni; sym.qii};
-      };
-      Divide;
-      RateParameter;
-    };
-  };
-
-  EquationClass ProbOfAcceptingProposal = new(#f85ca0eb-aa0b-49ac-a97c-58f95f15b181#, "Probability of accepting the proposed value") {
-    Formula: Equation {
-      ProbOfAccepting;
-      Equals;
-      "min";
-      InParens {
-        "1, ";
-        Fraction {
-          FunctionF; Arguments {
-            Condition{Unknown; NewValueProposal};
-          };
-
-          FunctionF; Arguments {Condition {Unknown; RateMatrixParams}};
-        };
-        Times;
-        Fraction {
-          FunctionF; Arguments {NewValueProposal};
-          FunctionF; Arguments {RateMatrixParams};
-        };
-        Times;
-        Fraction {
-          NewProposal(NewValueProposal, RateMatrixParams);
-          NewProposal(RateMatrixParams, NewValueProposal);
-        };
-      };
-    };
-  };
-
-  EquationClass ModelComparison = new(#99c4daca-c075-42c3-beb8-d89b4148d9a4#, "Model Comparison") {
-    Formula: Equation {
-      BayesFactor sub 12;
-      Equals;
-      Fraction {
-        PSM(1);
-        PSM(2);
-      }
-    };
-  };
-
-  EquationClass MarginalLikelihoodParameters = new(#a25bcd04-7841-4a0d-9859-acf4ea460c71#, "Marginal Likelihood Parameters") {
-    Formula: Equation {
-      Prob(SegmentalInfo);
-      Equals;
-      Summation {Lower: Topology};
-      IntegrateOver(ExpectedEvents);
-      IntegrateOver(RateMatrixParams);
-      IntegrateOver(InsertDelete(Tex.lt));
-      ProbVar(SegmentalInfo);
-      Space;
-      ProbALL;
-      FD(ExpectedEvents);
-      FD(RateMatrixParams);
-      FD(InsertionRate);
-      FD(DeletionRate);
-    };
-  };
-
-  EquationClass MarginalizationOverAlignments = new(#666bdb91-49be-408a-af3e-fe7ca5c7aebb#, "Marginalization Over Alignments") {
-    Formula: Equation {
-      ProbVar(SegmentalInfo);
-      Equals;
-      Summation {
-        Lower: HomologyMap;
-        ProbVar(SegmentalAlignment);
-        Space;
-        Prob(CommaList {Condition{SegmentalAlignment; HomologyMap}; SegmentalInfo});
-        Space;
-        Prob(HomologyMap);
-      };
-    };
-  };
-
-  EquationClass PosteriorProbabilityDistribution = new(#5294924e-b618-4073-adf4-bf782cc45e65#, "Posterior Probability Distribution") {
-    Formula: Equation {
-      Prob(CommaList {
-        Topology;
-        ExpectedEvents;
-        RateMatrixParams;
-        InsertionRate;
-        Condition{DeletionRate; SegmentalInfo};
-      });
-      Equals;
-      Fraction {
-        Span {
-          ProbVar(SegmentalInfo);
-          Space;
-          ProbALL;
-        };
-        Prob(SegmentalInfo);
-      }
-    };
-  };
-
-  EquationClass BayesTheorem = new(#7a57afd3-1293-4a75-8518-9ce32bbe9fa8#, "Bayes’ Theorem") {
-    Formula: Equation {
-      PPO;
-      Equals;
-      Fraction {
-        Span {
-          POP;
-          Space;
-          PP;
-        };
-        PO;
-      }
-    };
-  };
-
-  EquationClass RateChange = new(#f7a964f6-414b-4e40-9d31-e63eadf32f8f#, "Rate change") {
-    Formula: Equation {
-      sym.qij;
-      Tex.geq;
-      0;
-      InParens {
-        sym.i;
-        Tex.neq;
-        sym.j;
-      }
-    };
-  };
-
-  EquationClass RatesOfChangeBetweenStates = new(#a7b02873-4fe5-47b8-9e3f-b594aef21fc3#, "Rates of change between all pairs of states") {
-    Formula: Equation {
-      RateMatrix;
-      Equals;
-      InBraces {sym.qij};
-      Equals;
-      StateSection.StateMatrix;
-      Space;
-      RateMatrixScale;
-    };
-  };
-
-  EquationClass DiagonalElements = new(#49b4a095-118d-4bbe-9fe3-80a5e13ddf28#, "The diagonal elements of the rate matrix") {
-    Formula: Equation {
-      sym.qii;
-      Equals;
-      Negative;
-      Summation {
-        Lower: Span {sym.j Tex.neq; sym.i};
-        sym.qij;
-      }
-    };
-  };
-
-  EquationClass ExponentiationOfRateMatrix = new(#05e99790-f121-4640-86a9-3a818e4a6b6e#, "Exponentiation of the rate matrix") {
-    Formula: Equation {
-      StateProbability;
-      InParens {ExpectedEvents};
-      Equals;
-      EulerNumber sup (Span {RateMatrix; ExpectedEvents});
-    }
-  };
-
-  EquationClass RateMatrixSolution = new(#7c820a26-5656-499b-93ea-047ad3513826#, "Rate matrix solution") {
-    Formula: Equation {
-      EquilibriumDistribution;
-      RateMatrix;
-      Equals;
-      Bold 0;
-    };
-  };
-
-  EquationClass EventInsertionProbability = new(#d2cd0ffe-34e5-4fab-a160-a03131651bca#, "Event insertion probability") {
-    Formula: Equation {
+EquationClass Equations.InDelDistribution = new(#db4b99ec-6725-4b11-b873-f8ab6698ac16#, "Indel Distribution") {
+  Formula: Equation {
+    RateParameter;
+    Equals;
+    Negative;
+    Summation {
+      Lower: sym.i;
+      InParens {sym.ni; sym.qii};
+      Plus;
       WordLength;
       InsertionRate;
-      Divide;
-      RateParameter;
+      Plus;
+      InParens {WordLength; Minus; 1};
+      SubstitutionRate;
     };
   };
+};
 
-  EquationClass EventDeletionProbability = new(#6b805317-a4b0-4f59-919c-0c2e21cc6bcd#, "Event deletion probability") {
-    Formula: Equation {
-      InParens {
-        WordLength;
-        Minus;
-        1;
+EquationClass Equations.InDelProbability = new(#01728f12-67b4-4bd0-ab13-e4124d4ac7ae#, "In-Del Probability") {
+  Formula: Equation {
+    Negative;
+    Summation {
+      Lower: sym.i;
+      InParens {sym.ni; sym.qii};
+    };
+    Divide;
+    RateParameter;
+  };
+};
+
+EquationClass Equations.ProbOfAcceptingProposal = new(#f85ca0eb-aa0b-49ac-a97c-58f95f15b181#, "Probability of accepting the proposed value") {
+  Formula: Equation {
+    ProbOfAccepting;
+    Equals;
+    "min";
+    InParens {
+      "1, ";
+      Fraction {
+        FunctionF; Arguments {
+          Condition{Unknown; NewValueProposal};
+        };
+
+        FunctionF; Arguments {Condition {Unknown; RateMatrixParams}};
       };
-      DeletionRate;
-      Divide;
-      RateParameter;
+      Times;
+      Fraction {
+        FunctionF; Arguments {NewValueProposal};
+        FunctionF; Arguments {RateMatrixParams};
+      };
+      Times;
+      Fraction {
+        NewProposal(NewValueProposal, RateMatrixParams);
+        NewProposal(RateMatrixParams, NewValueProposal);
+      };
     };
   };
-}
+};
+
+EquationClass Equations.ModelComparison = new(#99c4daca-c075-42c3-beb8-d89b4148d9a4#, "Model Comparison") {
+  Formula: Equation {
+    BayesFactor sub 12;
+    Equals;
+    Fraction {
+      PSM(1);
+      PSM(2);
+    }
+  };
+};
+
+EquationClass Equations.MarginalLikelihoodParameters = new(#a25bcd04-7841-4a0d-9859-acf4ea460c71#, "Marginal Likelihood Parameters") {
+  Formula: Equation {
+    Prob(SegmentalInfo);
+    Equals;
+    Summation {Lower: Topology};
+    IntegrateOver(ExpectedEvents);
+    IntegrateOver(RateMatrixParams);
+    IntegrateOver(InsertDelete(Tex.lt));
+    ProbVar(SegmentalInfo);
+    Space;
+    ProbALL;
+    FD(ExpectedEvents);
+    FD(RateMatrixParams);
+    FD(InsertionRate);
+    FD(DeletionRate);
+  };
+};
+
+EquationClass Equations.MarginalizationOverAlignments = new(#666bdb91-49be-408a-af3e-fe7ca5c7aebb#, "Marginalization Over Alignments") {
+  Formula: Equation {
+    ProbVar(SegmentalInfo);
+    Equals;
+    Summation {
+      Lower: HomologyMap;
+      ProbVar(SegmentalAlignment);
+      Space;
+      Prob(CommaList {Condition{SegmentalAlignment; HomologyMap}; SegmentalInfo});
+      Space;
+      Prob(HomologyMap);
+    };
+  };
+};
+
+EquationClass Equations.PosteriorProbabilityDistribution = new(#5294924e-b618-4073-adf4-bf782cc45e65#, "Posterior Probability Distribution") {
+  Formula: Equation {
+    Prob(CommaList {
+      Topology;
+      ExpectedEvents;
+      RateMatrixParams;
+      InsertionRate;
+      Condition{DeletionRate; SegmentalInfo};
+    });
+    Equals;
+    Fraction {
+      Span {
+        ProbVar(SegmentalInfo);
+        Space;
+        ProbALL;
+      };
+      Prob(SegmentalInfo);
+    }
+  };
+};
+
+BuildRateMatrix(states) = MatrixBlock {
+  HAlign: HAligns.Center;
+  BracketLR: Brackets.FlatRound;
+
+  foreach (var s1 in states) {
+    Row {
+      foreach (var s2 in states) {
+        if (s1 == s2)
+          Chars.EnDash;
+        else Span {
+          Defs.RateParameter sub (s1.Compare(s2) < 0 ? Span {s1; s2} : Span{s2; s1});
+          Defs.EquilibriumDistribution sub s2;
+        };
+      }
+    }
+  }
+};
+
+EquationClass Equations.GTR4 = new(#c593d288-f338-484d-9fca-b7d93e3c55be#, "4-State GTR Model") {
+  Formula: Equation {
+    RateMatrix;
+    Equals;
+    BuildRateMatrix(["A", "C", "G", "T"]);
+  };
+};
+
+EquationClass Equations.BayesTheorem = new(#7a57afd3-1293-4a75-8518-9ce32bbe9fa8#, "Bayes’ Theorem") {
+  Formula: Equation {
+    PPO;
+    Equals;
+    Fraction {
+      Span {
+        POP;
+        Space;
+        PP;
+      };
+      PO;
+    }
+  };
+};
+
+EquationClass Equations.RateChange = new(#f7a964f6-414b-4e40-9d31-e63eadf32f8f#, "Rate change") {
+  Formula: Equation {
+    sym.qij;
+    Tex.geq;
+    0;
+    InParens {
+      sym.i;
+      Tex.neq;
+      sym.j;
+    }
+  };
+};
+
+EquationClass Equations.RatesOfChangeBetweenStates = new(#a7b02873-4fe5-47b8-9e3f-b594aef21fc3#, "Rates of change between all pairs of states") {
+  Formula: Equation {
+    RateMatrix;
+    Equals;
+    InBraces {sym.qij};
+    Equals;
+    StateSection.StateMatrix;
+    Space;
+    RateMatrixScale;
+  };
+};
+
+EquationClass Equations.DiagonalElements = new(#49b4a095-118d-4bbe-9fe3-80a5e13ddf28#, "The diagonal elements of the rate matrix") {
+  Formula: Equation {
+    sym.qii;
+    Equals;
+    Negative;
+    Summation {
+      Lower: Span {sym.j Tex.neq; sym.i};
+      sym.qij;
+    }
+  };
+};
+
+EquationClass Equations.ExponentiationOfRateMatrix = new(#05e99790-f121-4640-86a9-3a818e4a6b6e#, "Exponentiation of the rate matrix") {
+  Formula: Equation {
+    StateProbability;
+    InParens {ExpectedEvents};
+    Equals;
+    EulerNumber sup (Span {RateMatrix; ExpectedEvents});
+  }
+};
+
+EquationClass Equations.RateMatrixSolution = new(#7c820a26-5656-499b-93ea-047ad3513826#, "Rate matrix solution") {
+  Formula: Equation {
+    EquilibriumDistribution;
+    RateMatrix;
+    Equals;
+    Bold 0;
+  };
+};
+
+EquationClass Equations.EventInsertionProbability = new(#d2cd0ffe-34e5-4fab-a160-a03131651bca#, "Event insertion probability") {
+  Formula: Equation {
+    WordLength;
+    InsertionRate;
+    Divide;
+    RateParameter;
+  };
+};
+
+EquationClass Equations.EventDeletionProbability = new(#6b805317-a4b0-4f59-919c-0c2e21cc6bcd#, "Event deletion probability") {
+  Formula: Equation {
+    InParens {
+      WordLength;
+      Minus;
+      1;
+    };
+    DeletionRate;
+    Divide;
+    RateParameter;
+  };
+};
+
 //======================================================================
 
 
