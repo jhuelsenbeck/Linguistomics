@@ -334,7 +334,7 @@ class DataSetClass {
         MaxLanguageName = taxon.Variable.Length;
     }
     Taxa     = tlist.Values;
-    WordList = VectorInit(null, Taxa.Length);
+    WordList = new VectorClass(Taxa.Length, null);
 
     // Build a dictionary with IPA text as the key
     var dictionary = new SegmentDictionary(256);
@@ -425,7 +425,7 @@ class DataSetClass {
   }
 
   void ComputeCognate(SegmentDictionary dictionary, CognateClass cognate) {
-    WordList.Init(DefWord);
+    WordList.SetAllValues(DefWord);
     var maxlength = 0;
 
     foreach (var langword in cognate.Variable) {
@@ -493,7 +493,7 @@ class DataSetClass {
 
   GetTransitionsCount {
     TransitionMax = 1;
-    var t = MatrixInit(null, UniqueCount, UniqueCount);
+    var t = new MatrixClass(UniqueCount, UniqueCount, null);
 
     foreach (var cognate in UsedCognates) {
       var length = cognate.Words.Length;
