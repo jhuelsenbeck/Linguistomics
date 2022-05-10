@@ -72,11 +72,32 @@ namespace Figures.ConsensusTree {
 }
 //======================================================================
 
+class HoverSegmentClass: HoverClass {
+  SegmentClass Segment;
+  var          Index;
+
+  Constructor(SegmentClass segment, index) {
+    super.Constructor(segment, HoverTypes.Tip);
+    Segment = segment;
+    Index   = index;
+  }
+
+  override GetLayoutTip = HBox {
+    VAlign: VAligns.Center;
+    Lang.Occurrences(Segment.LangUsedCount[Index]);
+    Segment.GetLayoutTip;
+  };
+
+  override GetQuery = Segment.FindFacts(WordClass);
+}
+
+//======================================================================
+
 namespace Figures.SegmentPercentages {
   Title = "Segment Occurance Rates";
 
   Caption(ExperimentClass experiment) = Span {
-    "Comparison of normalized occurance rates of segments in each language. Segments are sorted by {0} rates. "(experiment.Data.Taxa[0].Language);
+    "Comparison of occurance rates of segments in each language. Segments are sorted by rates in {0}. Rates are normalized to the rate of the most frequently ocurring segment \"{1}.\""(experiment.Data.Taxa[0].Language, experiment.Data.MostFrequentSegment.ShowSegment);
   };
 
   LangCanvas(SegmentClass[] segments, TaxonClass taxon, width, height) = HBox {
@@ -89,7 +110,7 @@ namespace Figures.SegmentPercentages {
   SegmentBar(SegmentClass segment, index, width, height) = Canvas {
     Size: Size(width, height * segment.LangUsedFrequency[index]);
     Background: ChartColor(0);
-    Hover: new HoverClass(segment, HoverTypes.Tip);
+    Hover: new HoverSegmentClass(segment, index);
   };
 
   SegmentLabel(SegmentClass segment, width) = HBox {
@@ -124,7 +145,7 @@ namespace Figures.SegmentPercentages {
 
       Row {
         Empty;
-        TextHeight: 0.6 * bw;
+        TextHeight: 1.1 * bw;
         HBox {
           SegmentLabel(each segments, bw);
         };
@@ -249,7 +270,7 @@ namespace Figures.Alignment {
       if (c == '1' and i < segments.Length)
         segments[i++].ShowBlock;
       else
-        IPA.Segments.GapSegment.ShowBlock;
+        IPASegments.GapSegment.ShowBlock;
     }
   };
 
@@ -490,7 +511,7 @@ namespace PaperSections.RomanceLanguagePhylogeny {
 namespace PaperSections.Discussion {
   Title = "Discussion";
 
-  SoundChange(op) = Span {IPA.Segments.ah.ShowDoc; op; IPA.Segments.oh.ShowDoc};
+  SoundChange(op) = Span {IPASegments.ah.ShowDoc; op; IPASegments.oh.ShowDoc};
 
   Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     FirstPar {
@@ -572,8 +593,8 @@ namespace PaperSections.MethodsSummary {
 namespace PaperSections.DataSummary {
   Title = Lang.Data;
 
-  K = IPA.Segments.k.ShowDoc;
-  S = IPA.Segments.s.ShowDoc;
+  K = IPASegments.k.ShowDoc;
+  S = IPASegments.s.ShowDoc;
   W = TextIpa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
 
   Body(ExperimentClass experiment, SizeClass maxsize) = Block {
@@ -612,9 +633,9 @@ namespace PaperSections.DataSummary {
       TableFigures.ManualAlignment.WordDisplay(experiment); eos;
       "The ancestral Latin form "; TextIpa{"ˈkʷ-id"}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
       "In all of the descendant languages, the secondary articulation is lost. ";
-      "In some languages, it becomes a consonant in its own right (i.e., the "; IPA.Segments.kw.ShowDoc; " of French and Walloon). ";
+      "In some languages, it becomes a consonant in its own right (i.e., the "; IPASegments.kw.ShowDoc; " of French and Walloon). ";
       "To accommodate this change, the Latin form has two segmental slots before the vowel (i.e., ";
-      IPA.Segments.kw.ShowSegment; "-id), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
+      IPASegments.kw.ShowSegment; "-id), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
     };
 
     ShowTable(experiment, maxsize, TableFigures.ManualAlignment);
@@ -798,7 +819,7 @@ namespace PaperSections.DataCuration {
 
     BodyPar {
       ParAlignment: ParAlignments.Center;
-      IPA.Segments.VlAlveolarNSAffricate.ShowFrame(3 inches, 20 pts);
+      IPASegments.VlAlveolarNSAffricate.ShowFrame(3 inches, 20 pts);
     };
 
     BodyPar {

@@ -83,12 +83,12 @@ class WordClass: FactClass {
 
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
     Text     = text.GetString(NormalizationForms.FormC);
-    Plain    = Text.FindSlice(c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
+    Plain    = Text.FindSlice(c => c != IPASegments.GapSegment.Ipa and c != IPASegments.PrimaryStress.Ipa);
     Language = language;
     Cognate  = cognate;
 
     if (valid Text) {
-      var segments = dictionary.FindTokens(Text, IPA.NoSegment);
+      var segments = dictionary.FindTokens(Text, IPA.NullSegment);
       Aligned  = segments.FindSlice(s => s.Gap or (not s.Punctuation));
       Segments = segments.FindSlice(s => not s.Punctuation);
 
@@ -301,6 +301,7 @@ class DataSetClass {
                               SortedCognates;
   ConceptClass[]              UsedConcepts;
   TaxonClass[]                Taxa;
+  SegmentClass                MostFrequentSegment;
   MatrixClass                 TransitionCount;
   DictionaryClass<TaxonClass> TaxonSet;
   WordClass                   DefWord;
@@ -336,7 +337,7 @@ class DataSetClass {
 
     // Build a dictionary with IPA text as the key
     var dictionary = new SegmentDictionary(256);
-    foreach (var segment in IPA.Segments) {
+    foreach (var segment in IPASegments) {
       if (valid segment.Ipa)
         dictionary.Add(segment, segment.Ipa);
     }
@@ -403,8 +404,10 @@ class DataSetClass {
       s.LangUsedFrequency = new VectorClass(languages.Length, null);
       s.UsedFrequency     = seg * s.UsedCount;
       foreach (var m in s.LangUsedCount) {
-        if (m > max)
-          max = m;
+        if (m > max) {
+          MostFrequentSegment = s;
+          max                 = m;
+        }
       }
     }
 
@@ -466,7 +469,7 @@ class DataSetClass {
       var a = word.Aligned;
       if (valid a) {
         if (a.Length < maxlength)
-          word.Padded = a + [IPA.Segments.GapSegment] * (maxlength - a.Length);
+          word.Padded = a + [IPASegments.GapSegment] * (maxlength - a.Length);
         else
           word.Padded = a;
       }
@@ -481,7 +484,7 @@ class DataSetClass {
       foreach (var word in cognate.Words) {
         if (valid word.Aligned) {
           ++count;
-          if (word.Padded[i] == IPA.Segments.GapSegment)
+          if (word.Padded[i] == IPASegments.GapSegment)
             ++gapcount;
         }
       }

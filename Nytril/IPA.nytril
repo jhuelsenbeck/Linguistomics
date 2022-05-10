@@ -141,6 +141,8 @@ class SegmentClass: FactClass {
 
   override GetIcon = Icons.record_voice_over;
 
+  ShowFeature(feature) = feature == Features.NoFeature ? null : feature.Name;
+
   SegmentName = Span {
     if (Features.HasFlag(Vowel)) {
       Open;
@@ -149,13 +151,14 @@ class SegmentClass: FactClass {
     }
     else
       Place;
+
     Space;
     Span {
       Separator: Space;
       if (Diacritic)
         Description;
       else
-        each Features;
+        ShowFeature(each Features);
     }
   };
 
@@ -268,6 +271,7 @@ class ConsonantClass: SegmentClass {
     Place    = place;
   }
 }
+
 //======================================================================
 
 class VowelClass: SegmentClass {
@@ -279,651 +283,145 @@ class VowelClass: SegmentClass {
     Backness = backness;
   }
 }
+
 //======================================================================
 
-
-namespace IPA {
-  NoSegment       = new SegmentClass(Tex.bigotimes, "!?", true);
-//  SpaceSegment    = new PunctuationClass(" ");
-
-  namespace Segments {
-    GapSegment      = new PunctuationClass("-") {Gap: true};
-    MissingSegment  = new PunctuationClass("?") {Gap: true};
-
-    SylableBreak     = new PunctuationClass(".");
-    PrimaryStressAlt = new PunctuationClass("'", "'");
-    PrimaryStress    = new PunctuationClass("ˈ", "'");
-    SecondaryStress  = new PunctuationClass("ˌ", "%");
-
-    //==================================
-    // Extra segments found in word list
-    //==================================
-
-
-    rn        = new ConsonantClass(Nasal Voiced Pulmonic Fricative, Places.Uvular, "r̃", "r~");
-
-    //==================================
-    // Pulmonic Consonants
-    //==================================
-
-    // Nasal					
-    VlBilabialNasal              = new ConsonantClass(Pulmonic Nasal, Places.Bilabial, "m̥", "m_0");
-    m                            = new ConsonantClass(Voiced Pulmonic Nasal Occlusive, Places.Bilabial, "m", "m");
-    VdLabioDentalNasal           = new ConsonantClass(Voiced Pulmonic Nasal Occlusive Labial Dental, Places.LabioDental, "ɱ", "F");
-    VdLinguoLabioNasal           = new ConsonantClass(Voiced Pulmonic Nasal Lingual Labial, Places.LinguoLabial, "n̼", "m_d");
-    VlAlveolarNasal              = new ConsonantClass(Pulmonic Nasal, Places.Alveolar, "n̥", "n_0");
-    VdApicalDentalNasalStop      = new ConsonantClass(Pulmonic Nasal Stop Dental, Places.Dental, "n̪", "");  // Check properties
-
-    n                            = new ConsonantClass(Voiced Pulmonic Nasal Occlusive, Places.Alveolar, "n", "n");
-    VlRetroFlexNasal             = new ConsonantClass(Pulmonic Nasal, Places.Retroflex, "ɳ̊", "n`_0");
-    VdRetroFlexNasal             = new ConsonantClass(Voiced Pulmonic Nasal Occlusive, Places.Retroflex, "ɳ", "n`");
-    VlPalatalNasal               = new ConsonantClass(Pulmonic Nasal, Places.Palatal, "ɲ̊", "J_0");
-    VdPalatalNasal               = new ConsonantClass(Voiced Pulmonic Nasal Occlusive, Places.Palatal, "ɲ", "J");
-    VlVelarNasal                 = new ConsonantClass(Pulmonic Nasal, Places.Velar, "ŋ̊", "N_0");
-    nya                          = new ConsonantClass(Voiced Pulmonic Nasal Occlusive, Places.Velar, "ŋ", "N");
-
-    nywa                         = new ConsonantClass(Voiced Pulmonic Nasal Stop, Places.Labial, "ŋʷ", "");  // Check properties
-
-
-    VdUvularNasal                = new ConsonantClass(Voiced Pulmonic Nasal Occlusive, Places.Uvular, "ɴ", "N\\");
-														
-    // Stop
-    p                            = new ConsonantClass(Pulmonic Stop Occlusive, Places.Bilabial, "p", "p");
-    b                            = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Bilabial, "b", "b");
-    VlLabioDentalStop            = new ConsonantClass(Pulmonic Stop Labial Dental, Places.LabioDental, "p̪", "p_d");
-    VdLabioDentalStop            = new ConsonantClass(Voiced Pulmonic Stop Labial Dental, Places.LabioDental, "b̪", "b_d");
-    VlLinguoLabialStop           = new ConsonantClass(Pulmonic Stop Lingual Labial, Places.LinguoLabial, "t̼", "");
-    VdLinguoLabialStop           = new ConsonantClass(Voiced Pulmonic Stop Lingual Labial, Places.LinguoLabial, "d̼");
-    VdAlveolarStop               = new ConsonantClass(Voiced Stop, Places.Alveolar, "dː", "");  // Check
-
-
-    t                            = new ConsonantClass(Pulmonic Stop Occlusive, Places.Alveolar, "t", "t");
-
-    VlDentalAlveolar             = new ConsonantClass(Pulmonic Dental, Places.Dental, "tː", "t:");  // Check properties
-
-    d                            = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Alveolar, "d", "d");
-    VlRetroflexStop              = new ConsonantClass(Pulmonic Stop Occlusive, Places.Retroflex, "ʈ", "t`");
-    VdRetroflexStop              = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Retroflex, "ɖ", "d`");
-    tya                          = new ConsonantClass(Pulmonic Stop Occlusive, Places.Palatal, "c", "c");
-    VdPalatalStop                = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Palatal, "ɟ", "J\\");
-    k                            = new ConsonantClass(Pulmonic Stop Occlusive, Places.Velar, "k", "k");
-
-    kk                           = new ConsonantClass(Velarized Pulmonic, Places.Velar, "kː", "k:");
-
-
-    kw                           = new ConsonantClass(Pulmonic Stop Occlusive Velar Labial, Places.LabialVelar, "kʷ", "k_W");
-    kh                           = new ConsonantClass(Pulmonic Stop, Places.Velar, "kʰ", "k_h");  // Check properties
-
-    kpalatal                     = new ConsonantClass(Palatalized Stop, Places.Palatal, "kʲ");
-
-
-    tt                           = new ConsonantClass(Pulmonic Stop, Places.Alveolar, "tʰ", "t_h");  // Check properties
-
-
-
-    g                            = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Velar, "ɡ", "g");
-    gw                           = new ConsonantClass(Voiced Pulmonic Stop Occlusive Velar Labial, Places.LabialVelar, "ɡʷ", "g_W");
-
-    VlUvularStop                 = new ConsonantClass(Pulmonic Stop Occlusive, Places.Uvular, "q", "q");
-    VdUvularStop                 = new ConsonantClass(Voiced Pulmonic Stop Occlusive, Places.Uvular, "ɢ", "G\\");
-    VdEpiglottalStop             = new ConsonantClass(Pulmonic Stop, Places.Pharyngeal, "ʡ", ">\\");
-    GlottalStop                  = new ConsonantClass(Pulmonic Stop, Places.Glottal, "ʔ", "?");
-		
-    // Sibilant Fricative										
-    s                            = new ConsonantClass(Pulmonic Sibilant Fricative Strident Obstruent Continuant, Places.Alveolar, "s", "s");
-    zz                           = new ConsonantClass(Voiced Pulmonic Sibilant Fricative Strident Obstruent Continuant, Places.Alveolar, "z", "z");
-    shh                          = new ConsonantClass(Pulmonic Sibilant Fricative Strident Obstruent Continuant, Places.PostAlveolar, "ʃ", "S");
-    gzah                         = new ConsonantClass(Voiced Pulmonic Sibilant Fricative Strident Obstruent Continuant, Places.PostAlveolar, "ʒ", "Z");
-    VlRetroflexSibFricative      = new ConsonantClass(Pulmonic Sibilant Fricative Strident Obstruent Continuant, Places.Retroflex, "ʂ", "s`");
-    VdRetroflexSibFricative      = new ConsonantClass(Voiced Pulmonic Sibilant Fricative Strident Obstruent Continuant, Places.Retroflex, "ʐ", "z`");
-    VlPalatalSibFricative        = new ConsonantClass(Pulmonic Sibilant Fricative Strident Obstruent Continuant, Places.Palatal, "ɕ", "s\\");
-    VdPalatalSibFricative        = new ConsonantClass(Voiced Pulmonic Sibilant Fricative Strident Obstruent Continuant, Places.Palatal, "ʑ", "z\\");
-
-    // Fricative										
-    VlBilabialFricative          = new ConsonantClass(Pulmonic Fricative Obstruent Continuant, Places.Bilabial, "ɸ", "p\\");
-    bb                           = new ConsonantClass(Voiced Pulmonic Fricative Obstruent Continuant, Places.Bilabial, "β", "B");
-    f                            = new ConsonantClass(Pulmonic Fricative Obstruent Continuant Strident Labial Dental, Places.LabioDental, "f", "f");
-    v                            = new ConsonantClass(Voiced Pulmonic Fricative Obstruent Continuant Strident Labial Dental, Places.LabioDental, "v", "v");
-    VlLinguoLabialFricative      = new ConsonantClass(Pulmonic Fricative Lingual Labial, Places.LinguoLabial, "θ̼", "");
-    VdLinguoLabialFricative      = new ConsonantClass(Voiced Pulmonic Fricative Lingual Labial, Places.LinguoLabial, "ð̼", "");
-    th                           = new ConsonantClass(Pulmonic Fricative Obstruent Continuant Dental, Places.Dental, "θ", "T");
-    dd                           = new ConsonantClass(Voiced Pulmonic Fricative Obstruent Continuant Dental, Places.Dental, "ð", "D");
-    VlAlveolarFricative          = new ConsonantClass(Pulmonic Fricative, Places.Alveolar, "θ̠", "");
-    VdAlveolarFricative          = new ConsonantClass(Voiced Pulmonic Fricative, Places.Alveolar, "ð̠", "");
-    VlPostaveolarFricative       = new ConsonantClass(Pulmonic Fricative, Places.PostAlveolar, "ɹ̠̊", "");
-    VdPostalveolarFricative      = new ConsonantClass(Voiced Pulmonic Fricative, Places.PostAlveolar, "ɹ̝̊", "");
-    VdRetroflexFricative         = new ConsonantClass(Voiced Pulmonic Fricative, Places.Retroflex, "ɻ˔","");
-    sh                           = new ConsonantClass(Pulmonic Fricative Obstruent Continuant, Places.Palatal, "ç", "C");
-    VdPalatalFricative           = new ConsonantClass(Voiced Pulmonic Fricative Obstruent Continuant, Places.Palatal, "ʝ", "j\\");
-    xha                          = new ConsonantClass(Pulmonic Fricative Obstruent Continuant, Places.Velar, "x", "x");
-    juh                          = new ConsonantClass(Voiced Pulmonic Fricative Obstruent Continuant, Places.Velar, "ɣ", "G");
-    VlUvularFricative            = new ConsonantClass(Pulmonic Fricative Obstruent Continuant Strident, Places.Uvular, "χ", "X");
-    rr                           = new ConsonantClass(Voiced Pulmonic Fricative Obstruent Continuant Strident Rhotic Liquid, Places.Uvular, "ʁ", "R");
-    VlPharyngealFricative        = new ConsonantClass(Pulmonic Fricative, Places.Pharyngeal, "ħ", "X\\");
-    VdPharyngealFricative        = new ConsonantClass(Voiced Pulmonic Fricative, Places.Pharyngeal, "ʕ", "?\\");
-    h                            = new ConsonantClass(Pulmonic Fricative, Places.Glottal, "h", "h");
-    VdGlottalFricative           = new ConsonantClass(Voiced Pulmonic Fricative, Places.Glottal, "ɦ", "h\\");
-														
-    // Approximant										
-    VlLabioDentalApproximant     = new ConsonantClass(Pulmonic Approximant Labial Dental, Places.LabioDental, "ʋ̥");
-    VdLabioDentalApproximant     = new ConsonantClass(Voiced Pulmonic Approximant Vocoid Approximant Labial Dental, Places.LabioDental, "ʋ", "v\\");
-    VlPostalveolarApproximant    = new ConsonantClass(Pulmonic Approximant, Places.Alveolar, "ɹ̥");
-    VdPostalveolarApproximant    = new ConsonantClass(Voiced Pulmonic Approximant Vocoid Rhotic Liquid, Places.Alveolar, "ɹ", "r\\");
-    VlRetroflexApproximant       = new ConsonantClass(Pulmonic Approximant, Places.Retroflex, "ɻ̊");
-    VdRetroflexApproximant       = new ConsonantClass(Voiced Pulmonic Approximant Vocoid Rhotic Liquid, Places.Retroflex, "ɻ", "r\\`");
-    VlPalatalApproximant         = new ConsonantClass(Pulmonic Approximant, Places.Palatal, "j̊");
-    jg                           = new ConsonantClass(Voiced Pulmonic Approximant Vocoid Semivowel Continuant, Places.Palatal, "j", "j");
-
-    jn                           = new ConsonantClass(Nasal Approximant, Places.Palatal, "j̃", "j~");  // Check properties
-
-
-    VlVelarApproximant           = new ConsonantClass(Pulmonic Approximant, Places.Velar, "ɰ̊");
-    VdVelarApproximant           = new ConsonantClass(Voiced Pulmonic Approximant Vocoid Semivowel Continuant, Places.Velar, "ɰ", "M\\");
-    VdGlottalApproximant         = new ConsonantClass(Voiced Pulmonic Approximant, Places.Glottal, "ʔ̞");
-														
-    // Tap or Flap										
-    VdBilabialDentalFlap         = new ConsonantClass(Voiced Pulmonic TapFlap, Places.Bilabial, "ⱱ̟");
-    VdLabioDentalFlap            = new ConsonantClass(Voiced Pulmonic TapFlap Vibrant Labial Dental, Places.LabioDental, "ⱱ");
-    VdLingualLabialStop          = new ConsonantClass(Voiced Pulmonic TapFlap Lingual Labial, Places.LinguoLabial, "ɾ̼");
-    VlAlveolarFlap               = new ConsonantClass(Pulmonic TapFlap, Places.Alveolar, "ɾ̥");
-    er                           = new ConsonantClass(Voiced Pulmonic TapFlap Rhotic Liquid Vibrant, Places.Alveolar, "ɾ", "4");
-    VlRetroflexFlap              = new ConsonantClass(Pulmonic TapFlap, Places.Retroflex, "ɽ̊");
-    VdRetroflexFlap              = new ConsonantClass(Voiced Pulmonic TapFlap Rhotic Liquid Vibrant, Places.Retroflex, "ɽ", "r`");
-    VdUvularFlap                 = new ConsonantClass(Voiced Pulmonic TapFlap, Places.Uvular, "ɢ̆");
-    VdPharyngealFlap             = new ConsonantClass(Voiced Pulmonic TapFlap, Places.Pharyngeal, "ʡ̆");
-														
-    // Trill		
-    buh                          = new ConsonantClass(Voiced Pulmonic, Places.Bilabial, "bː");
-    									
-    VlBilabialTrill              = new ConsonantClass(Pulmonic Trill, Places.Bilabial, "ʙ̥");
-    VdBilabialTrill              = new ConsonantClass(Voiced Pulmonic Trill Vibrant, Places.Bilabial, "ʙ", "B\\");
-    VlAlveolarTrill              = new ConsonantClass(Pulmonic Trill, Places.Alveolar, "r̥");
-    r                            = new ConsonantClass(Voiced Pulmonic Trill Rhotic Liquid Vibrant, Places.Alveolar, "r", "r");
-    VlRetroflexTrill             = new ConsonantClass(Pulmonic Trill, Places.Retroflex, "ɽ̊r̥");
-    VdRetroflexTrill             = new ConsonantClass(Voiced Pulmonic Trill, Places.Retroflex, "ɽr");
-    VlUvularTrill                = new ConsonantClass(Pulmonic Trill Rhotic Liquid Vibrant, Places.Uvular, "ʀ", "R\\");
-    VlPharyngealTrill            = new ConsonantClass(Pulmonic Trill, Places.Pharyngeal, "ʜ", "H\\");
-    VdPharyngealTrill            = new ConsonantClass(Voiced Pulmonic Trill, Places.Pharyngeal, "ʢ", "<\\");
-														
-    // Lateral Fricative								
-    VlAlveolarLateralFricative   = new ConsonantClass(Pulmonic Lateral Fricative Obstruent Continuant Strident Lateral Liquid, Places.Alveolar, "ɬ", "K");
-    VdAlveolarLateralFricative   = new ConsonantClass(Voiced Pulmonic Lateral Fricative Obstruent Continuant Strident Lateral Liquid, Places.Alveolar, "ɮ", "K\\");
-    VlRetroflexLateralFricative  = new ConsonantClass(Pulmonic Lateral Fricative, Places.Retroflex, "ɭ̊˔");
-    VdRetroflexLateralFricative  = new ConsonantClass(Voiced Pulmonic Lateral Fricative, Places.Retroflex, "ɭ˔");
-    VlAlveolarPalatalFricative   = new ConsonantClass(Pulmonic Lateral Fricative, Places.Palatal, "ʎ̝̊");
-    VdAlveolarPalatalFricative   = new ConsonantClass(Voiced Pulmonic Lateral Fricative, Places.Palatal, "ʎ̝");
-    VlVelarPalatalFricative      = new ConsonantClass(Pulmonic Lateral Fricative, Places.Velar, "ʟ̝̊");
-    VdVelarPalatalFricative      = new ConsonantClass(Voiced Pulmonic Lateral Fricative, Places.Velar, "ʟ̝");
-														
-    // LateralApproximant								
-    VlAlveolarLateralApproximant = new ConsonantClass(Pulmonic Lateral Approximant, Places.Alveolar, "l̥");
-    l                            = new ConsonantClass(Voiced Pulmonic Lateral Approximant Vocoid Rhotic Liquid Lateral, Places.Alveolar, "l", "l");
-    ssha                         = new ConsonantClass(Voiced Velarized Pulmonic Lateral Approximant, Places.Alveolar, "ɫ", "5");
-    VlRetroflexLateral           = new ConsonantClass(Pulmonic Lateral Approximant, Places.Retroflex, "ɭ̊");
-    VdRetroflexLateral           = new ConsonantClass(Voiced Pulmonic Lateral Approximant Vocoid Rhotic Liquid Lateral, Places.Retroflex, "ɭ", "n`");
-    VlPalatalLateral             = new ConsonantClass(Pulmonic Lateral Approximant, Places.Palatal, "ʎ̥");
-    yuh                          = new ConsonantClass(Voiced Pulmonic Lateral Approximant Vocoid Rhotic Liquid Lateral, Places.Palatal, "ʎ", "L");
-    VlVelarLateral               = new ConsonantClass(Pulmonic Lateral Approximant, Places.Velar, "ʟ̥");
-    VdVelarLateral               = new ConsonantClass(Voiced Pulmonic Lateral Approximant Vocoid Rhotic Liquid Lateral, Places.Velar, "ʟ", "L\\");
-    VdUvularLateral              = new ConsonantClass(Voiced Pulmonic Lateral Approximant, Places.Uvular, "ʟ̠");
-
-    // Lateral tap/flap
-    VdAlveolarLateralFlap        = new ConsonantClass(Voiced Pulmonic Lateral TapFlap Vibrant Rhotic Liquid, Places.Alveolar, "ɺ", "l\\");
-    VdRetroflexLateralFlap       = new ConsonantClass(Voiced Pulmonic Lateral TapFlap, Places.Retroflex, "ɭ̆");
-    VdPalatalLateralFlap         = new ConsonantClass(Voiced Pulmonic Lateral TapFlap, Places.Palatal, "ʎ̆");
-    VdVelarLateralTap            = new ConsonantClass(Voiced Pulmonic Lateral TapFlap, Places.Velar, "L̆");
-
-
-    //==================================
-    // Non-Pulmonic Consonants
-    //==================================
-
-    // Clicks
-    VlBilabialTenuisClick        = new ConsonantClass(Ejective Tenuis Click Affricate, Places.Bilabial, "ʘ", "O\\");
-    VdBilabialTenuisClick        = new ConsonantClass(Voiced Ejective Tenuis Click Affricate, Places.Bilabial, "ʘ̬");
-    VlDentalTenuisClick          = new ConsonantClass(Ejective Tenuis Click Affricate Dental, Places.Dental, "ǀ", "|");
-    VdDentalTenuisClick          = new ConsonantClass(Voiced Ejective Tenuis Click Affricate Dental, Places.Dental, "ǀ̬");
-    VlAlveolarTenuisClick        = new ConsonantClass(Ejective Tenuis Click Affricate, Places.Alveolar, "ǃ", "!\\");
-    VdAlveolarTenuisClick        = new ConsonantClass(Voiced Ejective Tenuis Click Affricate, Places.Alveolar, "ǃ̬");
-    VlPalatalTenuisClick         = new ConsonantClass(Ejective Tenuis Click Affricate, Places.Palatal, "ǂ", "=\\");
-    VdPalatalTenuisClick         = new ConsonantClass(Voiced Ejective Tenuis Click Affricate, Places.Palatal, "ǂ̬");
-
-    VlBilabialNasalClick         = new ConsonantClass(Ejective Nasal Click Affricate, Places.Bilabial, "ʘ̃");
-    VlDentalNasalClick           = new ConsonantClass(Ejective Nasal Click Affricate Dental, Places.Dental, "ǀ̃");
-    VlAlveolarNasalClick         = new ConsonantClass(Ejective Nasal Click Affricate, Places.Alveolar, "ǃ̃");
-    VlPalatalNasalClick          = new ConsonantClass(Ejective Nasal Click Affricate, Places.Palatal, "ǂ̃");
-
-    VlAlveolarTenuisLateralClick = new ConsonantClass(Ejective Tenuis Lateral Click Affricate, Places.Alveolar, "ǁ", " | \\ | \\");
-    VdAlveolarTenuisLateralClick = new ConsonantClass(Voiced Ejective Tenuis Lateral Click Affricate, Places.Alveolar, "ǁ̬");
-
-    VlBilabialImplosiveClick     = new ConsonantClass(Ejective Implosive Click Affricate, Places.Bilabial, "ɓ̥");
-    VdBilabialImplosiveClick     = new ConsonantClass(Voiced Ejective Implosive Click Affricate, Places.Bilabial, "ɓ", "b_<");
-    VlAlveolarImplosiveClick     = new ConsonantClass(Ejective Implosive Click Affricate, Places.Alveolar, "ɗ̥");
-    VdAlveolarImplosiveClick     = new ConsonantClass(Voiced Ejective Implosive Click Affricate, Places.Alveolar, "ɗ", "d_<");
-    VlRetroflexImplosiveClick    = new ConsonantClass(Ejective Implosive Click Affricate, Places.Retroflex, "ᶑ̊");
-    VdRetroflexImplosiveClick    = new ConsonantClass(Voiced Ejective Implosive Click Affricate, Places.Retroflex, "ᶑ");
-    VlPalatalImplosiveClick      = new ConsonantClass(Ejective Implosive Click Affricate, Places.Palatal, "ʄ̊");
-    VdPalatalImplosiveClick      = new ConsonantClass(Voiced Ejective Implosive Click Affricate, Places.Palatal, "ʄ", "J\\_<");
-    VlVelarImplosiveClick        = new ConsonantClass(Ejective Implosive Click Affricate, Places.Velar, "ɠ̊");
-    VdVelarImplosiveClick        = new ConsonantClass(Voiced Ejective Implosive Click Affricate, Places.Velar, "ɠ", "g_<");
-    VlUvularImplosiveClick       = new ConsonantClass(Ejective Implosive Click Affricate, Places.Uvular, "ʛ̥");
-    VdUvularImplosiveClick       = new ConsonantClass(Voiced Ejective Implosive Click Affricate, Places.Uvular, "ʛ", "G\\_<");
-
-    VdPalatoAlveolarSibilant     = new ConsonantClass(Voiced Sibilant Affricate, Places.PalatoAlveolar, "ʤ");
-
-    VdPalatoAlveolarAffricate    = new ConsonantClass(Voiced Sibilant Affricate, Places.Alveolar, "ʣ");
-// Is this the same as above ^
-//    VdAlveolarAffricate          = new ConsonantClass(Voiced Pulmonic Sibilant Affricate Occlusive Strident, Places.Alveolar, "dz");
-
-
-
-    //==================================
-    // Pulmonic Affricates
-    //==================================
-
-    // Sibilants
-    VlAlveolarSibilantAffricate  = new ConsonantClass(Pulmonic Sibilant Affricate Occlusive Strident, Places.Alveolar, "ʦ");
-    VlAlveolarAffricate          = new ConsonantClass(Affricate, Places.Alveolar, "t͡s");  // Check properties
-
-    VlPostalveolarAffricate      = new ConsonantClass(Pulmonic Sibilant Affricate Occlusive Strident, Places.PalatoAlveolar, "t̠ʃ");
-    ts                           = new ConsonantClass(Pulmonic Sibilant Affricate, Places.PalatoAlveolar, "ʧ");
-    tsj                          = new ConsonantClass(Pulmonic Sibilant Affricate Palatalized, Places.AlveoloPalatal, "ʧʲ"); //
-    dz                           = new ConsonantClass(Voiced Affricate, Places.PostAlveolar, "d͡ʒ");
-    VdPostalveolarAffricate      = new ConsonantClass(Voiced Pulmonic Sibilant Affricate Occlusive Strident, Places.PalatoAlveolar, "d̠ʒ");
-
-    VlRetroflexAffricate         = new ConsonantClass(Pulmonic Sibilant Affricate Occlusive Strident, Places.Retroflex, "ʈʂ");
-    VdRetroflexAffricate         = new ConsonantClass(Voiced Pulmonic Sibilant Affricate Occlusive Strident, Places.Retroflex, "ɖʐ");
-    VlAlveoloPalatalAffricate    = new ConsonantClass(Pulmonic Sibilant Affricate Occlusive Strident, Places.AlveoloPalatal, "tɕ");
-    VdAlveoloPalatalAffricate    = new ConsonantClass(Voiced Pulmonic Sibilant Affricate Occlusive Strident, Places.AlveoloPalatal, "dʑ");
-
-    VlAlveoloPalatalSibilantAffricate = new ConsonantClass(Pulmonic Sibilant Affricate, Places.AlveoloPalatal, "t͡ʃ");
-    Mystery4                          = new ConsonantClass(Pulmonic Sibilant Affricate, Places.AlveoloPalatal, "t͡ʃː");  // Check properties
-
-    // Non-Sibilants
-    VlBilabialNSAffricate        = new ConsonantClass(Pulmonic Affricate Occlusive, Places.Bilabial, "pɸ");
-    VdBilabialNSAffricate        = new ConsonantClass(Voiced Pulmonic Affricate Occlusive, Places.Bilabial, "bβ");
-    VlLabioDentalNSAffricate     = new ConsonantClass(Pulmonic Affricate Occlusive Strident Labial Dental, Places.LabioDental, "p̪f");
-    VdLabioDentalNSAffricate     = new ConsonantClass(Voiced Pulmonic Affricate Occlusive Strident Labial Dental, Places.LabioDental, "b̪v");
-    VlDentalNSAffricate          = new ConsonantClass(Pulmonic Affricate Occlusive Dental, Places.Dental, "t̪θ");
-    VdDentalNSAffricate          = new ConsonantClass(Voiced Pulmonic Affricate Occlusive Dental, Places.Dental, "d̪ð");
-    VlAlveolarNSAffricate        = new ConsonantClass(Pulmonic Affricate, Places.Alveolar, "tɹ̝̊");
-    VdAlveolarNSAffricate        = new ConsonantClass(Voiced Pulmonic Affricate, Places.Alveolar, "dɹ̝");
-    VlPalatoAlveolarNSAffricate  = new ConsonantClass(Pulmonic Affricate, Places.PalatoAlveolar, "t̠ɹ̠̊˔");
-    VdPalatoAlveolarNSAffricate  = new ConsonantClass(Voiced Pulmonic Affricate, Places.PalatoAlveolar, "d̠ɹ̠˔");
-    VlPalatalNSAffricate         = new ConsonantClass(Pulmonic Affricate Occlusive, Places.Palatal, "cç");
-    VdPalatalNSAffricate         = new ConsonantClass(Voiced Pulmonic Affricate Occlusive, Places.Palatal, "ɟʝ");
-    VlVelarNSAffricate           = new ConsonantClass(Pulmonic Affricate Occlusive, Places.Velar, "kx");
-    VdVelarNSAffricate           = new ConsonantClass(Voiced Pulmonic Affricate Occlusive, Places.Velar, "ɡɣ");
-    VlUvularNSAffricate          = new ConsonantClass(Pulmonic Affricate, Places.Uvular, "qχ");
-    VdEpiglottalNSAffricate      = new ConsonantClass(Voiced Pulmonic Affricate, Places.Pharyngeal, "ʡʢ");
-    VlGlottalNSAffricate         = new ConsonantClass(Pulmonic Affricate, Places.Glottal, "ʔh");
-
-    // Lateral
-    VlAlveolarLateralAffricate   = new ConsonantClass(Pulmonic Lateral Affricate, Places.Alveolar, "tɬ̝̊");
-    VdAlveolarLateralAffricate   = new ConsonantClass(Voiced Pulmonic Lateral Affricate, Places.Alveolar, "dɮ");
-    VlRetroflexLateralAffricate  = new ConsonantClass(Pulmonic Lateral Affricate, Places.Retroflex, "ʈɭ̊˔");
-    VdPalatalLateralAffricate    = new ConsonantClass(Voiced Pulmonic Lateral Affricate, Places.Palatal, "cʎ̝̊");
-    VlVelarLateralAffricate      = new ConsonantClass(Pulmonic Lateral Affricate, Places.Velar, "kʟ̝̊");
-    VdVelarLateralAffricate      = new ConsonantClass(Voiced Pulmonic Lateral Affricate, Places.Velar, "ɡʟ̝");
-
-
-    //==================================
-    // Ejective | Affricates
-    //==================================
-
-    // Central
-    VlAlveolarEjectiveAffricate       = new ConsonantClass(Ejective Central Affricate, Places.Alveolar, "tsʼ");
-    VlPalatoAlveolarEjectiveAffricate = new ConsonantClass(Ejective Central Affricate, Places.PalatoAlveolar, "t̠ʃʼ");
-    VlRetroflexEjectiveAffricate      = new ConsonantClass(Ejective Central Affricate, Places.Retroflex, "ʈʂʼ");
-    VlVelarEjectiveAffricate          = new ConsonantClass(Ejective Central Affricate, Places.Velar, "kxʼ");
-    VlUvularEjectiveAffricate         = new ConsonantClass(Ejective Central Affricate, Places.Uvular, "qχʼ");
-
-    // Lateral
-    VlAlveolarLateralEjective         = new ConsonantClass(Ejective Lateral Affricate, Places.Alveolar, "tɬʼ");
-    VlPalatalLateralEjective          = new ConsonantClass(Ejective Lateral Affricate, Places.Palatal, "cʎ̝̊ʼ");
-    VlVelarLateralEjective            = new ConsonantClass(Ejective Lateral Affricate, Places.Velar, "kʟ̝̊ʼ");
-
-    VlLabialVelarApproximant          = new ConsonantClass(Approximant Vocoid Semivowel Continuant Velar Labial, Places.LabialVelar, "ʍ", "W");
-
-// Pre-existing
-//    VlAlveoloPalatalFricative1      = new ConsonantClass(CPM(Categories.Other, Places.AlveoloPalatal) Fricative, "ɕ", "");
-//    VlAlveoloPalatalFricative       = new ConsonantClass(CPM(Categories.Other, Places.AlveoloPalatal) Fricative, "ʑ", "");
-
-
-    wh                                = new ConsonantClass(Nasal Voiced Approximant Nasal Velar Labial, Places.LabialVelar, "w̃", "w~");
-    w                                 = new ConsonantClass(Voiced Approximant Vocoid Semivowel Continuant Velar Labial, Places.LabialVelar, "w", "w");
-
-// This conflicts with another segment (VlPharyngealTrill)
-
-//    VlEpiglottalFricative             = new ConsonantClass(Fricative, Places.Pharyngeal, "ʜ", "H\\");
-
-
-    eu                                = new ConsonantClass(Voiced Approximant Vocoid Semivowel Continuant Labial Palatalized, Places.LabialPalatal, "ɥ", "H");
-
-    SimultaneousSx                    = new ConsonantClass(Sibilant Fricative, Places.PostAlveolar, "ɧ", "x\\");
-    VdEpiglottalFricative             = new ConsonantClass(Voiced Fricative, Places.Pharyngeal, "ʢ", "?\\");
-    VlEpiglottalPlosive               = new ConsonantClass(Ejective, Places.Pharyngeal, "ʡ", "<\\");
-
-    // Ejectives
-    VlBilabialStopEjective            = new ConsonantClass(Ejective Pulmonic Stop, Places.Bilabial, "pʼ", "p_>");
-    VlAveolarStopEjective             = new ConsonantClass(Ejective Stop, Places.Alveolar, "tʼ", "t_>");
-    VlRetroflexStopEjective           = new ConsonantClass(Ejective Stop, Places.Retroflex, "ʈʼ", "t`_>");
-    VlPalatalStopEjective             = new ConsonantClass(Ejective Stop, Places.Palatal, "cʼ", "c_>");
-    VlVelarStopEjective               = new ConsonantClass(Ejective Stop, Places.Velar, "kʼ", "k_>");
-    VlUvularStopEjective              = new ConsonantClass(Ejective Stop, Places.Uvular, "qʼ", "q_>");
-    VlEpiglottalStopEjective          = new ConsonantClass(Ejective Stop, Places.Pharyngeal, "ʡʼ", ">\\_>");
-    VlBilabialFricativeEjective       = new ConsonantClass(Ejective Fricative, Places.Bilabial, "ɸʼ", "p\\_>");
-    VlLabiodentalFricativeEjective    = new ConsonantClass(Ejective Fricative Labial Dental, Places.LabioDental, "fʼ", "f_>");
-    VlDentalFricativeEjective         = new ConsonantClass(Ejective Fricative Dental, Places.Dental, "θʼ", "T_>");
-    VlAlveolarFricativeEjective       = new ConsonantClass(Ejective Fricative, Places.Alveolar, "sʼ", "s_>");
-    VlPostalveolarFricativeEjective   = new ConsonantClass(Ejective Fricative, Places.PostAlveolar, "ʃʼ", "S_>");
-    VlRetroflexFricativeEjective      = new ConsonantClass(Ejective Fricative, Places.Retroflex, "ʂʼ", "s`_>");
-    VlPalatalFricativeEjective        = new ConsonantClass(Ejective Fricative, Places.Palatal, "ɕʼ", "s\\_>");
-    VlVelarFricativeEjective          = new ConsonantClass(Ejective Fricative, Places.Velar, "xʼ" , "x_>");
-    VlUvularFricativeEjective         = new ConsonantClass(Ejective Fricative, Places.Uvular, "χʼ", "X_>");
-    VlPostalveolarLatFricEjective     = new ConsonantClass(Ejective Lateral Fricative, Places.Alveolar, "ɬʼ", "K_>");
-
-    //==================================
-    // Vowels
-    //==================================
-
-    e                         = new VowelClass(null, ParentVowel Vocoid Continuant, Opens.Close, Backnesses.Front, "i", "i");
-    E                         = new VowelClass(e, LongVowel Vocoid Continuant, Opens.Close, Backnesses.Front, "iː", "i:");
-    een                       = new VowelClass(e, Nasal, Opens.Close, Backnesses.Front, "ĩ", "i*");
-
-    eee                       = new VowelClass(null, ParentVowel, Opens.Close, Backnesses.Central, "ɨ", "1");
-    CloseCentralRounded       = new VowelClass(null, Rounded, Opens.Close, Backnesses.Central, "ʉ", "}");
-    CloseBackUnrounded        = new VowelClass(null, Vocoid Continuant, Opens.Close, Backnesses.Back, "ɯ", "M");
-
-    u                         = new VowelClass(null, ParentVowel Rounded Vocoid Continuant, Opens.Close, Backnesses.Back, "u", "u");
-    U                         = new VowelClass(u, LongVowel Rounded, Opens.Close, Backnesses.Back, "uː", "u:");
-    ohh                       = new VowelClass(u, Rounded, Opens.Close, Backnesses.Back, "u̯", "<u>");  // SAMPA encoding ???
-
-    NearCloseCentralUnrounded = new VowelClass(null, NoFeature, Opens.NearClose, Backnesses.Central, "ᵻ", "I\\");
-
-    I                         = new VowelClass(null, ParentVowel, Opens.NearClose, Backnesses.NearFront, "ɪ", "I");
-    Mystery3                  = new VowelClass(I, NoFeature, Opens.NearClose, Backnesses.NearFront, "ɪ̯"); // Check properties
-
-    NearCloseFrontRounded     = new VowelClass(null, Rounded, Opens.NearClose, Backnesses.NearFront, "ʏ", "Y");
-    NearCloseCentralRounded   = new VowelClass(null, Rounded, Opens.NearClose, Backnesses.Central, "ᵿ", "U\\");
-
-    NearCloseBackRounded      = new VowelClass(null, Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ", "U");
-
-// References say different things about these two
-    ooo                       = new VowelClass(u, Nasal, Opens.Open, Backnesses.Back, "ũ", "u*");
-//    uh                        = new VowelClass(u, Nasal Rounded, Opens.Close, Backnesses.Back, "ũ", "u*");
-
-
-  // Needs review
-    NearCloseBackNasal        = new VowelClass(null, Nasal Rounded, Opens.NearClose, Backnesses.NearBack, "ʊ̃", "U*");
-    NearCloseBackLong         = new VowelClass(null, Rounded LongVowel, Opens.NearClose, Backnesses.NearBack, "ʊː");
-    ooon                      = new VowelClass(u, Nasal LongVowel, Opens.Open, Backnesses.Back, "ũː", "u*:");
-    ooonlong                  = new VowelClass(u, Nasal Advanced LongVowel, Opens.Open, Backnesses.Back, "ũ̟ː");
-    oooh                      = new VowelClass(u, Nasal LongVowel Lowered, Opens.Open, Backnesses.Back, "u̞ː");
-    aehdot                    = new VowelClass(aeh, Nasal Raised, Opens.OpenMid, Backnesses.NearFront, "ɜ̃ˑ");
-    ondot                     = new VowelClass(aeh, Nasal Rounded Raised, Opens.CloseMid, Backnesses.Back, "õˑ");
-
-    onraised                  = new VowelClass(aeh, Lowered Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "o̞");
-    onrdot                    = new VowelClass(aeh, Lowered Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "o̞ˑ");
-
-    udot                      = new VowelClass(null, Rounded Vocoid Continuant Raised, Opens.Close, Backnesses.Back, "uˑ");
-
-    draised                   = new ConsonantClass(Voiced Pulmonic Stop Occlusive Raised, Places.Alveolar, "d̥");
-    Idot                      = new VowelClass(null, Raised, Opens.NearClose, Backnesses.NearFront, "ɪˑ");
-
-
-
-
-
-
-
-
-    ay                        = new VowelClass(null, ParentVowel Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "e", "e");
-
-// References say different things about these two
-    ehn                     = new VowelClass(ay, Nasal, Opens.Close, Backnesses.Back, "ẽ", "e*");
-//    en                      = new VowelClass(ay, Nasal, Opens.CloseMid, Backnesses.Front, "ẽ", "e*");
-
-    LongNasalE              = new VowelClass(ay, LongVowel Nasal, Opens.Close, Backnesses.Back, "ẽː", "e*:");  // Check properties
-    eah                     = new VowelClass(ay, NonSylabic, Opens.CloseMid, Backnesses.Front, "e̯", "<e>");  // SAMPA encoding ???
-    ai                      = new VowelClass(ay, LongVowel Vocoid Continuant, Opens.Mid, Backnesses.Front, "eː", "e:");
-
-
-    eeh                     = new VowelClass(null, ParentVowel Rounded Vocoid Continuant, Opens.Close, Backnesses.Front, "y", "y");
-
-// Conflicting definitions
-    NasalY                  = new VowelClass(eeh, Nasal, Opens.CloseMid, Backnesses.Back, "ỹ", "y*");
-//    ey                      = new VowelClass(eeh, Rounded Nasal, Opens.Close, Backnesses.Front, "ỹ", "y~");
-//
-//
-
-    LongY                   = new VowelClass(eeh, LongVowel, Opens.CloseMid, Backnesses.Back, "yː", "y:");
-
-    uu                      = new VowelClass(null, ParentVowel Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Front, "ø", "2");
-    o                       = new VowelClass(uu, LongVowel Rounded Vocoid, Opens.Open, Backnesses.Front, "øː");  // Check properties
-    MidFrontUnrounded       = new VowelClass(uu, NoFeature, Opens.Mid, Backnesses.Front, "ø̞");
-
-    MidCentralUnrounded     = new VowelClass(null, NoFeature, Opens.Mid, Backnesses.Central, "ɘ", "@\\");
-
-    aah                     = new VowelClass(null, ParentVowel, Opens.CloseMid, Backnesses.Central, "ə", "@");
-
-
-    ooh                     = new VowelClass(null, Rounded, Opens.CloseMid, Backnesses.Central, "ɵ", "8");
-    CloseMidBackUnrounded   = new VowelClass(null, Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "ɤ", "7");
-
-    oh                      = new VowelClass(null, ParentVowel Rounded Vocoid Continuant, Opens.CloseMid, Backnesses.Back, "o", "o");
-    ooow                    = new VowelClass(oh, Rounded, Opens.CloseMid, Backnesses.Back, "o(w)");  // Not sure what the IPA for this is
-    MidBackUnrounded        = new VowelClass(oh, NoFeature, Opens.Mid, Backnesses.Back, "o̞");
-    O                       = new VowelClass(oh, LongVowel Rounded Vocoid Continuant, Opens.Mid, Backnesses.Back, "oː", "o:");
-    on                      = new VowelClass(oh, Nasal Rounded, Opens.CloseMid, Backnesses.Back, "õ", "O~");  // Check properties
-    oa                      = new VowelClass(oh, Rounded, Opens.CloseMid, Backnesses.Back, "o̯"); // Check properties
-    OOO                     = new VowelClass(oh, LongVowel Nasal Rounded, Opens.CloseMid, Backnesses.Back, "õː", "O~:"); // Check properties
-
-    eh                      = new VowelClass(null, ParentVowel Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "ɛ", "E");
-    Eh                      = new VowelClass(eh, LongVowel Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "ɛː", "E:");  // Check properties
-    ehnn                    = new VowelClass(eh, Nasal, Opens.OpenMid, Backnesses.NearFront, "ɛ̃", "E*");
-
-    uuh                     = new VowelClass(null, Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.NearFront, "œ", "9");
-    uuhn                    = new VowelClass(uuh, Diphthong Nasal Rounded, Opens.OpenMid, Backnesses.NearFront, "œ̃", "oe*");
-
-    OpenMidCentralRounded   = new VowelClass(null, Rounded, Opens.OpenMid, Backnesses.Central, "ɞ", "3\\");
-
-    aeh                     = new VowelClass(null, ParentVowel, Opens.OpenMid, Backnesses.Central, "ɜ", "3");
-    aehn                    = new VowelClass(aeh, Nasal, Opens.OpenMid, Backnesses.NearFront, "ɜ̃", "3*");
-
-    OpenMidBackUnrounded    = new VowelClass(null, Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ʌ", "V");
-
-    euh                     = new VowelClass(null, ParentVowel Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ɔ", "O");
-    LongOpenMidBackRounded  = new VowelClass(euh, LongVowel Rounded Vocoid Continuant, Opens.OpenMid, Backnesses.Back, "ɔː"); // Check properties
-    oon                     = new VowelClass(euh, Nasal Rounded, Opens.OpenMid, Backnesses.Back, "ɔ̃", "o*");       // French Fish "poisson"
-
-    NearFrontUnrounded      = new VowelClass(null, NoFeature, Opens.NearOpen, Backnesses.NearFront, "æ", "{");
-    FrontOpenRounded        = new VowelClass(null, Rounded, Opens.NearOpen, Backnesses.NearFront, "ɶ", "&");
-
-    a                       = new VowelClass(null, ParentVowel Vocoid Continuant, Opens.Open, Backnesses.Back, "ɑ", "A");
-    aay                     = new VowelClass(a, LongVowel, Opens.Open, Backnesses.Back, "ɑː");
-    NasalA                  = new VowelClass(a, Nasal, Opens.NearClose, Backnesses.Back, "ɑ̃", "a*");
-
-    ah                      = new VowelClass(null, ParentVowel Vocoid Continuant, Opens.Open, Backnesses.NearFront, "a", "a");
-    A                       = new VowelClass(ah, LongVowel Vocoid Continuant, Opens.Open, Backnesses.Central, "aː", "a:");
-    OpenCentralUnrounded    = new VowelClass(ah, NoFeature, Opens.Open, Backnesses.Central, "ä", "a_\"");
-    an                      = new VowelClass(ah, Nasal, Opens.NearOpen, Backnesses.Central, "ã"); // Check properties
-    aa                      = new VowelClass(ah, Nasal, Opens.Open, Backnesses.NearFront, "ã", "~a");
-    OtherA                  = new VowelClass(ah, Nasal, Opens.Close, Backnesses.Back, "a.", "a.");
-
-    OpenNearFrontRounded    = new VowelClass(null, Rounded Vocoid Continuant, Opens.Open, Backnesses.NearFront, "ɶ", "&");
-    OpenBackRounded         = new VowelClass(null, Rounded Vocoid Continuant, Opens.Open, Backnesses.Back, "ɒ", "Q");
-
-    ahh                     = new VowelClass(null, ParentVowel Rounded, Opens.NearOpen, Backnesses.Central, "ɐ", "6");
-    ahn                     = new VowelClass(ahh, Nasal Rounded, Opens.NearOpen, Backnesses.Central, "ɐ̃", "a*");   // Supposed to be "ɛ̃" as in French Dog "chien"?
-
-    au_diphthong_nasal      = new VowelClass(ahn, Diphthong Nasal, Opens.Open, Backnesses.Central, "ɐ̃w");
-    ahnjn                   = new VowelClass(ahn, Diphthong Nasal, Opens.NearOpen, Backnesses.Central, "ɐ̃j");
-
-    eaha                    = new VowelClass(eah, Diphthong NonSylabic, Opens.CloseMid, Backnesses.Front, "e̯a");
-    oaa                     = new VowelClass(oa, Diphthong NonSylabic, Opens.CloseMid, Backnesses.Back, "o̯a");
-    oj_diphthong            = new VowelClass(oh, Diphthong, Opens.CloseMid, Backnesses.Back, "oj");
-    mid_low_diphthong       = new VowelClass(oh, Diphthong, Opens.OpenMid, Backnesses.Back, "ɔj");
-    uj_diphthong            = new VowelClass(ooo, Diphthong Nasal, Opens.High, Backnesses.Back, "ũj");
-
-
-    // David, these are duplicated IPA symbols for different vowels
-    aj                      = new VowelClass(ah, Diphthong, Opens.NearOpen, Backnesses.NearFront, "aj");
-//    aj                    = new VowelClass(null, Nasal, Opens.Close, Backnesses.Back, "aj", "aj");  // Check
-
-
-    au                      = new VowelClass(ah, Diphthong, Opens.Open, Backnesses.Central, "au̯");
-
-    ahhj                    = new VowelClass(ahh, Diphthong, Opens.NearOpen, Backnesses.Central, "ɐj");
-    ehnj                    = new VowelClass(ehn, Diphthong Nasal, Opens.Mid, Backnesses.Front, "ẽj");
-    ehj                     = new VowelClass(eh, Diphthong, Opens.OpenMid, Backnesses.NearFront, "ɛj");
-    ayj                     = new VowelClass(ay, Diphthong, Opens.Mid, Backnesses.Front, "ej");
-    ehnun                   = new VowelClass(ehn, Diphthong Nasal, Opens.Mid, Backnesses.Front, "ẽu̯");
-                                                                 // High?
-    iw                      = new VowelClass(eee, Diphthong, Opens.Close, Backnesses.Central, "ɨw");
-                                                                 // High?
-    eeej                    = new VowelClass(eee, Diphthong, Opens.Close, Backnesses.Central, "ɨj");
-
-
-// How to show rhotic vowels?
-//    OpenMidCentralRhotic  = VowelClass(Rhotic, Opens.OpenMid, Backnesses.Central, "ɝ");
-//    RhoticSchwa           = VowelClass(Rhotic, Opens.Open, Backnesses.NearFront, "ɚ", "@`");
-  }
-
-  ParentVowels = Segments.FindSlice(s => s.Features.HasFlag(ParentVowel));
-
-  namespace ImpossibleSegments {
-    I10 = new ImpossibleClass(Pulmonic Nasal, Places.Pharyngeal);
-    I11 = new ImpossibleClass(Pulmonic Nasal, Places.Glottal);
-    I12 = new ImpossibleClass(Pulmonic Stop Voiced, Places.Pharyngeal);
-    I13 = new ImpossibleClass(Pulmonic Stop Voiced, Places.Glottal);
-    I14 = new ImpossibleClass(Pulmonic Sibilant Fricative, Places.Bilabial);
-    I15 = new ImpossibleClass(Pulmonic Sibilant Fricative Labial Dental, Places.LabioDental);
-    I16 = new ImpossibleClass(Pulmonic Sibilant Fricative Lingual Labial, Places.LinguoLabial);
-    I17 = new ImpossibleClass(Pulmonic Sibilant Fricative, Places.Velar);
-    I18 = new ImpossibleClass(Pulmonic Sibilant Fricative, Places.Uvular);
-    I19 = new ImpossibleClass(Pulmonic Sibilant Fricative, Places.Pharyngeal);
-    I20 = new ImpossibleClass(Pulmonic Sibilant Fricative, Places.Glottal);
-    I21 = new ImpossibleClass(Pulmonic Trill, Places.Velar);
-    I22 = new ImpossibleClass(Pulmonic Trill, Places.Glottal);
-    I23 = new ImpossibleClass(Pulmonic TapFlap, Places.Velar);
-    I24 = new ImpossibleClass(Pulmonic TapFlap, Places.Glottal);
-    I25 = new ImpossibleClass(Pulmonic Lateral Fricative, Places.Bilabial);
-    I26 = new ImpossibleClass(Pulmonic Lateral Fricative Labial Dental, Places.LabioDental);
-    I27 = new ImpossibleClass(Pulmonic Lateral Fricative, Places.Pharyngeal);
-    I28 = new ImpossibleClass(Pulmonic Lateral Fricative, Places.Glottal);
-    I29 = new ImpossibleClass(Pulmonic Lateral Approximant, Places.Bilabial);
-    I30 = new ImpossibleClass(Pulmonic Lateral Approximant Labial Dental, Places.LabioDental);
-    I31 = new ImpossibleClass(Pulmonic Lateral Approximant, Places.Pharyngeal);
-    I32 = new ImpossibleClass(Pulmonic Lateral Approximant, Places.Glottal);
-    I33 = new ImpossibleClass(Pulmonic Lateral TapFlap, Places.Bilabial);
-    I34 = new ImpossibleClass(Pulmonic Lateral TapFlap Labial Dental, Places.LabioDental);
-    I35 = new ImpossibleClass(Pulmonic Lateral TapFlap, Places.Pharyngeal);
-    I36 = new ImpossibleClass(Pulmonic Lateral TapFlap, Places.Glottal);
-    I37 = new ImpossibleClass(Pulmonic Sibilant Affricate, Places.Bilabial);
-    I38 = new ImpossibleClass(Pulmonic Sibilant Affricate Labial Dental, Places.LabioDental);
-    I39 = new ImpossibleClass(Pulmonic Sibilant Affricate, Places.Velar);
-    I40 = new ImpossibleClass(Pulmonic Sibilant Affricate, Places.Uvular);
-    I41 = new ImpossibleClass(Pulmonic Sibilant Affricate, Places.Pharyngeal);
-    I42 = new ImpossibleClass(Pulmonic Sibilant Affricate, Places.Glottal);
-    I43 = new ImpossibleClass(Pulmonic Lateral Affricate, Places.Bilabial);
-    I44 = new ImpossibleClass(Pulmonic Lateral Affricate Labial Dental, Places.LabioDental);
-    I45 = new ImpossibleClass(Pulmonic Lateral Affricate, Places.Pharyngeal);
-    I46 = new ImpossibleClass(Pulmonic Lateral Affricate, Places.Glottal);
-    I47 = new ImpossibleClass(Ejective Lateral Fricative Affricate, Places.Bilabial);
-    I48 = new ImpossibleClass(Ejective Lateral Fricative Affricate Labial Dental, Places.LabioDental);
-    I49 = new ImpossibleClass(Ejective Lateral Fricative Affricate, Places.Pharyngeal);
-    I50 = new ImpossibleClass(Ejective Central Affricate, Places.Glottal);
-    I51 = new ImpossibleClass(Ejective Lateral Affricate, Places.Bilabial);
-    I52 = new ImpossibleClass(Ejective Lateral Affricate Labial Dental, Places.LabioDental);
-    I53 = new ImpossibleClass(Ejective Lateral Affricate, Places.Pharyngeal);
-    I54 = new ImpossibleClass(Ejective Lateral Affricate, Places.Glottal);
-    I55 = new ImpossibleClass(Ejective Tenuis Click Affricate, Places.Velar);
-    I56 = new ImpossibleClass(Ejective Tenuis Click Affricate, Places.Uvular);
-    I57 = new ImpossibleClass(Ejective Tenuis Click Affricate, Places.Pharyngeal);
-    I58 = new ImpossibleClass(Ejective Nasal Click Affricate, Places.Velar);
-    I59 = new ImpossibleClass(Ejective Nasal Click Affricate, Places.Uvular);
-    I60 = new ImpossibleClass(Ejective Nasal Click Affricate, Places.Pharyngeal);
-    I61 = new ImpossibleClass(Ejective Tenuis Lateral Click Affricate, Places.Bilabial);
-    I62 = new ImpossibleClass(Ejective Tenuis Lateral Click Affricate Labial Dental, Places.LabioDental);
-    I63 = new ImpossibleClass(Ejective Tenuis Lateral Click Affricate, Places.Velar);
-    I64 = new ImpossibleClass(Ejective Tenuis Lateral Click Affricate, Places.Uvular);
-    I65 = new ImpossibleClass(Ejective Tenuis Lateral Click Affricate, Places.Pharyngeal);
-  }                 									
-
-  namespace DiacriticModifiers {
-    UndefinedEscapeCharacter     = new DiacriticClass("Undefined escape character", null, "*");
-    Nasalized                    = new DiacriticClass("Nasalized", "\u0303", "_~");
-    Centralized                  = new DiacriticClass("Centralized", "\u0308", "_\"");
-    Advanced                     = new DiacriticClass("Advanced", "\u031F", "_+");
-    Retracted                    = new DiacriticClass("Retracted", "\u0320", "_-");
-    RisingTone                   = new DiacriticClass("RisingTone ", "\u030C", "_R");
-    Voiceless                    = new DiacriticClass("Voiceless", "\u0325", "_0");
-    Implosive                    = new DiacriticClass("Implosive", null, "_<");
-    Syllabic                     = new DiacriticClass("Syllabic", "\u0329", "_=");
-    Ejective                     = new DiacriticClass("Ejective", "\u02BC", "_>");
-    Pharyngealized               = new DiacriticClass("Pharyngealized ", "\u02E4", "_?\\");
-    FallingTone                  = new DiacriticClass("Falling tone", "\u0302", "_F");
-    NonSyllabic                  = new DiacriticClass("Non-syllabic", "\u032F", "_^");
-    NoAudibleRelease             = new DiacriticClass("No audible release", "\u031A", "_}");
-    RhoticHook                   = new DiacriticClass("Rhotic hook", "\u02DE", "`");
-    AdvancedTongueRoot           = new DiacriticClass("Advanced tongue root ", "\u0318", "_A");
-    Apical                       = new DiacriticClass("Apical", "\u033A", "_a");
-    ExtraLowTone                 = new DiacriticClass("Extra low tone", "\u030F", "_B");
-    LessRounded                  = new DiacriticClass("Less rounded", "\u031C", "_c");
-    Dental                       = new DiacriticClass("Dental", "\u032A", "_d");
-    VelarizedOrPharyngealized    = new DiacriticClass("Velarized or Pharyngealized", "\u0334", "_e");
-    GlobalFall                   = new DiacriticClass("Global fall", "\u2198", "<F>");
-    Velarized                    = new DiacriticClass("Velarized", "\u02E0", "_G");
-    HighTone                     = new DiacriticClass("High tone", "\u0301", "_H");
-    Aspirated                    = new DiacriticClass("Aspirated", "\u02B0", "_h");
-    Palatalized                  = new DiacriticClass("Palatalized", "\u02B2", "_j");
-    CreakyVoiced                 = new DiacriticClass("Creaky voiced", "\u0330", "_k");
-    LowTone                      = new DiacriticClass("Low tone", "\u0300", "_L");
-    LateralRelease               = new DiacriticClass("Lateral release", "\u02E1", "_l");
-    MidTone                      = new DiacriticClass("Mid tone", "\u0304", "_M");
-    Laminal                      = new DiacriticClass("Laminal", "\u033B", "_m");
-    LinguoLabial                 = new DiacriticClass("Linguo-Labial", "\u033C", "_N");
-    NasalRelease                 = new DiacriticClass("Nasal release", "\u207F", "_n");
-    MoreRounded                  = new DiacriticClass("More rounded", "\u0339", "_O");
-    Lowered                      = new DiacriticClass("Lowered", "\u031E", "_o");
-    RetractedTongueRoot          = new DiacriticClass("Retracted tongue root", "\u0319", "_q");
-    GlobalRise                   = new DiacriticClass("Global rise", "\u2197", "<R>");
-    Raised                       = new DiacriticClass("Raised", "\u031D", "_r");
-    ExtraHighTone                = new DiacriticClass("Extra high tone", "\u030B", "_T");
-    BreathyVoiced                = new DiacriticClass("Breathy voiced", "\u0324", "_t");
-    Voiced                       = new DiacriticClass("Voiced", "\u032C", "_v");
-    Labialized                   = new DiacriticClass("Labialized", "\u02B7", "_W");
-    ExtraShort                   = new DiacriticClass("Extra short", "\u02D8", "_X");
-    MidCentralized               = new DiacriticClass("Mid-centralized", "\u033D", "_x");
-    Downstep                     = new DiacriticClass("Down-step", "↓", "!");
-    Upstep                       = new DiacriticClass("Up-step", "↑", "^");
-    Long                         = new DiacriticClass("Long", "ː", ":");
-    HalfLong                     = new DiacriticClass("Half-long", "ˑ", ":\\");
-    IndeterminacyinFrenchVowels  = new DiacriticClass("Indeterminacy in french vowels", null, "/");
-    BeginNonsegmentalNotation    = new DiacriticClass("Begin Non-segmental notation", null, "<");
-    Endnonsegmentalnotation      = new DiacriticClass("End non-segmental notation", "", ">");
-    Voicedepiglottalfricative    = new DiacriticClass("Voiced epiglottal fricative", "ʢ", "<\\");
-    Postalveolarclick            = new DiacriticClass("Post-alveolar click", "ǃ", "!\\");
-    MinorGroup                   = new DiacriticClass("Minor group", " | ", " | ");
-    Dentalclick                  = new DiacriticClass("Dental click", "ǀ", " | \\");
-    MajorGroup                   = new DiacriticClass("Major group", "‖", " |  | ");
-    Alveolarlateralclick         = new DiacriticClass("Alveolar lateral click", "ǁ", " | \\ | \\");
-    Palatalclick                 = new DiacriticClass("Palatal click", "ǂ", "");
-    VoicelessDescender           = new DiacriticClass("Voiceless descender", "\u030A", "");
-    CombiningMacron              = new DiacriticClass("Combining macron", "\u0331", "");
-    TieBarBelow                  = new DiacriticClass("Tie-bar below", "\u035C", "");
-    TieBarAbove                  = new DiacriticClass("Tie-bar above", "\u0361", "");
-    ReadyMadeCombination         = new DiacriticClass("Ready made combination", "\u026B", "");
-    Becomes                      = new DiacriticClass("Becomes", "→", "");
-    Separator                    = new DiacriticClass("Separator", "", "-");
+namespace ImpossibleSegments {
+  ImpossibleClass I10 = new(Pulmonic Nasal, Places.Pharyngeal);
+  ImpossibleClass I11 = new(Pulmonic Nasal, Places.Glottal);
+  ImpossibleClass I12 = new(Pulmonic Stop Voiced, Places.Pharyngeal);
+  ImpossibleClass I13 = new(Pulmonic Stop Voiced, Places.Glottal);
+  ImpossibleClass I14 = new(Pulmonic Sibilant Fricative, Places.Bilabial);
+  ImpossibleClass I15 = new(Pulmonic Sibilant Fricative Labial Dental, Places.LabioDental);
+  ImpossibleClass I16 = new(Pulmonic Sibilant Fricative Lingual Labial, Places.LinguoLabial);
+  ImpossibleClass I17 = new(Pulmonic Sibilant Fricative, Places.Velar);
+  ImpossibleClass I18 = new(Pulmonic Sibilant Fricative, Places.Uvular);
+  ImpossibleClass I19 = new(Pulmonic Sibilant Fricative, Places.Pharyngeal);
+  ImpossibleClass I20 = new(Pulmonic Sibilant Fricative, Places.Glottal);
+  ImpossibleClass I21 = new(Pulmonic Trill, Places.Velar);
+  ImpossibleClass I22 = new(Pulmonic Trill, Places.Glottal);
+  ImpossibleClass I23 = new(Pulmonic TapFlap, Places.Velar);
+  ImpossibleClass I24 = new(Pulmonic TapFlap, Places.Glottal);
+  ImpossibleClass I25 = new(Pulmonic Lateral Fricative, Places.Bilabial);
+  ImpossibleClass I26 = new(Pulmonic Lateral Fricative Labial Dental, Places.LabioDental);
+  ImpossibleClass I27 = new(Pulmonic Lateral Fricative, Places.Pharyngeal);
+  ImpossibleClass I28 = new(Pulmonic Lateral Fricative, Places.Glottal);
+  ImpossibleClass I29 = new(Pulmonic Lateral Approximant, Places.Bilabial);
+  ImpossibleClass I30 = new(Pulmonic Lateral Approximant Labial Dental, Places.LabioDental);
+  ImpossibleClass I31 = new(Pulmonic Lateral Approximant, Places.Pharyngeal);
+  ImpossibleClass I32 = new(Pulmonic Lateral Approximant, Places.Glottal);
+  ImpossibleClass I33 = new(Pulmonic Lateral TapFlap, Places.Bilabial);
+  ImpossibleClass I34 = new(Pulmonic Lateral TapFlap Labial Dental, Places.LabioDental);
+  ImpossibleClass I35 = new(Pulmonic Lateral TapFlap, Places.Pharyngeal);
+  ImpossibleClass I36 = new(Pulmonic Lateral TapFlap, Places.Glottal);
+  ImpossibleClass I37 = new(Pulmonic Sibilant Affricate, Places.Bilabial);
+  ImpossibleClass I38 = new(Pulmonic Sibilant Affricate Labial Dental, Places.LabioDental);
+  ImpossibleClass I39 = new(Pulmonic Sibilant Affricate, Places.Velar);
+  ImpossibleClass I40 = new(Pulmonic Sibilant Affricate, Places.Uvular);
+  ImpossibleClass I41 = new(Pulmonic Sibilant Affricate, Places.Pharyngeal);
+  ImpossibleClass I42 = new(Pulmonic Sibilant Affricate, Places.Glottal);
+  ImpossibleClass I43 = new(Pulmonic Lateral Affricate, Places.Bilabial);
+  ImpossibleClass I44 = new(Pulmonic Lateral Affricate Labial Dental, Places.LabioDental);
+  ImpossibleClass I45 = new(Pulmonic Lateral Affricate, Places.Pharyngeal);
+  ImpossibleClass I46 = new(Pulmonic Lateral Affricate, Places.Glottal);
+  ImpossibleClass I47 = new(Ejective Lateral Fricative Affricate, Places.Bilabial);
+  ImpossibleClass I48 = new(Ejective Lateral Fricative Affricate Labial Dental, Places.LabioDental);
+  ImpossibleClass I49 = new(Ejective Lateral Fricative Affricate, Places.Pharyngeal);
+  ImpossibleClass I50 = new(Ejective Central Affricate, Places.Glottal);
+  ImpossibleClass I51 = new(Ejective Lateral Affricate, Places.Bilabial);
+  ImpossibleClass I52 = new(Ejective Lateral Affricate Labial Dental, Places.LabioDental);
+  ImpossibleClass I53 = new(Ejective Lateral Affricate, Places.Pharyngeal);
+  ImpossibleClass I54 = new(Ejective Lateral Affricate, Places.Glottal);
+  ImpossibleClass I55 = new(Ejective Tenuis Click Affricate, Places.Velar);
+  ImpossibleClass I56 = new(Ejective Tenuis Click Affricate, Places.Uvular);
+  ImpossibleClass I57 = new(Ejective Tenuis Click Affricate, Places.Pharyngeal);
+  ImpossibleClass I58 = new(Ejective Nasal Click Affricate, Places.Velar);
+  ImpossibleClass I59 = new(Ejective Nasal Click Affricate, Places.Uvular);
+  ImpossibleClass I60 = new(Ejective Nasal Click Affricate, Places.Pharyngeal);
+  ImpossibleClass I61 = new(Ejective Tenuis Lateral Click Affricate, Places.Bilabial);
+  ImpossibleClass I62 = new(Ejective Tenuis Lateral Click Affricate Labial Dental, Places.LabioDental);
+  ImpossibleClass I63 = new(Ejective Tenuis Lateral Click Affricate, Places.Velar);
+  ImpossibleClass I64 = new(Ejective Tenuis Lateral Click Affricate, Places.Uvular);
+  ImpossibleClass I65 = new(Ejective Tenuis Lateral Click Affricate, Places.Pharyngeal);
+}
+
+//======================================================================
+
+namespace DiacriticModifiers {
+  DiacriticClass UndefinedEscapeCharacter     = new("Undefined escape character", null, "*");
+  DiacriticClass Nasalized                    = new("Nasalized", "\u0303", "_~");
+  DiacriticClass Centralized                  = new("Centralized", "\u0308", "_\"");
+  DiacriticClass Advanced                     = new("Advanced", "\u031F", "_+");
+  DiacriticClass Retracted                    = new("Retracted", "\u0320", "_-");
+  DiacriticClass RisingTone                   = new("RisingTone ", "\u030C", "_R");
+  DiacriticClass Voiceless                    = new("Voiceless", "\u0325", "_0");
+  DiacriticClass Implosive                    = new("Implosive", null, "_<");
+  DiacriticClass Syllabic                     = new("Syllabic", "\u0329", "_=");
+  DiacriticClass Ejective                     = new("Ejective", "\u02BC", "_>");
+  DiacriticClass Pharyngealized               = new("Pharyngealized ", "\u02E4", "_?\\");
+  DiacriticClass FallingTone                  = new("Falling tone", "\u0302", "_F");
+  DiacriticClass NonSyllabic                  = new("Non-syllabic", "\u032F", "_^");
+  DiacriticClass NoAudibleRelease             = new("No audible release", "\u031A", "_}");
+  DiacriticClass RhoticHook                   = new("Rhotic hook", "\u02DE", "`");
+  DiacriticClass AdvancedTongueRoot           = new("Advanced tongue root ", "\u0318", "_A");
+  DiacriticClass Apical                       = new("Apical", "\u033A", "_a");
+  DiacriticClass ExtraLowTone                 = new("Extra low tone", "\u030F", "_B");
+  DiacriticClass LessRounded                  = new("Less rounded", "\u031C", "_c");
+  DiacriticClass Dental                       = new("Dental", "\u032A", "_d");
+  DiacriticClass VelarizedOrPharyngealized    = new("Velarized or Pharyngealized", "\u0334", "_e");
+  DiacriticClass GlobalFall                   = new("Global fall", "\u2198", "<F>");
+  DiacriticClass Velarized                    = new("Velarized", "\u02E0", "_G");
+  DiacriticClass HighTone                     = new("High tone", "\u0301", "_H");
+  DiacriticClass Aspirated                    = new("Aspirated", "\u02B0", "_h");
+  DiacriticClass Palatalized                  = new("Palatalized", "\u02B2", "_j");
+  DiacriticClass CreakyVoiced                 = new("Creaky voiced", "\u0330", "_k");
+  DiacriticClass LowTone                      = new("Low tone", "\u0300", "_L");
+  DiacriticClass LateralRelease               = new("Lateral release", "\u02E1", "_l");
+  DiacriticClass MidTone                      = new("Mid tone", "\u0304", "_M");
+  DiacriticClass Laminal                      = new("Laminal", "\u033B", "_m");
+  DiacriticClass LinguoLabial                 = new("Linguo-Labial", "\u033C", "_N");
+  DiacriticClass NasalRelease                 = new("Nasal release", "\u207F", "_n");
+  DiacriticClass MoreRounded                  = new("More rounded", "\u0339", "_O");
+  DiacriticClass Lowered                      = new("Lowered", "\u031E", "_o");
+  DiacriticClass RetractedTongueRoot          = new("Retracted tongue root", "\u0319", "_q");
+  DiacriticClass GlobalRise                   = new("Global rise", "\u2197", "<R>");
+  DiacriticClass Raised                       = new("Raised", "\u031D", "_r");
+  DiacriticClass ExtraHighTone                = new("Extra high tone", "\u030B", "_T");
+  DiacriticClass BreathyVoiced                = new("Breathy voiced", "\u0324", "_t");
+  DiacriticClass Voiced                       = new("Voiced", "\u032C", "_v");
+  DiacriticClass Labialized                   = new("Labialized", "\u02B7", "_W");
+  DiacriticClass ExtraShort                   = new("Extra short", "\u02D8", "_X");
+  DiacriticClass MidCentralized               = new("Mid-centralized", "\u033D", "_x");
+  DiacriticClass Downstep                     = new("Down-step", "↓", "!");
+  DiacriticClass Upstep                       = new("Up-step", "↑", "^");
+  DiacriticClass Long                         = new("Long", "ː", ":");
+  DiacriticClass HalfLong                     = new("Half-long", "ˑ", ":\\");
+  DiacriticClass IndeterminacyinFrenchVowels  = new("Indeterminacy in french vowels", null, "/");
+  DiacriticClass BeginNonsegmentalNotation    = new("Begin Non-segmental notation", null, "<");
+  DiacriticClass Endnonsegmentalnotation      = new("End non-segmental notation", "", ">");
+  DiacriticClass Voicedepiglottalfricative    = new("Voiced epiglottal fricative", "ʢ", "<\\");
+  DiacriticClass Postalveolarclick            = new("Post-alveolar click", "ǃ", "!\\");
+  DiacriticClass MinorGroup                   = new("Minor group", " | ", " | ");
+  DiacriticClass Dentalclick                  = new("Dental click", "ǀ", " | \\");
+  DiacriticClass MajorGroup                   = new("Major group", "‖", " |  | ");
+  DiacriticClass Alveolarlateralclick         = new("Alveolar lateral click", "ǁ", " | \\ | \\");
+  DiacriticClass Palatalclick                 = new("Palatal click", "ǂ", "");
+  DiacriticClass VoicelessDescender           = new("Voiceless descender", "\u030A", "");
+  DiacriticClass CombiningMacron              = new("Combining macron", "\u0331", "");
+  DiacriticClass TieBarBelow                  = new("Tie-bar below", "\u035C", "");
+  DiacriticClass TieBarAbove                  = new("Tie-bar above", "\u0361", "");
+  DiacriticClass ReadyMadeCombination         = new("Ready made combination", "\u026B", "");
+  DiacriticClass Becomes                      = new("Becomes", "→", "");
+  DiacriticClass Separator                    = new("Separator", "", "-");
 
 // Glyphs are not in the font
 //    Linkingmark                = new DiacriticClass("Linking Mark", "\u203f", "-\\");
 //    LowRisingTone                = new DiacriticClass("Low rising tone", "\u1DC5", "_B_L");
 //    HighRisingTone               = new DiacriticClass("High rising tone", "\u1DC4", "_H_T");
 //    RisingFallingTone            = new DiacriticClass("Rising falling tone", "\u1DC8", "_R_F");
-  }
-  }
+}
 //======================================================================
+
+IPA.NullSegment = new SegmentClass(Tex.bigotimes, "!?", true);
+
 
