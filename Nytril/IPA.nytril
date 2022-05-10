@@ -97,7 +97,6 @@ flags SegmentFeatures {
   Raised      {Name: Lang.Raised},
   Lowered     {Name: Lang.Lowered},
   Advanced    {Name: Lang.Advanced},
-  ParentVowel {Name: "Parent Vowel"},
 }
 //======================================================================
 
@@ -121,8 +120,7 @@ class SegmentClass: FactClass {
         Diacritic,
         Open,
         Backness,
-        Place,
-        Root;
+        Place;
 
   Constructor(ipa, sampa, impossible=false) {
     super.Constructor(ipa ?? Empty);
@@ -141,7 +139,7 @@ class SegmentClass: FactClass {
 
   override GetIcon = Icons.record_voice_over;
 
-  ShowFeature(feature) = feature == Features.NoFeature ? null : feature.Name;
+  ShowFeature(feature) = feature == SegmentFeatures.NoFeature ? null : feature;
 
   SegmentName = Span {
     if (Features.HasFlag(Vowel)) {
@@ -265,7 +263,7 @@ class DiacriticClass: SegmentClass {
 //======================================================================
 
 class ConsonantClass: SegmentClass {
-  Constructor(features, place, ipa, sampa=null) {
+  Constructor(ipa, features, place, sampa=null) {
     super.Constructor(ipa, sampa);
     Features = features;
     Place    = place;
@@ -275,9 +273,8 @@ class ConsonantClass: SegmentClass {
 //======================================================================
 
 class VowelClass: SegmentClass {
-  Constructor(root, features, open, backness, ipa, sampa=null) {
+  Constructor(ipa, features, open, backness, sampa=null) {
     super.Constructor(ipa, sampa);
-    Root     = root;
     Features = features | Vowel;
     Open     = open;
     Backness = backness;
