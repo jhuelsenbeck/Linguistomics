@@ -246,13 +246,11 @@ class CognateClass: FactClass {
 
 class TaxonClass {
   var           Variable,
-                Index,
-                WordCount;
+                Index;
   LanguageClass Language;
 
   Constructor(LanguageClass language) {
     Index     = each0;
-    WordCount = 0;
     Language  = language;
     Variable  = language.GlobalVariableName;
   }
@@ -387,7 +385,6 @@ class DataSetClass {
     UsedCognates   = clist.Values;
     SortedCognates = UsedCognates.Sort(false);
 
-
     foreach (var cognate in UsedCognates)
       ComputeCognate(dictionary, cognate);
 
@@ -398,8 +395,24 @@ class DataSetClass {
 
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
     SortedSegments  = UniqueSegments.Sort(true, ref CompareAlpha);
+    TransitionCount = GetTransitionsCount;
 
-    GetFrequencies;
+    var seg = 100.0 / SegmentCount;
+    var max = 0;
+    foreach (var s in UniqueSegments) {
+      s.LangUsedFrequency = new VectorClass(languages.Length, null);
+      s.UsedFrequency     = seg * s.UsedCount;
+      foreach (var m in s.LangUsedCount) {
+        if (m > max)
+          max = m;
+      }
+    }
+
+    max = 1.0 / max;
+    foreach (var s in UniqueSegments) {
+      foreach (var t in Taxa)
+        s.LangUsedFrequency.SetValue(t.Index, max * s.LangUsedCount[t.Index]);
+    }
   }
 
   static CompareAlpha(SegmentClass s0, SegmentClass s1, options) {
@@ -437,8 +450,11 @@ class DataSetClass {
         foreach (var s in word.Segments) {
           ++SegmentCount;
           ++s.UsedCount;
+
+          if (not valid s.LangUsedCount)
+            s.LangUsedCount = new VectorClass(Languages.Length, 0);
+          s.LangUsedCount.AddValue(taxon.Index, 1);
         }
-        taxon.WordCount++;
         WordList.SetValue(taxon.Index, word);
       }
     }
@@ -509,7 +525,7 @@ class DataSetClass {
               if (s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation) {
                 var list = t.GetValue(s0.Index, s1.Index);
                 var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
-                if (not exists list) {
+                if (not valid list) {
                   list = new ListClass(16);
                   t.SetValue(s0.Index, s1.Index, list);
                 }
@@ -523,35 +539,6 @@ class DataSetClass {
       }
     }
     return t;
-  }
-
-
-  void GetFrequencies {
-    TransitionCount = GetTransitionsCount;
-
-    var set = new DictionaryClass<SegmentDataClass>(1024);
-    foreach (var sd in SegmentFrequencyData)
-      set.Add(sd, sd.Text);
-
-    var sum = 0.0;
-    foreach (var s in UniqueSegments) {
-      if (not s.Punctuation) {
-        var f = set.FindKey(s.Ipa);
-        if (valid f)
-          s.Frequency = f.Frequency;
-        sum += s.Frequency;
-      }
-    }
-    if (sum > 0) {
-      sum = 100.0 / sum;
-
-      var seg = 100.0 / SegmentCount;
-
-      foreach (var s in UniqueSegments) {
-        s.NormalFrequency = sum * s.Frequency;
-        s.UsedFrequency   = seg * s.UsedCount;
-      }
-    }
   }
 }
 //======================================================================

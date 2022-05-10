@@ -43,7 +43,7 @@ class EulerDiagramClass {
     Frame {
       Width: EX(width);
       ParAlignment: ParAlignments.Center;
-      if (exists name)
+      if (valid name)
         Span {TitleStyle; name};
       Paragraph {
         Separator: Space;
@@ -251,7 +251,7 @@ namespace MatchCell {
   SegmentBox(HashSetClass set, SegmentClass segment, color) = Canvas {
     HAlign: HAligns.Center;
     Size: DocMetrics.BoxSize;
-    if (exists segment.?Ipa) {
+    if (valid segment.?Ipa) {
       TextHeight: DocMetrics.BoxSize.Height - 6 pts;
       TextColor: color;
       SegmentText(set, segment)
@@ -336,7 +336,7 @@ class TabOptionsClass {
       PaddingLR: 2 pts;
       TextHeight: 7 pts;
 
-      if (exists RowLabels)
+      if (valid RowLabels)
         RowLabels[each0];
       else
         f;
@@ -658,7 +658,7 @@ namespace SegmentTree {
 namespace SegmentDisplay {
   CompareSegments(SegmentClass s0, SegmentClass s1, options) = s0.UsedCount - s1.UsedCount;
 
-  FrequencyChart(DataSetClass data, SizeClass size, extra = true) = Chart {
+  FrequencyChart(DataSetClass data, SizeClass size) = Chart {
     TextHeight: 11 pts;
     Size: size;
 
@@ -675,12 +675,6 @@ namespace SegmentDisplay {
       (each sorted).ShowSegment;
     };
     ValueAxis: ChartAxis;
-    if (extra) {
-      ChartSeries {
-        Label: "All Languages";
-        (each sorted).NormalFrequency;
-      };
-    }
     ChartSeries {
       Label: Lang.Experiment;
       (each sorted).UsedFrequency;
@@ -761,13 +755,13 @@ namespace SegmentDisplay {
     }
   };
 
-  ShowLanguages(DataSetClass data, SizeClass content) = Block {
+  ShowLanguages(DataSetClass data, SizeClass maxsize) = Block {
     var rows      = 2;
     var cols      = (data.Taxa.Length + 1) div rows;
     var taxagroup = data.Taxa / cols;
     var h         = 14 pts;
     var space     = 5 pts;
-    var size      = Size(content.Width / cols - space, content.Height / rows - space*2);
+    var size      = Size(maxsize.Width / cols - space, maxsize.Height / rows - space*2);
 
     foreach (var group in taxagroup) {
       HBox {

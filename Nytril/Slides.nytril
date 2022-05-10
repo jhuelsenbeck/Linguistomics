@@ -4,7 +4,7 @@ using Format, Units, Slides;
 
 class JohnPresentationClass: ShowClass {
   Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", [People.JPHuelsenbeck]);
+    super.Constructor(experiment, #aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", [People.JPHuelsenbeck], false);
     Design = new FancyDesignClass;
     AddSlideGroup(Slides);
   }
@@ -14,90 +14,71 @@ class JohnPresentationClass: ShowClass {
 namespace Slides.Introduction {
   Title = PaperSections.Introduction.Title;
 
-  Body(ShowClass show) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     PaperSections.Introduction.Slide;
-    Style.ShowTable(show.Experiment, TableFigures.Cognates);
+    Style.ShowTable(experiment, maxsize, TableFigures.Cognates);
   };
 }
 
 namespace Slides.ExampleTree {
   Title = "Example Tree";
-
-  Body(ShowClass show) = Block {
-    show.ShowFigureSlide(Figures.ExampleTree);
-  };
+  Figure = Figures.ExampleTree;
 }
 
 namespace Slides.Alignment {
-  Title = Lang.Alignment;
-
-  Body(ShowClass show) = show.ShowFigureSlide(Figures.Alignment, TextHeight: 5 pts);
+  Title  = Lang.Alignment;
+  Format = TextHeight: 5 pts;
+  Figure = Figures.Alignment;
 }
 
 namespace Slides.ShowResults {
   Title = Lang.ConsensusTree;
 
-  Body(ShowClass show) = Style.TreeOptions {
-    Width: show.Design.SlideContent.Width;
-    Root: show.Experiment.MainRun.Tree;
+  Body(ExperimentClass experiment, SizeClass maxsize) = Style.TreeOptions {
+    Width: maxsize.Width;
+    Root: experiment.MainRun.Tree;
   };
 }
 
 namespace Slides.LanguagesUsed {
   Title = Lang.Languages;
 
-  Body(ShowClass show) = SegmentDisplay.ShowLanguages(show.Experiment.Data, show.Design.SlideContent);
+  Body(ExperimentClass experiment, SizeClass maxsize) = SegmentDisplay.ShowLanguages(experiment.Data, maxsize);
 }
 
 namespace Slides.ConceptsUsed {
   Title = Lang.ConceptsExamples;
 
-  Body(ShowClass show) = AllWords.ShowTable(11 pts, show.Experiment.Data, 2);
+  Body(ExperimentClass experiment, SizeClass maxsize) = AllWords.ShowTable(11 pts, experiment.Data, 2);
 }
 
 namespace Slides.UniqueCharacters {
   Title = Lang.UniqueSegments;
 
-  Body(ShowClass show) = SegmentDisplay.ShowSegmentAssignments(show.Experiment.Data);
+  Body(ExperimentClass experiment, SizeClass maxsize) = SegmentDisplay.ShowSegmentAssignments(experiment.Data);
 }
 
 namespace Slides.SegmentFrequencies {
   Title = Lang.SegmentFrequencies;
 
-  Body(ShowClass show) = SegmentDisplay.FrequencyChart(show.Experiment.Data, show.Design.SlideContent);
+  Body(ExperimentClass experiment, SizeClass maxsize) = SegmentDisplay.FrequencyChart(experiment.Data, maxsize);
 }
 
 namespace Slides.PartitionRules {
-  Title = Lang.PartitionRules;
-
-  Body(ShowClass show) = show.Experiment.Rule.ShowPartitions;
+  Figure = Figures.PartitionAssignments;
+  Format = TextHeight: 18 pts;
 }
 
 namespace Slides.PartitionDiagramExperiment {
-  Title = Lang.TransitionRates;
-
-  Body(ShowClass show) = Block {
-    Figures.FrequencyDiagramStatic.Caption(show.Experiment);
-    show.Experiment.CalcExperiment.PartitionDiagram(Size(show.Design.SlideContent.Width, show.Design.SlideContent.Height - 40 pts));
-  };
+  Figure = Figures.FrequencyDiagramExperiment;
 }
 
 namespace Slides.PartitionDiagramStatic {
-  Title = Lang.StaticRates;
-
-  Body(ShowClass show) = Block {
-    Figures.FrequencyDiagramStatic.Caption(show.Experiment);
-    show.Experiment.CalcStatic.PartitionDiagram(show.Design.SlideContent);
-  };
+  Figure = Figures.FrequencyDiagramStatic;
 }
 
 namespace Slides.PartitionBoxStatic {
-  Title = "Segment Transition Rates";
-
-  Body(ShowClass show) = Block {
-    Figures.FrequencyBoxStatic.Caption(show.Experiment);
-    show.Experiment.CalcStatic.PartitionBox(Size(show.Design.SlideContent.Width, show.Design.SlideContent.Height - 20 pts));
-  };
+  Figure = Figures.FrequencyBoxStatic;
 }
 //======================================================================
 

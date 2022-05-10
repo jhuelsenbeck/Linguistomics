@@ -10,7 +10,7 @@ flags SlideTypes {
 
 class DavidLinguisticPresentationClass: ShowClass {
   Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "Presentation - Linguistics", Authors);
+    super.Constructor(experiment, #75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "Presentation - Linguistics", Authors, true);
     Title     = "From phonology to phylogeny\nA new framework for phylogenetic inference";
     Design    = new ProgressDesignClass;
 //    Design    = new FancyDesignClass;
@@ -22,7 +22,7 @@ class DavidLinguisticPresentationClass: ShowClass {
 
 class DavidBioPresentationClass: ShowClass {
   Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #6fea4e3d-384d-4606-99e5-1c1ffa006c73#, "Presentation - Biology", Authors);
+    super.Constructor(experiment, #6fea4e3d-384d-4606-99e5-1c1ffa006c73#, "Presentation - Biology", Authors, true);
     Title     = "Biology\nA new framework for phylogenetic inference";
     Design    = new ProgressDesignClass;
     TypeFlags = Integer(Bio);
@@ -81,7 +81,6 @@ namespace DavidSlides.Introduction {
     Figure = TableFigures.BinaryRepresentation;
   }
 
-
   namespace Slide.Slide5 {
     Title = "The problem";
 
@@ -113,11 +112,10 @@ namespace DavidSlides.Introduction {
   namespace Slide.Slide7 {
     Title = "My Colaborators";
 
-    Body(ShowClass show) = Block {
-      LeftIndent: show.Design.ItemIndent;
+    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
       TextHeight: 18 pts;
       Separator: Paragraph;
-      CitationLib.GetFullName(each show.AuthorList.FindSlice(p => p != People.DMGoldstein));
+      CitationLib.GetFullName(each Authors.FindSlice(p => p != People.DMGoldstein));
     };
 
   }
@@ -233,8 +231,8 @@ namespace DavidSlides.PreviousResearch {
       "There’s much more uncertainty after that";
     };
 
-    Items.Item3.Body(ShowClass show) = Span {
-      ShowTree("Romance phylogeny", null, show.Experiment.PriorTree, show.Design.ItemWidth, null);
+    Items.Item3.Body(ExperimentClass experiment, SizeClass maxsize) = Span {
+      ShowTree("Romance phylogeny", null, experiment.PriorTree, maxsize.Width, null);
     };
 
     Items.Item4.Text = Span {
@@ -255,21 +253,21 @@ namespace DavidSlides.TheData {
     Title = "Overview";
     Pause = true;
 
-    Items.Item1.Body(ShowClass show) = Span {
+    Items.Item1.Body(ExperimentClass experiment, SizeClass maxsize) = Span {
       ItemTextFormat;
-      show.Data.Taxa.Length - 1;
+      experiment.Data.Taxa.Length - 1;
       " Romance languages plus Latin as an outgroup";
     };
 
-    Items.Item2.Body(ShowClass show) = Span {
+    Items.Item2.Body(ExperimentClass experiment, SizeClass maxsize) = Span {
       ItemTextFormat;
-      show.Data.WordCount;
+      experiment.Data.WordCount;
       " words";
     };
 
-    Items.Item3.Body(ShowClass show) = Span {
+    Items.Item3.Body(ExperimentClass experiment, SizeClass maxsize) = Span {
       ItemTextFormat;
-      show.Data.UniqueSegments.Length;
+      experiment.Data.UniqueSegments.Length;
       " unique segments";
     };
 
@@ -277,16 +275,23 @@ namespace DavidSlides.TheData {
       "How many word forms from each language";
     };
 
-    Items.Item5.Body(ShowClass show) = TableFigures.WordCountTable.Body(show.Experiment) {
+    Items.Item5.Body(ExperimentClass experiment, SizeClass maxsize) = TableFigures.WordCountTable.Body(experiment, maxsize) {
       TextHeight: 14;
     };
+  }
 
-    Items.Item6.Text = Span {
+  namespace Slide.FunctionalLoad {
+    Title = "Percentages";
+    Text = Span {
       "functional load; locus of sound change/deletion; simple probability of "
       "transition between two segments or segmental stability -Comparison of rate "
       "matrices -differences in representation e.g. not all phonemic descriptions "
       "agree";
     };
+  }
+
+  namespace Slide.Percentages {
+    Figure = Figures.SegmentPercentages;
   }
 
   namespace Slide.Slide2 {
@@ -365,6 +370,7 @@ namespace DavidSlides.TheData {
   namespace Slide.Slide5 {
     Title  = "An example of an aligned cognate set";
     Figure = TableFigures.ManualAlignment;
+    Format = TextHeight: 16 pts;
   }
 
   namespace Slide.Slide6 {
@@ -486,38 +492,28 @@ namespace DavidSlides.Methods {
       ItemTextFormat;
       Paragraph {
         "What is the probability of an unobserved phenomenon—such as a phylogenetic tree, a rate of change, or an alignment—given the observable data and our prior assumptions?";
-        SpaceAfter: 40 pts;
       };
-
+      Paragraph;
       Equations.BayesTheorem.GetLayoutBlock {
         TextHeight: 18 pts;
       };
     };
-  }
 
-   namespace Slide.Slide6 {
-    Title = "Bayes’ Theorem ";
-
-    Items.Item1.Text = Block {
+    Items.Item2.Text = Block {
       ItemTextFormat;
       Paragraph {
         "What is the specific relation for our experiment";
-        SpaceAfter: 24 pts;
       };
-
-      Equations.PosteriorProbabilityDistribution.GetLayoutBlock {
-        TextHeight: 18 pts;
-      };
+      Paragraph;
+      Equations.PosteriorProbabilityDistribution.GetLayoutBlock ItemTextFormat;
     };
   }
 
   namespace Slide.Slide3 {
     Title = "The general-time reversible (GTR) substitution model";
 
-    Items.Item1.Text = Block {
-      Equations.GTR4.GetLayoutBlock {
-        TextHeight: 18 pts;
-      };
+    Text = Block {
+      Equations.GTR4.GetLayoutBlock ItemTextFormat;
     };
   }
 
@@ -573,8 +569,6 @@ namespace DavidSlides.Methods {
       "how do you split up the alignments? how do you calculate the probability of the alignments?";
     };
   }
-
-
 
   namespace Slide.Slide7 {
     Title = "Rate matrix";
@@ -633,9 +627,9 @@ namespace DavidSlides.Methods {
   }
 
   namespace Slide.Alignment {
-    Title = Lang.Alignment;
-
-    Body(ShowClass show) = show.ShowFigureSlide(Figures.Alignment, TextHeight:  7 pts);
+    Title  = Lang.Alignment;
+    Format = TextHeight: 7 pts;
+    Figure = Figures.Alignment;
   }
 
   namespace Slide.Slide8 {
@@ -665,10 +659,8 @@ namespace DavidSlides.Results {
   namespace Slide.Slide2 {
     Title = "Majority-rule consensus tree";
 
-    Body(ShowClass show) = Block {
-      ShowTree(null, null, show.Experiment.MainRun.Tree, show.Design.ItemWidth, Lang.Branches) {
-        MarginL: show.Design.ItemIndent;
-      }
+    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+      ShowTree(null, null, experiment.MainRun.Tree, maxsize.Width, Lang.Branches);
     };
   }
 
@@ -809,8 +801,9 @@ namespace DavidSlides.Discussion {
 
   namespace Slide.Partitions {
     Title = "Segment Partitions";
-    Body(ShowClass show) = Block {
-      show.Experiment.Rule.ShowPartitions {
+    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+      experiment.Rule.ShowPartitions {
+        TextHeight: 18 pts;
         ParAlignment: ParAlignments.Center;
       };
     };
@@ -818,8 +811,8 @@ namespace DavidSlides.Discussion {
 
   namespace Slide.SegmentalFrequency {
     Title = "The frequency distribution of segments";
-    Body(ShowClass show) = Block {
-      SegmentDisplay.FrequencyChart(show.Data, show.Design.SlideContent, false);
+    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+      SegmentDisplay.FrequencyChart(experiment.Data, maxsize);
     };
   }
 

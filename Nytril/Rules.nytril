@@ -533,7 +533,7 @@ class CalcRatesClass {
         var  rate = Transition.Rates[i][each0];
         var  hint = new PartitionHintClass(Data, Rule, rate, p1, p2);
         var  r    = rate * RateScale / MaxLine;
-        var  frac = 255.0 * r;
+        var  frac = Math.Round(Math.Max([1.0, r]) * 255.0);
         var  line1 = new LineStyleClass(rate * RateScale, 0.25, 1) {
           LineColor: Color(0, 0, 0, frac)
         };
@@ -590,8 +590,8 @@ class CalcRatesClass {
     };
   };
 
-  PartitionDiagram(SizeClass wholesize) = VBox {
-    Width: wholesize.Width;
+  PartitionDiagram(SizeClass maxsize) = VBox {
+    Width: maxsize.Width;
     HAlign: HAligns.Center;
 
     HBox {
@@ -618,7 +618,7 @@ class CalcRatesClass {
         };
       };
 
-      MainDiagram(Min([wholesize.Width, wholesize.Height]));
+      MainDiagram(Min([maxsize.Width, maxsize.Height]));
     };
   };
 
@@ -700,7 +700,7 @@ class CalcRatesClass {
         foreach (var s1 in segments) {
           if (s0.Index != s1.Index) {
             var tlist = t.GetValue(s0.Index, s1.Index);
-            if (exists tlist) {
+            if (valid tlist) {
               Canvas {
                 HAlign: HAligns.Center;
                 VAlign: VAligns.Center;

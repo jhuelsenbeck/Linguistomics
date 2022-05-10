@@ -1,8 +1,16 @@
 ﻿using Format, Units, Math, IO, Style, Defs, Equations, Languages, References;
 //======================================================================
 
+namespace Figures.PartitionAssignments {
+  Title = Lang.PartitionRules;
+
+  Body(ExperimentClass experiment, SizeClass maxsize) = experiment.Rule.ShowPartitions;
+}
+
 namespace Figures.FrequencyDiagramExperiment {
-  Caption(ExperimentClass experiment) = FigureCaption {
+  Title = "Transition Rates Between Partitions";
+
+  Caption(ExperimentClass experiment) = Span {
     var rule = experiment.CalcExperiment.Rule;
 
     "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
@@ -11,29 +19,23 @@ namespace Figures.FrequencyDiagramExperiment {
     PaperSections.WordTransformation.Note;
   };
 
-  Body(ExperimentClass experiment) = FigureBody {
-    experiment.CalcExperiment.PartitionDiagram(Size(6.6 inches, 5 inches));
-  };
+  Body(ExperimentClass experiment, SizeClass maxsize) = experiment.CalcExperiment.PartitionDiagram(maxsize);
 }
 //======================================================================
 
 namespace Figures.FrequencyDiagramStatic {
-  Caption(ExperimentClass experiment) = FigureCaption {
-    var rule = experiment.CalcStatic.Rule;
+  Title = "Prior Transition Rates";
 
-    "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
-    "Here, the area of the circles is proportional to the occurance frequencies for each group. ";
-    "The width of the lines is proportional to the rates of transition between each partition. ";
-  };
+  Caption(ExperimentClass experiment) = Figures.FrequencyDiagramExperiment.Caption(experiment);
 
-  Body(ExperimentClass experiment) = FigureBody {
-    experiment.CalcStatic.PartitionDiagram(Size(6.6 inches, 5 inches));
-  };
+  Body(ExperimentClass experiment, SizeClass maxsize) = experiment.CalcStatic.PartitionDiagram(maxsize);
 }
 //======================================================================
 
 namespace Figures.FrequencyBoxStatic {
-  Caption(ExperimentClass experiment) = FigureCaption {
+  Title = "Segment Transition Counts";
+
+  Caption(ExperimentClass experiment) = Span {
     "This chart shows the number of times that each segment (on the left vertical bar) differs from any other other segment in the same cognate set at the same aligned segment position. ";
     "The rates of transitions to gaps and from gaps are ignored. ";
     "The segments are grouped into partitions, represented by the  sections divided by lines. ";
@@ -42,35 +44,93 @@ namespace Figures.FrequencyBoxStatic {
     "The chart has diagonal symmetry.";
   };
 
-  Body(ExperimentClass experiment) = FigureBody {
-    experiment.CalcStatic.PartitionBox(Size(6.6 inches, 5 inches));
-  };
+  Body(ExperimentClass experiment, SizeClass maxsize) = experiment.CalcStatic.PartitionBox(maxsize);
 }
 //======================================================================
 
 namespace Figures.SegmentFrequencies {
-  Caption(ExperimentClass experiment) = FigureCaption {
-    "Frequency of occurance of segments in the lexicon";
-    Citation {Phoible};
+  Caption(ExperimentClass experiment) = Span {
+    "Frequency of occurance of segments";
   };
 
-  Body(ExperimentClass experiment) = FigureBody {
-    SegmentDisplay.FrequencyChart(experiment.Data, Size(DocMetrics.PageContent.Width, 3 inches));
-  };
+  Body(ExperimentClass experiment, SizeClass maxsize) = SegmentDisplay.FrequencyChart(experiment.Data, Size(maxsize.Width, 3 inches));
 }
 
 //======================================================================
 
 namespace Figures.ConsensusTree {
-  Caption(ExperimentClass experiment) = FigureCaption {
-    Lang.ConsensusTree;
+  Caption(ExperimentClass experiment) = Span {
+    "Segment Percentages";
   };
 
-  Body(ExperimentClass experiment) = FigureBody {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     Style.TreeOptions {
       Width: DocMetrics.TreeFigureWidth;
       Root: experiment.MainRun.Tree;
     }
+  };
+}
+//======================================================================
+
+namespace Figures.SegmentPercentages {
+  Title = "Segment Occurance Rates";
+
+  Caption(ExperimentClass experiment) = Span {
+    "Comparison of normalized occurance rates of segments in each language. Segments are sorted by {0} rates. "(experiment.Data.Taxa[0].Language);
+  };
+
+  LangCanvas(SegmentClass[] segments, TaxonClass taxon, width, height) = HBox {
+    VAlign: VAligns.Bottom;
+    Height: height;
+    BorderB: 0.25 pts;
+    SegmentBar(each segments, taxon.Index, width, height);
+  };
+
+  SegmentBar(SegmentClass segment, index, width, height) = Canvas {
+    Size: Size(width, height * segment.LangUsedFrequency[index]);
+    Background: ChartColor(0);
+    Hover: new HoverClass(segment, HoverTypes.Tip);
+  };
+
+  SegmentLabel(SegmentClass segment, width) = HBox {
+    Width: width;
+    HAlign: HAligns.Center;
+    segment.ShowSegment;
+  };
+
+  CompareRate(SegmentClass s0, SegmentClass s1, options) {
+    return s0.LangUsedFrequency[0].Compare(s1.LangUsedFrequency[0]);
+  }
+
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+    var data     = experiment.Data;
+    var segments = data.UniqueSegments.Sort(true, ref CompareRate);
+    var lw       = 60 pts;
+    var w        = maxsize.Width - lw;
+    var cw       = maxsize.Width - lw;
+    var bw       = cw / segments.Length;
+    var h        = (maxsize.Height - 20 pts) / data.Taxa.Length;
+
+    TextHeight: 10 pts;
+
+    Table {
+      Columns: [lw {HAlign: HAligns.Right; VAlign: VAligns.Bottom}, cw];
+      foreach (var taxon in data.Taxa) {
+        Row {
+          Span {taxon.Language};
+          LangCanvas(segments, taxon, bw, h);
+        };
+      }
+
+      Row {
+        Empty;
+        TextHeight: 0.6 * bw;
+        HBox {
+          SegmentLabel(each segments, bw);
+        };
+      }
+
+    };
   };
 }
 //======================================================================
@@ -115,15 +175,13 @@ class ExampleConceptClass {
 //======================================================================
 
 namespace Figures.ExampleTree {
-  Caption(ExperimentClass experiment) = FigureCaption {
+  Caption(ExperimentClass experiment) = Span {
     "An example tree showing the relationships of {0} languages."(SampledLanguages(experiment.Data.Languages.Length));
   };
 
-  Body(ExperimentClass experiment) = FigureBody {
-    TreeOptions {
-      Width: 5 inches;
-      Root: experiment.NumberedTree;
-    };
+  Body(ExperimentClass experiment, SizeClass maxsize) = TreeOptions {
+    Width: maxsize.Width;
+    Root: experiment.NumberedTree;
   };
 }
 //======================================================================
@@ -287,7 +345,7 @@ namespace Figures.Alignment {
 
   HomBox(ExperimentClass experiment, i, map) = NumBox(i, MapTable(experiment, map, false), MapTable(experiment, map, true));
 
-  Caption(ExperimentClass experiment) = FigureCaption {
+  Caption(ExperimentClass experiment) = Span {
     "Alignments ";
     InParens {SegmentalAlignment};
     " are formed from the observed segments ";
@@ -296,31 +354,29 @@ namespace Figures.Alignment {
     InParens {HomologyMap}; eos;
   };
 
-  Body(ExperimentClass experiment) = FigureBody {
-    VBox {
-      Margin: 5 pts;
-      HAlign: HAligns.Center;
-      HBox {
-        MarginB: 4 pts;
-        VAlign: VAligns.Bottom;
-        var size = Size(ArrowWidth, experiment.Data.Taxa.Length * 8 pts);
+  Body(ExperimentClass experiment, SizeClass maxsize) = VBox {
+    Margin: 5 pts;
+    HAlign: HAligns.Center;
+    HBox {
+      MarginB: 4 pts;
+      VAlign: VAligns.Bottom;
+      var size = Size(ArrowWidth, experiment.Data.Taxa.Length * 8 pts);
 
-        ArrowFigure(size) {
-          Transform: Affine(-1, 0, 0, 1, size.Width, 0);
-        };
-        HBox {
-          VAlign: VAligns.Top;
-          LabelBox(SegmentalInfo);
-          ContentBox(SegmentTable(experiment, false)) {MarginB: ArrowMargin; MarginR: ArrowMargin};
-        };
-        ArrowFigure(size);
+      ArrowFigure(size) {
+        Transform: Affine(-1, 0, 0, 1, size.Width, 0);
       };
       HBox {
-        HomBox(experiment, 1, HMap1);
-        Canvas {Width: 0.25 inches};
-        HomBox(experiment, 2, HMap2);
-      }
+        VAlign: VAligns.Top;
+        LabelBox(SegmentalInfo);
+        ContentBox(SegmentTable(experiment, false)) {MarginB: ArrowMargin; MarginR: ArrowMargin};
+      };
+      ArrowFigure(size);
     };
+    HBox {
+      HomBox(experiment, 1, HMap1);
+      Canvas {Width: 0.25 inches};
+      HomBox(experiment, 2, HMap2);
+    }
   };
 }
 //======================================================================
@@ -385,7 +441,7 @@ namespace PaperSections.WordTransformation {
   Title = "Understanding Word Transformation";
   Note  = "Note that rates of change are much greater from one word segment to another when the change is within the word segment group than it is when the change is between word segments in different groups.";
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     var modelname = Span {TextCase: TextCases.AllLower; experiment.Rule.Name};
 
     FirstPar {
@@ -407,7 +463,7 @@ namespace PaperSections.WordTransformation {
 namespace PaperSections.WordSegmentRelationships {
   Title = "Word Segment Relationships";
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     FirstPar {
       "Our method treats the relationships of word segments from one language to another as a random variable. ";
       "Figure [NUMBER] shows alignments for ten of the words we analyzed. ";
@@ -422,7 +478,7 @@ namespace PaperSections.WordSegmentRelationships {
 namespace PaperSections.RomanceLanguagePhylogeny {
   Title = "Romance Language Phylogeny";
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     BodyPar {
       "The results of the MCMC analysis are shown below.";
     };
@@ -436,7 +492,7 @@ namespace PaperSections.Discussion {
 
   SoundChange(op) = Span {IPA.Segments.ah.ShowDoc; op; IPA.Segments.oh.ShowDoc};
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     FirstPar {
      "Despite a wealth of textual data from Latin and its medieval descendants, the phylogeny of Romance remains a challenge";
      Citation {hall1974; malkiel1978; koutna1990}; eos;
@@ -504,7 +560,7 @@ namespace PaperSections.Discussion {
 namespace PaperSections.MethodsSummary {
   Title = Lang.Methods;
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     FirstPar {
       "A detailed description of the model and analyses can be found in the supplemental material, [reference]. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
@@ -520,7 +576,7 @@ namespace PaperSections.DataSummary {
   S = IPA.Segments.s.ShowDoc;
   W = TextIpa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     var data = experiment.Data;
 
     FirstPar {
@@ -561,7 +617,7 @@ namespace PaperSections.DataSummary {
       IPA.Segments.kw.ShowSegment; "-id), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
     };
 
-    ShowTable(experiment, TableFigures.ManualAlignment);
+    ShowTable(experiment, maxsize, TableFigures.ManualAlignment);
 
     BodyPar {
       "Our method models insertions, deletions, and transitions among segments. ";
@@ -582,15 +638,15 @@ namespace TableFigures.ManualAlignment {
     eos;
   };
 
-  Caption(ExperimentClass experiment) = FigureCaption {
+  Caption(ExperimentClass experiment) = Span {
     "Manual alignment of the words for the concept ";
     WordDisplay(experiment);
   };
 
-  Body(ExperimentClass experiment) = LanguageTable {
+  Body(ExperimentClass experiment, SizeClass maxsize) = LanguageTable {
     var cognate = experiment.Data.GetCognate(Trial.FigureConcept);
 
-    Columns: [1.5 inches, 2.5 inches, 2.5 inch];
+    Columns: [1.5 inches, 2 inches, 2.5 inch];
     LanguageTitleRow {
       Lang.Language; Lang.PhonemicRep; Lang.Alignment;
     };
@@ -616,12 +672,12 @@ namespace TableFigures.WordCountTable {
     eos;
   };
 
-  Caption(ExperimentClass experiment) = FigureCaption {
+  Caption(ExperimentClass experiment) = Span {
     "Manual alignment of the words for the concept ";
     WordDisplay(experiment);
   };
 
-  Body(ExperimentClass experiment) = LanguageTable {
+  Body(ExperimentClass experiment, SizeClass maxsize) = LanguageTable {
     Columns: [1.5 inches, 1 inches];
     LanguageTitleRow {
       Lang.Language; Lang.WordForms;
@@ -643,7 +699,7 @@ namespace PaperSections.ModelInference {
 
   InsertionLessThanDeletion = Span {InsertionRate; Tex.lt; DeletionRate};
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     FirstPar {
       "We assume that modern languages are related to one another through an unknown phylogenetic tree, ";
       UnknownTree;
@@ -715,7 +771,7 @@ namespace PaperSections.ModelInference {
 namespace PaperSections.DataCuration {
   Title = "Data Curation and Analyses";
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     var example = experiment.DataConcept;
 
     FirstPar {
@@ -740,7 +796,8 @@ namespace PaperSections.DataCuration {
       "Below is an example of a more complex encoding. The numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
     };
 
-    FigureBody {
+    BodyPar {
+      ParAlignment: ParAlignments.Center;
       IPA.Segments.VlAlveolarNSAffricate.ShowFrame(3 inches, 20 pts);
     };
 
@@ -765,7 +822,7 @@ namespace PaperSections.DataCuration {
 namespace PaperSections.Acknowledgements {
   Title = "Acknowledgements";
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     FirstPar {
       "J.P.H. was supported through NSF (1759909) and the Koret Foundation. We thank Gerton Lunter for help with the TKF91 model.";
     }
@@ -777,7 +834,7 @@ namespace PaperSections.Acknowledgements {
 namespace PaperSections.Contributions {
   Title = "Author contributions statement";
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     FirstPar {
       "D.M.G. collected data, S.H.M. developed the control software, and J.P.H. developed the MCMC software. All authors wrote the manuscript. ";
     }
@@ -789,7 +846,7 @@ namespace PaperSections.Contributions {
 
 namespace PaperSections.Methods {
   Title = Lang.Methods;
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     var treefigure      = FigureReference(experiment, Figures.ExampleTree);
     var alignmentfigure = FigureReference(experiment, Figures.Alignment);
     var ec              = experiment.ExampleConcept;
@@ -1132,7 +1189,8 @@ namespace PaperSections.Methods {
       "The rates of change between the pairs of states can be represented in table form as";
     };
 
-    FigureBody {
+    BodyPar {
+      ParAlignment: ParAlignments.Center;
       Frame {
         StateSection.StateTable;
       };
@@ -1626,7 +1684,7 @@ namespace PaperSections.Conclusion {
     value; Space; name;
   };
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     var data = experiment.Data;
     AddVariable("Languages", data.Taxa.Length);
     AddVariable("Concepts", data.UsedCognates.Length);
