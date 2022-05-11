@@ -74,21 +74,28 @@ namespace Figures.ConsensusTree {
 
 class HoverSegmentClass: HoverClass {
   SegmentClass Segment;
-  var          Index;
+  TaxonClass   Taxon;
 
-  Constructor(SegmentClass segment, index) {
+  Constructor(SegmentClass segment, TaxonClass taxon) {
     super.Constructor(segment, HoverTypes.Tip);
     Segment = segment;
-    Index   = index;
+    Taxon   = taxon;
   }
 
   override GetLayoutTip = HBox {
     VAlign: VAligns.Center;
-    Lang.Occurrences(Segment.LangUsedCount[Index]);
+    Lang.Occurrences(Segment.LangUsedCount[Taxon.Index]);
     Segment.GetLayoutTip;
   };
 
-  override GetQuery = Segment.FindFacts(WordClass);
+  override GetQuery = MatchAll WordClass {
+    MatchAny LanguageClass {
+      Taxon.Language;
+    };
+    MatchAny SegmentClass{
+      Segment;
+    };
+  };
 }
 
 //======================================================================
@@ -104,13 +111,13 @@ namespace Figures.SegmentPercentages {
     VAlign: VAligns.Bottom;
     Height: height;
     BorderB: 0.25 pts;
-    SegmentBar(each segments, taxon.Index, width, height);
+    SegmentBar(each segments, taxon, width, height);
   };
 
-  SegmentBar(SegmentClass segment, index, width, height) = Canvas {
-    Size: Size(width, height * segment.LangUsedFrequency[index]);
+  SegmentBar(SegmentClass segment, TaxonClass taxon, width, height) = Canvas {
+    Size: Size(width, height * segment.LangUsedFrequency[taxon.Index]);
     Background: ChartColor(0);
-    Hover: new HoverSegmentClass(segment, index);
+    Hover: new HoverSegmentClass(segment, taxon);
   };
 
   SegmentLabel(SegmentClass segment, width) = HBox {

@@ -409,14 +409,19 @@ class TransitionClass {
 }
 //======================================================================
 
-class TranClass {
+class TranHoverClass: HoverClass {
   var List,
       Percent;
 
   Constructor(list, percent) {
+    super.Constructor(list, HoverTypes.Tip);
     List    = list;
     Percent = percent;
   }
+
+  override GetQuery = MatchAny WordClass {
+    (each List).Word1;
+  };
 
   override GetLayoutTip = Frame {
     var first = List.FirstElement;
@@ -708,7 +713,7 @@ class CalcRatesClass {
 
                 Span {
                   tlist.Length;
-                  Hover: new HoverClass(new TranClass(tlist, tlist.Length*max), HoverTypes.Tip);
+                  Hover: new TranHoverClass(tlist, tlist.Length*max);
                 }
               };
             }
