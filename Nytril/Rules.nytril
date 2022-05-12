@@ -150,6 +150,27 @@ abstract class RuleClass {
     return segments.FindSlice(segment => MatchesRule(filter, segment));
   }
 
+  ShowLegend(textheight, width) = VBox {
+    Table {
+      TextHeight: textheight;
+      Columns: [textheight * 1.5 {HAlign: HAligns.Right}, textheight, width - textheight * 2.5];
+
+      foreach (var partition in Partitions) {
+        Row {
+          Span {
+            each1;
+            Space;
+          };
+          Cell {
+            TextColor: ChartColor(each0);
+            Tex.blackcirc;
+          };
+          partition.Filter;
+        }
+      }
+    };
+  };
+
   ShowPartitions = Table {
     Columns: [0.5 inch, 2 inches, 5 inches];
     TextHeight: 12 pts;
@@ -410,17 +431,17 @@ class TransitionClass {
 //======================================================================
 
 class TranHoverClass: HoverClass {
-  var List,
-      Percent;
+  WordPairClass[] List;
+  var             Percent;
 
-  Constructor(list, percent) {
+  Constructor(WordPairClass[] list, percent) {
     super.Constructor(list, HoverTypes.Tip);
     List    = list;
     Percent = percent;
   }
 
   override GetQuery = MatchAny WordClass {
-    (each List).Word1;
+    (each List).Word1 + (each List).Word2;
   };
 
   override GetLayoutTip = Frame {
@@ -580,28 +601,7 @@ class CalcRatesClass {
 
     HBox {
       VAlign: VAligns.Center;
-
-      VBox {
-        Table {
-          TextHeight: 12 pts;
-          Columns: [22 pts {HAlign: HAligns.Right;}, 12 pts, 1 inch];
-
-          foreach (var partition in Rule.Partitions) {
-            Row {
-              Span {
-                each1;
-                Space;
-              };
-              Cell {
-                TextColor: ChartColor(each0);
-                Tex.blackcirc;
-              };
-              partition.Filter;
-            }
-          }
-        };
-      };
-
+      Rule.ShowLegend(12 pts, 1.5 inch);
       MainDiagram(Min([maxsize.Width, maxsize.Height]));
     };
   };
@@ -696,7 +696,7 @@ class CalcRatesClass {
                 foreach (var e in tlist) {
                   var c0 = e.Word1.Padded[e.Index];
                   var c1 = e.Word2.Padded[e.Index];
-                  if (c0.Features.HasFlag(Vowel) != c1.Features.HasFlag(Vowel))
+                  if (c0.Features.HasFlag(Vowel | Semivowel) != c1.Features.HasFlag(Vowel | Semivowel))
                     ++count;
                 }
 
@@ -713,7 +713,7 @@ class CalcRatesClass {
 
                 Span {
                   tlist.Length;
-                  Hover: new TranHoverClass(tlist, tlist.Length*max);
+                  Hover: new TranHoverClass(tlist.Values, tlist.Length*max);
                 }
               };
             }

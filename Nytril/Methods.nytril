@@ -82,8 +82,8 @@ class HoverSegmentClass: HoverClass {
     Taxon   = taxon;
   }
 
-  override GetLayoutTip = HBox {
-    VAlign: VAligns.Center;
+  override GetLayoutTip = VBox {
+    HAlign: HAligns.Center;
     Lang.Occurrences(Segment.LangUsedCount[Taxon.Index]);
     Segment.GetLayoutTip;
   };
@@ -101,27 +101,32 @@ class HoverSegmentClass: HoverClass {
 //======================================================================
 
 namespace Figures.SegmentPercentages {
-  Title = "Segment Occurance Rates";
+  Title   = "Segment Occurance Rates";
+  CBorder = 0.25 pts;
+
 
   Caption(ExperimentClass experiment) = Span {
-    "Comparison of occurance rates of segments in each language. Segments are sorted by rates in {0}. Rates are normalized to the rate of the most frequently ocurring segment \"{1}.\""(experiment.Data.Taxa[0].Language, experiment.Data.MostFrequentSegment.ShowSegment);
+    "Comparison of occurance rates of segments in each language. Segments are sorted by the rates in {0}. "(experiment.Data.Taxa[0].Language);
+    "Rates are normalized to the rate of the most frequently ocurring segment "; SQuoteEnd {experiment.Data.MostFrequentSegment.ShowSegment};
   };
 
   LangCanvas(SegmentClass[] segments, TaxonClass taxon, width, height) = HBox {
     VAlign: VAligns.Bottom;
     Height: height;
-    BorderB: 0.25 pts;
-    SegmentBar(each segments, taxon, width, height);
+    BorderB: CBorder;
+    SegmentBar(each segments, taxon, width, height - CBorder);
   };
 
   SegmentBar(SegmentClass segment, TaxonClass taxon, width, height) = Canvas {
-    Size: Size(width, height * segment.LangUsedFrequency[taxon.Index]);
-    Background: ChartColor(0);
+    Size: Size(width-1, height * segment.LangUsedFrequency[taxon.Index]);
+    MarginR: 1;
+    Background: ChartColor(segment.PartitionIndex);
     Hover: new HoverSegmentClass(segment, taxon);
   };
 
-  SegmentLabel(SegmentClass segment, width) = HBox {
+  SegmentLabel(SegmentClass segment, width, height) = HBox {
     Width: width;
+    Height: height;
     HAlign: HAligns.Center;
     segment.ShowSegment;
   };
@@ -130,35 +135,40 @@ namespace Figures.SegmentPercentages {
     return s0.LangUsedFrequency[0].Compare(s1.LangUsedFrequency[0]);
   }
 
-  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+  OccurranceChart(ExperimentClass experiment, SizeClass maxsize) = MatrixBlock {
     var data     = experiment.Data;
     var segments = data.UniqueSegments.Sort(true, ref CompareRate);
     var lw       = 60 pts;
-    var w        = maxsize.Width - lw;
     var cw       = maxsize.Width - lw;
     var bw       = cw / segments.Length;
-    var h        = (maxsize.Height - 20 pts) / data.Taxa.Length;
+    var bh       = bw * 1.5;
+    var h        = (maxsize.Height - bh) / data.Taxa.Length;
 
-    TextHeight: 10 pts;
+    TextHeight: 12 pts;
 
-    Table {
-      Columns: [lw {HAlign: HAligns.Right; VAlign: VAligns.Bottom}, cw];
-      foreach (var taxon in data.Taxa) {
-        Row {
-          Span {taxon.Language};
-          LangCanvas(segments, taxon, bw, h);
-        };
-      }
-
+    VAlign: VAligns.Bottom;
+//    Columns: [lw {HAlign: HAligns.Right}, cw];
+    foreach (var taxon in data.Taxa) {
       Row {
-        Empty;
-        TextHeight: 1.1 * bw;
-        HBox {
-          SegmentLabel(each segments, bw);
-        };
-      }
+        Cell {PaddingR: 3 pts; taxon.Language};
+        LangCanvas(segments, taxon, bw, h);
+      };
+    }
 
-    };
+    Row {
+      Empty;
+      TextHeight: 1.1 * bw;
+      HBox {
+        SegmentLabel(each segments, bw, bh);
+      };
+    }
+  };
+
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+    Paragraph {
+      experiment.Rule.ShowLegend(10 pts, 1.1 inch) {Border: 0.25 {Color: 80%}; MarginR: 24 pts; Padding: 10};
+      OccurranceChart(experiment, new SizeClass(maxsize.Width - 1.75 inches, maxsize.Height));
+    }
   };
 }
 //======================================================================
