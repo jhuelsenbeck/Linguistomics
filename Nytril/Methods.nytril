@@ -77,7 +77,7 @@ class HoverSegmentClass: HoverClass {
   TaxonClass   Taxon;
 
   Constructor(SegmentClass segment, TaxonClass taxon) {
-    super.Constructor(segment, HoverTypes.Tip);
+    super.Constructor(segment, HoverTypes.Tip, HoverResponses.RunQuery);
     Segment = segment;
     Taxon   = taxon;
   }
@@ -106,8 +106,9 @@ namespace Figures.SegmentPercentages {
 
 
   Caption(ExperimentClass experiment) = Span {
-    "Comparison of occurance rates of segments in each language. Segments are sorted by the rates in {0}. "(experiment.Data.Taxa[0].Language);
-    "Rates are normalized to the rate of the most frequently ocurring segment "; SQuoteEnd {experiment.Data.MostFrequentSegment.ShowSegment};
+    var l0 = experiment.Data.Taxa[0].Language;
+
+    "Comparison of occurance rates of segments in each language. Segments are sorted by the rates in "; l0 ; ". Bars are normalized to the rate of the most frequently ocurring segment in each language. Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
   LangCanvas(SegmentClass[] segments, TaxonClass taxon, width, height) = HBox {
@@ -145,12 +146,20 @@ namespace Figures.SegmentPercentages {
     var h        = (maxsize.Height - bh) / data.Taxa.Length;
 
     TextHeight: 12 pts;
-
     VAlign: VAligns.Bottom;
-//    Columns: [lw {HAlign: HAligns.Right}, cw];
-    foreach (var taxon in data.Taxa) {
+    foreach (var taxon in data.SortedTaxa) {
       Row {
-        Cell {PaddingR: 3 pts; taxon.Language};
+        Cell {
+          PaddingR: 3 pts;
+          Frame {
+            Width: lw;
+            taxon.Language;
+          };
+          Canvas {
+            Background: Colors.Red;
+            Size: Size(lw * taxon.FrequencyDelta / data.MaxFrequencyDelta, 2);
+          };
+        };
         LangCanvas(segments, taxon, bw, h);
       };
     }
@@ -166,8 +175,8 @@ namespace Figures.SegmentPercentages {
 
   Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     Paragraph {
-      experiment.Rule.ShowLegend(10 pts, 1.1 inch) {Border: 0.25 {Color: 80%}; MarginR: 24 pts; Padding: 10};
-      OccurranceChart(experiment, new SizeClass(maxsize.Width - 1.75 inches, maxsize.Height));
+      experiment.Rule.ShowLegend(10 pts, 1.1 inch) {Border: 0.25 {Color: 80%}; MarginR: 12 pts; Padding: 5};
+      OccurranceChart(experiment, new SizeClass(maxsize.Width - 2 inches, maxsize.Height));
     }
   };
 }

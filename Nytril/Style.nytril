@@ -276,12 +276,12 @@ namespace Style {
   };
 
   FigureReference(ExperimentClass experiment, figure) = ShowFigureNumber(figure) {
-    Hover: new HoverClass(figure.GlobalVariablePath, HoverTypes.LocationMark, new FigureTipClass(experiment, figure));
+    Hover: new FigureHoverClass(experiment, figure);
   };
 
   ShowFigureDoc(ExperimentClass experiment, figure) = Block {
     Paragraph {
-      LocationMark: figure.GlobalVariablePath;
+      AnchorTag: figure.GlobalVariablePath;
       SpaceBefore: 10 pts;
       SpaceAfter: 6 pts;
       KeepWithNext: true;
@@ -405,7 +405,7 @@ namespace Style {
     LeftIndent: 0.25 inches;
 
     Paragraph {
-      LocationMark: person.GlobalVariablePath;
+      AnchorTag: person.GlobalVariablePath;
       FirstIndent: -0.25 inches;
       CitationLib.GetFullName(person);
     };
@@ -599,7 +599,7 @@ namespace Style {
     ".";
     Tab;
     Span {
-      Hover: new HoverClass(Lang.Appendix + each0, HoverTypes.LocationMark);
+      Hover: new HoverClass(Lang.Appendix + each0, HoverTypes.Anchor);
       appendix.Title
     };
   };
@@ -612,7 +612,7 @@ namespace Style {
         ParAlignment: ParAlignments.Center;
         TextHeight: 14 pts;
         SpaceAfter: 8 pts;
-        LocationMark: Lang.Appendix + each0;
+        AnchorTag: Lang.Appendix + each0;
         "{0} {1} - "(Lang.Appendix, each1);
         appendix.Title;
       };
@@ -712,11 +712,12 @@ namespace Style {
 }
 //======================================================================
 
-class FigureTipClass {
+class FigureHoverClass: HoverClass {
   var             Figure;
   ExperimentClass Experiment;
 
   Constructor(ExperimentClass experiment, figure) {
+    super.Constructor(figure.GlobalVariablePath, HoverTypes.Anchor);
     Experiment = experiment;
     Figure     = figure;
   }
