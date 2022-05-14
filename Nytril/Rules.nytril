@@ -37,12 +37,12 @@ class FilterClass {
 class PartitionClass: FactClass {
   field          Name;
   SegmentClass[] Segments;
+  PointClass     Center;
+  FilterClass    Filter;
   var            Index,
-                 Center,
                  Radius,
                  Angle,
                  Outer;
-  FilterClass    Filter;
 
   Constructor(index, FilterClass filter, SegmentClass[] segments) {
     super.Constructor(filter.Name);
@@ -495,7 +495,7 @@ class CalcRatesClass {
   }
 
   void Calibrate(size) {
-    var middle = Point(size.Width * 0.5, size.Height * 0.5);
+    var middle = new PointClass(size.Width * 0.5, size.Height * 0.5);
 
     MaxExtent    = Min([middle.X, middle.Y]);
     MaxRadius    = MaxExtent * 0.13;
@@ -524,7 +524,7 @@ class CalcRatesClass {
   }
 
   private MainDiagram(min) = Canvas {
-    var size = Size(min, min);
+    var size = new SizeClass(min, min);
 
     TransformFit: true;
     Calibrate(size);
@@ -538,7 +538,7 @@ class CalcRatesClass {
         var  r    = rate * RateScale / MaxLine;
         var  frac = Math.Round(Math.Max([1.0, r]) * 255.0);
         var  line1 = new LineStyleClass(rate * RateScale, 0.25, 1) {
-          LineColor: Color(0, 0, 0, frac)
+          LineColor: new ColorClass(0, 0, 0, frac)
         };
         var line2 = new LineStyleClass(rate * RateScale, 0.25, 1);
 
@@ -567,7 +567,7 @@ class CalcRatesClass {
       Figure {
         Fill: ChartColor(each0);
         Stroke: 0.5 pt;
-        Ellipse(Rect(pos, fsize));
+        Ellipse(new(pos, new(fsize)));
         Hover: new HoverClass(p1, HoverTypes.Tip);
       };
 
@@ -581,7 +581,7 @@ class CalcRatesClass {
     p.Filter.CircleName;
   };
 
-  CircleText(PartitionClass p, pos, fsize, textheight) = HBox {
+  CircleText(PartitionClass p, PointClass pos, fsize, textheight) = HBox {
     Position: pos;
     Height: fsize;
     Frame {
@@ -652,7 +652,7 @@ class CalcRatesClass {
   }
 
   PartitionBlock = Block {
-    PartitionBox(Size(DocMetrics.PageContent.Width, DocMetrics.PageContent.Height * 0.8));
+    PartitionBox(new SizeClass(DocMetrics.PageContent.Width, DocMetrics.PageContent.Height * 0.8));
 
 /*
     PageBreak;
@@ -701,12 +701,12 @@ class CalcRatesClass {
                 if (count > 0) {
                   var f = Integer(255.0 * (1.0 - count / tlist.Length));
                   if (f < 255)
-                    Background: Color(f, 255, f);
+                    Background: new ColorClass(f, 255, f);
                 }
                 else {
                   var f = Integer((1.0 - tlist.Length * max) * 255.0);
                   if (f < 255)
-                    Background: Color(255, f, f);
+                    Background: new ColorClass(255, f, f);
                 }
 
                 Span {
@@ -735,7 +735,7 @@ class CalcRatesClass {
         if (p != s.PartitionIndex) {
           Canvas {
             Y: y;
-            Size: Size(size.Width, grid);
+            Size: new SizeClass(size.Width, grid);
             Background: gcolor;
           };
           p = s.PartitionIndex;
@@ -760,7 +760,7 @@ class CalcRatesClass {
           if (p != s.PartitionIndex) {
             Canvas {
               X: x;
-              Size: Size(grid, size.Height);
+              Size: new SizeClass(grid, size.Height);
               Background: gcolor;
             };
             p = s.PartitionIndex;

@@ -2,40 +2,40 @@
 //======================================================================
 
 namespace PaperSizes {
-  Letter    = Size(8.5 inches, 11 inches);
-  Slideshow = Size(11 inches, 7.5 inches);
-  A4        = Size(210 millimeters, 297 millimeters);
+  Letter    = new SizeClass(8.5 inches, 11 inches);
+  Slideshow = new SizeClass(11 inches, 7.5 inches);
+  A4        = new SizeClass(210 millimeters, 297 millimeters);
 }
 //======================================================================
 
 namespace DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.Normal) {
   DocumentSize = PaperSizes.Letter;
-  PageMargin   = Margin(0.75 inches, 0.9 inches, 0.75 inches, 1 inches);
+  PageMargin   = new MarginClass(0.75 inches, 0.9 inches, 0.75 inches, 1 inches);
 }
 
 namespace DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.SlideShow) {
   DocumentSize = PaperSizes.Slideshow;
-  PageMargin   = Margin(0.5 inches, 1 inches, 0.5 inches, 0.5 inches);
+  PageMargin   = new MarginClass(0.5 inches, 1 inches, 0.5 inches, 0.5 inches);
 }
 
 namespace DocMetrics if (PaperSystem == PaperSystems.A and DocumentType == DocumentTypes.Normal) {
   DocumentSize = PaperSizes.A4;
-  PageMargin   = Margin(20 millimeters);
+  PageMargin   = new MarginClass(20 millimeters);
 }
 
 namespace DocMetrics if (PaperSystem == PaperSystems.A and DocumentType == DocumentTypes.SlideShow) {
   DocumentSize = PaperSizes.A4.Landscape;
-  PageMargin   = Margin(0.5 inches, 1.5 inches, 0.5 inches, 0.75 inches);
+  PageMargin   = new MarginClass(0.5 inches, 1.5 inches, 0.5 inches, 0.75 inches);
 }
 //======================================================================
 
 namespace DocMetrics {
-  PageContent     = DocumentSize - PageMargin - Size(Gutter, 0);
+  PageContent     = DocumentSize - PageMargin - new SizeClass(Gutter, 0);
   TableSpace      = 24 pts;
   TreeWidth       = PageContent.Width;
   TreeFigureWidth = TreeWidth - 30 pts;
-  BoxSize         = Size(18 pts, 20 pts);
-  CellSize        = Size(BoxSize.Width * 2, BoxSize.Height);
+  BoxSize         = new SizeClass(18 pts, 20 pts);
+  CellSize        = new SizeClass(BoxSize.Width * 2, BoxSize.Height);
   Gutter          = 0;
   SegmentColumns  = 4;
   SegmentSize     = 40 pts;
@@ -163,8 +163,8 @@ namespace Style {
   KeywordFormat        = {TextColor: Colors.Blue};
   ItemTextFormat       = {TextHeight: 20 pts};
   ImpossibleBackground = {Background: 80%};
-  CommentColor         = Color(0, 0x64, 0);
-  StringColor          = Color(168, 21, 53);
+  CommentColor         = new ColorClass(0, 0x64, 0);
+  StringColor          = new ColorClass(168, 21, 53);
   NoteIndexIndent      = 6 pts;
   VariableColor        = Colors.DarkBlue;
   AlignBackColor       = 95%;
@@ -174,9 +174,9 @@ namespace Style {
   TableEdge            = {Edge: TableEdgeSize};
   ColumnEdge           = {EdgeR: TableEdgeSize};
   SegmentBottom        = {EdgeB: TableEdgeSize {Color: 80%}};
-  Logo1                = Color(0, 0, 0xFF);
-  Logo1A               = Color(0, 0, 0xE0);
-  Logo2                = Color(0xFF, 0xA5, 00);
+  Logo1                = new ColorClass(0, 0, 0xFF);
+  Logo1A               = new ColorClass(0, 0, 0xE0);
+  Logo2                = new ColorClass(0xFF, 0xA5, 00);
   LightColor           = Colors.Orange;
   DarkColor            = Colors.DarkBlue;
   ArrowColor           = Colors.LightGray;
@@ -186,30 +186,30 @@ namespace Style {
   SectionFore          = Colors.White;
   HeaderText           = Colors.White;
   SlideHeader          = Colors.SlateGray;
-  Hyperlink            = Color(100, 42, 143);
-  HeaderBar1           = Color(23, 54, 114);
+  Hyperlink            = new ColorClass(100, 42, 143);
+  HeaderBar1           = new ColorClass(23, 54, 114);
   HeaderBar2           = 99%;
   RightBar             = null;
   LeftBar              = (90%)..(99%);
   BarLine              = LightColor;
-  FooterBar1           = Color(223, 232, 249);
+  FooterBar1           = new ColorClass(223, 232, 249);
   FooterBar2           = Colors.White;
   TitleColor           = Colors.Orange;
-  HeaderLeftBar = new RadialGradientClass(Point(95%, 50%), Point(95%, 50%), Size(20%, 90%)) {
+  HeaderLeftBar = new RadialGradientClass(new(95%, 50%), new(95%, 50%), new(20%, 90%)) {
     Stops: [
       new ColorStopClass(0%, HeaderBar2),
       new ColorStopClass(100%, HeaderBar1),
     ];
   };
 
-  TitlePageBackground = new RadialGradientClass(Point(50%, 50%), Point(50%, 50%), Size(120%, 120%)) {
+  TitlePageBackground = new RadialGradientClass(new(50%, 50%), new(50%, 50%), new(120%, 120%)) {
     Stops: [
       new ColorStopClass(0%, HeaderBar1),
       new ColorStopClass(100%, HeaderBar2),
     ];
   };
 
-  SphericalFill(ColorClass c) = new RadialGradientClass(Point(35%, 35%), Point(35%, 35%), Size(75%, 75%)) {
+  SphericalFill(ColorClass c) = new RadialGradientClass(new(35%, 35%), new(35%, 35%), new(75%, 75%)) {
     Stops: [
       new ColorStopClass(20%, c * 60%),
       new ColorStopClass(90%, c),
@@ -298,7 +298,7 @@ namespace Style {
       ParAlignment: ParAlignments.Center;
       SpaceAfter: 6 pts;
       Frame {
-        figure.Body(experiment, Size(DocMetrics.PageContent.Width, DocMetrics.PageContent.Height * 0.5))
+        figure.Body(experiment, new SizeClass(DocMetrics.PageContent.Width, DocMetrics.PageContent.Height * 0.5))
       }
     };
   };
@@ -533,7 +533,7 @@ namespace Style {
     X: options.Width - options.Width * node.BranchLength / options.MaxYear;
     Figure {
       Fill: Colors.Green;
-      Rectangle(Rect(Point(0), Size(5, options.TextHeight)))
+      Rectangle(new(new(0), new(5, options.TextHeight)))
     };
     Paragraph {
       Space;
@@ -551,7 +551,7 @@ namespace Style {
   BranchMarker = Figure {
     Stroke: 1 pt {Color: Colors.Gray};
     Fill: Colors.Black;
-    Ellipse(Rect(0, 1 pts))
+    Ellipse(new(new(0), new(1 pts)))
   };
 
   TreeOptions = Tree {

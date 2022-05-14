@@ -29,8 +29,8 @@ class ShowDesignClass {
     SlideHeader    = header;
     SlideFooter    = footer;
     SlidePage      = DocMetrics.DocumentSize;
-    SlideMargin    = Margin(DocMetrics.PageMargin.Left, SlideHeader + HeaderGap, DocMetrics.PageMargin.Right, SlideFooter);
-    SlideContent   = Size(SlidePage.Width - SlideMargin.Left - SlideMargin.Right, DocMetrics.DocumentSize.Height - header - footer - HeaderGap*2);
+    SlideMargin    = new MarginClass(DocMetrics.PageMargin.Left, SlideHeader + HeaderGap, DocMetrics.PageMargin.Right, SlideFooter);
+    SlideContent   = new SizeClass(SlidePage.Width - SlideMargin.Left - SlideMargin.Right, DocMetrics.DocumentSize.Height - header - footer - HeaderGap*2);
     BulletDone     = Tex.blacksquare;
     BulletCurrent  = Tex.blacktriangleright;
   }
@@ -180,7 +180,7 @@ class FancyDesignClass: ShowDesignClass {
     var t  = 0.10 height;
     var x1 = 0.80 width;
     var x2 = 0.90 width;
-    var p1 = Point((x2 + x1)*0.5, height * (right ? 0.25 : 0.75));
+    var p1 = new PointClass((x2 + x1)*0.5, height * (right ? 0.25 : 0.75));
 
     Figure {
       Fill: bar;
@@ -188,7 +188,7 @@ class FancyDesignClass: ShowDesignClass {
         Closed: true;
         LineTo(x0, t);
         LineTo(x1, t);
-        QuadTo(p1, Point(x2, height));
+        QuadTo(p1, new(x2, height));
         LineTo(x2, height);
         LineTo(x0, height);
       }
@@ -200,11 +200,11 @@ class FancyDesignClass: ShowDesignClass {
         Closed: true;
         MoveTo(x0, y0);
         LineTo(x1, y0);
-        QuadTo(p1, Point(x2, height-t));
+        QuadTo(p1, new(x2, height-t));
         LineTo(width, height-t);
         LineTo(width, height);
         LineTo(x2, height);
-        QuadTo(p1, Point(x1, t));
+        QuadTo(p1, new(x1, t));
         LineTo(x0, t);
       }
     };
@@ -459,7 +459,7 @@ class SlideItemClass {
    Constructor(ShowClass show, variable, number) {
      Number   = number;
      Numbered = variable.?Numbered ?? 0;
-     var maxsize = Size(show.Design.SlideContent.Width - show.Design.TotalIndent, show.Design.SlideContent.Height);
+     var maxsize = new SizeClass(show.Design.SlideContent.Width - show.Design.TotalIndent, show.Design.SlideContent.Height);
 
      Content = Frame {
        Width: maxsize.Width;
@@ -516,7 +516,7 @@ class FigureSlideClass: SlideClass {
       ParAlignment: ParAlignments.Center;
       Frame {
         var content = show.Design.SlideContent;
-        Figure.Body(show.Experiment, Size(content.Width, content.Height - ch)) {ContentFormat};
+        Figure.Body(show.Experiment, new SizeClass(content.Width, content.Height - ch)) {ContentFormat};
       };
     };
     show.PageIndex++;
