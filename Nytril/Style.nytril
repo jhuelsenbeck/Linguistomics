@@ -72,7 +72,7 @@ class DefClass: FactClass {
 
   override GetLayoutSpan = Style.Equation {
     Symbol {
-      Hover: new HoverClass(this, HoverTypes.Tip);
+      Hover: this;
     };
     Link to this;
   };
@@ -332,9 +332,7 @@ namespace Style {
     Link to person;
     CitationLib.GetFullName(person) {
       Bold;
-      var site = person.FindFirstFact(WebsiteLink);
-      if (valid site)
-        Hover: new HoverClass(site.Value, HoverTypes.WebSecure);
+      Hover: person.FindFirstFact(WebsiteLink);
     };
 
     Span {
@@ -370,9 +368,7 @@ namespace Style {
       };
     }
 
-    var email = person.FindFirstFact(WorkEmailLink);
-    if (valid email)
-      new HoverClass(email.Value, HoverTypes.Email);
+    Hover: person.FindFirstFact(WorkEmailLink);
   };
 
   ShowAuthorList(authors) = Block {
@@ -417,14 +413,14 @@ namespace Style {
       Paragraph {
         Lang.EMail;
         ColonSpace;
-        new HoverClass(email.Value, HoverTypes.Email);
+        email;
       };
     }
 
     var site = person.FindFirstFact(WebsiteLink);
     if (valid site) {
       Paragraph {
-        new HoverClass(site.Value, HoverTypes.WebSecure);
+        site;
       };
     }
     Empty;
@@ -599,7 +595,7 @@ namespace Style {
     ".";
     Tab;
     Span {
-      Hover: new HoverClass(Lang.Appendix + each0, HoverTypes.Anchor);
+      Hover: new HoverClass(Lang.Appendix + each0, HoverTypes.None, HoverResponses.ToAnchor);
       appendix.Title
     };
   };
@@ -717,7 +713,7 @@ class FigureHoverClass: HoverClass {
   ExperimentClass Experiment;
 
   Constructor(ExperimentClass experiment, figure) {
-    super.Constructor(figure.GlobalVariablePath, HoverTypes.Anchor);
+    super.Constructor(figure.GlobalVariablePath, HoverTypes.None, HoverResponses.ToAnchor);
     Experiment = experiment;
     Figure     = figure;
   }

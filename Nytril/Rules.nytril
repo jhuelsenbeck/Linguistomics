@@ -17,7 +17,7 @@ class FilterClass {
   virtual Matches(SegmentClass segment) = true;
 
   override GetLayoutSpan = Span {
-    Hover: new HoverClass(this, HoverTypes.Tip);
+    Hover: this;
     Name;
   };
 
@@ -314,7 +314,7 @@ class NaturalPartitionClass: RuleClass {
 }
 //======================================================================
 
-class PartitionHintClass {
+class PartitionHoverClass: HoverClass {
   var            Rate;
   PartitionClass P1,
                  P2;
@@ -322,6 +322,7 @@ class PartitionHintClass {
   DataSetClass   Data;
 
   Constructor(DataSetClass data, RuleClass rule, rate, PartitionClass p1, PartitionClass p2) {
+    super.Constructor(Rule, HoverTypes.Tip, HoverResponses.ToSource);
     Rule = rule;
     Data = data;
     Rate = rate;
@@ -433,7 +434,7 @@ class TranHoverClass: HoverClass {
   var             Percent;
 
   Constructor(WordPairClass[] list, percent) {
-    super.Constructor(list, HoverTypes.Tip);
+    super.Constructor(list, HoverTypes.Tip, HoverResponses.TipDocument);
     List    = list;
     Percent = percent;
   }
@@ -442,7 +443,7 @@ class TranHoverClass: HoverClass {
     (each List).Word1 + (each List).Word2;
   };
 
-  override GetLayoutTip = Frame {
+  ShowSegments(count) = Block {
     var first = List.FirstElement;
     Paragraph {
       first.Word1.Padded[first.Index].ShowSegment;
@@ -457,10 +458,6 @@ class TranHoverClass: HoverClass {
       Percent * 100.0; "% of max";
     };
 
-    var count = Math.Min([List.Length, 30]);
-
-    Width: Min([count*3, 6]) inches;
-
     Paragraph {
       Separator: Space;
       foreach (var p in List[0..count])
@@ -469,6 +466,16 @@ class TranHoverClass: HoverClass {
 
     if (count < List.Length)
       "More...";
+  };
+
+  override GetDocument = Block {
+    ShowSegments(List.Length);
+  };
+
+  override GetLayoutTip = Frame {
+    var count = Math.Min([List.Length, 30]);
+    Width: Min([count*3, 6]) inches;
+    ShowSegments(count);
   };
 }
 //======================================================================
@@ -533,10 +540,10 @@ class CalcRatesClass {
     foreach (var p1 in Rule.Partitions) {
       var i = each0;
       foreach (var p2 in Rule.Partitions) {
-        var  rate = Transition.Rates[i][each0];
-        var  hint = new PartitionHintClass(Data, Rule, rate, p1, p2);
-        var  r    = rate * RateScale / MaxLine;
-        var  frac = Math.Round(Math.Max([1.0, r]) * 255.0);
+        var  rate  = Transition.Rates[i][each0];
+        var  hover = new PartitionHoverClass(Data, Rule, rate, p1, p2);
+        var  r     = rate * RateScale / MaxLine;
+        var  frac  = Math.Round(Math.Max([1.0, r]) * 255.0);
         var  line1 = new LineStyleClass(rate * RateScale, 0.25, 1) {
           LineColor: new ColorClass(0, 0, 0, frac)
         };
@@ -545,7 +552,7 @@ class CalcRatesClass {
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line2.LineSize*0.5, p1.Angle);
           Graphics.CircleLine(line2, c, LoopRadius + line2.LineSize, p1.Angle + Graphics.OneEighty, GapAngle) {
-            Hover: new HoverClass(hint, HoverTypes.Tip);
+            Hover: hover;
           };
         }
         else if (each0 < i) {
@@ -554,8 +561,8 @@ class CalcRatesClass {
           var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle);
 
           Graphics.Line(line1, c1, c2) {
-            Hover: new HoverClass(hint, HoverTypes.Tip);
-          };
+            Hover: hover;
+          }
         }
       }
     }
@@ -568,7 +575,7 @@ class CalcRatesClass {
         Fill: ChartColor(each0);
         Stroke: 0.5 pt;
         Ellipse(new(pos, new(fsize)));
-        Hover: new HoverClass(p1, HoverTypes.Tip);
+        Hover: p1;
       };
 
       var c = LayoutSize(TestText(p1)).Width;
@@ -684,6 +691,7 @@ class CalcRatesClass {
             var tlist = t.GetValue(s0.Index, s1.Index);
             if (valid tlist) {
               Canvas {
+                Hover: new TranHoverClass(tlist.Values, tlist.Length*max);
                 HAlign: HAligns.Center;
                 VAlign: VAligns.Center;
                 X: x;
@@ -709,10 +717,7 @@ class CalcRatesClass {
                     Background: new ColorClass(255, f, f);
                 }
 
-                Span {
-                  tlist.Length;
-                  Hover: new TranHoverClass(tlist.Values, tlist.Length*max);
-                }
+                tlist.Length;
               };
             }
           }
