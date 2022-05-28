@@ -10,6 +10,7 @@ class ShowDesignClass {
               SlideHeader,
               HeaderGap,
               BulletIndent,
+              Bullet,
               BulletSize,
               BulletDone,
               BulletCurrent,
@@ -23,7 +24,7 @@ class ShowDesignClass {
     HeaderGap      = 12 pts;
     ItemSpacer     = 10 pts;
     BodyHeight     = 18 pts;
-    BulletIndent   = 0.25 inches;
+    BulletIndent   = 0.4 inches;
     ItemIndent     = 1 inch;
     TotalIndent    = ItemIndent + BulletIndent + 0.5 inches; // Why is this 0.5 inches needed?
     SlideHeader    = header;
@@ -31,8 +32,9 @@ class ShowDesignClass {
     SlidePage      = DocMetrics.DocumentSize;
     SlideMargin    = new MarginClass(DocMetrics.PageMargin.Left, SlideHeader + HeaderGap, DocMetrics.PageMargin.Right, SlideFooter);
     SlideContent   = new SizeClass(SlidePage.Width - SlideMargin.Left - SlideMargin.Right, DocMetrics.DocumentSize.Height - header - footer - HeaderGap*2);
-    BulletDone     = Tex.blacksquare;
-    BulletCurrent  = Tex.blacktriangleright;
+    Bullet         = Tex.blacksquare;
+    BulletDone     = Icons.check;
+    BulletCurrent  = Tex.blackcirc;
   }
 
   virtual HeaderFooter(ShowClass show, SlideClass slide, title, footer) = Block {
@@ -103,9 +105,9 @@ class ProgressDesignClass: ShowDesignClass {
           var i = group.StartCount;
           for (var j = 0; j < group.CompleteCount; ++j) {
             if (i < show.PageIndex)
-              Tex.blackcirc;
+              Icons.radio_button_checked;
             else
-              Tex.bigcirc;
+              Icons.radio_button_unchecked;
             ++i;
           }
         };
@@ -571,7 +573,7 @@ class TopicSlidesClass: SlideClass {
               else if (gi.Number == number+count)
                 design.BulletCurrent;
               else
-                design.BulletDone;
+                Pause ? design.BulletDone : design.Bullet;
             };
             Paragraph;
           };

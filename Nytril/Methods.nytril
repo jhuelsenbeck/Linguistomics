@@ -72,24 +72,18 @@ namespace Figures.ConsensusTree {
 }
 //======================================================================
 
-class HoverSegmentClass: HoverClass {
+class SegmentActionClass: ActionClass {
   TaxonRateClass Rate;
   SegmentClass   Segment;
   TaxonClass     Taxon;
   var            Count;
 
   Constructor(TaxonRateClass rate, SegmentClass segment, count) {
-    super.Constructor(null, HoverResponses.RunQuery);
+    super.Constructor(Actions.RunQuery, null);
     Segment = segment;
     Taxon   = rate.Taxon;
     Count   = count;
   }
-
-  override GetLayoutTip = VBox {
-    HAlign: HAligns.Center;
-    Lang.Occurrences(Count);
-    Segment.GetLayoutTip;
-  };
 
   override GetQuery = MatchAll WordClass {
     MatchAny LanguageClass {
@@ -98,6 +92,12 @@ class HoverSegmentClass: HoverClass {
     MatchAny SegmentClass{
       Segment;
     };
+  };
+
+  override GetLayoutTip = VBox {
+    HAlign: HAligns.Center;
+    Lang.Occurrences(Count);
+    Segment.GetLayoutTip;
   };
 }
 
@@ -126,7 +126,7 @@ namespace Figures.SegmentPercentages {
     MarginR: 1;
     var s = compute.Data.UniqueSegments[index];
     Background: ChartColor(s.PartitionIndex);
-    Hover: new HoverSegmentClass(rate, s, rate.SegmentCount[index]);
+    TipAction: new SegmentActionClass(rate, s, rate.SegmentCount[index]);
   };
 
   SegmentLabel(SegmentClass[] segments, index, width, height) = HBox {
@@ -160,7 +160,7 @@ namespace Figures.SegmentPercentages {
             Background: Colors.Red;
             var frac = rate.Distance / compute.MaxDistance;
             Size: new SizeClass(lw * frac, 2);
-            Hover: new HoverClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)), HoverResponses.None);
+            Tip: new TipClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)));
           };
         };
         LangCanvas(compute, rate, bw, h);

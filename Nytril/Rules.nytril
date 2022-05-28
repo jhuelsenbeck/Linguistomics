@@ -17,7 +17,7 @@ class FilterClass {
   virtual Matches(SegmentClass segment) = true;
 
   override GetLayoutSpan = Span {
-    Hover: this;
+    TipAction: this;
     Name;
   };
 
@@ -314,7 +314,7 @@ class NaturalPartitionClass: RuleClass {
 }
 //======================================================================
 
-class PartitionHoverClass: HoverClass {
+class PartitionActionClass: ActionClass {
   var            Rate;
   PartitionClass P1,
                  P2;
@@ -322,7 +322,7 @@ class PartitionHoverClass: HoverClass {
   DataSetClass   Data;
 
   Constructor(DataSetClass data, RuleClass rule, rate, PartitionClass p1, PartitionClass p2) {
-    super.Constructor(Rule, HoverResponses.ToSource);
+    super.Constructor(Actions.ToSource, Rule);
     Rule = rule;
     Data = data;
     Rate = rate;
@@ -429,12 +429,12 @@ class TransitionClass {
 }
 //======================================================================
 
-class TranHoverClass: HoverClass {
+class TranActionClass: ActionClass {
   WordPairClass[] List;
   var             Percent;
 
   Constructor(WordPairClass[] list, percent) {
-    super.Constructor(list, HoverResponses.TipDocument);
+    super.Constructor(Actions.TipDocument, list);
     List    = list;
     Percent = percent;
   }
@@ -515,7 +515,7 @@ class CalcRatesClass {
 
     RateScale = MaxLine / Max(Max(each Transition.Rates));
 
-    var mult = 2.0 * Math.PI / Rule.Partitions.Length;
+    var mult = Math.PI2 / Rule.Partitions.Length;
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;
       partition.Radius = Sqrt(Transition.Frequencies[each0]) * fmax;
@@ -541,7 +541,7 @@ class CalcRatesClass {
       var i = each0;
       foreach (var p2 in Rule.Partitions) {
         var  rate  = Transition.Rates[i][each0];
-        var  hover = new PartitionHoverClass(Data, Rule, rate, p1, p2);
+        var  hover = new PartitionActionClass(Data, Rule, rate, p1, p2);
         var  r     = rate * RateScale / MaxLine;
         var  frac  = Math.Round(Math.Max([1.0, r]) * 255.0);
         var  line1 = new LineStyleClass(rate * RateScale, 0.25, 1) {
@@ -552,7 +552,7 @@ class CalcRatesClass {
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line2.LineSize*0.5, p1.Angle);
           Graphics.CircleLine(line2, c, LoopRadius + line2.LineSize, p1.Angle + Graphics.OneEighty, GapAngle) {
-            Hover: hover;
+            TipAction: hover;
           };
         }
         else if (each0 < i) {
@@ -561,7 +561,7 @@ class CalcRatesClass {
           var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle);
 
           Graphics.Line(line1, c1, c2) {
-            Hover: hover;
+            TipAction: hover;
           }
         }
       }
@@ -575,7 +575,7 @@ class CalcRatesClass {
         Fill: ChartColor(each0);
         Stroke: 0.5 pt;
         Ellipse(new(pos, new(fsize)));
-        Hover: p1;
+        TipAction: p1;
       };
 
       var c = LayoutSize(TestText(p1)).Width;
@@ -691,7 +691,7 @@ class CalcRatesClass {
             var tlist = t.GetValue(s0.Index, s1.Index);
             if (valid tlist) {
               Canvas {
-                Hover: new TranHoverClass(tlist.Values, tlist.Length*max);
+                TipAction: new TranActionClass(tlist.Values, tlist.Length*max);
                 HAlign: HAligns.Center;
                 VAlign: VAligns.Center;
                 X: x;

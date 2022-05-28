@@ -72,7 +72,7 @@ class DefClass: FactClass {
 
   override GetLayoutSpan = Style.Equation {
     Symbol {
-      Hover: this;
+      TipAction: this;
     };
     Link to this;
   };
@@ -276,7 +276,7 @@ namespace Style {
   };
 
   FigureReference(ExperimentClass experiment, figure) = ShowFigureNumber(figure) {
-    Hover: new FigureHoverClass(experiment, figure);
+    TipAction: new FigureActionClass(experiment, figure);
   };
 
   ShowFigureDoc(ExperimentClass experiment, figure) = Block {
@@ -332,7 +332,7 @@ namespace Style {
     Link to person;
     CitationLib.GetFullName(person) {
       Bold;
-      Hover: person.FindFirstFact(WebsiteLink);
+      TipAction: person.FindFirstFact(WebsiteLink);
     };
 
     Span {
@@ -368,7 +368,7 @@ namespace Style {
       };
     }
 
-    Hover: person.FindFirstFact(WorkEmailLink);
+    TipAction: person.FindFirstFact(WorkEmailLink);
   };
 
   ShowAuthorList(authors) = Block {
@@ -595,7 +595,7 @@ namespace Style {
     ".";
     Tab;
     Span {
-      Hover: new HoverClass(Lang.Appendix + each0, HoverResponses.ToAnchor, HoverOptions.NoTip);
+      Action: new ActionClass(Actions.ToAnchor, Lang.Appendix + each0);
       appendix.Title
     };
   };
@@ -708,12 +708,12 @@ namespace Style {
 }
 //======================================================================
 
-class FigureHoverClass: HoverClass {
+class FigureActionClass: ActionClass {
   var             Figure;
   ExperimentClass Experiment;
 
   Constructor(ExperimentClass experiment, figure) {
-    super.Constructor(figure.GlobalVariablePath, HoverResponses.ToAnchor, HoverOptions.NoTip);
+    super.Constructor(Actions.ToAnchor, figure.GlobalVariablePath);
     Experiment = experiment;
     Figure     = figure;
   }
