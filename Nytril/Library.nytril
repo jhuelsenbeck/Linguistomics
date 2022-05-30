@@ -531,71 +531,118 @@ class DataSetClass {
 }
 //======================================================================
 
-class TaxonRateClass {
+class RateDataClass {
   TaxonClass  Taxon;
-  VectorClass SegmentCount,
-              SegmentFrequency;
+  VectorClass Count,
+              Frequency;
   var         TotalCount,
               MaxFrequency,
               Distance;
 
-  Constructor(segments, TaxonClass taxon) {
-    Taxon            = taxon;
-    TotalCount       = 0;
-    MaxFrequency     = 0;
-    SegmentCount     = new VectorClass(segments, 0);
-    SegmentFrequency = new VectorClass(segments, 0.0);
+  Constructor(count, TaxonClass taxon) {
+    Taxon        = taxon;
+    TotalCount   = 0;
+    MaxFrequency = 0;
+    Count        = new VectorClass(count, 0);
+    Frequency    = new VectorClass(count, 0.0);
   }
 }
 
 //======================================================================
 
-class SegmentFrequencyClass {
-  TaxonRateClass[] Rates,
-                   SortedRates;
+class SegmentActionClass: ActionClass {
+  RateDataClass Rate;
+  SegmentClass   Segment;
+  TaxonClass     Taxon;
+  var            Count,
+                 Percent;
+
+  Constructor(RateDataClass rate, SegmentClass segment, count, percent) {
+    super.Constructor(Actions.RunQuery, null);
+    Segment = segment;
+    Taxon   = rate.Taxon;
+    Count   = count;
+    Percent = percent;
+  }
+
+  override GetQuery = MatchAll WordClass {
+    MatchAny LanguageClass {
+      Taxon.Language;
+    };
+    MatchAny SegmentClass {
+      Segment;
+    };
+  };
+
+  override GetLayoutTip = VBox {
+    HAlign: HAligns.Center;
+    Span {
+      Lang.Occurrences(Count);
+      Space;
+      Span {
+        "(";
+        TextDigits: 1;
+        Percent * 100.0;
+        "%)";
+      }
+    };
+    Segment.GetLayoutTip;
+  };
+}
+
+//======================================================================
+
+abstract class FrequencyChartClass {
+  ExperimentClass  Experiment;
+  PartitionClass[] Partitions;
   DataSetClass     Data;
   TaxonClass[]     Taxa;
   VectorClass      UsedCount,
                    UsedFrequency,
                    FirstRate;
-  var              SortedSegments,
+  RateDataClass[]  Rates,
+                   SortedRates;
+  var              RateCount,
+                   SortedIndexes,
                    MaxDistance;
 
-  Constructor(DataSetClass data) {
-    Data  = data;
-    Taxa  = data.Taxa;
-    Rates = new TaxonRateClass(data.UniqueCount, each data.Taxa);
+ Constructor(ExperimentClass experiment, count) {
+    Experiment = experiment;
+    Partitions = experiment.Rule.Partitions;
+    Data       = experiment.Data;
+    Taxa       = Data.Taxa;
+    RateCount  = count;
+    Rates      = new RateDataClass(count, each Taxa);
+  }
 
+  CompareFrequency(i0, i1, options) {
+    return FirstRate[i0].Compare(FirstRate[i1]);
+  }
 
-    foreach (var cognate in data.UsedCognates) {
-      foreach (var word in cognate.Words) {
-        var rate = Rates[word.Taxon.Index];
-        foreach (var segment in word.Segments) {
-          ++rate.TotalCount;
-          rate.SegmentCount.AddValue(segment.Index, 1);
-        }
-      }
-    }
+  static CompareDistance(RateDataClass r0, RateDataClass r1, options) {
+    return r0.Distance.Compare(r1.Distance);
+  }
+
+  void ComputeDistance(sortfunction) {
+    // Compute the Euclidean distance between each language and the first language
 
     foreach (var rate in Rates) {
       var mult = 100.0 / rate.TotalCount;
-      for (var i = 0; i < data.UniqueCount; ++i) {
-        var f = mult * rate.SegmentCount[i];
-        rate.SegmentFrequency.SetValue(i, f);
+      for (var i = 0; i < RateCount; ++i) {
+        var f = mult * rate.Count[i];
+        rate.Frequency.SetValue(i, f);
         if (f > rate.MaxFrequency)
           rate.MaxFrequency = f;
       }
     }
-
-    // Compute the Euclidean distance between each language and the first language
 
     var max = 0.0;
     var r0  = Rates[0];
     foreach (var rate in Rates) {
       if (each0 > 0) {
         var sum = 0;
-        for (var i = 0; i < data.UniqueCount; ++i) {
-          var delta = rate.SegmentFrequency[i] - r0.SegmentFrequency[i];
+        for (var i = 0; i < RateCount; ++i) {
+          var delta = rate.Frequency[i] - r0.Frequency[i];
           sum += delta * delta;
         }
         rate.Distance = Math.Sqrt(sum);
@@ -607,19 +654,227 @@ class SegmentFrequencyClass {
     }
 
     MaxDistance = max;
-    FirstRate   = r0.SegmentFrequency;
-    var a = 0 ..< data.UniqueCount step 1;
-    SortedSegments = a.Sort(true, ref CompareFrequency);
-    SortedRates    = Rates.Sort(false, ref CompareDistance);
+    FirstRate   = r0.Frequency;
+    var a = 0 ..< RateCount step 1;
+    SortedIndexes = a.Sort(true, sortfunction);
+    SortedRates   = Rates.Sort(false, ref CompareDistance);
   }
 
-  CompareFrequency(s0, s1, options) {
-    return FirstRate[s0].Compare(FirstRate[s1]);
+  abstract SegmentBar(RateDataClass rate, index, width, height);
+  abstract OccurranceChart(SizeClass maxsize);
+
+  LangCanvas(RateDataClass rate, width, height) = HBox {
+    var cborder = 0.25 pts;
+
+    VAlign: VAligns.Bottom;
+    Height: height;
+    BorderB: cborder;
+    SegmentBar(rate, each SortedIndexes, width, height - cborder);
+  };
+
+  ShowChart(SizeClass maxsize) = Paragraph {
+    Experiment.Rule.ShowLegend(10 pts, 1.1 inch) {Border: 0.25 {Color: 80%}; MarginR: 12 pts; Padding: 5};
+    OccurranceChart(new SizeClass(maxsize.Width - 2 inches, maxsize.Height));
+  };
+}
+//======================================================================
+
+class SegmentFrequencyClass: FrequencyChartClass {
+  Constructor(ExperimentClass experiment, group) {
+    super.Constructor(experiment, experiment.Data.UniqueCount);
+
+    foreach (var cognate in Data.UsedCognates) {
+      foreach (var word in cognate.Words) {
+        var rate = Rates[word.Taxon.Index];
+        foreach (var segment in word.Segments) {
+          ++rate.TotalCount;
+          rate.Count.AddValue(segment.Index, 1);
+        }
+      }
+    }
+
+    ComputeDistance(group ? ref CompareGroups : ref CompareFrequency);
   }
 
-  static CompareDistance(TaxonRateClass r0, TaxonRateClass r1, options) {
-    return r0.Distance.Compare(r1.Distance);
+  CompareGroups(i0, i1, options) {
+    var s0 = Data.UniqueSegments[i0];
+    var s1 = Data.UniqueSegments[i1];
+    var d  = s0.PartitionIndex - s1.PartitionIndex;
+    if (d == 0)
+      return FirstRate[s1].Compare(FirstRate[s0]);
+    return d;
   }
+
+  override SegmentBar(RateDataClass rate, index, width, height) = Canvas {
+    var f = rate.Frequency[index] / rate.MaxFrequency;
+    Size: new SizeClass(width-1, height * f);
+    MarginR: 1;
+    var s = Data.UniqueSegments[index];
+    Background: ChartColor(s.PartitionIndex);
+    TipAction: new SegmentActionClass(rate, s, rate.Count[index], f);
+  };
+
+  SegmentLabel(SegmentClass[] segments, index, width, height) = HBox {
+    Width: width;
+    Height: height;
+    HAlign: HAligns.Center;
+    segments[index].ShowSegment;
+  };
+
+  override OccurranceChart(SizeClass maxsize) = MatrixBlock {
+    var lw = 60 pts;
+    var cw = maxsize.Width - lw;
+    var bw = cw / Data.UniqueCount;
+    var bh = bw * 1.5;
+    var h  = (maxsize.Height - bh) / Taxa.Length;
+    var r0 = SortedRates[0];
+
+    TextHeight: 12 pts;
+    VAlign: VAligns.Bottom;
+    foreach (var rate in SortedRates) {
+      Row {
+        Cell {
+          PaddingR: 3 pts;
+          Frame {
+            Width: lw;
+            rate.Taxon.Language;
+          };
+          Canvas {
+            Background: Colors.Red;
+            var frac = rate.Distance / MaxDistance;
+            Size: new SizeClass(lw * frac, 2);
+            Tip: new TipClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)));
+          };
+        };
+        LangCanvas(rate, bw, h);
+      };
+    }
+
+    Row {
+      Empty;
+      TextHeight: 1.1 * bw;
+      HBox {
+        SegmentLabel(Data.UniqueSegments, each SortedIndexes, bw, bh);
+      };
+    }
+  };
+}
+
+//======================================================================
+
+class PartitionRateActionClass: ActionClass {
+  RateDataClass  Rate;
+  PartitionClass Partition;
+  TaxonClass     Taxon;
+  var            Count,
+                 Percent;
+
+  Constructor(RateDataClass rate, PartitionClass partition, count, percent) {
+    super.Constructor(Actions.RunQuery, null);
+    Partition = partition;
+    Taxon     = rate.Taxon;
+    Count     = count;
+    Percent   = percent;
+  }
+
+  override GetQuery = MatchAll WordClass {
+    MatchAny LanguageClass {
+      Taxon.Language;
+    };
+    MatchAny PartitionClass {
+      Partition;
+    };
+  };
+
+  override GetLayoutTip = VBox {
+    HAlign: HAligns.Center;
+    Span {
+      Lang.Occurrences(Count);
+      Space;
+      Span {
+        "(";
+        TextDigits: 1;
+        Percent * 100.0;
+        "%)";
+      }
+    };
+  };
+}
+
+//======================================================================
+
+class PartitionFrequencyClass: FrequencyChartClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, experiment.Rule.Partitions.Length);
+
+    foreach (var cognate in Data.UsedCognates) {
+      foreach (var word in cognate.Words) {
+        var rate = Rates[word.Taxon.Index];
+        foreach (var segment in word.Segments) {
+          ++rate.TotalCount;
+          rate.Count.AddValue(segment.PartitionIndex, 1);
+        }
+      }
+    }
+
+    ComputeDistance(ref CompareFrequency);
+  }
+
+  override SegmentBar(RateDataClass rate, index, width, height) = Canvas {
+    var f = rate.Frequency[index] / rate.MaxFrequency;
+    Size: new SizeClass(width-1, height * f);
+    MarginR: 1;
+    var partition = Partitions[index];
+    Background: ChartColor(partition.Index);
+    TipAction: new PartitionRateActionClass(rate, partition, rate.Count[index], f);
+  };
+
+  PartitionLabel(index, width, height) = Frame {
+    Width: width;
+    Height: height;
+    ParAlignment: ParAlignments.Center;
+    Partitions[index].Name;
+  };
+
+  override OccurranceChart(SizeClass maxsize) = MatrixBlock {
+    var lw = 60 pts;
+    var cw = maxsize.Width - lw;
+    var bw = cw / Partitions.Length;
+    var bh = 16 pts;
+    var h  = (maxsize.Height - bh) / Taxa.Length;
+    var r0 = SortedRates[0];
+
+    TextHeight: 12 pts;
+    VAlign: VAligns.Bottom;
+    foreach (var rate in SortedRates) {
+      Row {
+        Cell {
+          PaddingR: 3 pts;
+          Frame {
+            Width: lw;
+            rate.Taxon.Language;
+          };
+          Canvas {
+            Background: Colors.Red;
+            var frac = rate.Distance / MaxDistance;
+            Size: new SizeClass(lw * frac, 2);
+            Tip: new TipClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)));
+          };
+        };
+        LangCanvas(rate, bw, h);
+      };
+    }
+
+    Row {
+      Empty;
+      TextHeight: 9 pts;
+      HBox {
+        VAlign: VAligns.Top;
+        PartitionLabel(each SortedIndexes, bw, bh);
+      };
+    }
+  };
+
 }
 
 //======================================================================
