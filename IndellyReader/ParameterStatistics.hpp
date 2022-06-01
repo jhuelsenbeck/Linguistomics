@@ -1,6 +1,7 @@
 #ifndef ParameterStatistics_hpp
 #define ParameterStatistics_hpp
 
+#include "json.hpp"
 #include <string>
 #include <vector>
 
@@ -31,6 +32,7 @@ class ParameterStatistics {
         int                 size(void) { return (int)values.size(); }
         void                setName(std::string s) { name = s; }
         void                sortValues(void);
+        nlohmann::json      toJson(void);
             
     private:
         std::string         name;

@@ -15,10 +15,10 @@
 
 
 
-McmcSummary::McmcSummary(RandomVariable* r):
-    conTree(NULL),
-    rv(r)
-{
+McmcSummary::McmcSummary(RandomVariable* r) : conTree(NULL), rv(r) {
+
+    statePartitions = NULL;
+
 }
 
 McmcSummary::~McmcSummary(void) {
@@ -196,7 +196,8 @@ void McmcSummary::print(void) {
         std::cout << std::endl;
         }
         
-    printPartitionFreqs();
+    if (statePartitions != NULL)
+        printPartitionFreqs();
         
     // print summary of aln files
     for (int i=0; i<alignments.size(); i++)
@@ -352,13 +353,36 @@ void McmcSummary::printPartitionFreqs(void) {
 }
 
 void McmcSummary::output(UserSettings& settings) {
-    auto& file = *new std::ofstream(settings.getPath() + "/consensus.tre" , std::ios::out);
-    file << "#NEXUS\n\nbegin taxa;" << std::endl;
 
-    file << "dimensions=" << conTree->numTaxa << ";" << std::endl;
-    file << "end;\nbegin trees;\ntree TREE1 = ";
-    file << conTree->getNewick(4) << ";"  << std::endl;
-    file << "end;" << std::endl;
+    nlohmann::json j = nlohmann::json::object();
+
+    // output the consensus tree
+    j["consensus"]["tree"] = conTree->getNewick(4);
+    j["consensus"]["n_taxa"] = conTree->numTaxa;
+    
+    // output information on mean and credible interval for all real-valued parameters
+    auto jStats = nlohmann::json::array();
+    for (int i=0; i<stats.size(); i++)
+        {
+        nlohmann::json cogStats = stats[i]->toJson();
+        jStats.push_back(cogStats);
+        }
+    j["stats"] = jStats;
+        
+    // output the credible set for all alignments
+    auto sampledAlignments = nlohmann::json::array();
+    for (int i=0; i<alignments.size(); i++)
+        {
+        nlohmann::json cogAlns = alignments[i]->toJson(0.95);
+        sampledAlignments.push_back(cogAlns);
+        }
+    j["cog_alns"] = sampledAlignments;
+
+    // output json representation to a file
+    auto& file = *new std::ofstream(settings.getPath() + "/summary.json" , std::ios::out);
+    file << j;
+    std::cout << "JSON file written to: ";
+    std::cout << settings.getPath() << "summary.json" << std::endl;
 }
     
 void McmcSummary::readAlnFile(std::string fn, int /*bi*/) {
@@ -433,8 +457,10 @@ void McmcSummary::readConfigFile(std::string fn) {
         {
         nlohmann::json jsPart = j["PartitionSets"];
         statePartitions = new Partition(jsPart);
-        //statePartitions = NULL;
         }
+    
+    if (statePartitions != NULL)
+        statePartitions->print();
 }
 
 void McmcSummary::readTreFile(std::string fn, int /*bi*/) {
@@ -499,7 +525,7 @@ void McmcSummary::readTreFile(std::string fn, int /*bi*/) {
                         std::string newickStr = interpretTreeString(treeString);
                         //std::cout << "Tree: \"" << newickStr << "\"" << std::endl;
                         Tree t(newickStr, translateMap);
-                        t.print();
+                        //t.print();
                         std::map<RbBitSet,double> parts = t.getPartitions();
                         addPartion(parts);
                         treeString = "";

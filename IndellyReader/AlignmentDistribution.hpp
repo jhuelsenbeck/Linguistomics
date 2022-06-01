@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include "Alignment.hpp"
+#include "json.hpp"
 class Partition;
 class RandomVariable;
 
@@ -22,6 +23,7 @@ class AlignmentDistribution {
         void                                    print(void);
         void                                    setName(std::string s) { name = s; }
         size_t                                  size(void) { return samples.size(); }
+        nlohmann::json                          toJson(double credibleSetSize);
             
     private:
         void                                    print(Alignment* aln);

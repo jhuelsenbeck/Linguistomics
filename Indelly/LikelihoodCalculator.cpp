@@ -183,11 +183,13 @@ void LikelihoodCalculator::initialize(void) {
 
 double LikelihoodCalculator::lnLikelihood(MathCache&) {
 
+    std::cout << "Calculating likelihood" << std::endl;
     initialize();
     
     // null emissions probability
 	IntVector* pos = getVector();
-    double nullEmissionFactor = partialProbability(pos, pos);
+    std::cout << "pos: " << *pos << std::endl;
+    double nullEmissionFactor = partialProbability(pos, pos, -1);
     double f = indelProbs.immortalProbability / nullEmissionFactor;
     partialProbabilities.insert( std::make_pair(pos, f) );
 
@@ -230,6 +232,7 @@ double LikelihoodCalculator::lnLikelihood(MathCache&) {
             }
         returnToPool(mask);
 
+        std::cout << "ptr = " << ptr << " " << *pos << std::endl;
         // Loop over all combinations of possible vectors, which define edges from
         // pos to another possible position, by ordinary binary counting.
         IntVector* newPos = getVector(*pos);
@@ -239,9 +242,12 @@ double LikelihoodCalculator::lnLikelihood(MathCache&) {
             {
             // Find next combination
             foundNonZero = false;
+            int site = 0;
 			for (int posPtr=numPossible-1; posPtr>=0; --posPtr)
                 {
 			    int curPtr = indelCombos.possibleVectorIndices[ posPtr ];
+                std::cout << "curPtr = " << curPtr << std::endl;
+                site = curPtr;
                 currentAlignmentColumn = curPtr;
                 if (indelCombos.state[ curPtr ] == possible)
                     {
@@ -281,7 +287,8 @@ double LikelihoodCalculator::lnLikelihood(MathCache&) {
                     unusedPos = false;
                     }
                     
-                double transFac = (-partialProbability(signature, pos)) / nullEmissionFactor;
+                std::cout << site << " -- " << *signature << " " << *pos << std::endl;
+                double transFac = (-partialProbability(signature, pos, site)) / nullEmissionFactor;
                 lft *= transFac;
                 rht += lft;
 
@@ -352,7 +359,7 @@ double LikelihoodCalculator::lnLikelihood(MathCache&) {
     } while (true);
 }
 
-double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector* pos) {
+double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector* pos, int site) {
 
     // make certain that the conditional probabilities for all
     // nodes are zero before we start
@@ -418,10 +425,10 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
         }
     if (isHomologyClashing)
         return 0.0;
-    return prune(signature, pos, dpSequence);
+    return prune(signature, pos, dpSequence, site);
 }
 
-void LikelihoodCalculator::pruneBranch(Node* p) {
+void LikelihoodCalculator::pruneBranch(Node* p, int site) {
 
     int pIdx = p->getIndex();
     auto fIIdx = fI[pIdx];
@@ -599,7 +606,7 @@ void LikelihoodCalculator::pruneBranch(Node* p) {
         }
 }
 
-double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::vector<Node*>& dpSequence) {
+double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::vector<Node*>& dpSequence, int site) {
  
     // pruning algorithm
     auto nsize = dpSequence.size();
@@ -611,6 +618,8 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
             int pIdx = p->getIndex();
             auto fIIdx = fI[pIdx];
             auto fHIdx = fH[pIdx];
+            
+            std::cout << "(*pos)[pIdx] = " << (*pos)[pIdx] << std::endl;
 
             // initialize conditional probabilties for the tip
             if ( (*signature)[pIdx] == 0 )
@@ -619,7 +628,7 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
                 fHIdx[ sequences[pIdx][(*pos)[pIdx]] ] = 1.0; // nucleotide
             }
         else
-            pruneBranch(p);
+            pruneBranch(p, site);
         }
 
     // average probability over states at the root
