@@ -54,7 +54,6 @@ int main(int argc, char* argv[]) {
             summary.readTreFile(filePath, settings.getBurnIn());
             }
 
-        show = false;
         if (show)
             std::cout << filePath << std::endl;
         }
