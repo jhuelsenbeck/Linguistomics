@@ -72,3 +72,15 @@ void ParameterStatistics::sortValues(void) {
 
     std::sort(values.begin(), values.end());
 }
+
+nlohmann::json ParameterStatistics::toJson(void) {
+
+    double m = getMean();
+    CredibleInterval i = getCredibleInterval();
+    nlohmann::json j = nlohmann::json::object();
+    j["cognate"] = name;
+    j["mean"] = m;
+    j["lower"] = i.lower;
+    j["upper"] = i.upper;
+    return j;
+}

@@ -60,12 +60,12 @@ class LikelihoodCalculator {
         int                             getNumAllocated(void) { return (int) allocated.size(); }
         int                             getNumInPool(void) { return (int)pool.size(); }
         void                            initialize(void);
-        double                          partialProbability(IntVector* signature, IntVector* pos);
+        double                          partialProbability(IntVector* signature, IntVector* pos, int site);
         void                            printTable(void);
         void                            returnToPool(IntVector* n);
         void                            setBirthDeathProbabilities(void);
-        double                          prune(IntVector* signature, IntVector* pos, std::vector<Node*>& dpSequence);
-        void                            pruneBranch(Node* p);
+        double                          prune(IntVector* signature, IntVector* pos, std::vector<Node*>& dpSequence, int site);
+        void                            pruneBranch(Node* p, int site);
 
 
         RbBitSet                        taxonMask;

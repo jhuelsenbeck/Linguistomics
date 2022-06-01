@@ -16,25 +16,35 @@ ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::strin
 
     updateChangesRateMatrix = false;
 
+    double len = slen;
+    double fac = (len + 1.0) / len;
+    double var = 2.0;
+    double lambda = 0.0001;
+    double mu = fac * lambda;
+    
+    for (int i=0; i<100; i++)
+        {
+        lambda += 0.01;
+        mu = fac * lambda;
+        std::cout << lambda << " " << mu << " " << (lambda / mu) / (1.0-(lambda/mu)) << " " << (lambda / mu) / ((1.0-(lambda/mu))*(1.0-(lambda/mu))) << std::endl;
+        }
+    exit(9);
+    
+
+    // set parameters for exponential priors
+    //rho = lambda / mu
+    // E(slen) = rho / (1 - rho)
+    //
     insertionLambda = insLam;
     deletionLambda  = delLam;
     
-    double expE = expectedEpsilon(slen); // epsilon = insertionRate / deletionRate
+    do {
+        insertionRate[0] = Probability::Exponential::rv(rv, insertionLambda);
+        deletionRate[0]  = Probability::Exponential::rv(rv, deletionLambda);
+        } while(insertionRate[0] >= deletionRate[0]);
+    insertionRate[1] = insertionRate[0];
+    deletionRate[1]  = deletionRate[0];
     
-    epsilon[0].resize(2);
-    epsilon[1].resize(2);
-    //std::cout << "Expected Epsilon = " << expEpsilon << std::endl;
-    std::vector<double> alpha(2);
-    alpha[0] = 100.0 * expE;
-    alpha[1] = 190.0 * (1.0 - expE);
-    Probability::Dirichlet::rv(rv, alpha, epsilon[0]);
-
-    rhoExpParm = 100.0;
-    rho[0] = Probability::Exponential::rv(rv, rhoExpParm);
-    
-    epsilon[1] = epsilon[0];
-    rho[1] = rho[0];
-
     //std::cout << "lambda = " << getInsertionRate() << " mu = " << getDeletionRate() << " E(L) = " << getExpectedSequenceLength() << std::endl;
 }
 
@@ -44,8 +54,8 @@ ParameterIndelRates::~ParameterIndelRates(void) {
 
 void ParameterIndelRates::accept(void) {
 
-    epsilon[1] = epsilon[0];
-    rho[1] = rho[0];
+    insertionRate[1] = insertionRate[0];
+    deletionRate[1]  = deletionRate[0];
 }
 
 double ParameterIndelRates::expectedEpsilon(double slen) {
@@ -106,8 +116,7 @@ void ParameterIndelRates::fillParameterValues(double* x, int& start, int maxNumV
 
 double ParameterIndelRates::getDeletionRate(void) {
 
-    double mu = rho[0] / (1.0 + epsilon[0][0]);
-    return mu;
+    return deletionRate[0];
 }
 
 double ParameterIndelRates::getExpectedSequenceLength(void) {
@@ -129,8 +138,7 @@ std::string ParameterIndelRates::getHeader(void) {
 
 double ParameterIndelRates::getInsertionRate(void) {
 
-    double lambda = rho[0] - getDeletionRate();
-    return lambda;
+    return insertionRate[0];
 }
 
 std::string ParameterIndelRates::getJsonString(void) {
@@ -165,19 +173,126 @@ void ParameterIndelRates::print(void) {
 
 void ParameterIndelRates::reject(void) {
 
-    epsilon[0] = epsilon[1];
-    rho[0] = rho[1];
+    insertionRate[0] = insertionRate[1];
+    deletionRate[0]  = deletionRate[1];
     modelPtr->flipActiveLikelihood();
 }
 
-double ParameterIndelRates::update(int) {    
+double ParameterIndelRates::update(int) {
+
+    // initialize some variables
+    double window = 0.1;
+    double theta1 = insertionRate[0];
+    double theta2 = deletionRate[0];
+    double lowerLimit = 0.0;
+    double upperLimit = 10.0;
+
+    // propose new values using rejection sampling
+    double theta1Prime, theta2Prime;
+    do {
+        theta1Prime = theta1 + (rv->uniformRv() - 0.5) * window; // lambda (x)
+        theta2Prime = theta2 + (rv->uniformRv() - 0.5) * window; // mu (y)
+        } while(theta1Prime <= lowerLimit || theta1Prime >= theta2Prime || theta2Prime >= upperLimit);
+        
+    // forward move proposal probability
+    // get vertices
+    std::pair<double, double> vertex1 = std::make_pair(theta1 - 0.5*window, theta2 - 0.5*window);
+    std::pair<double, double> vertex2 = std::make_pair(theta1 - 0.5*window, theta2 + 0.5*window);
+    std::pair<double, double> vertex3 = std::make_pair(theta1 + 0.5*window, theta2 + 0.5*window);
+    std::pair<double, double> vertex4 = std::make_pair(theta1 + 0.5*window, theta2 - 0.5*window);
     
+    // number of intersections
+    int outOfBounds = 0;
+    if (vertex1.first < lowerLimit) // mu-axis intersects window
+        outOfBounds += 2; // vertex 2 necessarily is out of bounds if vertex 1 is
+    if (vertex4.first > vertex4.second) // lambda=mu intersects window
+        outOfBounds++;
+    
+    // probability of area
+    double pForward = 0.0;
+    double r;
+    if (outOfBounds == 0)
+        pForward = 1.0 / (pow(window,2.0));
+    if (outOfBounds == 1)
+        {
+        // subtract triangular region defined by vertex 4
+        r = pow(abs(vertex4.second - vertex4.first),2) / 2;
+        pForward = 1.0 / (pow(window, 2.0) - r);
+        }
+    if (outOfBounds == 2)
+        {
+        // subtract rectangular region defined by vertex 1 & 2
+        r = abs(vertex1.first - lowerLimit) * window;
+        pForward = 1.0/(pow(window,2.0) - r);
+        }
+    if (outOfBounds == 3)
+        {
+        // subtract both triangular and rectuangular regions
+        double r1 = pow(abs(vertex4.second - vertex4.first),2.0) * 0.5;
+        double r2 = abs(vertex1.first) * window;
+        if (vertex1.second >= lowerLimit)
+            pForward = 1.0 / (pow(window,2.0) - r1 - r2);
+        else
+            {
+            // both regions overlap
+            double rOverlap = pow(abs(vertex1.second - lowerLimit),2) * 0.5;
+            pForward = 1.0 / (pow(window,2.0) - r1 - r2 + rOverlap);
+            }
+        }
+    
+    // reverse move proposal probability
+    // get vertices
+    vertex1 = std::make_pair(theta1Prime - 0.5*window, theta2Prime - 0.5*window);
+    vertex2 = std::make_pair(theta1Prime - 0.5*window, theta2Prime + 0.5*window);
+    vertex3 = std::make_pair(theta1Prime + 0.5*window, theta2Prime + 0.5*window);
+    vertex4 = std::make_pair(theta1Prime + 0.5*window, theta2Prime - 0.5*window);
+    
+    // number of intersections
+    outOfBounds = 0;
+    if (vertex1.first < lowerLimit)     // mu-axis intersects window
+        outOfBounds += 2;               // vertex 2 necessarily is out of bounds if vertex 1 is
+    if (vertex4.first > vertex4.second) // lambda=mu intersects window
+        outOfBounds++;
+    
+    // probability of area
+    double pReverse = 0.0;
+    if (outOfBounds == 0)
+        pReverse = 1.0/(pow(window,2.0));
+    if (outOfBounds == 1)
+        {
+        // subtract triangular region defined by vertex 4
+        r = pow(abs(vertex4.second - vertex4.first),2.0) * 0.5;
+        pReverse = 1.0 / (pow(window,2.0) - r);
+        }
+    if (outOfBounds == 2)
+        {
+        // subtract rectangular region defined by vertex 1 & 2
+        r = abs(vertex1.first - lowerLimit) * window;
+        pReverse = 1.0 / (pow(window,2.0) - r);
+        }
+    if (outOfBounds == 3)
+        {
+        // subtract both triangular and rectuangular regions
+        double r1 = pow(abs(vertex4.second - vertex4.first),2.0) * 0.5;
+        double r2 = abs(vertex1.first) * window;
+        if (vertex1.second >= lowerLimit)
+            pReverse = 1.0 / (pow(window,2.0) - r1 - r2);
+        else
+            { // both regions overlap
+            double rOverlap = pow(abs(vertex1.second - lowerLimit),2.0) * 0.5;
+            pReverse = 1.0/(pow(window,2.0) - r1 - r2 + rOverlap);
+            }
+        }
+    
+    return log(pReverse) - log(pForward);
+
+#   if 0
     double lnProposalProbability = 0.0;
     double u = rv->uniformRv();
     if (u < 0.5)
         {
         // update epsilon
-        lastUpdateType = "epsilon";
+        lastUpdateType = "lambda";
         double alpha0 = 10.0;
         std::vector<double> forwardAlpha(2);
         forwardAlpha[0] = alpha0 * epsilon[0][0];
@@ -198,7 +313,7 @@ double ParameterIndelRates::update(int) {
     else
         {
         // update rho
-        lastUpdateType = "rho";
+        lastUpdateType = "mu";
         double tuning = log(4.0);
         double newRho = rho[0] * exp(tuning*(rv->uniformRv()-0.5));
         lnProposalProbability = log(newRho) - log(rho[0]);
@@ -214,25 +329,10 @@ double ParameterIndelRates::update(int) {
     modelPtr->flipActiveLikelihood();
 
     return lnProposalProbability;
+#   endif
 }
 
 double ParameterIndelRates::updateFromPrior(void) {
 
-    lastUpdateType = "random indel rates";
-
-    double newLambda = 0.0, newMu = 0.0;
-    do
-        {
-        newLambda = Probability::Exponential::rv(rv, insertionLambda);
-        newMu = Probability::Exponential::rv(rv, deletionLambda);
-        } while (newLambda > newMu);
-        
-    double lnP  = log(deletionLambda) + log(insertionLambda + deletionLambda) - deletionLambda * newMu - insertionLambda * newLambda;
-           lnP += log(deletionLambda) + log(insertionLambda + deletionLambda) - deletionLambda * getDeletionRate() - insertionLambda * getInsertionRate();
-           
-    epsilon[0][0] = newLambda / newMu;
-    epsilon[0][1] = 1.0 - epsilon[0][0];
-    rho[0] = newLambda + newMu;
-
-    return lnP;
+    return 0.0;
 }

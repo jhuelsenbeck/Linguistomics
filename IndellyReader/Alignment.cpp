@@ -33,6 +33,13 @@ bool Alignment::operator==(const Alignment& aln) const {
     return true;
 }
 
+void Alignment::from_json(const nlohmann::json& j) {
+
+    //j.at("name").get_to(p.name);
+    //j.at("address").get_to(p.address);
+    //j.at("age").get_to(p.age);
+}
+
 std::map<double,double> Alignment::gapInfo(void) {
 
     std::map<double,double> info;
@@ -92,4 +99,19 @@ void Alignment::print(void) {
             }
         std::cout << std::endl;
         }
+}
+
+nlohmann::json Alignment::toJson(void) {
+
+    nlohmann::json j = nlohmann::json::array();
+    for (int i=0; i<numTaxa; i++)
+        {
+        std::vector<int> s = matrix[i].getSequence();
+        std::string tName = matrix[i].getName();
+        nlohmann::json sj;
+        sj["language"] = tName;
+        sj["sequence"] = s;
+        j.push_back(sj);
+        }
+    return j;
 }

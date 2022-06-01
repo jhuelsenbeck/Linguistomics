@@ -158,3 +158,52 @@ void AlignmentDistribution::print(Alignment* aln) {
         std::cout << std::endl;
         }
 }
+
+nlohmann::json AlignmentDistribution::toJson(double credibleSetSize) {
+    
+    // sort the alignments from highest to lowest posterior probability
+    std::vector<std::pair<Alignment*, int> > v;
+    for (auto& it : samples)
+        v.push_back(it);
+    sort(v.begin(), v.end(), cmp);
+
+    nlohmann::json j = nlohmann::json::object();
+    j["cognate"] = name;
+    auto alnVec = nlohmann::json::array();
+    int n = numSamples();
+    double cumulativeProb = 0.0;
+    int i = 0;
+    for (auto& it : v)
+        {
+        ++i;
+        nlohmann::json jaln = nlohmann::json::object();
+        double prob = (double)it.second / n;
+        cumulativeProb += prob;
+        
+        jaln["index"] = i;
+        jaln["prob"] = prob;
+        jaln["cumprob"] = cumulativeProb;
+                
+        if (cumulativeProb < credibleSetSize)
+            {
+            nlohmann::json a = it.first->toJson();
+            jaln["aln"] = a;
+            alnVec.push_back(jaln);
+            }
+        else
+            {
+            double lowerVal = cumulativeProb - prob;
+            double u = rv->uniformRv();
+            if (u < (credibleSetSize-lowerVal)/(cumulativeProb-lowerVal))
+                {
+                nlohmann::json a = it.first->toJson();
+                jaln["aln"] = a;
+                alnVec.push_back(jaln);
+                }
+            break;
+            }
+        }
+    j["aln_set"] = alnVec;
+    
+    return j;
+}

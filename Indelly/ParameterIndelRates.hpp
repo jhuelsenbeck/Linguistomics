@@ -33,10 +33,8 @@ class ParameterIndelRates : public Parameter {
         double                          updateFromPrior(void);
         double                          insertionLambda;
         double                          deletionLambda;
-        double                          expEpsilon;
-        std::vector<double>             epsilon[2];
-        double                          rhoExpParm;
-        double                          rho[2];
+        double                          insertionRate[2];
+        double                          deletionRate[2];
 };
 
 #endif
