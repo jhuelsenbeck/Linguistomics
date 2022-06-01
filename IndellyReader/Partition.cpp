@@ -108,3 +108,29 @@ int Partition::maxValue(void) {
 
     return m;
 }
+
+nlohmann::json Partition::toJson(void) {
+
+    nlohmann::json j = nlohmann::json::object();
+    
+    nlohmann::json jSubsets = nlohmann::json::array();
+    for (int i=1; i<=subsets.size(); i++)
+        {
+        Subset* s = findSubsetIndexed(i);
+        std::set<int>& vals = s->getValues();
+        
+        nlohmann::json jIdx = nlohmann::json::array();
+        for (int j : vals)
+            jIdx.push_back(j);
+
+        nlohmann::json jPart = nlohmann::json::object();
+        jPart["index"] = s->getIndex();
+        jPart["set"] = jIdx;
+        jPart["name"] = s->getLabel();
+        
+        jSubsets.push_back(jPart);
+        }
+    j["partition"] = jSubsets;
+    
+    return j;
+}

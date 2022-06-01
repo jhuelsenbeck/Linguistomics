@@ -19,6 +19,7 @@ class Partition {
         int                 numSubsets(void) { return (int)subsets.size(); }
         void                print(void);
         int                 maxValue(void);
+        nlohmann::json      toJson(void);
     
     private:
         std::set<Subset*>   subsets;

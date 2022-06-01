@@ -355,6 +355,10 @@ void McmcSummary::printPartitionFreqs(void) {
 void McmcSummary::output(UserSettings& settings) {
 
     nlohmann::json j = nlohmann::json::object();
+    
+    // output state partition information
+    if (statePartitions != NULL)
+        j["state_part"] = statePartitions->toJson();
 
     // output the consensus tree
     j["consensus"]["tree"] = conTree->getNewick(4);
