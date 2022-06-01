@@ -2,40 +2,40 @@
 //======================================================================
 
 namespace PaperSizes {
-  Letter    = Size(8.5 inches, 11 inches);
-  Slideshow = Size(11 inches, 7.5 inches);
-  A4        = Size(210 millimeters, 297 millimeters);
+  Letter    = new SizeClass(8.5 inches, 11 inches);
+  Slideshow = new SizeClass(11 inches, 7.5 inches);
+  A4        = new SizeClass(210 millimeters, 297 millimeters);
 }
 //======================================================================
 
 namespace DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.Normal) {
   DocumentSize = PaperSizes.Letter;
-  PageMargin   = Margin(0.75 inches, 0.9 inches, 0.75 inches, 1 inches);
+  PageMargin   = new MarginClass(0.75 inches, 0.9 inches, 0.75 inches, 1 inches);
 }
 
 namespace DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.SlideShow) {
   DocumentSize = PaperSizes.Slideshow;
-  PageMargin   = Margin(0.5 inches, 1 inches, 0.5 inches, 0.5 inches);
+  PageMargin   = new MarginClass(0.5 inches, 1 inches, 0.5 inches, 0.5 inches);
 }
 
 namespace DocMetrics if (PaperSystem == PaperSystems.A and DocumentType == DocumentTypes.Normal) {
   DocumentSize = PaperSizes.A4;
-  PageMargin   = Margin(20 millimeters);
+  PageMargin   = new MarginClass(20 millimeters);
 }
 
 namespace DocMetrics if (PaperSystem == PaperSystems.A and DocumentType == DocumentTypes.SlideShow) {
   DocumentSize = PaperSizes.A4.Landscape;
-  PageMargin   = Margin(0.5 inches, 1.5 inches, 0.5 inches, 0.75 inches);
+  PageMargin   = new MarginClass(0.5 inches, 1.5 inches, 0.5 inches, 0.75 inches);
 }
 //======================================================================
 
 namespace DocMetrics {
-  PageContent     = DocumentSize - PageMargin - Size(Gutter, 0);
+  PageContent     = DocumentSize - PageMargin - new SizeClass(Gutter, 0);
   TableSpace      = 24 pts;
   TreeWidth       = PageContent.Width;
   TreeFigureWidth = TreeWidth - 30 pts;
-  BoxSize         = Size(18 pts, 20 pts);
-  CellSize        = Size(BoxSize.Width * 2, BoxSize.Height);
+  BoxSize         = new SizeClass(18 pts, 20 pts);
+  CellSize        = new SizeClass(BoxSize.Width * 2, BoxSize.Height);
   Gutter          = 0;
   SegmentColumns  = 4;
   SegmentSize     = 40 pts;
@@ -68,9 +68,11 @@ class DefClass: FactClass {
 
   override GetIcon = Icons.subscript;
 
+  override Compare(d1, d2) = d1.Name.Compare(d2.Name);
+
   override GetLayoutSpan = Style.Equation {
     Symbol {
-      Hover: new HoverClass(this, HoverTypes.Tip);
+      TipAction: this;
     };
     Link to this;
   };
@@ -159,9 +161,10 @@ namespace Style {
   TaxonFormat          = {TextColor: Colors.DarkBlue};
   CommentFormat        = {TextColor: Colors.Green};
   KeywordFormat        = {TextColor: Colors.Blue};
+  ItemTextFormat       = {TextHeight: 20 pts};
   ImpossibleBackground = {Background: 80%};
-  CommentColor         = Color(0, 0x64, 0);
-  StringColor          = Color(168, 21, 53);
+  CommentColor         = new ColorClass(0, 0x64, 0);
+  StringColor          = new ColorClass(168, 21, 53);
   NoteIndexIndent      = 6 pts;
   VariableColor        = Colors.DarkBlue;
   AlignBackColor       = 95%;
@@ -171,9 +174,9 @@ namespace Style {
   TableEdge            = {Edge: TableEdgeSize};
   ColumnEdge           = {EdgeR: TableEdgeSize};
   SegmentBottom        = {EdgeB: TableEdgeSize {Color: 80%}};
-  Logo1                = Color(0, 0, 0xFF);
-  Logo1A               = Color(0, 0, 0xE0);
-  Logo2                = Color(0xFF, 0xA5, 00);
+  Logo1                = new ColorClass(0, 0, 0xFF);
+  Logo1A               = new ColorClass(0, 0, 0xE0);
+  Logo2                = new ColorClass(0xFF, 0xA5, 00);
   LightColor           = Colors.Orange;
   DarkColor            = Colors.DarkBlue;
   ArrowColor           = Colors.LightGray;
@@ -183,28 +186,36 @@ namespace Style {
   SectionFore          = Colors.White;
   HeaderText           = Colors.White;
   SlideHeader          = Colors.SlateGray;
-  Hyperlink            = Color(100, 42, 143);
-  HeaderBar1           = Color(23, 54, 114);
+  Hyperlink            = new ColorClass(100, 42, 143);
+  HeaderBar1           = new ColorClass(23, 54, 114);
   HeaderBar2           = 99%;
   RightBar             = null;
   LeftBar              = (90%)..(99%);
   BarLine              = LightColor;
-  FooterBar1           = Color(223, 232, 249);
+  FooterBar1           = new ColorClass(223, 232, 249);
   FooterBar2           = Colors.White;
   TitleColor           = Colors.Orange;
-  HeaderLeftBar = new RadialGradientClass(Point(95%, 50%), Point(95%, 50%), Size(20%, 90%)) {
+  HeaderLeftBar = new RadialGradientClass(new(95%, 50%), new(95%, 50%), new(20%, 90%)) {
     Stops: [
       new ColorStopClass(0%, HeaderBar2),
       new ColorStopClass(100%, HeaderBar1),
     ];
   };
 
-  TitlePageBackground = new RadialGradientClass(Point(50%, 50%), Point(50%, 50%), Size(120%, 120%)) {
+  TitlePageBackground = new RadialGradientClass(new(50%, 50%), new(50%, 50%), new(120%, 120%)) {
     Stops: [
       new ColorStopClass(0%, HeaderBar1),
       new ColorStopClass(100%, HeaderBar2),
     ];
   };
+
+  SphericalFill(ColorClass c) = new RadialGradientClass(new(35%, 35%), new(35%, 35%), new(75%, 75%)) {
+    Stops: [
+      new ColorStopClass(30%, c),
+      new ColorStopClass(90%, c.Scale(60%)),
+    ];
+  };
+
   TitlePageText        = Colors.White;
 
   HeaderRightBar       = (99%)..(90%);
@@ -244,11 +255,6 @@ namespace Style {
     SpaceAfter: 10 pts;
   };
 
-  FigureBody = Paragraph {
-    ParAlignment: ParAlignments.Center;
-    SpaceAfter: 6 pts;
-  };
-
   LanguageTable = Table {
     Padding: 2;
     EdgeTB: 2 pts;
@@ -263,8 +269,6 @@ namespace Style {
     SpaceAfter: 6 pts;
   };
 
-  FigureCaption = Span;
-
   ShowFigureNumber(figure) = Span {
     Lang.Figure;
     Space;
@@ -272,12 +276,12 @@ namespace Style {
   };
 
   FigureReference(ExperimentClass experiment, figure) = ShowFigureNumber(figure) {
-    Hover: new HoverClass(figure.GlobalVariablePath, HoverTypes.LocationMark, new FigureTipClass(experiment, figure));
+    TipAction: new FigureActionClass(experiment, figure);
   };
 
   ShowFigureDoc(ExperimentClass experiment, figure) = Block {
     Paragraph {
-      LocationMark: figure.GlobalVariablePath;
+      AnchorTag: figure.GlobalVariablePath;
       SpaceBefore: 10 pts;
       SpaceAfter: 6 pts;
       KeepWithNext: true;
@@ -290,8 +294,12 @@ namespace Style {
       figure.Caption(experiment);
     };
 
-    FigureBody {
-      figure.Body(experiment)
+    Paragraph {
+      ParAlignment: ParAlignments.Center;
+      SpaceAfter: 6 pts;
+      Frame {
+        figure.Body(experiment, new SizeClass(DocMetrics.PageContent.Width, DocMetrics.PageContent.Height * 0.5))
+      }
     };
   };
 
@@ -301,8 +309,8 @@ namespace Style {
     RefCounter("table", figure.GlobalVariablePath);
   };
 
-  ShowTable(ExperimentClass experiment, table) = Block {
-    table.Body(experiment) {
+  ShowTable(ExperimentClass experiment, SizeClass maxsize, table) = Block {
+    table.Body(experiment, maxsize) {
       SpaceBefore: 10 pts;
       ParAlignment: ParAlignments.Center;
     };
@@ -324,9 +332,7 @@ namespace Style {
     Link to person;
     CitationLib.GetFullName(person) {
       Bold;
-      var site = person.FindFirstFact(WebsiteLink);
-      if (valid site)
-        Hover: new HoverClass(site.Value, HoverTypes.WebSecure);
+      TipAction: person.FindFirstFact(WebsiteLink);
     };
 
     Span {
@@ -362,9 +368,7 @@ namespace Style {
       };
     }
 
-    var email = person.FindFirstFact(WorkEmailLink);
-    if (valid email)
-      new HoverClass(email.Value, HoverTypes.Email);
+    TipAction: person.FindFirstFact(WorkEmailLink);
   };
 
   ShowAuthorList(authors) = Block {
@@ -397,7 +401,7 @@ namespace Style {
     LeftIndent: 0.25 inches;
 
     Paragraph {
-      LocationMark: person.GlobalVariablePath;
+      AnchorTag: person.GlobalVariablePath;
       FirstIndent: -0.25 inches;
       CitationLib.GetFullName(person);
     };
@@ -409,14 +413,14 @@ namespace Style {
       Paragraph {
         Lang.EMail;
         ColonSpace;
-        new HoverClass(email.Value, HoverTypes.Email);
+        email;
       };
     }
 
     var site = person.FindFirstFact(WebsiteLink);
     if (valid site) {
       Paragraph {
-        new HoverClass(site.Value, HoverTypes.WebSecure);
+        site;
       };
     }
     Empty;
@@ -525,7 +529,7 @@ namespace Style {
     X: options.Width - options.Width * node.BranchLength / options.MaxYear;
     Figure {
       Fill: Colors.Green;
-      Rectangle(Rect(Point(0), Size(5, options.TextHeight)))
+      Rectangle(new(new(0), new(5, options.TextHeight)))
     };
     Paragraph {
       Space;
@@ -543,7 +547,7 @@ namespace Style {
   BranchMarker = Figure {
     Stroke: 1 pt {Color: Colors.Gray};
     Fill: Colors.Black;
-    Ellipse(Rect(0, 1 pts))
+    Ellipse(new(new(0), new(1 pts)))
   };
 
   TreeOptions = Tree {
@@ -554,11 +558,11 @@ namespace Style {
     Marker: BranchMarker;
   };
 
-  ShowTree(title, subtitle, root, width, axis=null) = VBox {
+  ShowTree(title, subtitle, root, width, axis) = VBox {
     Corner: 8 pts;
     MarginB: 20 pts;
     PaddingLR: 15 pts;
-    if (exists title) {
+    if (valid title) {
       Border: 0.5 pts {Color: 90%};
       Style.Header1 {
         HAlignment: HAligns.Center;
@@ -576,8 +580,10 @@ namespace Style {
 
     TreeOptions {
       Width: width;
-      ValueLabel: axis ?? "Branches";
-      ValueAxis: ChartAxis;
+      if (valid axis) {
+        ValueLabel: axis;
+        ValueAxis: ChartAxis;
+      }
       Root: root;
     };
   };
@@ -589,7 +595,7 @@ namespace Style {
     ".";
     Tab;
     Span {
-      Hover: new HoverClass(Lang.Appendix + each0, HoverTypes.LocationMark);
+      Action: new ActionClass(Actions.ToAnchor, Lang.Appendix + each0);
       appendix.Title
     };
   };
@@ -602,7 +608,7 @@ namespace Style {
         ParAlignment: ParAlignments.Center;
         TextHeight: 14 pts;
         SpaceAfter: 8 pts;
-        LocationMark: Lang.Appendix + each0;
+        AnchorTag: Lang.Appendix + each0;
         "{0} {1} - "(Lang.Appendix, each1);
         appendix.Title;
       };
@@ -702,11 +708,12 @@ namespace Style {
 }
 //======================================================================
 
-class FigureTipClass {
+class FigureActionClass: ActionClass {
   var             Figure;
   ExperimentClass Experiment;
 
   Constructor(ExperimentClass experiment, figure) {
+    super.Constructor(Actions.ToAnchor, figure.GlobalVariablePath);
     Experiment = experiment;
     Figure     = figure;
   }

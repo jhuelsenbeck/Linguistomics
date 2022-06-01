@@ -17,7 +17,7 @@ class FilterClass {
   virtual Matches(SegmentClass segment) = true;
 
   override GetLayoutSpan = Span {
-    Hover: new HoverClass(this, HoverTypes.Tip);
+    TipAction: this;
     Name;
   };
 
@@ -37,12 +37,12 @@ class FilterClass {
 class PartitionClass: FactClass {
   field          Name;
   SegmentClass[] Segments;
+  PointClass     Center;
+  FilterClass    Filter;
   var            Index,
-                 Center,
                  Radius,
                  Angle,
                  Outer;
-  FilterClass    Filter;
 
   Constructor(index, FilterClass filter, SegmentClass[] segments) {
     super.Constructor(filter.Name);
@@ -118,7 +118,7 @@ abstract class RuleClass {
       var index = GetFilterIndex(segment);
       if (index > last)
         index = last;
-      SetSegmentCharacter(segment, index);
+      SetSegmentCharacter(segment);
     }
     GetFilters;
   }
@@ -149,6 +149,25 @@ abstract class RuleClass {
   SegmentClass[] GetMatching(SegmentClass[] segments, FilterClass filter) {
     return segments.FindSlice(segment => MatchesRule(filter, segment));
   }
+
+  ShowLegend(textheight, width) = VBox {
+    Table {
+      TextHeight: textheight;
+      Columns: [textheight, width - textheight * 1.5];
+
+      foreach (var partition in Partitions) {
+        Row {
+          VAlign: VAligns.Center;
+          Span {
+            TextColor: ChartColor(each0);
+            TextHeight: textheight * 1.25;
+            Tex.blackcirc;
+          };
+          partition.Filter;
+        }
+      }
+    };
+  };
 
   ShowPartitions = Table {
     Columns: [0.5 inch, 2 inches, 5 inches];
@@ -253,27 +272,6 @@ class FeatureMaskClass: FilterClass {
 }
 //======================================================================
 
-class RootVowelClass: FilterClass {
-  Constructor(DataSetClass data, RuleClass rule) {
-    super.Constructor(data, rule, "Root vowel");
-  }
-
-  override Matches(SegmentClass segment) = segment.Features.HasFlag(Vowel) and valid segment.Root;
-}
-//======================================================================
-
-class DiphthongFilterClass: FilterClass {
-  var Root;
-
-  Constructor(DataSetClass data, RuleClass rule, root) {
-    super.Constructor(data, rule, "Root+Diphthongs");
-    Root = root;
-  }
-
-  override Matches(SegmentClass segment) = segment == Root or (segment.Features.HasFlag(Diphthong) and segment.Root == Root);
-}
-//======================================================================
-
 class SegmentListClass: FilterClass {
   SegmentClass[] List;
 
@@ -316,7 +314,7 @@ class NaturalPartitionClass: RuleClass {
 }
 //======================================================================
 
-class PartitionHintClass {
+class PartitionActionClass: ActionClass {
   var            Rate;
   PartitionClass P1,
                  P2;
@@ -324,6 +322,7 @@ class PartitionHintClass {
   DataSetClass   Data;
 
   Constructor(DataSetClass data, RuleClass rule, rate, PartitionClass p1, PartitionClass p2) {
+    super.Constructor(Actions.ToSource, Rule);
     Rule = rule;
     Data = data;
     Rate = rate;
@@ -430,16 +429,21 @@ class TransitionClass {
 }
 //======================================================================
 
-class TranClass {
-  var List,
-      Percent;
+class TranActionClass: ActionClass {
+  WordPairClass[] List;
+  var             Percent;
 
-  Constructor(list, percent) {
+  Constructor(WordPairClass[] list, percent) {
+    super.Constructor(Actions.TipDocument, list);
     List    = list;
     Percent = percent;
   }
 
-  override GetLayoutTip = Frame {
+  override GetQuery = MatchAny WordClass {
+    (each List).Word1 + (each List).Word2;
+  };
+
+  ShowSegments(count) = Block {
     var first = List.FirstElement;
     Paragraph {
       first.Word1.Padded[first.Index].ShowSegment;
@@ -454,10 +458,6 @@ class TranClass {
       Percent * 100.0; "% of max";
     };
 
-    var count = Math.Min([List.Length, 30]);
-
-    Width: Min([count*3, 6]) inches;
-
     Paragraph {
       Separator: Space;
       foreach (var p in List[0..count])
@@ -466,6 +466,16 @@ class TranClass {
 
     if (count < List.Length)
       "More...";
+  };
+
+  override GetDocument = Block {
+    ShowSegments(List.Length);
+  };
+
+  override GetLayoutTip = Frame {
+    var count = Math.Min([List.Length, 30]);
+    Width: Min([count*3, 6]) inches;
+    ShowSegments(count);
   };
 }
 //======================================================================
@@ -492,7 +502,7 @@ class CalcRatesClass {
   }
 
   void Calibrate(size) {
-    var middle = Point(size.Width * 0.5, size.Height * 0.5);
+    var middle = new PointClass(size.Width * 0.5, size.Height * 0.5);
 
     MaxExtent    = Min([middle.X, middle.Y]);
     MaxRadius    = MaxExtent * 0.13;
@@ -505,7 +515,7 @@ class CalcRatesClass {
 
     RateScale = MaxLine / Max(Max(each Transition.Rates));
 
-    var mult = 2.0 * Math.PI / Rule.Partitions.Length;
+    var mult = Math.PI2 / Rule.Partitions.Length;
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;
       partition.Radius = Sqrt(Transition.Frequencies[each0]) * fmax;
@@ -521,7 +531,7 @@ class CalcRatesClass {
   }
 
   private MainDiagram(min) = Canvas {
-    var size = Size(min, min);
+    var size = new SizeClass(min, min);
 
     TransformFit: true;
     Calibrate(size);
@@ -530,19 +540,19 @@ class CalcRatesClass {
     foreach (var p1 in Rule.Partitions) {
       var i = each0;
       foreach (var p2 in Rule.Partitions) {
-        var  rate = Transition.Rates[i][each0];
-        var  hint = new PartitionHintClass(Data, Rule, rate, p1, p2);
-        var  r    = rate * RateScale / MaxLine;
-        var  frac = 255.0 * r;
+        var  rate  = Transition.Rates[i][each0];
+        var  hover = new PartitionActionClass(Data, Rule, rate, p1, p2);
+        var  r     = rate * RateScale / MaxLine;
+        var  frac  = Math.Round(Math.Max([1.0, r]) * 255.0);
         var  line1 = new LineStyleClass(rate * RateScale, 0.25, 1) {
-          LineColor: Color(0, 0, 0, frac)
+          LineColor: new ColorClass(0, 0, 0, frac)
         };
         var line2 = new LineStyleClass(rate * RateScale, 0.25, 1);
 
         if (p1 == p2) {
           var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line2.LineSize*0.5, p1.Angle);
           Graphics.CircleLine(line2, c, LoopRadius + line2.LineSize, p1.Angle + Graphics.OneEighty, GapAngle) {
-            Hover: new HoverClass(hint, HoverTypes.Tip);
+            TipAction: hover;
           };
         }
         else if (each0 < i) {
@@ -551,8 +561,8 @@ class CalcRatesClass {
           var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle);
 
           Graphics.Line(line1, c1, c2) {
-            Hover: new HoverClass(hint, HoverTypes.Tip);
-          };
+            TipAction: hover;
+          }
         }
       }
     }
@@ -564,8 +574,8 @@ class CalcRatesClass {
       Figure {
         Fill: ChartColor(each0);
         Stroke: 0.5 pt;
-        Ellipse(Rect(pos, fsize));
-        Hover: new HoverClass(p1, HoverTypes.Tip);
+        Ellipse(new(pos, new(fsize)));
+        TipAction: p1;
       };
 
       var c = LayoutSize(TestText(p1)).Width;
@@ -578,7 +588,7 @@ class CalcRatesClass {
     p.Filter.CircleName;
   };
 
-  CircleText(PartitionClass p, pos, fsize, textheight) = HBox {
+  CircleText(PartitionClass p, PointClass pos, fsize, textheight) = HBox {
     Position: pos;
     Height: fsize;
     Frame {
@@ -590,35 +600,14 @@ class CalcRatesClass {
     };
   };
 
-  PartitionDiagram(SizeClass wholesize) = VBox {
-    Width: wholesize.Width;
+  PartitionDiagram(SizeClass maxsize) = VBox {
+    Width: maxsize.Width;
     HAlign: HAligns.Center;
 
     HBox {
       VAlign: VAligns.Center;
-
-      VBox {
-        Table {
-          TextHeight: 12 pts;
-          Columns: [22 pts {HAlign: HAligns.Right;}, 12 pts, 1 inch];
-
-          foreach (var partition in Rule.Partitions) {
-            Row {
-              Span {
-                each1;
-                Space;
-              };
-              Cell {
-                TextColor: ChartColor(each0);
-                Tex.blackcirc;
-              };
-              partition.Filter;
-            }
-          }
-        };
-      };
-
-      MainDiagram(Min([wholesize.Width, wholesize.Height]));
+      Rule.ShowLegend(12 pts, 1.25 inch);
+      MainDiagram(Min([maxsize.Width, maxsize.Height]));
     };
   };
 
@@ -636,7 +625,7 @@ class CalcRatesClass {
       var s1 = first.Word2.Padded[first.Index];
       s1.ShowSegment;
 
-      LocationMark: TranLink(s0.Index, s1.Index);
+      AnchorTag: TranLink(s0.Index, s1.Index);
       KeepWithNext: true;
     };
 
@@ -670,7 +659,7 @@ class CalcRatesClass {
   }
 
   PartitionBlock = Block {
-    PartitionBox(Size(DocMetrics.PageContent.Width, DocMetrics.PageContent.Height * 0.8));
+    PartitionBox(new SizeClass(DocMetrics.PageContent.Width, DocMetrics.PageContent.Height * 0.8));
 
 /*
     PageBreak;
@@ -700,8 +689,9 @@ class CalcRatesClass {
         foreach (var s1 in segments) {
           if (s0.Index != s1.Index) {
             var tlist = t.GetValue(s0.Index, s1.Index);
-            if (exists tlist) {
+            if (valid tlist) {
               Canvas {
+                TipAction: new TranActionClass(tlist.Values, tlist.Length*max);
                 HAlign: HAligns.Center;
                 VAlign: VAligns.Center;
                 X: x;
@@ -712,25 +702,22 @@ class CalcRatesClass {
                 foreach (var e in tlist) {
                   var c0 = e.Word1.Padded[e.Index];
                   var c1 = e.Word2.Padded[e.Index];
-                  if (c0.Features.HasFlag(Vowel) != c1.Features.HasFlag(Vowel))
+                  if (c0.Features.HasFlag(Vowel | Semivowel) != c1.Features.HasFlag(Vowel | Semivowel))
                     ++count;
                 }
 
                 if (count > 0) {
                   var f = Integer(255.0 * (1.0 - count / tlist.Length));
                   if (f < 255)
-                    Background: Color(f, 255, f);
+                    Background: new ColorClass(f, 255, f);
                 }
                 else {
                   var f = Integer((1.0 - tlist.Length * max) * 255.0);
                   if (f < 255)
-                    Background: Color(255, f, f);
+                    Background: new ColorClass(255, f, f);
                 }
 
-                Span {
-                  tlist.Length;
-                  Hover: new HoverClass(new TranClass(tlist, tlist.Length*max), HoverTypes.Tip);
-                }
+                tlist.Length;
               };
             }
           }
@@ -753,7 +740,7 @@ class CalcRatesClass {
         if (p != s.PartitionIndex) {
           Canvas {
             Y: y;
-            Size: Size(size.Width, grid);
+            Size: new SizeClass(size.Width, grid);
             Background: gcolor;
           };
           p = s.PartitionIndex;
@@ -778,7 +765,7 @@ class CalcRatesClass {
           if (p != s.PartitionIndex) {
             Canvas {
               X: x;
-              Size: Size(grid, size.Height);
+              Size: new SizeClass(grid, size.Height);
               Background: gcolor;
             };
             p = s.PartitionIndex;

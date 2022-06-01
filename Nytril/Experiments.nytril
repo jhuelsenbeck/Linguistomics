@@ -164,7 +164,8 @@ abstract class ExperimentClass: FactClass {
                       JC69,
                       GTR;
   ModelFolderClass[]  Models;
-  ExampleConceptClass ExampleConcept;
+  ExampleConceptClass ExampleConcept,
+                      DataConcept;
   CalcRatesClass      CalcStatic,
                       CalcExperiment;
   var                 RootFolder,
@@ -178,6 +179,7 @@ abstract class ExperimentClass: FactClass {
     FolderName     = folder;
     RootFolder     = Folder("Experiments") Folder(folder);
     ExampleConcept = new ExampleConceptClass(Data, Trial.ExampleConcept);
+    DataConcept    = new ExampleConceptClass(Data, Trial.DataConcept);
     CalcStatic     = new CalcRatesClass(Data, Rule);
     CalcExperiment = new CalcRatesClass(Data, Rule, new TransitionClass(Data, Rule, true));
     Custom         = new ModelFolderClass(this, "Custom", rule.Name);
@@ -233,7 +235,7 @@ abstract class ExperimentClass: FactClass {
       };
 
       foreach (var part in Rule.Partitions) {
-        var sum = Math.Sum((each part.Segments).UsedFrequency);
+        var sum = 0;//Math.Sum((each part.Segments).UsedFrequency);
         Row {
           part.Name;
           Cell {
@@ -268,7 +270,7 @@ abstract class ExperimentClass: FactClass {
 
       foreach (var r in folder.Posterior.Run) {
         if (valid r.Tree)
-          Style.ShowTree("Run {0}"(each1), null, r.Tree, w);
+          Style.ShowTree("Run {0}"(each1), null, r.Tree, w, null);
       }
     }
   };
@@ -283,7 +285,7 @@ abstract class ExperimentClass: FactClass {
       Style.DQuote {Name};
     };
 
-    Style.ShowTree("Prior", null, PriorTree, DocMetrics.TreeFigureWidth);
+    Style.ShowTree("Prior", null, PriorTree, DocMetrics.TreeFigureWidth, null);
     ShowTrees(Custom);
     ShowTrees(JC69);
     ShowTrees(GTR);

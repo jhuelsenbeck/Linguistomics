@@ -27,7 +27,7 @@ abstract class BaseViewClass: DocumentClass {
       content.Title;
     };
 
-    content.Body(Experiment);
+    content.Body(Experiment, DocMetrics.PageContent);
   };
 
   ShowSymbols = Block {
@@ -66,7 +66,7 @@ class SubmissionViewClass: BaseViewClass {
       Header1 {
         Abstract.Title
       };
-      Abstract.Body(Experiment);
+      Abstract.Body(Experiment, DocMetrics.PageContent);
       ShowContent(PaperSections.Introduction);
       Header1 {
         Lang.Results
@@ -180,7 +180,7 @@ class DiagnosticsViewClass: BaseViewClass {
   override GetMainDocument = Style.MainDocument {
     var appendices = [
       new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(Data)),
-      new AppendixClass(Lang.SegmentFrequencies, SegmentDisplay.FrequencyChart(Data, Size(DocMetrics.PageContent.Width, 3 inches))),
+      new AppendixClass(Lang.SegmentFrequencies, SegmentDisplay.FrequencyChart(Data, new SizeClass(DocMetrics.PageContent.Width, 3 inches))),
       new AppendixClass("Prior Frequencies", Experiment.CalcStatic.PartitionBlock),
       new AppendixClass("Symbols", ShowSymbols),
       new AppendixClass("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(Data)),

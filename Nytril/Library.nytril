@@ -19,7 +19,7 @@ class LanguageClass: FactClass {
   virtual Details = null;
 
   override GetLayoutSpan = Span {
-    Hover: new HoverClass(this, HoverTypes.Tip);
+    TipAction: this;
     Name;
   };
 
@@ -34,7 +34,7 @@ class LanguageClass: FactClass {
         RightIndent: 3.5 inches;
       };
     }
-    ShowMap(Size(5 inches, 3 inches));
+    ShowMap(new SizeClass(5 inches, 3 inches));
   };
 
   LoadImage(name) = IO.Read(Info.ImageFolder FileName(name));
@@ -47,7 +47,7 @@ class LanguageClass: FactClass {
 
         var h = 6 pts;
         MapImage {
-          Size: Size(size.Width, size.Height - h);
+          Size: new SizeClass(size.Width, size.Height - h);
           Proportional: true;
         };
 
@@ -56,7 +56,7 @@ class LanguageClass: FactClass {
             TextHeight: h;
             TextColor: 80%;
             Lang.Credit;
-            Hover: new HoverClass(MapAttribution, HoverTypes.Tip);
+            MapAttribution;
           }
         }
       };
@@ -71,28 +71,28 @@ typedef SegmentDictionary DictionaryClass<SegmentClass>;
 
 class WordClass: FactClass {
   field          Plain,
-                 Text,
-                 SegmentCount;
+                 Text;
   LanguageClass  Language;
+  TaxonClass     Taxon;
   CognateClass   Cognate;
   SegmentClass[] Segments,
                  Aligned,
                  Padded;
 
-  Constructor(SegmentDictionary dictionary, LanguageClass language, CognateClass cognate, text) {
-    super.Constructor(text+cognate.Concept.Name+cognate.Name+language.Name);
+  Constructor(SegmentDictionary dictionary, TaxonClass taxon, CognateClass cognate, text) {
+    super.Constructor(valid cognate ? text+cognate.Concept.Name+cognate.Name+taxon.Variable : #71f32657-a37c-4f1d-abba-87b928e9d80b#);
 
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
-    Text       = text.GetString(NormalizationForms.FormC);
-    Plain      = Text.FindSlice(c => c != IPA.Segments.GapSegment.Ipa and c != IPA.Segments.PrimaryStress.Ipa);
-    Language   = language;
-    Cognate    = cognate;
+    Text     = text.GetString(NormalizationForms.FormC);
+    Plain    = Text.FindSlice(c => c != IPASegments.GapSegment.Ipa and c != IPASegments.PrimaryStress.Ipa);
+    Taxon    = taxon;
+    Language = taxon.Language;
+    Cognate  = cognate;
 
     if (valid Text) {
-      var segments = dictionary.FindTokens(Text, IPA.NoSegment);
-      Aligned      = segments.FindSlice(s => s.Gap or (not s.Punctuation));
-      Segments     = segments.FindSlice(s => not s.Punctuation);
-      SegmentCount = Segments.Length;
+      var segments = dictionary.FindTokens(Text, IPA.NullSegment);
+      Aligned  = segments.FindSlice(s => s.Gap or (not s.Punctuation));
+      Segments = segments.FindSlice(s => not s.Punctuation);
 
       // Test that the word's text is the same as the segments converted back into text
       var view = Span {(each segments).Ipa};
@@ -100,12 +100,12 @@ class WordClass: FactClass {
 
       Link.Connect(this, Segments);
       Link.Connect(this, cognate);
-      Link.Connect(this, language);
+      Link.Connect(this, Language);
+      Link.Connect(Language, cognate);
     }
     else {
-      Segments     = [];
-      Aligned      = [];
-      SegmentCount = 0;
+      Segments = [];
+      Aligned  = [];
     }
   }
 
@@ -113,7 +113,7 @@ class WordClass: FactClass {
 
   ShowConcept = Span {
     Style.SansSerif;
-    Hover: new HoverClass(this, HoverTypes.Tip);
+    TipAction: this;
     Cognate.GetTitle;
   };
 
@@ -229,7 +229,7 @@ class CognateClass: FactClass {
     Link.Connect(this, concept);
   }
 
-  override GetIcon = Icons.share;
+  override GetIcon = Icons.format_list_bulleted;
 
   GetTitle {
     return Concept.Name + '-' + Name;
@@ -260,7 +260,7 @@ class TaxonClass {
   override GetLayoutTip = Span {
     Style.TaxonFormat;
     Variable;
-    Hover: new HoverClass(Language, HoverTypes.Tip);
+    TipAction: Language;
   };
 }
 //======================================================================
@@ -295,21 +295,23 @@ class WordPairClass {
 //======================================================================
 
 class DataSetClass {
-  LanguageClass[] Languages;
-  SegmentClass[]  UniqueSegments,
-                  SortedSegments,
-                  DisplaySegments;
-  CognateClass[]  UsedCognates,
-                  SortedCognates;
-  ConceptClass[]  UsedConcepts;
-  TaxonClass[]    Taxa;
-  MatrixClass     TransitionCount;
-  var             Description,
-                  MaxLanguageName,
-                  WordCount,
-                  SegmentCount,
-                  UniqueCount,
-                  TransitionMax;
+  LanguageClass[]             Languages;
+  SegmentClass[]              UniqueSegments,
+                              SortedSegments,
+                              DisplaySegments;
+  CognateClass[]              UsedCognates,
+                              SortedCognates;
+  ConceptClass[]              UsedConcepts;
+  TaxonClass[]                Taxa;
+  MatrixClass                 TransitionCount;
+  DictionaryClass<TaxonClass> TaxonSet;
+  VectorClass                 WordList;
+  var                         Description,
+                              MaxLanguageName,
+                              WordCount,
+                              SegmentCount,
+                              UniqueCount,
+                              TransitionMax;
 
   Constructor(includewords, LanguageClass[] languages, description) {
     Languages       = languages;
@@ -318,21 +320,27 @@ class DataSetClass {
     SegmentCount    = 0;
     MaxLanguageName = 0;
 
-    var languageset = new DictionaryClass<LanguageClass>(languages.Length);
+
+    TaxonSet = new(languages.Length);
+    ListClass<TaxonClass> tlist = new(languages.Length);
+
     foreach (var l in languages) {
-      var n = l.GlobalVariableName;
-      languageset.Add(l, n);
+      var taxon = new TaxonClass(l);
+      tlist.Add(taxon);
+      TaxonSet.Add(taxon, taxon.Variable);
+      if (taxon.Variable.Length > MaxLanguageName)
+        MaxLanguageName = taxon.Variable.Length;
     }
-    Taxa = new TaxonClass(each languages);
+    Taxa     = tlist.Values;
+    WordList = new VectorClass(Taxa.Length, null);
 
     // Build a dictionary with IPA text as the key
     var dictionary = new SegmentDictionary(256);
-    foreach (var segment in IPA.Segments) {
+    foreach (var segment in IPASegments) {
       if (valid segment.Ipa)
         dictionary.Add(segment, segment.Ipa);
     }
 
-    var set         = new DictionaryClass(1024);
     var clist       = new ListClass<CognateClass>(1024);
     var conceptlist = new ListClass<ConceptClass>(256);
 
@@ -361,15 +369,8 @@ class DataSetClass {
           if (inc) {
             var count = 0;
             foreach (var word in cognate) {
-              var n = word.GlobalVariableName;
-              if (languageset.Contains(n)) {
-                if (set.Add(n, n)) {
-                  if (n.Length > MaxLanguageName)
-                    MaxLanguageName = n.Length;
-                }
-                if (valid word)
-                  ++count;
-              }
+              if (valid word and TaxonSet.Contains(word.GlobalVariableName))
+                ++count;
             }
             if (count > 1) {
               WordCount += count;
@@ -382,21 +383,26 @@ class DataSetClass {
 
     UsedConcepts   = conceptlist.Values.Sort(false);
     UsedCognates   = clist.Values;
-    SortedCognates = UsedCognates.Sort(false);
-
 
     foreach (var cognate in UsedCognates)
       ComputeCognate(dictionary, cognate);
 
     UniqueSegments = GetUniqueSegments;
     UniqueCount    = UniqueSegments.Length;
-    foreach (var segment in UniqueSegments)
-      segment.Index = each0;
+    foreach (var segment in UniqueSegments) {
+      segment.Index         = each0;
+      segment.UsedFrequency = Real(segment.UsedCount) / SegmentCount;
+    }
 
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
     SortedSegments  = UniqueSegments.Sort(true, ref CompareAlpha);
+    TransitionCount = GetTransitionsCount;
+  }
 
-    GetFrequencies;
+  CognateClass[] GetSortedCognates {
+    if (not valid SortedCognates)
+      SortedCognates = UsedCognates.Sort(false);
+    return SortedCognates;
   }
 
   static CompareAlpha(SegmentClass s0, SegmentClass s1, options) {
@@ -422,38 +428,33 @@ class DataSetClass {
   }
 
   void ComputeCognate(SegmentDictionary dictionary, CognateClass cognate) {
-    var words     = new ListClass<WordClass>(Taxa.Length);
+    var defword = new WordClass(null, Taxa[0], null, Empty);
+
+    WordList.SetAllValues(defword);
     var maxlength = 0;
 
-    foreach (var taxon in Taxa) {
-      var word = null;
-      foreach (var langword in cognate.Variable) {
-        LinkTypes.Link.Connect(taxon.Language, cognate);
+    foreach (var langword in cognate.Variable) {
+      var taxon = TaxonSet.FindKey(langword.GlobalVariableName);
+      if (valid taxon) {
+        var word = new WordClass(dictionary, taxon, cognate, langword);
+        maxlength = Math.Max([maxlength, word.Aligned.Length]);
 
-        if (langword.GlobalVariableName == taxon.Variable) {
-          var w = new WordClass(dictionary, taxon.Language, cognate, langword);
-          maxlength = Math.Max([maxlength, w.Aligned.Length]);
-
-          foreach (var s in w.Segments) {
-            ++SegmentCount;
-            ++s.UsedCount;
-          }
-
-          word = w;
-          break;
+        foreach (var s in word.Segments) {
+          ++SegmentCount;
+          ++s.UsedCount;
         }
+        WordList.SetValue(taxon.Index, word);
       }
-      words.Add(word ?? new WordClass(dictionary, taxon.Language, cognate, Empty));
     }
 
-    cognate.Words     = words.Values;
+    cognate.Words     = WordList.Values;
     cognate.MaxLength = maxlength;
 
     foreach (var word in cognate.Words) {
       var a = word.Aligned;
       if (valid a) {
         if (a.Length < maxlength)
-          word.Padded = a + [IPA.Segments.GapSegment] * (maxlength - a.Length);
+          word.Padded = a + [IPASegments.GapSegment] * (maxlength - a.Length);
         else
           word.Padded = a;
       }
@@ -468,7 +469,7 @@ class DataSetClass {
       foreach (var word in cognate.Words) {
         if (valid word.Aligned) {
           ++count;
-          if (word.Padded[i] == IPA.Segments.GapSegment)
+          if (word.Padded[i] == IPASegments.GapSegment)
             ++gapcount;
         }
       }
@@ -496,7 +497,7 @@ class DataSetClass {
 
   GetTransitionsCount {
     TransitionMax = 1;
-    var t = MatrixInit(null, UniqueCount, UniqueCount);
+    var t = new MatrixClass(UniqueCount, UniqueCount, null);
 
     foreach (var cognate in UsedCognates) {
       var length = cognate.Words.Length;
@@ -512,8 +513,8 @@ class DataSetClass {
               if (s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation) {
                 var list = t.GetValue(s0.Index, s1.Index);
                 var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
-                if (not exists list) {
-                  list = new ListClass(16);
+                if (not valid list) {
+                  list = new ListClass<WordPairClass>(128);
                   t.SetValue(s0.Index, s1.Index, list);
                 }
                 list.Add(p);
@@ -527,35 +528,99 @@ class DataSetClass {
     }
     return t;
   }
+}
+//======================================================================
 
+class TaxonRateClass {
+  TaxonClass  Taxon;
+  VectorClass SegmentCount,
+              SegmentFrequency;
+  var         TotalCount,
+              MaxFrequency,
+              Distance;
 
-  void GetFrequencies {
-    TransitionCount = GetTransitionsCount;
-
-    var set = new DictionaryClass<SegmentDataClass>(1024);
-    foreach (var sd in SegmentFrequencyData)
-      set.Add(sd, sd.Text);
-
-    var sum = 0.0;
-    foreach (var s in UniqueSegments) {
-      if (not s.Punctuation) {
-        var f = set.FindKey(s.Ipa);
-        if (valid f)
-          s.Frequency = f.Frequency;
-        sum += s.Frequency;
-      }
-    }
-    if (sum > 0) {
-      sum = 100.0 / sum;
-
-      var seg = 100.0 / SegmentCount;
-
-      foreach (var s in UniqueSegments) {
-        s.NormalFrequency = sum * s.Frequency;
-        s.UsedFrequency   = seg * s.UsedCount;
-      }
-    }
+  Constructor(segments, TaxonClass taxon) {
+    Taxon            = taxon;
+    TotalCount       = 0;
+    MaxFrequency     = 0;
+    SegmentCount     = new VectorClass(segments, 0);
+    SegmentFrequency = new VectorClass(segments, 0.0);
   }
 }
+
+//======================================================================
+
+class SegmentFrequencyClass {
+  TaxonRateClass[] Rates,
+                   SortedRates;
+  DataSetClass     Data;
+  TaxonClass[]     Taxa;
+  VectorClass      UsedCount,
+                   UsedFrequency,
+                   FirstRate;
+  var              SortedSegments,
+                   MaxDistance;
+
+  Constructor(DataSetClass data) {
+    Data  = data;
+    Taxa  = data.Taxa;
+    Rates = new TaxonRateClass(data.UniqueCount, each data.Taxa);
+
+
+    foreach (var cognate in data.UsedCognates) {
+      foreach (var word in cognate.Words) {
+        var rate = Rates[word.Taxon.Index];
+        foreach (var segment in word.Segments) {
+          ++rate.TotalCount;
+          rate.SegmentCount.AddValue(segment.Index, 1);
+        }
+      }
+    }
+
+    foreach (var rate in Rates) {
+      var mult = 100.0 / rate.TotalCount;
+      for (var i = 0; i < data.UniqueCount; ++i) {
+        var f = mult * rate.SegmentCount[i];
+        rate.SegmentFrequency.SetValue(i, f);
+        if (f > rate.MaxFrequency)
+          rate.MaxFrequency = f;
+      }
+    }
+
+    // Compute the Euclidean distance between each language and the first language
+
+    var max = 0.0;
+    var r0  = Rates[0];
+    foreach (var rate in Rates) {
+      if (each0 > 0) {
+        var sum = 0;
+        for (var i = 0; i < data.UniqueCount; ++i) {
+          var delta = rate.SegmentFrequency[i] - r0.SegmentFrequency[i];
+          sum += delta * delta;
+        }
+        rate.Distance = Math.Sqrt(sum);
+        if (rate.Distance > max)
+          max = rate.Distance;
+      }
+      else
+        rate.Distance = 0.0;
+    }
+
+    MaxDistance = max;
+    FirstRate   = r0.SegmentFrequency;
+    var a = 0 ..< data.UniqueCount step 1;
+    SortedSegments = a.Sort(true, ref CompareFrequency);
+    SortedRates    = Rates.Sort(false, ref CompareDistance);
+  }
+
+  CompareFrequency(s0, s1, options) {
+    return FirstRate[s0].Compare(FirstRate[s1]);
+  }
+
+  static CompareDistance(TaxonRateClass r0, TaxonRateClass r1, options) {
+    return r0.Distance.Compare(r1.Distance);
+  }
+}
+
 //======================================================================
 

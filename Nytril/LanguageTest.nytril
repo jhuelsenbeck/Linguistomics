@@ -1,6 +1,6 @@
 using IO, WordGroups, Languages;
 
-namespace Info;
+namespace Trial;
 
 include "Concepts/Test";
 
@@ -12,24 +12,9 @@ ResultsFolder = Folder("rwin");
 
 ExampleConcept = Concepts.Woman;
 FigureConcept  = Concepts.Rain;
+DataConcept    = Concepts.Woman;
 
 IncludeWordGroups = Leipzig Swadesh100 Swadesh207;
-
-Experiments = [
-  new ExperimentClass(#8bbc5666-8f8d-49d9-b67d-fc12321ace43#, "All words", "All-100", 100_000),
-];
-
-PriorTree = Branch {
-  Leaf(LanguageA);
-  Branch {
-    Leaf(LanguageB);
-    Branch {
-      Leaf(LanguageC);
-      Leaf(LanguageD);
-    };
-  }
-};
-
 
 LanguageClass[] LanguageList = [
   LanguageA,
@@ -38,16 +23,75 @@ LanguageClass[] LanguageList = [
   LanguageD,
 ];
 
-NumberedTree = NBranch(7, 1) {
-  NLeaf(LanguageA, 1);
-  NBranch(6, 2) {
-    NLeaf(LanguageB, 3);
-    NBranch(5, 4) {
-      NLeaf(LanguageC, 5);
-      NLeaf(LanguageD, 6);
+NumberedTree = Branch(1) {
+  Leaf(LanguageA, 1);
+  Branch(2) {
+    Leaf(LanguageB, 3);
+    Branch(4) {
+      Leaf(LanguageC, 5);
+      Leaf(LanguageD, 6);
     };
   }
 };
+
+
+
+//======================================================================
+
+GetPriorTree(portuguese) = Branch {
+  Leaf(Latin);
+  Branch {
+    Leaf(Romanian);
+    Branch {
+      Branch {
+        Branch {
+          Leaf(Walloon);
+          Leaf(French);
+        };
+        Branch {
+          Branch {
+            portuguese;
+            Leaf(Spanish);
+          };
+          Leaf(Catalan);
+        }
+      };
+      Branch {
+        Leaf(Friulian);
+        Leaf(Italian);
+      }
+    }
+  }
+};
+
+//======================================================================
+
+class TestExperimentClass: ExperimentClass {
+  Constructor {
+    var data = new DataSetClass(Swadesh100 Leipzig Swadesh207, LanguageList, "207-word Swadesh list of basic vocabulary");
+    super.Constructor(#8bbc5666-8f8d-49d9-b67d-fc12321ace43#, "All words", "All-100", new NaturalPartitionClass(data));
+  }
+
+  override PriorTree = Branch {
+    Leaf(LanguageA);
+    Branch {
+      Leaf(LanguageB);
+      Branch {
+        Leaf(LanguageC);
+        Leaf(LanguageD);
+      };
+    }
+  };
+
+  override NumberedTree = GetNumberedTree(NBranch(12, 1) {NLeaf(Portuguese, 1); NLeaf(PortugueseBrazil, 1)});
+}
+
+
+ExperimentClass[] Experiments = [
+   new TestExperimentClass,
+];
+
+//======================================================================
 
 
 
