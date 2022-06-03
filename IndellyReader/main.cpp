@@ -84,6 +84,6 @@ void readConfigurationFile(UserSettings& settings, McmcSummary& summary) {
         #endif
 
         if (fileExtension == ".config")
-            summary.readConfigFile(fp);
+            summary.readConfigFile(filePath);
         }
 }

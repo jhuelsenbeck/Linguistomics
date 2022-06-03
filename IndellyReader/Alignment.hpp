@@ -3,6 +3,7 @@
 
 #include "json.hpp"
 #include "Sequence.hpp"
+#include "McmcSummary.hpp"
 #include <map>
 #include <string>
 #include <vector>
@@ -12,8 +13,8 @@
 class Alignment {
 
     public:
-                                Alignment(void) = delete;
-                                Alignment(nlohmann::json j);
+                                Alignment() = delete;
+                                Alignment(nlohmann::json j, std::vector<std::string>& taxa);
         Sequence&               operator[](size_t i) { return matrix[i]; }
         const Sequence&         operator[](size_t i) const { return matrix[i]; };
         bool                    operator==(const Alignment& aln) const;
@@ -27,12 +28,13 @@ class Alignment {
         void                    print(std::string h);
         size_t                  size(void) { return matrix.size(); }
         size_t                  size(void) const { return matrix.size(); }
-        nlohmann::json          toJson(void);
+        nlohmann::json          toJson(std::ostream& nytril);
     
     private:
         int                     numTaxa;
         int                     numChar;
         std::vector<Sequence>   matrix;
+        std::vector<Sequence*>  sorted;
 };
 
 struct CompAlignment {

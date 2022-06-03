@@ -120,8 +120,8 @@ nlohmann::json Partition::toJson(void) {
         std::set<int>& vals = s->getValues();
         
         nlohmann::json jIdx = nlohmann::json::array();
-        for (int j : vals)
-            jIdx.push_back(j);
+        for (int v : vals)
+            jIdx.push_back(v);
 
         nlohmann::json jPart = nlohmann::json::object();
         jPart["index"] = s->getIndex();

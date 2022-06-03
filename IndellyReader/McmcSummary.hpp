@@ -46,6 +46,7 @@ class McmcSummary {
         Tree*                                   conTree;
         bool                                    hasPartitions;
         Partition*                              statePartitions;
+        std::vector<std::string>                taxa;
 };
 
 #endif

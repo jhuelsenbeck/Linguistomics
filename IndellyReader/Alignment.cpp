@@ -4,13 +4,25 @@
 #include "Sequence.hpp"
 
 
-Alignment::Alignment(nlohmann::json js) {
+Alignment::Alignment(nlohmann::json js, std::vector <std::string>& taxa):
+    sorted(taxa.size())
+    {
 
     for (int i=0; i<js.size(); i++)
         {
-        std::string tName = js[i]["Taxon"];
-        std::vector<int> tInfo = js[i]["Segments"];
-        matrix.push_back( Sequence(tName, tInfo) );
+        const std::string& tName = js[i]["Taxon"];
+        const std::vector<int>& tInfo = js[i]["Segments"];
+
+        int j = 0;
+        for (auto& t: taxa)
+            {
+            if (t == tName)
+                break;
+            ++j;
+            }
+
+
+        matrix.push_back( Sequence(j, tName, tInfo) );
         }
     numTaxa = (int)matrix.size();
     numChar = (int)matrix[0].size();
@@ -33,7 +45,7 @@ bool Alignment::operator==(const Alignment& aln) const {
     return true;
 }
 
-void Alignment::from_json(const nlohmann::json& j) {
+void Alignment::from_json(const nlohmann::json& /*j*/) {
 
     //j.at("name").get_to(p.name);
     //j.at("address").get_to(p.address);
@@ -101,17 +113,48 @@ void Alignment::print(void) {
         }
 }
 
-nlohmann::json Alignment::toJson(void) {
+nlohmann::json Alignment::toJson(std::ostream& nytril) {
 
     nlohmann::json j = nlohmann::json::array();
+
+    auto size = sorted.size();
+
+    for (int i = 0; i < size; ++i)
+        sorted[i] = NULL;
+
     for (int i=0; i<numTaxa; i++)
         {
-        std::vector<int> s = matrix[i].getSequence();
-        std::string tName = matrix[i].getName();
+        auto& m = matrix[i];
         nlohmann::json sj;
-        sj["language"] = tName;
-        sj["sequence"] = s;
+        sj["language"] = m.getName();
+        sj["sequence"] = m.getSequence();
         j.push_back(sj);
+
+        sorted[m.getLanguage()] = &m;
         }
+
+
+    bool com = false;
+    for (int i = 0; i < size; i++) {
+        auto m = sorted[i];
+        if (com)
+            nytril << ",";
+        if (m) {
+            nytril << "[";
+            bool comma = false;
+            for (auto si : m->getSequence())
+            {
+                if (comma)
+                    nytril << ",";
+                nytril << si;
+                comma = true;
+            }
+            nytril << "]";
+        }
+        else
+            nytril << "null";
+        com = true;
+    }
+
     return j;
 }

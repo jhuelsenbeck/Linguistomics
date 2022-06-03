@@ -1,6 +1,31 @@
 using Format, Units, Math, IO, LinkTypes;
 //======================================================================
 
+class AlignClass {
+  var Language,
+      Sequence;
+
+
+  Constructor(language, sequence) {
+    Language = language;
+    Sequence = sequence;
+  }
+}
+
+class AlignSetClass {
+  var Prob,
+      CumulativeProb,
+      Set;
+
+  Constructor(prob, cumprob, set) {
+    Prob           = prob;
+    CumulativeProb = cumprob;
+    Set            = set;
+  }
+}
+
+//======================================================================
+
 class LanguageClass: FactClass {
   field Name,
         Cases;
@@ -531,20 +556,30 @@ class DataSetClass {
 }
 //======================================================================
 
+class FrequencyClass {
+  var Frequency,
+      Index;
+
+  Constructor(frequency) {
+    Index     = each0;
+    Frequency = frequency;
+  }
+}
+//======================================================================
+
 class RateDataClass {
-  TaxonClass  Taxon;
-  VectorClass Count,
-              Frequency;
-  var         TotalCount,
-              MaxFrequency,
-              Distance;
+  TaxonClass       Taxon;
+  VectorClass      Count;
+  FrequencyClass[] Frequency;
+  var              TotalCount,
+                   MaxFrequency,
+                   Distance;
 
   Constructor(count, TaxonClass taxon) {
     Taxon        = taxon;
     TotalCount   = 0;
     MaxFrequency = 0;
     Count        = new VectorClass(count, 0);
-    Frequency    = new VectorClass(count, 0.0);
   }
 }
 
@@ -552,10 +587,10 @@ class RateDataClass {
 
 class SegmentActionClass: ActionClass {
   RateDataClass Rate;
-  SegmentClass   Segment;
-  TaxonClass     Taxon;
-  var            Count,
-                 Percent;
+  SegmentClass  Segment;
+  TaxonClass    Taxon;
+  var           Count,
+                Percent;
 
   Constructor(RateDataClass rate, SegmentClass segment, count, percent) {
     super.Constructor(Actions.RunQuery, null);
@@ -598,8 +633,8 @@ abstract class FrequencyChartClass {
   DataSetClass     Data;
   TaxonClass[]     Taxa;
   VectorClass      UsedCount,
-                   UsedFrequency,
-                   FirstRate;
+                   UsedFrequency;
+  FrequencyClass[] FirstRate;
   RateDataClass[]  Rates,
                    SortedRates;
   var              RateCount,
@@ -616,7 +651,7 @@ abstract class FrequencyChartClass {
   }
 
   CompareFrequency(i0, i1, options) {
-    return FirstRate[i0].Compare(FirstRate[i1]);
+    return FirstRate[i0].Frequency.Compare(FirstRate[i1].Frequency);
   }
 
   static CompareDistance(RateDataClass r0, RateDataClass r1, options) {
@@ -626,14 +661,16 @@ abstract class FrequencyChartClass {
   void ComputeDistance(sortfunction) {
     // Compute the Euclidean distance between each language and the first language
 
+    var fr = new VectorClass(RateCount, 0.0);
     foreach (var rate in Rates) {
       var mult = 100.0 / rate.TotalCount;
       for (var i = 0; i < RateCount; ++i) {
         var f = mult * rate.Count[i];
-        rate.Frequency.SetValue(i, f);
+        fr.SetValue(i, f);
         if (f > rate.MaxFrequency)
           rate.MaxFrequency = f;
       }
+      rate.Frequency = new FrequencyClass(each fr);
     }
 
     var max = 0.0;
@@ -642,7 +679,7 @@ abstract class FrequencyChartClass {
       if (each0 > 0) {
         var sum = 0;
         for (var i = 0; i < RateCount; ++i) {
-          var delta = rate.Frequency[i] - r0.Frequency[i];
+          var delta = rate.Frequency[i].Frequency - r0.Frequency[i].Frequency;
           sum += delta * delta;
         }
         rate.Distance = Math.Sqrt(sum);
@@ -680,8 +717,12 @@ abstract class FrequencyChartClass {
 //======================================================================
 
 class SegmentFrequencyClass: FrequencyChartClass {
+  VectorClass PartitionMax;
+
   Constructor(ExperimentClass experiment, group) {
     super.Constructor(experiment, experiment.Data.UniqueCount);
+
+    PartitionMax = new(experiment.Rule.Partitions.Length, 0);
 
     foreach (var cognate in Data.UsedCognates) {
       foreach (var word in cognate.Words) {
@@ -689,6 +730,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
         foreach (var segment in word.Segments) {
           ++rate.TotalCount;
           rate.Count.AddValue(segment.Index, 1);
+          PartitionMax.AddValue(segment.PartitionIndex, 1);
         }
       }
     }
@@ -697,16 +739,16 @@ class SegmentFrequencyClass: FrequencyChartClass {
   }
 
   CompareGroups(i0, i1, options) {
-    var s0 = Data.UniqueSegments[i0];
-    var s1 = Data.UniqueSegments[i1];
-    var d  = s0.PartitionIndex - s1.PartitionIndex;
+    var f0 = FirstRate[i0];
+    var f1 = FirstRate[i1];
+    var d  = PartitionMax[Data.UniqueSegments[f0.Index].PartitionIndex] - PartitionMax[Data.UniqueSegments[f1.Index].PartitionIndex];
     if (d == 0)
-      return FirstRate[s1].Compare(FirstRate[s0]);
+      return f0.Frequency.Compare(f1.Frequency);
     return d;
   }
 
   override SegmentBar(RateDataClass rate, index, width, height) = Canvas {
-    var f = rate.Frequency[index] / rate.MaxFrequency;
+    var f = rate.Frequency[index].Frequency / rate.MaxFrequency;
     Size: new SizeClass(width-1, height * f);
     MarginR: 1;
     var s = Data.UniqueSegments[index];
@@ -821,7 +863,7 @@ class PartitionFrequencyClass: FrequencyChartClass {
   }
 
   override SegmentBar(RateDataClass rate, index, width, height) = Canvas {
-    var f = rate.Frequency[index] / rate.MaxFrequency;
+    var f = rate.Frequency[index].Frequency / rate.MaxFrequency;
     Size: new SizeClass(width-1, height * f);
     MarginR: 1;
     var partition = Partitions[index];
