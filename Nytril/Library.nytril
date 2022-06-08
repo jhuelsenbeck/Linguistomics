@@ -10,6 +10,8 @@ class AlignIndexClass {
     Index = index;
     Count = count;
   }
+
+  GetCognateName = GlobalVariablePath[9..-7];
 }
 
 //======================================================================
@@ -84,13 +86,16 @@ class AlignPairClass {
     };
   };
 
-  override GetLayoutTip = Block {
+  override GetLayoutTip = ShowDetails(20);
+
+  ShowDetails(max) = Block {
     TextHeight: 10 pts;
 
     var path   = Folders.Source Folders.Up Folder("Experiments/Europe200/Custom/Posterior/Run1/Execute") FileName("Alignment" + Align.Index) Extensions.Nytril;
     var adata  = Read(path).GetValue("Align");
 
     Paragraph {
+      KeepWithNext: true;
       TextHeight: 14 pts;
       SpaceAfter: 10 pts;
       Cognate;
@@ -105,8 +110,11 @@ class AlignPairClass {
         var prob = a[0];
         cumulative += prob;
         var alignments = a[1];
-        if (alignments.Length > 0)
+        if (alignments.Length > 0) {
           Show(prob, cumulative, a[1]);
+          if (each1 >= max)
+            break;
+        }
       }
     };
   };
@@ -132,7 +140,7 @@ class AlignmentChartClass {
     Border: 1;
 
     // Try to make proportional squares
-    var xitems = Integer(Math.Sqrt(Alignments.Length) * 0.25 * maxsize.Width / maxsize.Height) - 1;
+    var xitems = Integer(maxsize.Width / 130);
     var yitems = (Alignments.Length + xitems - 1) div xitems;
     var bsize  = new SizeClass(maxsize.Width / xitems, maxsize.Height / yitems);
     var rows   = Alignments / xitems;
@@ -146,7 +154,7 @@ class AlignmentChartClass {
             Size: bsize;
             Border: 0.25 pts {Color: 90%};
 
-            var name = a.GlobalVariablePath[9..-7];
+            var name = a.GetCognateName;
             TipAction: new ActionClass(Actions.TipDocument, new AlignPairClass(Data, name, a));
 
             Paragraph {
@@ -158,6 +166,13 @@ class AlignmentChartClass {
           }
         }
       }
+    }
+  };
+
+  ShowAll = Block {
+    foreach (var alignment in Alignments) {
+      var p = new AlignPairClass(Data, alignment.GetCognateName, alignment);
+      p.ShowDetails(5);
     }
   };
 }
