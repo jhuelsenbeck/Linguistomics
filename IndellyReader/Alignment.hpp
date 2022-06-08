@@ -28,6 +28,7 @@ class Alignment {
         void                    print(std::string h);
         size_t                  size(void) { return matrix.size(); }
         size_t                  size(void) const { return matrix.size(); }
+        bool                    valid(void) const {return sorted.size() > 0 && matrix.size() > 0;}
         nlohmann::json          toJson(std::ostream& nytril);
     
     private:

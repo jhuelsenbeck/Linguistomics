@@ -1,52 +1,39 @@
 using Format, Units, Math, IO, LinkTypes;
+
 //======================================================================
 
-class AlignSetClass {
-  CognateClass Cognate;
-  var          Prob,
-               CumulativeProb,
-               Set;
+class AlignIndexClass {
+  var Index,
+      Count;
 
-  Constructor(prob, cumprob, set) {
-    Prob           = prob;
-    CumulativeProb = cumprob;
-    Set            = set;
+  Constructor(index, count) {
+    Index = index;
+    Count = count;
   }
-
-  Show(DataSetClass data, SizeClass bsize) = VBox {
-    Border: 0.5 pts;
-    foreach (var taxon in data.Taxa) {
-      HBox {
-        Height: bsize.Height;
-
-        var word = Set[each0];
-        if (valid word) {
-          foreach (var c in word) {
-            var s = c >= 0 ? data.UniqueSegments[c] : IPASegments.GapSegment;
-            Canvas {
-              Size: bsize;
-              s.ShowSegment;
-            };
-          }
-        }
-      }
-    }
-  };
 }
 
 //======================================================================
 
 class AlignPairClass {
-  CognateClass    Cognate;
-  AlignSetClass[] Align;
+  DataSetClass    Data;
+  AlignIndexClass Align;
+  SizeClass       BoxSize;
+  var             Cognate;
 
-  Constructor(CognateClass cognate, AlignSetClass[] align) {
+  Constructor(DataSetClass data, cognate, AlignIndexClass align) {
+    Data    = data;
     Cognate = cognate;
     Align   = align;
+    BoxSize = new SizeClass(14 pts, 14 pts);
   }
 
   Languages(data, height) = VBox {
     HAlign: HAligns.Right;
+    Span {
+      TextHeight: 10 pts;
+      Empty;
+    };
+
     foreach (var taxon in data.Taxa) {
       HBox {
         Height: height;
@@ -56,20 +43,122 @@ class AlignPairClass {
     }
   };
 
-  override GetLayoutTip = Block {
-    TextHeight: 12 pts;
+  Show(prob, cumulative, set) = VBox {
+    MarginB: 10 pts;
+    MarginR: 5 pts;
+    Border: 0.125 {Color: 50%};
+    HAlign: HAligns.Center;
 
-    var height = 14 pts;
-    var bsize  = new SizeClass(0 pts, height);
-    var data   = Cognate.Data;
-    Paragraph {
-      Cognate.GetTitle;
+    Span {
+      TextHeight: 10 pts;
+      TextDigits: 1;
+      prob * 100.0;
+      "%";
     };
+
+    VBox {
+      foreach (var taxon in Data.Taxa) {
+        HBox {
+          Height: BoxSize.Height;
+
+          var word = set[each0];
+          if (valid word) {
+            foreach (var c in word) {
+              Canvas {
+                HAlign: HAligns.Center;
+                Size: BoxSize;
+                SegmentClass segment;
+                if (c == -1)
+                  segment = IPASegments.GapSegment;
+                else if (c >= 0 and c < Data.UniqueSegments.Length)
+                  segment = Data.UniqueSegments[c];
+                else
+                  segment = IPASegments.MissingSegment;
+                segment.ShowSegment;
+                Background: ChartColor(segment.PartitionIndex) * 0.5;
+              };
+            }
+          }
+        };
+      }
+    };
+  };
+
+  override GetLayoutTip = Block {
+    TextHeight: 10 pts;
+
+    var path   = Folders.Source Folders.Up Folder("Experiments/Europe200/Custom/Posterior/Run1/Execute") FileName("Alignment" + Align.Index) Extensions.Nytril;
+    var adata  = Read(path).GetValue("Align");
+
+    Paragraph {
+      TextHeight: 14 pts;
+      SpaceAfter: 10 pts;
+      Cognate;
+    };
+
     Paragraph {
       Separator: Space;
-      Languages(data, height);
-      (each Align).Show(data, bsize);
+      Languages(Data, BoxSize.Height);
+
+      var cumulative = 0.0;
+      foreach (var a in adata) {
+        var prob = a[0];
+        cumulative += prob;
+        var alignments = a[1];
+        if (alignments.Length > 0)
+          Show(prob, cumulative, a[1]);
+      }
     };
+  };
+}
+
+//======================================================================
+
+class AlignmentChartClass {
+  ExperimentClass   Experiment;
+  AlignIndexClass[] Alignments;
+  DataSetClass      Data;
+  TaxonClass[]      Taxa;
+
+ Constructor(ExperimentClass experiment) {
+    Experiment = experiment;
+    Data       = experiment.Data;
+    Alignments = Data.Alignments;
+    Taxa       = Data.Taxa;
+  }
+
+  ShowChart(SizeClass maxsize) = VBox {
+    Size: maxsize;
+    Border: 1;
+
+    // Try to make proportional squares
+    var xitems = Integer(Math.Sqrt(Alignments.Length) * 0.25 * maxsize.Width / maxsize.Height) - 1;
+    var yitems = (Alignments.Length + xitems - 1) div xitems;
+    var bsize  = new SizeClass(maxsize.Width / xitems, maxsize.Height / yitems);
+    var rows   = Alignments / xitems;
+
+    TextHeight: bsize.Height - 2.5 pt;
+
+    foreach (var row in rows) {
+      HBox {
+        foreach (var a in row) {
+          Canvas {
+            Size: bsize;
+            Border: 0.25 pts {Color: 90%};
+
+            var name = a.GlobalVariablePath[9..-7];
+            TipAction: new ActionClass(Actions.TipDocument, new AlignPairClass(Data, name, a));
+
+            Paragraph {
+//              TabStops: [5 pts];
+              a.Count;
+              Space*3;
+              name.Replace(".Primary", Empty);
+            };
+          }
+        }
+      }
+    }
   };
 }
 
@@ -376,7 +465,7 @@ class DataSetClass {
                               DisplaySegments;
   CognateClass[]              UsedCognates,
                               SortedCognates;
-  AlignPairClass[]            Alignments;
+  AlignIndexClass[]           Alignments;
   ConceptClass[]              UsedConcepts;
   TaxonClass[]                Taxa;
   MatrixClass                 TransitionCount;
@@ -418,7 +507,7 @@ class DataSetClass {
     }
 
     var clist       = new ListClass<CognateClass>(1024);
-    var alist       = new ListClass<AlignPairClass>(1024);
+    var alist       = new ListClass<AlignIndexClass>(1024);
     var conceptlist = new ListClass<ConceptClass>(256);
 
     foreach (var conceptvar in Concepts) {
@@ -456,7 +545,7 @@ class DataSetClass {
               var a = cognate.?Align;
 
               if (valid a)
-                alist.Add(new(c, a));
+                alist.Add(a);
             }
           }
         }
@@ -488,8 +577,11 @@ class DataSetClass {
     return SortedCognates;
   }
 
-  static CompareAlignment(AlignPairClass a0, AlignPairClass a1, options) {
-    return a0.Align.Length.Compare(a1.Align.Length);
+  static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
+    var c = a0.Count.Compare(a1.Count);
+    if (c == 0)
+      return a0.Index.Compare(a1.Index);
+    return c;
   }
 
   static CompareAlpha(SegmentClass s0, SegmentClass s1, options) {
@@ -976,52 +1068,6 @@ class PartitionFrequencyClass: FrequencyChartClass {
         VAlign: VAligns.Top;
         PartitionLabel(each SortedIndexes, bw, bh);
       };
-    }
-  };
-}
-
-//======================================================================
-
-class AlignmentChartClass {
-  ExperimentClass  Experiment;
-  AlignPairClass[] Alignments;
-  DataSetClass     Data;
-  TaxonClass[]     Taxa;
-
- Constructor(ExperimentClass experiment) {
-    Experiment = experiment;
-    Data       = experiment.Data;
-    Alignments = Data.Alignments;
-    Taxa       = Data.Taxa;
-  }
-
-  ShowChart(SizeClass maxsize) = VBox {
-    // Try to make proportional squares
-    var xitems = Integer(Math.Sqrt(Alignments.Length) * 0.25 * maxsize.Width / maxsize.Height) - 1;
-    var yitems = (Alignments.Length + xitems - 1) div xitems;
-
-    var bsize = new SizeClass(maxsize.Width / xitems, maxsize.Height / yitems);
-
-    Size: maxsize;
-    Border: 1;
-
-    var rows = Alignments / xitems;
-    TextHeight: bsize.Height - 2 pt;
-    foreach (var row in rows) {
-      HBox {
-        foreach (var a in row) {
-          Canvas {
-            Size: bsize;
-            Border: 0.25 {Color: 90%};
-            Span {
-              a.Cognate.GetTitle;
-              "(" a.Align.Length; ")";
-            };
-            Tip: a;
-            Action: new ActionClass(Actions.TipDocument, a);
-          }
-        }
-      }
     }
   };
 }

@@ -159,68 +159,75 @@ void AlignmentDistribution::print(Alignment* aln) {
         }
 }
 
-nlohmann::json AlignmentDistribution::toJson(double credibleSetSize, std::ostream& nytril) {
+nlohmann::json AlignmentDistribution::toJson(int index, double credibleSetSize, std::ostream& findex, std::ostream& fdata) {
     
     // sort the alignments from highest to lowest posterior probability
-    std::vector<std::pair<Alignment*, int> > v;
-    for (auto& it : samples)
-        v.push_back(it);
+    std::vector<std::pair<Alignment*, int> > v(1024);
+    for (auto& it : samples) 
+        {
+        if (it.first->valid())
+          v.push_back(it);
+        }
     sort(v.begin(), v.end(), cmp);
 
 
-    nytril << "AlignSetClass[] Concepts.";
-    for (auto& c : name)
-        nytril << (c == '-' ? '.' : c);
-    nytril << ".Align = [\n";
+    fdata << "Align = [\n";
 
-
-
-    nlohmann::json j = nlohmann::json::object();
+    auto j = nlohmann::json::object();
     j["cognate"] = name;
-    auto alnVec = nlohmann::json::array();
+    auto alnVec = nlohmann::json::array();                 
     int n = numSamples();
     double cumulativeProb = 0.0;
     int i = 0;
+    int count = 0;
     for (auto& it : v)
         {
         ++i;
-        nlohmann::json jaln = nlohmann::json::object();
         double prob = (double)it.second / n;
         cumulativeProb += prob;
         
-        nytril << "new(" << prob << "," << cumulativeProb << ",[";
+        fdata << "[" << prob << ",[";
 
+
+        auto jaln = nlohmann::json::object();
         jaln["index"] = i;
         jaln["prob"] = prob;
         jaln["cumprob"] = cumulativeProb;
+
+        bool done = false;
+        bool add  = true;
                 
-        if (cumulativeProb < credibleSetSize)
-            {
-            nlohmann::json a = it.first->toJson(nytril);
-            jaln["aln"] = a;
-            alnVec.push_back(jaln);
-            nytril << "]),\n";
-            }
-        else
+        if (cumulativeProb >= credibleSetSize) 
             {
             double lowerVal = cumulativeProb - prob;
             double u = rv->uniformRv();
-            if (u < (credibleSetSize-lowerVal)/(cumulativeProb-lowerVal))
-                {
-                nlohmann::json a = it.first->toJson(nytril);
-                jaln["aln"] = a;
-                alnVec.push_back(jaln);
-                }
-
-            nytril << "]),\n";
-            break;
+            add  = u < (credibleSetSize-lowerVal)/(cumulativeProb-lowerVal);
+            done = true;
             }
+
+        if (add) 
+            {
+            jaln["aln"] = it.first->toJson(fdata);
+            alnVec.push_back(jaln);
+            }
+
+        ++count;
+        fdata << "]],\n";
+        
+        if (done)
+            break;
         }
 
 
     j["aln_set"] = alnVec;
-    
-    nytril << "];\n\n";
+
+    fdata << "];\n\n";
+
+    findex << "AlignIndexClass Concepts.";
+    for (auto& c : name)
+        findex << (c == '-' ? '.' : c);
+    findex << ".Align = new(" << index << ", " << count << ");\n";
+
 
     return j;
 }
