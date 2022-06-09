@@ -72,12 +72,13 @@ class AlignPairClass {
                 SegmentClass segment;
                 if (c == -1)
                   segment = IPASegments.GapSegment;
-                else if (c >= 0 and c < Data.UniqueSegments.Length)
+                else if (c >= 0 and c < Data.UniqueSegments.Length) {
                   segment = Data.UniqueSegments[c];
+                  Background: ChartColor(segment.PartitionIndex);
+                }
                 else
                   segment = IPASegments.MissingSegment;
                 segment.ShowSegment;
-                Background: ChartColor(segment.PartitionIndex);
               };
             }
           }
@@ -98,7 +99,29 @@ class AlignPairClass {
       KeepWithNext: true;
       TextHeight: 14 pts;
       SpaceAfter: 10 pts;
+
+      TabStops: [3 inches];
       Cognate;
+      if (adata.Length > 1) {
+        Tab;
+        Chart {
+          TextHeight: 6 pts;
+          Size: new SizeClass(2 inch, 50 pts);
+
+          Type: ChartTypes.Column;
+          ValueLabel: "%";
+          XAxis: ChartAxis {
+            0..<adata.Length step 1;
+          };
+
+  //        ValueAxis: ChartAxis;
+          ChartSeries {
+  //          Label: Lang.Experiment;
+            foreach (var a in adata)
+              a[0] * 100.0;
+          };
+        };
+      }
     };
 
     Paragraph {
@@ -137,13 +160,15 @@ class AlignmentChartClass {
 
   ShowChart(SizeClass maxsize) = VBox {
     Size: maxsize;
-    Border: 1;
+    Border: 0.5;
 
     // Try to make proportional squares
     var xitems = Integer(maxsize.Width / 130);
     var yitems = (Alignments.Length + xitems - 1) div xitems;
     var bsize  = new SizeClass(maxsize.Width / xitems, maxsize.Height / yitems);
     var rows   = Alignments / xitems;
+    var x      = bsize.Width * 0.5;
+
 
     TextHeight: bsize.Height - 2.5 pt;
 
@@ -158,9 +183,8 @@ class AlignmentChartClass {
             TipAction: new ActionClass(Actions.TipDocument, new AlignPairClass(Data, name, a));
 
             Paragraph {
-//              TabStops: [5 pts];
-              a.Count;
-              Space*3;
+//              a.Count;
+//              Space*3;
               name.Replace(".Primary", Empty);
             };
           }
@@ -173,6 +197,9 @@ class AlignmentChartClass {
     foreach (var alignment in Alignments) {
       var p = new AlignPairClass(Data, alignment.GetCognateName, alignment);
       p.ShowDetails(5);
+      Paragraph {
+        BorderT: 1;
+      };
     }
   };
 }
