@@ -47,7 +47,6 @@ class AlignPairClass {
 
   Show(prob, cumulative, set) = VBox {
     MarginB: 10 pts;
-    MarginR: 5 pts;
     Border: 0.125 {Color: 50%};
     HAlign: HAligns.Center;
 
@@ -87,13 +86,17 @@ class AlignPairClass {
     };
   };
 
-  override GetLayoutTip = ShowDetails(20);
+  override GetLayoutTip = ShowDetails(500);
 
   ShowDetails(max) = Block {
     TextHeight: 10 pts;
 
     var path   = Folders.Source Folders.Up Folder("Experiments/Europe200/Custom/Posterior/Run1/Execute") FileName("Alignment" + Align.Index) Extensions.Nytril;
     var adata  = Read(path).GetValue("Align");
+
+    var langbox = Languages(Data, BoxSize.Height);
+
+    var indent = LayoutSize(langbox).Width;
 
     Paragraph {
       KeepWithNext: true;
@@ -105,18 +108,11 @@ class AlignPairClass {
       if (adata.Length > 1) {
         Tab;
         Chart {
-          TextHeight: 6 pts;
-          Size: new SizeClass(2 inch, 50 pts);
-
           Type: ChartTypes.Column;
+          TextHeight: 6 pts;
+          Size: new SizeClass(3 inch, 0.75 inch);
           ValueLabel: "%";
-          XAxis: ChartAxis {
-            0..<adata.Length step 1;
-          };
-
-  //        ValueAxis: ChartAxis;
           ChartSeries {
-  //          Label: Lang.Experiment;
             foreach (var a in adata)
               a[0] * 100.0;
           };
@@ -125,8 +121,10 @@ class AlignPairClass {
     };
 
     Paragraph {
-      Separator: Space;
-      Languages(Data, BoxSize.Height);
+      LeftIndent: indent;
+      FirstIndent: -indent;
+      langbox;
+      Tab;
 
       var cumulative = 0.0;
       foreach (var a in adata) {
@@ -135,6 +133,7 @@ class AlignPairClass {
         var alignments = a[1];
         if (alignments.Length > 0) {
           Show(prob, cumulative, a[1]);
+          Space;
           if (each1 >= max)
             break;
         }
@@ -183,8 +182,11 @@ class AlignmentChartClass {
             TipAction: new ActionClass(Actions.TipDocument, new AlignPairClass(Data, name, a));
 
             Paragraph {
-//              a.Count;
-//              Space*3;
+              Span {
+                TextColor: Colors.LightGray;
+                a.Count;
+                Space*2;
+              };
               name.Replace(".Primary", Empty);
             };
           }

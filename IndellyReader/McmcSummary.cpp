@@ -350,7 +350,7 @@ void McmcSummary::printPartitionFreqs(void) {
 }
 
 void McmcSummary::output(UserSettings& settings) {
-    double cutoff = 0.90;
+    double cutoff = 0.95;
 
 
     auto& findex = *new std::ofstream(settings.getPath() + "/alignments.nytril", std::ios::out);
