@@ -73,7 +73,7 @@ void ParameterStatistics::sortValues(void) {
     std::sort(values.begin(), values.end());
 }
 
-nlohmann::json ParameterStatistics::toJson(void) {
+nlohmann::json ParameterStatistics::toJson() {
 
     double m = getMean();
     CredibleInterval i = getCredibleInterval();
@@ -83,4 +83,11 @@ nlohmann::json ParameterStatistics::toJson(void) {
     j["lower"] = i.lower;
     j["upper"] = i.upper;
     return j;
+}
+
+void ParameterStatistics::toFile(std::ostream& findex) {
+
+    double m = getMean();
+    CredibleInterval i = getCredibleInterval();
+    findex << "new(" << i.lower << "," << m << "," << i.upper << ")";
 }

@@ -39,6 +39,7 @@ class PartitionClass: FactClass {
   SegmentClass[] Segments;
   PointClass     Center;
   FilterClass    Filter;
+  ColorClass     Color;
   var            Index,
                  Radius,
                  Angle,
@@ -47,6 +48,7 @@ class PartitionClass: FactClass {
   Constructor(index, FilterClass filter, SegmentClass[] segments) {
     super.Constructor(filter.Name);
     Name     = filter.Name;
+    Color    = ChartColor(index);
     Index    = index;
     Filter   = filter;
     Segments = segments;
@@ -159,7 +161,7 @@ abstract class RuleClass {
         Row {
           VAlign: VAligns.Center;
           Span {
-            TextColor: ChartColor(each0);
+            TextColor: partition.Color;
             TextHeight: textheight * 1.25;
             Tex.blackcirc;
           };
@@ -390,6 +392,7 @@ class TransitionClass {
   void ReadFrequencies {
     // This is temporary until we get actual data
 
+//    TransitionStats
     Frequencies = RandomArray;
     var list = new ListClass(Rule.Partitions.Length);
     foreach (var f in Rule.Partitions)
@@ -572,7 +575,7 @@ class CalcRatesClass {
       var fsize = p1.Radius*2;
 
       Figure {
-        Fill: ChartColor(each0);
+        Fill: p1.Color;
         Stroke: 0.5 pt;
         Ellipse(new(pos, new(fsize)));
         TipAction: p1;

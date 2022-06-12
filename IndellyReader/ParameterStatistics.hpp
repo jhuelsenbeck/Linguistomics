@@ -27,13 +27,14 @@ class ParameterStatistics {
         double              operator[](size_t idx) const;
         void                addValue(double x) { values.push_back(x); }
         CredibleInterval    getCredibleInterval(void);
-        double              getMean(void);
+        double              getMean();
         std::string         getName(void) { return name; }
         int                 size(void) { return (int)values.size(); }
         void                setName(std::string s) { name = s; }
         void                sortValues(void);
-        nlohmann::json      toJson(void);
-            
+        nlohmann::json      toJson();
+        void                toFile(std::ostream& findex);
+
     private:
         std::string         name;
         std::vector<double> values;

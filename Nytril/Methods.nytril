@@ -21,6 +21,181 @@ namespace Figures.FrequencyDiagramExperiment {
 
   Body(ExperimentClass experiment, SizeClass maxsize) = experiment.CalcExperiment.PartitionDiagram(maxsize);
 }
+
+//======================================================================
+
+namespace Figures.TransitionMatrix {
+  Title = Lang.TransitionMatrix;
+
+  ShowRight(number) = HBox {
+    Space*2;
+    TextHeight: 80%;
+    TextColor: Colors.Gray;
+    number;
+  };
+
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+    var partitions = experiment.Rule.Partitions;
+    var dy         = 5 pts;
+
+    MatrixBlock {
+      TextDigits: 3;
+
+      Row {
+        Bold;
+        HAlign: HAligns.Center;
+        Empty;
+        foreach (var r in TransitionStats) {
+          Cell {
+            var p = partitions[each0];
+            TextColor: p.Color;
+            p.Filter;
+          };
+        }
+      };
+
+      foreach (var r in TransitionStats) {
+        Row {
+          HAlign: HAligns.Center;
+          Cell {
+            VAlign: VAligns.Center;
+            HAlign: HAligns.Right;
+            Bold;
+            var p = partitions[each0];
+            TextColor: p.Color;
+            p.Filter;
+          };
+
+          foreach (var c in r) {
+            if (valid c) {
+              VBox {
+                MarginTB: dy;
+                BracketLR: Brackets.Curly;
+                ShowRight(c.Upper * 100.0);
+                c.Mean * 100.0;
+                ShowRight(c.Lower * 100.0);
+              };
+            }
+            else {
+              Cell {
+                VAlign: VAligns.Center;
+                HAlign: HAligns.Right;
+                "-";
+              }
+            }
+          }
+        };
+      }
+    };
+  };
+}
+//======================================================================
+
+namespace Figures.TransitionMatrixBall {
+  Title = Lang.TransitionMatrix;
+
+  ShowRight(number) = HBox {
+    Space*2;
+    TextHeight: 80%;
+    TextColor: Colors.Gray;
+    number;
+  };
+
+  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+    var partitions = experiment.Rule.Partitions;
+
+    var bx    = 15 pts;
+    var tx    = 1 inch + bx;
+    var dy    = maxsize.Height / (partitions.Length + 1);
+    var d     = Math.Min([dy, (maxsize.Width  - tx) / partitions.Length]);
+    var bsize = new SizeClass(d, dy);
+
+    var max = 0.0;
+    foreach (var r in TransitionStats) {
+      foreach (var c in r) {
+        if (valid c and c.Upper > max)
+          max = c.Upper;
+      }
+    }
+
+    var fc = d / max;
+    var fp = 50.0 / max;
+
+
+    HBox {
+      VBox {
+        Canvas {
+          Size: new SizeClass(tx, bx);
+        };
+
+        foreach (var r in TransitionStats) {
+          var p = partitions[each0];
+          HBox {
+            Separation: 10 pts;
+            Height: dy;
+            VAlign: VAligns.Center;
+            HAlignment: HAligns.Right;
+            Frame {
+              TextColor: p.Color;
+              p.Filter;
+            };
+            Canvas {
+              Size: new SizeClass(bx, dy);
+              Background: p.Color;
+            };
+          }
+        }
+      };
+
+
+      VBox {
+        HAlign: HAligns.Left;
+
+        HBox {
+          foreach (var r in TransitionStats) {
+            var p = partitions[each0];
+            Canvas {
+              Size: new SizeClass(d, bx);
+              Background: p.Color;
+            };
+          }
+        };
+
+        VBox {
+          foreach (var r in TransitionStats) {
+            var i = each0;
+            HBox {
+              foreach (var c in r) {
+                if (valid c) {
+                  var p = partitions[each0];
+
+                  Canvas {
+                    HAlign: HAligns.Center;
+                    VAlign: VAligns.Center;
+                    Size: bsize;
+                    Figure {
+                      Fill: new RadialGradientClass(new(50%, 50%), new(50%, 50%), new(100%, 100%), [
+//                        new(0%, Colors.White),
+                        new((fp * c.Lower)%, Colors.White),
+                        new((fp * c.Mean)%, Colors.Black),
+                        new((fp * c.Upper)%, Colors.White),
+                        new(100%, Colors.White),
+                      ]);
+                      Ellipse(new(new(0), bsize));
+                    };
+                  };
+                }
+                else
+                  Canvas {Size: bsize};
+              }
+            };
+          }
+        }
+      };
+    };
+  };
+}
+
 //======================================================================
 
 namespace Figures.FrequencyDiagramStatic {
