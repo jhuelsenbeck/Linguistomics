@@ -183,12 +183,12 @@ void LikelihoodCalculator::initialize(void) {
 
 double LikelihoodCalculator::lnLikelihood(MathCache&) {
 
-    std::cout << "Calculating likelihood" << std::endl;
+    //std::cout << "Calculating likelihood" << std::endl;
     initialize();
     
     // null emissions probability
 	IntVector* pos = getVector();
-    std::cout << "pos: " << *pos << std::endl;
+    //std::cout << "pos: " << *pos << std::endl;
     double nullEmissionFactor = partialProbability(pos, pos, -1);
     double f = indelProbs.immortalProbability / nullEmissionFactor;
     partialProbabilities.insert( std::make_pair(pos, f) );
@@ -232,7 +232,7 @@ double LikelihoodCalculator::lnLikelihood(MathCache&) {
             }
         returnToPool(mask);
 
-        std::cout << "ptr = " << ptr << " " << *pos << std::endl;
+        //std::cout << "ptr = " << ptr << " " << *pos << std::endl;
         // Loop over all combinations of possible vectors, which define edges from
         // pos to another possible position, by ordinary binary counting.
         IntVector* newPos = getVector(*pos);
@@ -246,7 +246,7 @@ double LikelihoodCalculator::lnLikelihood(MathCache&) {
 			for (int posPtr=numPossible-1; posPtr>=0; --posPtr)
                 {
 			    int curPtr = indelCombos.possibleVectorIndices[ posPtr ];
-                std::cout << "curPtr = " << curPtr << std::endl;
+                //std::cout << "curPtr = " << curPtr << std::endl;
                 site = curPtr;
                 currentAlignmentColumn = curPtr;
                 if (indelCombos.state[ curPtr ] == possible)
@@ -287,7 +287,7 @@ double LikelihoodCalculator::lnLikelihood(MathCache&) {
                     unusedPos = false;
                     }
                     
-                std::cout << site << " -- " << *signature << " " << *pos << std::endl;
+                //std::cout << site << " -- " << *signature << " " << *pos << std::endl;
                 double transFac = (-partialProbability(signature, pos, site)) / nullEmissionFactor;
                 lft *= transFac;
                 rht += lft;
@@ -619,7 +619,7 @@ double LikelihoodCalculator::prune(IntVector* signature, IntVector* pos, std::ve
             auto fIIdx = fI[pIdx];
             auto fHIdx = fH[pIdx];
             
-            std::cout << "(*pos)[pIdx] = " << (*pos)[pIdx] << std::endl;
+            //std::cout << "(*pos)[pIdx] = " << (*pos)[pIdx] << std::endl;
 
             // initialize conditional probabilties for the tip
             if ( (*signature)[pIdx] == 0 )

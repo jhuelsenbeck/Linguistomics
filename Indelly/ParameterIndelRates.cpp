@@ -10,42 +10,19 @@
 
 
 
-ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::string n, double slen, double insLam, double delLam) : Parameter(r, m, n) {
+ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::string n, double /*slen*/, double insLam, double delLam) : Parameter(r, m, n) {
     
     std::cout << "   * Setting up insertion/deletion rates parameter " << std::endl;
 
     updateChangesRateMatrix = false;
-
-    double len = slen;
-    double fac = (len + 1.0) / len;
-    double var = 2.0;
-    double lambda = 0.0001;
-    double mu = fac * lambda;
-    
-    for (int i=0; i<100; i++)
-        {
-        lambda += 0.01;
-        mu = fac * lambda;
-        std::cout << lambda << " " << mu << " " << (lambda / mu) / (1.0-(lambda/mu)) << " " << (lambda / mu) / ((1.0-(lambda/mu))*(1.0-(lambda/mu))) << std::endl;
-        }
-    exit(9);
-    
-
-    // set parameters for exponential priors
-    //rho = lambda / mu
-    // E(slen) = rho / (1 - rho)
-    //
     insertionLambda = insLam;
     deletionLambda  = delLam;
-    
     do {
         insertionRate[0] = Probability::Exponential::rv(rv, insertionLambda);
         deletionRate[0]  = Probability::Exponential::rv(rv, deletionLambda);
         } while(insertionRate[0] >= deletionRate[0]);
     insertionRate[1] = insertionRate[0];
     deletionRate[1]  = deletionRate[0];
-    
-    //std::cout << "lambda = " << getInsertionRate() << " mu = " << getDeletionRate() << " E(L) = " << getExpectedSequenceLength() << std::endl;
 }
 
 ParameterIndelRates::~ParameterIndelRates(void) {
@@ -160,8 +137,8 @@ std::string ParameterIndelRates::getString(void) {
 double ParameterIndelRates::lnPriorProbability(void) {
 
     double lambda = getInsertionRate();
-    double mu = getDeletionRate();
-    double lnP = log(deletionLambda) + log(insertionLambda + deletionLambda) - deletionLambda * mu - insertionLambda * lambda;
+    double mu     = getDeletionRate();
+    double lnP    = log(insertionLambda) - insertionLambda*lambda + log(deletionLambda) - deletionLambda*mu - log(1.0 - deletionLambda / (insertionLambda + deletionLambda));
     return lnP;
 }
 
