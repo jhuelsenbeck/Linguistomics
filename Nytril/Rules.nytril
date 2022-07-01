@@ -317,13 +317,13 @@ class NaturalPartitionClass: RuleClass {
 //======================================================================
 
 class PartitionActionClass: ActionClass {
-  var            Rate;
+  StatClass      Rate;
   PartitionClass P1,
                  P2;
   RuleClass      Rule;
   DataSetClass   Data;
 
-  Constructor(DataSetClass data, RuleClass rule, rate, PartitionClass p1, PartitionClass p2) {
+  Constructor(DataSetClass data, RuleClass rule, StatClass rate, PartitionClass p1, PartitionClass p2) {
     super.Constructor(Actions.ToSource, Rule);
     Rule = rule;
     Data = data;
@@ -352,16 +352,10 @@ class PartitionActionClass: ActionClass {
     HBox {
       MarginLR: 5;
       PaddingLR: 5;
-      Background: 90%;
       VBox {
         HAlign: HAligns.Center;
-        "Transitions";
-        Span {
-          Bold;
-          TextHeight: 14 pts;
-          TextDigits: 0;
-          Rate;
-        }
+        "Rate";
+        Rate.ShowBox;
       };
     };
     AddGroup(P2);
@@ -370,64 +364,32 @@ class PartitionActionClass: ActionClass {
 //======================================================================
 
 class TransitionClass {
-  var       Frequencies,
-            Rates;
-  RuleClass Rule;
+  var         Frequencies,
+              MaxRate,
+              MaxFrequency;
+  MatrixClass Rates;
+  RuleClass   Rule;
 
-  Constructor(DataSetClass data, RuleClass rule, read=false) {
+  Constructor(DataSetClass data, RuleClass rule) {
     Rule = rule;
-    if (read)
-      ReadFrequencies;
-    else
-      StaticFrequencies(data.UniqueSegments, data.TransitionCount);
-  }
 
-  RandomArray {
-    var list = new ListClass(Rule.Partitions.Length);
-    foreach (var f in Rule.Partitions)
-      list.Add(Math.Random(0..1000));
-    return list.Values;
-  }
+    var length = TransitionStats.Length;
+    Rates = new(length, length, null);
 
-  void ReadFrequencies {
-    // This is temporary until we get actual data
-
-//    TransitionStats
-    Frequencies = RandomArray;
-    var list = new ListClass(Rule.Partitions.Length);
-    foreach (var f in Rule.Partitions)
-      list.Add(RandomArray);
-    Rates = list.Values;
-  }
-
-  void StaticFrequencies(SegmentClass[] segments, MatrixClass tcount) {
-    var max   = Rule.Partitions.Length;
-    var list  = new ListClass(max);
-    var flist = new ListClass(max);
-    foreach (var p0 in Rule.Partitions) {
-      var s0  = Rule.GetMatching(segments, p0.Filter);
-      var sum = Math.Sum((each s0).UsedCount);
-
-      flist.Add(sum);
-
-      var l1 = new ListClass(max);
-      foreach (var p1 in Rule.Partitions) {
-        var s1    = Rule.GetMatching(segments, p1.Filter);
-        var count = 0;
-        foreach (var s0i in s0) {
-          foreach (var s1i in s1) {
-            var tl = tcount.GetValue(s0i.Index, s1i.Index);
-            if (valid tl)
-              count += tl.Length;
-          }
-        }
-
-        l1.Add(count);
+    var max = 0.0;
+    foreach (var r in TransitionStats) {
+      var i = each0;
+      foreach (var c in r) {
+        var f = c?.Upper ?? 0.0;
+        if (f > max)
+          max = f;
+        Rates.SetValue(i, each0, c);
       }
-      list.Add(l1.Values);
     }
-    Frequencies = flist.Values;
-    Rates       = list.Values;
+    MaxRate = max;
+
+    Frequencies  = [1.0] * length;
+    MaxFrequency = 1.0;
   }
 }
 //======================================================================
@@ -496,12 +458,12 @@ class CalcRatesClass {
                   MaxRadius,
                   RateScale;
 
-  Constructor(DataSetClass data, RuleClass rule, TransitionClass transition=null) {
+  Constructor(DataSetClass data, RuleClass rule) {
     Data       = data;
     Rule       = rule;
     ArrowGap   = 4 pts;
     GapAngle   = 80.0 degrees;
-    Transition = transition ?? new TransitionClass(Data, rule);
+    Transition = new TransitionClass(data, rule);
   }
 
   void Calibrate(size) {
@@ -514,9 +476,9 @@ class CalcRatesClass {
     LoopDistance = LoopRadius * 0.5;
 
 
-    var fmax = MaxRadius / Sqrt(Real(Max(Transition.Frequencies))); // Proportional to area, so use SQRT of frequency
+    var fmax = MaxRadius / Sqrt(Transition.MaxFrequency); // Proportional to area, so use SQRT of frequency
 
-    RateScale = MaxLine / Max(Max(each Transition.Rates));
+    RateScale = MaxLine / Transition.MaxRate;
 
     var mult = Math.PI2 / Rule.Partitions.Length;
     foreach (var partition in Rule.Partitions) {
@@ -526,7 +488,7 @@ class CalcRatesClass {
 
     var maxradius = 0.0;
     foreach (var partition in Rule.Partitions)
-      maxradius = Max([maxradius, partition.Radius + Transition.Rates[each0][each0] * RateScale]);
+      maxradius = Max([maxradius, partition.Radius + Transition.Rates.GetValue(each0, each0).Upper * RateScale]);
     maxradius = MaxExtent - maxradius - LoopRadius - LoopDistance - ArrowGap;
 
     foreach (var partition in Rule.Partitions)
@@ -543,28 +505,30 @@ class CalcRatesClass {
     foreach (var p1 in Rule.Partitions) {
       var i = each0;
       foreach (var p2 in Rule.Partitions) {
-        var  rate  = Transition.Rates[i][each0];
-        var  hover = new PartitionActionClass(Data, Rule, rate, p1, p2);
-        var  r     = rate * RateScale / MaxLine;
-        var  frac  = Math.Round(Math.Max([1.0, r]) * 255.0);
-        var  line1 = new LineStyleClass(rate * RateScale, 0.25, 1) {
-          LineColor: new ColorClass(0, 0, 0, frac)
-        };
-        var line2 = new LineStyleClass(rate * RateScale, 0.25, 1);
+        var rate = Transition.Rates.GetValue(each0, i);
+        if (valid rate) {
+          var  hover = new PartitionActionClass(Data, Rule, rate, p1, p2);
 
-        if (p1 == p2) {
-          var c = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line2.LineSize*0.5, p1.Angle);
-          Graphics.CircleLine(line2, c, LoopRadius + line2.LineSize, p1.Angle + Graphics.OneEighty, GapAngle) {
-            TipAction: hover;
-          };
-        }
-        else if (each0 < i) {
-          var angle = Graphics.GetAngle(p1.Center, p2.Center);
-          var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle + Graphics.OneEighty);
-          var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle);
+          if (p1 == p2) {
+            var line2 = new LineStyleClass(rate.Mean * RateScale, 0.25, 1);
+            var c     = Graphics.ExtendPoint(p1.Center, p1.Radius + LoopDistance - line2.LineSize*0.5, p1.Angle);
+            Graphics.CircleLine(line2, c, LoopRadius + line2.LineSize, p1.Angle + Graphics.OneEighty, GapAngle) {
+              TipAction: hover;
+            };
+          }
+          else if (each0 < i) {
+            var  r    = rate.Mean * RateScale / MaxLine;
+            var frac  = Math.Round(Math.Max([1.0, r]) * 255.0);
+            var line1 = new LineStyleClass(rate.Mean * RateScale, 0.25, 1) {
+              LineColor: new ColorClass(0, 0, 0, frac)
+            };
+            var angle = Graphics.GetAngle(p1.Center, p2.Center);
+            var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle + Graphics.OneEighty);
+            var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle);
 
-          Graphics.Line(line1, c1, c2) {
-            TipAction: hover;
+            Graphics.Line(line1, c1, c2) {
+              TipAction: hover;
+            }
           }
         }
       }

@@ -7,7 +7,9 @@ namespace Figures.PartitionAssignments {
   Body(ExperimentClass experiment, SizeClass maxsize) = experiment.Rule.ShowPartitions;
 }
 
-namespace Figures.FrequencyDiagramExperiment {
+//======================================================================
+
+namespace Figures.FrequencyExperiment {
   Title = "Transition Rates Between Partitions";
 
   Caption(ExperimentClass experiment) = Span {
@@ -27,16 +29,9 @@ namespace Figures.FrequencyDiagramExperiment {
 namespace Figures.TransitionMatrix {
   Title = Lang.TransitionMatrix;
 
-  ShowRight(number) = HBox {
-    Space*2;
-    TextHeight: 80%;
-    TextColor: Colors.Gray;
-    number;
-  };
-
   Body(ExperimentClass experiment, SizeClass maxsize) = Block {
     var partitions = experiment.Rule.Partitions;
-    var dy         = 5 pts;
+    var dy         = 2 pts;
 
     MatrixBlock {
       TextDigits: 3;
@@ -56,6 +51,7 @@ namespace Figures.TransitionMatrix {
 
       foreach (var r in TransitionStats) {
         Row {
+          TextHeight: 12 pts;
           HAlign: HAligns.Center;
           Cell {
             VAlign: VAligns.Center;
@@ -67,15 +63,8 @@ namespace Figures.TransitionMatrix {
           };
 
           foreach (var c in r) {
-            if (valid c) {
-              VBox {
-                MarginTB: dy;
-                BracketLR: Brackets.Curly;
-                ShowRight(c.Upper * 100.0);
-                c.Mean * 100.0;
-                ShowRight(c.Lower * 100.0);
-              };
-            }
+            if (valid c)
+              c.ShowBox {MarginT: dy};
             else {
               Cell {
                 VAlign: VAligns.Center;
@@ -108,7 +97,7 @@ namespace Figures.TransitionMatrixBall {
     var tx    = 1 inch + bx;
     var dy    = maxsize.Height / (partitions.Length + 1);
     var d     = Math.Min([dy, (maxsize.Width  - tx) / partitions.Length]);
-    var bsize = new SizeClass(d, dy);
+    var bsize = new SizeClass(d, d);
 
     var max = 0.0;
     foreach (var r in TransitionStats) {
@@ -170,10 +159,29 @@ namespace Figures.TransitionMatrixBall {
                   var p = partitions[each0];
 
                   Canvas {
-                    HAlign: HAligns.Center;
-                    VAlign: VAligns.Center;
+                    Tip: c;
+//                    HAlign: HAligns.Center;
+//                    VAlign: VAligns.Center;
                     Size: bsize;
+                    var center = new PointClass(d * 0.5);
+                    var x      = fc * c.Upper;
                     Figure {
+                      Fill: 70%;
+                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), new(x)));
+                      x = fc * c.Lower;
+                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), new(x)));
+                    };
+
+                    Figure {
+                      Stroke: 1;
+                      x = fc * c.Mean;
+                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), new(x)));
+                    };
+
+
+//                      Ellipse(new(center, new(fc * c.Lower)));
+/*
+
                       Fill: new RadialGradientClass(new(50%, 50%), new(50%, 50%), new(100%, 100%), [
 //                        new(0%, Colors.White),
                         new((fp * c.Lower)%, Colors.White),
@@ -182,7 +190,7 @@ namespace Figures.TransitionMatrixBall {
                         new(100%, Colors.White),
                       ]);
                       Ellipse(new(new(0), bsize));
-                    };
+*/
                   };
                 }
                 else
@@ -198,15 +206,6 @@ namespace Figures.TransitionMatrixBall {
 
 //======================================================================
 
-namespace Figures.FrequencyDiagramStatic {
-  Title = "Prior Transition Rates";
-
-  Caption(ExperimentClass experiment) = Figures.FrequencyDiagramExperiment.Caption(experiment);
-
-  Body(ExperimentClass experiment, SizeClass maxsize) = experiment.CalcStatic.PartitionDiagram(maxsize);
-}
-//======================================================================
-
 namespace Figures.FrequencyBoxStatic {
   Title = "Segment Transition Counts";
 
@@ -219,7 +218,7 @@ namespace Figures.FrequencyBoxStatic {
     "The chart has diagonal symmetry.";
   };
 
-  Body(ExperimentClass experiment, SizeClass maxsize) = experiment.CalcStatic.PartitionBox(maxsize);
+  Body(ExperimentClass experiment, SizeClass maxsize) = experiment.CalcExperiment.PartitionBox(maxsize);
 }
 //======================================================================
 
@@ -627,7 +626,7 @@ namespace PaperSections.WordTransformation {
 
     BodyPar {
       "The "; modelname; " model allows different rates for different groups of word segments, ";
-      FigureReference(experiment, Figures.FrequencyDiagramStatic); " summarizes the estimated rates of change from one segment grouping to another. ";
+      FigureReference(experiment, Figures.FrequencyExperiment); " summarizes the estimated rates of change from one segment grouping to another. ";
       Note;
     };
   };
@@ -1754,7 +1753,7 @@ namespace PaperSections.Methods {
       };
     };
     PageBreak;
-    ShowFigureDoc(experiment, Figures.FrequencyDiagramStatic);
+    ShowFigureDoc(experiment, Figures.FrequencyExperiment);
     ShowFigureDoc(experiment, Figures.AllSegmentFrequencies);
   };
 }
