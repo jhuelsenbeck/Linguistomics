@@ -17,26 +17,26 @@ DataConcept    = Concepts.Woman;
 //======================================================================
 
 GetPriorTree(portuguese) = Branch {
-  Leaf(Latin);
-  Branch {
-    Leaf(Romanian);
-    Branch {
-      Branch {
-        Branch {
-          Leaf(Walloon);
-          Leaf(French);
+  new Leaf(Latin);
+  new Branch {
+    new Leaf(Romanian);
+    new Branch {
+      new Branch {
+        new Branch {
+          new Leaf(Walloon);
+          new Leaf(French);
         };
-        Branch {
-          Branch {
+        new Branch {
+          new Branch {
             portuguese;
-            Leaf(Spanish);
+            new Leaf(Spanish);
           };
-          Leaf(Catalan);
+          new Leaf(Catalan);
         }
       };
-      Branch {
-        Leaf(Friulian);
-        Leaf(Italian);
+      new Branch {
+        new Leaf(Friulian);
+        new Leaf(Italian);
       }
     }
   }
@@ -52,9 +52,19 @@ class EuropeBrazilExperimentClass: ExperimentClass {
     super.Constructor(#8bbc5666-8f8d-49d9-b67d-fc12321ace43#, "Europe Brazil", "EuropeBrazil", new NaturalPartitionClass(data));
   }
 
-  override PriorTree = GetPriorTree(Branch {Leaf(Portuguese); Leaf(PortugueseBrazil)});
+  Extra = new Branch {
+    new Leaf(Portuguese);
+    new Leaf(PortugueseBrazil);
+  };
 
-  override NumberedTree = GetNumberedTree(NBranch(12, 1) {NLeaf(Portuguese, 1); NLeaf(PortugueseBrazil, 1)});
+  override PriorTree = GetPriorTree(Extra);
+
+  NodeClass NExtra = new NBranch(12) {
+    new NLeaf(Data, Portuguese, 1);
+    new NLeaf(Data, PortugueseBrazil, 1);
+  };
+
+  override NumberedTree = GetNumberedTree(NExtra);
 }
 
 //======================================================================
@@ -65,9 +75,9 @@ class Europe100ExperimentClass: ExperimentClass {
     super.Constructor(#896d37be-ebe1-44a6-a94d-7eade795760a#, "Europe100", "Europe100", new NaturalPartitionClass(data));
   }
 
-  override PriorTree = GetPriorTree(Leaf(Portuguese));
+  override PriorTree = GetPriorTree(new Leaf(Portuguese));
 
-  override NumberedTree = GetNumberedTree(NLeaf(Portuguese, 2));
+  override NumberedTree = GetNumberedTree(new NLeaf(Data, Portuguese, 2));
 }
 
 //======================================================================
@@ -78,9 +88,9 @@ class Europe200ExperimentClass: ExperimentClass {
     super.Constructor(#ca9b67db-c29e-4fc9-a421-8dc4fe82d370#, "Europe200", "Europe200", new NaturalPartitionClass(data));
   }
 
-  override PriorTree = GetPriorTree(Leaf(Portuguese));
+  override PriorTree = GetPriorTree(new Leaf(Portuguese));
 
-  override NumberedTree = GetNumberedTree(NLeaf(Portuguese, 2));
+  override NumberedTree = GetNumberedTree(new NLeaf(Data, Portuguese, 2));
 }
 
 //======================================================================

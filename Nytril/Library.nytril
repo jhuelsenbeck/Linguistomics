@@ -36,6 +36,7 @@ class StatClass {
 
   ShowBox = VBox {
     BracketLR: Brackets.Curly;
+    TextDigits: 3;
     ShowRight(Upper * 100.0);
     Mean * 100.0;
     ShowRight(Lower * 100.0);
@@ -209,8 +210,6 @@ class AlignmentChartClass {
             Border: 0.25 pts {Color: 90%};
 
             var name = a.GetCognateName;
-            TipAction: new ActionClass(Actions.TipDocument, new AlignPairClass(Data, name, a));
-
             Paragraph {
               Span {
                 TextColor: Colors.LightGray;
@@ -218,6 +217,7 @@ class AlignmentChartClass {
                 Space*2;
               };
               name.Replace(".Primary", Empty);
+              TipAction: new ActionClass(Actions.TipDocument, new AlignPairClass(Data, name, a));
             };
           }
         }
@@ -239,18 +239,18 @@ class AlignmentChartClass {
 //======================================================================
 
 class LanguageClass: FactClass {
-  field Name,
-        Cases;
-  var   MapImage,
-        MapAttribution;
+  field      Name,
+             Cases;
+  var        MapAttribution;
+  ImageClass MapImage;
 
   Constructor(id, name, cases=0) {
     super.Constructor(id);
-    Name    = name;
-    Cases   = cases;
+    Name  = name;
+    Cases = cases;
   }
 
-  override GetIcon = Icons.language;
+  override IconClass GetIcon = Icons.language;
 
   virtual Description = null;
   virtual Details = null;
@@ -274,7 +274,7 @@ class LanguageClass: FactClass {
     ShowMap(new SizeClass(5 inches, 3 inches));
   };
 
-  LoadImage(name) = IO.Read(Info.ImageFolder FileName(name));
+  ImageClass LoadImage(name) = new ImageClass(Info.ImageFolder FileName(name));
 
   ShowMap(size) {
     if (valid MapImage) {
@@ -283,10 +283,7 @@ class LanguageClass: FactClass {
         HAlign: HAligns.Center;
 
         var h = 6 pts;
-        MapImage {
-          Size: new SizeClass(size.Width, size.Height - h);
-          Proportional: true;
-        };
+        MapImage.FitSize(new(size.Width, size.Height - h));
 
         if (valid MapAttribution) {
           Span {
@@ -335,9 +332,9 @@ class WordClass: FactClass {
       var view = Span {(each segments).Ipa};
       System.Assert(Text == view.GetString(), "Round-trip error with text {0}-{1}"(Text, view), Text);
 
-      Link.Connect(this, Segments);
-      Link.Connect(this, cognate);
-      Link.Connect(this, Language);
+      Link to Segments;
+      Link to cognate;
+      Link to Language;
       Link.Connect(Language, cognate);
     }
     else {
@@ -346,7 +343,7 @@ class WordClass: FactClass {
     }
   }
 
-  override GetIcon = Icons.text_snippet;
+  override IconClass GetIcon = Icons.text_snippet;
 
   ShowConcept = Span {
     Style.SansSerif;
@@ -437,7 +434,7 @@ class ConceptClass: FactClass {
     System.Assert(WordGroup != WordGroups.None);
   }
 
-  override GetIcon = Icons.category;
+  override IconClass GetIcon = Icons.category;
 
   override GetLayoutTip = Span {Name; "-"; Confidence};
 
@@ -464,10 +461,10 @@ class CognateClass: FactClass {
     Variable   = variable;
     MaxLength  = 0;
 
-    Link.Connect(this, concept);
+    Link to concept;
   }
 
-  override GetIcon = Icons.format_list_bulleted;
+  override IconClass GetIcon = Icons.format_list_bulleted;
 
   GetTitle {
     return Concept.Name + '-' + Name;
@@ -680,6 +677,8 @@ class DataSetClass {
     return set.Values;
   }
 
+  LangNumber(LanguageClass language) = Languages.FindFirstIndex(language)+1;
+
   void ComputeCognate(SegmentDictionary dictionary, CognateClass cognate) {
     var defword = new WordClass(null, Taxa[0], null, Empty);
 
@@ -781,6 +780,117 @@ class DataSetClass {
     }
     return t;
   }
+
+  GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);// * 30%;
+
+  PartitionBox(RuleClass rule, SizeClass framesize) = Paragraph {
+    var segments = rule.PartSegments;
+    var grid     = 0.125 pts;
+    var gcolor   = 65%;
+    var border   = 0.5 pts;
+    var size     = framesize - border*2;
+    var d        = size / (segments.Length+1);
+    var vflags   = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
+
+
+    Canvas {
+      TextHeight: d.Height * 0.6;
+      Border: border;
+
+      var t   = TransitionCount;
+      var max = 1.0 / TransitionMax;
+      var y   = d.Height;
+      foreach (var s0 in segments) {
+        var x = d.Width;
+        foreach (var s1 in segments) {
+          if (s0.Index != s1.Index) {
+            var tlist = t.GetValue(s0.Index, s1.Index);
+            if (valid tlist) {
+              Canvas {
+                TipAction: new TranActionClass(tlist.Values, tlist.Length*max);
+                HAlign: HAligns.Center;
+                VAlign: VAligns.Center;
+                X: x;
+                Y: y;
+                Size: d;
+
+                var count = 0;
+                foreach (var e in tlist) {
+                  var c0 = e.Word1.Padded[e.Index];
+                  var c1 = e.Word2.Padded[e.Index];
+                  if (c0.Features.HasFlag(vflags) != c1.Features.HasFlag(vflags))
+                    ++count;
+                }
+
+                if (count > 0) {
+                  var f = Integer(255.0 * (1.0 - count / tlist.Length));
+                  if (f < 255)
+                    Background: new ColorClass(f, 255, f);
+                }
+                else {
+                  var f = Integer((1.0 - tlist.Length * max) * 255.0);
+                  if (f < 255)
+                    Background: new ColorClass(255, f, f);
+                }
+
+                tlist.Length;
+              };
+            }
+          }
+          x += d.Width;
+        }
+        y += d.Height;
+      }
+
+      y = d.Height;
+      var p = 0;
+      foreach (var s in segments) {
+        Canvas {
+          Size: d;
+          Background: GetColor(s);
+          Width: d.Width;
+          HAlign: HAligns.Center;
+          Y: y;
+          s.ShowSegment;
+        };
+        if (p != s.PartitionIndex) {
+          Canvas {
+            Y: y;
+            Size: new SizeClass(size.Width, grid);
+            Background: gcolor;
+          };
+          p = s.PartitionIndex;
+        }
+        y += d.Height;
+      }
+
+      Canvas {
+        Height: d.Height;
+        Width: size.Width;
+
+        var x = d.Width;
+        p = 0;
+        foreach (var s in segments) {
+          Canvas {
+            Size: d;
+            Background: GetColor(s);
+            HAlign: HAligns.Center;
+            X : x;
+            s.ShowSegment;
+          };
+          if (p != s.PartitionIndex) {
+            Canvas {
+              X: x;
+              Size: new SizeClass(grid, size.Height);
+              Background: gcolor;
+            };
+            p = s.PartitionIndex;
+          }
+          x += d.Width;
+        }
+      };
+    };
+  };
 }
 //======================================================================
 

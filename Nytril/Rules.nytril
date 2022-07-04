@@ -1,4 +1,4 @@
-using Format, Units, SegmentFeatures, Math, Style;
+using Format, Units, SegmentFeatures, Math, Style, LinkTypes;
 //======================================================================
 
 class FilterClass {
@@ -52,10 +52,10 @@ class PartitionClass: FactClass {
     Index    = index;
     Filter   = filter;
     Segments = segments;
-    LinkTypes.Link.Connect(this, segments);
+    Link to segments;
   }
 
-  override GetIcon = Icons.sort;
+  override IconClass GetIcon = Icons.sort;
 
   override GetLayoutTip = Filter.GetLayoutTip;
 }
@@ -354,7 +354,7 @@ class PartitionActionClass: ActionClass {
       PaddingLR: 5;
       VBox {
         HAlign: HAligns.Center;
-        "Rate";
+        Span {Lang.Rate; "%"};
         Rate.ShowBox;
       };
     };
@@ -461,7 +461,7 @@ class CalcRatesClass {
   Constructor(DataSetClass data, RuleClass rule) {
     Data       = data;
     Rule       = rule;
-    ArrowGap   = 4 pts;
+    ArrowGap   = 0.0;//4 pts;
     GapAngle   = 80.0 degrees;
     Transition = new TransitionClass(data, rule);
   }
@@ -578,32 +578,7 @@ class CalcRatesClass {
     };
   };
 
-  GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);// * 30%;
-
   TranLink(i0, i1) = "Tran{0}:{1}"(i0, i1);
-
-  TranPar(list) = Block {
-    var first = list.FirstElement;
-    Paragraph {
-      var s0 = first.Word1.Padded[first.Index];
-      s0.ShowSegment;
-
-      Tex.To;
-      var s1 = first.Word2.Padded[first.Index];
-      s1.ShowSegment;
-
-      AnchorTag: TranLink(s0.Index, s1.Index);
-      KeepWithNext: true;
-    };
-
-    Paragraph {
-      SpaceBefore: 4 pts;
-      SpaceAfter: 6 pts;
-      Separator: Space;
-      foreach (var p in list)
-        p.ShowDescription(9 pts);
-    }
-  };
 
   static CompareLength(l1, l2, options) = l2.Length - l1.Length;
 
@@ -625,123 +600,6 @@ class CalcRatesClass {
     return all.Sort(true, ref CompareLength);
   }
 
-  PartitionBlock = Block {
-    PartitionBox(new SizeClass(DocMetrics.PageContent.Width, DocMetrics.PageContent.Height * 0.8));
-
-/*
-    PageBreak;
-    Block {
-      TextHeight: 9 pts;
-      TranPar(each GetSorted);
-    }
-*/
-  };
-
-  PartitionBox(SizeClass framesize) = Paragraph {
-    var segments = Rule.PartSegments;
-    var grid     = 0.125 pts;
-    var gcolor   = 65%;
-    var border   = 0.5 pts;
-    var size     = framesize - border*2;
-    var d        = size / (segments.Length+1);
-    Canvas {
-      TextHeight: d.Height * 0.6;
-      Border: border;
-
-      var t   = Data.TransitionCount;
-      var max = 1.0 / Data.TransitionMax;
-      var y   = d.Height;
-      foreach (var s0 in segments) {
-        var x = d.Width;
-        foreach (var s1 in segments) {
-          if (s0.Index != s1.Index) {
-            var tlist = t.GetValue(s0.Index, s1.Index);
-            if (valid tlist) {
-              Canvas {
-                TipAction: new TranActionClass(tlist.Values, tlist.Length*max);
-                HAlign: HAligns.Center;
-                VAlign: VAligns.Center;
-                X: x;
-                Y: y;
-                Size: d;
-
-                var count = 0;
-                foreach (var e in tlist) {
-                  var c0 = e.Word1.Padded[e.Index];
-                  var c1 = e.Word2.Padded[e.Index];
-                  if (c0.Features.HasFlag(Vowel | Semivowel) != c1.Features.HasFlag(Vowel | Semivowel))
-                    ++count;
-                }
-
-                if (count > 0) {
-                  var f = Integer(255.0 * (1.0 - count / tlist.Length));
-                  if (f < 255)
-                    Background: new ColorClass(f, 255, f);
-                }
-                else {
-                  var f = Integer((1.0 - tlist.Length * max) * 255.0);
-                  if (f < 255)
-                    Background: new ColorClass(255, f, f);
-                }
-
-                tlist.Length;
-              };
-            }
-          }
-          x += d.Width;
-        }
-        y += d.Height;
-      }
-
-      y = d.Height;
-      var p = 0;
-      foreach (var s in segments) {
-        Canvas {
-          Size: d;
-          Background: GetColor(s);
-          Width: d.Width;
-          HAlign: HAligns.Center;
-          Y: y;
-          s.ShowSegment;
-        };
-        if (p != s.PartitionIndex) {
-          Canvas {
-            Y: y;
-            Size: new SizeClass(size.Width, grid);
-            Background: gcolor;
-          };
-          p = s.PartitionIndex;
-        }
-        y += d.Height;
-      }
-
-      Canvas {
-        Height: d.Height;
-        Width: size.Width;
-
-        var x = d.Width;
-        p = 0;
-        foreach (var s in segments) {
-          Canvas {
-            Size: d;
-            Background: GetColor(s);
-            HAlign: HAligns.Center;
-            X : x;
-            s.ShowSegment;
-          };
-          if (p != s.PartitionIndex) {
-            Canvas {
-              X: x;
-              Size: new SizeClass(grid, size.Height);
-              Background: gcolor;
-            };
-            p = s.PartitionIndex;
-          }
-          x += d.Width;
-        }
-      };
-    };
-  };
 }
 //======================================================================
 

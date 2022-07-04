@@ -155,6 +155,22 @@ class RunInitClass: RunClass {
 
 //======================================================================
 
+class NLeaf: NodeClass {
+  Constructor(DataSetClass data, LanguageClass language, branch) {
+    super.Constructor("{0} ({1})"(language, data.LangNumber(language)));
+    BranchLength = branch;
+  }
+}
+
+class NBranch: NodeClass {
+  Constructor(name, branch=1) {
+    super.Constructor(name);
+    BranchLength = branch;
+  }
+}
+
+//======================================================================
+
 abstract class ExperimentClass: FactClass {
   field               Name,
                       FolderName;
@@ -190,7 +206,7 @@ abstract class ExperimentClass: FactClass {
     ];
   }
 
-  override GetIcon = Icons.science;
+  override IconClass GetIcon = Icons.science;
 
   abstract NumberedTree;
   abstract PriorTree;
@@ -212,7 +228,7 @@ abstract class ExperimentClass: FactClass {
     new ConfigurationViewClass(this),
     new AlignmentViewClass(this),
     new DavidLinguisticPresentationClass(this),
-    new DavidBioPresentationClass(this),
+//    new DavidBioPresentationClass(this),
     new JohnPresentationClass(this),
   ];
 
@@ -290,38 +306,28 @@ abstract class ExperimentClass: FactClass {
     ShowTrees(GTR);
   };
 
-  LangNumber(LanguageClass language) = Data.Languages.FindFirstIndex(language)+1;
-
-  NLeaf(LanguageClass language, length) = new NodeClass("{0} ({1})"(language, LangNumber(language))) {
-    BranchLength: length
-  };
-
-  NBranch(name, length) = new NodeClass(name) {
-    BranchLength: length
-  };
-
-  GetNumberedTree(portuguese) = NBranch(19, 1) {
-    NLeaf(Latin, 7);
-    NBranch(18, 1) {
-      NLeaf(Romanian, 6);
-      NBranch(17, 1) {
-        NBranch(16, 1) {
-          NBranch(15, 1) {
-            NLeaf(Walloon, 3);
-            NLeaf(French, 3);
+  NodeClass GetNumberedTree(portuguese) = new NBranch(19) {
+    new NLeaf(Data, Latin, 7);
+    new NBranch(18) {
+      new NLeaf(Data, Romanian, 6);
+      new NBranch(17) {
+        new NBranch(16) {
+          new NBranch(15) {
+            new NLeaf(Data, Walloon, 3);
+            new NLeaf(Data, French, 3);
           };
-          NBranch(14, 1) {
-            NBranch(13, 1) {
+          new NBranch(14) {
+            new NBranch(13) {
               portuguese;
-              NLeaf(Spanish, 2);
+              new NLeaf(Data, Spanish, 2);
             };
-            NLeaf(Catalan, 3);
+            new NLeaf(Data, Catalan, 3);
           }
         };
-        NBranch(11, 1) {
-          NLeaf(Friulian, 4);
-          NLeaf(Italian, 4);
-        }
+        new NBranch(11) {
+          new NLeaf(Data, Friulian, 4);
+          new NLeaf(Data, Italian, 4);
+        };
       }
     }
   };

@@ -575,12 +575,15 @@ namespace MatchingOther {
 //======================================================================
 
 namespace SegmentTree {
-  AddNode(name) = new NodeClass(name) {
-    Bevel: 20%;
-    Curvature: 20%;
-  };
+  class Node: NodeClass {
+    Constructor(name) {
+      super.Constructor(name);
+      Bevel     = 20%;
+      Curvature = 20%;
+    }
+  }
 
-  AddSegments(DataSetClass data, DictionaryClass set, name, predicate, width=3 inches) {
+  NodeClass AddSegments(DataSetClass data, DictionaryClass set, name, predicate, width=3 inches) {
     var segments = data.DisplaySegments.FindSlice(predicate);
     if (valid segments) {
       var label = Frame {
@@ -603,42 +606,42 @@ namespace SegmentTree {
           }
         }
       };
-      return new NodeClass(label);
+      return new Node(label);
     }
     else
       return null;
   }
 
-  AddVowels(DataSetClass data, DictionaryClass set, backness) {
+  NodeClass AddVowels(DataSetClass data, DictionaryClass set, backness) {
     return AddSegments(data, set, backness.Name, s => s.Features.HasFlag(Vowel) and s.Backness == backness);
   }
 
-  AddFlag(DataSetClass data, DictionaryClass set, all, features, other) {
+  NodeClass AddFlag(DataSetClass data, DictionaryClass set, all, features, other) {
     return AddSegments(data, set, other.Name, s => (not set.Contains(s)) and s.Features.HasFlagMask(all, features) and s.Features.HasFlagMask(other, other));
   }
 
-  AddConsonants(DataSetClass data, DictionaryClass set, name, all, features) = AddNode(name) {
+  NodeClass AddConsonants(DataSetClass data, DictionaryClass set, name, all, features) = new Node(name) {
     AddFlag(data, set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]);
   };
 
-  AddVoicedPairs(DataSetClass data, DictionaryClass set, name, all, features) = AddNode(name) {
+  AddVoicedPairs(DataSetClass data, DictionaryClass set, name, all, features) = new Node(name) {
     AddConsonants(data, set, Lang.Voiced, all Voiced, features Voiced);
     AddConsonants(data, set, Lang.Voiceless, all Voiced, features);
   };
 
-  GetNodes(DataSetClass data) = new NodeClass() {
+  GetNodes(DataSetClass data) = new NodeClass(null) {
     var set1 = new DictionaryClass(256);
     var set2 = new DictionaryClass(256);
     var all  = Vowel Pulmonic Affricate;
 
-    AddNode(Lang.Vowels) {
+    new Node(Lang.Vowels) {
       AddVowels(data, set1, each Backnesses)
     };
-    AddNode(Lang.Affricates) {
+    new Node(Lang.Affricates) {
       AddVoicedPairs(data, set1, Lang.NonPulmonic, all, Affricate);
       AddVoicedPairs(data, set1, Lang.Pulmonic, all, Pulmonic Affricate);
     };
-    AddNode(Lang.Consonants) {
+    new Node(Lang.Consonants) {
       AddVoicedPairs(data, set1, Lang.Pulmonic, all, Pulmonic);
       AddVoicedPairs(data, set1, Lang.NonPulmonic, all, NoFeature);
     };
@@ -649,6 +652,7 @@ namespace SegmentTree {
     Tree {
       Width: 7 inches;
       LabelGap: 4 pts;
+      NodeGap: 8 pts;
       Root: GetNodes(data);
     }
   };
