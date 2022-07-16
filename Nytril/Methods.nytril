@@ -9,14 +9,13 @@ namespace Figures.PartitionAssignments {
 
 //======================================================================
 
-namespace Figures.FrequencyExperiment {
-  Title = "Transition Rates Between Partitions";
+namespace Figures.TransitionRates {
+  Title = "Transition Rates between Partitions";
 
   Caption(ExperimentClass experiment) = Span {
     var rule = experiment.CalcExperiment.Rule;
 
-    "For the "; SQuote{rule.Name}; " model, states were grouped into "; rule.Partitions.Length; " sets. ";
-    "Here, the area of the circles is proportional to the estimated equilibrium frequencies for each group. ";
+    "The area of the circles is proportional to the estimated equilibrium frequencies. ";
     "The width of the lines is proportional to the estimated rates. ";
     PaperSections.WordTransformation.Note;
   };
@@ -207,17 +206,11 @@ namespace Figures.TransitionMatrixBall {
 
 //======================================================================
 
-namespace Figures.FrequencyBoxStatic {
-  Title = "Segment Transition Counts";
+namespace Figures.SegmentTransitionCounts {
+  Title = "Prior Segment Transition Counts";
 
   Caption(ExperimentClass experiment) = Span {
-    TextHeight: 10;
-    "This chart shows the number of times that each segment (on the left vertical bar) differs from any other other segment in the same cognate set at the same aligned segment position. ";
-    "The rates of transitions to gaps and from gaps are ignored. ";
-    "The segments are grouped into partitions, represented by the  sections divided by lines. ";
-    "Within each partition, the segments are ordered from highest to lowest frequency of occurrance. ";
-    "Transition counts are shown with the number in a red box, where the darker reds are larger numbers. ";
-    "The chart has diagonal symmetry.";
+    "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled red box. The chart has diagonal symmetry.";
   };
 
   Body(ExperimentClass experiment) = experiment.Data.PartitionBox(experiment.Rule);
@@ -225,50 +218,50 @@ namespace Figures.FrequencyBoxStatic {
 //======================================================================
 
 namespace Figures.AllSegmentFrequencies {
+  Title = "Segment occurrance rates for all languages";
+
   Caption(ExperimentClass experiment) = Span {
-    "Frequency of occurance of segments";
+    "The frequency of occurrance of each segment for all languages";
   };
 
-  Body(ExperimentClass experiment) = SegmentDisplay.FrequencyChart(experiment.Data, new SizeClass(Extent.Size.Width, 3 inches));
+  Body(ExperimentClass experiment) = Block {
+    SegmentDisplay.FrequencyChart(experiment.Data, Extent.Size);
+  };
 }
 
 //======================================================================
 
 namespace Figures.ConsensusTree {
-  Caption(ExperimentClass experiment) = Span {
-    "Segment Percentages";
-  };
+  Title = Lang.ConsensusTree;
 
-  Body(ExperimentClass experiment) = Block {
+  Body(ExperimentClass experiment) = VBox {
+    Width: Extent.Size.Width;
+    HAlign: HAligns.Center;
     Style.TreeOptions {
       Width: Extent.Size.Width;
       Root: experiment.MainRun.Tree;
-    }
+    };
   };
 }
+
 //======================================================================
 
-namespace Figures.SegmentFrequencies {
+namespace Figures.SegmentOccuranceRates {
   Title = "Segment Occurance Rates";
 
   Caption(ExperimentClass experiment) = Span {
     var l0 = experiment.Data.Taxa[0].Language;
+
     "Comparison of occurance rates of segments in each language. Segments are sorted by the rates in ";
-    l0 ;
-    ". Bars are normalized to the rate of the most frequently ocurring segment in each language. ";
-    "Languages are ordered by their Euclidian distance from ";
-    l0;
-    " indicated by the red line.";
+    l0; ". Bars are normalized to the rate of the most frequently ocurring segment in each language. Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
   Body(ExperimentClass experiment) = new SegmentFrequencyClass(experiment, false).ShowChart;
 }
 //======================================================================
 
-namespace Figures.SegmentFrequenciesGrouped {
-  Title = "Segment Occurance Rates (Grouped)";
-
-  Caption(ExperimentClass experiment) = Figures.SegmentFrequencies.Caption(experiment);
+namespace Figures.SegmentOccuranceGrouped {
+  Title = "Segment Occurance Rates (grouped by partition)";
 
   Body(ExperimentClass experiment) = Block {
     new SegmentFrequencyClass(experiment, true).ShowChart;
@@ -282,11 +275,8 @@ namespace Figures.PartitionFrequencies {
   Caption(ExperimentClass experiment) = Span {
     var l0 = experiment.Data.Taxa[0].Language;
     "Comparison of occurance rates of partitions in each language. Partitions are sorted by the rates in ";
-    l0 ;
-    ". Bars are normalized to the rate of the most frequently ocurring partition in each language. ";
-    "Languages are ordered by their Euclidian distance from ";
-    l0;
-    " indicated by the red line.";
+    l0; ". Bars are normalized to the rate of the most frequently ocurring partition in each language. ";
+    "Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
   Body(ExperimentClass experiment) = Block {
@@ -348,6 +338,8 @@ class ExampleConceptClass {
 //======================================================================
 
 namespace Figures.ExampleTree {
+  Title = "Example Tree";
+
   Caption(ExperimentClass experiment) = Span {
     "An example tree showing the relationships of {0} languages."(SampledLanguages(experiment.Data.Languages.Length));
   };
@@ -360,6 +352,8 @@ namespace Figures.ExampleTree {
 //======================================================================
 
 namespace Figures.Alignment {
+  Title = Lang.Alignment;
+
   ArrowWidth  = 40;
   ArrowMargin = 10 pts;
   Arrowhead   = 8 pts;
@@ -612,7 +606,7 @@ namespace StateSection {
 
 namespace PaperSections.WordTransformation {
   Title = "Understanding Word Transformation";
-  Note  = "Note that rates of change are much greater from one word segment to another when the change is within the word segment group than it is when the change is between word segments in different groups.";
+  Note  = "The rates are much greater from one word segment to another when the change is within the word segment group than when the change is between word segments in different groups.";
 
   Body(ExperimentClass experiment) = Block {
     var modelname = Span {TextCase: TextCases.AllLower; experiment.Rule.Name};
@@ -626,7 +620,7 @@ namespace PaperSections.WordTransformation {
 
     BodyPar {
       "The "; modelname; " model allows different rates for different groups of word segments, ";
-      FigureReference(experiment, Figures.FrequencyExperiment); " summarizes the estimated rates of change from one segment grouping to another. ";
+      FigureReference(experiment, Figures.TransitionRates); " summarizes the estimated rates of change from one segment grouping to another. ";
       Note;
     };
   };
@@ -1753,7 +1747,7 @@ namespace PaperSections.Methods {
       };
     };
     PageBreak;
-    ShowFigureDoc(experiment, Figures.FrequencyExperiment);
+    ShowFigureDoc(experiment, Figures.TransitionRates);
     ShowFigureDoc(experiment, Figures.AllSegmentFrequencies);
   };
 }

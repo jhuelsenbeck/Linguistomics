@@ -171,37 +171,46 @@ abstract class RuleClass {
     };
   };
 
-  ShowPartitions = Table {
-    Columns: [0.5 inch, 2 inches, 4 inches];
-    TextHeight: 12 pts;
-    EdgeB: 1;
+  ShowPartitions = Block {
+    var th = Extent.Size.Width * 0.03;
+    var tw = th * 0.65;
 
-    Row {
-      EdgeB: 1;
-      Cell {
-        ColSpan: 3;
-        TextHeight: 16 pts;
-        Span {
-          "Model: ";
-          Style.DQuote {Name};
-        };
-      };
+    Paragraph {
+      TextHeight: 20 pts;
+      "Model: ";
+      Style.DQuote {Name};
     };
 
-    foreach (var partition in Partitions) {
+    Table {
+      TextHeight: th;
+
+      Columns: [tw * 3, tw * 15, tw * 20];
+      TextHeight: 12 pts;
+      EdgeB: 1;
+
       Row {
+        EdgeB: 1;
         Cell {
-          HAlign: HAligns.Right;
-          Span {each1; ") "};
-          PaddingR: 3 pts;
-        };
-        partition.Filter.Name;
-        Span {
-          Separator: Space;
-          (each partition.Segments).ShowSegment;
+          ColSpan: 3;
+          TextHeight: 16 pts;
         };
       };
-    }
+
+      foreach (var partition in Partitions) {
+        Row {
+          Cell {
+            HAlign: HAligns.Right;
+            Span {each1; ") "};
+            PaddingR: 3 pts;
+          };
+          partition.Filter.Name;
+          Span {
+            Separator: Space;
+            (each partition.Segments).ShowSegment;
+          };
+        };
+      }
+    };
   };
 
   ShowDescription(SegmentClass[] segments) = Block {

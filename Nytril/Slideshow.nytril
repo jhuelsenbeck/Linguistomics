@@ -2,10 +2,8 @@ using Format, Units;
 
 //======================================================================
 
-class ShowDesignClass {
-  var         HeaderHeight,
-              FooterHeight,
-              SideGap,
+abstract class ShowDesignClass {
+  var         SideGap,
               HeaderGap,
               FooterGap,
               BulletIndent,
@@ -18,10 +16,8 @@ class ShowDesignClass {
               ItemSpacer;
 
   Constructor {
-    HeaderHeight  = 56 pts;
     HeaderGap     = 6 pts;
-    FooterHeight  = 32 pts;
-    FooterGap     = 24 pts;
+    FooterGap     = 20 pts;
     SideGap       = 0.5 inches;
     ItemSpacer    = 10 pts;
     BulletIndent  = 36 pts;
@@ -60,19 +56,44 @@ class ShowDesignClass {
       }
     }
   };
+
+  abstract GetFigureCaption(ExperimentClass experiment, title, caption);
+  abstract FooterHeight;
+  abstract HeaderHeight;
 }
 
 //======================================================================
 
 class ProgressDesignClass: ShowDesignClass {
-  var HeaderFontHeight;
-
   Constructor {
     super.Constructor;
-    HeaderFontHeight = 30 pts;
-    HeaderHeight     = 48 pts + HeaderFontHeight;
-    FooterHeight     = 24 pts;
-    FooterGap        = 12 pts;
+  }
+
+  override HeaderHeight = 36 pts;
+  override FooterHeight = 24 pts;
+
+  override GetFigureCaption(ExperimentClass experiment, title, caption) {
+    if (valid title or valid caption) {
+      return Frame {
+        PaddingB: 10 pts;
+
+        if (valid title) {
+          Paragraph {
+            TextHeight: 30 pts;
+            title;
+          };
+        }
+        if (valid caption) {
+          Block {
+            TextHeight: 20 pts;
+            LeftIndent: 12 pts;
+            caption.Caption(experiment);
+          };
+        }
+      };
+    }
+
+    return null;
   }
 
   GetBox(ShowClass show, th, s) = HBox {
@@ -106,18 +127,15 @@ class ProgressDesignClass: ShowDesignClass {
     Paragraph {
       PageBreakBefore: true;
 
-      FixedFrame(0, 0, page.Width, HeaderHeight) {
-        HeaderBackground(show, slide, title, footer, page.Width, HeaderHeight);
+      var hh = HeaderHeight;
+      var fh = FooterHeight;
 
-        Paragraph {
-          SpaceBefore: HeaderGap;
-          TextHeight: HeaderFontHeight;
-          LeftIndent: 24 pts;
-          title;
-        };
+      FixedFrame(0, 0, page.Width, hh) {
+        HeaderBackground(show, slide, title, footer, page.Width, hh);
       };
-      FixedFrame(0, page.Height - FooterHeight, page.Width, FooterHeight) {
-        FooterBackground(show, slide, title, footer, page.Width, FooterHeight);
+
+      FixedFrame(0, page.Height - fh, page.Width, fh) {
+        FooterBackground(show, slide, title, footer, page.Width, fh);
       };
     };
   };
@@ -155,6 +173,20 @@ class FancyDesignClass: ShowDesignClass {
     super.Constructor;
   }
 
+  override HeaderHeight = 56 pts;
+  override FooterHeight = 32 pts;
+
+  override GetFigureCaption(ExperimentClass experiment, title, caption) {
+    if (valid caption) {
+      return Frame {
+        PaddingB: 10 pts;
+        TextHeight: 16 pts;
+        caption.Caption(experiment);
+      };
+    }
+    return null;
+  }
+
   override HeaderFooter(ShowClass show, SlideClass slide, title, footer) = Block {
     var page = Extent.Page;
 
@@ -163,13 +195,16 @@ class FancyDesignClass: ShowDesignClass {
 
       if (show.PageIndex > 0) {
         if (valid title) {
-          FixedFrame(0, 0, page.Width, HeaderHeight) {
-            HeaderBackground(show, slide, title, footer, page.Width, HeaderHeight)
+          var hh = HeaderHeight;
+
+          FixedFrame(0, 0, page.Width, hh) {
+            HeaderBackground(show, slide, title, footer, page.Width, hh)
           };
         }
         if (valid footer) {
-          FixedFrame(0, page.Height - FooterHeight, page.Width, FooterHeight) {
-            FooterBackground(show, slide, title, footer, page.Width, FooterHeight);
+          var fh = FooterHeight;
+          FixedFrame(0, page.Height - fh, page.Width, fh) {
+            FooterBackground(show, slide, title, footer, page.Width, fh);
           };
         }
       }
@@ -495,17 +530,17 @@ class FigureSlideClass: SlideClass {
   override AddSlidePage(ShowClass show, title, footer) = Block {
     show.Design.HeaderFooter(show, this, title, footer);
 
-    var size   = Extent.Size;
-    var height = size.Height;
+    var caption = null;
+    if (exists Figure?.Caption)
+      caption = Figure;
 
-    if (exists Figure.?Caption or exists Figure.?Title) {
-      var caption = Frame {
-        PaddingB: 10 pts;
-        TextHeight: 16 pts;
-        Figure.?Caption(show.Experiment);
+    var header = show.Design.GetFigureCaption(show.Experiment, Figure.?Title, caption);
+    var height  = 0.0;
+    if (valid header) {
+      Paragraph {
+        header;
       };
-      caption;
-      height -= LayoutSize(caption).Height;
+      height = LayoutSize(header).Height;
     }
 
     Paragraph {
@@ -513,7 +548,7 @@ class FigureSlideClass: SlideClass {
       Frame {
         Height: height;
 
-        PushExtent(new(size.Width, height));
+        PushExtent(new(Extent.Size.Width, Extent.Size.Height - height));
         Figure.Body(show.Experiment) {
           Variable.?Format;
         };
