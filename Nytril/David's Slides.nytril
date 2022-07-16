@@ -10,23 +10,21 @@ flags SlideTypes {
 
 class DavidLinguisticPresentationClass: ShowClass {
   Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "Presentation - Linguistics", Authors, true);
+    super.Constructor(experiment, #75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "David's Presentation", new ProgressDesignClass, Authors, true);
     Title     = "From phonology to phylogeny\nA new framework for phylogenetic inference";
-    Design    = new ProgressDesignClass;
-//    Design    = new FancyDesignClass;
     TypeFlags = Integer(Linguistic);
-    AddSlideGroup(DavidSlides);
+    SlideData = DavidSlides;
   }
 }
 //======================================================================
 
 class DavidBioPresentationClass: ShowClass {
   Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #6fea4e3d-384d-4606-99e5-1c1ffa006c73#, "Presentation - Biology", Authors, true);
+    super.Constructor(experiment, #6fea4e3d-384d-4606-99e5-1c1ffa006c73#, "David's Presentation - Biology", new ProgressDesignClass, Authors, true);
     Title     = "Biology\nA new framework for phylogenetic inference";
     Design    = new ProgressDesignClass;
     TypeFlags = Integer(Bio);
-    AddSlideGroup(DavidSlides);
+    SlideData = DavidSlides;
   }
 }
 //======================================================================
@@ -75,9 +73,9 @@ namespace DavidSlides.Introduction {
     Title     = "Multistate character";
     ListWidth = 3 inches;
 
-    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+    Body(ExperimentClass experiment) = Block {
       Table {
-        Columns: [ListWidth, maxsize.Width - ListWidth];
+        Columns: [ListWidth, Extent.Size.Width - ListWidth];
 
         Row {
           Cell {
@@ -101,9 +99,9 @@ namespace DavidSlides.Introduction {
     Title     = "From multistate to binary representation";
     ListWidth = 3 inches;
 
-    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+    Body(ExperimentClass experiment) = Block {
       Table {
-        Columns: [ListWidth, maxsize.Width - ListWidth];
+        Columns: [ListWidth, Extent.Size.Width - ListWidth];
 
         Row {
           Cell {
@@ -154,7 +152,7 @@ namespace DavidSlides.Introduction {
   namespace Slide.Slide7 {
     Title = "My Colaborators";
 
-    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+    Body(ExperimentClass experiment) = Block {
       TextHeight: 18 pts;
       Separator: Paragraph;
       CitationLib.GetFullName(each Authors.FindSlice(p => p != People.DMGoldstein));
@@ -273,8 +271,8 @@ namespace DavidSlides.PreviousResearch {
       "There’s much more uncertainty after that";
     };
 
-    Items.Item3.Body(ExperimentClass experiment, SizeClass maxsize) = Span {
-      ShowTree("Romance phylogeny", null, experiment.PriorTree, maxsize.Width, null);
+    Items.Item3.Body(ExperimentClass experiment) = Span {
+      ShowTree("Romance phylogeny", null, experiment.PriorTree, null);
     };
 
     Items.Item4.Text = Span {
@@ -295,19 +293,19 @@ namespace DavidSlides.TheData {
     Title = "Overview";
     Pause = true;
 
-    Items.Item1.Body(ExperimentClass experiment, SizeClass maxsize) = Span {
+    Items.Item1.Body(ExperimentClass experiment) = Span {
       ItemTextFormat;
       experiment.Data.Taxa.Length - 1;
       " Romance languages plus Latin as an outgroup";
     };
 
-    Items.Item2.Body(ExperimentClass experiment, SizeClass maxsize) = Span {
+    Items.Item2.Body(ExperimentClass experiment) = Span {
       ItemTextFormat;
       experiment.Data.WordCount;
       " words";
     };
 
-    Items.Item3.Body(ExperimentClass experiment, SizeClass maxsize) = Span {
+    Items.Item3.Body(ExperimentClass experiment) = Span {
       ItemTextFormat;
       experiment.Data.UniqueSegments.Length;
       " unique segments";
@@ -317,7 +315,7 @@ namespace DavidSlides.TheData {
       "How many word forms from each language";
     };
 
-    Items.Item5.Body(ExperimentClass experiment, SizeClass maxsize) = TableFigures.WordCountTable.Body(experiment, maxsize) {
+    Items.Item5.Body(ExperimentClass experiment) = TableFigures.WordCountTable.Body(experiment) {
       TextHeight: 14 pts;
     };
   }
@@ -697,8 +695,8 @@ namespace DavidSlides.Results {
   namespace Slide.Slide2 {
     Title = "Majority-rule consensus tree";
 
-    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
-      ShowTree(null, null, experiment.MainRun.Tree, maxsize.Width, Lang.Branches);
+    Body(ExperimentClass experiment) = Block {
+      ShowTree(null, null, experiment.MainRun.Tree, Lang.Branches);
     };
   }
 
@@ -744,8 +742,8 @@ namespace DavidSlides.Results {
 
   namespace Slide.SegmentalFrequency {
     Title = "The frequency distribution of segments for all languages";
-    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
-      SegmentDisplay.FrequencyChart(experiment.Data, maxsize);
+    Body(ExperimentClass experiment) = Block {
+      SegmentDisplay.FrequencyChart(experiment.Data, Extent.Size);
     };
   }
 
@@ -763,6 +761,10 @@ namespace DavidSlides.Results {
 
   namespace Slide.Alignments {
     Figure = Figures.Alignments;
+  }
+
+  namespace Slide.PartitionExperiment {
+    Figure = Figures.FrequencyExperiment;
   }
 
   namespace Slide.Slide5 {
@@ -862,7 +864,7 @@ namespace DavidSlides.Discussion {
 
   namespace Slide.Partitions {
     Title = "Segment Partitions";
-    Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+    Body(ExperimentClass experiment) = Block {
       experiment.Rule.ShowPartitions {
         TextHeight: 18 pts;
         ParAlignment: ParAlignments.Center;

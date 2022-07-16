@@ -188,14 +188,14 @@ class AlignmentChartClass {
     Taxa       = Data.Taxa;
   }
 
-  ShowChart(SizeClass maxsize) = VBox {
-    Size: maxsize;
+  ShowChart(SizeClass size) = VBox {
+    Size: size;
     Border: 0.5;
 
     // Try to make proportional squares
-    var xitems = Integer(maxsize.Width / 130);
+    var xitems = Integer(size.Width / 130);
     var yitems = (Alignments.Length + xitems - 1) div xitems;
-    var bsize  = new SizeClass(maxsize.Width / xitems, maxsize.Height / yitems);
+    var bsize  = new SizeClass(size.Width / xitems, size.Height / yitems);
     var rows   = Alignments / xitems;
     var x      = bsize.Width * 0.5;
 
@@ -271,22 +271,23 @@ class LanguageClass: FactClass {
         RightIndent: 3.5 inches;
       };
     }
-    ShowMap(new SizeClass(5 inches, 3 inches));
+    ShowMap(Extent.Size);
   };
 
   ImageClass LoadImage(name) = new ImageClass(Info.ImageFolder FileName(name));
 
-  ShowMap(size) {
+  ShowMap(SizeClass size) {
     if (valid MapImage) {
       return VBox {
-        Width: size.Width;
+        Size: size;
         HAlign: HAligns.Center;
 
         var h = 6 pts;
-        MapImage.FitSize(new(size.Width, size.Height - h));
+        MapImage.FitSize(new(size.Width, size.Height - h*2));
 
         if (valid MapAttribution) {
-          Span {
+          Frame {
+            Width: size.Width;
             TextHeight: h;
             TextColor: 80%;
             Lang.Credit;
@@ -332,9 +333,9 @@ class WordClass: FactClass {
       var view = Span {(each segments).Ipa};
       System.Assert(Text == view.GetString(), "Round-trip error with text {0}-{1}"(Text, view), Text);
 
-      Link to Segments;
-      Link to cognate;
-      Link to Language;
+      Link.Connect(this, Segments);
+      Link.Connect(this, cognate);
+      Link.Connect(this, Language);
       Link.Connect(Language, cognate);
     }
     else {
@@ -461,7 +462,7 @@ class CognateClass: FactClass {
     Variable   = variable;
     MaxLength  = 0;
 
-    Link to concept;
+    Link.Connect(this, concept);
   }
 
   override IconClass GetIcon = Icons.format_list_bulleted;
@@ -643,7 +644,7 @@ class DataSetClass {
   }
 
   CognateClass[] GetSortedCognates {
-    if (not valid SortedCognates)
+    if (invalid SortedCognates)
       SortedCognates = UsedCognates.Sort(false);
     return SortedCognates;
   }
@@ -689,7 +690,7 @@ class DataSetClass {
       var taxon = TaxonSet.FindKey(langword.GlobalVariableName);
       if (valid taxon) {
         var word = new WordClass(dictionary, taxon, cognate, langword);
-        maxlength = Math.Max([maxlength, word.Aligned.Length]);
+        maxlength = Math.Max(maxlength, word.Aligned.Length);
 
         foreach (var s in word.Segments) {
           ++SegmentCount;
@@ -758,14 +759,14 @@ class DataSetClass {
         for (var j = 0; j < length; ++j) {
           if (i != j) {
             var p1 = cognate.Words[j].Padded;
-            var ml = Min([p0.Length, p1.Length]);
+            var ml = Min(p0.Length, p1.Length);
             for (var index = 0; index < ml; ++index) {
               var s0 = p0[index];
               var s1 = p1[index];
               if (s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation) {
                 var list = t.GetValue(s0.Index, s1.Index);
                 var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
-                if (not valid list) {
+                if (invalid list) {
                   list = new ListClass<WordPairClass>(128);
                   t.SetValue(s0.Index, s1.Index, list);
                 }
@@ -783,12 +784,12 @@ class DataSetClass {
 
   GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);// * 30%;
 
-  PartitionBox(RuleClass rule, SizeClass framesize) = Paragraph {
+  PartitionBox(RuleClass rule) = Paragraph {
     var segments = rule.PartSegments;
     var grid     = 0.125 pts;
     var gcolor   = 65%;
     var border   = 0.5 pts;
-    var size     = framesize - border*2;
+    var size     = Extent.Size - border*2;
     var d        = size / (segments.Length+1);
     var vflags   = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
 
@@ -1036,7 +1037,7 @@ abstract class FrequencyChartClass {
   }
 
   abstract SegmentBar(RateDataClass rate, index, width, height);
-  abstract OccurranceChart(SizeClass maxsize);
+  abstract OccurranceChart(SizeClass size);
 
   LangCanvas(RateDataClass rate, width, height) = HBox {
     var cborder = 0.25 pts;
@@ -1047,9 +1048,14 @@ abstract class FrequencyChartClass {
     SegmentBar(rate, each SortedIndexes, width, height - cborder);
   };
 
-  ShowChart(SizeClass maxsize) = Paragraph {
-    Experiment.Rule.ShowLegend(10 pts, 1.1 inch) {Border: 0.25 {Color: 80%}; MarginR: 12 pts; Padding: 5};
-    OccurranceChart(new SizeClass(maxsize.Width - 2 inches, maxsize.Height));
+  ShowChart = HBox {
+    VAlign: VAligns.Center;
+    Experiment.Rule.ShowLegend(10 pts, 1.1 inch) {
+      Border: 0.25 {Color: 80%};
+      MarginR: 12 pts;
+      Padding: 5
+    };
+    OccurranceChart(new SizeClass(Extent.Size.Width - 2 inches, Extent.Size.Height));
   };
 }
 //======================================================================
@@ -1101,12 +1107,12 @@ class SegmentFrequencyClass: FrequencyChartClass {
     segments[index].ShowSegment;
   };
 
-  override OccurranceChart(SizeClass maxsize) = MatrixBlock {
+  override OccurranceChart(SizeClass size) = MatrixBlock {
     var lw = 60 pts;
-    var cw = maxsize.Width - lw;
+    var cw = size.Width - lw;
     var bw = cw / Data.UniqueCount;
     var bh = bw * 1.5;
-    var h  = (maxsize.Height - bh) / Taxa.Length;
+    var h  = (size.Height - bh) / Taxa.Length;
     var r0 = SortedRates[0];
 
     TextHeight: 12 pts;
@@ -1161,8 +1167,8 @@ class PartitionRateActionClass: ActionClass {
     MatchAny LanguageClass {
       Taxon.Language;
     };
-    MatchAny PartitionClass {
-      Partition;
+    MatchAny SegmentClass {
+      Partition.Segments;
     };
   };
 
@@ -1216,12 +1222,12 @@ class PartitionFrequencyClass: FrequencyChartClass {
     Partitions[index].Name;
   };
 
-  override OccurranceChart(SizeClass maxsize) = MatrixBlock {
+  override OccurranceChart(SizeClass size) = MatrixBlock {
     var lw = 60 pts;
-    var cw = maxsize.Width - lw;
+    var cw = size.Width - lw;
     var bw = cw / Partitions.Length;
     var bh = 16 pts;
-    var h  = (maxsize.Height - bh) / Taxa.Length;
+    var h  = (size.Height - bh) / Taxa.Length;
     var r0 = SortedRates[0];
 
     TextHeight: 12 pts;

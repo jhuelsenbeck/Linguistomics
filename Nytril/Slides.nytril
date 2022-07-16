@@ -4,9 +4,9 @@ using Format, Units, Slides;
 
 class JohnPresentationClass: ShowClass {
   Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", [People.JPHuelsenbeck], false);
-    Design = new FancyDesignClass;
-    AddSlideGroup(Slides);
+    super.Constructor(experiment, #aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", new FancyDesignClass,
+      [People.JPHuelsenbeck], false);
+    SlideData = ref Slides;
   }
 }
 //======================================================================
@@ -14,9 +14,9 @@ class JohnPresentationClass: ShowClass {
 namespace Slides.Introduction {
   Title = PaperSections.Introduction.Title;
 
-  Body(ExperimentClass experiment, SizeClass maxsize) = Block {
+  Body(ExperimentClass experiment) = Block {
     PaperSections.Introduction.Slide;
-    Style.ShowTable(experiment, maxsize, TableFigures.Cognates);
+    Style.ShowTable(experiment, TableFigures.Cognates);
   };
 }
 
@@ -34,34 +34,38 @@ namespace Slides.Alignment {
 namespace Slides.ShowResults {
   Title = Lang.ConsensusTree;
 
-  Body(ExperimentClass experiment, SizeClass maxsize) = Style.TreeOptions {
-    Width: 5 inches;
-    Root: experiment.MainRun.Tree;
+  Body(ExperimentClass experiment) = VBox {
+    Width: Extent.Size.Width;
+    HAlign: HAligns.Center;
+    Style.TreeOptions {
+      Width: 5 inches;
+      Root: experiment.MainRun.Tree;
+    };
   };
 }
 
 namespace Slides.LanguagesUsed {
   Title = Lang.Languages;
 
-  Body(ExperimentClass experiment, SizeClass maxsize) = SegmentDisplay.ShowLanguages(experiment.Data, maxsize);
+  Body(ExperimentClass experiment) = SegmentDisplay.ShowLanguages(experiment.Data);
 }
 
 namespace Slides.ConceptsUsed {
   Title = Lang.ConceptsExamples;
 
-  Body(ExperimentClass experiment, SizeClass maxsize) = AllWords.ShowTable(11 pts, experiment.Data, 2);
+  Body(ExperimentClass experiment) = AllWords.ShowTable(11 pts, experiment.Data, 2);
 }
 
 namespace Slides.UniqueCharacters {
   Title = Lang.UniqueSegments;
 
-  Body(ExperimentClass experiment, SizeClass maxsize) = SegmentDisplay.ShowSegmentAssignments(experiment.Data);
+  Body(ExperimentClass experiment) = SegmentDisplay.ShowSegmentAssignments(experiment.Data);
 }
 
 namespace Slides.SegmentFrequencies {
   Title = Lang.SegmentFrequencies;
 
-  Body(ExperimentClass experiment, SizeClass maxsize) = SegmentDisplay.FrequencyChart(experiment.Data, maxsize);
+  Body(ExperimentClass experiment) = SegmentDisplay.FrequencyChart(experiment.Data, Extent.Size);
 }
 
 namespace Slides.PartitionRules {

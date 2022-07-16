@@ -1,5 +1,33 @@
 using Format, Units, IO, DB;
 
+//================================================================
+
+
+Schema = new LogSchemaClass;
+
+class MyDocClass: DocumentClass {
+  Constructor {
+    super.Constructor(#2f91b3da-1566-4591-bcc7-1ec7b798a87f#, "Convert Site Data");
+
+    var view = Schema.ReadTextFile(IO.Folder("c:/temp") FileName("SoundComparisons Export.txt"), true);
+    Schema.GetData(view);
+  }
+
+  override GetDocument = Document {
+    Schema.ShowDoc;
+  };
+
+//void Out {
+//  IO.Write(Schema.ShowDoc, Folders.Source Folders.Up IO.Folder("Concepts") FileName("Phonetic.nytril"));
+//}
+}
+
+//================================================================
+
+Main.Documents.MainDocument = new MyDocClass;
+
+//================================================================
+
 class WordClass {
   var Language,
       Text,
@@ -11,8 +39,6 @@ class WordClass {
     Spelling = spelling;
   }
 }
-
-//Main.Run = new MyDocClass.Out;
 
 //================================================================
 
@@ -29,7 +55,7 @@ class ConceptClass {
 //================================================================
 
 class LogSchemaClass: SchemaClass {
-  DB.FieldClass                 Language,
+  DB.DbFieldClass               Language,
                                 Concept,
                                 Text,
                                 Spelling;
@@ -52,7 +78,7 @@ class LogSchemaClass: SchemaClass {
     foreach (var row in view) {
       var cname = row.FindValue(Concept);
       var concept = Concepts.FindKey(cname);
-      if (not exists concept) {
+      if (invalid concept) {
         concept = new ConceptClass(cname);
         Concepts.Add(concept, cname);
       }
@@ -84,7 +110,7 @@ class LogSchemaClass: SchemaClass {
 
       var length = 0;
       foreach (var word in concept.Words)
-        length = Math.Max([length, word.Text.Length]);
+        length = Math.Max(length, word.Text.Length);
 
       foreach (var word in concept.Words) {
         Span {
@@ -113,31 +139,3 @@ class LogSchemaClass: SchemaClass {
 }
 
 //================================================================
-
-class MyDocClass: DocumentClass {
-  var Schema;
-
-  Constructor {
-    super.Constructor(#2f91b3da-1566-4591-bcc7-1ec7b798a87f#, "Convert Site Data");
-
-    Schema = new LogSchemaClass;
-    var name   = IO.Folder("c:/temp") FileName("SoundComparisons Export.txt");
-    var view   = Schema.ReadTextFile(name, true);
-
-    Schema.GetData(view);
-  }
-
-  override GetDocument = Document {
-    Schema.ShowDoc;
-  };
-
-  void Out {
-    IO.Write(Schema.ShowDoc, Folders.Source Folders.Up IO.Folder("Concepts") FileName("Phonetic.nytril"));
-  }
-}
-
-Main.Documents = [
-  new MyDocClass
-];
-
-

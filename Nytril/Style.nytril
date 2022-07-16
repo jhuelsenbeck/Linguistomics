@@ -1,42 +1,10 @@
 ﻿using Format, Units, Math, IO, LinkTypes;
 //======================================================================
 
-namespace PaperSizes {
-  Letter    = new SizeClass(8.5 inches, 11 inches);
-  Slideshow = new SizeClass(11 inches, 7.5 inches);
-  A4        = new SizeClass(210 millimeters, 297 millimeters);
-}
-//======================================================================
-
-namespace DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.Normal) {
-  DocumentSize = PaperSizes.Letter;
-  PageMargin   = new MarginClass(0.75 inches, 0.9 inches, 0.75 inches, 1 inches);
-}
-
-namespace DocMetrics if (PaperSystem == PaperSystems.US and DocumentType == DocumentTypes.SlideShow) {
-  DocumentSize = PaperSizes.Slideshow;
-  PageMargin   = new MarginClass(0.5 inches, 1 inches, 0.5 inches, 0.5 inches);
-}
-
-namespace DocMetrics if (PaperSystem == PaperSystems.A and DocumentType == DocumentTypes.Normal) {
-  DocumentSize = PaperSizes.A4;
-  PageMargin   = new MarginClass(20 millimeters);
-}
-
-namespace DocMetrics if (PaperSystem == PaperSystems.A and DocumentType == DocumentTypes.SlideShow) {
-  DocumentSize = PaperSizes.A4.Landscape;
-  PageMargin   = new MarginClass(0.5 inches, 1.5 inches, 0.5 inches, 0.75 inches);
-}
-//======================================================================
-
 namespace DocMetrics {
-  PageContent     = DocumentSize - PageMargin - new SizeClass(Gutter, 0);
   TableSpace      = 24 pts;
-  TreeWidth       = PageContent.Width;
-  TreeFigureWidth = TreeWidth - 30 pts;
   BoxSize         = new SizeClass(18 pts, 20 pts);
   CellSize        = new SizeClass(BoxSize.Width * 2, BoxSize.Height);
-  Gutter          = 0;
   SegmentColumns  = 4;
   SegmentSize     = 40 pts;
 }
@@ -229,16 +197,10 @@ namespace Style {
   DQuoteEnd            = Span {Begin: "“"; End: ".” "};
   textit               = Span {Italic};
   TextIpa              = Span {IPAFamily; Begin:"/"; End:"/"};
+
   MainStyle = {
     MainFamily;
     TextHeight: 9 pts;
-  };
-
-  MainDocument = Document {
-    RefStyle: ReferenceStyle;
-    Size: DocMetrics.DocumentSize;
-    Margin: DocMetrics.PageMargin;
-    MainStyle;
   };
 
   MainTitle = Paragraph {
@@ -298,7 +260,7 @@ namespace Style {
       ParAlignment: ParAlignments.Center;
       SpaceAfter: 6 pts;
       Frame {
-        figure.Body(experiment, new SizeClass(DocMetrics.PageContent.Width, DocMetrics.PageContent.Height * 0.5))
+        figure.Body(experiment);
       }
     };
   };
@@ -309,8 +271,8 @@ namespace Style {
     RefCounter("table", figure.GlobalVariablePath);
   };
 
-  ShowTable(ExperimentClass experiment, SizeClass maxsize, table) = Block {
-    table.Body(experiment, maxsize) {
+  ShowTable(ExperimentClass experiment, table) = Block {
+    table.Body(experiment) {
       SpaceBefore: 10 pts;
       ParAlignment: ParAlignments.Center;
     };
@@ -552,13 +514,15 @@ namespace Style {
 
   TreeOptions = Tree {
     TextHeight: 12 pts;
-    NodeGap: 5 pts;
-    Curvature: 20%;
-    Bevel: 20%;
-    Marker: BranchMarker;
+    Default: new NodeClass(null) {
+      NodeGap: 5 pts;
+      Curvature: 20%;
+      Bevel: 20%;
+      Marker: BranchMarker;
+    };
   };
 
-  ShowTree(title, subtitle, root, width, axis) = VBox {
+  ShowTree(title, subtitle, NodeClass root, axis) = VBox {
     Corner: 8 pts;
     MarginB: 20 pts;
     PaddingLR: 15 pts;
@@ -579,7 +543,7 @@ namespace Style {
     }
 
     TreeOptions {
-      Width: width;
+      Width: Extent.Size.Width - 30 pts;
       if (valid axis) {
         ValueLabel: axis;
         ValueAxis: ChartAxis;
@@ -613,9 +577,7 @@ namespace Style {
         appendix.Title;
       };
     };
-    Block {
-      appendix.Content;
-    };
+    appendix.Content;
   };
 
   LanguageRow(lang) = Row {

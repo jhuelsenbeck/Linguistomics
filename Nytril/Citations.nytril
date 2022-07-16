@@ -266,7 +266,7 @@ abstract class CitationStyleClass: ReferenceStyleClass {
     var url = reference.FindFirstFact(URLClass);
     if (valid url) {
       left;
-      if (not valid after)
+      if (invalid after)
         url;
       right;
       if (valid url.Accessed) {
@@ -544,7 +544,7 @@ abstract class CitationStyleClass: ReferenceStyleClass {
   };
 
   virtual WriteEndnoteList(ReferenceClass[] references) = Table {
-    Columns: [EndnoteNumberWidth, DocMetrics.PageContent.Width - EndnoteNumberWidth];
+    Columns: [EndnoteNumberWidth, Extent.Size.Width - EndnoteNumberWidth];
     foreach (var reference in references) {
       Row {
         Cell {
@@ -1147,7 +1147,7 @@ class ChicagoStyleClass: MLAStyleClass {
     var publisher = reference.FindFacts(PublisherLink );
     InParens {
       var authors = GetAuthors(reference);
-      if (valid publisher && not valid authors) {
+      if (valid publisher && invalid authors) {
         GetAddress(reference, ColonSpace);
         GetSponsor(reference, CommaSpace);
       }
@@ -1176,7 +1176,7 @@ class ChicagoStyleClass: MLAStyleClass {
     GetEdition(reference, " ed");
     var authors = GetAuthors(reference);
     var publisher = reference.FindFacts(PublisherLink );
-    if (valid publisher && not valid authors) {
+    if (valid publisher && invalid authors) {
       DotSpace;
       GetAddress(reference, ColonSpace);
       GetSponsor(reference, CommaSpace);

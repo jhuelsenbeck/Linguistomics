@@ -165,7 +165,7 @@ namespace DisplayWords {
     Style.TitleBar {taxon.Language};
     Table {
       Edge: 0.5;
-      Columns: [2.1 inches, 1 inches, DocMetrics.PageContent.Width - 3.1 inches];
+      Columns: [2.1 inches, 1 inches, Extent.Size.Width - 3.1 inches];
       Row {
         HeaderCell(Lang.Cognate);
         HeaderCell(Lang.IPA);
@@ -207,7 +207,7 @@ namespace AllWords {
 
   ConceptTable(DataSetClass data, textheight, wordsperline, CognateClass[] cognates) = HBox {
     var first = 84 pts;
-    var w     = (DocMetrics.PageContent.Width - first) / wordsperline;
+    var w     = (Extent.Size.Width - first) / wordsperline;
     Table {
       Style.IPAFamily;
       Edge: 0.5;
@@ -229,7 +229,7 @@ namespace AllWords {
 
   ShowTable(textheight, DataSetClass data, max=1000000) = Block {
     TextHeight: textheight;
-    var wordsperline = Math.Round(DocMetrics.PageContent.Width / (13 * (textheight intu pixels)));
+    var wordsperline = Math.Round(Extent.Size.Width / (13 * (textheight intu pixels)));
 
     foreach (var cognates in (data.GetSortedCognates / wordsperline)) {
       if (each0 >= max)
@@ -528,7 +528,7 @@ namespace MatchingDiacritics {
     Style.TitleBar {Lang.Diacritics};
     Table {
       Style.TableEdge;
-      Columns: [DocMetrics.PageContent.Width / ColumnDiv] * ColumnDiv;
+      Columns: [Extent.Size.Width / ColumnDiv] * ColumnDiv;
       AddRow(each (DiacriticModifiers / ColumnDiv));
     };
     Style.TableNotes;
@@ -563,7 +563,7 @@ namespace MatchingOther {
     Style.TitleBar {Lang.OtherSegments};
     Table {
       Style.TableEdge;
-      Columns: [DocMetrics.CellSize.Width, DocMetrics.PageContent.Width * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv;
+      Columns: [DocMetrics.CellSize.Width, Extent.Size.Width * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv;
       var segments = data.DisplaySegments.FindSlice(segment => not set.Contains(segment));
       AddRow(each (segments / ColumnDiv));
     };
@@ -651,8 +651,11 @@ namespace SegmentTree {
   ShowTree(DataSetClass data) = Paragraph {
     Tree {
       Width: 7 inches;
-      LabelGap: 4 pts;
-      NodeGap: 8 pts;
+      Default: new NodeClass(null) {
+        LabelGap: 4 pts;
+        NodeGap: 8 pts;
+      };
+
       Root: GetNodes(data);
     }
   };
@@ -718,7 +721,7 @@ namespace SegmentDisplay {
 
     Style.TitleBar {Lang.IPAListing};
     Table {
-      Columns: [DocMetrics.PageContent.Width / c] * c;
+      Columns: [Extent.Size.Width / c] * c;
       foreach (var s in (data.SortedSegments / c)) {
         Row {
           SegmentCell(each s);
@@ -738,7 +741,7 @@ namespace SegmentDisplay {
         Paragraph {
           ParAlignment: ParAlignments.Center;
           if (valid language.MapImage)
-            language.ShowMap(new SizeClass(5 inches, 3 inches));
+            language.ShowMap(new(5 inches, 3 inches));
         };
         language.Description;
         language.Details;
@@ -760,45 +763,49 @@ namespace SegmentDisplay {
     }
   };
 
-  ShowLanguages(DataSetClass data, SizeClass maxsize) = Block {
+  ShowLanguages(DataSetClass data) = Block {
     var rows      = 2;
     var cols      = (data.Taxa.Length + 1) div rows;
     var taxagroup = data.Taxa / cols;
     var h         = 14 pts;
     var space     = 5 pts;
-    var size      = new SizeClass(maxsize.Width / cols - space, maxsize.Height / rows - space*2);
+    var border    = 1 pts;
+    var body      = Extent.Size;
+    var size      = new SizeClass(body.Width / cols - space, body.Height / rows - space*(rows-1) - (border*2*rows));
 
-    foreach (var group in taxagroup) {
-      HBox {
-        PaddingT: space;
-        VAlign: VAligns.Top;
+    VBox {
+      HAlign: HAligns.Center;
 
-        foreach (var taxon in group) {
-          VBox {
-            MarginR: space;
-            Size: size;
-            HAlign: HAligns.Center;
+      foreach (var group in taxagroup) {
+        HBox {
+          PaddingT: space;
+          VAlign: VAligns.Top;
 
-            Paragraph {
-              TextHeight: h;
-              Bold;
-              taxon.Language;
-            };
+          foreach (TaxonClass taxon in group) {
+            VBox {
+              MarginR: space;
+              Size: size;
+              HAlign: HAligns.Center;
 
-            HBox {
-              VAlign: VAligns.Center;
+              Paragraph {
+                TextHeight: h;
+                Bold;
+                taxon.Language;
+              };
 
-              var s = new SizeClass(size.Width, size.Height - h);
-              Size: s;
-              Corner: 20 pts;
-              BorderStroke: 1 pts {Color: 90%};
-              BorderClip: true;
+              HBox {
+                VAlign: VAligns.Center;
 
-              Span {
-                TipAction: taxon.Language;
-                taxon.Language.ShowMap(s);
-              }
-            };
+                Corner: 20 pts;
+                BorderStroke: border {Color: 90%};
+                BorderClip: true;
+
+                Span {
+                  TipAction: taxon.Language;
+                  taxon.Language.ShowMap(new SizeClass(size.Width, size.Height - h));
+                }
+              };
+            }
           }
         }
       }
@@ -848,7 +855,7 @@ namespace SegmentDisplay {
   ShowWordsForEachSegment(DataSetClass data) = Block {
     foreach (var segment in data.SortedSegments) {
       Paragraph {
-        TabStops: [0.5 inches, DocMetrics.PageContent.Width {Type: TabTypes.Right}];
+        TabStops: [0.5 inches, Extent.Size.Width {Type: TabTypes.Right}];
         KeepWithNext: true;
         TextHeight: 16 pts;
         ParBackground: 90%;

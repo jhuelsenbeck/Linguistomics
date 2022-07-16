@@ -52,7 +52,7 @@ class PartitionClass: FactClass {
     Index    = index;
     Filter   = filter;
     Segments = segments;
-    Link to segments;
+    Link.Connect(this, segments);
   }
 
   override IconClass GetIcon = Icons.sort;
@@ -172,7 +172,7 @@ abstract class RuleClass {
   };
 
   ShowPartitions = Table {
-    Columns: [0.5 inch, 2 inches, 5 inches];
+    Columns: [0.5 inch, 2 inches, 4 inches];
     TextHeight: 12 pts;
     EdgeB: 1;
 
@@ -438,8 +438,8 @@ class TranActionClass: ActionClass {
   };
 
   override GetLayoutTip = Frame {
-    var count = Math.Min([List.Length, 30]);
-    Width: Min([count*3, 6]) inches;
+    var count = Math.Min(List.Length, 30);
+    Width: Min(count*3, 6) inches;
     ShowSegments(count);
   };
 }
@@ -469,7 +469,7 @@ class CalcRatesClass {
   void Calibrate(size) {
     var middle = new PointClass(size.Width * 0.5, size.Height * 0.5);
 
-    MaxExtent    = Min([middle.X, middle.Y]);
+    MaxExtent    = Min(middle.X, middle.Y);
     MaxRadius    = MaxExtent * 0.13;
     MaxLine      = MaxRadius * 0.3;
     LoopRadius   = MaxRadius * 0.25;
@@ -488,7 +488,7 @@ class CalcRatesClass {
 
     var maxradius = 0.0;
     foreach (var partition in Rule.Partitions)
-      maxradius = Max([maxradius, partition.Radius + Transition.Rates.GetValue(each0, each0).Upper * RateScale]);
+      maxradius = Max(maxradius, partition.Radius + Transition.Rates.GetValue(each0, each0).Upper * RateScale);
     maxradius = MaxExtent - maxradius - LoopRadius - LoopDistance - ArrowGap;
 
     foreach (var partition in Rule.Partitions)
@@ -496,7 +496,7 @@ class CalcRatesClass {
   }
 
   private MainDiagram(min) = Canvas {
-    var size = new SizeClass(min, min);
+    var size = new SizeClass(min);
 
     TransformFit: true;
     Calibrate(size);
@@ -518,7 +518,7 @@ class CalcRatesClass {
           }
           else if (each0 < i) {
             var  r    = rate.Mean * RateScale / MaxLine;
-            var frac  = Math.Round(Math.Max([1.0, r]) * 255.0);
+            var frac  = Math.Round(Math.Max(1.0, r) * 255.0);
             var line1 = new LineStyleClass(rate.Mean * RateScale, 0.25, 1) {
               LineColor: new ColorClass(0, 0, 0, frac)
             };
@@ -546,7 +546,7 @@ class CalcRatesClass {
       };
 
       var c = LayoutSize(TestText(p1)).Width;
-      CircleText(p1, pos, fsize, Math.Min([12 pts, p1.Radius * 20 / c]));
+      CircleText(p1, pos, fsize, Math.Min(12 pts, p1.Radius * 20 / c));
     }
   };
 
@@ -567,15 +567,14 @@ class CalcRatesClass {
     };
   };
 
-  PartitionDiagram(SizeClass maxsize) = VBox {
-    Width: maxsize.Width;
-    HAlign: HAligns.Center;
+  PartitionDiagram = HBox {
+    VAlign: VAligns.Center;
 
-    HBox {
-      VAlign: VAligns.Center;
-      Rule.ShowLegend(12 pts, 1.25 inch);
-      MainDiagram(Min([maxsize.Width, maxsize.Height]));
-    };
+    var legend = 1.25 inches;
+    var size   = Extent.Size;
+
+    Rule.ShowLegend(12 pts, legend);
+    MainDiagram(Min(size.Width - legend, size.Height));
   };
 
   TranLink(i0, i1) = "Tran{0}:{1}"(i0, i1);

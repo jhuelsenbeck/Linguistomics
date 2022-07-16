@@ -1,5 +1,38 @@
 using Format, Units, IO, DB;
 
+//================================================================
+
+class MyDocClass: DocumentClass {
+  Constructor {
+    super.Constructor(#2f91b3da-1566-4591-bcc7-1ec7b798a87f#, "Convert BIPA");
+  }
+
+  override GetDocument = Document {
+    Schema.ShowDoc;
+  };
+}
+
+Schema = new LogSchemaClass;
+
+
+Main.Documents.MainDocument = new MyDocClass;
+
+//================================================================
+
+Main.Run = new FileRunClass;
+
+class FileRunClass: RunClass {
+  Constructor {
+    super.Constructor(#df9fdd21-7689-4dc5-bf7a-ce1cafb52899#, "Create BIPA file");
+  }
+
+  override void Execute {
+    IO.Write(Schema.ShowDoc, Folders.Source Folders.Up FileName("BIPA.nytril"));
+  }
+}
+
+//================================================================
+
 class FeatureClass {
   var Name,
       Index,
@@ -55,9 +88,9 @@ class LogSchemaClass: SchemaClass {
 
   Constructor {
     super.Constructor("log");
-    Description = new FieldClass("description", ValueTypes.String);
-    Text        = new FieldClass("text", ValueTypes.String);
-    Code        = new FieldClass("code", ValueTypes.Int32);
+    Description = new DbFieldClass("description", ValueTypes.String);
+    Text        = new DbFieldClass("text", ValueTypes.String);
+    Code        = new DbFieldClass("code", ValueTypes.Int32);
     AddField(Description);
     AddField(Text);
     AddField(Code);
@@ -271,27 +304,3 @@ class LogSchemaClass: SchemaClass {
 }
 
 //================================================================
-
-class MyDocClass: DocumentClass {
-  var Schema;
-
-  Constructor {
-    super.Constructor(#2f91b3da-1566-4591-bcc7-1ec7b798a87f#, "Convert BIPA");
-    Schema = new LogSchemaClass;
-  }
-
-  override GetDocument = Document {
-    Schema.ShowDoc;
-  };
-
-  void Out {
-    IO.Write(Schema.ShowDoc, Folders.Source Folders.Up FileName("BIPA.nytril"));
-  }
-}
-
-Main.Documents = [
-  new MyDocClass
-];
-
-//Main.Run = new MyDocClass.Out;
-
