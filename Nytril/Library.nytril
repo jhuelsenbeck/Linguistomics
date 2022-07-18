@@ -122,12 +122,10 @@ class AlignPairClass {
   ShowDetails(max) = Block {
     TextHeight: 10 pts;
 
-    var path   = Folders.Source Folders.Up Folder("Experiments/Europe200/Custom/Posterior/Run1/Execute") FileName("Alignment" + Align.Index) Extensions.Nytril;
-    var adata  = Read(path).GetValue("Align");
-
+    var path    = Folders.Source Folders.Up Folder("Experiments/Europe200/Custom/Posterior/Run1/Execute") FileName("Alignment" + Align.Index) Extensions.Nytril;
+    var adata   = Read(path).GetValue("Align");
     var langbox = Languages(Data, BoxSize.Height);
-
-    var indent = LayoutSize(langbox).Width;
+    var indent  = GetLayoutSize(langbox, Extent.Size).Width;
 
     Paragraph {
       KeepWithNext: true;
@@ -278,20 +276,22 @@ class LanguageClass: FactClass {
 
   ShowMap(SizeClass size) {
     if (valid MapImage) {
-      return VBox {
+      return HBox {
         Size: size;
         HAlign: HAligns.Center;
 
-        var h = 6 pts;
-        MapImage.FitSize(new(size.Width, size.Height - h*2));
+        VBox {
+          var h = 6 pts;
+          MapImage.FitSize(new(size.Width, size.Height - h*2));
 
-        if (valid MapAttribution) {
-          Frame {
-            Width: size.Width;
-            TextHeight: h;
-            TextColor: 80%;
-            Lang.Credit;
-            MapAttribution;
+          if (valid MapAttribution) {
+            Frame {
+              Width: size.Width;
+              TextHeight: h;
+              TextColor: 80%;
+              Lang.Credit;
+              MapAttribution;
+            }
           }
         }
       };

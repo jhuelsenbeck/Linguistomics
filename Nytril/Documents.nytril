@@ -14,13 +14,6 @@ abstract class BaseDocumentClass: DocumentClass {
     Title      = "Understanding Language Evolution Using an Event-Based Model";
   }
 
-  MainRevisions = {
-    AuthorLink to Authors;
-    Link to References;
-    RefStyle: ReferenceStyle;
-    MainStyle;
-  };
-
   ShowContent(content) = Block {
     Header2 {
       content.Title;
@@ -33,6 +26,21 @@ abstract class BaseDocumentClass: DocumentClass {
     (each Defs).Appendix;
   };
 
+  abstract GetContent;
+
+  override GetDocument = Document {
+    TextFamily: TextFamilies.TimesNewRoman;
+    TextHeight: 9 pts;
+
+    SetMathFamily(TextFamilies.LinuxLibertineO);
+    SetSymbolFamily(TextFamilies.CMUClassicalSerif);
+
+    AuthorLink to Authors;
+    Link to References;
+    RefStyle: ReferenceStyle;
+
+    GetContent;
+  };
 }
 
 //======================================================================
@@ -49,9 +57,7 @@ class SubmissionViewClass: BaseDocumentClass {
     }
   };
 
-  override GetDocument = Document {
-    MainRevisions;
-
+  override GetContent = Block {
     PageSection {
       Footer: FooterBlock {
         Even: FooterBlock;
@@ -105,9 +111,7 @@ class SupplimentalViewClass: BaseDocumentClass {
     }
   };
 
-  override GetDocument = Document {
-    MainRevisions;
-
+  override GetContent = Block {
     var appendices = [
       new AppendixClass(Lang.PartitionRules, Experiment.Rule.ShowPartitions),
     ];
@@ -146,9 +150,7 @@ class ExperimentViewClass: BaseDocumentClass {
     (each Trial.Experiments).ShowExperiment;
   };
 
-  override GetDocument = Document {
-    MainRevisions;
-
+  override GetContent = Block {
     var appendices = [
       new AppendixClass(Lang.FunctionalLoad, Experiment.ShowFunctionalLoad),
       new AppendixClass("Experimental Runs", ShowComparison),
@@ -182,9 +184,7 @@ class DiagnosticsViewClass: BaseDocumentClass {
     MatchingOther.ShowTable(Data, set);
   };
 
-  override GetDocument = Document {
-    MainRevisions;
-
+  override GetContent = Block {
     var appendices = [
       new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(Data)),
       new AppendixClass(Lang.SegmentFrequencies, SegmentDisplay.FrequencyChart(Data, new SizeClass(Extent.Size.Width, 3 inches))),
@@ -210,9 +210,7 @@ class ConfigurationViewClass: BaseDocumentClass {
     super.Constructor(experiment, #7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Configuration File");
   }
 
-  override GetDocument = Document {
-    MainRevisions;
-
+  override GetContent = Block {
     var appendices = [
       new AppendixClass(Name, new ConfigFileClass(Experiment, Experiment.MainRun).Show),
 //      new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
@@ -228,9 +226,7 @@ class AlignmentViewClass: BaseDocumentClass {
     super.Constructor(experiment, #a14658e4-26f7-4eab-87b7-4f486035103b#, "Alignments");
   }
 
-  override GetDocument = Document {
-    MainRevisions;
-
+  override GetContent = Block {
     var chart = new AlignmentChartClass(Experiment);
     chart.ShowChart(Extent.Size);
     PageBreak;

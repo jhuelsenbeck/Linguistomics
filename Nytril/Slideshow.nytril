@@ -49,7 +49,6 @@ abstract class ShowDesignClass {
     FixedFrame(0, (Extent.Page.Height - h) * 0.5, Extent.Page.Width, h) {
       Paragraph {
         ParAlignment:ParAlignments.Center;
-        Style.MainFamily;
         TextColor: color;
         TextHeight: h;
         title;
@@ -143,7 +142,7 @@ class ProgressDesignClass: ShowDesignClass {
   HeaderBackground(ShowClass show, SlideClass slide, title, footer, width, height) = Block {
     var th = 12 pts;
     for (;;) {
-      var bw  = LayoutSize(GetBox(show, th, 0)).Width;
+      var bw  = GetLayoutSize(GetBox(show, th, 0), Extent.Size).Width;
       var l   = show.Groups.Length - 1;
       var sep = 1.0;
       if (l > 1)
@@ -359,7 +358,7 @@ class IntroSlideClass: SlideClass {
       show.Title;
     };
 
-    var gap = (Extent.Size.Height - LayoutSize(title).Height - (NameGap+NameHeight)*(show.AuthorList.Length+1)) * 0.25;
+    var gap = (Extent.Size.Height - GetLayoutSize(title, Extent.Size).Height - (NameGap+NameHeight)*(show.AuthorList.Length+1)) * 0.25;
 
     ParAlignment: ParAlignments.Center;
     title;
@@ -453,12 +452,8 @@ ShowItem(ShowClass show, variable) {
        text;
      };
    }
-   else {
-     return Block {
-       Style.MainStyle;
-       variable.?Body(show.Experiment);
-     };
-   }
+   else
+     return variable.?Body(show.Experiment);
 }
 
 //======================================================================
@@ -491,13 +486,13 @@ class SlideItemClass {
      Numbered = variable.?Numbered ?? 0;
 
      var size = Extent.Size;
-     PushExtent(new(width, size.Height));
+     var extent = SetExtentSize(new(width, size.Height));
      Content = Frame {
        Width: size.Width;
        ShowItem(show, variable);
      };
-     Height = LayoutSize(Content).Height;
-     PopExtent;
+     Height = GetLayoutSize(Content, size).Height;
+     SetExtent(extent);
    }
 }
 
@@ -540,7 +535,7 @@ class FigureSlideClass: SlideClass {
       Paragraph {
         header;
       };
-      height = LayoutSize(header).Height;
+      height = GetLayoutSize(header, Extent.Size).Height;
     }
 
     Paragraph {
@@ -548,11 +543,11 @@ class FigureSlideClass: SlideClass {
       Frame {
         Height: height;
 
-        PushExtent(new(Extent.Size.Width, Extent.Size.Height - height));
+        var extent = SetExtentSize(new(Extent.Size.Width, Extent.Size.Height - height));
         Figure.Body(show.Experiment) {
           Variable.?Format;
         };
-        PopExtent;
+        SetExtent(extent);
       };
     };
     show.PageIndex++;
@@ -630,9 +625,9 @@ class TopicSlidesClass: SlideClass {
           Cell {
             PaddingB: design.ItemSpacer;
 
-            PushExtent(new(contentwidth, size.Height));
+            var extent = SetExtentSize(new(contentwidth, size.Height));
             gi.Content;
-            PopExtent;
+            SetExtent(extent);
           };
         }
       }
@@ -698,11 +693,9 @@ class ShowClass: BaseDocumentClass {
     return TypeFlags == 0 or invalid slide.?Type or (Integer(slide.Type) & TypeFlags) != 0;
   }
 
-  override GetDocument = Document {
-    MainRevisions;
-
-    var size = new SizeClass(Extent.Size.Width, Extent.Size.Height - Design.FooterGap);
-    PushExtent(size);
+  override GetContent = Block {
+    var size   = new SizeClass(Extent.Size.Width, Extent.Size.Height - Design.FooterGap);
+    var extent = SetExtentSize(size);
     AddSlideGroup(SlideData);
 
     PageTotal = 1;
@@ -717,7 +710,7 @@ class ShowClass: BaseDocumentClass {
     if (Bibliography)
       AddSlide(new BibSlideClass);
 
-    PopExtent;
+    SetExtent(extent);
   };
 
   void AddSlideGroup(slidesvar) {

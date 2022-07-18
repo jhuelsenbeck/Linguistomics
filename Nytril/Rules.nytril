@@ -232,7 +232,7 @@ abstract class RuleClass {
             PaddingLR: 1;
             Border: 0.25 pts {Color: 80%};
             Span {
-              Style.MonoFamily;
+              TextFixed: true;
               HAlign: HAligns.Center;
               if (Numbers) {
                 i++;
@@ -528,14 +528,11 @@ class CalcRatesClass {
           else if (each0 < i) {
             var  r    = rate.Mean * RateScale / MaxLine;
             var frac  = Math.Round(Math.Max(1.0, r) * 255.0);
-            var line1 = new LineStyleClass(rate.Mean * RateScale, 0.25, 1) {
-              LineColor: new ColorClass(0, 0, 0, frac)
-            };
             var angle = Graphics.GetAngle(p1.Center, p2.Center);
             var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle + Graphics.OneEighty);
             var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle);
 
-            Graphics.Line(line1, c1, c2) {
+            Graphics.Line(new(rate.Mean * RateScale, 0.25, 1), c1, c2) {
               TipAction: hover;
             }
           }
@@ -554,7 +551,7 @@ class CalcRatesClass {
         TipAction: p1;
       };
 
-      var c = LayoutSize(TestText(p1)).Width;
+      var c = GetLayoutSize(TestText(p1), new(fsize)).Width;
       CircleText(p1, pos, fsize, Math.Min(12 pts, p1.Radius * 20 / c));
     }
   };
