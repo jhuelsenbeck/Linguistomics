@@ -428,7 +428,7 @@ double LikelihoodCalculator::partialProbability(IntVector* signature, IntVector*
     return prune(signature, pos, dpSequence, site);
 }
 
-void LikelihoodCalculator::pruneBranch(Node* p, int site) {
+void LikelihoodCalculator::pruneBranch(Node* p, int /*site*/) {
 
     int pIdx = p->getIndex();
     auto fIIdx = fI[pIdx];
@@ -451,24 +451,23 @@ void LikelihoodCalculator::pruneBranch(Node* p, int site) {
         // Case 1: One homology family spanning tree intersects both child edges, i.e.
         //         a 'homologous' nucleotide should travel down both edges.
 
-        auto fHleft = fH[lftChildIdx];
+        auto fHleft  = fH[lftChildIdx];
         auto fHright = fH[rhtChildIdx];
-        auto probLeft = indelProbs.homologousProbability[lftChildIdx];
+        auto probLeft  = indelProbs.homologousProbability[lftChildIdx];
         auto probRight = indelProbs.homologousProbability[rhtChildIdx];
 
         auto tpLeft = tpLft.begin();
         auto tpRight = tpRht.begin();
 
-        for (int i = 0; i < numStates; i++)
+        for (int i=0; i<numStates; i++)
             {
-            double lft = 0.0;
-            double rht = 0.0;
             auto lj = fHleft;
             auto rj = fHright;
 
-            for (int j = 0; j < numStates; j++)
+            double lft = 0.0, rht = 0.0;
+            for (int j=0; j<numStates; j++)
                 {
-                lft += *lj++ * probLeft * *tpLeft++;
+                lft += *lj++ * probLeft  * *tpLeft++;
                 rht += *rj++ * probRight * *tpRight++;
                 }
             fHIdx[i] = lft * rht;
@@ -541,39 +540,37 @@ void LikelihoodCalculator::pruneBranch(Node* p, int site) {
         //         a 'homologous' nucleotide may travel down either edge and pop out at a leaf,
         //         or may travel down both edges but has to die in at least one subtree, or
         //         an 'inhomologous' nucleotide may do whatever it likes here.
-
-        auto extinctionProbabilityLeft = indelProbs.extinctionProbability[lftChildIdx];
+        auto extinctionProbabilityLeft  = indelProbs.extinctionProbability[lftChildIdx];
         auto extinctionProbabilityRight = indelProbs.extinctionProbability[rhtChildIdx];
-        auto fILeft = fI[lftChildIdx];
+        auto fILeft  = fI[lftChildIdx];
         auto fIRight = fI[rhtChildIdx];
-        auto fHLeft = fH[lftChildIdx];
+        auto fHLeft  = fH[lftChildIdx];
         auto fHRight = fH[rhtChildIdx];
-        auto homologousProbabilityLeft = indelProbs.homologousProbability[lftChildIdx];
+        auto homologousProbabilityLeft  = indelProbs.homologousProbability[lftChildIdx];
         auto homologousProbabilityRight = indelProbs.homologousProbability[rhtChildIdx];
-        auto birthProbabilityLeft = indelProbs.birthProbability[lftChildIdx];
+        auto birthProbabilityLeft  = indelProbs.birthProbability[lftChildIdx];
         auto birthProbabilityRight = indelProbs.birthProbability[rhtChildIdx];
-        auto nonHomologousProbabilityLeft = indelProbs.nonHomologousProbability[lftChildIdx];
+        auto nonHomologousProbabilityLeft  = indelProbs.nonHomologousProbability[lftChildIdx];
         auto nonHomologousProbabilityRight = indelProbs.nonHomologousProbability[rhtChildIdx];
         auto rfactor = nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight;
-        auto lfactor = nonHomologousProbabilityLeft - extinctionProbabilityLeft * birthProbabilityLeft;
+        auto lfactor = nonHomologousProbabilityLeft  - extinctionProbabilityLeft  * birthProbabilityLeft;
 
         for (int i = 0; i < numStates; i++)
             {
-            double lft1 = 0.0,
-                lft2 = 0.0;
+            double lft1 = 0.0, lft2 = 0.0;
             double rht1 = extinctionProbabilityLeft * fILeft[numStates];
             double rht2 = extinctionProbabilityRight * fIRight[numStates];
-            auto fhleft = fHLeft;
+            auto fhleft  = fHLeft;
             auto fhright = fHRight;
-            auto fileft = fILeft;
+            auto fileft  = fILeft;
             auto firight = fIRight;
 
             for (int j = 0; j < numStates; j++)
                 {
-                lft1 += *fhleft * homologousProbabilityLeft * tpLft(i, j);
+                lft1 += *fhleft  * homologousProbabilityLeft  * tpLft(i, j);
                 lft2 += *fhright * homologousProbabilityRight * tpRht(i, j);
                 auto stateEquilibriumFrequency = stateEquilibriumFrequencies[j];
-                rht1 += (*fhleft + *fileft) * lfactor * stateEquilibriumFrequency + *fileft * homologousProbabilityLeft * tpLft(i, j);
+                rht1 += (*fhleft  + *fileft)  * lfactor * stateEquilibriumFrequency + *fileft  * homologousProbabilityLeft  * tpLft(i, j);
                 rht2 += (*fhright + *firight) * rfactor * stateEquilibriumFrequency + *firight * homologousProbabilityRight * tpRht(i, j);
                 ++fhleft;
                 ++fhright;
@@ -584,17 +581,17 @@ void LikelihoodCalculator::pruneBranch(Node* p, int site) {
             fIIdx[i] = rht1 * rht2;
             }
 
-        auto left = fILeft[numStates];
+        auto left  = fILeft[numStates];
         auto right = fIRight[numStates];
         auto fIL = fILeft;
         auto fHL = fHLeft;
         auto fIR = fIRight;
         auto fHR = fHRight;
 
-        for (int j = 0; j < numStates; j++)
+        for (int j=0; j<numStates; j++)
             {
             auto stateEquilibriumFrequency = stateEquilibriumFrequencies[j];
-            left -= birthProbabilityLeft * (*fIL + *fHL) * stateEquilibriumFrequency;
+            left  -= birthProbabilityLeft  * (*fIL + *fHL) * stateEquilibriumFrequency;
             right -= birthProbabilityRight * (*fIR + *fHR) * stateEquilibriumFrequency;
             ++fIL;
             ++fHL;

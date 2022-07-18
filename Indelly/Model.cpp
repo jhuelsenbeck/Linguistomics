@@ -10,6 +10,7 @@
 #include "ParameterExchangabilityRates.hpp"
 #include "ParameterIndelRates.hpp"
 #include "ParameterIndelGammaShape.hpp"
+#include "ParameterRatesGammaShape.hpp"
 #include "ParameterTree.hpp"
 #include "Partition.hpp"
 #include "RandomVariable.hpp"
@@ -202,6 +203,18 @@ std::vector<double>& Model::getIndelGammaRates(void) {
     for (int i=0; i<parameters.size(); i++)
         {
         p = dynamic_cast<ParameterIndelGammaShape*>(parameters[i]);
+        if (p != NULL)
+            break;
+        }
+    return p->getRates();
+}
+
+std::vector<double>& Model::getRatesammaRates(void) {
+
+    ParameterRatesGammaShape* p = NULL;
+    for (int i=0; i<parameters.size(); i++)
+        {
+        p = dynamic_cast<ParameterRatesGammaShape*>(parameters[i]);
         if (p != NULL)
             break;
         }
@@ -525,6 +538,15 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         pIndelGamma->setProposalProbability(1.0);
         parameters.push_back(pIndelGamma);
         }
+
+    // set up the gamma rate variation parameter
+    if (settings.getNumRateCategories() > 1)
+        {
+        Parameter* pRateGamma = new ParameterRatesGammaShape(rv, this, "rates gamma", 2.0, settings.getNumRateCategories());
+        pRateGamma->setProposalProbability(1.0);
+        parameters.push_back(pRateGamma);
+        }
+
 
     // set up the alignment parameter(s)
     double alnProposalProb = 10.0 / (double)wordAlignments.size();

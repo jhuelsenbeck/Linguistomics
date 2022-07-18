@@ -180,8 +180,8 @@ double ParameterIndelRates::update(int) {
     
     // number of intersections
     int outOfBounds = 0;
-    if (vertex1.first < lowerLimit) // mu-axis intersects window
-        outOfBounds += 2; // vertex 2 necessarily is out of bounds if vertex 1 is
+    if (vertex1.first < lowerLimit)     // mu-axis intersects window
+        outOfBounds += 2;               // vertex 2 necessarily is out of bounds if vertex 1 is
     if (vertex4.first > vertex4.second) // lambda=mu intersects window
         outOfBounds++;
     

@@ -19,9 +19,10 @@ int setQvalue(double tol);
 
 
 
-class TransitionProbabilitiesTask: public ThreadTask {
+class TransitionProbabilitiesTask : public ThreadTask {
 
     public:
+    
         TransitionProbabilitiesTask() {
             numStates  = 0;
             Tree       = NULL;
@@ -46,6 +47,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
            The method has the advantage of error control. The error is controlled by
            setting qValue appropriately (using the function SetQValue). */
         void computeMatrixExponential(MathCache& cache, int qValue, double v, DoubleMatrix* probs) {
+        
             assert(probs->getNumRows() == probs->getNumCols());
             auto size = probs->getNumRows();
 
@@ -54,7 +56,6 @@ class TransitionProbabilitiesTask: public ThreadTask {
             auto a  = cache.pushMatrix(size);
             auto x  = cache.pushMatrix(size);
             auto cx = cache.pushMatrix(size);
-
 
             // A is the matrix Q * v and p = exp(a)
             Q->multiply(v, *a);
@@ -116,6 +117,7 @@ class TransitionProbabilitiesTask: public ThreadTask {
             }
 
     private:
+    
         int             numStates;
         Tree*           Tree;
         DoubleMatrix*   Q;
@@ -128,7 +130,7 @@ TransitionProbabilities::TransitionProbabilities(void) {
 
     modelPtr          = NULL;
     numNodes          = 0;
-    numRateCategories = 0;
+    numRateCategories = 1;
     numStates         = 0;
     substitutionModel = jc69;
     threadPool        = NULL;
