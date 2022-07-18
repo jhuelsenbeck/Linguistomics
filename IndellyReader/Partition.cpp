@@ -134,3 +134,36 @@ nlohmann::json Partition::toJson(void) {
     
     return j;
 }
+
+nlohmann::json Partition::toJson(std::map<int,double>& partFreqs) {
+
+    nlohmann::json j = nlohmann::json::object();
+    
+    nlohmann::json jSubsets = nlohmann::json::array();
+    for (int i=1; i<=subsets.size(); i++)
+        {
+        Subset* s = findSubsetIndexed(i);
+        std::set<int>& vals = s->getValues();
+        
+        std::map<int,double>::iterator it = partFreqs.find(i);
+        if (it == partFreqs.end())
+            Msg::error("Could not find subset " + std::to_string(i));
+        double subsetFreq = it->second;
+        
+        nlohmann::json jIdx = nlohmann::json::array();
+        for (int v : vals)
+            jIdx.push_back(v);
+
+        nlohmann::json jPart = nlohmann::json::object();
+        jPart["index"] = s->getIndex();
+        jPart["set"] = jIdx;
+        jPart["name"] = s->getLabel();
+        jPart["freq"] = subsetFreq;
+        
+        jSubsets.push_back(jPart);
+        }
+    j["partition"] = jSubsets;
+    
+    return j;
+
+}

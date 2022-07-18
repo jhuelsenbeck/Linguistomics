@@ -1,6 +1,7 @@
 #ifndef Partition_hpp
 #define Partition_hpp
 
+#include <map>
 #include <set>
 #include "json.hpp"
 class Subset;
@@ -20,6 +21,7 @@ class Partition {
         void                print(void);
         int                 maxValue(void);
         nlohmann::json      toJson(void);
+        nlohmann::json      toJson(std::map<int,double>& partFreqs);
     
     private:
         std::set<Subset*>   subsets;

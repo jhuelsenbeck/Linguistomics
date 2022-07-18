@@ -38,6 +38,7 @@ class McmcSummary {
         bool                                    hasSemicolon(std::string str);
         std::map<int,std::string>               interpretTranslateString(std::vector<std::string> translateTokens);
         std::string                             interpretTreeString(std::string str);
+        int                                     parseNumberFromFreqHeader(std::string str);
         void                                    printPartitionFreqs(void);
         RandomVariable*                         rv;
         std::vector<ParameterStatistics*>       stats;

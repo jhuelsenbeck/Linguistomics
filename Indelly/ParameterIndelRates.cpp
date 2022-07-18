@@ -137,8 +137,8 @@ std::string ParameterIndelRates::getString(void) {
 double ParameterIndelRates::lnPriorProbability(void) {
 
     double lambda = getInsertionRate();
-    double mu     = getDeletionRate();
-    double lnP    = log(insertionLambda) - insertionLambda*lambda + log(deletionLambda) - deletionLambda*mu - log(1.0 - deletionLambda / (insertionLambda + deletionLambda));
+    double mu = getDeletionRate();
+    double lnP = log(insertionLambda) - insertionLambda*lambda + log(deletionLambda) - deletionLambda*mu - log(1.0 - deletionLambda / (insertionLambda + deletionLambda));
     return lnP;
 }
 
