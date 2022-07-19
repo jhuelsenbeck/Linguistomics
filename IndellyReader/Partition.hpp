@@ -21,7 +21,7 @@ class Partition {
         void                print(void);
         int                 maxValue(void);
         nlohmann::json      toJson(void);
-        nlohmann::json      toJson(std::map<int,double>& partFreqs);
+        nlohmann::json      toJson(std::map<int,double>& partFreqs, std::ostream& findex);
     
     private:
         std::set<Subset*>   subsets;

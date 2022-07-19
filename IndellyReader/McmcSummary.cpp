@@ -453,7 +453,7 @@ void McmcSummary::output(UserSettings& settings) {
                 sum += it->second;
                 }
             std::cout << "sum = " << sum << std::endl;
-        j["part_freqs"] = statePartitions->toJson(subsetFreqs);
+        j["part_freqs"] = statePartitions->toJson(subsetFreqs, findex);
         }
         
     // output json representation to a file

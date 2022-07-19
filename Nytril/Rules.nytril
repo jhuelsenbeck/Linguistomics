@@ -155,14 +155,15 @@ abstract class RuleClass {
   ShowLegend(textheight, width) = VBox {
     Table {
       TextHeight: textheight;
-      Columns: [textheight, width - textheight * 1.5];
+      Columns: [textheight*1.7, textheight, width - textheight * 2.7];
 
       foreach (var partition in Partitions) {
         Row {
           VAlign: VAligns.Center;
+          Span {each1; ")"};
           Span {
             TextColor: partition.Color;
-            TextHeight: textheight * 1.25;
+            TextHeight: 125%;
             Tex.blackcirc;
           };
           partition.Filter;
@@ -373,8 +374,7 @@ class PartitionActionClass: ActionClass {
 //======================================================================
 
 class TransitionClass {
-  var         Frequencies,
-              MaxRate,
+  var         MaxRate,
               MaxFrequency;
   MatrixClass Rates;
   RuleClass   Rule;
@@ -395,9 +395,7 @@ class TransitionClass {
         Rates.SetValue(i, each0, c);
       }
     }
-    MaxRate = max;
-
-    Frequencies  = [1.0] * length;
+    MaxRate      = max;
     MaxFrequency = 1.0;
   }
 }
@@ -479,7 +477,7 @@ class CalcRatesClass {
     var middle = new PointClass(size.Width * 0.5, size.Height * 0.5);
 
     MaxExtent    = Min(middle.X, middle.Y);
-    MaxRadius    = MaxExtent * 0.13;
+    MaxRadius    = MaxExtent * 0.2;
     MaxLine      = MaxRadius * 0.3;
     LoopRadius   = MaxRadius * 0.25;
     LoopDistance = LoopRadius * 0.5;
@@ -492,7 +490,7 @@ class CalcRatesClass {
     var mult = Math.PI2 / Rule.Partitions.Length;
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;
-      partition.Radius = Sqrt(Transition.Frequencies[each0]) * fmax;
+      partition.Radius = Sqrt(EquilibriumFrequencies[each0]) * fmax;
     }
 
     var maxradius = 0.0;
@@ -513,6 +511,7 @@ class CalcRatesClass {
 
     foreach (var p1 in Rule.Partitions) {
       var i = each0;
+
       foreach (var p2 in Rule.Partitions) {
         var rate = Transition.Rates.GetValue(each0, i);
         if (valid rate) {
@@ -551,35 +550,31 @@ class CalcRatesClass {
         TipAction: p1;
       };
 
-      var c = GetLayoutSize(TestText(p1), new(fsize)).Width;
-      CircleText(p1, pos, fsize, Math.Min(12 pts, p1.Radius * 20 / c));
+      var textheight = Math.Min(14 pts, fsize * 0.5);
+
+      HBox {
+        Position: pos;
+        Height: fsize;
+        Frame {
+          VAlignment: VAligns.Center;
+          Width: fsize;
+          TextHeight: textheight;
+          ParAlignment: ParAlignments.Center;
+          p1.Index+1;
+        };
+      };
+
     }
   };
 
-  TestText(PartitionClass p) = Paragraph {
-    TextHeight: 10 pts;
-    p.Filter.CircleName;
-  };
-
-  CircleText(PartitionClass p, PointClass pos, fsize, textheight) = HBox {
-    Position: pos;
-    Height: fsize;
-    Frame {
-      VAlignment: VAligns.Center;
-      Width: fsize;
-      TextHeight: textheight;
-      ParAlignment: ParAlignments.Center;
-      p.Filter.CircleName;
-    };
-  };
 
   PartitionDiagram = HBox {
     VAlign: VAligns.Center;
 
-    var legend = 1.25 inches;
+    var legend = 1.5 inches;
     var size   = Extent.Size;
 
-    Rule.ShowLegend(12 pts, legend);
+    Rule.ShowLegend(10 pts, legend);
     MainDiagram(Min(size.Width - legend, size.Height));
   };
 

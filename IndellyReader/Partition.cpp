@@ -135,8 +135,8 @@ nlohmann::json Partition::toJson(void) {
     return j;
 }
 
-nlohmann::json Partition::toJson(std::map<int,double>& partFreqs) {
-
+nlohmann::json Partition::toJson(std::map<int,double>& partFreqs, std::ostream& findex) {
+    findex << "\nEquilibriumFrequencies = [\n  ";
     nlohmann::json j = nlohmann::json::object();
     
     nlohmann::json jSubsets = nlohmann::json::array();
@@ -161,9 +161,16 @@ nlohmann::json Partition::toJson(std::map<int,double>& partFreqs) {
         jPart["freq"] = subsetFreq;
         
         jSubsets.push_back(jPart);
+    
+        if (i > 1)
+            findex << ", ";
+        findex << subsetFreq;
+
         }
     j["partition"] = jSubsets;
     
+    findex << "\n];\n\n";
+
     return j;
 
 }
