@@ -4,8 +4,6 @@ using Format, Units;
 
 abstract class ShowDesignClass {
   var         SideGap,
-              HeaderGap,
-              FooterGap,
               BulletIndent,
               Bullet,
               BulletSize,
@@ -16,12 +14,10 @@ abstract class ShowDesignClass {
               ItemSpacer;
 
   Constructor {
-    HeaderGap     = 6 pts;
-    FooterGap     = 20 pts;
     SideGap       = 0.5 inches;
     ItemSpacer    = 10 pts;
-    BulletIndent  = 36 pts;
-    ItemIndent    = 0;//1 inch;
+    BulletIndent  = 24 pts;
+    ItemIndent    = 0.5 inch;
     TotalIndent   = ItemIndent + BulletIndent;
     Bullet        = Tex.blacksquare;
     BulletDone    = Icons.check;
@@ -56,19 +52,31 @@ abstract class ShowDesignClass {
     }
   };
 
+  virtual ShowTopicTitle(title) = Paragraph {
+    SpaceAfter: 4 pts;
+    TextHeight: TopicHeight;
+    title;
+  };
+
+  virtual  TopicHeight = 32 pts;
+
   abstract GetFigureCaption(ExperimentClass experiment, title, caption);
   abstract FooterHeight;
   abstract HeaderHeight;
+  abstract FooterGap;
+  abstract HeaderGap;
 }
 
 //======================================================================
 
-class ProgressDesignClass: ShowDesignClass {
+class TexDesignClass: ShowDesignClass {
   Constructor {
     super.Constructor;
   }
 
-  override HeaderHeight = 36 pts;
+  override HeaderGap    = 6 pts;
+  override FooterGap    = 16 pts;
+  override HeaderHeight = 38 pts;
   override FooterHeight = 24 pts;
 
   override GetFigureCaption(ExperimentClass experiment, title, caption) {
@@ -85,7 +93,6 @@ class ProgressDesignClass: ShowDesignClass {
         if (valid caption) {
           Block {
             TextHeight: 20 pts;
-            LeftIndent: 12 pts;
             caption.Caption(experiment);
           };
         }
@@ -172,8 +179,12 @@ class FancyDesignClass: ShowDesignClass {
     super.Constructor;
   }
 
+  override HeaderGap    = 6 pts;
+  override FooterGap    = 20 pts;
   override HeaderHeight = 56 pts;
   override FooterHeight = 32 pts;
+
+  override ShowTopicTitle(title) = null;
 
   override GetFigureCaption(ExperimentClass experiment, title, caption) {
     if (valid caption) {
@@ -445,17 +456,32 @@ class BibSlideClass: SlideClass {
 
 //======================================================================
 
-ShowItem(ShowClass show, variable) {
-   var text = variable.?Text;
-   if (valid text) {
-     return Block {
-       Style.ItemTextFormat;
-       text;
+ShowItem(ShowClass show, variable) = Block {
+  if (valid variable.?Title)
+    show.Design.ShowTopicTitle(variable.?Title);
+
+   var indent = show.Design.ItemIndent;
+   Paragraph {
+     LeftIndent: indent;
+
+     var width = Extent.Size.Width - indent;
+     var text  = variable.?Text;
+
+     Frame {
+       Width: width;
+       var extent = SetExtentSize(new(width, Extent.Size.Height));
+
+       if (valid text) {
+         Style.ItemTextFormat;
+         text;
+       }
+       else
+         variable.?Body(show.Experiment);
+
+       SetExtent(extent);
      };
    }
-   else
-     return variable.?Body(show.Experiment);
-}
+};
 
 //======================================================================
 
@@ -545,9 +571,7 @@ class FigureSlideClass: SlideClass {
         Height: height;
 
         var extent = SetExtentSize(new(Extent.Size.Width, Extent.Size.Height - height));
-        Figure.Body(show.Experiment) {
-          Variable.?Format;
-        };
+        Figure.Body(show.Experiment);
         SetExtent(extent);
       };
     };
@@ -560,20 +584,20 @@ class FigureSlideClass: SlideClass {
 class TopicSlidesClass: SlideClass {
   ListClass<SlideGroupClass> Groups;
   var                        Main,
+                             Start,
                              Topic,
                              Pause;
 
   Constructor(ShowClass show, TitleSlideClass main, variable, topic, pause) {
     super.Constructor(null);
-    Topic  = topic;
-    Main   = main;
-    Pause  = pause;
-    Groups = new(32);
+    Topic       = topic;
+    Main        = main;
+    Pause       = pause;
+    Start       = topic.Title;
+    Groups      = new(32);
 
     var size  = Extent.Size;
     var width = size.Width - show.Design.TotalIndent;
-
-
     var group  = new SlideGroupClass(show, topic, width);
     Groups.Add(group);
 
@@ -598,6 +622,9 @@ class TopicSlidesClass: SlideClass {
 
     var size         = Extent.Size;
     var contentwidth = size.Width - design.TotalIndent;
+
+    if (valid Start)
+      show.Design.ShowTopicTitle(Start);
 
     Table {
       LeftIndent: design.ItemIndent;
@@ -695,8 +722,7 @@ class ShowClass: BaseDocumentClass {
   }
 
   override GetContent = Block {
-    var size   = new SizeClass(Extent.Size.Width, Extent.Size.Height - Design.FooterGap);
-    var extent = SetExtentSize(size);
+    var extent = SetExtentSize(new(Extent.Size.Width, Extent.Size.Height - Design.FooterGap));
     AddSlideGroup(SlideData);
 
     PageTotal = 1;

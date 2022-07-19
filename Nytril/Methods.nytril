@@ -93,8 +93,8 @@ namespace Figures.TransitionMatrixBall {
   Body(ExperimentClass experiment) = Block {
     var partitions = experiment.Rule.Partitions;
     var size       = Extent.Size;
-    var bx         = 15 pts;
-    var tx         = 1 inch + bx;
+    var bx         = 20 pts;
+    var tx         = 60 pts + bx;
     var dy         = size.Height / (partitions.Length + 1);
     var d          = Math.Min(dy, (size.Width  - tx) / partitions.Length);
     var bsize      = new SizeClass(d, d);
@@ -113,10 +113,6 @@ namespace Figures.TransitionMatrixBall {
 
     HBox {
       VBox {
-        Canvas {
-          Size: new SizeClass(tx, bx);
-        };
-
         foreach (var r in TransitionStats) {
           var p = partitions[each0];
           HBox {
@@ -144,8 +140,16 @@ namespace Figures.TransitionMatrixBall {
           foreach (var r in TransitionStats) {
             var p = partitions[each0];
             Canvas {
+              VAlign: VAligns.Center;
               Size: new SizeClass(d, bx);
               Background: p.Color;
+              HAlign: HAligns.Center;
+              Frame {
+                ParAlignment: ParAlignments.Center;
+                Width: d;
+                TextHeight: 7 pts;
+                p.Filter.Name;
+              };
             };
           }
         };
@@ -160,8 +164,6 @@ namespace Figures.TransitionMatrixBall {
 
                   Canvas {
                     Tip: c;
-//                    HAlign: HAligns.Center;
-//                    VAlign: VAligns.Center;
                     Size: bsize;
                     var center = new PointClass(d * 0.5);
                     var x      = fc * c.Upper;
@@ -177,20 +179,6 @@ namespace Figures.TransitionMatrixBall {
                       x = fc * c.Mean;
                       Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), new(x)));
                     };
-
-
-//                      Ellipse(new(center, new(fc * c.Lower)));
-/*
-
-                      Fill: new RadialGradientClass(new(50%, 50%), new(50%, 50%), new(100%, 100%), [
-//                        new(0%, Colors.White),
-                        new((fp * c.Lower)%, Colors.White),
-                        new((fp * c.Mean)%, Colors.Black),
-                        new((fp * c.Upper)%, Colors.White),
-                        new(100%, Colors.White),
-                      ]);
-                      Ellipse(new(new(0), bsize));
-*/
                   };
                 }
                 else
@@ -352,8 +340,7 @@ namespace Figures.ExampleTree {
 //======================================================================
 
 namespace Figures.Alignment {
-  Title = Lang.Alignment;
-
+  Title       = Lang.Alignment;
   ArrowWidth  = 40;
   ArrowMargin = 10 pts;
   Arrowhead   = 8 pts;
@@ -799,6 +786,8 @@ namespace PaperSections.DataSummary {
 //======================================================================
 
 namespace TableFigures.ManualAlignment {
+  Title = "An example of an aligned cognate set";
+
   WordDisplay(ExperimentClass experiment) = SQuote {
     TextCase: TextCases.AllLower;
     Trial.FigureConcept.GlobalVariableName;

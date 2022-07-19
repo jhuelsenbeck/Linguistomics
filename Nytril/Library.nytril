@@ -198,7 +198,7 @@ class AlignmentChartClass {
     var x      = bsize.Width * 0.5;
 
 
-    TextHeight: bsize.Height - 2.5 pt;
+    TextHeight: bsize.Height - 3.2 pt;
 
     foreach (var row in rows) {
       HBox {
@@ -264,40 +264,32 @@ class LanguageClass: FactClass {
       TextHeight: 14 pts;
       Name;
     };
-    if (valid Description) {
-      Description {
-        RightIndent: 3.5 inches;
-      };
-    }
-    ShowMap(Extent.Size);
+    Description;
+
+    if (valid MapImage)
+      ShowMap(Extent.Size);
   };
 
-  ImageClass LoadImage(name) = new ImageClass(Info.ImageFolder FileName(name));
+  static ImageClass LoadImage(name) = new ImageClass(Info.ImageFolder FileName(name));
 
-  ShowMap(SizeClass size) {
-    if (valid MapImage) {
-      return HBox {
-        Size: size;
-        HAlign: HAligns.Center;
+  ShowMap(SizeClass size) = HBox {
+    HAlign: HAligns.Center;
 
-        VBox {
-          var h = 6 pts;
-          MapImage.FitSize(new(size.Width, size.Height - h*2));
+    VBox {
+      var h = 6 pts;
+      MapImage.FitSize(new(size.Width, size.Height - h*2));
 
-          if (valid MapAttribution) {
-            Frame {
-              Width: size.Width;
-              TextHeight: h;
-              TextColor: 80%;
-              Lang.Credit;
-              MapAttribution;
-            }
-          }
+      if (valid MapAttribution) {
+        Frame {
+          Width: size.Width;
+          TextHeight: h;
+          TextColor: 80%;
+          Lang.Credit;
+          MapAttribution;
         }
-      };
+      }
     }
-    return null;
-  }
+  };
 }
 
 //======================================================================
