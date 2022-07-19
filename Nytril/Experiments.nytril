@@ -266,6 +266,29 @@ abstract class ExperimentClass: FactClass {
     }
   };
 
+  ShowCognateCoverage = Block {
+    Style.Header1 {
+      "The completeness of the raw data";
+    };
+
+    Chart {
+      Type: ChartTypes.Column;
+      TextHeight: 10 pts;
+      Size: new SizeClass(Extent.Size.Width, 3 inches);
+      ValueLabel: "%";
+
+      XAxis: ChartAxis {
+        (each Data.Taxa).Language;
+      };
+      ValueAxis: ChartAxis;
+
+      ChartSeries {
+        foreach (var t in Data.Taxa)
+          Data.Coverage(t) * 100.0;
+      };
+    };
+  };
+
   ShowTrees(ModelFolderClass folder) = Block {
     var any = false;
     foreach (var r in folder.Posterior.Run) {

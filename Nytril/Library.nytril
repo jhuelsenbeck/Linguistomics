@@ -635,6 +635,20 @@ class DataSetClass {
     TransitionCount = GetTransitionsCount;
   }
 
+  Coverage(TaxonClass taxon) {
+    var index = taxon.Index;
+    var count = 0.0;
+    var used  = 0.0;
+    foreach (var c in UsedCognates) {
+      var word = c.Words[index];
+      if (valid word && valid word.Text)
+        ++used;
+
+      ++count;
+    }
+    return used / count;
+  }
+
   CognateClass[] GetSortedCognates {
     if (invalid SortedCognates)
       SortedCognates = UsedCognates.Sort(false);
