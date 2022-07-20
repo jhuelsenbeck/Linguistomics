@@ -734,18 +734,21 @@ namespace PaperSections.DataSummary {
     var data = experiment.Data;
 
     FirstPar {
-      "We selected ";
-      data.UsedConcepts.Length;
-      " concepts from the "; data.Description; eos;
       "The initial set of data was downloaded from "; Wiktionary.Title; Citation{Wiktionary}; ", which was then manually checked for accuracy and augmented. ";
       "Words were double-checked against data from "; SoundComparisons.Title; Citation{SoundComparisons}; eos;
       "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; SQuote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; SQuoteEnd{"serious"};
       "They are assigned to the same cognate set because segmentally French "; textit{"grave"}; " descends from Latin "; textit{"gravis"}; eos;
-      "There are in total "; data.UsedCognates.Length; " cognate sets, "; data.WordCount; " word forms, using "; data.UniqueCount; " unique segments. ";
       "Each word is represented phonemically with the IPA alphabet. ";
       "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by and for ancient languages such as Latin non-existent. ";
+    };
+
+    BodyPar {
+      "The raw data set contains many cognates and word forms, but data for this experiment was limited to only those cognates that have word forms from ";
+      data.WordCutoff == data.Taxa.Length ? "all " : "at least ";
+      data.WordCutoff; " languages. ";
+      "There are in total "; data.UsedConcepts.Length; " concepts, "; data.UsedCognates.Length; " cognate sets, "; data.WordCount; " word forms, using "; data.UniqueCount; " unique segments. ";
     };
 
     BodyPar {

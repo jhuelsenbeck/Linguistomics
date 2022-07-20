@@ -1,4 +1,4 @@
-using Format, IO, Units, Languages;
+﻿using Format, IO, Units, Languages;
 
 //======================================================================
 
@@ -139,7 +139,7 @@ class ModelFolderClass {
 //======================================================================
 
 class RunInitClass: RunClass {
-  var Experiment;
+  ExperimentClass Experiment;
 
   Constructor(ExperimentClass experiment) {
     super.Constructor(experiment.FactId, "Create \"{0}\" data files"(experiment.Name));
@@ -212,10 +212,126 @@ abstract class ExperimentClass: FactClass {
   abstract NodeClass PriorTree;
 
   void InitFolders {
-    if (not FolderExists(RootFolder)) {
+  //  if (not FolderExists(RootFolder)) {
       CreateFolder(Folders.Repository RootFolder);
       (each Models).InitFolders(this);
+
+      IO.Write(WordArchive, RootFolder FileName("Words") Extensions.Nytril);
+//    }
+  }
+
+  WordArchive = TextBlock {
+    "using Format, WordGroups;";
+    "namespace Concepts;";
+
+    var first = Empty;
+    var any   = false;
+
+    foreach (var cognate in Data.UsedCognates) {
+      var concept = cognate.Concept;
+      var cname   = concept.Name;
+      if (first != cname) {
+        if (any)
+          "}";
+
+        Empty;
+        Span {
+          "namespace ";
+          concept.Name;
+          " {";
+        };
+        TextBlock {
+          IndentSpace: 2;
+          Span {"Confidence = "; concept.Confidence; ";"};
+          Span {"WordType   = WordTypes."; concept.WordType.GlobalSourceName; ";"};
+          Span {"WordGroup  = ";
+            Span {
+              Separator: Space;
+              (each concept.WordGroup).GlobalSourceName;
+            };
+            ";";
+          };
+          Empty;
+        };
+      }
+
+      TextBlock {
+        IndentSpace: 2;
+
+        Empty;
+        Span {
+          "namespace ";
+          cognate.Name;
+          " {";
+        };
+        TextBlock {
+          IndentSpace: 2;
+          foreach (var word in cognate.Words) {
+            Span {
+              word.Language.Name;
+
+              Space*(Data.MaxLanguageName - word.Language.Name.Length);
+              " = ";
+              Quote;
+              word.Text;
+              Quote;
+              ";";
+            }
+          }
+        }
+        "}";
+      };
+      any   = true;
+      first = cname;
     }
+    if (any)
+      "}";
+  }
+
+/*
+namespace Woman {
+
+  namespace Primary {
+    Latin       = "feː-mi-nam";  // feminam ALIGNMENT
+    French      = "fa-m--";      // femme
+    Spanish     = "-e-m-bɾa";    // hembra
+    Italian     = "femmi-na";    // femmina
+    PortugueseB = "fẽ-mi--a";    // fêmea
+    Portuguese  = "fe-mi--ɐ";    // fêmea
+    Catalan     = "fe-m-bɾa";    // fembra
+    Walloon     = "fœ-m---";     // feume
+    Friulian    = "fɛ-mi-ne";    // fèmine
+    Romanian    = Empty;    //
+  }
+
+  namespace Mulier {
+    Latin       = "mulierem";     // mulier CASE? IF NOM, HOW TO GET ROMANIAN?
+    French      = Empty;          //
+    Spanish     = "mux-eɾ--";     // mujer
+    Italian     = "moʎʎe---";     // moglie
+    PortugueseB = "muʎ-ɛʁ--";     // mulher
+    Portuguese  = "muʎ-ɛɾ--";     // mulher
+    Catalan     = "muʎ-e---";     // muller
+    Walloon     = Empty;          //
+    Friulian    = "mu--iːr--";    // muîr ALIGNMENT
+    Romanian    = "mu-jere-";     // muiere
+  }
+
+  namespace Domina {
+    Latin       = "dominam";       // domina
+    French      = "dam----";       // dame
+    Spanish     = "doɲ--a-";       // doña
+    Italian     = "dɔn-na-";       // donna
+    PortugueseB = "dõ--na-";       // dona
+    Portuguese  = "do--nɐ-";       // dona
+    Catalan     = "dɔ--nə-";       // dona
+    Walloon     = "dam----";       // dame
+    Friulian    = "dɔ--ne-";       // dòne
+    Romanian    = "do̯am-nə-";      // doamnă
+  }
+}
+*/
+
   }
 
   MainRun = Custom.Posterior.Run[0];
@@ -228,7 +344,6 @@ abstract class ExperimentClass: FactClass {
     new ConfigurationViewClass(this),
     new AlignmentViewClass(this),
     new DavidLinguisticPresentationClass(this),
-//    new DavidBioPresentationClass(this),
     new JohnPresentationClass(this),
   ];
 

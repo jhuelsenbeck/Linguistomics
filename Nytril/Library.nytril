@@ -122,7 +122,7 @@ class AlignPairClass {
   ShowDetails(max) = Block {
     TextHeight: 10 pts;
 
-    var path    = Folders.Source Folders.Up Folder("Experiments/Europe200/Custom/Posterior/Run1/Execute") FileName("Alignment" + Align.Index) Extensions.Nytril;
+    var path    = Folders.Source Folders.Up Folder("Experiments") Folder("Europe200") Folder("Custom/Posterior/Run1/Execute") FileName("Alignment" + Align.Index) Extensions.Nytril;
     var adata   = Read(path).GetValue("Align");
     var langbox = Languages(Data, BoxSize.Height);
     var indent  = GetLayoutSize(langbox, Extent.Size).Width;
@@ -540,17 +540,17 @@ class DataSetClass {
                               WordCount,
                               SegmentCount,
                               UniqueCount,
-                              TransitionMax;
+                              TransitionMax,
+                              WordCutoff;
 
-  Constructor(includewords, LanguageClass[] languages, description) {
+  Constructor(includewords, LanguageClass[] languages, description, cutoff=-1) {
     Languages       = languages;
     Description     = description;
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
-
-
-    TaxonSet = new(languages.Length);
+    WordCutoff      = cutoff < 0 ? languages.Length : cutoff;
+    TaxonSet        = new(languages.Length);
     ListClass<TaxonClass> tlist = new(languages.Length);
 
     foreach (var l in languages) {
@@ -581,9 +581,6 @@ class DataSetClass {
       System.Assert(good, "Improper concept", conceptvar);
 
       if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(includewords)) {
-        var concept = new ConceptClass(conceptvar);
-        conceptlist.Add(concept);
-
         foreach (var cognate in conceptvar) {
           var vname = cognate.GlobalVariableName();
           var inc   = true;
@@ -602,7 +599,11 @@ class DataSetClass {
               if (valid word and TaxonSet.Contains(word.GlobalVariableName))
                 ++count;
             }
-            if (count > 1) {
+            if (count >= WordCutoff) {
+              var concept = new ConceptClass(conceptvar);
+              conceptlist.Add(concept);
+
+
               WordCount += count;
               var c = new CognateClass(this, concept, cognate);
               clist.Add(c);
@@ -1009,7 +1010,12 @@ abstract class FrequencyChartClass {
   }
 
   CompareFrequency(i0, i1, options) {
-    return FirstRate[i0].Frequency.Compare(FirstRate[i1].Frequency);
+    var f0 = FirstRate[i0];
+    var f1 = FirstRate[i1];
+    var d  = f0.Frequency.Compare(f1.Frequency);
+    if (d == 0)
+      return f0.Index - f1.Index;
+    return d;
   }
 
   static CompareDistance(RateDataClass r0, RateDataClass r1, options) {
@@ -1105,8 +1111,11 @@ class SegmentFrequencyClass: FrequencyChartClass {
     var f0 = FirstRate[i0];
     var f1 = FirstRate[i1];
     var d  = PartitionMax[Data.UniqueSegments[f0.Index].PartitionIndex] - PartitionMax[Data.UniqueSegments[f1.Index].PartitionIndex];
-    if (d == 0)
-      return f0.Frequency.Compare(f1.Frequency);
+    if (d == 0) {
+      d = f0.Frequency.Compare(f1.Frequency);
+      if (d == 0)
+        return f0.Index - f1.Index;
+    }
     return d;
   }
 
