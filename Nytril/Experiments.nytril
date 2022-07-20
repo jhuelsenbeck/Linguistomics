@@ -268,9 +268,8 @@ abstract class ExperimentClass: FactClass {
 
   ShowCognateCoverage = Block {
     Style.Header1 {
-      "The completeness of the raw data";
+      "By Language";
     };
-
     Chart {
       Type: ChartTypes.Column;
       TextHeight: 10 pts;
@@ -285,6 +284,33 @@ abstract class ExperimentClass: FactClass {
       ChartSeries {
         foreach (var t in Data.Taxa)
           Data.Coverage(t) * 100.0;
+      };
+    };
+    Paragraph;
+    Style.Header1 {
+      "By Number of Languages";
+    };
+
+    var coverage = Data.CoverageByLanguages;
+    Chart {
+      Type: ChartTypes.Column;
+      TextHeight: 10 pts;
+      Size: new SizeClass(Extent.Size.Width, 3 inches);
+
+      ValueLabel: Lang.Cognates {
+        Transform: Rotate(90 degrees);
+        TransformFit: true;
+      };
+      ValueAxis: ChartAxis;
+
+      XAxis: ChartAxis {
+        0..<coverage.Length step 1;
+      };
+      XLabel: "Languages Included";
+
+      ChartSeries {
+        foreach (var c in coverage)
+          c;
       };
     };
   };
