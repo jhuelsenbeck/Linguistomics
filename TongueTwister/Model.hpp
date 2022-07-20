@@ -54,7 +54,7 @@ class Model {
         std::vector<double>&                    getEquilibriumFrequencies(void);
         std::vector<double>&                    getExchangabilityRates(void);
         std::vector<double>&                    getIndelGammaRates(void);
-        std::vector<double>&                    getRatesammaRates(void);
+        std::vector<double>&                    getRatesGammaRates(void);
         int                                     getIndex(void) { return index; }
         double                                  getInsertionRate(void);
         int                                     getNumAlignments(void);

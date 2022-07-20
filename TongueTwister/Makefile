@@ -4,7 +4,7 @@ CFLAGS   =  -Ofast -std=c++17
 
 CC       =   clang++
 
-OBJECTS  =  main.o Alignment.o AlignmentProposal.o AlnMatrix.o Container.o IndelMatrix.o IntVector.o LikelihoodCalculator.o MatrixMath.o Mcmc.o Model.o Msg.o Node.o NodeFactory.o NodeSet.o Parameter.o ParameterAlignment.o ParameterEquilibirumFrequencies.o ParameterExchangabilityRates.o ParameterIndelGammaShape.o ParameterIndelRates.o ParameterTree.o Partition.o Probability.o RandomVariable.o RateMatrix.o RateMatrixHelper.o RbBitSet.o SteppingStones.o Stone.o Subset.o TaxonPair.o Threads.o TransitionProbabilities.o Tree.o UpdateInfo.o UserSettings.o
+OBJECTS  =  main.o Alignment.o AlignmentProposal.o AlnMatrix.o Container.o IndelMatrix.o IntVector.o LikelihoodCalculator.o MatrixMath.o Mcmc.o Model.o Msg.o Node.o NodeFactory.o NodeSet.o Parameter.o ParameterAlignment.o ParameterEquilibirumFrequencies.o ParameterExchangabilityRates.o ParameterIndelGammaShape.o ParameterIndelRates.o ParameterRatesGammaShape.o ParameterTree.o Partition.o Probability.o RandomVariable.o RateMatrix.o RateMatrixHelper.o RbBitSet.o SteppingStones.o Stone.o Subset.o TaxonPair.o Threads.o TransitionProbabilities.o Tree.o UpdateInfo.o UserSettings.o
 
 PROGS    = tonguetwister
 
@@ -69,6 +69,9 @@ ParameterEquilibirumFrequencies.o:	ParameterEquilibirumFrequencies.cpp
 
 ParameterExchangabilityRates.o:	ParameterExchangabilityRates.cpp
 		$(CC) $(CFLAGS) -c ParameterExchangabilityRates.cpp
+
+ParameterRatesGammaShape.o:	ParameterRatesGammaShape.cpp
+		$(CC) $(CFLAGS) -c ParameterRatesGammaShape.cpp
 
 ParameterIndelGammaShape.o:	ParameterIndelGammaShape.cpp
 		$(CC) $(CFLAGS) -c ParameterIndelGammaShape.cpp

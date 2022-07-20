@@ -209,7 +209,7 @@ std::vector<double>& Model::getIndelGammaRates(void) {
     return p->getRates();
 }
 
-std::vector<double>& Model::getRatesammaRates(void) {
+std::vector<double>& Model::getRatesGammaRates(void) {
 
     ParameterRatesGammaShape* p = NULL;
     for (int i=0; i<parameters.size(); i++)
@@ -546,7 +546,6 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         pRateGamma->setProposalProbability(1.0);
         parameters.push_back(pRateGamma);
         }
-
 
     // set up the alignment parameter(s)
     double alnProposalProb = 10.0 / (double)wordAlignments.size();
