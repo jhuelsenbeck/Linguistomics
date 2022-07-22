@@ -380,12 +380,13 @@ class TransitionClass {
 
   Constructor(DataSetClass data, RuleClass rule) {
     Rule = rule;
+    var stats = data.TransitionStats;
 
-    var length = TransitionStats.Length;
+    var length = stats.Length;
     Rates = new(length, length, null);
 
     var max = 0.0;
-    foreach (var r in TransitionStats) {
+    foreach (var r in stats) {
       var i = each0;
       foreach (var c in r) {
         var f = c?.Upper ?? 0.0;
@@ -487,9 +488,11 @@ class CalcRatesClass {
     RateScale = MaxLine / Transition.MaxRate;
 
     var mult = Math.PI2 / Rule.Partitions.Length;
+    var eq   = Data.EquilibriumFrequencies;
+
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;
-      partition.Radius = Sqrt(EquilibriumFrequencies[each0]) * fmax;
+      partition.Radius = Sqrt(eq[each0]) * fmax;
     }
 
     var maxradius = 0.0;

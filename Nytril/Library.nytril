@@ -2,16 +2,29 @@ using Format, Units, Math, IO, LinkTypes;
 
 //======================================================================
 
-class AlignIndexClass {
-  var Index,
-      Count;
+class AlignDataClass {
+  var Prob,
+      Alignments;
 
-  Constructor(index, count) {
-    Index = index;
-    Count = count;
+  Constructor(prob, alignments) {
+    Prob       = prob;
+    Alignments = alignments;
   }
+}
 
-  GetCognateName = GlobalVariablePath[9..-7];
+//======================================================================
+
+class AlignIndexClass {
+  var              ConceptName,
+                   CognateName;
+  CognateClass     Cognate;
+  AlignDataClass[] Data;
+
+  Constructor(concept, cognate, AlignDataClass[] data) {
+    ConceptName = concept;
+    CognateName = cognate;
+    Data        = data;
+  }
 }
 
 //======================================================================
@@ -51,13 +64,16 @@ class AlignPairClass {
   DataSetClass    Data;
   AlignIndexClass Align;
   SizeClass       BoxSize;
-  var             Cognate;
+  var             Name;
 
-  Constructor(DataSetClass data, cognate, AlignIndexClass align) {
+  Constructor(DataSetClass data, AlignIndexClass align) {
     Data    = data;
-    Cognate = cognate;
     Align   = align;
     BoxSize = new SizeClass(14 pts, 14 pts);
+
+    Name = align.ConceptName;
+    if (align.CognateName != "Primary")
+      Name += "-" + align.CognateName;
   }
 
   Languages(data, height) = VBox {
@@ -117,13 +133,12 @@ class AlignPairClass {
     };
   };
 
-  override GetLayoutTip = ShowDetails(500);
+  override GetLayoutTip = ShowDetails(9);
 
   ShowDetails(max) = Block {
     TextHeight: 10 pts;
 
-    var path    = Folders.Source Folders.Up Folder("Experiments") Folder("Europe200") Folder("Custom/Posterior/Run1/Execute") FileName("Alignment" + Align.Index) Extensions.Nytril;
-    var adata   = Read(path).GetValue("Align");
+    var adata   = Align.Data;
     var langbox = Languages(Data, BoxSize.Height);
     var indent  = GetLayoutSize(langbox, Extent.Size).Width;
 
@@ -133,21 +148,21 @@ class AlignPairClass {
       SpaceAfter: 10 pts;
 
       TabStops: [3 inches];
-      Cognate;
-      if (adata.Length > 1) {
-        Tab;
-        Chart {
-          Type: ChartTypes.Column;
-          TextHeight: 6 pts;
-          Size: new SizeClass(3 inch, 0.75 inch);
-          ValueLabel: "%";
-          ChartSeries {
-            foreach (var a in adata)
-              a[0] * 100.0;
-          };
-        };
-      }
+      Name;
     };
+
+    if (adata.Length > 1) {
+      Chart {
+        Type: ChartTypes.Column;
+        TextHeight: 6 pts;
+        Size: new SizeClass(3 inch, 0.75 inch);
+        ValueLabel: "%";
+        ChartSeries {
+          foreach (var a in adata)
+            a.Prob * 100.0;
+        };
+      };
+    }
 
     Paragraph {
       LeftIndent: indent;
@@ -157,11 +172,11 @@ class AlignPairClass {
 
       var cumulative = 0.0;
       foreach (var a in adata) {
-        var prob = a[0];
+        var prob = a.Prob;
         cumulative += prob;
-        var alignments = a[1];
+        var alignments = a.Alignments;
         if (alignments.Length > 0) {
-          Show(prob, cumulative, a[1]);
+          Show(prob, cumulative, alignments);
           Space;
           if (each1 >= max)
             break;
@@ -175,14 +190,12 @@ class AlignPairClass {
 
 class AlignmentChartClass {
   ExperimentClass   Experiment;
-  AlignIndexClass[] Alignments;
   DataSetClass      Data;
   TaxonClass[]      Taxa;
 
  Constructor(ExperimentClass experiment) {
     Experiment = experiment;
     Data       = experiment.Data;
-    Alignments = Data.Alignments;
     Taxa       = Data.Taxa;
   }
 
@@ -192,30 +205,34 @@ class AlignmentChartClass {
 
     // Try to make proportional squares
     var xitems = Integer(size.Width / 130);
-    var yitems = (Alignments.Length + xitems - 1) div xitems;
+    var yitems = (Data.Alignments.Length + xitems - 1) div xitems;
     var bsize  = new SizeClass(size.Width / xitems, size.Height / yitems);
-    var rows   = Alignments / xitems;
     var x      = bsize.Width * 0.5;
+    AlignIndexClass[][] rows = Data.Alignments / xitems;
 
 
-    TextHeight: bsize.Height - 3.2 pt;
+    TextHeight: Math.Min(9 pts, bsize.Height - 3.2 pt);
 
     foreach (var row in rows) {
       HBox {
         foreach (var a in row) {
           Canvas {
+            VAlign: VAligns.Center;
             Size: bsize;
             Border: 0.25 pts {Color: 90%};
 
-            var name = a.GetCognateName;
-            Paragraph {
-              Span {
+            var ap = new AlignPairClass(Data, a);
+            Block {
+              Paragraph {
                 TextColor: Colors.LightGray;
-                a.Count;
-                Space*2;
+                a.Data.Length;
               };
-              name.Replace(".Primary", Empty);
-              TipAction: new ActionClass(Actions.TipDocument, new AlignPairClass(Data, name, a));
+              Paragraph {
+                Span {
+                  ap.Name;
+                  TipAction: new ActionClass(Actions.TipDocument, ap);
+                };
+              };
             };
           }
         }
@@ -224,8 +241,8 @@ class AlignmentChartClass {
   };
 
   ShowAll = Block {
-    foreach (var alignment in Alignments) {
-      var p = new AlignPairClass(Data, alignment.GetCognateName, alignment);
+    foreach (var a in Data.Alignments) {
+      var p = new AlignPairClass(Data, a);
       p.ShowDetails(5);
       Paragraph {
         BorderT: 1;
@@ -459,9 +476,12 @@ class CognateClass: FactClass {
 
   override IconClass GetIcon = Icons.format_list_bulleted;
 
-  GetTitle {
-    return Concept.Name + '-' + Name;
-  }
+  GetSource = Concept.Name + '-' + Name;
+
+  GetTitle = Span {
+    Concept.Name; '-'; Name;
+    TipAction: this;
+  };
 
   override GetLayoutTip = AllWords.ShowConceptTable(Data, this);
 
@@ -534,8 +554,13 @@ class DataSetClass {
   TaxonClass[]                Taxa;
   MatrixClass                 TransitionCount;
   DictionaryClass<TaxonClass> TaxonSet;
+  StatClass[][]               TransitionStats;
   VectorClass                 WordList;
-  var                         Description,
+  var                         FolderName,
+                              RootFolder,
+                              AlignmentCutoff,
+                              EquilibriumFrequencies,
+                              Description,
                               MaxLanguageName,
                               WordCount,
                               SegmentCount,
@@ -543,7 +568,9 @@ class DataSetClass {
                               TransitionMax,
                               WordCutoff;
 
-  Constructor(includewords, LanguageClass[] languages, description, cutoff=-1) {
+  Constructor(folder, includewords, LanguageClass[] languages, description, cutoff=-1) {
+    FolderName      = folder;
+    RootFolder      = Folders.Repository Info.ExperimentFolder Folder(folder);
     Languages       = languages;
     Description     = description;
     WordCount       = 0;
@@ -552,6 +579,12 @@ class DataSetClass {
     WordCutoff      = cutoff < 0 ? languages.Length : cutoff;
     TaxonSet        = new(languages.Length);
     ListClass<TaxonClass> tlist = new(languages.Length);
+
+    var data = IO.ReadScript(RootFolder Folder("Custom") Folder("Posterior") Folder("Run1") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
+    TransitionStats        = data.TransitionStats;
+    EquilibriumFrequencies = data.EquilibriumFrequencies;
+    AlignmentCutoff        = data.AlignmentCutoff;
+    Alignments             = data.Alignments;
 
     foreach (var l in languages) {
       var taxon = new TaxonClass(l);
@@ -571,7 +604,6 @@ class DataSetClass {
     }
 
     var clist       = new ListClass<CognateClass>(1024);
-    var alist       = new ListClass<AlignIndexClass>(1024);
     var conceptlist = new ListClass<ConceptClass>(256);
 
     foreach (var conceptvar in Concepts) {
@@ -607,12 +639,20 @@ class DataSetClass {
               WordCount += count;
               var c = new CognateClass(this, concept, cognate);
               clist.Add(c);
-              var a = cognate.?Align;
-
-              if (valid a)
-                alist.Add(a);
             }
           }
+        }
+      }
+    }
+
+    var alist = new ListClass<AlignIndexClass>(1024);
+
+    foreach (var a in Alignments) {
+      foreach (var c in clist) {
+        if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
+          a.Cognate = c;
+          alist.Add(a);
+          break;
         }
       }
     }
@@ -670,9 +710,9 @@ class DataSetClass {
   }
 
   static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
-    var c = a0.Count.Compare(a1.Count);
+    var c = a0.Data.Length.Compare(a1.Data.Length);
     if (c == 0)
-      return a0.Index.Compare(a1.Index);
+      return a0.ConceptName.Compare(a1.ConceptName);
     return c;
   }
 

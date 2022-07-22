@@ -351,6 +351,15 @@ void McmcSummary::printPartitionFreqs(void) {
 }
 
 void McmcSummary::output(UserSettings& settings) {
+    auto stree = conTree->getNewick(4);
+    auto tree  = new std::ofstream(settings.getPath() + "/consensus.tre", std::ios::out);
+    *tree << "#NEXUS\n\nbegin taxa;\n   dimensions = " << conTree->numTaxa;
+    *tree << ";\nend;\nbegin trees;\ntree TREE1 = ";
+    *tree << stree;
+    *tree << ";\nend;\n";
+    tree->close();
+    delete tree;
+
 
     double cutoff = 0.95;
 
@@ -365,7 +374,7 @@ void McmcSummary::output(UserSettings& settings) {
         j["state_part"] = statePartitions->toJson();
 
     // output the consensus tree
-    j["consensus"]["tree"] = conTree->getNewick(4);
+    j["consensus"]["tree"] = stree;
     j["consensus"]["n_taxa"] = conTree->numTaxa;
     
     // output information on mean and credible interval for all real-valued parameters
@@ -397,6 +406,10 @@ void McmcSummary::output(UserSettings& settings) {
         findex << "]";
     }
     findex << "\n];\n\n";
+
+
+    findex << "AlignIndexClass[] Alignments = [\n";
+
         
     // output the credible set for all alignments
     auto sampledAlignments = nlohmann::json::array();
@@ -405,16 +418,14 @@ void McmcSummary::output(UserSettings& settings) {
         auto& a = alignments[i];
         if (a->size() > 0)
             {
-            auto name  = settings.getPath() + "/alignment" + std::to_string(i) + ".nytril";
-            auto fdata = new std::ofstream(name, std::ios::out);
-            auto cogAlns = a->toJson(i, cutoff, findex, *fdata);
+            auto cogAlns = a->toJson(cutoff, findex);
             sampledAlignments.push_back(cogAlns);
-            fdata->close();
-            delete fdata;
             }
         }
     j["cog_alns"] = sampledAlignments;
-    
+
+    findex << "];\n\n";
+
     // output the pooled partition subset frequencies (if a subset is available)
     if (statePartitions != NULL)
         {

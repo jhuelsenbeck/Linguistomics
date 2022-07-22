@@ -1,4 +1,4 @@
-﻿using Format, IO, Units, Languages;
+using Format, IO, Units, Languages;
 
 //======================================================================
 
@@ -26,7 +26,7 @@ class RunExperimentClass {
     RootFolder  = mode.RootFolder Folder(name);
     Seed        = Math.Random(0..0xFFFFFFFF);
 
-    var treefile = Folders.Repository RootFolder Info.ExecuteFolder FileName("consensus.tre");
+    var treefile = Folders.Repository Info.ExperimentFolder RootFolder Info.ExecuteFolder FileName("consensus.tre");
     Complete = FileExists(treefile);
     if (Complete)
       Tree = Read(treefile).trees.TREE1;
@@ -126,7 +126,7 @@ class ModelFolderClass {
   Constructor(ExperimentClass experiment, model, name=null) {
     Name       = name ?? model;
     Model      = model;
-    RootFolder = experiment.RootFolder Folder(model);
+    RootFolder = Folder(experiment.Data.FolderName) Folder(model);
     Posterior  = new ModeClass(this, "Posterior", 1_000_000, 20_000, 1000, false);
     Marginal   = new ModeClass(this, "Marginal", 50_000, 5000, 100, true);
   }
@@ -174,8 +174,7 @@ class NBranch: NodeClass {
 //======================================================================
 
 abstract class ExperimentClass: FactClass {
-  field               Name,
-                      FolderName;
+  field               Name;
   RuleClass           Rule;
   DataSetClass        Data;
   ModelFolderClass    Custom,
@@ -185,16 +184,15 @@ abstract class ExperimentClass: FactClass {
   ExampleConceptClass ExampleConcept,
                       DataConcept;
   CalcRatesClass      CalcExperiment;
+  RunExperimentClass  MainRun;
   var                 RootFolder,
                       MacFolder;
 
-  Constructor(id, name, folder, RuleClass rule) {
+  Constructor(id, name, RuleClass rule) {
     super.Constructor(id);
     Rule           = rule;
     Data           = rule.Data;
     Name           = name;
-    FolderName     = folder;
-    RootFolder     = Folder("Experiments") Folder(folder);
     ExampleConcept = new ExampleConceptClass(Data, Trial.ExampleConcept);
     DataConcept    = new ExampleConceptClass(Data, Trial.DataConcept);
     CalcExperiment = new CalcRatesClass(Data, Rule);
@@ -206,6 +204,8 @@ abstract class ExperimentClass: FactClass {
       JC69,
       GTR,
     ];
+
+    MainRun = Custom.Posterior.Run[0];
   }
 
   override IconClass GetIcon = Icons.science;
@@ -214,12 +214,11 @@ abstract class ExperimentClass: FactClass {
   abstract NodeClass PriorTree;
 
   void InitFolders {
-  //  if (not FolderExists(RootFolder)) {
+    if (not FolderExists(RootFolder))
       CreateFolder(Folders.Repository RootFolder);
-      (each Models).InitFolders(this);
+    (each Models).InitFolders(this);
 
-      IO.Write(WordArchive, RootFolder FileName("Words") Extensions.Nytril);
-//    }
+    IO.Write(WordArchive, RootFolder FileName("Words") Extensions.Nytril);
   }
 
   WordArchive = TextBlock {
@@ -289,54 +288,8 @@ abstract class ExperimentClass: FactClass {
     if (any)
       "}";
   }
-
-/*
-namespace Woman {
-
-  namespace Primary {
-    Latin       = "feː-mi-nam";  // feminam ALIGNMENT
-    French      = "fa-m--";      // femme
-    Spanish     = "-e-m-bɾa";    // hembra
-    Italian     = "femmi-na";    // femmina
-    PortugueseB = "fẽ-mi--a";    // fêmea
-    Portuguese  = "fe-mi--ɐ";    // fêmea
-    Catalan     = "fe-m-bɾa";    // fembra
-    Walloon     = "fœ-m---";     // feume
-    Friulian    = "fɛ-mi-ne";    // fèmine
-    Romanian    = Empty;    //
-  }
-
-  namespace Mulier {
-    Latin       = "mulierem";     // mulier CASE? IF NOM, HOW TO GET ROMANIAN?
-    French      = Empty;          //
-    Spanish     = "mux-eɾ--";     // mujer
-    Italian     = "moʎʎe---";     // moglie
-    PortugueseB = "muʎ-ɛʁ--";     // mulher
-    Portuguese  = "muʎ-ɛɾ--";     // mulher
-    Catalan     = "muʎ-e---";     // muller
-    Walloon     = Empty;          //
-    Friulian    = "mu--iːr--";    // muîr ALIGNMENT
-    Romanian    = "mu-jere-";     // muiere
-  }
-
-  namespace Domina {
-    Latin       = "dominam";       // domina
-    French      = "dam----";       // dame
-    Spanish     = "doɲ--a-";       // doña
-    Italian     = "dɔn-na-";       // donna
-    PortugueseB = "dõ--na-";       // dona
-    Portuguese  = "do--nɐ-";       // dona
-    Catalan     = "dɔ--nə-";       // dona
-    Walloon     = "dam----";       // dame
-    Friulian    = "dɔ--ne-";       // dòne
-    Romanian    = "do̯am-nə-";      // doamnă
-  }
 }
-*/
 
-  }
-
-  MainRun = Custom.Posterior.Run[0];
 
   GetDocuments = [
     new SubmissionViewClass(this),

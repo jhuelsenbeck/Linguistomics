@@ -159,7 +159,7 @@ void AlignmentDistribution::print(Alignment* aln) {
         }
 }
 
-nlohmann::json AlignmentDistribution::toJson(int index, double credibleSetSize, std::ostream& findex, std::ostream& fdata) {
+nlohmann::json AlignmentDistribution::toJson(double credibleSetSize, std::ostream& findex) {
     
     // sort the alignments from highest to lowest posterior probability
     std::vector<std::pair<Alignment*, int> > v(1024);
@@ -171,7 +171,17 @@ nlohmann::json AlignmentDistribution::toJson(int index, double credibleSetSize, 
     sort(v.begin(), v.end(), cmp);
 
 
-    fdata << "Align = [\n";
+    findex << "new(\"";
+    for (auto& c : name)
+        {
+        if (c == '-')
+          findex << "\", \"";
+        else
+          findex << c;
+        }
+
+
+    findex << "\", [\n";
 
     auto j = nlohmann::json::object();
     j["cognate"] = name;
@@ -186,7 +196,7 @@ nlohmann::json AlignmentDistribution::toJson(int index, double credibleSetSize, 
         double prob = (double)it.second / n;
         cumulativeProb += prob;
         
-        fdata << "[" << prob << ",[";
+        findex << "new(" << prob << ",[";
 
 
         auto jaln = nlohmann::json::object();
@@ -207,12 +217,12 @@ nlohmann::json AlignmentDistribution::toJson(int index, double credibleSetSize, 
 
         if (add) 
             {
-            jaln["aln"] = it.first->toJson(fdata);
+            jaln["aln"] = it.first->toJson(findex);
             alnVec.push_back(jaln);
             }
 
         ++count;
-        fdata << "]],\n";
+        findex << "]),\n";
         
         if (done)
             break;
@@ -221,14 +231,7 @@ nlohmann::json AlignmentDistribution::toJson(int index, double credibleSetSize, 
 
     j["aln_set"] = alnVec;
 
-    fdata << "];\n\n";
-
-    findex << "AlignIndexClass Concepts.";
-    for (auto& c : name)
-        findex << (c == '-' ? '.' : c);
-    findex << ".Align = new(" << index << ", " << count << ");\n";
-
-
+    findex << "]),\n";
     return j;
 }
 

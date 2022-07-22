@@ -29,6 +29,7 @@ namespace Figures.TransitionMatrix {
   Title = Lang.TransitionMatrix;
 
   Body(ExperimentClass experiment) = Block {
+    var stats      = experiment.Data.TransitionStats;
     var partitions = experiment.Rule.Partitions;
     var dy         = 2 pts;
 
@@ -40,7 +41,7 @@ namespace Figures.TransitionMatrix {
         Bold;
         HAlign: HAligns.Center;
         Empty;
-        foreach (var r in TransitionStats) {
+        foreach (var r in stats) {
           Cell {
             var p = partitions[each0];
             TextColor: p.Color;
@@ -49,7 +50,7 @@ namespace Figures.TransitionMatrix {
         }
       };
 
-      foreach (var r in TransitionStats) {
+      foreach (var r in stats) {
         Row {
           TextHeight: 12 pts;
           HAlign: HAligns.Center;
@@ -92,6 +93,7 @@ namespace Figures.TransitionMatrixBall {
 
   Body(ExperimentClass experiment) = Block {
     var partitions = experiment.Rule.Partitions;
+    var stats      = experiment.Data.TransitionStats;
     var size       = Extent.Size;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
@@ -100,7 +102,7 @@ namespace Figures.TransitionMatrixBall {
     var bsize      = new SizeClass(d, d);
 
     var max = 0.0;
-    foreach (var r in TransitionStats) {
+    foreach (var r in stats) {
       foreach (var c in r) {
         if (valid c and c.Upper > max)
           max = c.Upper;
@@ -113,7 +115,7 @@ namespace Figures.TransitionMatrixBall {
 
     HBox {
       VBox {
-        foreach (var r in TransitionStats) {
+        foreach (var r in stats) {
           var p = partitions[each0];
           HBox {
             Separation: 10 pts;
@@ -137,7 +139,7 @@ namespace Figures.TransitionMatrixBall {
         HAlign: HAligns.Left;
 
         HBox {
-          foreach (var r in TransitionStats) {
+          foreach (var r in stats) {
             var p = partitions[each0];
             Canvas {
               VAlign: VAligns.Center;
@@ -155,7 +157,7 @@ namespace Figures.TransitionMatrixBall {
         };
 
         VBox {
-          foreach (var r in TransitionStats) {
+          foreach (var r in stats) {
             var i = each0;
             HBox {
               foreach (var c in r) {
@@ -277,7 +279,7 @@ namespace Figures.Alignments {
   Title = "Alignments";
 
   Caption(ExperimentClass experiment) = Span {
-    AlignmentCutoff * 100.0; "% credible set of alignments";
+    experiment.Data.AlignmentCutoff * 100.0; "% credible set of alignments";
   };
 
   Body(ExperimentClass experiment) = Block {
