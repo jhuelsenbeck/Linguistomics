@@ -1,48 +1,133 @@
-using Format, Units, Math, IO, Style;
+using Format, Units, Style;
 
-include "English";
-include "Spanish";
-include "Library";
-include "LanguageTree";
-include "IPA";
-include "Segments";
-include "Rules";
-include "Experiments";
-include "Nexus";
-include "Style";
-include "References";
-include "Formulas";
-include "Config";
-include "Methods";
-include "Introduction";
-include "Tables";
-include "Languages";
-include "Graphics";
-include "Citations";
-include "Documents";
+include "Standard Includes";
+
+include "Slideshow";
 include "John Slides";
 include "David's Slides";
-include "Slideshow";
-include "Queries";
-
-//include "LanguagePhonetic";
-//include "LanguageTest";
-include "Romance";
-//include "LanguageSet";
-
 include "../Experiments/EuropeFull/Words";
 
 //======================================================================
 
-Main.Documents = Trial.Experiments.FirstElement.GetDocuments;
-Main.Run       = new RunInitClass(each Trial.Experiments);
+ExperimentClass MainExperiment = new Trial.Europe200ExperimentClass;
 
-Authors = [
-  People.DMGoldstein,
-  People.EBuchi,
-  People.SHMcCreight,
-  People.JPHuelsenbeck,
+Main.Documents = [
+  new AlignmentViewClass(MainExperiment),
+  new SubmissionViewClass(MainExperiment),
+  new SupplimentalViewClass(MainExperiment),
+  new DavidLinguisticPresentationClass(MainExperiment),
+  new JohnPresentationClass(MainExperiment),
 ];
+//======================================================================
 
+class SubmissionViewClass: BaseDocumentClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
+  }
+
+  FooterBlock = Block {
+    Paragraph {
+      ParAlignment: ParAlignments.Right;
+      PageNumber; "/"; PageCount;
+    }
+  };
+
+  override GetContent = Block {
+    PageSection {
+      Footer: FooterBlock {
+        Even: FooterBlock;
+        First: Block;
+      };
+
+      MainTitle {
+        Title;
+      };
+
+      ShowAuthorList(Authors);
+
+      Header1 {
+        Abstract.Title
+      };
+      Abstract.Body(Experiment);
+      ShowContent(PaperSections.Introduction);
+      Header1 {
+        Lang.Results
+      };
+
+      ShowContent(PaperSections.WordTransformation);
+      ShowContent(PaperSections.WordSegmentRelationships);
+      ShowContent(PaperSections.RomanceLanguagePhylogeny);
+      ShowContent(PaperSections.Discussion);
+      ShowContent(PaperSections.MethodsSummary);
+      ShowContent(PaperSections.DataSummary);
+      ShowContent(PaperSections.ModelInference);
+      ShowContent(PaperSections.DataCuration);
+      ShowContent(PaperSections.Acknowledgements);
+      ShowContent(PaperSections.Contributions);
+    };
+
+    ShowBibliography;
+    PageSection {
+      ShowFigureDoc(Experiment, Figures.TransitionRates);
+    }
+  };
+}
+//======================================================================
+
+class SupplimentalViewClass: BaseDocumentClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
+  }
+
+  HeaderBlock = Block {
+    Span {
+      TextCase: TextCases.AllUpper;
+      Title;
+    }
+  };
+
+  override GetContent = Block {
+    var appendices = [
+      new AppendixClass(Lang.PartitionRules, Experiment.Rule.ShowPartitions),
+      new AppendixClass(Lang.FunctionalLoad, Experiment.ShowFunctionalLoad),
+      new AppendixClass("Experimental Runs", Experiment.ShowExperiment),
+    ];
+
+    PageSection {
+      Header: HeaderBlock {
+        Distance: 0.125 inches;
+        MarginT: 0.125 inch;
+        Even: HeaderBlock;
+        First: Block;
+      };
+
+      MainTitle {
+        Title;
+      };
+      ShowAuthorList(Authors);
+
+      ShowContent(PaperSections.Introduction);
+      ShowContent(PaperSections.Methods);
+      ShowContent(PaperSections.Conclusion);
+    };
+
+    ShowBibliography;
+    ShowAppendix(each appendices);
+  };
+}
+//======================================================================
+
+class AlignmentViewClass: BaseDocumentClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #a14658e4-26f7-4eab-87b7-4f486035103b#, "Alignments");
+  }
+
+  override GetContent = Block {
+    var chart = new AlignmentChartClass(Experiment);
+    chart.ShowChart(Extent.Size);
+    PageBreak;
+    chart.ShowAll;
+  };
+}
 //======================================================================
 

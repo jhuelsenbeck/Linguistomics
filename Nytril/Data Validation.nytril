@@ -1,0 +1,90 @@
+using Format, Units;
+
+include "Standard Includes";
+//include "LanguagePhonetic";
+//include "LanguageTest";
+include "LanguageSet";
+
+ExperimentClass MainExperiment = new Trial.Europe200ExperimentClass;
+
+Main.Documents = [
+  new DiagnosticsViewClass(MainExperiment),
+  new ConfigurationViewClass(MainExperiment),
+];
+
+//======================================================================
+
+class DiagnosticsViewClass: BaseDocumentClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
+  }
+
+  ShowSegmentTables = Block {
+    SegmentSetClass set = new(512);
+    MatchingVowels.ShowTable(Data, set);
+    MatchingConsonants.PulmonicTable.ShowTable(Data, set);
+    MatchingConsonants.NonPulmonicTable.ShowTable(Data, set);
+    MatchingConsonants.PulmonicAffricatesTable.ShowTable(Data, set);
+    MatchingConsonants.EjectiveAffricatesTable.ShowTable(Data, set);
+    MatchingOther.ShowTable(Data, set);
+  };
+
+  override GetContent = Block {
+    var appendices = [
+      new AppendixClass("Cognate Coverage", Experiment.ShowCognateCoverage),
+      new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(Data)),
+      new AppendixClass("Symbols", ShowSymbols),
+      new AppendixClass("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(Data)),
+      new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),
+      new AppendixClass("Segment Groups", ShowSegmentTables),
+      new AppendixClass("Euler Feature Diagram", new EulerDiagramClass().FeatureChart(Data)),
+      new AppendixClass(Lang.IPAFullName, SegmentDisplay.SegmentTable(Data)),
+      new AppendixClass("Feature Tree", SegmentTree.ShowTree(Data)),
+      new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
+      new AppendixClass(Lang.Languages, SegmentDisplay.ShowLanguageDetails(Data)),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(10 pts, Data)),
+    ];
+
+    Style.ShowAppendix(each appendices);
+  };
+}
+//======================================================================
+
+class ConfigurationViewClass: BaseDocumentClass {
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment, #7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Configuration File");
+  }
+
+  override GetContent = Block {
+    var appendices = [
+      new AppendixClass(Name, new ConfigFileClass(Experiment, Experiment.MainRun).Show),
+//      new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
+    ];
+
+    Style.ShowAppendix(each appendices);
+  };
+}
+//======================================================================
+
+class RunInitClass: RunClass {
+  ExperimentClass Experiment;
+
+  Constructor(ExperimentClass experiment) {
+    super.Constructor(experiment.FactId, "Create \"{0}\" data files"(experiment.Name));
+    Experiment = experiment;
+  }
+
+  override void Execute {
+    Experiment.InitFolders;
+  }
+
+  override AskQuestion = "Overwrite configuration files for experiment \"{0}\"?"(Name);
+}
+
+//======================================================================
+
+Main.Run = new RunInitClass(MainExperiment);
+
+//======================================================================
+
+
