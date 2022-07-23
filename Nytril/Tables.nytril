@@ -33,9 +33,9 @@ class EulerDiagramClass {
     NameBox(name, 90 degrees)
   };
 
-  FeatureMask = Vowel Nasal Vocoid LongVowel Semivowel Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
+  FeatureMask = Vowel Nasal Vocoid Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
 
-  FeatureSegments(DataSetClass data, features) = data.DisplaySegments.FindSlice(segment => segment.Features.HasFlagMask(FeatureMask, features));
+  FeatureSegments(DataSetClass data, features) = data.DisplaySegments.FindSlice(s => s.Features.HasFlagMask(FeatureMask, features));
 
   FeatureFrame(DataSetClass data, x, y, width, name, features) = Canvas {
     X: EX(x);
@@ -571,96 +571,6 @@ namespace MatchingOther {
   };
 }
 //======================================================================
-// Segment Tree
-//======================================================================
-
-namespace SegmentTree {
-  class Node: NodeClass {
-    Constructor(name) {
-      super.Constructor(name);
-      Bevel     = 20%;
-      Curvature = 20%;
-    }
-  }
-
-  NodeClass AddSegments(DataSetClass data, DictionaryClass set, name, predicate, width=3 inches) {
-    var segments = data.DisplaySegments.FindSlice(predicate);
-    if (valid segments) {
-      var label = Frame {
-        Width: width;
-        Paragraph {
-          LeftIndent: 0.95 inches;
-          FirstIndent: -0.95 inches;
-          Span {
-            TextBackground: 95%;
-            name;
-            Tab;
-          };
-          Span {
-            TextHeight: 10 pts;
-            Separator: Space;
-            foreach (var segment in segments) {
-              var good = set.Add(segment);
-              segment.ShowSegment;
-            }
-          }
-        }
-      };
-      return new Node(label);
-    }
-    else
-      return null;
-  }
-
-  NodeClass AddVowels(DataSetClass data, DictionaryClass set, backness) {
-    return AddSegments(data, set, backness.Name, s => s.Features.HasFlag(Vowel) and s.Backness == backness);
-  }
-
-  NodeClass AddFlag(DataSetClass data, DictionaryClass set, all, features, other) {
-    return AddSegments(data, set, other.Name, s => (not set.Contains(s)) and s.Features.HasFlagMask(all, features) and s.Features.HasFlagMask(other, other));
-  }
-
-  NodeClass AddConsonants(DataSetClass data, DictionaryClass set, name, all, features) = new Node(name) {
-    AddFlag(data, set, all, features, each [Tenuis, Click, Nasal, Ejective, Fricative, Sibilant, Lateral, Stop, Approximant, TapFlap, Trill, NoFeature]);
-  };
-
-  AddVoicedPairs(DataSetClass data, DictionaryClass set, name, all, features) = new Node(name) {
-    AddConsonants(data, set, Lang.Voiced, all Voiced, features Voiced);
-    AddConsonants(data, set, Lang.Voiceless, all Voiced, features);
-  };
-
-  GetNodes(DataSetClass data) = new NodeClass(null) {
-    var set1 = new DictionaryClass(256);
-    var set2 = new DictionaryClass(256);
-    var all  = Vowel Pulmonic Affricate;
-
-    new Node(Lang.Vowels) {
-      AddVowels(data, set1, each Backnesses)
-    };
-    new Node(Lang.Affricates) {
-      AddVoicedPairs(data, set1, Lang.NonPulmonic, all, Affricate);
-      AddVoicedPairs(data, set1, Lang.Pulmonic, all, Pulmonic Affricate);
-    };
-    new Node(Lang.Consonants) {
-      AddVoicedPairs(data, set1, Lang.Pulmonic, all, Pulmonic);
-      AddVoicedPairs(data, set1, Lang.NonPulmonic, all, NoFeature);
-    };
-    AddSegments(data, set2, "Other", segment => true, 4 inches)
-  };
-
-  ShowTree(DataSetClass data) = Paragraph {
-    Tree {
-      Width: 7 inches;
-      Default: new NodeClass(null) {
-        LabelGap: 4 pts;
-        NodeGap: 8 pts;
-      };
-
-      Root: GetNodes(data);
-    }
-  };
-}
-//======================================================================
 
 namespace SegmentDisplay {
   CompareSegments(SegmentClass s0, SegmentClass s1, options) = s0.UsedCount - s1.UsedCount;
@@ -719,7 +629,6 @@ namespace SegmentDisplay {
   SegmentTable(DataSetClass data) = Block {
     var c = DocMetrics.SegmentColumns;
 
-    Style.TitleBar {Lang.IPAListing};
     Table {
       Columns: [Extent.Size.Width / c] * c;
       foreach (var s in (data.SortedSegments / c)) {

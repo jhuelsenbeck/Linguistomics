@@ -133,9 +133,9 @@ class AlignPairClass {
     };
   };
 
-  override GetLayoutTip = ShowDetails(9);
+  override GetLayoutTip = ShowDetails(9, true);
 
-  ShowDetails(max) = Block {
+  ShowDetails(max, tip) = Block {
     TextHeight: 10 pts;
 
     var adata   = Align.Data;
@@ -165,10 +165,16 @@ class AlignPairClass {
     }
 
     Paragraph {
-      LeftIndent: indent;
-      FirstIndent: -indent;
-      langbox;
-      Tab;
+      if (tip) {
+        langbox;
+        Space;
+      }
+      else {
+        LeftIndent: indent;
+        FirstIndent: -indent;
+        Tab;
+        langbox;
+      }
 
       var cumulative = 0.0;
       foreach (var a in adata) {
@@ -243,7 +249,7 @@ class AlignmentChartClass {
   ShowAll = Block {
     foreach (var a in Data.Alignments) {
       var p = new AlignPairClass(Data, a);
-      p.ShowDetails(5);
+      p.ShowDetails(5, false);
       Paragraph {
         BorderT: 1;
       };
