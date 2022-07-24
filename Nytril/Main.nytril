@@ -1,7 +1,10 @@
 using Format, Units, Style;
 
 include "Standard Includes";
-
+include "Formulas";
+include "Tables";
+include "Methods";
+include "Introduction";
 include "Slideshow";
 include "John Slides";
 include "David's Slides";
@@ -9,20 +12,21 @@ include "../Experiments/EuropeFull/Words";
 
 //======================================================================
 
-ExperimentClass Experiment = new Trial.Europe200ExperimentClass;
+ExperimentClass Experiment  = new Trial.EuropeFullExperimentClass;
+ResultsClass    MainResults = new(Experiment);
 
 Main.Documents = [
-  new AlignmentViewClass(Experiment),
-  new SubmissionViewClass(Experiment),
-  new SupplimentalViewClass(Experiment),
-  new DavidLinguisticPresentationClass(Experiment),
-  new JohnPresentationClass(Experiment),
+  new AlignmentViewClass,
+  new SubmissionViewClass,
+  new SupplimentalViewClass,
+  new DavidLinguisticPresentationClass,
+  new JohnPresentationClass,
 ];
 //======================================================================
 
 class SubmissionViewClass: BaseDocumentClass {
-  Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
+  Constructor {
+    super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
   }
 
   FooterBlock = Block {
@@ -48,7 +52,7 @@ class SubmissionViewClass: BaseDocumentClass {
       Header1 {
         Abstract.Title
       };
-      Abstract.Body(Experiment);
+      Abstract.Body(Extent.Size);
       ShowContent(PaperSections.Introduction);
       Header1 {
         Lang.Results
@@ -68,15 +72,15 @@ class SubmissionViewClass: BaseDocumentClass {
 
     ShowBibliography;
     PageSection {
-      ShowFigureDoc(Experiment, Figures.TransitionRates);
+      ShowFigureDoc(Extent.Size, Figures.TransitionRates);
     }
   };
 }
 //======================================================================
 
 class SupplimentalViewClass: BaseDocumentClass {
-  Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
+  Constructor {
+    super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
   }
 
   HeaderBlock = Block {
@@ -118,12 +122,12 @@ class SupplimentalViewClass: BaseDocumentClass {
 //======================================================================
 
 class AlignmentViewClass: BaseDocumentClass {
-  Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #a14658e4-26f7-4eab-87b7-4f486035103b#, "Alignments");
+  Constructor {
+    super.Constructor(#a14658e4-26f7-4eab-87b7-4f486035103b#, "Alignments");
   }
 
   override GetContent = Block {
-    var chart = new AlignmentChartClass(Experiment);
+    var chart = new AlignmentChartClass(MainResults);
     chart.ShowChart(Extent.Size);
     PageBreak;
     chart.ShowAll;

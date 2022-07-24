@@ -1,22 +1,24 @@
 using Format, Units;
 
 include "Standard Includes";
+include "Tables";
 //include "LanguagePhonetic";
 //include "LanguageTest";
 include "LanguageSet";
 
-ExperimentClass MainExperiment = new Trial.Europe200ExperimentClass;
-
 Main.Documents = [
-  new DiagnosticsViewClass(MainExperiment),
-  new ConfigurationViewClass(MainExperiment),
+  new DiagnosticsViewClass,
+  new ConfigurationViewClass,
 ];
 
 //======================================================================
 
 class DiagnosticsViewClass: BaseDocumentClass {
-  Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
+  DataSetClass Data;
+
+  Constructor {
+    super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
+    Data = new DataSetClass(WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, Trial.Romance, 1);
   }
 
   ShowSegmentTables = Block {
@@ -29,11 +31,60 @@ class DiagnosticsViewClass: BaseDocumentClass {
     MatchingOther.ShowTable(Data, set);
   };
 
+  ShowCognateCoverage = Block {
+    Style.Header1 {
+      "By Language";
+    };
+    Chart {
+      Type: ChartTypes.Column;
+      TextHeight: 10 pts;
+      Size: new SizeClass(Extent.Size.Width, 3 inches);
+      ValueLabel: "%";
+
+      XAxis: ChartAxis {
+        (each Data.Taxa).Language;
+      };
+      ValueAxis: ChartAxis;
+
+      ChartSeries {
+        foreach (var t in Data.Taxa)
+          Data.Coverage(t) * 100.0;
+      };
+    };
+    Paragraph;
+    Style.Header1 {
+      "By Number of Languages";
+    };
+
+    var coverage = Data.CoverageByLanguages;
+    Chart {
+      Type: ChartTypes.Column;
+      TextHeight: 10 pts;
+      Size: new SizeClass(Extent.Size.Width, 3 inches);
+
+      ValueLabel: Lang.Cognates {
+        Transform: Rotate(90 degrees);
+        TransformFit: true;
+      };
+      ValueAxis: ChartAxis;
+
+      XAxis: ChartAxis {
+        0..<coverage.Length step 1;
+      };
+      XLabel: "Languages Included";
+
+      ChartSeries {
+        foreach (var c in coverage)
+          c;
+      };
+    };
+  };
+
+
   override GetContent = Block {
     var appendices = [
-      new AppendixClass("Cognate Coverage", Experiment.ShowCognateCoverage),
+      new AppendixClass("Cognate Coverage", ShowCognateCoverage),
       new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(Data)),
-      new AppendixClass("Symbols", ShowSymbols),
       new AppendixClass("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(Data)),
       new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),
       new AppendixClass("Segment Groups", ShowSegmentTables),
@@ -50,13 +101,15 @@ class DiagnosticsViewClass: BaseDocumentClass {
 //======================================================================
 
 class ConfigurationViewClass: BaseDocumentClass {
-  Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, #7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Configuration File");
+  Constructor {
+    super.Constructor(#7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Configuration File");
   }
 
   override GetContent = Block {
+    var experiment = new Trial.EuropeFullExperimentClass;
+
     var appendices = [
-      new AppendixClass(Name, new ConfigFileClass(Experiment, Experiment.MainRun).Show),
+      new AppendixClass(Name, new ConfigFileClass(experiment, experiment.MainRun).Show),
 //      new AppendixClass(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
     ];
 
@@ -82,7 +135,7 @@ class RunInitClass: RunClass {
 
 //======================================================================
 
-Main.Run = new RunInitClass(MainExperiment);
+Main.Run = new RunInitClass(new Trial.EuropeFullExperimentClass);
 
 //======================================================================
 

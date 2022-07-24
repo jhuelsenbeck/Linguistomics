@@ -29,7 +29,7 @@ class FilterClass {
       BorderB: 1;
       Name;
     };
-    SegmentDisplay.ShowFilterSegments(Rule, Data.UniqueSegments, this, ParAlignments.Left);
+    Rule.ShowFilterSegments(Data.UniqueSegments, this, ParAlignments.Left);
   };
 }
 //======================================================================
@@ -151,6 +151,20 @@ abstract class RuleClass {
   SegmentClass[] GetMatching(SegmentClass[] segments, FilterClass filter) {
     return segments.FindSlice(segment => MatchesRule(filter, segment));
   }
+
+  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame {
+    Width: 2 inches;
+    Paragraph {
+      ParAlignment: align;
+
+      TextHeight: 18 pts;
+      var matching = GetMatching(segments, filter);
+      if (valid matching) {
+        Separator: Space;
+        (each matching).ShowSegment;
+      }
+    }
+  };
 
   ShowLegend(textheight, width) = VBox {
     Table {
@@ -351,7 +365,7 @@ class PartitionActionClass: ActionClass {
       };
     };
     HBox {
-      SegmentDisplay.ShowFilterSegments(Rule, Data.UniqueSegments, p.Filter, ParAlignments.Center);
+      Rule.ShowFilterSegments(Data.UniqueSegments, p.Filter, ParAlignments.Center);
     };
   };
 
@@ -378,9 +392,9 @@ class TransitionClass {
   MatrixClass Rates;
   RuleClass   Rule;
 
-  Constructor(DataSetClass data, RuleClass rule) {
+  Constructor(ResultsClass results, RuleClass rule) {
     Rule = rule;
-    var stats = data.TransitionStats;
+    var stats = results.TransitionStats;
 
     var length = stats.Length;
     Rates = new(length, length, null);
@@ -456,6 +470,7 @@ class CalcRatesClass {
   DataSetClass    Data;
   TransitionClass Transition;
   RuleClass       Rule;
+  ResultsClass    Results;
   var             MaxLine,
                   ArrowGap,
                   GapAngle,
@@ -465,12 +480,13 @@ class CalcRatesClass {
                   MaxRadius,
                   RateScale;
 
-  Constructor(DataSetClass data, RuleClass rule) {
+  Constructor(ResultsClass results, DataSetClass data, RuleClass rule) {
+    Results    = results;
     Data       = data;
     Rule       = rule;
     ArrowGap   = 0.0;//4 pts;
     GapAngle   = 80.0 degrees;
-    Transition = new TransitionClass(data, rule);
+    Transition = new TransitionClass(results, rule);
   }
 
   void Calibrate(size) {
@@ -488,7 +504,7 @@ class CalcRatesClass {
     RateScale = MaxLine / Transition.MaxRate;
 
     var mult = Math.PI2 / Rule.Partitions.Length;
-    var eq   = Data.EquilibriumFrequencies;
+    var eq   = Results.EquilibriumFrequencies;
 
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;
@@ -561,6 +577,7 @@ class CalcRatesClass {
           VAlignment: VAligns.Center;
           Width: fsize;
           TextHeight: textheight;
+          TextColor: p1.Color.TextCompliment;
           ParAlignment: ParAlignments.Center;
           p1.Index+1;
         };

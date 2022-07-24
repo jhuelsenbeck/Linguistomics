@@ -195,14 +195,10 @@ class AlignPairClass {
 //======================================================================
 
 class AlignmentChartClass {
-  ExperimentClass   Experiment;
-  DataSetClass      Data;
-  TaxonClass[]      Taxa;
+  ResultsClass Results;
 
- Constructor(ExperimentClass experiment) {
-    Experiment = experiment;
-    Data       = experiment.Data;
-    Taxa       = Data.Taxa;
+ Constructor(ResultsClass results) {
+    Results = results;
   }
 
   ShowChart(SizeClass size) = VBox {
@@ -211,10 +207,10 @@ class AlignmentChartClass {
 
     // Try to make proportional squares
     var xitems = Integer(size.Width / 130);
-    var yitems = (Data.Alignments.Length + xitems - 1) div xitems;
+    var yitems = (Results.Alignments.Length + xitems - 1) div xitems;
     var bsize  = new SizeClass(size.Width / xitems, size.Height / yitems);
     var x      = bsize.Width * 0.5;
-    AlignIndexClass[][] rows = Data.Alignments / xitems;
+    AlignIndexClass[][] rows = Results.Alignments / xitems;
 
 
     TextHeight: Math.Min(9 pts, bsize.Height - 3.2 pt);
@@ -227,7 +223,7 @@ class AlignmentChartClass {
             Size: bsize;
             Border: 0.25 pts {Color: 90%};
 
-            var ap = new AlignPairClass(Data, a);
+            var ap = new AlignPairClass(Results.Data, a);
             Block {
               Paragraph {
                 TextColor: Colors.LightGray;
@@ -247,8 +243,8 @@ class AlignmentChartClass {
   };
 
   ShowAll = Block {
-    foreach (var a in Data.Alignments) {
-      var p = new AlignPairClass(Data, a);
+    foreach (var a in Results.Alignments) {
+      var p = new AlignPairClass(Results.Data, a);
       p.ShowDetails(5, false);
       Paragraph {
         BorderT: 1;
@@ -489,7 +485,7 @@ class CognateClass: FactClass {
     TipAction: this;
   };
 
-  override GetLayoutTip = AllWords.ShowConceptTable(Data, this);
+//  override GetLayoutTip = AllWords.ShowConceptTable(Data, this);
 
   override Compare(c, options) {
     var i = Concept.Compare(c.Concept, options);
@@ -548,6 +544,46 @@ class WordPairClass {
 }
 //======================================================================
 
+class ResultsClass {
+  ExperimentClass   Experiment;
+  DataSetClass      Data;
+  AlignIndexClass[] Alignments;
+  StatClass[][]     TransitionStats;
+  var               AlignmentCutoff,
+                    EquilibriumFrequencies;
+
+  Constructor(ExperimentClass experiment) {
+     Experiment = experiment;
+     Data       = experiment.Data;
+
+    var file = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run1") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
+    TransitionStats        = file.TransitionStats;
+    EquilibriumFrequencies = file.EquilibriumFrequencies;
+    AlignmentCutoff        = file.AlignmentCutoff;
+    Alignments             = file.Alignments;
+
+    var alist = new ListClass<AlignIndexClass>(1024);
+    foreach (var a in Alignments) {
+      foreach (var c in experiment.Data.UsedCognates) {
+        if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
+          a.Cognate = c;
+          alist.Add(a);
+          break;
+        }
+      }
+    }
+    Alignments = alist.Values.Sort(false, ref CompareAlignment);
+  }
+
+  static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
+    var c = a0.Data.Length.Compare(a1.Data.Length);
+    if (c == 0)
+      return a0.ConceptName.Compare(a1.ConceptName);
+    return c;
+  }
+}
+//======================================================================
+
 class DataSetClass {
   LanguageClass[]             Languages;
   SegmentClass[]              UniqueSegments,
@@ -555,42 +591,26 @@ class DataSetClass {
                               DisplaySegments;
   CognateClass[]              UsedCognates,
                               SortedCognates;
-  AlignIndexClass[]           Alignments;
   ConceptClass[]              UsedConcepts;
   TaxonClass[]                Taxa;
   MatrixClass                 TransitionCount;
   DictionaryClass<TaxonClass> TaxonSet;
-  StatClass[][]               TransitionStats;
   VectorClass                 WordList;
-  var                         FolderName,
-                              RootFolder,
-                              AlignmentCutoff,
-                              EquilibriumFrequencies,
-                              Description,
-                              MaxLanguageName,
+  var                         MaxLanguageName,
                               WordCount,
                               SegmentCount,
                               UniqueCount,
                               TransitionMax,
                               WordCutoff;
 
-  Constructor(folder, includewords, LanguageClass[] languages, description, cutoff=-1) {
-    FolderName      = folder;
-    RootFolder      = Folders.Repository Info.ExperimentFolder Folder(folder);
+  Constructor(includewords, LanguageClass[] languages, cutoff=-1) {
     Languages       = languages;
-    Description     = description;
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
     WordCutoff      = cutoff < 0 ? languages.Length : cutoff;
     TaxonSet        = new(languages.Length);
     ListClass<TaxonClass> tlist = new(languages.Length);
-
-    var data = IO.ReadScript(RootFolder Folder("Custom") Folder("Posterior") Folder("Run1") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
-    TransitionStats        = data.TransitionStats;
-    EquilibriumFrequencies = data.EquilibriumFrequencies;
-    AlignmentCutoff        = data.AlignmentCutoff;
-    Alignments             = data.Alignments;
 
     foreach (var l in languages) {
       var taxon = new TaxonClass(l);
@@ -651,20 +671,8 @@ class DataSetClass {
       }
     }
 
-    var alist = new ListClass<AlignIndexClass>(1024);
-
-    foreach (var a in Alignments) {
-      foreach (var c in clist) {
-        if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
-          a.Cognate = c;
-          alist.Add(a);
-          break;
-        }
-      }
-    }
 
     UsedConcepts = conceptlist.Values.Sort(false);
-    Alignments   = alist.Values.Sort(false, ref CompareAlignment);
     UsedCognates = clist.Values;
 
     foreach (var cognate in UsedCognates)
@@ -713,13 +721,6 @@ class DataSetClass {
     if (invalid SortedCognates)
       SortedCognates = UsedCognates.Sort(false);
     return SortedCognates;
-  }
-
-  static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
-    var c = a0.Data.Length.Compare(a1.Data.Length);
-    if (c == 0)
-      return a0.ConceptName.Compare(a1.ConceptName);
-    return c;
   }
 
   static CompareAlpha(SegmentClass s0, SegmentClass s1, options) {

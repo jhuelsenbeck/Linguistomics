@@ -53,15 +53,6 @@ class RunExperimentClass {
     Separator: Space;
   };
 
-  RunMCMC(mac, root) = TextBlock {
-    ArgSpan {
-      ArgString(null, mac ? Info.MacMCMCEXE : Info.MCMCEXE);
-      ArgString("d", Info.ConfigFile);
-      ArgString("o", root OutFileName);
-    };
-    Pause(mac);
-  };
-
   RunReader(mac, root) = TextBlock {
     ArgSpan {
       ArgString(null, mac ? Info.MacReaderEXE : Info.ReaderEXE);
@@ -72,7 +63,11 @@ class RunExperimentClass {
   };
 
   RunAll(mac, root) = TextBlock {
-    RunMCMC(mac, root);
+    ArgSpan {
+      ArgString(null, mac ? Info.MacMCMCEXE : Info.MCMCEXE);
+      ArgString("d", Info.ConfigFile);
+      ArgString("o", root OutFileName);
+    };
     RunReader(mac, root);
   };
 
@@ -126,7 +121,7 @@ class ModelFolderClass {
   Constructor(ExperimentClass experiment, model, name=null) {
     Name       = name ?? model;
     Model      = model;
-    RootFolder = Folder(experiment.Data.FolderName) Folder(model);
+    RootFolder = Folder(experiment.ShortName) Folder(model);
     Posterior  = new ModeClass(this, "Posterior", 1_000_000, 20_000, 1000, false);
     Marginal   = new ModeClass(this, "Marginal", 50_000, 5000, 100, true);
   }
@@ -164,21 +159,18 @@ abstract class ExperimentClass: FactClass {
                       JC69,
                       GTR;
   ModelFolderClass[]  Models;
-  ExampleConceptClass ExampleConcept,
-                      DataConcept;
-  CalcRatesClass      CalcExperiment;
   RunExperimentClass  MainRun;
   var                 RootFolder,
-                      MacFolder;
+                      MacFolder,
+                      ShortName;
 
-  Constructor(id, name, RuleClass rule) {
+  Constructor(id, shortname, name, RuleClass rule) {
     super.Constructor(id);
     Rule           = rule;
     Data           = rule.Data;
     Name           = name;
-    ExampleConcept = new ExampleConceptClass(Data, Trial.ExampleConcept);
-    DataConcept    = new ExampleConceptClass(Data, Trial.DataConcept);
-    CalcExperiment = new CalcRatesClass(Data, Rule);
+    ShortName      = shortname;
+    RootFolder     = Folders.Repository Info.ExperimentFolder Folder(shortname);
     Custom         = new ModelFolderClass(this, "Custom", rule.Name);
     JC69           = new ModelFolderClass(this, "JC69");
     GTR            = new ModelFolderClass(this, "GTR");
@@ -306,55 +298,6 @@ abstract class ExperimentClass: FactClass {
         };
       }
     }
-  };
-
-  ShowCognateCoverage = Block {
-    Style.Header1 {
-      "By Language";
-    };
-    Chart {
-      Type: ChartTypes.Column;
-      TextHeight: 10 pts;
-      Size: new SizeClass(Extent.Size.Width, 3 inches);
-      ValueLabel: "%";
-
-      XAxis: ChartAxis {
-        (each Data.Taxa).Language;
-      };
-      ValueAxis: ChartAxis;
-
-      ChartSeries {
-        foreach (var t in Data.Taxa)
-          Data.Coverage(t) * 100.0;
-      };
-    };
-    Paragraph;
-    Style.Header1 {
-      "By Number of Languages";
-    };
-
-    var coverage = Data.CoverageByLanguages;
-    Chart {
-      Type: ChartTypes.Column;
-      TextHeight: 10 pts;
-      Size: new SizeClass(Extent.Size.Width, 3 inches);
-
-      ValueLabel: Lang.Cognates {
-        Transform: Rotate(90 degrees);
-        TransformFit: true;
-      };
-      ValueAxis: ChartAxis;
-
-      XAxis: ChartAxis {
-        0..<coverage.Length step 1;
-      };
-      XLabel: "Languages Included";
-
-      ChartSeries {
-        foreach (var c in coverage)
-          c;
-      };
-    };
   };
 
   ShowTrees(ModelFolderClass folder) = Block {

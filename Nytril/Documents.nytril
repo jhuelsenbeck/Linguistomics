@@ -6,15 +6,10 @@ Main.SymbolFamily = TextFamilies.CMUClassicalSerif;
 //======================================================================
 
 abstract class BaseDocumentClass: DocumentClass {
-  ExperimentClass Experiment;
-  DataSetClass    Data;
-
-  Constructor(ExperimentClass experiment, id, name, type=DocumentTypes.Normal) {
+  Constructor(GuidClass id, name, type=DocumentTypes.Normal) {
     super.Constructor(id, name, type);
-    Margin     = new(0.75 inches, 0.9 inches, 0.75 inches, 1 inches);
-    Experiment = experiment;
-    Data       = experiment.Data;
-    Title      = "Understanding Language Evolution Using an Event-Based Model";
+    Margin = new(0.75 inches, 0.9 inches, 0.75 inches, 1 inches);
+    Title  = "Understanding Language Evolution Using an Event-Based Model";
   }
 
   ShowContent(content) = Block {
@@ -22,11 +17,7 @@ abstract class BaseDocumentClass: DocumentClass {
       content.Title;
     };
 
-    content.Body(Experiment);
-  };
-
-  ShowSymbols = Block {
-    (each Defs).Appendix;
+    content.Body(Extent.Size);
   };
 
   abstract GetContent;
@@ -37,7 +28,7 @@ abstract class BaseDocumentClass: DocumentClass {
 
     AuthorLink to Authors;
     Link to References;
-    RefStyle: ReferenceStyle;
+    RefStyle: new NatureStyleClass;
 
     GetContent;
   };

@@ -116,7 +116,6 @@ class EquationClass: FactClass {
 //======================================================================
 
 namespace Style {
-  ReferenceStyle       = new NatureStyleClass;
   SansSerif            = {TextFamily: TextFamilies.Arial};
   IPAFamily            = {TextFamily: TextFamilies.LinuxLibertineO};
   GreekFamily          = IPAFamily;
@@ -189,7 +188,7 @@ namespace Style {
     TipAction: new FigureActionClass(experiment, figure);
   };
 
-  ShowFigureDoc(ExperimentClass experiment, figure) = Block {
+  ShowFigureDoc(SizeClass size, figure) = Block {
     Paragraph {
       AnchorTag: figure.GlobalVariablePath;
       SpaceBefore: 10 pts;
@@ -201,14 +200,14 @@ namespace Style {
         ShowFigureNumber(figure);
         eos;
       };
-      figure.?Caption(experiment) ?? figure.Title;
+      figure.?Caption(size) ?? figure.Title;
     };
 
     Paragraph {
       ParAlignment: ParAlignments.Center;
       SpaceAfter: 6 pts;
       Frame {
-        figure.Body(experiment);
+        figure.Body(size);
       }
     };
   };
@@ -219,8 +218,8 @@ namespace Style {
     RefCounter("table", figure.GlobalVariablePath);
   };
 
-  ShowTable(ExperimentClass experiment, table) = Block {
-    table.Body(experiment) {
+  ShowTable(SizeClass size, table) = Block {
+    table.Body(size) {
       SpaceBefore: 10 pts;
       ParAlignment: ParAlignments.Center;
     };
@@ -235,7 +234,7 @@ namespace Style {
         ShowTableNumber(table);
         eos;
       };
-      table.Caption(experiment);
+      table.Caption(size);
     };
   };
 
@@ -634,10 +633,8 @@ class FigureActionClass: ActionClass {
     Figure     = figure;
   }
 
-  override GetLayoutTip = Style.ShowFigureDoc(Experiment, Figure);
+  override GetLayoutTip = Style.ShowFigureDoc(Extent.Size, Figure);
 }
-
-//======================================================================
 
 //======================================================================
 
