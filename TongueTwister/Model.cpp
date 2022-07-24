@@ -527,7 +527,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     parameters.push_back(pTree);
 
     // set up the indel parameter
-    Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 3.0, 100.0, 100.0);
+    Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 3.0, 1.0, 1.0);
     pIndel->setProposalProbability(1.0);
     parameters.push_back(pIndel);
     

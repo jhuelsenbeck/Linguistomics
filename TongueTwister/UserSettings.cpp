@@ -20,7 +20,7 @@ UserSettings::UserSettings(void) {
     numMcmcCycles               = 1000;
     printFrequency              = 100;
     sampleFrequency             = 100;
-    branchLengthLambda          = 10.0;
+    branchLengthLambda          = 50.0;
     substitutionModel           = jc69;
     calculateMarginalLikelihood = false;
     numRateCategories           = 1;
