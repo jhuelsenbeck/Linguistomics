@@ -353,10 +353,7 @@ void McmcSummary::printPartitionFreqs(void) {
 void McmcSummary::output(UserSettings& settings) {
     auto stree = conTree->getNewick(4);
     auto tree  = new std::ofstream(settings.getPath() + "/consensus.tre", std::ios::out);
-    *tree << "#NEXUS\n\nbegin taxa;\n   dimensions = " << conTree->numTaxa;
-    *tree << ";\nend;\nbegin trees;\ntree TREE1 = ";
-    *tree << stree;
-    *tree << ";\nend;\n";
+    *tree << stree << ";";
     tree->close();
     delete tree;
 
