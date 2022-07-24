@@ -26,7 +26,7 @@ class RunExperimentClass {
     RootFolder  = mode.RootFolder Folder(name);
     Seed        = Math.Random(0..0xFFFFFFFF);
 
-    var treefile = Folders.Repository Info.ExperimentFolder RootFolder Info.ExecuteFolder FileName("consensus.tre");
+    var treefile = Info.ExperimentRoot RootFolder Info.ExecuteFolder FileName("consensus.tre");
     Complete = FileExists(treefile);
     if (Complete)
       Tree = Read(treefile).Tree;
@@ -166,24 +166,25 @@ abstract class ExperimentClass: FactClass {
 
   Constructor(id, shortname, name, includewords, LanguageClass[] languages, cutoff=-1) {
     super.Constructor(id);
-    RootFolder = Folders.Repository Info.ExperimentFolder Folder(shortname);
+    RootFolder = Info.ExperimentRoot Folder(shortname);
 
     var words = IO.ReadScript(RootFolder Info.WordFile);
+    if (valid words) {
+      Data           = new(words.Concepts, includewords, languages, cutoff);
+      Rule           = new NaturalPartitionClass(Data);
+      Name           = name;
+      ShortName      = shortname;
+      Custom         = new ModelFolderClass(this, "Custom", Rule.Name);
+      JC69           = new ModelFolderClass(this, "JC69");
+      GTR            = new ModelFolderClass(this, "GTR");
+      Models = [
+        Custom,
+        JC69,
+        GTR,
+      ];
 
-    Data           = new(words.Concepts, includewords, languages, cutoff);
-    Rule           = new NaturalPartitionClass(Data);
-    Name           = name;
-    ShortName      = shortname;
-    Custom         = new ModelFolderClass(this, "Custom", Rule.Name);
-    JC69           = new ModelFolderClass(this, "JC69");
-    GTR            = new ModelFolderClass(this, "GTR");
-    Models = [
-      Custom,
-      JC69,
-      GTR,
-    ];
-
-    MainRun = Custom.Posterior.Run[0];
+      MainRun = Custom.Posterior.Run[0];
+    }
   }
 
   override IconClass GetIcon = Icons.science;
