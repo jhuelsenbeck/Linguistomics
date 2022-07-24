@@ -1,15 +1,7 @@
 using Format, Units, IO;
 
-include "Standard Includes";
-include "Tables";
-//include "LanguagePhonetic";
-//include "LanguageTest";
-include "LanguageSet";
-
-Main.Documents = [
-  new DiagnosticsViewClass,
-  new ConfigurationViewClass,
-];
+DocumentClass Main.Documents.Diagnostics   = new DiagnosticsViewClass;
+DocumentClass Main.Documents.Configuration = new ConfigurationViewClass;
 
 //======================================================================
 
@@ -18,7 +10,13 @@ class DiagnosticsViewClass: BaseDocumentClass {
 
   Constructor {
     super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
-    Data = new DataSetClass(Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, Trial.Romance, 1);
+
+
+    // "LanguagePhonetic";
+    // "LanguageTest";
+
+    var words = ReadScript(Folders.Source FileName("LanguageSet") Extensions.Nytril);
+    Data = new DataSetClass(words.Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, Trial.Romance, 1);
   }
 
   ShowSegmentTables = Block {
