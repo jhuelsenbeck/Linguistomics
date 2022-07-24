@@ -553,14 +553,14 @@ class ResultsClass {
                     EquilibriumFrequencies;
 
   Constructor(ExperimentClass experiment) {
-     Experiment = experiment;
-     Data       = experiment.Data;
+    Experiment = experiment;
+    Data       = experiment.Data;
 
-    var file = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run1") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
-    TransitionStats        = file.TransitionStats;
-    EquilibriumFrequencies = file.EquilibriumFrequencies;
-    AlignmentCutoff        = file.AlignmentCutoff;
-    Alignments             = file.Alignments;
+    var results = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run1") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
+    TransitionStats        = results.TransitionStats;
+    EquilibriumFrequencies = results.EquilibriumFrequencies;
+    AlignmentCutoff        = results.AlignmentCutoff;
+    Alignments             = results.Alignments;
 
     var alist = new ListClass<AlignIndexClass>(1024);
     foreach (var a in Alignments) {
@@ -601,9 +601,15 @@ class DataSetClass {
                               SegmentCount,
                               UniqueCount,
                               TransitionMax,
-                              WordCutoff;
+                              WordCutoff,
+                              ExampleConcept,
+                              FigureConcept,
+                              DataConcept;
 
-  Constructor(includewords, LanguageClass[] languages, cutoff=-1) {
+  Constructor(concepts, includewords, LanguageClass[] languages, cutoff=-1) {
+    ExampleConcept  = concepts.Stone;
+    FigureConcept   = concepts.What;
+    DataConcept     = concepts.Mountain;
     Languages       = languages;
     WordCount       = 0;
     SegmentCount    = 0;
@@ -632,7 +638,7 @@ class DataSetClass {
     var clist       = new ListClass<CognateClass>(1024);
     var conceptlist = new ListClass<ConceptClass>(256);
 
-    foreach (var conceptvar in Concepts) {
+    foreach (var conceptvar in concepts) {
       var good = exists conceptvar.?Confidence and
                  exists conceptvar.?WordType and
                  exists conceptvar.?WordGroup;

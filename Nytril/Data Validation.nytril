@@ -1,4 +1,4 @@
-using Format, Units;
+using Format, Units, IO;
 
 include "Standard Includes";
 include "Tables";
@@ -18,7 +18,7 @@ class DiagnosticsViewClass: BaseDocumentClass {
 
   Constructor {
     super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
-    Data = new DataSetClass(WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, Trial.Romance, 1);
+    Data = new DataSetClass(Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, Trial.Romance, 1);
   }
 
   ShowSegmentTables = Block {
@@ -126,8 +126,84 @@ class RunInitClass: RunClass {
     Experiment = experiment;
   }
 
+  WordArchive = TextBlock {
+    "using Format, WordGroups;";
+    "namespace Concepts;";
+
+    var first = Empty;
+    var any   = false;
+    var data  = Experiment.Data;
+
+    foreach (var cognate in data.UsedCognates) {
+      var concept = cognate.Concept;
+      var cname   = concept.Name;
+      if (first != cname) {
+        if (any)
+          "}";
+
+        Empty;
+        Span {
+          "namespace ";
+          concept.Name;
+          " {";
+        };
+        TextBlock {
+          IndentSpace: 2;
+          Span {"Confidence = "; concept.Confidence; ";"};
+          Span {"WordType   = WordTypes."; concept.WordType.GlobalSourceName; ";"};
+          Span {"WordGroup  = ";
+            Span {
+              Separator: Space;
+              (each concept.WordGroup).GlobalSourceName;
+            };
+            ";";
+          };
+          Empty;
+        };
+      }
+
+      TextBlock {
+        IndentSpace: 2;
+
+        Empty;
+        Span {
+          "namespace ";
+          cognate.Name;
+          " {";
+        };
+
+        TextBlock {
+          IndentSpace: 2;
+          foreach (var word in cognate.Words) {
+            Span {
+              word.Language.Name;
+
+              Space * (data.MaxLanguageName - word.Language.Name.Length);
+              " = ";
+              Quote;
+              word.Text;
+              Quote;
+              ";";
+            }
+          }
+        }
+        "}";
+      };
+      any   = true;
+      first = cname;
+    }
+    if (any)
+      "}";
+  };
+
   override void Execute {
-    Experiment.InitFolders;
+    var root = Experiment.RootFolder;
+
+    if (not FolderExists(root))
+      CreateFolder(Folders.Repository root);
+    (each Experiment.Models).InitFolders(Experiment);
+
+    Write(WordArchive, root Info.WordFile);
   }
 
   override AskQuestion = "Overwrite configuration files for experiment \"{0}\"?"(Name);

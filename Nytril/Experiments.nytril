@@ -164,14 +164,17 @@ abstract class ExperimentClass: FactClass {
                       MacFolder,
                       ShortName;
 
-  Constructor(id, shortname, name, RuleClass rule) {
+  Constructor(id, shortname, name, includewords, LanguageClass[] languages, cutoff=-1) {
     super.Constructor(id);
-    Rule           = rule;
-    Data           = rule.Data;
+    RootFolder = Folders.Repository Info.ExperimentFolder Folder(shortname);
+
+    var words = IO.ReadScript(RootFolder Info.WordFile);
+
+    Data           = new(words.Concepts, includewords, languages, cutoff);
+    Rule           = new NaturalPartitionClass(Data);
     Name           = name;
     ShortName      = shortname;
-    RootFolder     = Folders.Repository Info.ExperimentFolder Folder(shortname);
-    Custom         = new ModelFolderClass(this, "Custom", rule.Name);
+    Custom         = new ModelFolderClass(this, "Custom", Rule.Name);
     JC69           = new ModelFolderClass(this, "JC69");
     GTR            = new ModelFolderClass(this, "GTR");
     Models = [
@@ -187,84 +190,6 @@ abstract class ExperimentClass: FactClass {
 
   abstract NodeClass NumberedTree;
   abstract NodeClass PriorTree;
-
-  void InitFolders {
-    if (not FolderExists(RootFolder))
-      CreateFolder(Folders.Repository RootFolder);
-    (each Models).InitFolders(this);
-
-    IO.Write(WordArchive, RootFolder FileName("Words") Extensions.Nytril);
-  }
-
-  WordArchive = TextBlock {
-    "using Format, WordGroups;";
-    "namespace Concepts;";
-
-    var first = Empty;
-    var any   = false;
-
-    foreach (var cognate in Data.UsedCognates) {
-      var concept = cognate.Concept;
-      var cname   = concept.Name;
-      if (first != cname) {
-        if (any)
-          "}";
-
-        Empty;
-        Span {
-          "namespace ";
-          concept.Name;
-          " {";
-        };
-        TextBlock {
-          IndentSpace: 2;
-          Span {"Confidence = "; concept.Confidence; ";"};
-          Span {"WordType   = WordTypes."; concept.WordType.GlobalSourceName; ";"};
-          Span {"WordGroup  = ";
-            Span {
-              Separator: Space;
-              (each concept.WordGroup).GlobalSourceName;
-            };
-            ";";
-          };
-          Empty;
-        };
-      }
-
-      TextBlock {
-        IndentSpace: 2;
-
-        Empty;
-        Span {
-          "namespace ";
-          cognate.Name;
-          " {";
-        };
-        TextBlock {
-          IndentSpace: 2;
-          foreach (var word in cognate.Words) {
-            Span {
-              word.Language.Name;
-
-              Space*(Data.MaxLanguageName - word.Language.Name.Length);
-              " = ";
-              Quote;
-              word.Text;
-              Quote;
-              ";";
-            }
-          }
-        }
-        "}";
-      };
-      any   = true;
-      first = cname;
-    }
-    if (any)
-      "}";
-  }
-}
-
 
   CalculateLoad(SegmentClass[] segments, sum) {
     return sum;
