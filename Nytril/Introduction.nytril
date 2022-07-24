@@ -19,7 +19,7 @@ namespace Abstract {
 namespace PaperSections.Introduction {
   Title = Lang.Introduction;
 
-  Slide = FirstPar {
+  IntroText = FirstPar {
     "Modern languages are related to one another through a complicated history of divergence and word borrowing. ";
     "The divergence of languages is caused by the slow change in spoken language as it is passed from parents to offspring. ";
     "Over time, divergence causes languages to become increasingly different from one another, ultimately to the point where they are mutually unintelligible. ";
@@ -29,7 +29,10 @@ namespace PaperSections.Introduction {
   };
 
   Body(SizeClass size) = Block {
-    Slide;
+    FirstPar {
+      IntroText;
+    };
+
     BodyPar {
       "The phylogenetic relationships of languages are inferred from cognate words";
       Citation {gray2000; holden2002; ringe2002; gray2003; bouckaert2012; bowern2012; chang2015};
@@ -54,7 +57,7 @@ namespace PaperSections.Introduction {
        "Such decisions, even when well-informed, can significantly influence the results of a phylogenetic analysis.";
     };
 
-    ShowTable(size, TableFigures.Cognates);
+    ShowTable(size, TableFigures.Cognates, 10 pts);
 
     BodyPar {
       "The coding procedure forces the linguist to treat the cognate word data in the same way biologists treat morphological characters in a phylogenetic analysis"; Citation {lewis01}; eos;
@@ -121,10 +124,13 @@ namespace PaperSections.Introduction {
 
 LanguageLine(LanguageClass language, text, binary, code, slash=false) = Row {
   language;
-  if (slash)
-    TextIpa {text};
-  else
-    textit {text};
+  Cell {
+    IPAFamily;
+    if (slash)
+      TextIpa {text};
+    else
+      textit {text};
+  };
 
   if (binary)
     [0, 0, 0].Substitute(code-1, 1);

@@ -5,40 +5,28 @@ Main.SymbolFamily = TextFamilies.CMUClassicalSerif;
 
 //======================================================================
 
-abstract class BaseDocumentClass: DocumentClass {
-  Constructor(GuidClass id, name, type=DocumentTypes.Normal) {
-    super.Constructor(id, name, type);
-    Margin = new(0.75 inches, 0.9 inches, 0.75 inches, 1 inches);
-    Title  = "Understanding Language Evolution Using an Event-Based Model";
-  }
-
-  ShowContent(content) = Block {
-    Header2 {
-      content.Title;
-    };
-
-    content.Body(Extent.Size);
-  };
-
-  abstract GetContent;
-
-  override GetDocument = Document {
-    TextFamily: TextFamilies.TimesNewRoman;
-    TextHeight: 9 pts;
-
-    AuthorLink to Authors;
-    Link to References;
-    RefStyle: new NatureStyleClass;
-
-    GetContent;
-  };
-}
+DiagDocumentClass = Document {
+  TextHeight: 9 pts;
+};
 
 //======================================================================
 
-class SubmissionViewClass: BaseDocumentClass {
+BaseDocumentClass = Document {
+  TextFamily: TextFamilies.TimesNewRoman;
+  TextHeight: 9 pts;
+
+  AuthorLink to Authors;
+  Link to References;
+  RefStyle: new NatureStyleClass;
+};
+
+//======================================================================
+
+class SubmissionViewClass: DocumentClass {
   Constructor {
     super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
+    Title  = Info.Title;
+    Margin = DocMetrics.DocMargin;
   }
 
   FooterBlock = Block {
@@ -48,7 +36,7 @@ class SubmissionViewClass: BaseDocumentClass {
     }
   };
 
-  override GetContent = Block {
+  override GetDocument = BaseDocumentClass {
     PageSection {
       Footer: FooterBlock {
         Even: FooterBlock;
@@ -56,7 +44,7 @@ class SubmissionViewClass: BaseDocumentClass {
       };
 
       MainTitle {
-        Title;
+        Info.Title;
       };
 
       ShowAuthorList(Authors);
@@ -65,21 +53,21 @@ class SubmissionViewClass: BaseDocumentClass {
         Abstract.Title
       };
       Abstract.Body(Extent.Size);
-      ShowContent(PaperSections.Introduction);
+      ShowTitledContent(PaperSections.Introduction);
       Header1 {
         Lang.Results
       };
 
-      ShowContent(PaperSections.WordTransformation);
-      ShowContent(PaperSections.WordSegmentRelationships);
-      ShowContent(PaperSections.RomanceLanguagePhylogeny);
-      ShowContent(PaperSections.Discussion);
-      ShowContent(PaperSections.MethodsSummary);
-      ShowContent(PaperSections.DataSummary);
-      ShowContent(PaperSections.ModelInference);
-      ShowContent(PaperSections.DataCuration);
-      ShowContent(PaperSections.Acknowledgements);
-      ShowContent(PaperSections.Contributions);
+      ShowTitledContent(PaperSections.WordTransformation);
+      ShowTitledContent(PaperSections.WordSegmentRelationships);
+      ShowTitledContent(PaperSections.RomanceLanguagePhylogeny);
+      ShowTitledContent(PaperSections.Discussion);
+      ShowTitledContent(PaperSections.MethodsSummary);
+      ShowTitledContent(PaperSections.DataSummary);
+      ShowTitledContent(PaperSections.ModelInference);
+      ShowTitledContent(PaperSections.DataCuration);
+      ShowTitledContent(PaperSections.Acknowledgements);
+      ShowTitledContent(PaperSections.Contributions);
     };
 
     ShowBibliography;
@@ -90,19 +78,21 @@ class SubmissionViewClass: BaseDocumentClass {
 }
 //======================================================================
 
-class SupplimentalViewClass: BaseDocumentClass {
+class SupplimentalViewClass: DocumentClass {
   Constructor {
     super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
+    Title  = Name;
+    Margin = DocMetrics.DocMargin;
   }
 
   HeaderBlock = Block {
     Span {
       TextCase: TextCases.AllUpper;
-      Title;
+      Info.Title;
     }
   };
 
-  override GetContent = Block {
+  override GetDocument = BaseDocumentClass {
     var appendices = [
       new AppendixClass(Lang.PartitionRules, Experiment.Rule.ShowPartitions),
 //      new AppendixClass(Lang.FunctionalLoad, Experiment.ShowFunctionalLoad),
@@ -119,12 +109,20 @@ class SupplimentalViewClass: BaseDocumentClass {
 
       MainTitle {
         Title;
+        SpaceAfter: 0;
       };
+      Paragraph {
+        LeftIndent: 24 pts;
+        TextHeight: 12 pts;
+        "For: "; DQuote {Info.Title};
+        SpaceAfter: 10 pts;
+      };
+
       ShowAuthorList(Authors);
 
-      ShowContent(PaperSections.Introduction);
-      ShowContent(PaperSections.Methods);
-      ShowContent(PaperSections.Conclusion);
+      ShowTitledContent(PaperSections.Introduction);
+      ShowTitledContent(PaperSections.Methods);
+      ShowTitledContent(PaperSections.Conclusion);
     };
 
     ShowBibliography;
@@ -133,12 +131,13 @@ class SupplimentalViewClass: BaseDocumentClass {
 }
 //======================================================================
 
-class AlignmentViewClass: BaseDocumentClass {
+class AlignmentViewClass: DocumentClass {
   Constructor {
     super.Constructor(#a14658e4-26f7-4eab-87b7-4f486035103b#, "Alignments");
+    Margin = DocMetrics.DocMargin;
   }
 
-  override GetContent = Block {
+  override GetDocument = BaseDocumentClass {
     var chart = new AlignmentChartClass(MainResults);
     chart.ShowChart(Extent.Size);
     PageBreak;
