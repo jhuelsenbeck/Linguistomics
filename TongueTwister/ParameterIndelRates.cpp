@@ -157,8 +157,10 @@ void ParameterIndelRates::reject(void) {
 
 double ParameterIndelRates::update(int) {
 
+    lastUpdateType = "indel rates";
+
     // initialize some variables
-    double window = 0.1;
+    double window = 0.05;
     double theta1 = insertionRate[0];
     double theta2 = deletionRate[0];
     double lowerLimit = 0.0;
@@ -170,6 +172,8 @@ double ParameterIndelRates::update(int) {
         theta1Prime = theta1 + (rv->uniformRv() - 0.5) * window; // lambda (x)
         theta2Prime = theta2 + (rv->uniformRv() - 0.5) * window; // mu (y)
         } while(theta1Prime <= lowerLimit || theta1Prime >= theta2Prime || theta2Prime >= upperLimit);
+    insertionRate[0] = theta1Prime;
+    deletionRate[0]  = theta2Prime;
         
     // forward move proposal probability
     // get vertices
@@ -260,6 +264,10 @@ double ParameterIndelRates::update(int) {
             pReverse = 1.0/(pow(window,2.0) - r1 - r2 + rOverlap);
             }
         }
+        
+    updateChangesTransitionProbabilities = false;
+    modelPtr->setUpdateLikelihood();
+    modelPtr->flipActiveLikelihood();
     
     return log(pReverse) - log(pForward);
 
