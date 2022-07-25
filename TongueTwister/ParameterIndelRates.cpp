@@ -160,7 +160,7 @@ double ParameterIndelRates::update(int) {
     lastUpdateType = "indel rates";
 
     // initialize some variables
-    double window = 0.05;
+    double window = 0.03;
     double theta1 = insertionRate[0];
     double theta2 = deletionRate[0];
     double lowerLimit = 0.0;
