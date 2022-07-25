@@ -4,7 +4,7 @@
 namespace Figures.PartitionAssignments {
   Title = Lang.PartitionRules;
 
-  Body(SizeClass size) = Experiment.Rule.ShowPartitions;
+  Body(DocumentClass document) = Experiment.Rule.ShowPartitions;
 }
 
 //======================================================================
@@ -12,13 +12,13 @@ namespace Figures.PartitionAssignments {
 namespace Figures.TransitionRates {
   Title = "Transition Rates between Partitions";
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     "The area of the circles is proportional to the estimated equilibrium frequencies. ";
     "The width of the lines is proportional to the estimated rates. ";
     PaperSections.WordTransformation.Note;
   };
 
-  Body(SizeClass size) {
+  Body(DocumentClass document) {
     var calc = new CalcRatesClass(MainResults, Experiment.Data, Experiment.Rule);
     return calc.PartitionDiagram;
   }
@@ -29,8 +29,10 @@ namespace Figures.TransitionRates {
 namespace Figures.TransitionMatrixTable {
   Title = Lang.TransitionMatrix;
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     Style.SansSerif;
+    TextHeight: Extent.Size.Width * 0.015;
+
     var stats      = MainResults.TransitionStats;
     var partitions = Experiment.Rule.Partitions;
     var dy         = 2 pts;
@@ -54,7 +56,6 @@ namespace Figures.TransitionMatrixTable {
 
       foreach (var r in stats) {
         Row {
-          TextHeight: 12 pts;
           HAlign: HAligns.Center;
           Cell {
             VAlign: VAligns.Center;
@@ -93,12 +94,15 @@ namespace Figures.TransitionMatrixChart {
     number;
   };
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     Style.SansSerif;
+    TextHeight: Extent.Size.Width * 0.015;
+
     var partitions = Experiment.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
+    var size       = Extent.Size;
     var dy         = size.Height / (partitions.Length + 1);
     var d          = Math.Min(dy, (size.Width  - tx) / partitions.Length);
     var bsize      = new SizeClass(d, d);
@@ -114,9 +118,11 @@ namespace Figures.TransitionMatrixChart {
     var fc = d / max;
     var fp = 50.0 / max;
 
-
     HBox {
       VBox {
+        Canvas {
+          Size: bx;
+        };
         foreach (var r in stats) {
           var p = partitions[each0];
           HBox {
@@ -152,7 +158,7 @@ namespace Figures.TransitionMatrixChart {
                 TextColor: p.Color.TextCompliment;
                 ParAlignment: ParAlignments.Center;
                 Width: d;
-                TextHeight: 7 pts;
+                TextHeight: 75%;
                 p.Filter.Name;
               };
             };
@@ -202,22 +208,23 @@ namespace Figures.TransitionMatrixChart {
 namespace Figures.SegmentTransitionCounts {
   Title = "Prior Segment Transition Counts";
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled red box. The chart has diagonal symmetry.";
   };
 
-  Body(SizeClass size) = Experiment.Data.PartitionBox(Experiment.Rule);
+  Body(DocumentClass document) = Experiment.Data.PartitionBox(Experiment.Rule);
 }
 //======================================================================
 
 namespace Figures.AllSegmentFrequencies {
   Title = "Segment occurrance rates for all languages";
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     "The frequency of occurrance of each segment for all languages";
   };
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
+    var size = Extent.Size;
     SegmentDisplay.FrequencyChart(Experiment.Data, new(size.Width, Math.Min(size.Height, 5 inches)));
   };
 }
@@ -227,7 +234,8 @@ namespace Figures.AllSegmentFrequencies {
 namespace Figures.ConsensusTree {
   Title = Lang.ConsensusTree;
 
-  Body(SizeClass size) = VBox {
+  Body(DocumentClass document) = VBox {
+    var size = Extent.Size;
     Width: size.Width;
     HAlign: HAligns.Center;
     Style.TreeOptions {
@@ -242,21 +250,21 @@ namespace Figures.ConsensusTree {
 namespace Figures.SegmentOccuranceRates {
   Title = "Segment Occurance Rates";
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     var l0 = Experiment.Data.Taxa[0].Language;
 
     "Comparison of occurance rates of segments in each language. Segments are sorted by the rates in ";
     l0; ". Bars are normalized to the rate of the most frequently ocurring segment in each language. Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
-  Body(SizeClass size) = new SegmentFrequencyClass(Experiment, false).ShowChart;
+  Body(DocumentClass document) = new SegmentFrequencyClass(Experiment, false).ShowChart;
 }
 //======================================================================
 
 namespace Figures.SegmentOccuranceGrouped {
   Title = "Segment Occurance Rates (by partition)";
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     new SegmentFrequencyClass(Experiment, true).ShowChart;
   };
 }
@@ -265,14 +273,14 @@ namespace Figures.SegmentOccuranceGrouped {
 namespace Figures.PartitionFrequencies {
   Title = "Partition Occurance Rates";
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     var l0 = Experiment.Data.Taxa[0].Language;
     "Comparison of occurance rates of partitions in each language. Partitions are sorted by the rates in ";
     l0; ". Bars are normalized to the rate of the most frequently ocurring partition in each language. ";
     "Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     new PartitionFrequencyClass(Experiment).ShowChart;
   };
 }
@@ -281,11 +289,11 @@ namespace Figures.PartitionFrequencies {
 namespace Figures.Alignments {
   Title = "Alignments";
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     MainResults.AlignmentCutoff * 100.0; "% credible set of alignments";
   };
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     new AlignmentChartClass(MainResults).ShowChart(Extent.Size);
   };
 }
@@ -334,11 +342,11 @@ class ExampleConceptClass {
 namespace Figures.ExampleTree {
   Title = "Example Tree";
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     "An example tree showing the relationships of {0} languages."(SampledLanguages(Experiment.Data.Languages.Length));
   };
 
-  Body(SizeClass size) = TreeOptions {
+  Body(DocumentClass document) = TreeOptions {
     Width: 5 inches;
     Root: Experiment.NumberedTree;
   };
@@ -348,7 +356,7 @@ namespace Figures.ExampleTree {
 namespace Figures.ExampleConcepts {
   Title = Lang.ConceptsExamples;
 
-  Body(SizeClass size) = AllWords.ShowTable(11 pts, Experiment.Data, 2);
+  Body(DocumentClass document) = AllWords.ShowTable(11 pts, Experiment.Data, 2);
 }
 
 //======================================================================
@@ -356,7 +364,7 @@ namespace Figures.ExampleConcepts {
 namespace Figures.LanguagesUsed {
   Title = Lang.Languages;
 
-  Body(SizeClass size) = SegmentDisplay.ShowLanguages(Experiment.Data);
+  Body(DocumentClass document) = SegmentDisplay.ShowLanguages(Experiment.Data);
 }
 
 //======================================================================
@@ -364,7 +372,7 @@ namespace Figures.LanguagesUsed {
 namespace Figures.UniqueCharacters {
   Title = Lang.UniqueSegments;
 
-  Body(SizeClass size) = SegmentDisplay.ShowSegmentAssignments(Experiment.Data);
+  Body(DocumentClass document) = SegmentDisplay.ShowSegmentAssignments(Experiment.Data);
 }
 
 //======================================================================
@@ -529,7 +537,7 @@ namespace Figures.Alignment {
 
   HomBox(ExampleConceptClass example, DataSetClass data, i, map) = NumBox(i, MapTable(example, data, map, false), MapTable(example, data, map, true));
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     "Alignments ";
     InParens {SegmentalAlignment};
     " are formed from the observed segments ";
@@ -538,7 +546,7 @@ namespace Figures.Alignment {
     InParens {HomologyMap}; eos;
   };
 
-  Body(SizeClass size) = VBox {
+  Body(DocumentClass document) = VBox {
     TextHeight: 12 pts;
 
     var data    = Experiment.Data;
@@ -630,7 +638,7 @@ namespace PaperSections.WordTransformation {
   Title = "Understanding Word Transformation";
   Note  = "The rates are much greater from one word segment to another when the change is within the word segment group than when the change is between word segments in different groups.";
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     var modelname = Span {TextCase: TextCases.AllLower; Experiment.Rule.Name};
 
     FirstPar {
@@ -652,7 +660,7 @@ namespace PaperSections.WordTransformation {
 namespace PaperSections.WordSegmentRelationships {
   Title = "Word Segment Relationships";
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     FirstPar {
       "Our method treats the relationships of word segments from one language to another as a random variable. ";
       "Figure [NUMBER] shows alignments for ten of the words we analyzed. ";
@@ -667,11 +675,11 @@ namespace PaperSections.WordSegmentRelationships {
 namespace PaperSections.RomanceLanguagePhylogeny {
   Title = "Romance Language Phylogeny";
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     BodyPar {
       "The results of the MCMC analysis are shown below.";
     };
-    ShowFigureDoc(size, Figures.ConsensusTree);
+    ShowFigureDoc(document, Figures.ConsensusTree);
   };
 }
 //======================================================================
@@ -681,7 +689,7 @@ namespace PaperSections.Discussion {
 
   SoundChange(op) = Span {IPASegments.ah.ShowDoc; op; IPASegments.oh.ShowDoc};
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     FirstPar {
      "Despite a wealth of textual data from Latin and its medieval descendants, the phylogeny of Romance remains a challenge";
      Citation {hall1974; malkiel1978; koutna1990}; eos;
@@ -749,7 +757,7 @@ namespace PaperSections.Discussion {
 namespace PaperSections.MethodsSummary {
   Title = Lang.Methods;
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     FirstPar {
       "A detailed description of the model and analyses can be found in the supplemental material, [reference]. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
@@ -765,7 +773,7 @@ namespace PaperSections.DataSummary {
   S = IPASegments.s.ShowDoc;
   W = TextIpa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     var data = Experiment.Data;
 
     FirstPar {
@@ -809,7 +817,7 @@ namespace PaperSections.DataSummary {
       IPASegments.kw.ShowSegment; "-id), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
     };
 
-    ShowTable(size, TableFigures.ManualAlignment, 10 pts);
+    ShowTable(document, TableFigures.ManualAlignment, 10 pts);
 
     BodyPar {
       "Our method models insertions, deletions, and transitions among segments. ";
@@ -832,12 +840,12 @@ namespace TableFigures.ManualAlignment {
     eos;
   };
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     "Manual alignment of the words for the concept ";
     WordDisplay;
   };
 
-  Body(SizeClass size) = LanguageTable {
+  Body(DocumentClass document) = LanguageTable {
     var cognate = Experiment.Data.GetCognate(Experiment.Data.FigureConcept);
 
     Columns: [1.5 inches, 2 inches, 2.5 inch];
@@ -866,12 +874,12 @@ namespace TableFigures.WordCountTable {
     eos;
   };
 
-  Caption(SizeClass size) = Span {
+  Caption(DocumentClass document) = Span {
     "Manual alignment of the words for the concept ";
     WordDisplay(Experiment);
   };
 
-  Body(SizeClass size) = LanguageTable {
+  Body(DocumentClass document) = LanguageTable {
     Columns: [1.5 inches, 1 inches];
     LanguageTitleRow {
       Lang.Language; Lang.WordForms;
@@ -893,7 +901,7 @@ namespace PaperSections.ModelInference {
 
   InsertionLessThanDeletion = Span {InsertionRate; Tex.lt; DeletionRate};
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     var rule = Experiment.Rule;
 
 
@@ -966,7 +974,7 @@ namespace PaperSections.ModelInference {
 namespace PaperSections.DataCuration {
   Title = "Data Curation and Analyses";
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     var example = new ExampleConceptClass(Experiment.Data, Experiment.Data.DataConcept);
 
     FirstPar {
@@ -1016,7 +1024,7 @@ namespace PaperSections.DataCuration {
 namespace PaperSections.Acknowledgements {
   Title = "Acknowledgements";
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     FirstPar {
       "J.P.H. was supported through NSF (1759909) and the Koret Foundation. We thank Gerton Lunter for help with the TKF91 model.";
     }
@@ -1028,7 +1036,7 @@ namespace PaperSections.Acknowledgements {
 namespace PaperSections.Contributions {
   Title = "Author contributions statement";
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     FirstPar {
       "D.M.G. collected data, S.H.M. developed the control software, and J.P.H. developed the MCMC software. All authors wrote the manuscript. ";
     }
@@ -1040,7 +1048,7 @@ namespace PaperSections.Contributions {
 namespace PaperSections.Methods {
   Title = Lang.Methods;
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     var data            = Experiment.Data;
     var treefigure      = FigureReference(Experiment, Figures.ExampleTree);
     var alignmentfigure = FigureReference(Experiment, Figures.Alignment);
@@ -1093,7 +1101,7 @@ namespace PaperSections.Methods {
       ", the branch connecting nodes 12 and 13 is assigned the label 12. ";
     };
 
-    ShowFigureDoc(size, Figures.ExampleTree);
+    ShowFigureDoc(document, Figures.ExampleTree);
 
     BodyPar {
       "A phylogeny is an information-rich graph. ";
@@ -1349,7 +1357,7 @@ namespace PaperSections.Methods {
       " that can be formed using two different homology maps. ";
     };
 
-    ShowFigureDoc(size, Figures.Alignment);
+    ShowFigureDoc(document, Figures.Alignment);
 
     BodyPar {
       "Ultimately, the linguist observes the phonetic (in the case of contemporary languages) or graphemic (in the case of corpus languages) forms of words, on the basis of which phonemic representations are posited. ";
@@ -1774,8 +1782,8 @@ namespace PaperSections.Methods {
       };
     };
     PageBreak;
-    ShowFigureDoc(size, Figures.TransitionRates);
-    ShowFigureDoc(size, Figures.AllSegmentFrequencies);
+    ShowFigureDoc(document, Figures.TransitionRates);
+    ShowFigureDoc(document, Figures.AllSegmentFrequencies);
   };
 }
 
@@ -1878,7 +1886,7 @@ namespace PaperSections.Conclusion {
     value; Space; name;
   };
 
-  Body(SizeClass size) = Block {
+  Body(DocumentClass document) = Block {
     var data = Experiment.Data;
     AddVariable("Languages", data.Taxa.Length);
     AddVariable("Concepts", data.UsedCognates.Length);

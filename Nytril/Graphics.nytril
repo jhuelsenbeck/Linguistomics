@@ -187,7 +187,7 @@ namespace Style {
     TipAction: new FigureActionClass(experiment, figure);
   };
 
-  ShowFigureDoc(SizeClass size, figure) = Block {
+  ShowFigureDoc(DocumentClass document, figure) = Block {
     Paragraph {
       AnchorTag: figure.GlobalVariablePath;
       SpaceBefore: 10 pts;
@@ -199,14 +199,14 @@ namespace Style {
         ShowFigureNumber(figure);
         eos;
       };
-      figure.?Caption(size) ?? figure.Title;
+      figure.?Caption(document) ?? figure.Title;
     };
 
     Paragraph {
       ParAlignment: ParAlignments.Center;
       SpaceAfter: 6 pts;
       Frame {
-        figure.Body(size);
+        figure.Body(document);
       }
     };
   };
@@ -217,8 +217,8 @@ namespace Style {
     RefCounter("table", figure.GlobalVariablePath);
   };
 
-  ShowTable(SizeClass size, table, textheight) = Block {
-    table.Body(size) {
+  ShowTable(DocumentClass document, table, textheight) = Block {
+    table.Body(document) {
       TextHeight: textheight;
       SpaceBefore: 10 pts;
       ParAlignment: ParAlignments.Center;
@@ -234,7 +234,7 @@ namespace Style {
         ShowTableNumber(table);
         eos;
       };
-      table.Caption(size);
+      table.Caption(document);
     };
   };
 
@@ -633,7 +633,7 @@ class FigureActionClass: ActionClass {
     Figure     = figure;
   }
 
-  override GetLayoutTip = Style.ShowFigureDoc(Extent.Size, Figure);
+  override GetLayoutTip = Style.ShowFigureDoc(null, Figure);
 }
 
 //======================================================================
