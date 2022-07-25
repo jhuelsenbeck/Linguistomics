@@ -5,18 +5,19 @@ DocumentClass Main.Documents.Configuration = new ConfigurationViewClass;
 
 //======================================================================
 
-class DiagnosticsViewClass: BaseDocumentClass {
+class DiagnosticsViewClass: DocumentClass {
   DataSetClass Data;
 
   Constructor {
     super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
+    Margin = DocMetrics.DocMargin;
 
 
     // "LanguagePhonetic";
     // "LanguageTest";
 
     var words = ReadScript(Folders.Source FileName("LanguageSet") Extensions.Nytril);
-    Data = new DataSetClass(words.Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, Trial.Romance, 1);
+    Data = new DataSetClass(words.Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, EuroRomance, 1);
   }
 
   ShowSegmentTables = Block {
@@ -78,8 +79,7 @@ class DiagnosticsViewClass: BaseDocumentClass {
     };
   };
 
-
-  override GetContent = Block {
+  override GetDocument = DiagDocumentClass {
     var appendices = [
       new AppendixClass("Cognate Coverage", ShowCognateCoverage),
       new AppendixClass("Concept Groups", SegmentDisplay.ShowConceptGroups(Data)),
@@ -98,12 +98,13 @@ class DiagnosticsViewClass: BaseDocumentClass {
 }
 //======================================================================
 
-class ConfigurationViewClass: BaseDocumentClass {
+class ConfigurationViewClass: DocumentClass {
   Constructor {
     super.Constructor(#7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Configuration File");
+    Margin = DocMetrics.DocMargin;
   }
 
-  override GetContent = Block {
+  override GetDocument = DiagDocumentClass {
     var experiment = new Trial.EuropeFullExperimentClass;
 
     var appendices = [

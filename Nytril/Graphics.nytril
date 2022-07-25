@@ -116,7 +116,7 @@ class EquationClass: FactClass {
 //======================================================================
 
 namespace Style {
-  SansSerif            = {TextFamily: TextFamilies.Arial};
+  SansSerif            = {TextFamily: TextFamilies.Calibri};
   IPAFamily            = {TextFamily: TextFamilies.LinuxLibertineO};
   GreekFamily          = IPAFamily;
   Classical            = {TextFamily: TextFamilies.CMUClassicalSerif};
@@ -124,7 +124,6 @@ namespace Style {
   TaxonFormat          = {TextColor: Colors.DarkBlue};
   CommentFormat        = {TextColor: Colors.Green};
   KeywordFormat        = {TextColor: Colors.Blue};
-  ItemTextFormat       = {TextHeight: 20 pts};
   ImpossibleBackground = {Background: 80%};
   CommentColor         = new ColorClass(0, 0x64, 0);
   StringColor          = new ColorClass(168, 21, 53);
@@ -152,7 +151,7 @@ namespace Style {
 
   MainTitle = Paragraph {
     SansSerif;
-    TextHeight: 20 pts;
+    TextHeight: 18 pts;
     Bold;
     SpaceAfter: 10 pts;
   };
@@ -188,7 +187,7 @@ namespace Style {
     TipAction: new FigureActionClass(experiment, figure);
   };
 
-  ShowFigureDoc(SizeClass size, figure) = Block {
+  ShowFigureDoc(DocumentClass document, figure) = Block {
     Paragraph {
       AnchorTag: figure.GlobalVariablePath;
       SpaceBefore: 10 pts;
@@ -200,14 +199,14 @@ namespace Style {
         ShowFigureNumber(figure);
         eos;
       };
-      figure.?Caption(size) ?? figure.Title;
+      figure.?Caption(document) ?? figure.Title;
     };
 
     Paragraph {
       ParAlignment: ParAlignments.Center;
       SpaceAfter: 6 pts;
       Frame {
-        figure.Body(size);
+        figure.Body(document);
       }
     };
   };
@@ -218,8 +217,9 @@ namespace Style {
     RefCounter("table", figure.GlobalVariablePath);
   };
 
-  ShowTable(SizeClass size, table) = Block {
-    table.Body(size) {
+  ShowTable(DocumentClass document, table, textheight) = Block {
+    table.Body(document) {
+      TextHeight: textheight;
       SpaceBefore: 10 pts;
       ParAlignment: ParAlignments.Center;
     };
@@ -234,7 +234,7 @@ namespace Style {
         ShowTableNumber(table);
         eos;
       };
-      table.Caption(size);
+      table.Caption(document);
     };
   };
 
@@ -633,7 +633,7 @@ class FigureActionClass: ActionClass {
     Figure     = figure;
   }
 
-  override GetLayoutTip = Style.ShowFigureDoc(Extent.Size, Figure);
+  override GetLayoutTip = Style.ShowFigureDoc(null, Figure);
 }
 
 //======================================================================

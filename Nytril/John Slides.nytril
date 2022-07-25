@@ -4,10 +4,22 @@ using Format, Units;
 
 class JohnPresentationClass: ShowClass {
   Constructor {
-    super.Constructor(#aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", new FancyDesignClass,
-      [People.JPHuelsenbeck], false);
+    super.Constructor(#aaa17f12-4f92-4c7e-a941-017d2015e129#,
+                      "John's Presentation",
+                      new FancyDesignClass,
+                      [People.JPHuelsenbeck]
+                      );
     SlideData = ref JohnSlides;
+    Title     = Info.Title;
   }
+
+  override GetStyle = {
+    TextFamily: TextFamilies.Arial;
+    TextHeight: 16 pts;
+    RefStyle: new NatureStyleClass;
+    LinkTypes.AuthorLink to Authors;
+    LinkTypes.Link to References;
+  };
 }
 //======================================================================
 
@@ -16,9 +28,12 @@ namespace JohnSlides {
   namespace Introduction {
     Title = Lang.Introduction;
 
-    Body(SizeClass size) = Block {
-      PaperSections.Introduction.Slide;
-      Style.ShowTable(size, TableFigures.Cognates);
+    Caption(DocumentClass document) = Block {
+      PaperSections.Introduction.IntroText;
+    };
+
+    Body(DocumentClass document) = Block {
+      Style.ShowTable(document, TableFigures.Cognates, 12 pts);
     };
   }
 

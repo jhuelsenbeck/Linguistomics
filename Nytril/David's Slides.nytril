@@ -8,22 +8,35 @@ flags SlideTypes {
 
 //======================================================================
 
-class DavidLinguisticPresentationClass: ShowClass {
+class DavidPresentationClass: ShowClass {
+  Constructor(id, name, typeflags) {
+    super.Constructor(id, name, new TexDesignClass, Authors);
+    Title        = "From phonology to phylogeny\nA new framework for phylogenetic inference";
+    TypeFlags    = Integer(typeflags);
+    SlideData    = DavidSlides;
+    Bibliography = true;
+  }
+
+  override GetStyle = {
+    TextFamily: TextFamilies.LinuxLibertineO;
+    TextHeight: 9 pts;
+    RefStyle: new NatureStyleClass;
+    LinkTypes.AuthorLink to Authors;
+    LinkTypes.Link to References;
+  };
+}
+//======================================================================
+
+class DavidLinguisticPresentationClass: DavidPresentationClass {
   Constructor {
-    super.Constructor(#75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "David's Presentation", new TexDesignClass, Authors, true);
-    Title     = "From phonology to phylogeny\nA new framework for phylogenetic inference";
-    TypeFlags = Integer(SlideTypes.Linguistic);
-    SlideData = DavidSlides;
+    super.Constructor(#75503dbc-fd54-4c55-b2e4-ebafb3b39d7d#, "David's Presentation", SlideTypes.Linguistic);
   }
 }
 //======================================================================
 
-class DavidBioPresentationClass: ShowClass {
+class DavidBioPresentationClass: DavidPresentationClass {
   Constructor {
-    super.Constructor(#6fea4e3d-384d-4606-99e5-1c1ffa006c73#, "David's Presentation - Biology", new TexDesignClass, Authors, true);
-    Title     = "Biology\nA new framework for phylogenetic inference";
-    TypeFlags = Integer(SlideTypes.Bio);
-    SlideData = DavidSlides;
+    super.Constructor(#6fea4e3d-384d-4606-99e5-1c1ffa006c73#, "David's Presentation - Biology", SlideTypes.Bio);
   }
 }
 //======================================================================
@@ -70,7 +83,7 @@ namespace DavidSlides.Introduction {
     Title     = "Multistate character";
     ListWidth = 3 inches;
 
-    Body(SizeClass size) = Block {
+    Body(DocumentClass document) = Block {
       Table {
         Columns: [ListWidth, Extent.Size.Width - ListWidth];
 
@@ -96,7 +109,7 @@ namespace DavidSlides.Introduction {
     Title     = "From multistate to binary representation";
     ListWidth = 3 inches;
 
-    Body(SizeClass size) = Block {
+    Body(DocumentClass document) = Block {
       Table {
         Columns: [ListWidth, Extent.Size.Width - ListWidth];
 
@@ -149,7 +162,7 @@ namespace DavidSlides.Introduction {
   namespace Slide.Slide7 {
     Title = "My Colaborators";
 
-    Body(SizeClass size) = Block {
+    Body(DocumentClass document) = Block {
       TextHeight: 18 pts;
       Separator: Paragraph;
       CitationLib.GetFullName(each Colaborators(People.DMGoldstein));
@@ -264,9 +277,9 @@ namespace DavidSlides.PreviousResearch {
       "There’s much more uncertainty after that";
     };
 
-    Items.Item3.Body(SizeClass size) = ShowTree("Romance phylogeny", null, LanguageBranches.Romance, Lang.Years);
+    Items.Item3.Body(DocumentClass document) = ShowTree("Romance phylogeny", null, LanguageBranches.Romance, Lang.Years);
 
-    Items.Item4.Body(SizeClass size) = ShowTree("Prior Tree", null, Experiment.PriorTree, null);
+    Items.Item4.Body(DocumentClass document) = ShowTree("Prior Tree", null, Experiment.PriorTree, null);
 
     Items.Item5.Text = Span {
       "Chang et al lexical data; others";
@@ -286,20 +299,20 @@ namespace DavidSlides.TheData {
     Title = "Overview";
     Pause = true;
 
-    Items.Item1.Body(SizeClass size) = Span {
-      ItemTextFormat;
-      Experiment.Data.Taxa.Length - 1;
+    Items.Item1.Body(DocumentClass document) = Paragraph {
+      Span {
+        Experiment.Data.Taxa.Length - 1;
+//        Tip:
+      };
       " Romance languages plus Latin as an outgroup";
     };
 
-    Items.Item2.Body(SizeClass size) = Span {
-      ItemTextFormat;
+    Items.Item2.Body(DocumentClass document) = Span {
       Experiment.Data.WordCount;
       " words";
     };
 
-    Items.Item3.Body(SizeClass size) = Span {
-      ItemTextFormat;
+    Items.Item3.Body(DocumentClass document) = Span {
       Experiment.Data.UniqueSegments.Length;
       " unique segments";
     };
@@ -308,7 +321,7 @@ namespace DavidSlides.TheData {
       "How many word forms from each language";
     };
 
-    Items.Item5.Body(SizeClass size) = TableFigures.WordCountTable.Body(size) {
+    Items.Item5.Body(DocumentClass document) = TableFigures.WordCountTable.Body(document) {
       TextHeight: 14 pts;
     };
   }
@@ -508,7 +521,6 @@ namespace DavidSlides.Methods {
     Title = "Bayes’ Theorem";
 
     Items.Item1.Text = Block {
-      ItemTextFormat;
       Paragraph {
         "What is the probability of an unobserved phenomenon—such as a phylogenetic tree, a rate of change, or an alignment—given the observable data and our prior assumptions?";
       };
@@ -519,20 +531,21 @@ namespace DavidSlides.Methods {
     };
 
     Items.Item2.Text = Block {
-      ItemTextFormat;
       Paragraph {
         "What is the specific relation for our experiment";
       };
       Paragraph;
-      Equations.PosteriorProbabilityDistribution.GetLayoutBlock ItemTextFormat;
+      Equations.PosteriorProbabilityDistribution.GetLayoutBlock {
+        TextHeight: 24 pts;
+      }
     };
   }
 
   namespace Slide.Slide3 {
     Title = "The general-time reversible (GTR) model";
 
-    Text = Block {
-      Equations.GTR4.GetLayoutBlock ItemTextFormat;
+    Text = Equations.GTR4.GetLayoutBlock {
+      TextHeight: 24 pts;
     };
   }
 
@@ -672,7 +685,7 @@ namespace DavidSlides.Results {
   namespace Slide.Slide2 {
     Title = "Majority-rule consensus tree";
 
-    Body(SizeClass size) = Block {
+    Body(DocumentClass document) = Block {
       ShowTree(null, null, Experiment.MainRun.Tree, Lang.Branches);
     };
   }
