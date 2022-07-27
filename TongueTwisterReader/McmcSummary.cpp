@@ -488,7 +488,7 @@ int McmcSummary::parseNumberFromFreqHeader(std::string str) {
     return num;
 }
 
-void McmcSummary::readAlnFile(std::string fn, int /*bi*/) {
+void McmcSummary::readAlnFile(std::string fn, int bi) {
 
     std::ifstream ifs(fn);
     nlohmann::json j;
@@ -529,8 +529,11 @@ void McmcSummary::readAlnFile(std::string fn, int /*bi*/) {
     nlohmann::json js = j["Samples"];
     for (int i=0; i<js.size(); i++)
         {
-        Alignment* aln = new Alignment( js[i]["Data"], taxa );
-        dist->addAlignment(aln);
+        if (i > bi)
+            {
+            Alignment* aln = new Alignment( js[i]["Data"], taxa );
+            dist->addAlignment(aln);
+            }
         }
         
     //dist->print();
@@ -572,7 +575,7 @@ void McmcSummary::readConfigFile(std::string fn) {
         statePartitions->print();
 }
 
-void McmcSummary::readTreFile(std::string fn, int /*bi*/) {
+void McmcSummary::readTreFile(std::string fn, int bi) {
 
 	// open the file
 	std::ifstream fstrm(fn.c_str());
@@ -585,6 +588,7 @@ void McmcSummary::readTreFile(std::string fn, int /*bi*/) {
     std::vector<std::string> translateTokens;
     std::string treeString = "";
     std::map<int,std::string> translateMap;
+    int treeCount = 0;
 	while( getline(fstrm, lineString).good() )
 		{
         //std::cout << line << " -- " << lineString << std::endl;
@@ -631,12 +635,14 @@ void McmcSummary::readTreFile(std::string fn, int /*bi*/) {
                         {
                         treeString += word;
                         readingTree = false;
-                        std::string newickStr = interpretTreeString(treeString);
-                        //std::cout << "Tree: \"" << newickStr << "\"" << std::endl;
-                        Tree t(newickStr, translateMap);
-                        //t.print();
-                        std::map<RbBitSet,double> parts = t.getPartitions();
-                        addPartion(parts);
+                        treeCount++;
+                        if (treeCount > bi)
+                            {
+                            std::string newickStr = interpretTreeString(treeString);
+                            Tree t(newickStr, translateMap);
+                            std::map<RbBitSet,double> parts = t.getPartitions();
+                            addPartion(parts);
+                            }
                         treeString = "";
                         }
                     else
