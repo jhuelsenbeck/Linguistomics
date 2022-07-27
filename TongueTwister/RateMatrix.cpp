@@ -12,6 +12,7 @@ RateMatrix::RateMatrix(void) {
     numStates = 0;
     activeMatrix = 0;
     isInitialized = false;
+    rateMatrixHelper = NULL;
 }
 
 RateMatrix::~RateMatrix(void) {
