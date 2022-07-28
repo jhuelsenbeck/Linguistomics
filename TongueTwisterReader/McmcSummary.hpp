@@ -21,11 +21,14 @@ class McmcSummary {
                                                 McmcSummary(void) = delete;
                                                 McmcSummary(RandomVariable* r);
                                                ~McmcSummary(void);
+        McmcSummary&                            operator+=(const McmcSummary& rhs);
         std::vector<CredibleInterval>           getCredibleIntervals(void);
         std::vector<double>                     getMeans(void);
+        AlignmentDistribution*                  getAlignmentNamed(std::string str) const;
+        ParameterStatistics*                    getParameterNamed(std::string str) const;
         void                                    print(void);
         void                                    printPartitionSet(void);
-        void                                    output(UserSettings& settings);
+        void                                    output(std::string pathName);
         void                                    readAlnFile(std::string fn, int bi);
         void                                    readTreFile(std::string fn, int bi);
         void                                    readTsvFile(std::string fn, int bi);

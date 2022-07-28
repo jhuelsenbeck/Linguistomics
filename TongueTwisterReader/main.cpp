@@ -6,15 +6,12 @@
 #include "UserSettings.hpp"
 
 void printHeader(void);
-void readConfigurationFile(UserSettings& settings, McmcSummary& summary);
+void readConfigurationFile(std::string pathName, McmcSummary& summary);
+void readDirectory(std::string filePath, int bi, McmcSummary& summary);
 
 
 
 int main(int argc, char* argv[]) {
-
-    // TODO: Output information on partition group frequencies (i.e., size of circles), with CIs.
-    //       Check that the partition group indices are consistent across all output in this program (esp. check .csv file)
-    // Check in a Makefile for this code
 
     RandomVariable rv;
     printHeader();
@@ -25,9 +22,54 @@ int main(int argc, char* argv[]) {
     settings.print();
     
     // go through all of the files in the directory
-    McmcSummary summary(&rv);
-    readConfigurationFile(settings, summary); // this will instantiate the partition sets object, if partitions are present
-    for (const auto& entry : std::filesystem::directory_iterator(settings.getPath()))
+    McmcSummary summary1(&rv);
+    readConfigurationFile(settings.getInputFile(), summary1); // this will instantiate the partition sets object, if partitions are present
+    readDirectory(settings.getInputFile(), settings.getBurnIn(), summary1);
+    
+    // read the second set of input, if available
+    if (settings.getInputFile2() != "")
+        {
+        McmcSummary summary2(&rv);
+        readConfigurationFile(settings.getInputFile2(), summary2);
+        readDirectory(settings.getInputFile2(), settings.getBurnIn(), summary2);
+        summary1 += summary2;
+        summary1.output(settings.getPath());
+        }
+    else
+        {
+        summary1.output(settings.getPath());
+        }
+
+    return 0;
+}
+
+void printHeader(void) {
+
+    std::cout << "   TongueTwister Reader" << std::endl;
+    std::cout << "   * John P. Huelsenbeck" << std::endl;
+}
+
+void readConfigurationFile(std::string pathName, McmcSummary& summary) {
+
+    for (const auto& entry : std::filesystem::directory_iterator(pathName))
+        {
+        std::filesystem::path fp = entry.path();
+        #ifdef _CONSOLE
+        auto filePath      = fp.string();
+        auto fileExtension = fp.extension();
+        #else
+        auto filePath      = fp;
+        auto fileExtension = fp.extension();
+        #endif
+
+        if (fileExtension == ".config")
+            summary.readConfigFile(filePath);
+        }
+}
+
+void readDirectory(std::string filePath, int bi, McmcSummary& summary) {
+
+    for (const auto& entry : std::filesystem::directory_iterator(filePath))
         {
         std::filesystem::path fp = entry.path();
         #ifdef _CONSOLE
@@ -42,49 +84,20 @@ int main(int argc, char* argv[]) {
         if (fileExtension == ".tsv")
             {
             show = true;
-            summary.readTsvFile(filePath, settings.getBurnIn());
+            summary.readTsvFile(filePath, bi);
             }
         else if (fileExtension == ".aln")
             {
             show = true;
-            summary.readAlnFile(filePath, settings.getBurnIn());
+            summary.readAlnFile(filePath, bi);
             }
         else if (fileExtension == ".tre")
             {
             show = true;
-            summary.readTreFile(filePath, settings.getBurnIn());
+            summary.readTreFile(filePath, bi);
             }
 
         if (show)
             std::cout << filePath << std::endl;
-        }
-    
-    //summary.print();
-    summary.output(settings);
-
-    return 0;
-}
-
-void printHeader(void) {
-
-    std::cout << "   TongueTwister Reader" << std::endl;
-    std::cout << "   * John P. Huelsenbeck" << std::endl;
-}
-
-void readConfigurationFile(UserSettings& settings, McmcSummary& summary) {
-
-    for (const auto& entry : std::filesystem::directory_iterator(settings.getPath()))
-        {
-        std::filesystem::path fp = entry.path();
-        #ifdef _CONSOLE
-        auto filePath      = fp.string();
-        auto fileExtension = fp.extension();
-        #else
-        auto filePath      = fp;
-        auto fileExtension = fp.extension();
-        #endif
-
-        if (fileExtension == ".config")
-            summary.readConfigFile(filePath);
         }
 }
