@@ -3,6 +3,17 @@
 #include "ParameterStatistics.hpp"
 
 
+ParameterStatistics::ParameterStatistics(void) {
+
+    name = "";
+    values.clear();
+}
+
+ParameterStatistics::ParameterStatistics(const ParameterStatistics& ps) {
+
+    name = ps.name;
+    values = ps.values;
+}
 
 double ParameterStatistics::operator[](size_t idx) {
 
@@ -16,6 +27,16 @@ double ParameterStatistics::operator[](size_t idx) const {
     if (idx >= values.size())
         Msg::error("Subscript index out-of-range");
     return values[idx];
+}
+
+ParameterStatistics& ParameterStatistics::operator+=(const ParameterStatistics& rhs) {
+
+    for (int i=0; i<rhs.size(); i++)
+        {
+        double x = rhs[i];
+        this->addValue(x);
+        }
+    return *this;
 }
 
 CredibleInterval ParameterStatistics::getCredibleInterval(void) {

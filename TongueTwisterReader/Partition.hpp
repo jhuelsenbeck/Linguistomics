@@ -13,10 +13,13 @@ class Partition {
                             Partition(void) = delete;
                             Partition(nlohmann::json js);
                            ~Partition(void);
+        bool                operator==(const Partition& rhs) const;
         void                addSubset(std::string s, std::vector<int> v);
         Subset*             findSubsetIndexed(int x);
+        Subset*             findSubsetIndexed(int x) const;
         Subset*             findSubsetWithValue(int x);
         int                 indexOfSubsetWithValue(int x);
+        bool                isEqualTo(const Partition& rhs) const;
         int                 numSubsets(void) { return (int)subsets.size(); }
         void                print(void);
         int                 maxValue(void);
@@ -26,5 +29,6 @@ class Partition {
     private:
         std::set<Subset*>   subsets;
 };
+
 
 #endif

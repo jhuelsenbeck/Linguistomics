@@ -16,7 +16,9 @@ class AlignmentDistribution {
                                                 AlignmentDistribution(void) = delete;
                                                 AlignmentDistribution(RandomVariable* r, Partition* p);
                                                ~AlignmentDistribution(void);
+        AlignmentDistribution&                  operator+=(const AlignmentDistribution& rhs);
         void                                    addAlignment(Alignment* aln);
+        void                                    addAlignmentNoDelete(Alignment* aln);
         int                                     ciSize(void);
         std::string                             getName(void) { return name; }
         Alignment*                              getMapAlignment(void);

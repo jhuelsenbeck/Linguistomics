@@ -14,6 +14,7 @@ class UserSettings {
                                     return us;
                                 }
         std::string             getInputFile(void) { return inFile; }
+        std::string             getInputFile2(void) { return inFile2; }
         std::string             getOutFile(void) { return outFile; }
         int                     getBurnIn(void) { return burnIn; }
         std::string             getPath(void) { return inFile; }
@@ -25,6 +26,7 @@ class UserSettings {
                                 UserSettings(const UserSettings& s) = delete;
         void                    usage(void);
         std::string             inFile;
+        std::string             inFile2;
         std::string             outFile;
         int                     burnIn;
 };

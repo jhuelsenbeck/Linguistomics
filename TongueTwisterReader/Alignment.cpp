@@ -4,9 +4,7 @@
 #include "Sequence.hpp"
 
 
-Alignment::Alignment(nlohmann::json js, std::vector <std::string>& taxa):
-    sorted(taxa.size())
-    {
+Alignment::Alignment(nlohmann::json js, std::vector <std::string>& taxa) : sorted(taxa.size()) {
 
     for (int i=0; i<js.size(); i++)
         {

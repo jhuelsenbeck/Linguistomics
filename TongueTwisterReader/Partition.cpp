@@ -34,6 +34,44 @@ Partition::~Partition(void) {
         delete s;
 }
 
+bool Partition::operator==(const Partition& rhs) const {
+
+    if (this->subsets.size() != rhs.subsets.size())
+        return false;
+        
+    for (Subset* lhsSubset : this->subsets)
+        {
+        int lhsIndex = lhsSubset->getIndex();
+        std::string lhsLabel = lhsSubset->getLabel();
+        std::set<int>& lhsVals = lhsSubset->getValues();
+        
+        Subset* rhsSubset = rhs.findSubsetIndexed(lhsIndex);
+        if (rhsSubset == NULL)
+            {
+            return false;
+            }
+        else
+            {
+            int rhsIndex = rhsSubset->getIndex();
+            std::string rhsLabel = rhsSubset->getLabel();
+            std::set<int>& rhsVals = rhsSubset->getValues();
+            
+            if (lhsIndex != rhsIndex)
+                return false;
+            if (lhsLabel != rhsLabel)
+                return false;
+            if (lhsVals != rhsVals)
+                return false;
+            }
+        }
+    return true;
+}
+
+bool Partition::isEqualTo(const Partition& rhs) const {
+
+    return (*this == rhs);
+}
+
 void Partition::addSubset(std::string s, std::vector<int> v) {
 
     Subset* ss = new Subset(s, v);
@@ -42,6 +80,16 @@ void Partition::addSubset(std::string s, std::vector<int> v) {
 }
 
 Subset* Partition::findSubsetIndexed(int x) {
+
+    for (Subset* s : subsets)
+        {
+        if (s->getIndex() == x)
+            return s;
+        }
+    return NULL;
+}
+
+Subset* Partition::findSubsetIndexed(int x) const {
 
     for (Subset* s : subsets)
         {

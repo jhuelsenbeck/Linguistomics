@@ -11,6 +11,7 @@ UserSettings::UserSettings(void) {
 
     // dafault values
     inFile  = "";
+    inFile2 = "";
     outFile = "";
     burnIn  = 5000;
 }
@@ -42,6 +43,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
             {
             if (arg == "-i")
                 inFile = cmd;
+            else if (arg == "-i2")
+                inFile2 = cmd;
             else if (arg == "-o")
                 outFile = cmd;
             else if (arg == "-b")
@@ -61,18 +64,20 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 void UserSettings::print(void) {
 
     std::cout << "   Settings" << std::endl;
-    std::cout << "   * Input path name  = \"" << inFile << "\"" << std::endl;
-    std::cout << "   * Output file name = \"" << outFile << "\"" << std::endl;
-    std::cout << "   * Burn in number   = " << burnIn << std::endl;
+    std::cout << "   * Input path name   = \"" << inFile << "\"" << std::endl;
+    std::cout << "   * Input 2 path name = \"" << inFile2 << "\"" << std::endl;
+    std::cout << "   * Output file name  = \"" << outFile << "\"" << std::endl;
+    std::cout << "   * Burn in number    = " << burnIn << std::endl;
     std::cout << std::endl;
 }
 
 void UserSettings::usage(void) {
 
     std::cout << "   Usage" << std::endl;
-    std::cout << "   * -i -- File with data to be summarized" << std::endl;
-    std::cout << "   * -o -- File name for output" << std::endl;
-    std::cout << "   * -b -- Burn-in number" << std::endl;
+    std::cout << "   * -i  -- File with data to be summarized" << std::endl;
+    std::cout << "   * -i2 -- Second file with data to be summarized" << std::endl;
+    std::cout << "   * -o  -- File name for output" << std::endl;
+    std::cout << "   * -b  -- Burn-in number" << std::endl;
     std::cout << std::endl;
 }
 

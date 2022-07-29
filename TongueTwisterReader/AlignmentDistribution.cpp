@@ -3,6 +3,7 @@
 #include <vector>
 #include "Alignment.hpp"
 #include "AlignmentDistribution.hpp"
+#include "Msg.hpp"
 #include "Partition.hpp"
 #include "RandomVariable.hpp"
 
@@ -27,6 +28,22 @@ AlignmentDistribution::~AlignmentDistribution(void) {
         delete partition;
 }
 
+AlignmentDistribution& AlignmentDistribution::operator+=(const AlignmentDistribution& rhs) {
+
+    // check that the partition information is the same in each
+    if ( this->partition->isEqualTo(*(rhs.partition)) == false )
+        Msg::error("Cannot combine alignments with different partition information");
+
+    // combine the information
+    for (std::map<Alignment*,int>::const_iterator it = rhs.samples.begin(); it != rhs.samples.end(); it++)
+        {
+        Alignment* rhsAln = it->first;
+        this->addAlignmentNoDelete(rhsAln);
+        }
+    
+    return *this;
+}
+
 void AlignmentDistribution::addAlignment(Alignment* aln) {
 
     bool foundAlignmentInMap = false;
@@ -37,6 +54,25 @@ void AlignmentDistribution::addAlignment(Alignment* aln) {
             it->second++;
             foundAlignmentInMap = true;
             delete aln;
+            break;
+            }
+        }
+        
+    if (foundAlignmentInMap == false)
+        {
+        samples.insert( std::make_pair(aln,1) );
+        }
+}
+
+void AlignmentDistribution::addAlignmentNoDelete(Alignment* aln) {
+
+    bool foundAlignmentInMap = false;
+    for (std::map<Alignment*,int>::iterator it = samples.begin(); it != samples.end(); it++)
+        {
+        if (*it->first == *aln)
+            {
+            it->second++;
+            foundAlignmentInMap = true;
             break;
             }
         }
