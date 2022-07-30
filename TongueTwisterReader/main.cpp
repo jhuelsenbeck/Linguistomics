@@ -67,9 +67,9 @@ void readConfigurationFile(std::string pathName, McmcSummary& summary) {
         }
 }
 
-void readDirectory(std::string filePath, int bi, McmcSummary& summary) {
+void readDirectory(std::string folder, int bi, McmcSummary& summary) {
 
-    for (const auto& entry : std::filesystem::directory_iterator(filePath))
+    for (const auto& entry : std::filesystem::directory_iterator(folder))
         {
         std::filesystem::path fp = entry.path();
         #ifdef _CONSOLE
