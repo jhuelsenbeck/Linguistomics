@@ -22,10 +22,9 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
     numRates = numStates * (numStates-1) / 2;
     for (int i=0; i<numStates; i++)
         {
-        std::string str = std::to_string(i) + "-";
         for (int j=i+1; j<numStates; j++)
             {
-            str += std::to_string(j);
+            std::string str = std::to_string(i) + "-" + std::to_string(j);
             rateLabels.push_back(str);
             }
         }
