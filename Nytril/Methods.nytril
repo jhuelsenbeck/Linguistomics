@@ -846,9 +846,11 @@ namespace TableFigures.ManualAlignment {
   };
 
   Body(DocumentClass document) = LanguageTable {
+    TextHeight: Extent.Size.Width * 0.02;
+
     var cognate = Experiment.Data.GetCognate(Experiment.Data.FigureConcept);
 
-    Columns: [1.5 inches, 2 inches, 2.5 inch];
+    Columns: [1.5 inches, 2.1 inches, 2.5 inch];
     LanguageTitleRow {
       Lang.Language; Lang.PhonemicRep; Lang.Alignment;
     };
@@ -868,15 +870,14 @@ namespace TableFigures.ManualAlignment {
 //======================================================================
 
 namespace TableFigures.WordCountTable {
-  WordDisplay(ExperimentClass experiment) = SQuote {
-    TextCase: TextCases.AllLower;
-    Experiment.Data.FigureConcept.GlobalVariableName;
-    eos;
-  };
 
   Caption(DocumentClass document) = Span {
     "Manual alignment of the words for the concept ";
-    WordDisplay(Experiment);
+    SQuote {
+      TextCase: TextCases.AllLower;
+      Experiment.Data.FigureConcept.GlobalVariableName;
+      eos;
+    };
   };
 
   Body(DocumentClass document) = LanguageTable {
@@ -888,7 +889,7 @@ namespace TableFigures.WordCountTable {
     foreach (var taxon in Experiment.Data.Taxa) {
       Row {
         taxon.Language;
-        taxon.Language.FindFacts(WordClass).Length;
+        taxon.WordCount;
       };
     }
   };
@@ -903,7 +904,6 @@ namespace PaperSections.ModelInference {
 
   Body(DocumentClass document) = Block {
     var rule = Experiment.Rule;
-
 
     FirstPar {
       "We assume that modern languages are related to one another through an unknown phylogenetic tree, ";

@@ -18,6 +18,33 @@ class AppendixClass {
     Title   =  title;
     Content = content;
   }
+
+  virtual GetCaption(DocumentClass doc) = null;
+  virtual GetBody(DocumentClass doc)    = Content;
+}
+//======================================================================
+
+class AppendixFigureClass: AppendixClass {
+  var Figure;
+
+  Constructor(figure) {
+    super.Constructor(figure.Title, null);
+    Figure = figure;
+  }
+
+  override GetCaption(DocumentClass doc) = Paragraph {
+    if (exists Figure.?Caption)
+      return Figure.Caption(doc);
+    else
+      return Figure.?Title;
+  };
+
+  override GetBody(DocumentClass doc) = Block {
+    if (exists Figure.?Body)
+      return Figure.Body(doc);
+    else
+      return Figure.?Text;
+  };
 }
 //======================================================================
 
@@ -513,7 +540,7 @@ namespace Style {
     };
   };
 
-  ShowAppendix(appendix) = PageSection {
+  ShowAppendix(DocumentClass doc, AppendixClass appendix) = PageSection {
     Header: Block {
       Distance: 0.5 inches;
       Paragraph {
@@ -526,7 +553,17 @@ namespace Style {
         appendix.Title;
       };
     };
-    appendix.Content;
+    var caption = Block {
+      appendix.GetCaption(doc);
+      Paragraph;
+    };
+    caption;
+    var height = GetLayoutSize(caption, Extent.Size).Height;
+
+
+    var extent = SetExtentSize(new(Extent.Size.Width, Extent.Size.Height - height));
+    appendix.GetBody(doc);
+    SetExtent(extent);
   };
 
   LanguageRow(lang) = Row {

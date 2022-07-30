@@ -11,7 +11,7 @@ DiagDocumentClass = Document {
 
 //======================================================================
 
-BaseDocumentClass = Document {
+BaseDocumentClass = Document(DocMetrics.DocExtent) {
   TextFamily: TextFamilies.TimesNewRoman;
   TextHeight: 9 pts;
 
@@ -24,7 +24,7 @@ BaseDocumentClass = Document {
 
 class SubmissionViewClass: DocumentClass {
   Constructor {
-    super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper", DocumentTypes.Normal, DocMetrics.DocExtent);
+    super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
     Title = Info.Title;
   }
 
@@ -87,7 +87,7 @@ class SubmissionViewClass: DocumentClass {
 
 class SupplimentalViewClass: DocumentClass {
   Constructor {
-    super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material", DocumentTypes.Normal, DocMetrics.DocExtent);
+    super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
     Title  = Name;
   }
 
@@ -107,10 +107,10 @@ class SupplimentalViewClass: DocumentClass {
   };
 
   override GetDocument = BaseDocumentClass {
-    var appendices = [
-      new AppendixClass(Lang.PartitionRules, Experiment.Rule.ShowPartitions),
-//      new AppendixClass(Lang.FunctionalLoad, Experiment.ShowFunctionalLoad),
-      new AppendixClass("Experimental Runs", Experiment.ShowExperiment),
+    AppendixClass[] appendices = [
+      new(Lang.PartitionRules, Experiment.Rule.ShowPartitions),
+//      new(Lang.FunctionalLoad, Experiment.ShowFunctionalLoad),
+      new("Experimental Runs", Experiment.ShowExperiment),
     ];
 
     PageSection {
@@ -140,14 +140,14 @@ class SupplimentalViewClass: DocumentClass {
     };
 
     ShowBibliography;
-    ShowAppendix(each appendices);
+    ShowAppendix(this, each appendices);
   };
 }
 //======================================================================
 
 class AlignmentViewClass: DocumentClass {
   Constructor {
-    super.Constructor(#a14658e4-26f7-4eab-87b7-4f486035103b#, "Alignments", DocumentTypes.Normal, DocMetrics.DocExtent);
+    super.Constructor(#a14658e4-26f7-4eab-87b7-4f486035103b#, "Alignments");
   }
 
   override GetDocument = BaseDocumentClass {

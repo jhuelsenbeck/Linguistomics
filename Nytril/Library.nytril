@@ -499,13 +499,15 @@ class CognateClass: FactClass {
 
 class TaxonClass {
   var           Variable,
-                Index;
+                Index,
+                WordCount;
   LanguageClass Language;
 
   Constructor(LanguageClass language) {
-    Index    = each0;
-    Language = language;
-    Variable = language.GlobalVariableName;
+    Index     = each0;
+    Language  = language;
+    Variable  = language.GlobalVariableName;
+    WordCount = 0;
   }
 
   override GetLayoutTip = Span {
@@ -565,7 +567,7 @@ class ResultsClass {
 
     var alist = new ListClass<AlignIndexClass>(1024);
     foreach (var a in Alignments) {
-      foreach (var c in experiment.Data.UsedCognates) {
+      foreach (var c in Data.UsedCognates) {
         if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
           a.Cognate = c;
           alist.Add(a);
@@ -661,9 +663,15 @@ class DataSetClass {
           if (inc) {
             var count = 0;
             foreach (var word in cognate) {
-              if (valid word and TaxonSet.Contains(word.GlobalVariableName))
-                ++count;
+              if (valid word) {
+                var taxon = TaxonSet.FindKey(word.GlobalVariableName);
+                if (valid taxon) {
+                  ++taxon.WordCount;
+                  ++count;
+                }
+              }
             }
+
             if (count >= WordCutoff) {
               var concept = new ConceptClass(conceptvar);
               conceptlist.Add(concept);

@@ -1,4 +1,4 @@
-using Format, Units, Style;
+using Format, Units, IO;
 
 include "English";
 include "Spanish";
@@ -29,13 +29,30 @@ include "Data Validation";
 
 //======================================================================
 
-ExperimentClass Experiment  = new Trial.EuropeFullExperimentClass;
-ResultsClass    MainResults = new(Experiment);
+// "LanguagePhonetic";
+// "LanguageTest";
 
-DocumentClass Main.Documents.Alignment         = new AlignmentViewClass;
-DocumentClass Main.Documents.Submission        = new SubmissionViewClass;
-DocumentClass Main.Documents.Supplimental      = new SupplimentalViewClass;
-DocumentClass Main.Documents.DavidPresentation = new DavidLinguisticPresentationClass;
-DocumentClass Main.Documents.JohnPresentation  = new JohnPresentationClass;
+DataSetClass RawData {
+  var words = ReadScript(Folders.Source FileName("LanguageSet") Extensions.Nytril);
+  return new DataSetClass(words.Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, EuroRomance, 1);
+}
+//======================================================================
+
+Main.Run = new RunInitClass;
+
+ExperimentClass NewExperiment = new EuropeXLExperimentClass(RawData);
+ExperimentClass Experiment    = new EuropeFullExperimentClass(null);
+ResultsClass    MainResults   = new(Experiment);
+//======================================================================
+
+namespace Main.Documents {
+  DocumentClass Diagnostics       = new DiagnosticsViewClass(RawData);
+  DocumentClass Configuration     = new ConfigurationViewClass;
+  DocumentClass Alignment         = new AlignmentViewClass;
+  DocumentClass Submission        = new SubmissionViewClass;
+  DocumentClass Supplimental      = new SupplimentalViewClass;
+  DocumentClass DavidPresentation = new DavidLinguisticPresentationClass;
+  DocumentClass JohnPresentation  = new JohnPresentationClass;
+}
 //======================================================================
 
