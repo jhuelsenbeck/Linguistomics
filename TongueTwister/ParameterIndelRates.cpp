@@ -270,51 +270,6 @@ double ParameterIndelRates::update(int) {
     modelPtr->flipActiveLikelihood();
     
     return log(pReverse) - log(pForward);
-
-#   if 0
-    double lnProposalProbability = 0.0;
-    double u = rv->uniformRv();
-    if (u < 0.5)
-        {
-        // update epsilon
-        lastUpdateType = "lambda";
-        double alpha0 = 10.0;
-        std::vector<double> forwardAlpha(2);
-        forwardAlpha[0] = alpha0 * epsilon[0][0];
-        forwardAlpha[1] = alpha0 * epsilon[0][1];
-        std::vector<double> newEpsilon(2);
-        
-        do {
-            Probability::Dirichlet::rv(rv, forwardAlpha, newEpsilon);
-            } while(newEpsilon[0] > 0.99 || newEpsilon[0] < 0.01);
-        
-        std::vector<double> reverseAlpha(2);
-        reverseAlpha[0] = alpha0 * newEpsilon[0];
-        reverseAlpha[1] = alpha0 * newEpsilon[1];
-        
-        lnProposalProbability = Probability::Dirichlet::lnPdf(reverseAlpha, epsilon[0]) - Probability::Dirichlet::lnPdf(forwardAlpha, newEpsilon);
-        epsilon[0] = newEpsilon;
-        }
-    else
-        {
-        // update rho
-        lastUpdateType = "mu";
-        double tuning = log(4.0);
-        double newRho = rho[0] * exp(tuning*(rv->uniformRv()-0.5));
-        lnProposalProbability = log(newRho) - log(rho[0]);
-        rho[0] = newRho;
-        }
-
-    // set flags indicating the transition probabilities are not affected
-    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
-    tip->setNeedsUpdate(false);
-    updateChangesTransitionProbabilities = false;
-
-    modelPtr->setUpdateLikelihood();
-    modelPtr->flipActiveLikelihood();
-
-    return lnProposalProbability;
-#   endif
 }
 
 double ParameterIndelRates::updateFromPrior(void) {

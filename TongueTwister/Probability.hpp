@@ -38,8 +38,8 @@ namespace  Probability {
     
         double  pdf(const std::vector<double> &a, const std::vector<double> &z);
         double  lnPdf(const std::vector<double> &a, const std::vector<double> &z);
-        void    rv(RandomVariable* rng, const std::vector<double>& a, std::vector<double>& z);
-        void    rv(RandomVariable* rng, const double* a, double* z, int n);
+        bool     rv(RandomVariable* rng, const std::vector<double>& a, std::vector<double>& z);
+        bool     rv(RandomVariable* rng, const double* a, double* z, int n);
     }
 
     namespace Gamma {
@@ -106,7 +106,7 @@ namespace  Probability {
         void    normalize(std::vector<double>& vec, double min);
         void    normalize(double* vec, double min, int n);
         double  pointNormal(double prob);
-        double  rndGamma(RandomVariable* rng, double s);
+        double  rndGamma(RandomVariable* rng, double s, bool& err);
         double  rndGamma1(RandomVariable* rng, double s);
         double  rndGamma2(RandomVariable* rng, double s);
     }

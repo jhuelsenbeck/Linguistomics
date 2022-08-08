@@ -134,32 +134,39 @@ double ParameterEquilibirumFrequencies::update(int) {
     double lnP = 0.0;
     if (k == 1)
         {
-        double alpha0 = 100.0;
-        
-        int indexToUpdate = rv->uniformRvInt(numStates);
-
+        // resize vectors for move
         oldValues.resize(2, 0.0);
         newValues.resize(2, 0.0);
         alphaForward.resize(2, 0.0);
         alphaReverse.resize(2, 0.0);
-
+        
+        // parameterize dirichlet for forward move
+        double alpha0 = 100.0;
+        int indexToUpdate = rv->uniformRvInt(numStates);
         oldValues[0] = freqs[0][indexToUpdate];
         oldValues[1] = 1.0 - oldValues[0];
         alphaForward[0] = oldValues[0] * alpha0;
         alphaForward[1] = oldValues[1] * alpha0;
+        if (alphaForward[0] < 0.0)
+            Msg::error("Negative alpha[0] in k=1 proposal for exchangability rates");
+        if (alphaForward[1] < 0.0)
+            Msg::error("Negative alpha[1] in k=1 proposal for exchangability rates");
         
-        Probability::Dirichlet::rv(rv, alphaForward, newValues);
-        Probability::Helper::normalize(newValues, minVal);
-        
-        alphaReverse[0] = newValues[0] * alpha0;
-        alphaReverse[1] = newValues[1] * alpha0;
-        
+        // propose new values
+        bool err = Probability::Dirichlet::rv(rv, alphaForward, newValues);
+        if (err == true)
+            Msg::error("Problem proposing dirichlet values in k=1 for exchangability rates");
         double factor = newValues[1] / oldValues[1];
-        
         for (int i=0; i<numStates; i++)
             freqs[0][i] *= factor;
         freqs[0][indexToUpdate] = newValues[0];
+        Probability::Helper::normalize(newValues, minVal);
 
+        // parameterize dirichlet for reverse move
+        alphaReverse[0] = newValues[0] * alpha0;
+        alphaReverse[1] = newValues[1] * alpha0;
+
+        // calculate proposal probability
         lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         lnP += (numStates - 2) * log(factor); // Jacobian
         }
@@ -189,7 +196,13 @@ double ParameterEquilibirumFrequencies::update(int) {
             alphaForward[i] = oldValues[i] * alpha0;;
         
         // draw a new value for the reduced vector
-        Probability::Dirichlet::rv(rv, alphaForward, newValues);
+        bool err = false;
+        do
+            {
+            err = Probability::Dirichlet::rv(rv, alphaForward, newValues);
+            if (err == true)
+                Msg::warning("Trying to recover from Dirichlet random variable error in state frequencies update (k=intermediate)");
+            } while (err == true);
         Probability::Helper::normalize(newValues, minVal);
         
         // fill in the Dirichlet parameters for the reverse probability calculations
@@ -226,7 +239,13 @@ double ParameterEquilibirumFrequencies::update(int) {
             alphaForward[i] = oldValues[i] * alpha0;
             }
         
-        Probability::Dirichlet::rv(rv, alphaForward, newValues);
+        bool err = false;
+        do
+            {
+            err = Probability::Dirichlet::rv(rv, alphaForward, newValues);
+            if (err == true)
+                Msg::warning("Trying to recover from Dirichlet random variable error in state frequencies update (k=N)");
+            } while (err == true);
         Probability::Helper::normalize(newValues, minVal);
         
         for (int i=0; i<numStates; i++)

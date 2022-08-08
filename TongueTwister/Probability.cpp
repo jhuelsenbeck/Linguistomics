@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include "Msg.hpp"
 #include "Probability.hpp"
@@ -9,8 +10,9 @@
 
 double Probability::Beta::rv(RandomVariable* rng, double a, double b) {
 
-    double z0 = Probability::Helper::rndGamma( rng, a );
-    double z1 = Probability::Helper::rndGamma( rng, b );
+    bool betaErr = false;
+    double z0 = Probability::Helper::rndGamma( rng, a, betaErr );
+    double z1 = Probability::Helper::rndGamma( rng, b, betaErr );
     double sum = z0 + z1;
     double x = z0 / sum;
     return x;
@@ -288,31 +290,41 @@ double Probability::Dirichlet::lnPdf(const std::vector<double> &a, const std::ve
 	return lnP;
 }
 
-void Probability::Dirichlet::rv(RandomVariable* rng, const std::vector<double> &a, std::vector<double> &z) {
+bool Probability::Dirichlet::rv(RandomVariable* rng, const std::vector<double> &a, std::vector<double> &z) {
 
+    bool error = false;
     int n = (int)a.size();
     double sum = 0.0;
     for(int i=0; i<n; i++)
         {
         /* z[i] = rndGamma(a[i]) / 1.0; */
-        z[i] = Probability::Helper::rndGamma(rng, a[i]);
+        bool gammaError;
+        z[i] = Probability::Helper::rndGamma(rng, a[i], gammaError);
+        if (gammaError == true)
+            error = true;
         sum += z[i];
         }
     for(int i=0; i<n; i++)
         z[i] /= sum;
+    return error;
 }
 
-void Probability::Dirichlet::rv(RandomVariable* rng, const double* a, double* z, int n) {
+bool Probability::Dirichlet::rv(RandomVariable* rng, const double* a, double* z, int n) {
 
+    bool error = false;
     double sum = 0.0;
     for(int i=0; i<n; i++)
         {
         /* z[i] = rndGamma(a[i]) / 1.0; */
-        z[i] = Probability::Helper::rndGamma(rng, a[i]);
+        bool gammaError;
+        z[i] = Probability::Helper::rndGamma(rng, a[i], gammaError);
+        if (gammaError == true)
+            error = true;
         sum += z[i];
         }
     for(int i=0; i<n; i++)
         z[i] /= sum;
+    return error;
 }
 
 #pragma mark - Exponential
@@ -351,7 +363,8 @@ double  Probability::Gamma::lnPdf(double /*alpha*/, double /*beta*/, double /*x*
 
 double  Probability::Gamma::rv(RandomVariable* rng, double alpha, double beta) {
 
-    return (Probability::Helper::rndGamma(rng, alpha) / beta);
+    bool gammaErr = false;
+    return (Probability::Helper::rndGamma(rng, alpha, gammaErr) / beta);
 }
 
 double  Probability::Gamma::cdf(double alpha, double beta, double x) {
@@ -1064,7 +1077,7 @@ void Probability::Helper::normalize(std::vector<double>& vec, double min) {
             vec[i] *= factor;
         }
         
-#   if 0
+#   if 1
     sum = 0.0;
     for (int i=0; i<vec.size(); i++)
         sum += vec[i];
@@ -1095,9 +1108,9 @@ void Probability::Helper::normalize(double* vec, double min, int n) {
             vec[i] *= factor;
         }
         
-#   if 0
+#   if 1
     sum = 0.0;
-    for (int i=0; i<vec.size(); i++)
+    for (int i=0; i<n; i++)
         sum += vec[i];
     if ( fabs(1.0 - sum) > 0.000001)
         std::cout << "Problem normalizing vector " << std::fixed << std::setprecision(20) << sum << std::endl;
@@ -1125,17 +1138,28 @@ double Probability::Helper::pointNormal(double prob) {
 	return ( p < 0.5 ? -z : z );
 }
 
-double Probability::Helper::rndGamma(RandomVariable* rng, double s) {
+double Probability::Helper::rndGamma(RandomVariable* rng, double s, bool& err) {
 
+    err = false;
     double r = 0.0;
     if (s <= 0.0)
+        {
         std::cout << "Gamma parameter less than or equal to zero (" << s << ")" << std::endl;
+        std::cout << "Setting error status to true" << std::endl;
+        err = true;
+        }
     else if (s < 1.0)
         r = Probability::Helper::rndGamma1(rng, s);
     else if (s > 1.0)
         r = Probability::Helper::rndGamma2(rng, s);
     else
         r = -log(rng->uniformRv());
+    if (r < 0.0)
+        {
+        std::cout << "Gamma value less than or equal to zero (" << r << ")" << std::endl;
+        std::cout << "Setting error status to true" << std::endl;
+        err = true;
+        }
     return (r);
 }
 
@@ -1169,8 +1193,8 @@ double Probability::Helper::rndGamma1(RandomVariable* rng, double s) {
             return (0.0);
         r = rng->uniformRv();
         if (1.0 - r <= w && r > 0.0)
-        if (r*(w + 1.0) >= 1.0 || -log(r) <= w)
-            continue;
+            if (r*(w + 1.0) >= 1.0 || -log(r) <= w)
+                continue;
         break;
         }
     

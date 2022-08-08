@@ -36,6 +36,10 @@ class ParameterExchangabilityRates : public Parameter {
         std::vector<double>             alpha;
         std::vector<std::string>        rateLabels;
         static double                   minVal;
+        std::vector<double>             oldValues;
+        std::vector<double>             newValues;
+        std::vector<double>             alphaForward;
+        std::vector<double>             alphaReverse;
 };
 
 #endif
