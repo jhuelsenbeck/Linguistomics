@@ -207,7 +207,7 @@ namespace Style {
   ShowFigureNumber(figure) = Span {
     Lang.Figure;
     Space;
-    RefCounter("figure", figure.GlobalVariablePath);
+    RefCounter("figure", figure.GetVariableFullName);
   };
 
   FigureReference(ExperimentClass experiment, figure) = ShowFigureNumber(figure) {
@@ -216,7 +216,7 @@ namespace Style {
 
   ShowFigureDoc(DocumentClass document, figure) = Block {
     Paragraph {
-      AnchorTag: figure.GlobalVariablePath;
+      AnchorTag: figure.GetVariableFullName;
       SpaceBefore: 10 pts;
       SpaceAfter: 6 pts;
       KeepWithNext: true;
@@ -241,7 +241,7 @@ namespace Style {
   ShowTableNumber(figure) = Span {
     Lang.Table;
     Space;
-    RefCounter("table", figure.GlobalVariablePath);
+    RefCounter("table", figure.GetVariableFullName);
   };
 
   ShowTable(DocumentClass document, table, textheight) = Block {
@@ -338,7 +338,7 @@ namespace Style {
     LeftIndent: 0.25 inches;
 
     Paragraph {
-      AnchorTag: person.GlobalVariablePath;
+      AnchorTag: person.GetVariableFullName;
       FirstIndent: -0.25 inches;
       CitationLib.GetFullName(person);
     };
@@ -390,7 +390,7 @@ namespace Style {
 
   AnimalRow(a) = Row {
     TextHeight: 10 pts;
-    a.GlobalVariableName;
+    a.GetVariableName;
     Cell {
       Span {
         TextFixed: true;
@@ -568,7 +568,7 @@ namespace Style {
 
   LanguageRow(lang) = Row {
     Background: ((each0 mod 2) == 0 ? Colors.White : 97%);
-    lang.GlobalVariableName;
+    lang.GetVariableName;
   };
 
   ShowLanguageList(list) = Table {
@@ -665,7 +665,7 @@ class FigureActionClass: ActionClass {
   ExperimentClass Experiment;
 
   Constructor(ExperimentClass experiment, figure) {
-    super.Constructor(Actions.ToAnchor, figure.GlobalVariablePath);
+    super.Constructor(Actions.ToAnchor, figure.GetVariableFullName);
     Experiment = experiment;
     Figure     = figure;
   }

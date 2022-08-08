@@ -435,9 +435,9 @@ class ConceptClass: FactClass {
         WordGroup;
 
   Constructor(variable) {
-    super.Constructor(variable.GlobalVariablePath);
+    super.Constructor(variable.GetVariableFullName);
     Variable   = variable;
-    Name       = variable.GlobalVariableName;
+    Name       = variable.GetVariableName;
     Confidence = variable.Confidence;
     WordType   = variable.WordType;
     WordGroup  = variable.WordGroup;
@@ -466,9 +466,9 @@ class CognateClass: FactClass {
                Variable;
 
   Constructor(DataSetClass data, ConceptClass concept, variable) {
-    super.Constructor(variable.GlobalVariablePath);
+    super.Constructor(variable.GetVariableFullName);
 
-    Name       = variable.GlobalVariableName;
+    Name       = variable.GetVariableName;
     Data       = data;
     Concept    = concept;
     Variable   = variable;
@@ -506,7 +506,7 @@ class TaxonClass {
   Constructor(LanguageClass language) {
     Index     = each0;
     Language  = language;
-    Variable  = language.GlobalVariableName;
+    Variable  = language.GetVariableName;
     WordCount = 0;
   }
 
@@ -535,7 +535,7 @@ class WordPairClass {
     Paragraph {
       ParBackground: 90%;
       Bold;
-      Word1.Cognate.Variable.GlobalVariablePath[9..];
+      Word1.Cognate.Variable.GetVariableFullName[9..];
     };
 
     textheight += 2 pts;
@@ -649,7 +649,7 @@ class DataSetClass {
 
       if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(includewords)) {
         foreach (var cognate in conceptvar) {
-          var vname = cognate.GlobalVariableName();
+          var vname = cognate.GetVariableName();
           var inc   = true;
 
           switch (vname) {
@@ -664,7 +664,7 @@ class DataSetClass {
             var count = 0;
             foreach (var word in cognate) {
               if (valid word) {
-                var taxon = TaxonSet.FindKey(word.GlobalVariableName);
+                var taxon = TaxonSet.FindKey(word.GetVariableName);
                 if (valid taxon) {
                   ++taxon.WordCount;
                   ++count;
@@ -769,7 +769,7 @@ class DataSetClass {
     var maxlength = 0;
 
     foreach (var langword in cognate.Variable) {
-      var taxon = TaxonSet.FindKey(langword.GlobalVariableName);
+      var taxon = TaxonSet.FindKey(langword.GetVariableName);
       if (valid taxon) {
         var word = new WordClass(dictionary, taxon, cognate, langword);
         maxlength = Math.Max(maxlength, word.Aligned.Length);
