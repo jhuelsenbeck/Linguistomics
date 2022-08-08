@@ -31,7 +31,7 @@ namespace Figures.TransitionMatrixTable {
 
   Body(DocumentClass document) = Block {
     Style.SansSerif;
-    TextHeight: Extent.Size.Width * 0.015;
+    TextHeight: ExtentWidth * 0.015;
 
     var stats      = MainResults.TransitionStats;
     var partitions = Experiment.Rule.Partitions;
@@ -68,7 +68,7 @@ namespace Figures.TransitionMatrixTable {
 
           foreach (var c in r) {
             if (valid c)
-              c.ShowBox {MarginT: dy};
+              c.ShowBox {Margin: ThicknessClass.T(dy)};
             else {
               Cell {
                 VAlign: VAligns.Center;
@@ -96,15 +96,14 @@ namespace Figures.TransitionMatrixChart {
 
   Body(DocumentClass document) = Block {
     Style.SansSerif;
-    TextHeight: Extent.Size.Width * 0.015;
+    TextHeight: ExtentWidth * 0.015;
 
     var partitions = Experiment.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
-    var size       = Extent.Size;
-    var dy         = size.Height / (partitions.Length + 1);
-    var d          = Math.Min(dy, (size.Width  - tx) / partitions.Length);
+    var dy         = ExtentHeight / (partitions.Length + 1);
+    var d          = Math.Min(dy, (ExtentWidth  - tx) / partitions.Length);
     var bsize      = new SizeClass(d, d);
 
     var max = 0.0;
@@ -131,7 +130,6 @@ namespace Figures.TransitionMatrixChart {
             VAlign: VAligns.Center;
             HAlignment: HAligns.Right;
             Frame {
-              TextColor: p.Color;
               p.Filter;
             };
             Canvas {
@@ -224,8 +222,7 @@ namespace Figures.AllSegmentFrequencies {
   };
 
   Body(DocumentClass document) = Block {
-    var size = Extent.Size;
-    SegmentDisplay.FrequencyChart(Experiment.Data, new(size.Width, Math.Min(size.Height, 5 inches)));
+    SegmentDisplay.FrequencyChart(Experiment.Data, new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
   };
 }
 
@@ -235,11 +232,10 @@ namespace Figures.ConsensusTree {
   Title = Lang.ConsensusTree;
 
   Body(DocumentClass document) = VBox {
-    var size = Extent.Size;
-    Width: size.Width;
+    Width: ExtentWidth;
     HAlign: HAligns.Center;
     Style.TreeOptions {
-      Width: size.Width;
+      Width: ExtentWidth;
       Root: Experiment.MainRun.Tree;
     };
   };
@@ -294,7 +290,7 @@ namespace Figures.Alignments {
   };
 
   Body(DocumentClass document) = Block {
-    new AlignmentChartClass(MainResults).ShowChart(Extent.Size);
+    new AlignmentChartClass(MainResults).ShowChart(ExtentSize);
   };
 }
 //======================================================================
@@ -471,7 +467,7 @@ namespace Figures.Alignment {
   };
 
   ContentBox(content) = HBox {
-    MarginL: 4 pts;
+    Margin: ThicknessClass.L(4 pts);
     Border: 1 {Color: ArrowColor};
     Padding: 2 pts;
     content;
@@ -522,7 +518,7 @@ namespace Figures.Alignment {
     Row {
       Empty;
       VBox {
-        MarginTB: 6 pts;
+        Margin: ThicknessClass.TB(6 pts);
         TextHeight: 20 pts;
         HAlign: HAligns.Center;
         CFigure('=');
@@ -555,7 +551,7 @@ namespace Figures.Alignment {
     Margin: 5 pts;
     HAlign: HAligns.Center;
     HBox {
-      MarginB: 4 pts;
+      Margin: ThicknessClass.B(4 pts);
       VAlign: VAligns.Bottom;
       var fsize = new SizeClass(ArrowWidth, data.Taxa.Length * 8 pts);
 
@@ -565,7 +561,9 @@ namespace Figures.Alignment {
       HBox {
         VAlign: VAligns.Top;
         LabelBox(SegmentalInfo);
-        ContentBox(SegmentTable(example, data, false)) {MarginB: ArrowMargin; MarginR: ArrowMargin};
+        ContentBox(SegmentTable(example, data, false)) {
+          Margin: new ThicknessClass(null, null, ArrowMargin, ArrowMargin);
+        };
       };
       ArrowFigure(fsize);
     };
@@ -579,7 +577,6 @@ namespace Figures.Alignment {
 //======================================================================
 
 namespace StateSection {
-  CellPad = new MarginClass(1 pts, 1 pts, 3 pts, 0);
   States  = 'A'..'E' step 1;
 
   MatrixRow(state) = {
@@ -606,7 +603,7 @@ namespace StateSection {
 
     VAlign: VAligns.Center;
     HAlign: HAligns.Center;
-    Padding: CellPad;
+    Padding: new ThicknessClass(1 pts, 1 pts, 3 pts, null);
     Columns: [(1 inch) {EdgeR: Style.TableEdgeSize}] + 5*[0.36 inches];
     Row {
       Empty;
@@ -846,7 +843,7 @@ namespace TableFigures.ManualAlignment {
   };
 
   Body(DocumentClass document) = LanguageTable {
-    TextHeight: Extent.Size.Width * 0.02;
+    TextHeight: ExtentWidth * 0.02;
 
     var cognate = Experiment.Data.GetCognate(Experiment.Data.FigureConcept);
 

@@ -93,7 +93,7 @@ class AlignPairClass {
   };
 
   Show(prob, cumulative, set) = VBox {
-    MarginB: 10 pts;
+    Margin: ThicknessClass.B(10 pts);
     Border: 0.125 {Color: 50%};
     HAlign: HAligns.Center;
 
@@ -140,7 +140,7 @@ class AlignPairClass {
 
     var adata   = Align.Data;
     var langbox = Languages(Data, BoxSize.Height);
-    var indent  = GetLayoutSize(langbox, Extent.Size).Width;
+    var indent  = GetLayoutSize(langbox).Width;
 
     Paragraph {
       KeepWithNext: true;
@@ -287,7 +287,7 @@ class LanguageClass: FactClass {
     Description;
 
     if (valid MapImage)
-      ShowMap(Extent.Size);
+      ShowMap(ExtentSize);
   };
 
   static ImageClass LoadImage(name) = new ImageClass(Info.ImageFolder FileName(name));
@@ -873,7 +873,7 @@ class DataSetClass {
     var grid     = 0.125 pts;
     var gcolor   = 65%;
     var border   = 0.5 pts;
-    var size     = Extent.Size - border*2;
+    var size     = ExtentSize - border*2;
     var d        = size / (segments.Length+1);
     var vflags   = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
 
@@ -1141,10 +1141,10 @@ abstract class FrequencyChartClass {
     VAlign: VAligns.Center;
     Experiment.Rule.ShowLegend(10 pts, 1.4 inch) {
       Border: 0.25 {Color: 80%};
-      MarginR: 12 pts;
-      Padding: 5
+      Margin: ThicknessClass.R(12 pts);
+      Padding: 5;
     };
-    OccurranceChart(new SizeClass(Extent.Size.Width - 2 inches, Extent.Size.Height));
+    OccurranceChart(new SizeClass(ExtentWidth - 2 inches, ExtentHeight));
   };
 }
 //======================================================================
@@ -1186,7 +1186,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
   override SegmentBar(RateDataClass rate, index, width, height) = Canvas {
     var f = rate.Frequency[index].Frequency / rate.MaxFrequency;
     Size: new SizeClass(width-1, height * f);
-    MarginR: 1;
+    Margin: ThicknessClass.R(1);
     var s = Data.UniqueSegments[index];
     Background: ChartColor(s.PartitionIndex);
     TipAction: new SegmentActionClass(rate, s, rate.Count[index], f);
@@ -1212,7 +1212,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     foreach (var rate in SortedRates) {
       Row {
         Cell {
-          PaddingR: 3 pts;
+          Padding: ThicknessClass.R(3 pts);
           Frame {
             Width: lw;
             rate.Taxon.Language;
@@ -1301,7 +1301,7 @@ class PartitionFrequencyClass: FrequencyChartClass {
   override SegmentBar(RateDataClass rate, index, width, height) = Canvas {
     var f = rate.Frequency[index].Frequency / rate.MaxFrequency;
     Size: new SizeClass(width-1, height * f);
-    MarginR: 1;
+    Margin: ThicknessClass.R(1);
     var partition = Partitions[index];
     Background: partition.Color;
     TipAction: new PartitionRateActionClass(rate, partition, rate.Count[index], f);
@@ -1327,7 +1327,7 @@ class PartitionFrequencyClass: FrequencyChartClass {
     foreach (var rate in SortedRates) {
       Row {
         Cell {
-          PaddingR: 3 pts;
+          Padding: ThicknessClass.R(3 pts);
           Frame {
             Width: lw;
             rate.Taxon.Language;
