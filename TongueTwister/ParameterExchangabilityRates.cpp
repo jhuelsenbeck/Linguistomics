@@ -8,7 +8,7 @@
 #include "RateMatrix.hpp"
 #include "TransitionProbabilities.hpp"
 
-double ParameterExchangabilityRates::minVal = 0.00001;
+double ParameterExchangabilityRates::minVal = 0.000001;
 
 
 
@@ -166,54 +166,64 @@ double ParameterExchangabilityRates::update(int) {
     else
         k = numRates;
         
+    k = 1;
+        
     lastUpdateType += std::to_string(k) + ")";
     
     // update the rates
     double lnP = 0.0;
     if (k == 1)
         {
+        // resize vectors for move
+        oldValues.resize(2, 0.0);
+        newValues.resize(2, 0.0);
+        alphaForward.resize(2, 0.0);
+        alphaReverse.resize(2, 0.0);
+
+        // parameterize dirichlet for forward move
         double alpha0 = 100.0;
-        
         int indexToUpdate = rv->uniformRvInt(numRates);
-
-        std::vector<double> oldValues(2, 0.0);
-        std::vector<double> newValues(2, 0.0);
-        std::vector<double> alphaForward(2, 0.0);
-        std::vector<double> alphaReverse(2, 0.0);
-
         oldValues[0] = rates[0][indexToUpdate];
         oldValues[1] = 1.0 - oldValues[0];
         alphaForward[0] = oldValues[0] * alpha0;
         alphaForward[1] = oldValues[1] * alpha0;
-        
-        Probability::Dirichlet::rv(rv, alphaForward, newValues);
-        Probability::Helper::normalize(newValues, minVal);
-        
-        alphaReverse[0] = newValues[0] * alpha0;
-        alphaReverse[1] = newValues[1] * alpha0;
-        
+        if (alphaForward[0] < 0.0)
+            Msg::error("Negative alpha[0] in k=1 proposal for exchangability rates");
+        if (alphaForward[1] < 0.0)
+            Msg::error("Negative alpha[1] in k=1 proposal for exchangability rates");
+                
+        // propose new values
+        bool err = Probability::Dirichlet::rv(rv, alphaForward, newValues);
+        if (err == true)
+            Msg::error("Problem proposing dirichlet values in k=1 for exchangability rates");
         double factor = newValues[1] / oldValues[1];
-        
         for (int i=0; i<numRates; i++)
             rates[0][i] *= factor;
         rates[0][indexToUpdate] = newValues[0];
+        Probability::Helper::normalize(rates[0], minVal);
 
+        // parameterize dirichlet for reverse move
+        alphaReverse[0] = newValues[0] * alpha0;
+        alphaReverse[1] = newValues[1] * alpha0;
+
+        // calculate proposal probability
         lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         lnP += (numRates - 2) * log(factor); // Jacobian
         }
     else if (k > 1 && k < numRates)
         {
+        // resize vectors for move
+        oldValues.resize(k+1, 0.0);
+        newValues.resize(k+1, 0.0);
+        alphaForward.resize(k+1, 0.0);
+        alphaReverse.resize(k+1, 0.0);
+
+        // parameterize dirichlet for forward move
         double alpha0 = 1000.0;
         std::vector<int> indicesToUpdate = randomlyChooseIndices(k, numRates);
         std::map<size_t,size_t> mapper;
         for (size_t i=0; i<indicesToUpdate.size(); i++)
             mapper.insert( std::make_pair(indicesToUpdate[i], i) );
-            
-        std::vector<double> oldValues(k+1, 0.0);
-        std::vector<double> newValues(k+1, 0.0);
-        std::vector<double> alphaForward(k+1, 0.0);
-        std::vector<double> alphaReverse(k+1, 0.0);
-        
         for (size_t i=0; i<numRates; i++)
             {
             std::map<size_t,size_t>::iterator it = mapper.find(i);
@@ -222,19 +232,17 @@ double ParameterExchangabilityRates::update(int) {
             else
                 oldValues[k] += rates[0][i];
             }
-        
         for (size_t i=0; i<k+1; i++)
-            alphaForward[i] = oldValues[i] * alpha0;;
+            {
+            alphaForward[i] = oldValues[i] * alpha0;
+            if (alphaForward[i] < 0.0)
+                Msg::error("Negative alpha[" + std::to_string(i)  + ")] in k=" + std::to_string(k) + " proposal for exchangability rates");
+            }
         
-        // draw a new value for the reduced vector
-        Probability::Dirichlet::rv(rv, alphaForward, newValues);
-        Probability::Helper::normalize(newValues, minVal);
-        
-        // fill in the Dirichlet parameters for the reverse probability calculations
-        for (size_t i=0; i<k+1; i++)
-            alphaReverse[i] = newValues[i] * alpha0;
-        
-        // fill in the full vector
+        // propose new values
+        bool err = Probability::Dirichlet::rv(rv, alphaForward, newValues);
+        if (err == true)
+            Msg::error("Problem proposing dirichlet values in k=" + std::to_string(k) + " for exchangability rates");
         double factor = newValues[k] / oldValues[k];
         for (size_t i=0; i<numRates; i++)
             {
@@ -244,31 +252,49 @@ double ParameterExchangabilityRates::update(int) {
             else
                 rates[0][i] *= factor;
             }
-        
-        // Hastings ratio
+        Probability::Helper::normalize(rates[0], minVal);
+
+        // parameterize dirichlet for reverse move
+        for (size_t i=0; i<k+1; i++)
+            alphaReverse[i] = newValues[i] * alpha0;
+
+        // calculate proposal probability
         lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         lnP += (numRates - k - 1) * log(factor); // Jacobian
         }
     else
         {
+        // resize vectors for move
+        oldValues.resize(numRates);
+        newValues.resize(numRates);
+        alphaForward.resize(numRates);
+        alphaReverse.resize(numRates);
+
+        // parameterize dirichlet for forward move
         double alpha0 = 4000.0;
-        // update all of the rates
-        std::vector<double>& oldValues = rates[0];
-        std::vector<double> alphaForward(numRates);
         for (int i=0; i<numRates; i++)
+            {
+            oldValues[i] = rates[0][i];
             alphaForward[i] = oldValues[i] * alpha0;
+            if (alphaForward[i] < 0.0)
+                Msg::error("Negative alpha[" + std::to_string(i)  + ")] in k=" + std::to_string(numRates) + " proposal for exchangability rates");
+            }
         
-        std::vector<double> newValues(numRates);
-        Probability::Dirichlet::rv(rv, alphaForward, newValues);
+        // propose new values
+        bool err = Probability::Dirichlet::rv(rv, alphaForward, newValues);
+        if (err == true)
+            Msg::error("Problem proposing dirichlet values in k=" + std::to_string(numRates) + " for exchangability rates");
         Probability::Helper::normalize(newValues, minVal);
         
-        std::vector<double> alphaReverse(numRates);
+        // parameterize dirichlet for reverse move
         for (int i=0; i<numRates; i++)
+            {
+            rates[0][i] = newValues[i];
             alphaReverse[i] = newValues[i] * alpha0;
+            }
 
+        // calculate proposal probability
         lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
-        
-        rates[0] = newValues;
         }
     
     // update the rate matrix and transition probabilities
@@ -285,7 +311,6 @@ double ParameterExchangabilityRates::update(int) {
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
 
-    // and it also changes the eigen system
 
     return lnP;
 }
