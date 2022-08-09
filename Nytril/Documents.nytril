@@ -11,21 +11,26 @@ DiagDocumentClass = Document {
 
 //======================================================================
 
-BaseDocumentClass = Document(DocMetrics.DocExtent) {
-  TextFamily: TextFamilies.TimesNewRoman;
-  TextHeight: 9 pts;
+class PaperViewClass: DocumentClass {
+  Constructor(id, title) {
+    super.Constructor(id, title);
+    Title = Info.Title;
+  }
 
-  AuthorLink to Authors;
-  Link to References;
-  RefStyle: new NatureStyleClass;
-};
+  BaseDocumentClass = Document(DocMetrics.DocExtent) {
+    TextFamily: TextFamilies.TimesNewRoman;
+    TextHeight: 9 pts;
 
+    AuthorLink to Authors;
+    Link to References;
+    RefStyle: new NatureStyleClass;
+  };
+}
 //======================================================================
 
-class SubmissionViewClass: DocumentClass {
+class SubmissionViewClass: PaperViewClass {
   Constructor {
     super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
-    Title = Info.Title;
   }
 
   FooterBlock = Block {
@@ -85,10 +90,10 @@ class SubmissionViewClass: DocumentClass {
 }
 //======================================================================
 
-class SupplimentalViewClass: DocumentClass {
+class SupplimentalViewClass: PaperViewClass {
   Constructor {
     super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
-    Title  = Name;
+    Title = Name;
   }
 
   HeaderBlock = Block {
@@ -145,7 +150,7 @@ class SupplimentalViewClass: DocumentClass {
 }
 //======================================================================
 
-class AlignmentViewClass: DocumentClass {
+class AlignmentViewClass: PaperViewClass {
   Constructor {
     super.Constructor(#a14658e4-26f7-4eab-87b7-4f486035103b#, "Alignments");
   }

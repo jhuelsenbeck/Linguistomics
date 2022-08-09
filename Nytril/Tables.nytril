@@ -156,7 +156,7 @@ namespace DisplayWords {
   HeaderCell(d) = Cell {
     Style.SansSerif;
     Style.TitleBackground;
-    EdgeB: 1 pts;
+    Border: BorderClass.B(1 pts);
     Padding: 2 pts;
     d
   };
@@ -164,7 +164,7 @@ namespace DisplayWords {
   ShowLanguage(DataSetClass data, TaxonClass taxon) = Block {
     Style.TitleBar {taxon.Language};
     Table {
-      Edge: 0.5;
+      Border: 0.5;
       Columns: [2.1 inches, 1 inches, ColumnClass.Expand];
       Row {
         HeaderCell(Lang.Cognate);
@@ -210,7 +210,7 @@ namespace AllWords {
     var w     = (ExtentWidth - first) / wordsperline;
     Table {
       Style.IPAFamily;
-      Edge: 0.5;
+      Border: 0.5;
       Columns: [first] + [w] * wordsperline;
 
       Row {
@@ -331,7 +331,7 @@ class TabOptionsClass {
     var features = f | All;
     Cell {
       VAlign: VAligns.Center;
-      EdgeR: 0.5 pts;
+      Border: BorderClass.R(0.5 pts);
       Style.TitleBackground;
       Padding: ThicknessClass.LR(2 pts);
       TextHeight: 7 pts;
@@ -351,9 +351,9 @@ class TabOptionsClass {
     var places = Places.FindSlice(place => MatchPlace(data, place));
     Style.TitleBar {Title};
     Table {
-      Style.TableEdge;
-      Columns: [ColWidth {EdgeR: 0.5 pts}] +
-               [DocMetrics.CellSize.Width {HAlign: HAligns.Center; EdgeR: 0.25 pts}] * places.Length;
+      Style.TableBorder;
+      Columns: [ColWidth {Border: BorderClass.R(0.5 pts)}] +
+               [DocMetrics.CellSize.Width {HAlign: HAligns.Center; Border: BorderClass.R(0.25 pts)}] * places.Length;
 
       Row {
         TextHeight: 6 pts;
@@ -468,8 +468,9 @@ namespace MatchingVowels {
     Style.TitleBar {Separator: "-"; each features};
     Table {
       HAlign: HAligns.Center;
-      Style.TableEdge;
-      Columns: [(1 inch){EdgeR: 0.5 pts}] + [DocMetrics.BoxSize.Width*4 {EdgeR: 0.25 pts}] * Backnesses.Length;
+      Style.TableBorder;
+      var border = Border: BorderClass.R(0.5 pts);
+      Columns: [(1 inch) border] + [DocMetrics.BoxSize.Width*4 border] * Backnesses.Length;
       Row {
         TextHeight: 10 pts;
         Style.HeaderCell;
@@ -527,7 +528,7 @@ namespace MatchingDiacritics {
   ShowTable = Block {
     Style.TitleBar {Lang.Diacritics};
     Table {
-      Style.TableEdge;
+      Style.TableBorder;
       Columns: [ExtentWidth / ColumnDiv] * ColumnDiv;
       AddRow(each (DiacriticModifiers / ColumnDiv));
     };
@@ -562,7 +563,7 @@ namespace MatchingOther {
   ShowTable(DataSetClass data, SegmentSetClass set) = Block {
     Style.TitleBar {Lang.OtherSegments};
     Table {
-      Style.TableEdge;
+      Style.TableBorder;
       Columns: [DocMetrics.CellSize.Width, ExtentWidth * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv;
       var segments = data.DisplaySegments.FindSlice(segment => not set.Contains(segment));
       AddRow(each (segments / ColumnDiv));
@@ -621,7 +622,7 @@ namespace SegmentDisplay {
   };
 
   SegmentCell(SegmentClass segment) = Cell {
-    Edge: 0.25 pts {Color: Colors.LightGray};
+    Border: 0.25 pts {Color: Colors.LightGray};
     Padding: 2 pts;
     segment.Display(segment.GetVariableFullName, 16 pts)
   };
@@ -712,7 +713,7 @@ namespace SegmentDisplay {
   ShowConceptGroups(DataSetClass data) = Block {
     var groups = WordGroups[1..];
     Table {
-      Style.TableEdge;
+      Style.TableBorder;
       Columns: [0.25 inches] + [1 inch] * (2+groups.Length);
       Row {
         Style.HeaderCell;

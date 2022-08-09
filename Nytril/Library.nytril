@@ -248,7 +248,7 @@ class AlignmentChartClass {
       var p = new AlignPairClass(Results.Data, a);
       p.ShowDetails(5, false);
       Paragraph {
-        BorderT: 1;
+        Border: BorderClass.T(1);
       };
     }
   };
@@ -376,7 +376,7 @@ class WordClass: FactClass {
     Row {
       foreach (var segment in Padded) {
         Cell {
-          EdgeL: (0.125 pts) {Color: 80%};
+          Border: BorderClass.L(new EdgeClass(0.125 pts, 80%));
           ParAlignment: ParAlignments.Center;
           if (index == each0)
             Background: Colors.LightYellow;
@@ -816,7 +816,7 @@ class DataSetClass {
     Paragraph {
       SpaceBefore: 10 pts;
       TextHeight: 14;
-      BorderB: 1;
+      Border: BorderClass.B(1);
       "Words containing \"{0}\""(segment.Ipa);
     };
     Paragraph {
@@ -1133,7 +1133,7 @@ abstract class FrequencyChartClass {
 
     VAlign: VAligns.Bottom;
     Height: height;
-    BorderB: cborder;
+    Border: BorderClass.B(cborder);
     SegmentBar(rate, each SortedIndexes, width, height - cborder);
   };
 
@@ -1200,7 +1200,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
   };
 
   override OccurranceChart(SizeClass size) = MatrixBlock {
-    var lw = 60 pts;
+    var lw = 70 pts;
     var cw = size.Width - lw;
     var bw = cw / Data.UniqueCount;
     var bh = bw * 1.5;
@@ -1217,12 +1217,14 @@ class SegmentFrequencyClass: FrequencyChartClass {
             Width: lw;
             rate.Taxon.Language;
           };
-          Canvas {
-            Background: Colors.Red;
-            var frac = rate.Distance / MaxDistance;
-            Size: new SizeClass(lw * frac, 2);
-            Tip: new TipClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)));
-          };
+          if (rate.Distance > 0) {
+            Canvas {
+              Background: Colors.Red;
+              var frac = rate.Distance / MaxDistance;
+              Size: new SizeClass(lw * frac, 2);
+              Tip: new TipClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)));
+            };
+          }
         };
         LangCanvas(rate, bw, h);
       };
