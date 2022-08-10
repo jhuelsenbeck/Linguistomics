@@ -25,9 +25,9 @@ class Mcmc {
         Model*              getColdModel(void);
         int                 numDigits(double lnX);
         void                openOutputFiles(void);
-        int                 phaseLength(std::string phs);
         double              power(int idx);
         void                print(int gen, double* curLnL, double* curLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
+        void                print(int powIdx, int numPowers, std::string phase, int gen, double* curLnL, double* curLnP);
         double              safeExponentiation(double lnX);
         void                sample(int gen, double lnL, double lnP);
         void                runPathSampling(void);

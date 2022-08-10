@@ -261,12 +261,14 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void copy(const MatrixTemplate<T>& other) {
+        
             BufferTemplate<T>::copy(other);
             numRows = other.numRows;
             numCols = other.numCols;
         }
 
         void create(size_t nr, size_t nc) {
+        
             if (numRows != nr || numCols != nc) 
                 { 
                 BufferTemplate<T>::create(nr * nc);
@@ -276,6 +278,7 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void create(size_t n) {
+        
             if (numRows != n || numCols != n) 
                 {
                 BufferTemplate<T>::create(n * n);
@@ -294,6 +297,7 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         double maxDiagonal() {
+        
             assert(numRows == numCols);
             auto cols1 = getNumCols() + 1;
             T max = 0;
