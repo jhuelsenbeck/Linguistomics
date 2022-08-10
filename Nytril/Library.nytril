@@ -48,7 +48,7 @@ class StatClass {
   };
 
   ShowBox = VBox {
-    BracketLR: Brackets.Curly;
+    Brackets: Brackets.Curly;
     TextDigits: 3;
     ShowRight(Upper * 100.0);
     Mean * 100.0;
@@ -93,7 +93,7 @@ class AlignPairClass {
   };
 
   Show(prob, cumulative, set) = VBox {
-    Margin: ThicknessClass.B(10 pts);
+    Margin: PadB(10 pts);
     Border: 0.125 {Color: 50%};
     HAlign: HAligns.Center;
 
@@ -248,7 +248,7 @@ class AlignmentChartClass {
       var p = new AlignPairClass(Results.Data, a);
       p.ShowDetails(5, false);
       Paragraph {
-        Border: BorderClass.T(1);
+        Border: BorderT(1);
       };
     }
   };
@@ -376,7 +376,7 @@ class WordClass: FactClass {
     Row {
       foreach (var segment in Padded) {
         Cell {
-          Border: BorderClass.L(new EdgeClass(0.125 pts, 80%));
+          Border: BorderL(new(0.125 pts, 80%));
           ParAlignment: ParAlignments.Center;
           if (index == each0)
             Background: Colors.LightYellow;
@@ -816,7 +816,7 @@ class DataSetClass {
     Paragraph {
       SpaceBefore: 10 pts;
       TextHeight: 14;
-      Border: BorderClass.B(1);
+      Border: BorderB(1);
       "Words containing \"{0}\""(segment.Ipa);
     };
     Paragraph {
@@ -1133,7 +1133,7 @@ abstract class FrequencyChartClass {
 
     VAlign: VAligns.Bottom;
     Height: height;
-    Border: BorderClass.B(cborder);
+    Border: BorderB(cborder);
     SegmentBar(rate, each SortedIndexes, width, height - cborder);
   };
 
@@ -1141,7 +1141,7 @@ abstract class FrequencyChartClass {
     VAlign: VAligns.Center;
     Experiment.Rule.ShowLegend(10 pts, 1.4 inch) {
       Border: 0.25 {Color: 80%};
-      Margin: ThicknessClass.R(12 pts);
+      Margin: PadR(12 pts);
       Padding: 5;
     };
     OccurranceChart(new SizeClass(ExtentWidth - 2 inches, ExtentHeight));
@@ -1186,7 +1186,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
   override SegmentBar(RateDataClass rate, index, width, height) = Canvas {
     var f = rate.Frequency[index].Frequency / rate.MaxFrequency;
     Size: new SizeClass(width-1, height * f);
-    Margin: ThicknessClass.R(1);
+    Margin: PadR(1);
     var s = Data.UniqueSegments[index];
     Background: ChartColor(s.PartitionIndex);
     TipAction: new SegmentActionClass(rate, s, rate.Count[index], f);
@@ -1212,7 +1212,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     foreach (var rate in SortedRates) {
       Row {
         Cell {
-          Padding: ThicknessClass.R(3 pts);
+          Padding: PadR(3 pts);
           Frame {
             Width: lw;
             rate.Taxon.Language;
@@ -1303,7 +1303,7 @@ class PartitionFrequencyClass: FrequencyChartClass {
   override SegmentBar(RateDataClass rate, index, width, height) = Canvas {
     var f = rate.Frequency[index].Frequency / rate.MaxFrequency;
     Size: new SizeClass(width-1, height * f);
-    Margin: ThicknessClass.R(1);
+    Margin: PadR(1);
     var partition = Partitions[index];
     Background: partition.Color;
     TipAction: new PartitionRateActionClass(rate, partition, rate.Count[index], f);
@@ -1329,7 +1329,7 @@ class PartitionFrequencyClass: FrequencyChartClass {
     foreach (var rate in SortedRates) {
       Row {
         Cell {
-          Padding: ThicknessClass.R(3 pts);
+          Padding: PadR(3 pts);
           Frame {
             Width: lw;
             rate.Taxon.Language;

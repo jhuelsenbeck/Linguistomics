@@ -68,7 +68,7 @@ namespace Figures.TransitionMatrixTable {
 
           foreach (var c in r) {
             if (valid c)
-              c.ShowBox {Margin: ThicknessClass.T(dy)};
+              c.ShowBox {Margin: PadT(dy)};
             else {
               Cell {
                 VAlign: VAligns.Center;
@@ -178,15 +178,15 @@ namespace Figures.TransitionMatrixChart {
                     var x      = fc * c.Upper;
                     Figure {
                       Fill: 80%;
-                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), new(x)));
+                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                       x = fc * c.Lower;
-                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), new(x)));
+                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
 
                     Figure {
                       Stroke: 1;
                       x = fc * c.Mean;
-                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), new(x)));
+                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
                   };
                 }
@@ -467,7 +467,7 @@ namespace Figures.Alignment {
   };
 
   ContentBox(content) = HBox {
-    Margin: ThicknessClass.L(4 pts);
+    Margin: PadL(4 pts);
     Border: 1 {Color: ArrowColor};
     Padding: 2 pts;
     content;
@@ -518,7 +518,7 @@ namespace Figures.Alignment {
     Row {
       Empty;
       VBox {
-        Margin: ThicknessClass.TB(6 pts);
+        Margin: PadTB(6 pts);
         TextHeight: 20 pts;
         HAlign: HAligns.Center;
         CFigure('=');
@@ -551,7 +551,7 @@ namespace Figures.Alignment {
     Margin: 5 pts;
     HAlign: HAligns.Center;
     HBox {
-      Margin: ThicknessClass.B(4 pts);
+      Margin: PadB(4 pts);
       VAlign: VAligns.Bottom;
       var fsize = new SizeClass(ArrowWidth, data.Taxa.Length * 8 pts);
 
@@ -604,7 +604,7 @@ namespace StateSection {
     VAlign: VAligns.Center;
     HAlign: HAligns.Center;
     Padding: new ThicknessClass(1 pts, 1 pts, 3 pts, null);
-    Columns: [(1 inch) {Border: BorderClass.R(Style.TableEdgeSize)}] + 5*[0.36 inches];
+    Columns: [(1 inch) {Border: BorderR(Style.TableEdgeSize)}] + 5*[0.36 inches];
     Row {
       Empty;
       Cell {
@@ -613,7 +613,7 @@ namespace StateSection {
       };
     };
     Row {
-      Border: BorderClass.B(Style.TableEdgeSize);
+      Border: BorderB(Style.TableEdgeSize);
       Empty;
       States;
     };
@@ -621,7 +621,7 @@ namespace StateSection {
   };
 
   StateMatrix = MatrixBlock {
-    BracketLR: Brackets.FlatRound;
+    Brackets: Brackets.FlatRound;
     foreach (var state in States) {
       Row {
         MatrixRow(state);
@@ -1698,7 +1698,7 @@ namespace PaperSections.Methods {
     BodyTable {
       Columns: [1 inches, 1 inches, 3 inches];
       Row {
-        Border: BorderClass.B(0.5 pts);
+        Border: BorderB(0.5 pts);
 
         BayesFactor;
         Span {"log" sub 10; BayesFactor};
@@ -1771,7 +1771,7 @@ namespace PaperSections.Methods {
           sym.qij;
           Equals;
           VBox {
-            BracketL: Brackets.FlatCurly;
+            Brackets: Brackets.FlatCurly.Left;
             IfValue(Tex.alpha, " is a something");
             IfValue(Tex.beta, " is a something else");
           };
