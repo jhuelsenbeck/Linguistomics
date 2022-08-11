@@ -382,7 +382,7 @@ double ParameterTree::update(int iter) {
     // pick a tree parameter to update
     double probNni   = 0.50;
     double probBrlen = 0.25;
-    if (iter < settings.getNumMcmcCycles() * 0.25)
+    if (iter < settings.getNumMcmcCycles() * 0.25 || settings.getCalculateMarginalLikelihood() == true)
         {
         probNni = 0.0;
         probBrlen = 0.75;

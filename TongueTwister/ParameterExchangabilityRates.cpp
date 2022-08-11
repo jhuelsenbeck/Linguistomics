@@ -181,7 +181,7 @@ double ParameterExchangabilityRates::update(int) {
         alphaReverse.resize(2, 0.0);
 
         // parameterize dirichlet for forward move
-        double alpha0 = 100.0;
+        double alpha0 = 200.0;
         int indexToUpdate = rv->uniformRvInt(numRates);
         oldValues[0] = rates[0][indexToUpdate];
         oldValues[1] = 1.0 - oldValues[0];
