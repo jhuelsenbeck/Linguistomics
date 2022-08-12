@@ -32,6 +32,7 @@ UserSettings::UserSettings(void) {
     burninLength                = 100000;
     sampleLength                = 100000;
     sampleToStoneFrequency      = 10;
+    useClockConstraint          = false;
 }
 
 
@@ -60,7 +61,14 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     std::string arg = "";
     for (int i=1; i<commands.size(); i++)
         {
-        std::string cmd = commands[i];
+        std::string origCmd = commands[i];
+        std::string cmd;
+        cmd.resize(origCmd.size());
+
+        // Convert the source string to lower case
+        // storing the result in destination string
+        std::transform(origCmd.begin(), origCmd.end(), cmd.begin(),::tolower);
+        
         if (arg == "")
             {
             arg = cmd;
@@ -107,6 +115,17 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 else
                     Msg::error("Unknown option for calculating marginal likelihood");
                 }
+
+            else if (arg == "-lc")
+                {
+                if (cmd == "yes")
+                    useClockConstraint = true;
+                else if (cmd == "no")
+                    useClockConstraint = false;
+                else
+                    Msg::error("Unknown option for branch length constraints");
+                }
+
             else if (arg == "-c")
                 {
                 if (cmd == "yes")
@@ -192,6 +211,18 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
             else
                 Msg::error("Unknown option" + res);
             }
+            
+        it2 = jsonSettings.find("Clock");
+        if (it2 != jsonSettings.end())
+            {
+            std::string res = getVariable(jsonSettings, "Clock");
+            if (res == "no")
+                useClockConstraint = false;
+            else if (res == "yes")
+                useClockConstraint = true;
+            else
+                Msg::error("Unknown option" + res);
+            }
 
         it2 = jsonSettings.find("Seed");
         if (it2 != jsonSettings.end())
@@ -263,6 +294,10 @@ void UserSettings::print(void) {
         std::cout << "   * Substitution model                      = GTR" << std::endl;
     else
         std::cout << "   * Substitution model                      = Custom" << std::endl;
+    if (useClockConstraint == false)
+        std::cout << "   * Branch length constraints               = unconstrained" << std::endl;
+    else
+        std::cout << "   * Branch length constraints               = constant rate (clock)" << std::endl;
     std::cout << "   * Number of gamma rate categories         = " << numRateCategories << std::endl;
     std::cout << "   * Number of gamma indel categories        = " << numIndelCategories << std::endl;
     std::cout << "   * Branch length prior parameter           = " << branchLengthLambda << std::endl;
@@ -299,6 +334,7 @@ void UserSettings::usage(void) {
     std::cout << "   * -o / FileOutput         -- File name for output" << std::endl;
     std::cout << "   * -m / Model              -- Substitution model (jc69/gtr/custom)" << std::endl;
     std::cout << "   * -l / BrlenPriorVal      -- Parameter of exponential branch length prior" << std::endl;
+    std::cout << "   * -lc / Clock             -- Clock constrained (yes) or unconstrained (no) branch lengths" << std::endl;
     std::cout << "   * -c / OnlyCompleteWords  -- Use only completely sampled words (no/yes)" << std::endl;
     std::cout << "   * -g                      -- Number of gamma rate categories (=1 is no rate variation)" << std::endl;
     std::cout << "   * -i                      -- Number of gamma indel categories (=1 is no indel rate variation)" << std::endl;

@@ -18,21 +18,22 @@ Tree::Tree(Tree& t) {
     clone(t);
 }
 
-Tree::Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv) {
+Tree::Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv, bool ic) {
 
-    buildRandomTree(tNames, betaT, rv);
+    buildRandomTree(tNames, betaT, rv, ic);
 }
 
-Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double lambda, RandomVariable* rv) {
+Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double lambda, RandomVariable* rv, bool ic) {
 
     // read the tree file
-    Node* p = NULL;
     root = NULL;
     numTaxa = 0;
     taxonNames = tNames;
+    isClock = ic;
 
     std::vector<std::string> tokens = tokenizeTreeString(treeStr);
     bool readingBrlen = false;
+    Node* p = NULL;
     for (int i=0; i<tokens.size(); i++)
         {
         std::string token = tokens[i];
@@ -112,34 +113,43 @@ Tree::Tree(std::string treeStr, std::vector<std::string> tNames, double lambda, 
 
     // check for branch lengths, randomly initializing from prior
     // if they are anot all initialized from the Newick string
-    bool branchLengthsPresent = true;
-    for (int i=0; i<downPassSequence.size(); i++)
+    if (isClock == false)
         {
-        p = downPassSequence[i];
-        if (p != root && p->getBranchLength() < 0.0001)
-            branchLengthsPresent = false;
-        }
-    if (branchLengthsPresent == false)
-        {
-        // initialize branch lengths from uniform Dirichlet
-        // first, initialize all branch lengths, except the root node
+        bool branchLengthsPresent = true;
         for (int i=0; i<downPassSequence.size(); i++)
             {
             p = downPassSequence[i];
-            if (p != root)
-                p->setBranchLength(Probability::Exponential::rv(rv, lambda));
-            else
-                p->setBranchLength(0.0);
+            if (p != root && p->getBranchLength() < 0.0001)
+                branchLengthsPresent = false;
             }
-        // make certain the two branches incident to the root are the
-        // same in length and considered one branch
-        std::vector<Node*> rootDes = root->getDescendantsVector();
-        if (rootDes.size() != 2)
-            Msg::error("Expecting two descendants of the root node");
-        double x = rootDes[0]->getBranchLength() + rootDes[1]->getBranchLength();
-        rootDes[0]->setBranchLength(x/2.0);
-        rootDes[1]->setBranchLength(x/2.0);
+        if (branchLengthsPresent == false)
+            {
+            // initialize branch lengths from uniform Dirichlet
+            // first, initialize all branch lengths, except the root node
+            for (int i=0; i<downPassSequence.size(); i++)
+                {
+                p = downPassSequence[i];
+                if (p != root)
+                    p->setBranchLength(Probability::Exponential::rv(rv, lambda));
+                else
+                    p->setBranchLength(0.0);
+                }
+            // make certain the two branches incident to the root are the
+            // same in length and considered one branch
+            std::vector<Node*> rootDes = root->getDescendantsVector();
+            if (rootDes.size() != 2)
+                Msg::error("Expecting two descendants of the root node");
+            double x = rootDes[0]->getBranchLength() + rootDes[1]->getBranchLength();
+            rootDes[0]->setBranchLength(x/2.0);
+            rootDes[1]->setBranchLength(x/2.0);
+            }
         }
+    else
+        {
+        // clock-constrained branch lengths
+        initializeClockBranchLengths(rv, lambda);
+        }
+        
 }
 
 Tree::Tree(Tree& t, RbBitSet& taxonMask) {
@@ -171,10 +181,11 @@ Node* Tree::addNode(void) {
     return newNode;
 }
 
-void Tree::buildRandomTree(std::vector<std::string> tNames, double lambda, RandomVariable* rv) {
+void Tree::buildRandomTree(std::vector<std::string> tNames, double lambda, RandomVariable* rv, bool ic) {
 
     deleteAllNodes();
     
+    isClock = ic;
     root = NULL;
     numTaxa = 0;
     taxonNames = tNames;
@@ -237,13 +248,23 @@ void Tree::buildRandomTree(std::vector<std::string> tNames, double lambda, Rando
 
     // initialize branch lengths
     // first, initialize all branch lengths, except the root node
-    for (int i=0; i<downPassSequence.size(); i++)
+    if (isClock == false)
         {
-        Node* p = downPassSequence[i];
-        if (p != root)
-            p->setBranchLength(Probability::Exponential::rv(rv,lambda));
-        else
-            p->setBranchLength(0.0);
+        // we do not have a clock constraint, so we choose all of the branch lengths
+        // INDEPENDENTLY from a common exponential(lambda) distribution
+        for (int i=0; i<downPassSequence.size(); i++)
+            {
+            Node* p = downPassSequence[i];
+            if (p != root)
+                p->setBranchLength(Probability::Exponential::rv(rv, lambda));
+            else
+                p->setBranchLength(0.0);
+            }
+        }
+    else
+        {
+        // we have a clock constraint
+        initializeClockBranchLengths(rv, lambda);
         }
         
     // make certain the two branches incident to the root are the
@@ -306,6 +327,7 @@ void Tree::clone(Tree& t) {
     // copy some instance variables
     numTaxa = t.numTaxa;
     taxonNames = t.taxonNames;
+    isClock = t.isClock;
     
     // make certain we have the saame number of nodes in each tree
     if (nodes.size() != t.nodes.size())
@@ -326,6 +348,7 @@ void Tree::clone(Tree& t) {
         pLft->setIsLeaf( pRht->getIsLeaf() );
         pLft->setName( pRht->getName() );
         pLft->setBranchLength( pRht->getBranchLength() );
+        pLft->setNodeTime( pRht->getNodeTime() );
         
         if (pRht->getAncestor() != NULL)
             pLft->setAncestor( nodes[pRht->getAncestor()->getOffset()] );
@@ -476,6 +499,53 @@ double Tree::getTreeLength(void) {
     return tl;
 }
 
+void Tree::initializeClockBranchLengths(RandomVariable* rv, double lam) {
+
+    // check that the tree is rooted and binary
+    if (isRooted() == false)
+        Msg::error("Clock-constrained trees must be rooted");
+    if (isBinary() == false)
+        Msg::error("Clock-constrained trees must be binary");
+        
+    // draw branch times randomly
+    for (Node* n : downPassSequence)
+        {
+        if (n->getIsLeaf() == true)
+            {
+            n->setNodeTime(0.0);
+            }
+        else
+            {
+            double oldestDescendantTime = n->oldestDescendantTime();
+            n->setNodeTime( oldestDescendantTime + Probability::Exponential::rv(rv, lam) );
+            }
+        }
+        
+#   if 0
+    // rescale such that root time is 1.0
+    double rootTime = root->getNodeTime();
+    for (Node* n : downPassSequence)
+        {
+        if (n->getIsLeaf() == false)
+            {
+            double x = n->getNodeTime();
+            n->setNodeTime( x/rootTime );
+            }
+        }
+#   endif
+        
+    // set branch lengths
+    for (Node* n : downPassSequence)
+        {
+        if (n != root)
+            {
+            n->setBranchLength( n->getAncestor()->getNodeTime() - n->getNodeTime() );
+            }
+        else
+            n->setBranchLength(0.0);
+        }
+}
+
 bool Tree::isBinary(void) {
 
     for (int i=0; i<downPassSequence.size(); i++)
@@ -490,6 +560,19 @@ bool Tree::isBinary(void) {
         else
             {
             if (ndes != 2)
+                return false;
+            }
+        }
+    return true;
+}
+
+bool Tree::isRooted(void) {
+
+    for (Node* n : downPassSequence)
+        {
+        if (n->getIsLeaf() == false)
+            {
+            if (n->getDescendants()->size() != 2)
                 return false;
             }
         }
@@ -514,7 +597,6 @@ void Tree::listNodes(Node* p, size_t indent) {
         
         for (int i=0; i<indent; i++)
             std::cout << " ";
-//        std::cout << p->getIndex() << " " << p << " ( ";
         std::cout << p->getIndex() << " ( ";
         if (p->getAncestor() != NULL)
             std::cout << "a_" << p->getAncestor()->getIndex() << " ";

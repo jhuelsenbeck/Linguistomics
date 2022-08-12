@@ -32,8 +32,10 @@ class Node {
         int                 getOffset(void) const { return offset; }
         Node*               getSisterNode(void);
         DoubleMatrix*       getTransitionProbability(void) { return transitionProbability; }
+        double              getNodeTime(void) { return nodeTime; }
         bool                isDescendant(Node* p);
         size_t              numDescendants(void);
+        double              oldestDescendantTime(void);
         void                print(void);
         void                removeDescendant(Node* p);
         void                removeDescendants(void);
@@ -46,6 +48,7 @@ class Node {
         void                setName(std::string s) { name = s; }
         void                setOffset(int x) { offset = x; }
         void                setTransitionProbability(DoubleMatrix* p) { transitionProbability = p; }
+        void                setNodeTime(double x) { nodeTime = x; }
 
     protected:
         NodeSet*            descendants;
@@ -54,6 +57,7 @@ class Node {
         DoubleMatrix*       transitionProbability;
         std::string         name;
         double              length;
+        double              nodeTime;
         int                 offset;
         int                 index;
         bool                isLeaf;

@@ -37,6 +37,7 @@ class UserSettings {
         void                    print(void);
         void                    readCommandLineArguments(int argc, char* argv[]);
         bool                    getUseOnlyCompleteWords(void) { return useOnlyCompleteWords; }
+        bool                    getUseClockConstraint(void) { return useClockConstraint; }
     
     private:
                                 UserSettings(void);
@@ -65,6 +66,7 @@ class UserSettings {
         uint32_t                seed;
         int                     numChains;
         double                  temperature;
+        bool                    useClockConstraint;
 };
 
 #endif

@@ -17,19 +17,20 @@ class Tree {
 
     public:
                                                     Tree(void) = delete;
-                                                    Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
-                                                    Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv);
+                                                    Tree(std::vector<std::string> tNames, double betaT, RandomVariable* rv, bool ic);
+                                                    Tree(std::string treeStr, std::vector<std::string> tNames, double betaT, RandomVariable* rv, bool ic);
                                                     Tree(Tree& t);
                                                     Tree(Tree& t, RbBitSet& taxonMask);
                                                    ~Tree(void);
         Tree&                                       operator=(Tree& t);
-        void                                        buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv);
+        void                                        buildRandomTree(std::vector<std::string> tNames, double betaT, RandomVariable* rv, bool ic);
         void                                        debugPrint(std::string h);
         std::string                                 getNewick(int brlenPrecision);
         int                                         getNumNodes(void) { return (int)nodes.size(); }
         int                                         getNumTaxa(void) { return numTaxa; }
         std::vector<int>                            getAncestorIndices(void);
         std::vector<Node*>&                         getDownPassSequence(void) { return downPassSequence; }
+        bool                                        getIsClock(void) { return isClock; }
         Node*                                       getLeafIndexed(int idx);
         Node*                                       getLeafNamed(std::string n);
         Node*                                       getRoot(void) { return root; }
@@ -47,12 +48,15 @@ class Tree {
         void                                        print(std::string header);
         Node*                                       randomNode(RandomVariable* rv);
         void                                        setAllFlags(bool tf);
+        void                                        setIsClock(bool tf) { isClock = tf; }
                 
     private:
         Node*                                       addNode(void);
         double                                      calculateDistance(std::string t1, std::string t2);
         void                                        clone(Tree& t);
         void                                        deleteAllNodes(void);
+        void                                        initializeClockBranchLengths(RandomVariable* rv, double lam);
+        bool                                        isRooted(void);
         void                                        listNodes(Node* p, size_t indent);
         void                                        passDown(Node* p);
         std::vector<std::string>                    tokenizeTreeString(std::string ls);
@@ -63,6 +67,7 @@ class Tree {
         Node*                                       root;
         int                                         numTaxa;
         std::vector<std::string>                    taxonNames;
+        bool                                        isClock;
 };
 
 #endif

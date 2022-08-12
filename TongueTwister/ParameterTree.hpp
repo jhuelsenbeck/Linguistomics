@@ -47,8 +47,7 @@ class ParameterTree : public Parameter {
         int                             countMaskBits(std::vector<bool>& m);
         void                            initializeSubtrees(std::vector<Alignment*>& alns);
         void                            nniArea(std::vector<Node*>& backbone, Node*& incidentNode);
-        void                            normalize(std::vector<double>& vec, double minVal);
-        double                          updateBrlenProportions(void);
+        double                          updateBrlen(void);
         double                          updateBranchlengthsFromPrior(void);
         double                          updateTopologyFromPrior(void);
         double                          updateNni(void);
@@ -57,6 +56,7 @@ class ParameterTree : public Parameter {
         double                          lambda;
         TreePair                        fullTree;
         std::map<RbBitSet,TreePair>     subTrees;
+        bool                            isClockConstrained;
 };
 
 #endif

@@ -74,7 +74,7 @@ void Mcmc::closeOutputFiles(void) {
     treeStrm.close();
 }
 
-std::string Mcmc::formattedTime(std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
+std::string Mcmc::formattedTime(Timer& t1, Timer& t2) {
 
     std::chrono::duration<double> durationSecs  = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1);
     int s = (int)durationSecs.count();
@@ -179,7 +179,7 @@ void Mcmc::print(int powIdx, int numPowers, std::string phase, int gen, double* 
 
 }
 
-void Mcmc::print(int gen, double* curLnL, double* curLnP, bool /*accept*/, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
+void Mcmc::print(int gen, double* curLnL, double* curLnP, bool /*accept*/, Timer& t1, Timer& t2) {
 
     for (int chain=0; chain<numChains; chain++)
         {
@@ -267,6 +267,8 @@ void Mcmc::run(void) {
 }
 
 void Mcmc::runPathSampling(void) {
+
+    // TODO: add parameters to user settings (num stones, power parameters, preburnin length, etc.)
 
     // path sampling only implemented for one chain
     if (numChains > 1)
