@@ -268,11 +268,12 @@ void Mcmc::run(void) {
 
 void Mcmc::runPathSampling(void) {
 
-    // TODO: add parameters to user settings (num stones, power parameters, preburnin length, etc.)
-
     // path sampling only implemented for one chain
     if (numChains > 1)
         Msg::error("Cannot run path sampling with more than one chain");
+        
+    // get a reference to the user settings object
+    UserSettings& settings = UserSettings::userSettings();
 
     // initialize the chain
     initialize();
@@ -283,9 +284,9 @@ void Mcmc::runPathSampling(void) {
     double beta   = 1.0;
     std::vector<double> powers = calculatePowers(numStones, alpha, beta);
     SteppingStones samples(powers);
-    McmcPhase mcmcPhases(1000, 0, 1000, 20000, 50);
+    McmcPhase mcmcPhases(settings.getFirstBurnLength(), settings.getPreburninLength(), settings.getTuneLength(), settings.getBurnLength(), settings.getSampleLength(), settings.getSampleFrequency());
     std::vector<std::string>& phases = mcmcPhases.getPhases();
-    int firstBurnLength = 1000000;
+    int firstBurnLength = mcmcPhases.getFirstBurnLength();
 
     // get initial likelihoods
     for (int chain=0; chain<numChains; chain++)

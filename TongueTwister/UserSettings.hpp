@@ -18,18 +18,17 @@ class UserSettings {
         int                     getCheckPointFrequency(void) { return checkPointFrequency; }
         std::string             getDataFile(void) { return dataFile; }
         double                  getBranchLengthLambda(void) { return branchLengthLambda; }
-        int                     getBurninLength(void) { return burninLength; }
+        int                     getBurnLength(void) { return burnLength; }
+        int                     getFirstBurnLength(void) { return firstBurnLength; }
         std::string             getOutFile(void) { return outFile; }
         int                     getNumChains(void) { return numChains; }
         int                     getNumMcmcCycles(void) { return numMcmcCycles; }
         int                     getNumIndelCategories(void) { return numIndelCategories; }
         int                     getNumRateCategories(void) { return numRateCategories; }
-        int                     getNumTunes(void) { return numTunes; }
         int                     getPreburninLength(void) { return preburninLength; }
         int                     getPrintFrequency(void) { return printFrequency; }
         int                     getSampleFrequency(void) { return sampleFrequency; }
         int                     getSampleLength(void) { return sampleLength; }
-        int                     getSampleToStoneFrequency(void) { return sampleToStoneFrequency; }
         uint32_t                getSeed(void) { return seed; }
         int                     getSubstitutionModel(void) { return substitutionModel; }
         double                  getTemperature(void) { return temperature; }
@@ -53,20 +52,20 @@ class UserSettings {
         int                     numMcmcCycles;
         int                     numRateCategories;
         int                     printFrequency;
-        int                     sampleFrequency;
         int                     substitutionModel;
         bool                    useOnlyCompleteWords;
         bool                    calculateMarginalLikelihood;
         int                     preburninLength;
-        int                     numTunes;
-        int                     tuneLength;
-        int                     burninLength;
-        int                     sampleLength;
-        int                     sampleToStoneFrequency;
         uint32_t                seed;
         int                     numChains;
         double                  temperature;
         bool                    useClockConstraint;
+        int                     firstBurnLength;
+        int                     preBurnLength;
+        int                     tuneLength;
+        int                     burnLength;
+        int                     sampleLength;
+        int                     sampleFrequency;
 };
 
 #endif

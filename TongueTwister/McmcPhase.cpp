@@ -2,8 +2,9 @@
 
 
 
-McmcPhase::McmcPhase(int pbl, int tl, int bl, int sl, int sf) {
+McmcPhase::McmcPhase(int fbl, int pbl, int tl, int bl, int sl, int sf) {
 
+    firstBurnLength = fbl;
     preBurnLength   = pbl;
     tuneLength      = tl;
     burnLength      = bl;

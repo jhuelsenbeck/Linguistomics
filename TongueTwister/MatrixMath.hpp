@@ -3,8 +3,6 @@
 
 #include "Container.hpp"
 
-#include "Container.hpp"
-
 
 class MathCache {
 

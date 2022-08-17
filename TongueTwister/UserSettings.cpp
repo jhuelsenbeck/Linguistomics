@@ -6,6 +6,33 @@
 #include "Msg.hpp"
 #include "UserSettings.hpp"
 
+/* Summary of commands used by this program
+
+   Cmd Arg    Json Key             Command Description
+   ------------------------------------------------------------------------------------------------------------------------
+   -d         N/A                  Name of the file with the initial alignments of words (and model settings)
+   -o         FileOutput           File name for output
+   -m         Model                Substitution model (jc69 or gtr or custom, making certain the model name is lower case)
+   -l         BrlenPriorVal        Parameter of exponential branch length prior
+   -lc        Clock                Clock constrained (yes or no, all lower case)
+   -c         OnlyCompleteWords    Use only completely sampled words (yes or no, lower case)
+   -g         SubRatesNumCats      Number of gamma rate categories for substitution rate variation (1 is no rate variation)
+   -i         IndelRatesNumCats    Number of gamma indel categories (1 is no indel rate variation)
+   -z         CalcMarginal         Calculate marginal likelihood (yes or no)
+   -e         Seed                 Seed for pseudorandom number generator (program uses time if this is not specified)
+   -nc        NumChains            Number of Markov chains for (MC)^3
+   -h         Temperature          Temperature for (MC)^3
+   -n         NumCycles            Number of MCMC cycles (used for posterior analysis)
+   -p         PrintFreq            Print-to-screen frequency
+   -s         SampleFreq           Chain sample frequency
+   -fb        FirstBurn            Length of initial burnin for path sampling method
+   -pbl       PreburnLength        Preburnin length
+   -tl        TuneLength           Tune length
+   -bl        BurnLength           Length of burn period for each stone
+   -sl        SampleLength         The number of MCMC cycles during which log likelihoods are sampled
+
+   Json commands to be added by Shawn: SubRatesNumCats, IndelRatesNumCats, FirstBurn, PreburnLength, TuneLength, BurnLength, SampleLength */
+
 
 
 UserSettings::UserSettings(void) {
@@ -19,24 +46,24 @@ UserSettings::UserSettings(void) {
     seed                        = 0;
     numMcmcCycles               = 1000;
     printFrequency              = 100;
-    sampleFrequency             = 100;
     branchLengthLambda          = 50.0;
     substitutionModel           = jc69;
     calculateMarginalLikelihood = false;
     numRateCategories           = 1;
     numIndelCategories          = 1;
     useOnlyCompleteWords        = false;
-    preburninLength             = 10000;
-    numTunes                    = 4;
-    tuneLength                  = 1000;
-    burninLength                = 100000;
-    sampleLength                = 100000;
-    sampleToStoneFrequency      = 10;
     useClockConstraint          = false;
+    firstBurnLength             = 0;
+    preburninLength             = 0;
+    tuneLength                  = 0;
+    burnLength                  = 0;
+    sampleLength                = 20000;
+    sampleFrequency             = 100;
 }
 
 
 std::string UserSettings::getVariable(nlohmann::json &settings, const char* name) {
+
     std::string res = settings[name];
     std::transform(res.begin(), res.end(), res.begin(), [](unsigned char c) { return (char)std::tolower(c); });
     return res;
@@ -106,6 +133,17 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 checkPointFrequency = atoi(cmd.c_str());
             else if (arg == "-l")
                 branchLengthLambda = atof(cmd.c_str());
+                
+            else if (arg == "-fb")
+                firstBurnLength = atoi(cmd.c_str());
+            else if (arg == "-pbl")
+                preburninLength = atoi(cmd.c_str());
+            else if (arg == "-tl")
+                tuneLength = atoi(cmd.c_str());
+            else if (arg == "-bl")
+                burnLength = atoi(cmd.c_str());
+            else if (arg == "-sl")
+                sampleLength = atoi(cmd.c_str());
             else if (arg == "-z")
                 {
                 if (cmd == "yes")
@@ -247,10 +285,13 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         it2 = jsonSettings.find("BrlenPriorVal");
         if (it2 != jsonSettings.end())
             branchLengthLambda = jsonSettings["BrlenPriorVal"];
-
-        it2 = jsonSettings.find("NumTunings");
+            
+            
+            
+            
+        it2 = jsonSettings.find("FirstBurn");
         if (it2 != jsonSettings.end())
-            numTunes = jsonSettings["NumTunings"];
+            firstBurnLength = jsonSettings["FirstBurn"];
 
         it2 = jsonSettings.find("TuneLength");
         if (it2 != jsonSettings.end())
@@ -259,14 +300,14 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         it2 = jsonSettings.find("PreburnLength");
         if (it2 != jsonSettings.end())
             preburninLength = jsonSettings["PreburnLength"];
-
-        it2 = jsonSettings.find("StoneSampleLength");
+            
+        it2 = jsonSettings.find("SampleLength");
         if (it2 != jsonSettings.end())
-            sampleLength = jsonSettings["StoneSampleLength"];
-
-        it2 = jsonSettings.find("StoneSampleFreq");
-        if (it2 != jsonSettings.end())
-            sampleToStoneFrequency = jsonSettings["StoneSampleFreq"];
+            sampleLength = jsonSettings["SampleLength"];
+            
+            
+            
+            
 
         it2 = jsonSettings.find("NumChains");
         if (it2 != jsonSettings.end())
@@ -318,11 +359,8 @@ void UserSettings::print(void) {
    else
         {
         std::cout << "   * Calculate marginal likelihood           = yes" << std::endl;
-        std::cout << "   * Number of tunings                       = " << numTunes << std::endl;
+        std::cout << "   * Pre-burnin length                       = " << preburninLength << std::endl;
         std::cout << "   * Tuning length                           = " << tuneLength << std::endl;
-        std::cout << "   * Pre burnin length                       = " << preburninLength << std::endl;
-        std::cout << "   * Stone sample length                     = " << sampleLength << std::endl;
-        std::cout << "   * Stone sample frequency                  = " << sampleToStoneFrequency << std::endl;
         }
     std::cout << std::endl;
 }
@@ -349,8 +387,6 @@ void UserSettings::usage(void) {
     std::cout << "   * -nt / NumTunings        -- Number of tunings" << std::endl;
     std::cout << "   * -tl / TuneLength        -- Tune length" << std::endl;
     std::cout << "   * -bl / PreburnLength     -- Preburnin length" << std::endl;
-    std::cout << "   * -sl / StoneSampleLength -- Sample length" << std::endl;
-    std::cout << "   * -sf / StoneSampleFreq   -- Stone sample frequency" << std::endl;
     std::cout << std::endl;
 }
 
