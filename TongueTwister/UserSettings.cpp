@@ -25,7 +25,7 @@
    -n         NumCycles            Number of MCMC cycles (used for posterior analysis)
    -p         PrintFreq            Print-to-screen frequency
    -s         SampleFreq           Chain sample frequency
-   -fb        FirstBurn            Length of initial burnin for path sampling method
+   -fb        FirstBurnLength      Length of initial burnin for path sampling method
    -pbl       PreburnLength        Preburnin length
    -tl        TuneLength           Tune length
    -bl        BurnLength           Length of burn period for each stone
@@ -133,7 +133,6 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 checkPointFrequency = atoi(cmd.c_str());
             else if (arg == "-l")
                 branchLengthLambda = atof(cmd.c_str());
-                
             else if (arg == "-fb")
                 firstBurnLength = atoi(cmd.c_str());
             else if (arg == "-pbl")
@@ -286,12 +285,9 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         if (it2 != jsonSettings.end())
             branchLengthLambda = jsonSettings["BrlenPriorVal"];
             
-            
-            
-            
-        it2 = jsonSettings.find("FirstBurn");
+        it2 = jsonSettings.find("FirstBurnLength");
         if (it2 != jsonSettings.end())
-            firstBurnLength = jsonSettings["FirstBurn"];
+            firstBurnLength = jsonSettings["FirstBurnLength"];
 
         it2 = jsonSettings.find("TuneLength");
         if (it2 != jsonSettings.end())
@@ -301,13 +297,13 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         if (it2 != jsonSettings.end())
             preburninLength = jsonSettings["PreburnLength"];
             
+        it2 = jsonSettings.find("BurnLength");
+        if (it2 != jsonSettings.end())
+            burnLength = jsonSettings["BurnLength"];
+            
         it2 = jsonSettings.find("SampleLength");
         if (it2 != jsonSettings.end())
             sampleLength = jsonSettings["SampleLength"];
-            
-            
-            
-            
 
         it2 = jsonSettings.find("NumChains");
         if (it2 != jsonSettings.end())
