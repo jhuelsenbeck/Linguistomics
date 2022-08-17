@@ -33,11 +33,9 @@ Mcmc::Mcmc(Model** m, RandomVariable* r) {
     printFrequency       = settings.getPrintFrequency();
     sampleFrequency      = settings.getSampleFrequency();
     preburninLength      = settings.getPreburninLength();
-    numTunes             = settings.getNumTunes();
     tuneLength           = settings.getTuneLength();
-    burninLength         = settings.getBurninLength();
+    burninLength         = settings.getBurnLength();
     sampleLength         = settings.getSampleLength();
-    stoneSampleFrequency = settings.getSampleToStoneFrequency();
     maxGenPrint          = numDigits(settings.getNumMcmcCycles());
 }
 
