@@ -22,6 +22,7 @@ ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, s
 
     updateChangesRateMatrix = false;
     lambda = itl;
+    isClockConstrained = UserSettings::userSettings().getUseClockConstraint();
     
     if (treeStr != "")
         std::cout << "   * Setting up the tree parameter from information in json file " << std::endl;
@@ -29,9 +30,9 @@ ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, s
         std::cout << "   * Setting up the tree parameter with randomly chosen tree" << std::endl;
         
     if (treeStr != "")
-        fullTree.trees[0] = new Tree(treeStr, tNames, lambda, rv);
+        fullTree.trees[0] = new Tree(treeStr, tNames, lambda, rv, isClockConstrained);
     else
-        fullTree.trees[0] = new Tree(tNames, lambda, rv);
+        fullTree.trees[0] = new Tree(tNames, lambda, rv, isClockConstrained);
     fullTree.trees[1] = new Tree(*fullTree.trees[0]);
     
     // initialize the subtrees
@@ -253,22 +254,37 @@ double ParameterTree::lnPriorProbability(void) {
     // get a vector with the branch lengths
     std::vector<Node*>& dpSeq = fullTree.trees[0]->getDownPassSequence();
     double lnP = 0.0;
-    for (int i=0; i<dpSeq.size(); i++)
+    if (isClockConstrained == false)
         {
-        Node* p = dpSeq[i];
-        if (p->getAncestor() != t->getRoot())
+        // unconstrained prior probability
+        for (Node* p : dpSeq)
             {
-            if (p == t->getRoot())
+            if (p->getAncestor() != t->getRoot())
                 {
-                std::set<Node*,CompNode>& rootDes = p->getDescendants()->getNodes();
-                double len = 0.0;
-                for (Node* n : rootDes)
-                    len += n->getBranchLength();
-                lnP += Probability::Exponential::lnPdf(lambda, len);
+                if (p == t->getRoot())
+                    {
+                    std::set<Node*,CompNode>& rootDes = p->getDescendants()->getNodes();
+                    double len = 0.0;
+                    for (Node* n : rootDes)
+                        len += n->getBranchLength();
+                    lnP += Probability::Exponential::lnPdf(lambda, len);
+                    }
+                else
+                    {
+                    lnP += Probability::Exponential::lnPdf(lambda, p->getBranchLength());
+                    }
                 }
-            else
+            }
+        }
+    else
+        {
+        // clock-constrained prior probability
+        for (Node* p : dpSeq)
+            {
+            if (p->getIsLeaf() == false)
                 {
-                lnP += Probability::Exponential::lnPdf(lambda, p->getBranchLength());
+                double d = p->getNodeTime() - p->oldestDescendantTime();
+                lnP += Probability::Exponential::lnPdf(lambda, d);
                 }
             }
         }
@@ -321,40 +337,6 @@ double ParameterTree::lnPriorProbability(void) {
 #   endif
 }
 
-void ParameterTree::normalize(std::vector<double>& vec, double minVal) {
-    
-    // find entries with values that are too small
-    int numTooSmall = 0;
-    double sum = 0.0;
-    for (int i=0; i<vec.size(); i++)
-        {
-        if (vec[i] < minVal)
-            {
-            numTooSmall++;
-            }
-        else
-            sum += vec[i];
-        }
-        
-    double factor = (1.0 - numTooSmall * minVal) / sum;
-    for (int i=0; i<vec.size(); i++)
-        {
-        if (vec[i] < minVal)
-            vec[i] = minVal;
-        else
-            vec[i] *= factor;
-        }
-        
-    
-#   if 0
-    sum = 0.0;
-    for (int i=0; i<vec.size(); i++)
-        sum += vec[i];
-    if ( fabs(1.0 - sum) > 0.000001)
-        std::cout << "Problem normalizing vector " << std::fixed << std::setprecision(20) << sum << std::endl;
-#   endif
-}
-
 void ParameterTree::print(void) {
 
     fullTree.trees[0]->print();
@@ -382,7 +364,7 @@ double ParameterTree::update(int iter) {
     // pick a tree parameter to update
     double probNni   = 0.50;
     double probBrlen = 0.25;
-    if (iter < settings.getNumMcmcCycles() * 0.25 || settings.getCalculateMarginalLikelihood() == true)
+    if (iter < settings.getNumMcmcCycles() * 0.25 || settings.getCalculateMarginalLikelihood() == true || isClockConstrained == true)
         {
         probNni = 0.0;
         probBrlen = 0.75;
@@ -391,98 +373,166 @@ double ParameterTree::update(int iter) {
     if (u <= probNni)
         return updateNni();
     else if (u > probNni && u <= probNni + probBrlen)
-        return updateBrlenProportions();
+        return updateBrlen();
     else
         return updateTreeLength();
 }
 
-double ParameterTree::updateBrlenProportions(void) {
+double ParameterTree::updateBrlen(void) {
 
     lastUpdateType = "branch length";
     
-    // tuning parameter for move
-    double tuning = log(4.0);
-    
-    // pick a branch at random (note that the two branches
-    // from the root are treated as a single branch)
-    Tree* t = getActiveTree();
-    std::vector<Node*>& nodes = t->getDownPassSequence();
-    Node* nde = NULL;
-    do
+    if (isClockConstrained == false)
         {
-        nde = nodes[rv->uniformRvInt(nodes.size())];
-        if (nde == t->getRoot())
-            nde = NULL;
-        } while(nde == NULL);
+        // update an unconstrained tree
         
-    // determine if the branch is one of the
-    // two branches incident to the root
-    bool isRootBranch = false;
-    if (nde->getAncestor() == t->getRoot())
-        {
-        isRootBranch = true;
-        std::set<Node*,CompNode>& des = t->getRoot()->getDescendants()->getNodes();
-        if (des.size() != 2)
-            Msg::error("Expecting two descendants at root of the tree");
+        // tuning parameter for move
+        double tuning = log(4.0);
+        
+        // pick a branch at random (note that the two branches
+        // from the root are treated as a single branch)
+        Tree* t = getActiveTree();
+        std::vector<Node*>& nodes = t->getDownPassSequence();
+        Node* nde = NULL;
+        do
+            {
+            nde = nodes[rv->uniformRvInt(nodes.size())];
+            if (nde == t->getRoot())
+                nde = NULL;
+            } while(nde == NULL);
+            
+        // determine if the branch is one of the
+        // two branches incident to the root
+        bool isRootBranch = false;
+        if (nde->getAncestor() == t->getRoot())
+            {
+            isRootBranch = true;
+            std::set<Node*,CompNode>& des = t->getRoot()->getDescendants()->getNodes();
+            if (des.size() != 2)
+                Msg::error("Expecting two descendants at root of the tree");
+            }
+            
+        // get the old branch length
+        double oldBrlen = 0.0;
+        if (isRootBranch == false)
+            oldBrlen = nde->getBranchLength();
+        else
+            {
+            std::set<Node*,CompNode>& des = t->getRoot()->getDescendants()->getNodes();
+            for (Node* n : des)
+                oldBrlen += n->getBranchLength();
+            }
+
+        // propose new branch length
+        double randomFactor = exp( -tuning*(rv->uniformRv()-0.5) );
+        double newBrlen = oldBrlen * randomFactor;
+        
+        // set the new branch length
+        if (isRootBranch == false)
+            nde->setBranchLength(newBrlen);
+        else
+            {
+            std::set<Node*,CompNode>& des = t->getRoot()->getDescendants()->getNodes();
+            for (Node* n : des)
+                n->setBranchLength(newBrlen*0.5);
+            }
+
+        // update the subtrees (before updating transition probabilities)
+        updateSubtrees();
+        
+        // update the transition probabilities
+        updateChangesTransitionProbabilities = true;
+        TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+        tip->flipActive();
+        tip->setNeedsUpdate(true);
+        tip->setTransitionProbabilities();
+
+        modelPtr->setUpdateLikelihood();
+        modelPtr->flipActiveLikelihood();
+
+        return log(randomFactor);
         }
-        
-    // get the old branch length
-    double oldBrlen = 0.0;
-    if (isRootBranch == false)
-        oldBrlen = nde->getBranchLength();
     else
         {
-        std::set<Node*,CompNode>& des = t->getRoot()->getDescendants()->getNodes();
-        for (Node* n : des)
-            oldBrlen += n->getBranchLength();
-        }
+        // update a clock-constrained tree
 
-    // propose new branch length
-    double randomFactor = exp( -tuning*(rv->uniformRv()-0.5) );
-    double newBrlen = oldBrlen * randomFactor;
+        // pick an interior node at random
+        Tree* t = getActiveTree();
+        //t->print("before");
+        std::vector<Node*>& nodes = t->getDownPassSequence();
+        Node* nde = NULL;
+        do
+            {
+            nde = nodes[rv->uniformRvInt(nodes.size())];
+            } while(nde->getIsLeaf() == true);
+            
+        // find the time of the oldest descendant of nde
+        double oldestDescendantTime = nde->oldestDescendantTime();
+        
+        // and the time of the ancestor
+        double ancestorTime = 0.0;
+        if (nde->getAncestor() != NULL)
+            ancestorTime = nde->getAncestor()->getNodeTime();
+            
+        // pick a new node time
+        double lnProposalProbability = 0.0;
+        if (nde->getAncestor() != NULL)
+            {
+            double u = rv->uniformRv();
+            /*std::cout << "node                 = " << nde->getIndex() << std::endl;
+            std::cout << "oldestDescendantTime = " << oldestDescendantTime << std::endl;
+            std::cout << "ancestorTime         = " << ancestorTime << std::endl;
+            std::cout << "new time             = " << oldestDescendantTime + u * (ancestorTime - oldestDescendantTime) << std::endl;*/
+            nde->setNodeTime( oldestDescendantTime + u * (ancestorTime - oldestDescendantTime) );
+            }
+        else
+            {
+            // we treat the root differently
+            double tuning = log(4.0);
+            double oldD = nde->getNodeTime() - oldestDescendantTime;
+            double randomFactor = exp( -tuning*(rv->uniformRv()-0.5) );
+            double newD = oldD * randomFactor;
+            //std::cout << oldD << " -> " << oldestDescendantTime + newD << std::endl;
+            nde->setNodeTime( oldestDescendantTime + newD );
+            
+            lnProposalProbability = log(randomFactor);
+            }
+
+        // adjust the branch lengths
+        for (Node* n : t->getDownPassSequence())
+            {
+            if (n != t->getRoot())
+                n->setBranchLength( n->getAncestor()->getNodeTime() - n->getNodeTime() );
+            else
+                n->setBranchLength(0.0);
+            }
+        //t->print("after");
+
+
+        // update the subtrees (before updating transition probabilities)
+        updateSubtrees();
+        
+        // update the transition probabilities
+        updateChangesTransitionProbabilities = true;
+        TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
+        tip->flipActive();
+        tip->setNeedsUpdate(true);
+        tip->setTransitionProbabilities();
+
+        modelPtr->setUpdateLikelihood();
+        modelPtr->flipActiveLikelihood();
+
+        return lnProposalProbability;
+        }
     
-    // set the new branch length
-    if (isRootBranch == false)
-        nde->setBranchLength(newBrlen);
-    else
-        {
-        std::set<Node*,CompNode>& des = t->getRoot()->getDescendants()->getNodes();
-        for (Node* n : des)
-            n->setBranchLength(newBrlen*0.5);
-        }
-
-    // update the subtrees (before updating transition probabilities)
-    updateSubtrees();
-    
-    // update the transition probabilities
-    updateChangesTransitionProbabilities = true;
-    TransitionProbabilities* tip = modelPtr->getTransitionProbabilities();
-    tip->flipActive();
-    tip->setNeedsUpdate(true);
-    tip->setTransitionProbabilities();
-
-    modelPtr->setUpdateLikelihood();
-    modelPtr->flipActiveLikelihood();
-
-#   if 0
-    std::vector<double> proposedBrlens;
-    for (int i=0; i<nodes.size(); i++)
-        {
-        Node* p = nodes[i];
-        proposedBrlens.push_back(p->getBranchProportion());
-        }
-    std::cout << "(";
-    std::cout << std::fixed << std::setprecision(7);
-    for (int i=0; i<proposedBrlens.size(); i++)
-        std::cout << proposedBrlens[i] << " ";
-    std::cout << ")" << std::endl;
-#   endif
-
-    return log(randomFactor);
+    return 0.0; // to silence warnings
 }
 
 double ParameterTree::updateNni(void) {
 
+    if (isClockConstrained == true)
+        Msg::error("Cannot update a clock constrained tree using NNI");
+        
     lastUpdateType = "local";
 
     double tuning = log(2.0);
@@ -631,6 +681,9 @@ double ParameterTree::updateNni(void) {
 
 double ParameterTree::updateSpr(void) {
 
+    if (isClockConstrained == true)
+        Msg::error("Cannot update a clock constrained tree using SPR");
+
     return 0.0;
 }
 
@@ -643,13 +696,35 @@ double ParameterTree::updateTreeLength(void) {
     double tuning = log(2.0);
     double randomFactor = exp(tuning * (rv->uniformRv()-0.5));
     
-    // update all of the branch lengths
     std::vector<Node*>& dpSeq = t->getDownPassSequence();
-    for (int i=0; i<dpSeq.size(); i++)
+    if (isClockConstrained == false)
         {
-        Node* p = dpSeq[i];
-        if (p->getAncestor() != NULL)
-            p->setBranchLength( p->getBranchLength() * randomFactor );
+        // update all of the branch lengths (unconstrained)
+        for (Node* p : dpSeq)
+            {
+            if (p->getAncestor() != NULL)
+                p->setBranchLength( p->getBranchLength() * randomFactor );
+            }
+        }
+    else
+        {
+        // update all node times, then branch lengths (clock constrained)
+        for (Node* p : dpSeq)
+            {
+            if (p->getIsLeaf() == false)
+                {
+                double oldT = p->getNodeTime();
+                double newT = oldT * randomFactor;
+                p->setNodeTime(newT);
+                }
+            }
+        for (Node* p : dpSeq)
+            {
+            if (p != t->getRoot())
+                p->setBranchLength( p->getAncestor()->getNodeTime() - p->getNodeTime() );
+            else
+                p->setBranchLength(0.0);
+            }
         }
 
     // update the transition probabilities
@@ -661,11 +736,20 @@ double ParameterTree::updateTreeLength(void) {
 
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
-
-    return (double)(dpSeq.size()-1) * log(randomFactor);
+    
+    // calculate and return the log of the proposal probability
+    double lnP = 0.0;
+    if (isClockConstrained == false)
+        lnP = (double)(dpSeq.size()-1) * log(randomFactor);
+    else
+        lnP = (t->getNumTaxa()-1) * log(randomFactor);
+    return lnP;
 }
 
 double ParameterTree::updateTopologyFromPrior(void) {
+
+    if (isClockConstrained == true)
+        Msg::error("Cannot update a clock constrained topology from prior");
 
     lastUpdateType = "random tree";
     
@@ -677,7 +761,7 @@ double ParameterTree::updateTopologyFromPrior(void) {
         
     // update the topology and calculate proposal probability
     double lnP1 = lnPriorProbability();
-    t->buildRandomTree(tNames, lambda, rv);
+    t->buildRandomTree(tNames, lambda, rv, isClockConstrained);
     double lnP2 = lnPriorProbability();
 
     // update the transition probabilities
@@ -693,6 +777,9 @@ double ParameterTree::updateTopologyFromPrior(void) {
 }
 
 double ParameterTree::updateBranchlengthsFromPrior(void) {
+
+    if (isClockConstrained == true)
+        Msg::error("Cannot update a clock constrained tree's branch lengths from prior");
 
     lastUpdateType = "random branch lengths";
 

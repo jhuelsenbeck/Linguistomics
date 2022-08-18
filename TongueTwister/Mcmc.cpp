@@ -33,11 +33,9 @@ Mcmc::Mcmc(Model** m, RandomVariable* r) {
     printFrequency       = settings.getPrintFrequency();
     sampleFrequency      = settings.getSampleFrequency();
     preburninLength      = settings.getPreburninLength();
-    numTunes             = settings.getNumTunes();
     tuneLength           = settings.getTuneLength();
-    burninLength         = settings.getBurninLength();
+    burninLength         = settings.getBurnLength();
     sampleLength         = settings.getSampleLength();
-    stoneSampleFrequency = settings.getSampleToStoneFrequency();
     maxGenPrint          = numDigits(settings.getNumMcmcCycles());
 }
 
@@ -74,7 +72,7 @@ void Mcmc::closeOutputFiles(void) {
     treeStrm.close();
 }
 
-std::string Mcmc::formattedTime(std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
+std::string Mcmc::formattedTime(Timer& t1, Timer& t2) {
 
     std::chrono::duration<double> durationSecs  = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1);
     int s = (int)durationSecs.count();
@@ -179,7 +177,7 @@ void Mcmc::print(int powIdx, int numPowers, std::string phase, int gen, double* 
 
 }
 
-void Mcmc::print(int gen, double* curLnL, double* curLnP, bool /*accept*/, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2) {
+void Mcmc::print(int gen, double* curLnL, double* curLnP, bool /*accept*/, Timer& t1, Timer& t2) {
 
     for (int chain=0; chain<numChains; chain++)
         {
@@ -271,6 +269,9 @@ void Mcmc::runPathSampling(void) {
     // path sampling only implemented for one chain
     if (numChains > 1)
         Msg::error("Cannot run path sampling with more than one chain");
+        
+    // get a reference to the user settings object
+    UserSettings& settings = UserSettings::userSettings();
 
     // initialize the chain
     initialize();
@@ -281,9 +282,9 @@ void Mcmc::runPathSampling(void) {
     double beta   = 1.0;
     std::vector<double> powers = calculatePowers(numStones, alpha, beta);
     SteppingStones samples(powers);
-    McmcPhase mcmcPhases(1000, 0, 1000, 20000, 50);
+    McmcPhase mcmcPhases(settings.getFirstBurnLength(), settings.getPreburninLength(), settings.getTuneLength(), settings.getBurnLength(), settings.getSampleLength(), settings.getSampleFrequency());
     std::vector<std::string>& phases = mcmcPhases.getPhases();
-    int firstBurnLength = 1000000;
+    int firstBurnLength = mcmcPhases.getFirstBurnLength();
 
     // get initial likelihoods
     for (int chain=0; chain<numChains; chain++)

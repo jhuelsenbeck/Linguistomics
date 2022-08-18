@@ -24,18 +24,21 @@
 //==============================================================================================
 
 WordLnLikeTask::WordLnLikeTask() {
+
     Calculator = NULL;
     ThreadLnL  = NULL;
     WordLnL    = NULL;
 }
 
 void WordLnLikeTask::Init(LikelihoodCalculator* calculator, double* threadLnL, double* wordLnL) {
+
     Calculator = calculator;
     ThreadLnL = threadLnL;
     WordLnL = wordLnL;
 }
 
 void WordLnLikeTask::Run(MathCache& cache) {
+
     double lnL = Calculator->lnLikelihood(cache);
     *ThreadLnL = lnL;
     *WordLnL = lnL;

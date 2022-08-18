@@ -7,7 +7,7 @@
 class Model;
 class RandomVariable;
 
-
+typedef std::chrono::high_resolution_clock::time_point Timer;
 
 class Mcmc {
 
@@ -20,13 +20,13 @@ class Mcmc {
         std::vector<double> calculatePowers(int numStones, double alpha, double beta);
         void                chooseModelsToSwap(int& idx1, int& idx2);
         void                closeOutputFiles(void);
-        std::string         formattedTime(std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
+        std::string         formattedTime(Timer& t1, Timer& t2);
         void                initialize(void);
         Model*              getColdModel(void);
         int                 numDigits(double lnX);
         void                openOutputFiles(void);
         double              power(int idx);
-        void                print(int gen, double* curLnL, double* curLnP, bool accept, std::chrono::high_resolution_clock::time_point& t1, std::chrono::high_resolution_clock::time_point& t2);
+        void                print(int gen, double* curLnL, double* curLnP, bool accept, Timer& t1, Timer& t2);
         void                print(int powIdx, int numPowers, std::string phase, int gen, double* curLnL, double* curLnP);
         double              safeExponentiation(double lnX);
         void                sample(int gen, double lnL, double lnP);

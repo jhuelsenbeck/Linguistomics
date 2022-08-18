@@ -13,6 +13,7 @@ Node::Node(void) {
     name                  = "";
     ancestor              = NULL;
     length                = 0.0;
+    nodeTime              = 0.0;
     offset                = 0;
     myTree                = NULL;
     descendants           = new NodeSet;
@@ -26,6 +27,7 @@ Node::Node(int idx) {
     name                  = "";
     ancestor              = NULL;
     length                = 0.0;
+    nodeTime              = 0.0;
     offset                = idx;
     myTree                = NULL;
     descendants           = new NodeSet;
@@ -49,6 +51,7 @@ void Node::clean(void) {
     name       = "";
     ancestor   = NULL;
     length     = 0.0;
+    nodeTime   = 0.0;
     myTree     = NULL;
     descendants->deleteAllNodes();
     transitionProbability = NULL;
@@ -98,6 +101,17 @@ bool Node::isDescendant(Node* p) {
 size_t Node::numDescendants(void) {
 
     return descendants->size();
+}
+
+double Node::oldestDescendantTime(void) {
+
+    double oldestDescendantTime = 0.0;
+    for (Node* n : descendants->getNodes())
+        {
+        if (n->getNodeTime() > oldestDescendantTime)
+            oldestDescendantTime = n->getNodeTime();
+        }
+    return oldestDescendantTime;
 }
 
 void Node::print(void) {

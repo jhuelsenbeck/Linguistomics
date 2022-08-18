@@ -11,7 +11,8 @@ void printHeader(void);
 
 int main(int argc, char* argv[]) {
 
-    // read the user settings from the command-line arguments
+    // Read the user settings from the command-line arguments. See the
+    // header of UserSettings.cpp for a full list of command options.
     UserSettings& settings = UserSettings::userSettings();
     settings.readCommandLineArguments(argc, argv);
     settings.print();
