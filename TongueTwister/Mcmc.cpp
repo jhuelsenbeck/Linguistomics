@@ -27,16 +27,16 @@ Mcmc::Mcmc(Model** m, RandomVariable* r) {
     maxPriorPrint = 0;
     
     UserSettings& settings = UserSettings::userSettings();
-    numChains            = settings.getNumChains();
-    temperature          = settings.getTemperature();
-    numMcmcCycles        = settings.getNumMcmcCycles();
-    printFrequency       = settings.getPrintFrequency();
-    sampleFrequency      = settings.getSampleFrequency();
-    preburninLength      = settings.getPreburninLength();
-    tuneLength           = settings.getTuneLength();
-    burninLength         = settings.getBurnLength();
-    sampleLength         = settings.getSampleLength();
-    maxGenPrint          = numDigits(settings.getNumMcmcCycles());
+    numChains              = settings.getNumChains();
+    temperature            = settings.getTemperature();
+    numMcmcCycles          = settings.getNumMcmcCycles();
+    printFrequency         = settings.getPrintFrequency();
+    sampleFrequency        = settings.getSampleFrequency();
+    preburninLength        = settings.getPreburninLength();
+    tuneLength             = settings.getTuneLength();
+    burninLength           = settings.getBurnLength();
+    sampleLength           = settings.getSampleLength();
+    maxGenPrint            = numDigits(settings.getNumMcmcCycles());
 }
 
 std::vector<double> Mcmc::calculatePowers(int numStones, double alpha, double beta) {
