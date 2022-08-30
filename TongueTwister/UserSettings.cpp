@@ -94,7 +94,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 
         // Convert the source string to lower case
         // storing the result in destination string
-        std::transform(origCmd.begin(), origCmd.end(), cmd.begin(),::tolower);
+        std::transform(origCmd.begin(), origCmd.end(), cmd.begin(), [](char c) { return (char)std::tolower(c); });
         
         if (arg == "")
             {
