@@ -6,11 +6,11 @@
 #include <string>
 #include <vector>
 #include "json.hpp"
+#include "Parameter.hpp"
 #include "RbBitSet.h"
 #include "Threads.hpp"
 class Alignment;
 class LikelihoodCalculator;
-class Parameter;
 class ParameterAlignment;
 class ParameterTree;
 class Partition;
@@ -46,7 +46,7 @@ class Model {
         void                                    fillParameterValues(double* x, int n);
         void                                    flipActiveLikelihood(void);
         void                                    flipActiveLikelihood(int idx);
-        std::string                             getLastUpdate(void);
+        std::string&                            getLastUpdate(void);
         ParameterAlignment*                     getAlignment(int idx);
         std::vector<ParameterAlignment*>        getAlignments(void);
         std::vector<std::string>&               getCanonicalTaxonList(void) { return canonicalTaxonList; }
@@ -103,6 +103,7 @@ class Model {
         RateMatrixHelper*                       rateMatrixHelper;
         TransitionProbabilities*                transitionProbabilities;
         size_t                                  taskMax;
+        //ParameterId                             updatedParameterIdx;
         int                                     updatedParameterIdx;
         int                                     substitutionModel;
         int                                     index;

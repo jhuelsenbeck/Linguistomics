@@ -14,14 +14,14 @@ UpdateInfo::~UpdateInfo(void) {
     info.clear();
 }
 
-void UpdateInfo::accept(std::string key) {
+void UpdateInfo::accept(std::string& key) {
 
     AcceptTries* at = getUpdateInfo(key);
     at->numTries++;
     at->numAccepts++;
 }
 
-AcceptTries* UpdateInfo::getUpdateInfo(std::string key) {
+AcceptTries* UpdateInfo::getUpdateInfo(std::string& key) {
 
     std::map<std::string,AcceptTries*>::iterator it = info.find(key);
     if (it == info.end())
@@ -57,7 +57,7 @@ void UpdateInfo::print(void) {
         }
 }
 
-void UpdateInfo::reject(std::string key) {
+void UpdateInfo::reject(std::string& key) {
 
     AcceptTries* at = getUpdateInfo(key);
     at->numTries++;

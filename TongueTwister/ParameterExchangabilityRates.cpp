@@ -14,6 +14,8 @@ double ParameterExchangabilityRates::minVal = 0.000001;
 
 ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns) : Parameter(r, m, n) {
 
+    //parmId = ExchangabilityRatesParm;
+
     std::cout << "   * Setting up GTR exchangeability rates parameter " << std::endl;
 
     updateChangesRateMatrix = true;

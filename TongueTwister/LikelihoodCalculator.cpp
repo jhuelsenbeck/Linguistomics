@@ -55,9 +55,9 @@ LikelihoodCalculator::~LikelihoodCalculator(void) {
     delete [] fI;
 }
 
-std::string LikelihoodCalculator::alignmentName(void) {
+std::string& LikelihoodCalculator::alignmentName(void) {
 
-    return data->getName();
+    return data->parmName;
 }
 
 void LikelihoodCalculator::allcoateIndelCombinatorics(int nn, int maxSeqLen) {

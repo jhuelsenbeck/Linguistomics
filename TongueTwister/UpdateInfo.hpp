@@ -20,10 +20,10 @@ class UpdateInfo {
                                                 static UpdateInfo uiPool;
                                                 return uiPool;
                                             }
-        void                                accept(std::string key);
+        void                                accept(std::string& key);
         void                                print(void);
-        void                                reject(std::string key);
-        AcceptTries*                        getUpdateInfo(std::string key);
+        void                                reject(std::string& key);
+        AcceptTries*                        getUpdateInfo(std::string& key);
         
     private:
                                             UpdateInfo(void);

@@ -45,7 +45,7 @@ class LikelihoodCalculator {
                                         LikelihoodCalculator(void) = delete;
                                         LikelihoodCalculator(ParameterAlignment* a, Model* m);
                                        ~LikelihoodCalculator(void);
-        std::string                     alignmentName(void);
+        std::string&                    alignmentName(void);
         double                          lnLikelihood(MathCache& cache);
     
     private:

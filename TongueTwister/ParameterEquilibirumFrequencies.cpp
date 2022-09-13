@@ -14,6 +14,8 @@ double ParameterEquilibirumFrequencies::minVal = 0.001;
 
 ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable* r, Model* m, std::string n, int ns) : Parameter(r, m, n) {
 
+    //parmId = EquilibriumFrequenciesParm;
+
     std::cout << "   * Setting up equilibrium frequencies parameter " << std::endl;
 
     updateChangesRateMatrix = true;

@@ -13,22 +13,24 @@
 
 ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a, std::string n, int idx) : Parameter(r, m, n) {
     
+    //parmId = AlignmentParm;
+    
     updateChangesRateMatrix = false;
     
     index = idx;
 
-    std::string name = a->getName();
+    std::string& name = a->name;
     const size_t periodIdx = name.rfind('.');
     if (std::string::npos != periodIdx)
         name.erase(periodIdx);
     std::cout << "   * Setting up alignment parameter for word " << name << std::endl;
 
     // initialize the alignment
-    numTaxa = a->getNumTaxa();
-    int numSites = a->getNumChar();
-    std::vector<bool> boolMask = a->getTaxonMask();
+    numTaxa = a->numTaxa;
+    int& numSites = a->numChar;
+    std::vector<bool>& boolMask = a->taxonMask;
     taxonMask = RbBitSet(boolMask);
-    taxonMapKeyCanonical = a->getTaxonMap();
+    taxonMapKeyCanonical = a->taxonMap;
     for (std::map<int,int>::iterator it = taxonMapKeyCanonical.begin(); it != taxonMapKeyCanonical.end(); it++)
         taxonMapKeyAlignment.insert( std::make_pair(it->second,it->first) );
         
@@ -42,7 +44,7 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     printWidth = (int)(numSites * 1.8);
     gapCode = a->getGapCode();
     numStates = a->getNumStates();
-    taxonNames = a->getTaxonNames();
+    taxonNames = a->taxonNames;
     gapCode = a->getGapCode();
     alignment[0] = new AlnMatrix(numTaxa, numSites * 5);
     alignment[1] = new AlnMatrix(numTaxa, numSites * 5);

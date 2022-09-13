@@ -179,11 +179,6 @@ int Alignment::getCharacter(size_t i, size_t j) {
     return matrix[i][j];
 }
 
-std::vector<std::string> Alignment::getTaxonNames(void) {
-
-    return taxonNames;
-}
-
 std::vector<std::vector<int> > Alignment::getIndelMatrix(void) {
 
     // note that this returns a numSites X numTaxa matrix (i.e.,

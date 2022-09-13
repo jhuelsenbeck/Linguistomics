@@ -210,7 +210,7 @@ void TransitionProbabilities::initialize(Model* m, ThreadPool* pool, std::vector
     for (int i=0; i<alns.size(); i++)
         {
         // get the taxon mask
-        std::vector<bool> bm = alns[i]->getTaxonMask();
+        std::vector<bool>& bm = alns[i]->taxonMask;
         RbBitSet mask(bm);
 
         // if the mask is not found in the map, insert it

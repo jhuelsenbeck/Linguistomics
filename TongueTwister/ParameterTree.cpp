@@ -20,6 +20,8 @@
 
 ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, std::vector<std::string> tNames, std::vector<Alignment*>& wordAlignments, double itl) : Parameter(r, m, "tree") {
 
+    //parmId = TreeParm;
+
     updateChangesRateMatrix = false;
     lambda = itl;
     isClockConstrained = UserSettings::userSettings().getUseClockConstraint();
@@ -218,7 +220,7 @@ void ParameterTree::initializeSubtrees(std::vector<Alignment*>& alns) {
     for (int i=0; i<alns.size(); i++)
         {
         // get the taxon mask and only proceed if the taxon list is incomplete
-        std::vector<bool> m = alns[i]->getTaxonMask();
+        std::vector<bool>& m = alns[i]->taxonMask;
         if (countMaskBits(m) == m.size())
             continue;
         RbBitSet mask(m);
