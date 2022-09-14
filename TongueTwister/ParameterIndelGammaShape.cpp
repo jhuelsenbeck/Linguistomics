@@ -12,6 +12,8 @@
 
 ParameterIndelGammaShape::ParameterIndelGammaShape(RandomVariable* r, Model* m, std::string n, double ep, int nc) : Parameter(r, m, n) {
 
+    //parmId = IndelGammaShapeParm;
+
     std::cout << "   * Setting up gamma shape parameter for insertion/deletion rates " << std::endl;
 
     updateChangesRateMatrix = false;

@@ -12,6 +12,8 @@
 
 ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::string n, double /*slen*/, double insLam, double delLam) : Parameter(r, m, n) {
     
+    //parmId = IndelRatesParm;
+
     std::cout << "   * Setting up insertion/deletion rates parameter " << std::endl;
 
     updateChangesRateMatrix = false;

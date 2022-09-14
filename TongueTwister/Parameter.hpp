@@ -6,6 +6,16 @@ class Model;
 class RandomVariable;
 
 
+/*enum ParameterId {
+    AlignmentParm,
+    EquilibriumFrequenciesParm,
+    ExchangabilityRatesParm,
+    IndelGammaShapeParm,
+    IndelRatesParm,
+    RatesGammaShapeParm,
+    TreeParm };*/
+
+
 
 class Parameter {
 
@@ -17,8 +27,6 @@ class Parameter {
         virtual void        fillParameterValues(double* x, int& start, int maxNumValues) = 0;
         virtual std::string getJsonString(void) = 0;
         virtual std::string getHeader(void) = 0;
-        std::string         getName(void) { return parmName; }
-        std::string         getLastUpdate(void) { return lastUpdateType; }
         virtual int         getNumValues(void) = 0;
         double              getProposalProbability(void) { return proposalProbability; }
         virtual std::string getString(void) = 0;
@@ -32,12 +40,13 @@ class Parameter {
         void                setUpdateChangesRateMatrix(bool tf) { updateChangesRateMatrix = tf; }
         void                setUpdateChangesTransitionProbabilities(bool tf) { updateChangesTransitionProbabilities = tf; }
         virtual double      update(int iter) = 0;
+        std::string         lastUpdateType;
+        std::string         parmName;
+        //ParameterId         parmId;
         
     protected:
-        std::string         parmName;
         Model*              modelPtr;
         RandomVariable*     rv;
-        std::string         lastUpdateType;
         double              proposalProbability;
         bool                updateChangesRateMatrix;
         bool                updateChangesTransitionProbabilities;

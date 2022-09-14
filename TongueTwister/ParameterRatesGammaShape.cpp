@@ -12,6 +12,8 @@
 
 ParameterRatesGammaShape::ParameterRatesGammaShape(RandomVariable* r, Model* m, std::string n, double ep, int nc) : Parameter(r, m, n) {
 
+    //parmId = RatesGammaShapeParm;
+
     std::cout << "   * Setting up gamma shape parameter for site rates " << std::endl;
 
     updateChangesRateMatrix = false;

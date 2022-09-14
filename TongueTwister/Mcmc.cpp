@@ -244,7 +244,7 @@ void Mcmc::print(int gen, double* curLnL, double* curLnP, bool /*accept*/, Timer
         std::cout << "Rejected ";
     std::cout << getColdModel()->getUpdatedParameterName();
     std::cout << " parameter";
-    std::string updateType = getColdModel()->getLastUpdate();
+    std::string& updateType = getColdModel()->getLastUpdate();
     if (updateType != "")
         {
         std::cout << " (";
@@ -450,25 +450,25 @@ void Mcmc::runPosterior(void) {
             chooseModelsToSwap(idx1, idx2);
             double lnR  = power(idx2) * (curLnL[idx1] + curLnP[idx1]) + power(idx1) * (curLnL[idx2] + curLnP[idx2]); // swapped state
                    lnR -= power(idx1) * (curLnL[idx1] + curLnP[idx1]) + power(idx2) * (curLnL[idx2] + curLnP[idx2]); // original condition
+            int chainIndex1 = modelPtr[idx1]->getIndex();
+            int chainIndex2 = modelPtr[idx2]->getIndex();
+            std::string swap12 = "Swap(" + std::to_string(chainIndex1) + "," + std::to_string(chainIndex2) + ")";
+            std::string swap21 = "Swap(" + std::to_string(chainIndex2) + "," + std::to_string(chainIndex1) + ")";
             if ( log(rv->uniformRv()) < lnR )
                 {
-                int chainIndex1 = modelPtr[idx1]->getIndex();
-                int chainIndex2 = modelPtr[idx2]->getIndex();
                 modelPtr[idx1]->setIndex(chainIndex2);
                 modelPtr[idx2]->setIndex(chainIndex1);
                 if (chainIndex1 < chainIndex2)
-                    updateInfo.accept("Swap(" + std::to_string(chainIndex1) + "," + std::to_string(chainIndex2) + ")");
+                    updateInfo.accept(swap12);
                 else
-                    updateInfo.accept("Swap(" + std::to_string(chainIndex2) + "," + std::to_string(chainIndex1) + ")");
+                    updateInfo.accept(swap21);
                 }
             else
                 {
-                int chainIndex1 = modelPtr[idx1]->getIndex();
-                int chainIndex2 = modelPtr[idx2]->getIndex();
                 if (chainIndex1 < chainIndex2)
-                    updateInfo.reject("Swap(" + std::to_string(chainIndex1) + "," + std::to_string(chainIndex2) + ")");
+                    updateInfo.reject(swap12);
                 else
-                    updateInfo.reject("Swap(" + std::to_string(chainIndex2) + "," + std::to_string(chainIndex1) + ")");
+                    updateInfo.reject(swap21);
                 }
             }
         
@@ -533,7 +533,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
         std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
         for (int i=0; i<alns.size(); i++)
             {
-            std::string fn = outPath + "." + alns[i]->getName() + ".aln";
+            std::string fn = outPath + "." + alns[i]->parmName + ".aln";
             std::ofstream alnStream( fn.c_str(), std::ios::out);
             if (!alnStream)
                 Msg::error("Problem opening alignment file " + fn + " for initial output");
@@ -572,7 +572,7 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     std::vector<ParameterAlignment*> alns = getColdModel()->getAlignments();
     for (int i=0; i<alns.size(); i++)
         {
-        std::string fn = outPath + "." + alns[i]->getName() + ".aln";
+        std::string fn = outPath + "." + alns[i]->parmName + ".aln";
         std::ofstream alnStream( fn.c_str(), std::ios::app);
         if (!alnStream)
             Msg::error("Problem opening alignment file " + fn + " for appended output");

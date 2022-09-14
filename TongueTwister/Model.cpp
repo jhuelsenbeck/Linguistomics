@@ -262,10 +262,9 @@ int Model::getNumParameterValues(void) {
     return n;
 }
 
-std::string Model::getLastUpdate(void) {
+std::string& Model::getLastUpdate(void) {
 
-    std::string str = parameters[updatedParameterIdx]->getLastUpdate();
-    return str;
+    return parameters[updatedParameterIdx]->lastUpdateType;
 }
 
 std::string Model::getParameterHeader(void) {
@@ -337,7 +336,7 @@ Tree* Model::getTree(void) {
     Tree* t = NULL;
     for (int i=0; i<parameters.size(); i++)
         {
-        if (parameters[i]->getName() == "tree")
+        if (parameters[i]->parmName == "tree")
             {
             ParameterTree* pt = dynamic_cast<ParameterTree*>(parameters[i]);
             return pt->getActiveTree();
@@ -351,7 +350,7 @@ Tree* Model::getTree(RbBitSet& mask) {
     Tree* t = NULL;
     for (int i=0; i<parameters.size(); i++)
         {
-        if (parameters[i]->getName() == "tree")
+        if (parameters[i]->parmName == "tree")
             {
             ParameterTree* pt = dynamic_cast<ParameterTree*>(parameters[i]);
             return pt->getActiveTree(mask);
@@ -365,7 +364,7 @@ Tree* Model::getTree(const RbBitSet& mask) {
     Tree* t = NULL;
     for (int i=0; i<parameters.size(); i++)
         {
-        if (parameters[i]->getName() == "tree")
+        if (parameters[i]->parmName == "tree")
             {
             ParameterTree* pt = dynamic_cast<ParameterTree*>(parameters[i]);
             return pt->getActiveTree(mask);
@@ -376,7 +375,7 @@ Tree* Model::getTree(const RbBitSet& mask) {
 
 std::string Model::getUpdatedParameterName(void) {
 
-    std::string str = parameters[updatedParameterIdx]->getName() + " [" + std::to_string(index) + "]";
+    std::string str = parameters[updatedParameterIdx]->parmName + " [" + std::to_string(index) + "]";
     return str;
 }
 
@@ -424,17 +423,16 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         if (settings.getUseOnlyCompleteWords() == true)
             {
             // we only use the completely-sampled words
-            std::vector<std::string> alnTaxonNames = aln->getTaxonNames();
             if (canonicalTaxonList.size() != aln->numCompleteTaxa())
                 {
-                rejectedWords.push_back(aln->getName());
+                rejectedWords.push_back(aln->name);
                 delete aln;
                 continue;
                 }
             else if (aln->hasAllGapColumn() == true)
                 {
-                Msg::error("Alignment " + aln->getName() + " has a column with all gaps");
-                rejectedWords.push_back(aln->getName());
+                Msg::error("Alignment " + aln->name + " has a column with all gaps");
+                rejectedWords.push_back(aln->name);
                 delete aln;
                 continue;
                 }
@@ -444,7 +442,7 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
             // we use all of the cognates, except those with fewer than two languages sampled
             if (aln->numCompleteTaxa() < 3)
                 {
-                rejectedWords.push_back(aln->getName());
+                rejectedWords.push_back(aln->name);
                 delete aln;
                 continue;
                 }
@@ -554,7 +552,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     double alnProposalProb = 10.0 / (double)wordAlignments.size();
     for (int i=0; i<wordAlignments.size(); i++)
         {
-        std::string alnName = wordAlignments[i]->getName();
+        std::string& alnName = wordAlignments[i]->name;
         Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, i);
         pAlign->setProposalProbability(alnProposalProb);
         parameters.push_back(pAlign);
@@ -771,18 +769,11 @@ double Model::update(int iter) {
         if (u < sum)
             {
             updatedParameterIdx = i;
+            //updatedParameterIdx = parameters[i]->parmId;
             return parameters[i]->update(iter);
             }
         }
     Msg::error("Failed to pick a parameter to update");
     return 0.0;
 }
-
-/*
-void Model::wordLnLike(MathCache &cache, int i) {
-
-    threadLnL[i] = wordLikelihoodCalculators[i]->lnLikelihood(cache);
-    wordLnLikelihoods[ activeLikelihood[i] ][i] = threadLnL[i];
-}
-*/
 
