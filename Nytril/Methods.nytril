@@ -1,4 +1,5 @@
 using Format, Units, Math, IO, Style, Defs, Equations, Languages, References;
+
 //======================================================================
 
 namespace Figures.PartitionAssignments {
@@ -693,7 +694,7 @@ namespace PaperSections.RomanceLanguagePhylogeny {
 namespace PaperSections.Discussion {
   Title = "Discussion";
 
-  SoundChange(op) = Span {IPASegments.ah.ShowDoc; op; IPASegments.oh.ShowDoc};
+  SoundChange(op) = Span {IPASegments.ah; op; IPASegments.oh};
 
   Body(DocumentClass document) = Block {
     FirstPar {
@@ -712,7 +713,7 @@ namespace PaperSections.Discussion {
      "Leonard Bloomfield famously declared "; DQuote{"phonemes change"}; Citation {bloomfield1933; Pages: 354}; eos;
      "According to this view, sound change is abrupt and affects all words at once. ";
      "So a change from "; SoundChange(" to "); " would occur more or less simultaneously in all words with the input phoneme. ";
-     "One consequence of this view is that the changes in each individual word-form are not independent and there is therefore just one change event from "; SoundChange(" to ");
+     "One consequence of this view is that the changes in each individual word-form are not independent and there is therefore just one change event from "; SoundChange(" to "); eos;
      "Other scholars have emphasized the role of acoustic and auditory phonetics in sound change";
      Citation {blevins2004a; ohala2003; ohala2012};
      ", while yet another view contends that sound change occurs by gradually making its way through the lexicon in a process known as lexical diffusion"; Citation {chen1975a; phillips2015}; eos;
@@ -746,6 +747,14 @@ namespace PaperSections.Discussion {
      "or to model the history of words along a phylogenetic tree.";
    };
 
+    BodyPar {
+      "Our method models insertions, deletions, and transitions among segments. ";
+      "An effort was made to exclude word forms that involve changes of multiple segments (such as occur in morphological change). ";
+      "Metathesis, a change in which two segments exhcange positions, is modeled as separate transitions from the input and output segments. ";
+      "For instance, the Latin verb "; textit{"exprimere"}; " begins with a string "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
+      "The initial vowel has been lost and "; IPASegments.k; " and "; IPASegments.s; " have undergone metathesis. ";
+      "Under our model, this change is treated as two separate transitions, one from "; IPASegments.k; " to "; IPASegments.s; " and another from "; IPASegments.s; " to "; IPASegments.k; eos;
+    };
 
    BodyPar {
      TextColor: Colors.Blue;
@@ -771,8 +780,6 @@ namespace PaperSections.MethodsSummary {
 namespace PaperSections.DataSummary {
   Title = Lang.Data;
 
-  K = IPASegments.k.ShowDoc;
-  S = IPASegments.s.ShowDoc;
   W = TextIpa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
 
   Body(DocumentClass document) = Block {
@@ -815,19 +822,10 @@ namespace PaperSections.DataSummary {
       "In all of the descendant languages, the secondary articulation is lost. ";
       "In some languages, it becomes a consonant in its own right (i.e., the "; TextIpa{"kw"}; " of French and Walloon). ";
       "To accommodate this change, the Latin form has two segmental slots before the vowel (i.e., ";
-      IPASegments.kw.ShowSegment; "-), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
+      IPASegments.kw.ShowSegment; "-), one of which anticipates the development of "; IPASegments.k; ", the other its secondary articulation " W; eos;
     };
 
     ShowTable(document, TableFigures.ManualAlignment, 10 pts);
-
-    BodyPar {
-      "Our method models insertions, deletions, and transitions among segments. ";
-      "An effort was made to exclude word forms that involve changes of multiple segments (such as occur in morphological change). ";
-      "Metathesis, a change in which two segments exhcange positions, is modeled as separate transitions from the input and output segments. ";
-      "For instance, the Latin verb "; textit{"exprimere"}; " begins with a string "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
-      "The initial vowel has been lost and "; K; " and "; S; " have undergone metathesis. ";
-      "Under our model, this change is treated as two separate transitions, one from "; K; " to "; S; " and another from "; S; " to "; K; eos;
-    };
   };
 }
 //======================================================================
