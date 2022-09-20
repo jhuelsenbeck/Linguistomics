@@ -658,7 +658,7 @@ namespace PaperSections.WordTransformation {
 //======================================================================
 
 namespace PaperSections.WordSegmentRelationships {
-  Title = "Word Segment Relationships";
+  Title = "Segmental Alignments";
 
   Body(DocumentClass document) = Block {
     FirstPar {
@@ -682,11 +682,6 @@ namespace PaperSections.RomanceLanguagePhylogeny {
     BodyPar {
       "The majority-rule consensus tree (cutoff 00) is presented in Figure "; FigureReference(Experiment, Figures.ConsensusTree);
       " Latin was specified as an outgroup, according to the prevailing view that it is a sister to the most recent common ancestor of the Romance languages [REFERENCE]";
-      "Our framework correctly inferred long-established clades, such as Ibero-Romance (Spanish and Portuguese) and Gallo-Romance (French and Walloon).";
-      "The position of other languages is at odds with the most prominent view of the phylogeny of Romance.";
-      "For instance, Romanian is often held to have formed before Italian, which in turn is thought to form a clade with Friulian.";
-      "POSTERIOR PROBABILITIES FOR THE CLADES";
-      "Below we discuss potential causes of our topological results.";
     };
     ShowFigureDoc(document, Figures.ConsensusTree);
   };
@@ -704,17 +699,12 @@ namespace PaperSections.Discussion {
     FirstPar {
      "Despite a wealth of textual data from Latin and its medieval descendants, the phylogeny of Romance remains a challenge";
      Citation {hall1974; malkiel1978; koutna1990}; eos;
-     "The topology of the tree in "; FigureReference(Experiment, Figures.ConsensusTree); " agrees with the prevailing views of the Romance phylogeny in most aspects. ";
-     "For instance, it recognizes that French and Walloon have undergone the greatest segmental change. ";
-     "In addition, it identifies the Ibero-Romance (Spanish, European Portuguese, and Brazilian Portuguese) and Gallo-Romance (French, Walloon, and Catalan) clades. ";
-     "In recent years a consensus appears to have emerged among specialists that Romanian was one of the first clades to form. ";
-     "This view has been based on studies using both cognate data"; Citation {bouckaert2012; chang2015};
-     " and sound changes"; Citation {straka1956}; eos;
-     "Our results suggest that Romanian did not emerge as early as is thought. ";
-     "Rather it is Italian that was the first to form. ";
-     "Furthermore, our results demonstrate that the branching of Romance languages did not take place along an East-West fault line, since Romanian, an Eastern Romance language, emerges between Ibero- and Gallo-Romance. ";
-     "Finally, our study refutes an idea that has long circulated in the linguistics literature, namely that the diversification of Romance correlates with the date of Roman colonization. ";
-     "According to this theory, Romanian would be the last language to emerge since the Roman colony of Dacia was the last to be established.";
+     "The topology of the tree in "; FigureReference(Experiment, Figures.ConsensusTree); " correctly identifies long-established clades, such as Ibero-Romance (Spanish and Portuguese) and Gallo-Romance (French and Walloon).";
+     "The position of other languages is at odds with the most prominent view of the phylogeny of Romance.";
+     "For instance, Romanian is often held to have formed before Italian, which in turn is thought to form a clade with Friulian.";
+     "POSTERIOR PROBABILITIES FOR THE CLADES ";
+     "Causes of early position of Italian---segmental length between Latin and Italian?";
+
    };
 
    BodyPar {
@@ -722,10 +712,10 @@ namespace PaperSections.Discussion {
      "Leonard Bloomfield famously declared "; DQuote{"phonemes change"}; Citation {bloomfield1933; Pages: 354}; eos;
      "According to this view, sound change is abrupt and affects all words at once. ";
      "So a change from "; SoundChange(" to "); " would occur more or less simultaneously in all words with the input phoneme. ";
+     "One consequence of this view is that the changes in each individual word-form are not independent and there is therefore just one change event from "; SoundChange(" to ");
      "Other scholars have emphasized the role of acoustic and auditory phonetics in sound change";
      Citation {blevins2004a; ohala2003; ohala2012};
-     ", while yet another view contends that sound change occurs by gradually making its way through the lexicon in a process known as ";
-     textit{"lexical diffusion"}; Citation {chen1975a; phillips2015}; eos;
+     ", while yet another view contends that sound change occurs by gradually making its way through the lexicon in a process known as lexical diffusion"; Citation {chen1975a; phillips2015}; eos;
      "Our method cannot be located within any one of these traditions, but rather has affinities with the phonemic approach and lexical diffusion. ";
      "Since our analyses are based on phonemic representations, it is phonemes that undergo transitions. ";
      "Rates of change are, however, inferred from phonemes in the context of word forms. ";
@@ -737,16 +727,29 @@ namespace PaperSections.Discussion {
    };
 
    BodyPar {
+     "A paragraph on the transition rates---their interpretation, their importance. ";
+   };
+
+   BodyPar {
      "Our event-based modeling approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. ";
      "For instance, questions pertaining to the relationship between phonological change and the phonemic inventory of a language can now be addressed. ";
      "Does the frequency of a phoneme in the words of a language affect its diachronic stability? ";
      "To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? ";
      "What is the role of "; DQuote{"natural classes"}; " in phonological change? ";
      "This last question can be addressed in particular through comparison of models with different numbers of rate parameters. ";
-     "The method can also be extended in various ways, for instance, to handle more complex phonological changes (such as those involving context dependency); ";
-     "to estimate divergence times and diversification rates in addition to topology; ";
+     "The method can also be extended to handle more complex phonological changes (such as those involving context dependency), ";
+     "to estimate divergence times and diversification rates in addition to topology, ";
      "or to model the history of words along a phylogenetic tree.";
    };
+
+       BodyPar {
+      "Our method models insertions, deletions, and transitions among segments. ";
+      "An effort was made to exclude word forms that involve changes of multiple segments (such as occur in morphological change). ";
+      "Metathesis, a change in which two segments exhcange positions, is modeled as separate transitions from the input and output segments. ";
+      "For instance, the Latin verb "; textit{"exprimere"}; " begins with a string "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
+      "The initial vowel has been lost and "; K; " and "; S; " have undergone metathesis. ";
+      "Under our model, this change is treated as two separate transitions, one from "; K; " to "; S; " and another from "; S; " to "; K; eos;
+    };
 
    BodyPar {
      TextColor: Colors.Blue;
@@ -785,8 +788,8 @@ namespace PaperSections.DataSummary {
       "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; SQuote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; SQuoteEnd{"serious"};
-      "They are assigned to the same cognate set because segmentally French "; textit{"grave"}; " descends from Latin "; textit{"gravis"}; eos;
-      "Each word is represented phonemically with the IPA alphabet. ";
+      "They are assigned to the same cognate set because French "; textit{"grave"}; " descends from Latin "; textit{"gravem"}; eos;
+      "Each word-form is represented phonemically in the International Phonetic Alphabet (IPA). ";
       "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by and for ancient languages such as Latin non-existent. ";
     };
 
@@ -800,8 +803,7 @@ namespace PaperSections.DataSummary {
     BodyPar {
       "Latin is a highly inflectional language, which means that there are multiple word forms for verbs, nouns, and adjectives. ";
       "For verbs, infinitive forms were selected. ";
-      "For nouns, singular forms were used in either the nominative or the accusative case, since these are the two case forms that were most often ancestral to Romance descendants. ";
-      "For adjectives, masculine singular nominative forms were typically used. ";
+      "For nouns, singular forms were used in either the accusative or the nominative case, since these are the two case forms ancestral to Romance descendants. ";
       "The selection of word forms is not without consequences, since it impacts the rates of phonological change. ";
       "For instance, most masculine singular nominative adjectives in Latin end in -"; textit{"us"}; eos;
       "By contrast, feminine singular nominative adjectives end in -"; textit{"a"}; eos;
@@ -809,23 +811,23 @@ namespace PaperSections.DataSummary {
     };
 
     BodyPar {
-      "In addition to being collected and classified, the data were also manually aligned, so that putatively historically related segments belong to the same column. ";
-      "The manual alignments served as the starting point for the MCMC sampling procedure (see below), so our analyses did not condition on any particular alignment of word segments being correct. ";
+      "All word-forms were manually aligned, so that historically related segments occur in the same column. ";
+      "The manual alignments serve as the starting point for the MCMC sampling procedure (see below), so our analyses did not condition on any particular alignment of word segments being correct. ";
       ShowTableNumber(TableFigures.ManualAlignment); " provides an illustrative example of the alignment for the concept ";
       TableFigures.ManualAlignment.WordDisplay; eos;
-      "The ancestral Latin form "; TextIpa{"ˈkʷ-id"}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
+      "The Latin form "; TextIpa{"ˈkʷ-id"}; " begins with a voiceless velar stop with a secondary labial articulation "; W; eos;
       "In all of the descendant languages, the secondary articulation is lost. ";
-      "In some languages, it becomes a consonant in its own right (i.e., the "; IPASegments.kw.ShowDoc; " of French and Walloon). ";
+      "In some languages, it becomes a consonant in its own right (i.e., the "; TextIpa{"kw"}; " of French and Walloon). ";
       "To accommodate this change, the Latin form has two segmental slots before the vowel (i.e., ";
-      IPASegments.kw.ShowSegment; "-id), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
+      IPASegments.kw.ShowSegment; "-), one of which anticipates the development of "; K; ", the other its secondary articulation " W; eos;
     };
 
     ShowTable(document, TableFigures.ManualAlignment, 10 pts);
 
     BodyPar {
       "Our method models insertions, deletions, and transitions among segments. ";
-      "An effort was made to exclude word forms that involve changes of sets of segments (such as occur in morphological change). ";
-      "Metathesis, a change in which two segments swap positions, is modeled as separate transitions from the input and output segments. ";
+      "An effort was made to exclude word forms that involve changes of multiple segments (such as occur in morphological change). ";
+      "Metathesis, a change in which two segments exhcange positions, is modeled as separate transitions from the input and output segments. ";
       "For instance, the Latin verb "; textit{"exprimere"}; " begins with a string "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
       "The initial vowel has been lost and "; K; " and "; S; " have undergone metathesis. ";
       "Under our model, this change is treated as two separate transitions, one from "; K; " to "; S; " and another from "; S; " to "; K; eos;
