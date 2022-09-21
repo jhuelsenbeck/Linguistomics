@@ -72,7 +72,7 @@ class AlignPairClass {
     BoxSize = new SizeClass(14 pts, 14 pts);
 
     Name = align.ConceptName;
-    if (align.CognateName != "Primary")
+    if (align.CognateName != DefaultCognate)
       Name += "-" + align.CognateName;
   }
 
@@ -133,6 +133,20 @@ class AlignPairClass {
 
   override GetLayoutTip = ShowDetails(9, true, 10 pts);
 
+  GetChart(SizeClass size, max) = Chart {
+    Type: ChartTypes.Column;
+    TextHeight: 6 pts;
+    Size: size;
+    ValueLabel: "%";
+    ChartSeries {
+      foreach (var a in Align.Data) {
+        a.Prob * 100.0;
+        if (each1 >= max)
+          break;
+      }
+    };
+  };
+
   ShowDetails(max, tip, textheight) = Block {
     TextHeight: textheight;
 
@@ -145,18 +159,8 @@ class AlignPairClass {
       Name;
     };
 
-    if (Align.Data.Length > 1) {
-      Chart {
-        Type: ChartTypes.Column;
-        TextHeight: 6 pts;
-        Size: new SizeClass(3 inch, 0.75 inch);
-        ValueLabel: "%";
-        ChartSeries {
-          foreach (var a in Align.Data)
-            a.Prob * 100.0;
-        };
-      };
-    }
+    if (Align.Data.Length > 1)
+      GetChart(new(3 inch, 0.75 inch), max);
 
     var langbox = Languages(Data, BoxSize.Height);
     var indent  = GetLayoutSize(langbox).Width;
@@ -191,12 +195,12 @@ class AlignPairClass {
     }
   };
 
-  ShowFigureDetails() = Block {
+  ShowFigureDetails(max) = Block {
     BoxSize = new(BoxSize.Width, 8 pts);
     TextHeight: 7 pts;
     Span {
       Languages(Data, BoxSize.Height);
-      ShowBlocks(5);
+      ShowBlocks(max);
     }
   };
 }
@@ -205,11 +209,13 @@ class AlignPairClass {
 
 class CognateIdClass {
   var Concept,
-      Cognate;
+      Cognate,
+      Count;
 
-  Constructor(concept, cognate) {
+  Constructor(concept, cognate, count) {
     Concept = concept;
-    Cognate = cognate;
+    Cognate = cognate ?? DefaultCognate;
+    Count   = count;
   }
 }
 
@@ -273,37 +279,35 @@ class AlignmentChartClass {
     }
   };
 
-  AlignIndexClass[] GetAlignments(CognateIdClass[] examples) {
+  ShowSet(DataSetClass data, CognateIdClass[] examples) = Table {
     var alignments = MainResults.Alignments;
+    var chartwidth = 1 inch;
 
-    var list = new ListClass<AlignIndexClass>(10);
+    Columns: [ColumnClass.Fit(1 inches), chartwidth, ColumnClass.Expand];
     foreach (var e in examples) {
+      var found = null;
       foreach (var a in alignments) {
         if (a.ConceptName == e.Concept && a.CognateName == e.Cognate) {
-          list.Add(a);
+          found = a;
           break;
         }
       }
-    }
-    return list.Values;
-  }
 
-  ShowSet(DataSetClass data, CognateIdClass[] examples) = Table {
-    var alignments = GetAlignments(examples);
-
-
-    Columns: [ColumnClass.Fit(2 inches), ColumnClass.Expand];
-    foreach (var a in alignments) {
-      var ap = new AlignPairClass(data, a);
-      Row {
-        Cell {
-          Padding: PadR(10 pts);
-          VAlign: VAligns.Center;
-          ap.Name;
-        };
-        Cell {
-          ap.ShowFigureDetails();
-        };
+      if (valid found) {
+        var ap = new AlignPairClass(data, found);
+        Row {
+          Cell {
+            Padding: PadR(10 pts);
+            VAlign: VAligns.Center;
+            ap.Name;
+          };
+          Cell {
+            ap.GetChart(new(chartwidth, data.Taxa.Length * (9 pts)), e.Count);
+          };
+          Cell {
+            ap.ShowFigureDetails(e.Count);
+          };
+        }
       }
     }
   };

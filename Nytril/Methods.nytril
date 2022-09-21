@@ -38,8 +38,9 @@ namespace Figures.AlignmentExamples {
   Title = "Alignment Examples";
 
   CognateIdClass[] Examples = [
-    new("And", "Et"),
-    new("In", "In"),
+    new("And", "Et", 5),
+    new("In", "In", 4),
+    new("Tooth", null, 3),
   ];
 
   Caption(DocumentClass document) = Span {
@@ -529,12 +530,6 @@ namespace Figures.Alignment {
     };
   };
 
-  CFigure(c) = Figure {
-    Fill: ArrowColor;
-    Padding: 1;
-    c;
-  };
-
   NumBox(num, c1, c2) = MatrixBlock {
     VAlign: VAligns.Top;
     HAlign: HAligns.Center;
@@ -545,12 +540,19 @@ namespace Figures.Alignment {
     };
     Row {
       Empty;
-      VBox {
-        Margin: PadTB(6 pts);
+      Canvas {
+        TextColor: ArrowColor;
+        Margin: PadB(5 pts);
         TextHeight: 20 pts;
         HAlign: HAligns.Center;
-        CFigure('=');
-        CFigure(Tex.downarrow);
+        Span {
+          Tex.downarrow;
+          X: 1 pts;
+//          Y: 11 pts;
+        };
+        Span {
+          "=";
+        };
       }
     };
     Row {
@@ -1465,9 +1467,9 @@ namespace PaperSections.Methods {
       ExpectedEvents;
       " can be calculated through exponentiation of the rate matrix, ";
       ExponentiationOfRateMatrix; eos;
-      "One can also calculate the equilibrium distribution of the process --- denoted ";
+      "One can also calculate the equilibrium distribution of the process — denoted ";
       EquilibriumDistribution;
-      " and interpreted as the probability of capturing the process in a particular state after a very long time (formally, an infinite amount of time) has passed --- by solving the system of equations defined by ";
+      " and interpreted as the probability of capturing the process in a particular state after a very long time (formally, an infinite amount of time) has passed — by solving the system of equations defined by ";
       RateMatrixSolution; eos;
       "Both the transition probabilities and equilibrium probability distribution play an important role in calculating the likelihood (see below).";
     };
@@ -1834,15 +1836,11 @@ ParamList(v) = Equation {EllipsisList {v sub 1; v sub BN}};
 FD(x) = HBox {Span {Classical; " d"}; x};
 
 Prob(x) = Equation {
-  MarginalLikelihood; InParens {x};
+  MarginalLikelihood;
+  "("; x; ")";
 };
 
-PSM(n) = Equation {
-  MarginalLikelihood;
-  InParens {
-    Condition{SegmentalInfo; Model sub n};
-  }
-};
+PSM(n) = Prob(Condition {SegmentalInfo; Model sub n});
 
 NewProposal(start, end) = Equation {
   ProbProposal;
