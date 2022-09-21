@@ -8,6 +8,14 @@ namespace DocMetrics {
   SegmentColumns  = 4;
   SegmentSize     = 40 pts;
 }
+
+CaptionOrTitle(DocumentClass doc, figure) = Span {
+  if (exists figure.?Caption)
+    return figure.Caption(doc);
+  else
+    return figure.?Title;
+};
+
 //======================================================================
 
 class AppendixClass {
@@ -20,7 +28,8 @@ class AppendixClass {
   }
 
   virtual GetCaption(DocumentClass doc) = null;
-  virtual GetBody(DocumentClass doc)    = Content;
+
+  virtual GetBody(DocumentClass doc) = Content;
 }
 //======================================================================
 
@@ -33,10 +42,7 @@ class AppendixFigureClass: AppendixClass {
   }
 
   override GetCaption(DocumentClass doc) = Paragraph {
-    if (exists Figure.?Caption)
-      return Figure.Caption(doc);
-    else
-      return Figure.?Title;
+    CaptionOrTitle(doc, Figure);
   };
 
   override GetBody(DocumentClass doc) = Block {
@@ -168,7 +174,6 @@ namespace Style {
   TextColor            = Colors.Black;
   SlideHeader          = Colors.SlateGray;
 
-  AndSpace             = " and ";
   eos                  = ". ";
   SQuote               = Span {Begin: "‘"; End: "’"};
   SQuoteEnd            = Span {Begin: "‘"; End: ".’ "};
@@ -222,13 +227,17 @@ namespace Style {
       SpaceBefore: 10 pts;
       SpaceAfter: 6 pts;
       KeepWithNext: true;
-      Span {
-        Bold;
-        SansSerif;
-        ShowFigureNumber(figure);
-        eos;
-      };
-      figure.?Caption(document) ?? figure.Title;
+      Frame {
+        Paragraph {
+          Span {
+            Bold;
+            SansSerif;
+            ShowFigureNumber(figure);
+            eos;
+          };
+          CaptionOrTitle(document, figure);
+        };
+      }
     };
 
     Paragraph {
@@ -246,26 +255,33 @@ namespace Style {
     RefNumber(NumberedGroup.Table, table.GetVariableFullName);
   };
 
-  ShowTable(DocumentClass document, table, textheight) = Block {
-    table.Body(document) {
-      TextHeight: textheight;
+  ShowTable(DocumentClass document, table, textheight=null) = Block {
+    Paragraph {
+      KeepWithNext: true;
+      AnchorTag: table.GetVariableFullName;
+      AnchorGroup: NumberedGroup.Table;
       SpaceBefore: 10 pts;
+      SpaceAfter: 10 pts;
       ParAlignment: ParAlignments.Center;
+
+      Frame {
+        table.Body(document) {
+          TextHeight: textheight;
+        };
+      };
     };
 
     Paragraph {
-      AnchorTag: table.GetVariableFullName;
-      AnchorGroup: NumberedGroup.Table;
       ParAlignment: ParAlignments.Center;
-      SpaceBefore: 6 pts;
-      SpaceAfter: 6 pts;
+      SpaceAfter: 10 pts;
+
       Span {
         Bold;
         SansSerif;
         ShowTableNumber(table);
         eos;
       };
-      table.Caption(document);
+      CaptionOrTitle(document, table);
     };
   };
 
@@ -318,7 +334,7 @@ namespace Style {
       TextHeight: 12 pts;
       SpaceAfter: 10 pts;
       Separator: CommaSpace;
-      LastSeparator: AndSpace;
+      LastSeparator: " and ";
       ShowAuthor(each authors);
     };
 

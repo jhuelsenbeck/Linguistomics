@@ -79,7 +79,6 @@ class AlignPairClass {
   Languages(data, height) = VBox {
     HAlign: HAligns.Right;
     Span {
-      TextHeight: 10 pts;
       Empty;
     };
 
@@ -98,7 +97,6 @@ class AlignPairClass {
     HAlign: HAligns.Center;
 
     Span {
-      TextHeight: 10 pts;
       TextDigits: 1;
       prob * 100.0;
       "%";
@@ -133,37 +131,35 @@ class AlignPairClass {
     };
   };
 
-  override GetLayoutTip = ShowDetails(9, true);
+  override GetLayoutTip = ShowDetails(9, true, 10 pts);
 
-  ShowDetails(max, tip) = Block {
-    TextHeight: 10 pts;
-
-    var adata   = Align.Data;
-    var langbox = Languages(Data, BoxSize.Height);
-    var indent  = GetLayoutSize(langbox).Width;
+  ShowDetails(max, tip, textheight) = Block {
+    TextHeight: textheight;
 
     Paragraph {
       KeepWithNext: true;
-      TextHeight: 14 pts;
+      TextHeight: textheight + 4 pts;
       SpaceAfter: 10 pts;
 
       TabStops: [3 inches];
       Name;
     };
 
-    if (adata.Length > 1) {
+    if (Align.Data.Length > 1) {
       Chart {
         Type: ChartTypes.Column;
         TextHeight: 6 pts;
         Size: new SizeClass(3 inch, 0.75 inch);
         ValueLabel: "%";
         ChartSeries {
-          foreach (var a in adata)
+          foreach (var a in Align.Data)
             a.Prob * 100.0;
         };
       };
     }
 
+    var langbox = Languages(Data, BoxSize.Height);
+    var indent  = GetLayoutSize(langbox).Width;
     Paragraph {
       if (tip) {
         langbox;
@@ -176,20 +172,45 @@ class AlignPairClass {
         langbox;
       }
 
-      var cumulative = 0.0;
-      foreach (var a in adata) {
-        var prob = a.Prob;
-        cumulative += prob;
-        var alignments = a.Alignments;
-        if (alignments.Length > 0) {
-          Show(prob, cumulative, alignments);
-          Space;
-          if (each1 >= max)
-            break;
-        }
-      }
-    };
+      ShowBlocks(max);
+    }
   };
+
+  ShowBlocks(max) = Span {
+    var cumulative = 0.0;
+    foreach (var a in Align.Data) {
+      var prob = a.Prob;
+      cumulative += prob;
+      var alignments = a.Alignments;
+      if (alignments.Length > 0) {
+        Show(prob, cumulative, alignments);
+        Space;
+        if (each1 >= max)
+          break;
+      }
+    }
+  };
+
+  ShowFigureDetails() = Block {
+    BoxSize = new(BoxSize.Width, 8 pts);
+    TextHeight: 7 pts;
+    Span {
+      Languages(Data, BoxSize.Height);
+      ShowBlocks(5);
+    }
+  };
+}
+
+//======================================================================
+
+class CognateIdClass {
+  var Concept,
+      Cognate;
+
+  Constructor(concept, cognate) {
+    Concept = concept;
+    Cognate = cognate;
+  }
 }
 
 //======================================================================
@@ -245,11 +266,45 @@ class AlignmentChartClass {
 
   ShowAll = Block {
     foreach (var a in Results.Alignments) {
-      var p = new AlignPairClass(Results.Data, a);
-      p.ShowDetails(5, false);
+      new AlignPairClass(Results.Data, a).ShowDetails(5, false, 10 pts);
       Paragraph {
         Border: BorderT(1);
       };
+    }
+  };
+
+  AlignIndexClass[] GetAlignments(CognateIdClass[] examples) {
+    var alignments = MainResults.Alignments;
+
+    var list = new ListClass<AlignIndexClass>(10);
+    foreach (var e in examples) {
+      foreach (var a in alignments) {
+        if (a.ConceptName == e.Concept && a.CognateName == e.Cognate) {
+          list.Add(a);
+          break;
+        }
+      }
+    }
+    return list.Values;
+  }
+
+  ShowSet(DataSetClass data, CognateIdClass[] examples) = Table {
+    var alignments = GetAlignments(examples);
+
+
+    Columns: [ColumnClass.Fit(2 inches), ColumnClass.Expand];
+    foreach (var a in alignments) {
+      var ap = new AlignPairClass(data, a);
+      Row {
+        Cell {
+          Padding: PadR(10 pts);
+          VAlign: VAligns.Center;
+          ap.Name;
+        };
+        Cell {
+          ap.ShowFigureDetails();
+        };
+      }
     }
   };
 }

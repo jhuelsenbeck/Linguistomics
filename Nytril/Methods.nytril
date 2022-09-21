@@ -10,19 +10,46 @@ namespace Figures.PartitionAssignments {
 
 //======================================================================
 
+namespace Figures.ExperimentalRuns {
+  Title = "Experimental Runs";
+
+  Body(DocumentClass document) = Experiment.ShowExperiment;
+}
+
+//======================================================================
+
 namespace Figures.TransitionRates {
   Title = "Transition Rates between Partitions";
 
   Caption(DocumentClass document) = Span {
     "The area of the circles is proportional to the estimated equilibrium frequencies. ";
     "The width of the lines is proportional to the estimated rates. ";
-    PaperSections.WordTransformation.Note;
   };
 
   Body(DocumentClass document) {
     var calc = new CalcRatesClass(MainResults, Experiment.Data, Experiment.Rule);
     return calc.PartitionDiagram;
   }
+}
+
+//======================================================================
+
+namespace Figures.AlignmentExamples {
+  Title = "Alignment Examples";
+
+  CognateIdClass[] Examples = [
+    new("And", "Et"),
+    new("In", "In"),
+  ];
+
+  Caption(DocumentClass document) = Span {
+    "Several examples of cognate alignments...";
+  };
+
+  Body(DocumentClass document) = Block {
+    var chart = new AlignmentChartClass(MainResults);
+    chart.ShowSet(MainResults.Data, Examples);
+  };
 }
 
 //======================================================================
@@ -634,7 +661,6 @@ namespace StateSection {
 
 namespace PaperSections.WordTransformation {
   Title = "Understanding Segmental Change";
-  Note  = "The rates are much greater from one word segment to another when the change is within the word segment group than when the change is between word segments in different groups.";
 
   Body(DocumentClass document) = Block {
     var modelname = Span {TextCase: TextCases.AllLower; Experiment.Rule.Name};
@@ -646,13 +672,14 @@ namespace PaperSections.WordTransformation {
       "Hence, the "; modelname; " model is best supported by the data.";
     };
 
-    ShowFigureDoc(document, Figures.PartitionAssignments);
+    ShowTable(document, Figures.PartitionAssignments);
 
     BodyPar {
       "The "; modelname; " model allows different rates for different groups of word segments, ";
       FigureReference(Experiment, Figures.TransitionRates); " summarizes the estimated rates of change from one segment grouping to another. ";
-      Note;
+      "The rates are much greater from one word segment to another when the change is within the word segment group than when the change is between word segments in different groups.";
     };
+
     ShowFigureDoc(document, Figures.TransitionRates);
   };
 }
@@ -664,12 +691,15 @@ namespace PaperSections.WordSegmentRelationships {
   Body(DocumentClass document) = Block {
     FirstPar {
       "Our method treats the relationships of word segments from one language to another as a random variable. ";
-      "Figure [NUMBER] shows alignments for ten of the words we analyzed. ";
+      FigureReference(Experiment, Figures.AlignmentExamples); " shows alignments for ";
+      Cardinal(Figures.AlignmentExamples.Examples.Length);
+      " of the words we analyzed. ";
       "The pictured alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
       "Note that insertions and deletions appear to occur more frequently at the end of the words. ";
       "Also note that the alignments tend to assign word segments from the same segment group to the same column in the alignment.";
     };
 
+    ShowFigureDoc(document, Figures.AlignmentExamples);
   };
 }
 
@@ -694,8 +724,6 @@ namespace PaperSections.RomanceLanguagePhylogeny {
 namespace PaperSections.Discussion {
   Title = "Discussion";
 
-  SoundChange(op) = Span {IPASegments.ah; op; IPASegments.oh};
-
   Body(DocumentClass document) = Block {
     FirstPar {
      "Despite a wealth of textual data from Latin and its medieval descendants, the phylogeny of Romance remains a challenge";
@@ -712,19 +740,18 @@ namespace PaperSections.Discussion {
      "There is a long debate—known as the "; DQuote{"Neogrammarian controversy"}; "—about the units involved in sound change. ";
      "Leonard Bloomfield famously declared "; DQuote{"phonemes change"}; Citation {bloomfield1933; Pages: 354}; eos;
      "According to this view, sound change is abrupt and affects all words at once. ";
-     "So a change from "; SoundChange(" to "); " would occur more or less simultaneously in all words with the input phoneme. ";
-     "One consequence of this view is that the changes in each individual word-form are not independent and there is therefore just one change event from "; SoundChange(" to "); eos;
+     "So a change from "; IPASegments.ah; " to "; IPASegments.oh; " would occur more or less simultaneously in all words with the input phoneme. ";
+     "One consequence of this view is that the changes in each individual word-form are not independent and there is therefore just one change event from "; IPASegments.ah; " to "; IPASegments.oh; eos;
      "Other scholars have emphasized the role of acoustic and auditory phonetics in sound change";
      Citation {blevins2004a; ohala2003; ohala2012};
      ", while yet another view contends that sound change occurs by gradually making its way through the lexicon in a process known as lexical diffusion"; Citation {chen1975a; phillips2015}; eos;
      "Our method cannot be located within any one of these traditions, but rather has affinities with the phonemic approach and lexical diffusion. ";
      "Since our analyses are based on phonemic representations, it is phonemes that undergo transitions. ";
      "Rates of change are, however, inferred from phonemes in the context of word forms. ";
-     "Consider again the change from "; SoundChange(" to "); eos;
+     "Consider again the change from "; IPASegments.ah; " to "; IPASegments.oh; eos;
      "Our method does not infer a single transition in this case. ";
      "It instead infers a rate of change that is based on the frequencies of ";
-     SoundChange(AndSpace);
-     " in the data and how often the former transitions to the latter.";
+     IPASegments.ah; " and "; IPASegments.oh; " in the data and how often the former transitions to the latter.";
    };
 
    BodyPar {
@@ -803,7 +830,7 @@ namespace PaperSections.DataSummary {
       "There are in total "; data.UsedConcepts.Length; " concepts, "; data.UsedCognates.Length; " cognate sets, "; data.WordCount; " word forms, using "; data.UniqueCount; " unique segments. ";
     };
 
-    ShowTable(document, Figures.PartitionAssignments, 8 pts);
+//    ShowTable(document, Figures.PartitionAssignments, 8 pts);
 
     BodyPar {
       "Latin is a highly inflectional language, which means that there are multiple word forms for verbs, nouns, and adjectives. ";
@@ -951,7 +978,7 @@ namespace PaperSections.ModelInference {
       Cardinal(rule.Filters.Length); " groups of word segments (";
       Span {
         Separator: CommaSpace;
-        LastSeparator: AndSpace;
+        LastSeparator: " and ";
         rule.Filters;
       };
       ") and has an intermediate number of parameters (";
