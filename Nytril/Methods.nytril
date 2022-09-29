@@ -59,37 +59,42 @@ namespace Figures.TransitionMatrixTable {
   Title = Lang.TransitionMatrix;
 
   Body(DocumentClass document) = Block {
+    var th = ExtentWidth * 0.015;
     Style.SansSerif;
-    TextHeight: ExtentWidth * 0.015;
+    TextHeight: th;
 
     var stats      = MainResults.TransitionStats;
     var partitions = Experiment.Rule.Partitions;
     var dy         = 2 pts;
+    var left       = 1 inch;
+    var w          = (ExtentWidth - 1 inch) / stats.Length;
 
-    MatrixBlock {
-      ColumnGap: 8 pts;
+    Table {
+      HAlign: HAligns.Center;
+      Padding: PadR(4 pts);
+      Columns: [left] + [w] * stats.Length;
       TextDigits: 3;
 
       Row {
-        Bold;
-        HAlign: HAligns.Center;
         Empty;
         foreach (var r in stats) {
-          Cell {
+          Frame {
+            Width: w;
+            ParAlignment: ParAlignments.Center;
+            TextHeight: th*0.8;
             var p = partitions[each0];
             TextColor: p.Color;
-            p.Filter;
+            p.Filter.Name.Split(Space);
           };
         }
       };
 
       foreach (var r in stats) {
         Row {
-          HAlign: HAligns.Center;
-          Cell {
-            VAlign: VAligns.Center;
-            HAlign: HAligns.Right;
-            Bold;
+          VAlign: VAligns.Center;
+          Frame {
+            Width: w;
+            ParAlignment: ParAlignments.Right;
             var p = partitions[each0];
             TextColor: p.Color;
             p.Filter;
@@ -98,13 +103,8 @@ namespace Figures.TransitionMatrixTable {
           foreach (var c in r) {
             if (valid c)
               c.ShowBox {Margin: PadT(dy)};
-            else {
-              Cell {
-                VAlign: VAligns.Center;
-                HAlign: HAligns.Right;
-                "-";
-              }
-            }
+            else
+              "-";
           }
         };
       }
