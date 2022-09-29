@@ -193,7 +193,7 @@ abstract class RuleClass {
     };
 
     Table {
-      Columns: [24 pts, ColumnClass.Fit(2 inch), ColumnClass.Fit(3 inches)];
+      Columns: [ColumnClass.Fit(72 pts), ColumnClass.Fit(2 inch), ColumnClass.Fit(3 inches)];
       Border: BorderB(1);
 
       Row {
@@ -207,13 +207,14 @@ abstract class RuleClass {
         Row {
           Cell {
             HAlign: HAligns.Right;
-            Span {each1; ") "};
             Padding: PadR(3 pts);
+            Span {each1; ") "};
           };
           Cell {
-            partition.Filter.Name;
             Padding: PadR(10 pts);
+            partition.Filter.Name;
           };
+
           Span {
             Separator: Space;
             (each partition.Segments).ShowSegment;
@@ -287,6 +288,7 @@ class FeatureMaskClass: FilterClass {
     super.Constructor(data, rule, name);
     Mask  = mask;
     Flags = flag;
+    rule.FilterList.Add(this);
   }
 
   override Matches(SegmentClass segment) = segment.Features.HasFlagMask(Mask, Flags);
@@ -319,16 +321,16 @@ class NaturalPartitionClass: RuleClass {
     super.Constructor(data, "Natural Class");
     Numbers = true;
 
-    FilterList.Add(new FeatureMaskClass(data, this, "Long Vowel", Vowel LongVowel, Vowel LongVowel));
-    FilterList.Add(new FeatureMaskClass(data, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal));
-    FilterList.Add(new FeatureMaskClass(data, this, "Diphthong", Diphthong, Diphthong));
-    FilterList.Add(new FeatureMaskClass(data, this, "Short Vowel", Vowel, Vowel));
-    FilterList.Add(new FeatureMaskClass(data, this, "Nasal Consonant", Nasal, Nasal));
-    FilterList.Add(new FeatureMaskClass(data, this, "Liquid", Vowel Liquid, Liquid));
-    FilterList.Add(new FeatureMaskClass(data, this, "Approximant", Vowel Approximant, Approximant));
-    FilterList.Add(new FeatureMaskClass(data, this, "Affricate", Vowel Affricate, Affricate));
-    FilterList.Add(new FeatureMaskClass(data, this, "Fricatives", Vowel Fricative, Fricative));
-    FilterList.Add(new FeatureMaskClass(data, this, "Consonant", Vowel, NoFeature));
+    new FeatureMaskClass(data, this, "Long Vowel", Vowel LongVowel, Vowel LongVowel);
+    new FeatureMaskClass(data, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal);
+    new FeatureMaskClass(data, this, "Diphthong", Diphthong, Diphthong);
+    new FeatureMaskClass(data, this, "Short Vowel", Vowel, Vowel);
+    new FeatureMaskClass(data, this, "Nasal Consonant", Nasal, Nasal);
+    new FeatureMaskClass(data, this, "Liquid", Vowel Liquid, Liquid);
+    new FeatureMaskClass(data, this, "Approximant", Vowel Approximant, Approximant);
+    new FeatureMaskClass(data, this, "Affricate", Vowel Affricate, Affricate);
+    new FeatureMaskClass(data, this, "Fricatives", Vowel Fricative, Fricative);
+    new FeatureMaskClass(data, this, "Consonant", Vowel, NoFeature);
     GetFilters;
     AssignPartitions(data.UniqueSegments);
   }
@@ -554,8 +556,9 @@ class CalcRatesClass {
     }
 
     foreach (var p1 in Rule.Partitions) {
-      var pos   = p1.Center - p1.Radius;
-      var fsize = p1.Radius*2;
+      var pos        = p1.Center - p1.Radius;
+      var fsize      = p1.Radius*2;
+      var textheight = Math.Min(14 pts, fsize * 0.5);
 
       Figure {
         Fill: p1.Color;
@@ -564,21 +567,17 @@ class CalcRatesClass {
         TipAction: p1;
       };
 
-      var textheight = Math.Min(14 pts, fsize * 0.5);
-
-      HBox {
+      Canvas {
         Position: pos;
-        Height: fsize;
-        Frame {
-          VAlignment: VAligns.Center;
-          Width: fsize;
+        HAlign: HAligns.Center;
+        VAlign: VAligns.Center;
+        Size: new SizeClass(fsize);
+        Span {
           TextHeight: textheight;
           TextColor: p1.Color.TextCompliment;
-          ParAlignment: ParAlignments.Center;
           p1.Index+1;
         };
       };
-
     }
   };
 
