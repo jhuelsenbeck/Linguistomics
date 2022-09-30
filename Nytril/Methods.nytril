@@ -38,13 +38,13 @@ namespace Figures.AlignmentExamples {
   Title = "Alignment Examples";
 
   CognateIdClass[] Examples = [
-    new("And", "Et", 5),
-    new("In", "In", 8),
+    new("Moon", null, 5),
+    new("One", null, 8),
     new("Tooth", null, 3),
   ];
 
   Caption(DocumentClass document) = Span {
-    "Several examples of cognate alignments...";
+    "Credible sets for cognate alignments";
   };
 
   Body(DocumentClass document) = Block {
@@ -668,6 +668,7 @@ namespace PaperSections.WordTransformation {
     var modelname = Span {TextCase: TextCases.AllLower; Experiment.Rule.Name};
 
     FirstPar {
+      "WE SHOULD DELETE THIS PARAGRAPH, YES?";
       "Marginal likelihoods under the three models of word transition were approximated using the stepping-stone path-sampling method";
       Citation {xie2010}; eos;
       "The marginal likelihoods were NUMBER, NUMBER, and NUMBER under the Jukes-Cantor, "; modelname; ", and GTR models, respectively. ";
@@ -675,15 +676,17 @@ namespace PaperSections.WordTransformation {
     };
 
     BodyPar {
-
-    };
-
-    ShowTable(document, Figures.PartitionAssignments);
-
-    BodyPar {
       "The "; modelname; " model allows different rates for different groups of word segments, ";
-      FigureReference(Experiment, Figures.TransitionRates); " summarizes the estimated rates of change from one segment grouping to another. ";
-      "The rates are much greater from one word segment to another when the change is within the word segment group than when the change is between word segments in different groups.";
+      FigureReference(Experiment, Figures.TransitionRates); " summarizes the estimated rates of change within and between each segmental class under the "; modelname; "model. ";
+      "The curved lines representing the within-class transition rates are particularly illuminating. ";
+      "The stop and nasal consonants are the most stable segmental classes, whereas the approximants and long vowels are the least. ";
+      "The diachronic stability of nasal consonants is well known cross-linguistically. ";
+      "The low rates exhibited by the long vowels and approximants are due to well-known sound changes within Romance. ";
+      "For instance, phonemic vowel length was lost within the history of Latin. ";
+      "Approximants, in particular /j/, were often lost in assimilatory sound changes that resulted, for instance, in palatal consonants and affricates. ";
+      "The inter-class rates are in some cases difficult to interpret (e.g., the high transition rate between nasal vowels and fricatives). ";
+      "These may be due to faulty alignments. ";
+
     };
 
     ShowFigureDoc(document, Figures.TransitionRates);
@@ -700,9 +703,13 @@ namespace PaperSections.WordSegmentRelationships {
       FigureReference(Experiment, Figures.AlignmentExamples); " shows alignments for ";
       Cardinal(Figures.AlignmentExamples.Examples.Length);
       " of the words we analyzed. ";
-      "The pictured alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
-      "Note that insertions and deletions appear to occur more frequently at the end of the words. ";
-      "Also note that the alignments tend to assign word segments from the same segment group to the same column in the alignment.";
+      "For each word, the alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
+      "This sample of alignments illustrate three key properties. ";
+      "First, the distributions of credible sets exhibit extreme skew. ";
+      "There is always a clear best alignment.";
+      "Second, deletions occur predominantly at the end of the words. ";
+      "Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment.";
+      "The alignment of the nasalized vowels is surprising, in that they are being aligned with nasal consonants, when in fact they are homologous with vowels.";
     };
 
     ShowFigureDoc(document, Figures.AlignmentExamples);
@@ -765,7 +772,14 @@ namespace PaperSections.Discussion {
    };
 
    BodyPar {
-     "A paragraph on segmental sampling. ";
+     "Under our framework a new issue in linguistic phylogenetics emerges, that of segmental sampling. (CITE DOCKUM2019, LIST?) ";
+     "Certain segemental transitions can play a crucial role in topological inference, but under a sampling scheme such as ours, in which selection of concepts is guided by a Swadesh list, ";
+     "there is no guarantee that the necessary segmental correspondences will be sampled. ";
+     "There is the further question of the frequency distribution of segments in the dataset. ";
+     "Some segments will be sampled far more often than others simply because they are more frequent in a language. ";
+     "The sampling can thus influence estimates of equilibrium frequencies and transition rates. ";
+     "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will in all likelihood have to be modified under our framework to take into account issues of segmental distribution. ";
+
    };
 
    BodyPar {
@@ -784,15 +798,15 @@ namespace PaperSections.Discussion {
       "Our method models insertions, deletions, and transitions among segments. ";
       "An effort was made to exclude word forms that involve changes of multiple segments (such as occur in morphological change). ";
       "Metathesis, a change in which two segments exhcange positions, is modeled as separate transitions from the input and output segments. ";
-      "For instance, the Latin verb "; textit{"exprimere"}; " begins with a string "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
+      "For instance, the Latin verb "; textit{"exprimere"}; " begins with a "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
       "The initial vowel has been lost and "; IPASegments.k; " and "; IPASegments.s; " have undergone metathesis. ";
       "Under our model, this change is treated as two separate transitions, one from "; IPASegments.k; " to "; IPASegments.s; " and another from "; IPASegments.s; " to "; IPASegments.k; eos;
     };
 
    BodyPar {
-     TextColor: Colors.Blue;
-     "- maybe conclude on something that talks about a more -omics approach to linguistics, perhaps by combining automatic cognate discovery with the more event-based modeling approach we pursue here. ";
-     "Also, might mention that this framework does allow for more complicated questions to be addressed, such as context dependence of segment change.";
+     "Our event-based modeling approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general. ";
+     "It can be expanded and refined in various ways. For instance, it can be combined with methods of automatic cognate detection (REFERENCES). ";
+     "It can also address more complicated questions, such as context-dependent changes and changes involving multiple segments (such as metathesis). ";
    };
   };
 }
@@ -826,7 +840,8 @@ namespace PaperSections.DataSummary {
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; SQuote{"heavy"}; ", but its French descendant "; textit{"grave"}; " has lost this sense and now means "; SQuoteEnd{"serious"};
       "They are assigned to the same cognate set because French "; textit{"grave"}; " descends from Latin "; textit{"gravem"}; eos;
       "Each word-form is represented phonemically in the International Phonetic Alphabet (IPA). ";
-      "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by and for ancient languages such as Latin non-existent. ";
+      "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by especially with corpus languages such as Latin. ";
+      "Suprasegmental features such as stress are not represented in the data. ";
     };
 
     BodyPar {
@@ -977,20 +992,20 @@ namespace PaperSections.ModelInference {
     BodyPar {
       "We examined three models of segmental transition. ";
       "The first (denoted "; SQuote{"JC69"}") is isomorphic to the Jukes-Cantor"; Citation{jukes69};
-      " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate; ";
-      "the second ("; SQuote{rule.Name}; ") model allows different rates among ";
-      Cardinal(rule.Filters.Length); " groups of word segments (";
-      Span {
-        Separator: CommaSpace;
-        LastSeparator: " and ";
-        rule.Filters;
-      };
-      ") and has an intermediate number of parameters (";
+      " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate. ";
+      "The second ("; SQuote{rule.Name}; ") model allows different rates among ";
+      Cardinal(rule.Filters.Length); " classes of segments ("; ShowTableNumber(Figures.PartitionAssignments); ") that share articulatory properties";
+      //Span {
+      //  Separator: CommaSpace;
+      //  LastSeparator: " and ";
+      //  rule.Filters;
+      //};
+      " and has an intermediate number of parameters (";
       Experiment.Data.UniqueCount;
       " parameters for the equilibrium distribution and ";
       (rule.Filters.Length-1)^2-1;
-      " parameters describing rates among word segment groups); ";
-      "and the third ("; SQuote{"GTR"}; ") is a model isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
+      " parameters describing rates among word segment groups). ";
+      "The third ("; SQuote{"GTR"}; ") is a isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
       ", and has a large number of parameters (";
       Experiment.Data.UniqueCount;
       " parameters for the equilibrium distribution and ";
@@ -998,6 +1013,9 @@ namespace PaperSections.ModelInference {
       " exchangability parameters). ";
       "For both the second and third models, we consider the equilibrium frequencies of the model to be random variables with a flat Dirichlet prior distribution."
     };
+
+    ShowTable(document, Figures.PartitionAssignments);
+
   };
 }
 
