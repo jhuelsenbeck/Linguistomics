@@ -55,8 +55,8 @@ namespace Figures.AlignmentExamples {
 
 //======================================================================
 
-namespace Figures.TransitionMatrixTable {
-  Title = Lang.TransitionMatrix;
+namespace Figures.ExchangeabilityTable {
+  Title = Lang.Exchangeability;
 
   Body(DocumentClass document) = Block {
     var th = ExtentWidth * 0.015;
@@ -113,8 +113,8 @@ namespace Figures.TransitionMatrixTable {
 }
 //======================================================================
 
-namespace Figures.TransitionMatrixChart {
-  Title = Lang.TransitionMatrix;
+namespace Figures.ExchangeabilityChart {
+  Title = Lang.Exchangeability;
 
   ShowRight(number) = HBox {
     Space*2;
@@ -224,6 +224,92 @@ namespace Figures.TransitionMatrixChart {
               }
             };
           }
+        }
+      };
+    };
+  };
+}
+
+//======================================================================
+
+namespace Figures.PartitionVolatilityChart {
+  Title = "Partition Volatility";
+
+  Body(DocumentClass document) = Block {
+    Style.SansSerif;
+
+    var partitions = Experiment.Rule.Partitions;
+    var stats      = MainResults.TransitionStats;
+    Chart {
+      Type: ChartTypes.Dot;
+      Size: new SizeClass(ExtentWidth, 4 inches);
+      ValueLabel: "%";
+
+      XAxis: ChartAxis {
+        foreach (var p in partitions) {
+          Span {
+            p.Name;
+            Tip: p;
+          }
+        }
+      };
+
+      ValueAxis: ChartAxis;
+
+      ChartSeries {
+        foreach (var i in 0..<stats.Length) {
+          var s = stats[i][i];
+          var p = partitions[i];
+          var m = s.Mean * 100.0;
+          new DataPointClass(i, m) {
+            Fill: ChartColor(i);
+            Reference: p;
+            ErrorHi: s.Upper*100.0 - m;
+            ErrorLo: m- s.Lower*100.0;
+          };
+        }
+      };
+    };
+  };
+}
+
+//======================================================================
+
+namespace Figures.FractionGapsChart {
+  Title = "Deletions at the right edge";
+
+  Body(DocumentClass document) = Block {
+    Style.SansSerif;
+
+    var partitions = Experiment.Rule.Partitions;
+    var stats      = MainResults.TransitionStats;
+    Chart {
+      Type: ChartTypes.Dot;
+      Size: new SizeClass(ExtentWidth, 4 inches);
+      ValueLabel: "%";
+
+      XAxis: ChartAxis {
+        foreach (var p in partitions) {
+          Span {
+            p.Name;
+            Tip: p;
+          }
+        }
+      };
+
+      ValueAxis: ChartAxis;
+
+      ChartSeries {
+        foreach (var i in 0..<stats.Length) {
+          var s = stats[i][i];
+          var p = partitions[i];
+          var m = s.Mean * 100.0;
+          new DataPointClass(i, m) {
+            Fill: ChartColor(i);
+            Reference: p;
+            ErrorHi: s.Upper*100.0 - m;
+            ErrorLo: m- s.Lower*100.0;
+          };
         }
       };
     };
@@ -651,6 +737,7 @@ namespace StateSection {
   };
 
   StateMatrix = MatrixBlock {
+    Padding: PadB(3);
     Brackets: Brackets.FlatRound;
     foreach (var state in States) {
       Row {
