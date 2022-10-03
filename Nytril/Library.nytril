@@ -656,14 +656,12 @@ class DataSetClass {
                               SortedCognates;
   ConceptClass[]              UsedConcepts;
   TaxonClass[]                Taxa;
-  MatrixClass                 TransitionCount;
   DictionaryClass<TaxonClass> TaxonSet;
   VectorClass                 WordList;
   var                         MaxLanguageName,
                               WordCount,
                               SegmentCount,
                               UniqueCount,
-                              TransitionMax,
                               WordCutoff,
                               ExampleConcept,
                               FigureConcept,
@@ -762,7 +760,6 @@ class DataSetClass {
 
     DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
     SortedSegments  = UniqueSegments.Sort(true, ref CompareAlpha);
-    TransitionCount = GetTransitionsCount;
   }
 
   Coverage(TaxonClass taxon) {
@@ -889,42 +886,18 @@ class DataSetClass {
       }
     };
   };
+}
 
-  GetTransitionsCount {
-    TransitionMax = 1;
-    var t = new MatrixClass(UniqueCount, UniqueCount, null);
+//======================================================================
 
-    foreach (var cognate in UsedCognates) {
-      var length = cognate.Words.Length;
-      for (var i = 0; i < length; ++i) {
-        var p0 = cognate.Words[i].Padded;
-        for (var j = 0; j < length; ++j) {
-          if (i != j) {
-            var p1 = cognate.Words[j].Padded;
-            var ml = Min(p0.Length, p1.Length);
-            for (var index = 0; index < ml; ++index) {
-              var s0 = p0[index];
-              var s1 = p1[index];
-              if (s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation) {
-                var list = t.GetValue(s0.Index, s1.Index);
-                var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
-                if (invalid list) {
-                  list = new ListClass<WordPairClass>(128);
-                  t.SetValue(s0.Index, s1.Index, list);
-                }
-                list.Add(p);
-                if (list.Length > TransitionMax)
-                  TransitionMax = list.Length;
-              }
-            }
-          }
-        }
-      }
-    }
-    return t;
+abstract class CountBaseClass {
+  MatrixClass  TMatrix;
+  var          Factor;
+
+  Constructor {
   }
 
-  GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);// * 30%;
+  GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);
 
   PartitionBox(RuleClass rule) = Paragraph {
     Style.SansSerif;
@@ -937,48 +910,21 @@ class DataSetClass {
     var d        = size / (segments.Length+1);
     var vflags   = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
 
-
     Canvas {
-      TextHeight: d.Height * 0.6;
+      TextHeight: Math.Min(d.Height * 0.6, d.Width * 0.5);
       Border: border;
 
-      var t   = TransitionCount;
-      var max = 1.0 / TransitionMax;
       var y   = d.Height;
       foreach (var s0 in segments) {
         var x = d.Width;
         foreach (var s1 in segments) {
           if (s0.Index != s1.Index) {
-            var tlist = t.GetValue(s0.Index, s1.Index);
-            if (valid tlist) {
-              Canvas {
-                TipAction: new TranActionClass(tlist.Values, tlist.Length*max);
-                HAlign: HAligns.Center;
-                VAlign: VAligns.Center;
+            var value = TMatrix.GetValue(s0.Index, s1.Index);
+            if (valid value) {
+              AddEntry(value, vflags) {
                 X: x;
                 Y: y;
                 Size: d;
-
-                var count = 0;
-                foreach (var e in tlist) {
-                  var c0 = e.Word1.Padded[e.Index];
-                  var c1 = e.Word2.Padded[e.Index];
-                  if (c0.Features.HasFlag(vflags) != c1.Features.HasFlag(vflags))
-                    ++count;
-                }
-
-                if (count > 0) {
-                  var f = Integer(255.0 * (1.0 - count / tlist.Length));
-                  if (f < 255)
-                    Background: new ColorClass(f, 255, f);
-                }
-                else {
-                  var f = Integer((1.0 - tlist.Length * max) * 255.0);
-                  if (f < 255)
-                    Background: new ColorClass(255, f, f);
-                }
-
-                tlist.Length;
               };
             }
           }
@@ -1036,7 +982,145 @@ class DataSetClass {
       };
     };
   };
+
+  abstract AddEntry(value, vflags);
 }
+
+//======================================================================
+
+class TransitionCountClass: CountBaseClass {
+  Constructor(DataSetClass data) {
+    super.Constructor;
+
+    var uc = data.UniqueCount;
+    TMatrix = new MatrixClass(uc, uc, null);
+    var tmax = 1;
+
+    foreach (var cognate in data.UsedCognates) {
+      var length = cognate.Words.Length;
+      for (var i = 0; i < length; ++i) {
+        var p0 = cognate.Words[i].Padded;
+        for (var j = 0; j < length; ++j) {
+          if (i != j) {
+            var p1 = cognate.Words[j].Padded;
+            var ml = Min(p0.Length, p1.Length);
+            for (var index = 0; index < ml; ++index) {
+              var s0 = p0[index];
+              var s1 = p1[index];
+              if (s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation) {
+                var list = TMatrix.GetValue(s0.Index, s1.Index);
+                var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
+                if (invalid list) {
+                  list = new ListClass<WordPairClass>(128);
+                  TMatrix.SetValue(s0.Index, s1.Index, list);
+                }
+                list.Add(p);
+                if (list.Length > tmax)
+                  tmax = list.Length;
+              }
+            }
+          }
+        }
+      }
+    }
+    Factor = 1.0 / tmax;
+  }
+
+  override AddEntry(value, vflags) = Canvas {
+    TipAction: new TranActionClass(value.Values, value.Length*Factor);
+    HAlign: HAligns.Center;
+    VAlign: VAligns.Center;
+
+    var count = 0;
+    foreach (var e in value) {
+      var c0 = e.Word1.Padded[e.Index];
+      var c1 = e.Word2.Padded[e.Index];
+      if (c0.Features.HasFlag(vflags) != c1.Features.HasFlag(vflags))
+        ++count;
+    }
+
+    if (count > 0) {
+      var f = Integer(255.0 * (1.0 - count / value.Length));
+      if (f < 255)
+        Background: new ColorClass(f, 255, f);
+    }
+    else {
+      var f = Integer((1.0 - value.Length * Factor) * 255.0);
+      if (f < 255)
+        Background: new ColorClass(255, f, f);
+    }
+
+    value.Length;
+  };
+}
+
+//======================================================================
+
+class AlignedCountClass: CountBaseClass {
+  Constructor(ResultsClass results) {
+    super.Constructor;
+
+    var data     = results.Experiment.Data;
+    var segments = data.UniqueSegments;
+    var length   = segments.Length;
+    TMatrix = new MatrixClass(length, length, 0.0);
+    var scale = new VectorClass(length, 0);
+
+    foreach (var alignindex in results.Alignments) {
+      foreach (var alignment in alignindex.Data) {
+        var prob    = alignment.Prob;
+        var words   = alignment.Alignments;
+        var wlength = words.Length;
+        for (var i = 0; i < wlength; ++i) {
+          var p0 = words[i];
+          if (valid p0) {
+            for (var j = 0; j < wlength; ++j) {
+              if (i != j) {
+                var p1 = words[j];
+                if (valid p1) {
+                  var ml = Min(p0.Length, p1.Length);
+                  for (var index = 0; index < ml; ++index) {
+                    var s0 = p0[index];
+                    var s1 = p1[index];
+                    if (s0 != s1 and s0 >= 0 and s1 >= 0) {
+                      TMatrix.AddValue(s0, s1, prob);
+                      scale.AddValue(s0, 1);
+                      scale.AddValue(s1, 1);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    for (var i = 0; i < length; ++i) {
+      var si = scale[i];
+      for (var j = 0; j < length; ++j) {
+        TMatrix.MultValue(i, j, 1.0 / (si + scale[j]));
+      }
+    }
+
+    Factor = 1.0 / TMatrix.FindMax;
+  }
+
+  override AddEntry(value, vflags) {
+    if (value > 0.0) {
+      return Canvas {
+        HAlign: HAligns.Center;
+        VAlign: VAligns.Center;
+
+        var c = value * Factor;
+        Background: ColorClass.FromHSLA(0%, c, 100%, 100%);
+        Span {c * 100.0; TextDigits: 0};
+       };
+     }
+     return null;
+  }
+}
+
 //======================================================================
 
 class FrequencyClass {
@@ -1048,6 +1132,7 @@ class FrequencyClass {
     Frequency = frequency;
   }
 }
+
 //======================================================================
 
 class RateDataClass {

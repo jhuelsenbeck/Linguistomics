@@ -26,9 +26,10 @@ namespace Figures.TransitionRates {
     "The width of the lines is proportional to the estimated rates. ";
   };
 
+  Display = new CalcRatesClass(MainResults, Experiment.Data, Experiment.Rule);
+
   Body(DocumentClass document) {
-    var calc = new CalcRatesClass(MainResults, Experiment.Data, Experiment.Rule);
-    return calc.PartitionDiagram;
+    return Display.PartitionDiagram;
   }
 }
 
@@ -47,9 +48,10 @@ namespace Figures.AlignmentExamples {
     "Credible sets for cognate alignments";
   };
 
+  Display = new AlignmentChartClass(MainResults);
+
   Body(DocumentClass document) = Block {
-    var chart = new AlignmentChartClass(MainResults);
-    chart.ShowSet(MainResults.Data, Examples);
+    Display.ShowSet(MainResults.Data, Examples);
   };
 }
 
@@ -241,9 +243,13 @@ namespace Figures.PartitionVolatilityChart {
     var partitions = Experiment.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
     Chart {
-      Type: ChartTypes.Dot;
+      Type: ChartTypes.Scatter;
       Size: new SizeClass(ExtentWidth, 4 inches);
-      ValueLabel: "%";
+      ValueLabel: "Probability %" {
+        TextHeight: 14 pts;
+        Transform: Rotate(90 degrees);
+        TransformFit: true;
+      };
 
       XAxis: ChartAxis {
         foreach (var p in partitions) {
@@ -280,39 +286,7 @@ namespace Figures.FractionGapsChart {
 
   Body(DocumentClass document) = Block {
     Style.SansSerif;
-
-    var partitions = Experiment.Rule.Partitions;
-    var stats      = MainResults.TransitionStats;
-    Chart {
-      Type: ChartTypes.Dot;
-      Size: new SizeClass(ExtentWidth, 4 inches);
-      ValueLabel: "%";
-
-      XAxis: ChartAxis {
-        foreach (var p in partitions) {
-          Span {
-            p.Name;
-            Tip: p;
-          }
-        }
-      };
-
-      ValueAxis: ChartAxis;
-
-      ChartSeries {
-        foreach (var i in 0..<stats.Length) {
-          var s = stats[i][i];
-          var p = partitions[i];
-          var m = s.Mean * 100.0;
-          new DataPointClass(i, m) {
-            Fill: ChartColor(i);
-            Reference: p;
-            ErrorHi: s.Upper*100.0 - m;
-            ErrorLo: m- s.Lower*100.0;
-          };
-        }
-      };
-    };
+    "To be completed";
   };
 }
 
@@ -325,8 +299,21 @@ namespace Figures.SegmentTransitionCounts {
     "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled red box. The chart has diagonal symmetry.";
   };
 
-  Body(DocumentClass document) = Experiment.Data.PartitionBox(Experiment.Rule);
+  Display = new TransitionCountClass(Experiment.Data);
+
+  Body(DocumentClass document) = Display.PartitionBox(Experiment.Rule);
 }
+
+//======================================================================
+
+namespace Figures.AlignedTransitions {
+  Title = "Segment transitions";
+
+  Display = new AlignedCountClass(MainResults);
+
+  Body(DocumentClass document) = Display.PartitionBox(Experiment.Rule);
+}
+
 //======================================================================
 
 namespace Figures.AllSegmentFrequencies {
@@ -336,8 +323,10 @@ namespace Figures.AllSegmentFrequencies {
     "The frequency of occurrance of each segment for all languages";
   };
 
+  Display = SegmentDisplay.FrequencyChart(Experiment.Data, new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
+
   Body(DocumentClass document) = Block {
-    SegmentDisplay.FrequencyChart(Experiment.Data, new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
+    Display;
   };
 }
 
@@ -368,15 +357,19 @@ namespace Figures.SegmentOccuranceRates {
     l0; ". Bars are normalized to the rate of the most frequently ocurring segment in each language. Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
-  Body(DocumentClass document) = new SegmentFrequencyClass(Experiment, false).ShowChart;
+  Display = new SegmentFrequencyClass(Experiment, false);
+
+  Body(DocumentClass document) = Display.ShowChart;
 }
 //======================================================================
 
 namespace Figures.SegmentOccuranceGrouped {
   Title = "Segment Occurance Rates (by partition)";
 
+  Display = new SegmentFrequencyClass(Experiment, true);
+
   Body(DocumentClass document) = Block {
-    new SegmentFrequencyClass(Experiment, true).ShowChart;
+    Display.ShowChart;
   };
 }
 //======================================================================
@@ -391,8 +384,10 @@ namespace Figures.PartitionFrequencies {
     "Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
+  Display = new PartitionFrequencyClass(Experiment);
+
   Body(DocumentClass document) = Block {
-    new PartitionFrequencyClass(Experiment).ShowChart;
+    Display.ShowChart;
   };
 }
 //======================================================================
@@ -404,8 +399,10 @@ namespace Figures.Alignments {
     MainResults.AlignmentCutoff * 100.0; "% credible set of alignments";
   };
 
+  Display = new AlignmentChartClass(MainResults);
+
   Body(DocumentClass document) = Block {
-    new AlignmentChartClass(MainResults).ShowChart(ExtentSize);
+    Display.ShowChart(ExtentSize);
   };
 }
 //======================================================================
