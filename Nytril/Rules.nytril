@@ -465,6 +465,41 @@ class TranActionClass: ActionClass {
 }
 //======================================================================
 
+class AlignActionClass: ActionClass {
+  SegmentClass S0,
+               S1;
+  var          Percent;
+
+  Constructor(SegmentClass s0, SegmentClass s1, percent) {
+    super.Constructor(Actions.TipDocument, s0);
+    S0      = s0;
+    S1      = s1;
+    Percent = percent;
+  }
+
+  override GetQuery = MatchAny SegmentClass {
+    S0;
+    S1;
+  };
+
+  ShowSegments = Block {
+    Paragraph {
+      S0.ShowSegment;
+      Tex.To;
+      S1.ShowSegment;
+    };
+    Paragraph {
+      TextDigits: 1;
+      Percent; "% of max";
+    };
+  };
+
+  override GetLayoutTip = Frame {
+    ShowSegments;
+  };
+}
+//======================================================================
+
 class CalcRatesClass {
   DataSetClass    Data;
   TransitionClass Transition;
@@ -594,25 +629,6 @@ class CalcRatesClass {
   TranLink(i0, i1) = "Tran{0}:{1}"(i0, i1);
 
   static CompareLength(l1, l2, options) = l2.Length - l1.Length;
-
-/*  GetSorted {
-    var all      = new ListClass(128);
-    var t        = Data.TransitionCount;
-    var segments = Rule.PartSegments;
-
-    foreach (var s0 in segments) {
-      foreach (var s1 in segments) {
-        if (s0.Index != s1.Index) {
-          var tlist = t.GetValue(s0.Index, s1.Index);
-          if (valid tlist and tlist.Length < Info.LinkMin)
-            all.Add(tlist);
-        }
-      }
-    }
-
-    return all.Sort(true, ref CompareLength);
-  }
-*/
 }
 //======================================================================
 
