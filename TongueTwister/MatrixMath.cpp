@@ -264,12 +264,6 @@ void MathCache::power(DoubleMatrix& m, int power) {
           // Calculate even powers of 2 
           // Accumulate the result in "m"
 
-          #ifdef _DEBUG
-          auto tm = pushMatrix(size);
-          tm->copy(m);
-          #endif
-
-
           auto t    = pushMatrix(n);
           auto even = pushMatrix(n);
           even->copy(m);
@@ -301,12 +295,6 @@ void MathCache::power(DoubleMatrix& m, int power) {
               }
 
           popMatrix(2);
-
-          #ifdef _DEBUG
-          while (--power > 0)
-              multiply(*tm, *tm);
-          assert(m == *tm);
-          #endif
           break;
 
         }
