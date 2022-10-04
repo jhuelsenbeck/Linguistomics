@@ -1,0 +1,77 @@
+using Format, Units, IO;
+
+include "English";
+include "NytrilStyle";
+include "LanguageTree";
+include "Library";
+include "Citations";
+include "Graphics";
+include "Tables";
+include "IPA";
+include "Segments";
+include "Rules";
+include "Experiments";
+include "Nexus";
+include "Config";
+include "Languages";
+include "Romance";
+include "Data Validation";
+include "Queries";
+
+// Choose between one of these 3 sets
+include "LanguageSet";
+//include "LanguagePhonetic";
+//include "LanguageTest";
+
+//======================================================================
+
+DataSetClass    RawData    = new(Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, EuroRomance, 1);
+ExperimentClass Experiment = new EuropeExperimentClass(RawData);
+
+Main.Run = new RunInitClass;
+
+
+namespace Main.Documents {
+  DocumentClass Diagnostic    = new DiagnosticsViewClass(RawData);
+  DocumentClass Configuration = new ConfigurationViewClass(Experiment);
+}
+
+//======================================================================
+
+class RunInitClass: RunClass {
+  Constructor() {
+    super.Constructor(#219d23b2-2af2-4ad8-ac19-182c7dcfd05d#, "Create Experiment Data Files");
+  }
+
+  override void Execute {
+    var experiment = Experiment;
+    var root       = experiment.RootFolder;
+
+    if (not FolderExists(root))
+      CreateFolder(root);
+    (each experiment.Models).InitFolders(experiment);
+
+    Write(CreateArchiveFile(experiment.Data), root Info.WordFile);
+  }
+
+  override AskQuestion {
+    return "Overwrite configuration files for experiment \"{0}\"?"(Experiment.Name);
+  }
+}
+
+//======================================================================
+
+namespace Figures.SegmentTransitionCounts {
+  Title = "Prior Segment Transition Counts";
+
+  Caption(DocumentClass document) = Span {
+    "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled red box. The chart has diagonal symmetry.";
+  };
+
+  TransitionCountClass Display = new(RawData);
+
+  Body(DocumentClass document) = Display.PartitionBox(Experiment.Rule);
+}
+
+//======================================================================
+

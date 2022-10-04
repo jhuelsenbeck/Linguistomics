@@ -1064,13 +1064,18 @@ class TransitionCountClass: CountBaseClass {
 //======================================================================
 
 class AlignedCountClass: CountBaseClass {
+  ListClass<AlignActionClass> ActionList;
+  MatrixClass                 Actions;
+
   Constructor(ResultsClass results) {
     super.Constructor;
 
     var data     = results.Experiment.Data;
     var segments = data.UniqueSegments;
     var length   = segments.Length;
-    TMatrix = new MatrixClass(length, length, 0.0);
+    TMatrix    = new MatrixClass(length, length, 0.0);
+    Actions    = new MatrixClass(length, length, null);
+    ActionList = new(length * length);
     var scale = new VectorClass(length, 0);
 
     foreach (var alignindex in results.Alignments) {
@@ -1108,19 +1113,52 @@ class AlignedCountClass: CountBaseClass {
     }
 
     Factor = 100.0 / TMatrix.FindMax;
+    foreach (var s0 in segments) {
+      foreach (var s1 in segments) {
+        var v = TMatrix.GetValue(s0.Index, s1.Index) * Factor;
+        if (v >= 1) {
+          var a = new AlignActionClass(s0, s1, v);
+          ActionList.Add(a);
+          Actions.SetValue(s0.Index, s1.Index, a);
+        }
+      }
+    }
   }
 
+  Most = Block {
+    var sorted = ActionList.Sort(true);
+    var max    = Math.Min(sorted.Length, 30);
+    Table {
+      Columns: [60 pts, 60 pts, 1 inch];
+      Row {
+        Style.HeaderCell {"From"};
+        Style.HeaderCell {"To"};
+        Style.HeaderCell {"% of max"};
+      };
+
+      for (var i = 0; i < max; ++i) {
+        var a = sorted[i];
+        Row {
+          Style.RowBar(i);
+          a.S0.ShowSegment;
+          a.S1.ShowSegment;
+          Span {TextDigits: 2; a.Percent};
+        }
+      }
+    };
+  };
+
   override AddEntry(SegmentClass s0, SegmentClass s1) {
-    var v = TMatrix.GetValue(s0.Index, s1.Index) * Factor;
-    if (v >= 1.0) {
+    var a = Actions.GetValue(s0.Index, s1.Index);
+    if (valid a) {
       return Canvas {
-        TipAction: new AlignActionClass(s0, s1, v);
+        TipAction: a;
         HAlign: HAligns.Center;
         VAlign: VAligns.Center;
 
-        var f = Integer(2.55 * (100.0 - v));
+        var f = Integer(2.55 * (100.0 - a.Percent));
         Background: new ColorClass(255, f, f);
-        Span {v; TextDigits: 0};
+        Span {a.Percent; TextDigits: 0};
        };
      }
      return null;
