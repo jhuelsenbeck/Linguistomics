@@ -1078,22 +1078,20 @@ class AlignedCountClass: CountBaseClass {
         var prob    = alignment.Prob;
         var words   = alignment.Alignments;
         var wlength = words.Length;
-        for (var i = 0; i < wlength; ++i) {
-          var p0 = words[i];
+        if (wlength > 1) {
+          var p0 = words[0];
           if (valid p0) {
-            for (var j = 0; j < wlength; ++j) {
-              if (i != j) {
-                var p1 = words[j];
-                if (valid p1) {
-                  var ml = Min(p0.Length, p1.Length);
-                  for (var index = 0; index < ml; ++index) {
-                    var s0 = p0[index];
-                    var s1 = p1[index];
-                    if (s0 != s1 and s0 >= 0 and s1 >= 0) {
-                      TMatrix.AddValue(s0, s1, prob);
-                      scale.AddValue(s0, 1);
-                      scale.AddValue(s1, 1);
-                    }
+            for (var j = 1; j < wlength; ++j) {
+              var p1 = words[j];
+              if (valid p1) {
+                var ml = Min(p0.Length, p1.Length);
+                for (var index = 0; index < ml; ++index) {
+                  var s0 = p0[index];
+                  var s1 = p1[index];
+                  if (s0 != s1 and s0 >= 0 and s1 >= 0) {
+                    TMatrix.AddValue(s0, s1, prob);
+                    scale.AddValue(s0, 1);
+                    scale.AddValue(s1, 1);
                   }
                 }
               }
@@ -1104,10 +1102,9 @@ class AlignedCountClass: CountBaseClass {
     }
 
     for (var i = 0; i < length; ++i) {
-      var si = scale[i];
-      for (var j = 0; j < length; ++j) {
-        TMatrix.MultValue(i, j, 1.0 / (si + scale[j]));
-      }
+      var si = 1.0 / scale[i];
+      for (var j = 0; j < length; ++j)
+        TMatrix.MultValue(i, j, si);
     }
 
     Factor = 100.0 / TMatrix.FindMax;
