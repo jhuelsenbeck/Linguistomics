@@ -43,6 +43,9 @@ MatrixMath.o:	MatrixMath.cpp
 Mcmc.o:	Mcmc.cpp
 		$(CC) $(CFLAGS) -c Mcmc.cpp
 
+McmcPhase.o:	McmcPhase.cpp
+		$(CC) $(CFLAGS) -c McmcPhase.cpp
+
 Model.o:	Model.cpp
 		$(CC) $(CFLAGS) -c Model.cpp
 
