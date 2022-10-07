@@ -527,7 +527,6 @@ double ParameterTree::updateBrlen(void) {
         return lnProposalProbability;
         }
     
-    return 0.0; // to silence warnings
 }
 
 double ParameterTree::updateNni(void) {

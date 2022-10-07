@@ -2,8 +2,6 @@ using Format, Units, IO;
 
 //======================================================================
 
-//======================================================================
-
 class DiagnosticsViewClass: DocumentClass {
   DataSetClass Data;
 
@@ -73,7 +71,9 @@ class DiagnosticsViewClass: DocumentClass {
     };
   };
 
-  override GetDocument = DiagDocumentClass {
+  override GetDocument = Document {
+    TextHeight: 9 pts;
+
     AppendixClass[] appendices = [
       new("Cognate Coverage", ShowCognateCoverage),
       new AppendixFigureClass(Figures.SegmentTransitionCounts),
@@ -94,114 +94,95 @@ class DiagnosticsViewClass: DocumentClass {
 //======================================================================
 
 class ConfigurationViewClass: DocumentClass {
-  Constructor {
+  ExperimentClass Experiment;
+
+  Constructor(ExperimentClass experiment) {
     super.Constructor(#7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Configuration File");
+    Experiment = experiment;
   }
 
-  override GetDocument = DiagDocumentClass {
-    var experiment = NewExperiment;
+  override GetDocument = Document {
+    TextHeight: 9 pts;
 
     AppendixClass[] appendices = [
-      new(Name, new ConfigFileClass(experiment, experiment.MainRun).Show),
+      new(Name, new ConfigFileClass(Experiment, Experiment.MainRun).Show),
 //      new(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
     ];
 
     Style.ShowAppendix(this, each appendices);
   };
 }
+
 //======================================================================
 
-class RunInitClass: RunClass {
-  ExperimentClass Experiment;
+CreateArchiveFile(DataSetClass data) = TextBlock {
+  "using Format, WordGroups;";
+  "namespace Concepts;";
 
-  Constructor() {
-    super.Constructor(#219d23b2-2af2-4ad8-ac19-182c7dcfd05d#, "Create Experiment data files");
-  }
+  var first = Empty;
+  var any   = false;
 
-  WordArchive(DataSetClass data) = TextBlock {
-    "using Format, WordGroups;";
-    "namespace Concepts;";
+  foreach (var cognate in data.UsedCognates) {
+    var concept = cognate.Concept;
+    var cname   = concept.Name;
+    if (first != cname) {
+      if (any)
+        "}";
 
-    var first = Empty;
-    var any   = false;
-
-    foreach (var cognate in data.UsedCognates) {
-      var concept = cognate.Concept;
-      var cname   = concept.Name;
-      if (first != cname) {
-        if (any)
-          "}";
-
-        Empty;
-        Span {
-          "namespace ";
-          concept.Name;
-          " {";
-        };
-        TextBlock {
-          IndentSpace: 2;
-          Span {"Confidence = "; concept.Confidence; ";"};
-          Span {"WordType   = WordTypes."; concept.WordType.GetSourceName; ";"};
-          Span {"WordGroup  = ";
-            Span {
-              Separator: Space;
-              (each concept.WordGroup).GetSourceName;
-            };
-            ";";
+      Empty;
+      Span {
+        "namespace ";
+        concept.Name;
+        " {";
+      };
+      TextBlock {
+        IndentSpace: 2;
+        Span {"Confidence = "; concept.Confidence; ";"};
+        Span {"WordType   = WordTypes."; concept.WordType.GetSourceName; ";"};
+        Span {"WordGroup  = ";
+          Span {
+            Separator: Space;
+            (each concept.WordGroup).GetSourceName;
           };
-          Empty;
+          ";";
         };
-      }
+        Empty;
+      };
+    }
+
+    TextBlock {
+      IndentSpace: 2;
+
+      Empty;
+      Span {
+        "namespace ";
+        cognate.Name;
+        " {";
+      };
 
       TextBlock {
         IndentSpace: 2;
+        foreach (var word in cognate.Words) {
+          Span {
+            word.Language.Name;
 
-        Empty;
-        Span {
-          "namespace ";
-          cognate.Name;
-          " {";
-        };
-
-        TextBlock {
-          IndentSpace: 2;
-          foreach (var word in cognate.Words) {
-            Span {
-              word.Language.Name;
-
-              Space * (data.MaxLanguageName - word.Language.Name.Length);
-              " = ";
-              Quote;
-              word.Text;
-              Quote;
-              ";";
-            }
+            Space * (data.MaxLanguageName - word.Language.Name.Length);
+            " = ";
+            Quote;
+            word.Text;
+            Quote;
+            ";";
           }
         }
-        "}";
-      };
-      any   = true;
-      first = cname;
-    }
-    if (any)
+      }
       "}";
-  };
-
-  override void Execute {
-    var root = Experiment.RootFolder;
-
-    if (not FolderExists(root))
-      CreateFolder(root);
-    (each Experiment.Models).InitFolders(Experiment);
-
-    Write(WordArchive(Experiment.Data), root Info.WordFile);
+    };
+    any   = true;
+    first = cname;
   }
-
-  override AskQuestion {
-    Experiment = NewExperiment;
-    return "Overwrite configuration files for experiment \"{0}\"?"(Experiment.Name);
-  }
-}
+  if (any)
+    "}";
+};
 
 //======================================================================
 

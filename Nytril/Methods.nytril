@@ -292,26 +292,20 @@ namespace Figures.FractionGapsChart {
 
 //======================================================================
 
-namespace Figures.SegmentTransitionCounts {
-  Title = "Prior Segment Transition Counts";
+namespace Figures.AlignedTransitions {
+  Title = "Segment transitions";
 
-  Caption(DocumentClass document) = Span {
-    "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled red box. The chart has diagonal symmetry.";
-  };
-
-  Display = new TransitionCountClass(Experiment.Data);
+  AlignedCountClass Display = new(MainResults);
 
   Body(DocumentClass document) = Display.PartitionBox(Experiment.Rule);
 }
 
 //======================================================================
 
-namespace Figures.AlignedTransitions {
-  Title = "Segment transitions";
+namespace Figures.AlignedMost {
+  Title = "Greatest Segment Change";
 
-  Display = new AlignedCountClass(MainResults);
-
-  Body(DocumentClass document) = Display.PartitionBox(Experiment.Rule);
+  Body(DocumentClass document) = AlignedTransitions.Display.Most;
 }
 
 //======================================================================
@@ -357,7 +351,7 @@ namespace Figures.SegmentOccuranceRates {
     l0; ". Bars are normalized to the rate of the most frequently ocurring segment in each language. Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
-  Display = new SegmentFrequencyClass(Experiment, false);
+  SegmentFrequencyClass Display = new(Experiment, false);
 
   Body(DocumentClass document) = Display.ShowChart;
 }
@@ -366,7 +360,7 @@ namespace Figures.SegmentOccuranceRates {
 namespace Figures.SegmentOccuranceGrouped {
   Title = "Segment Occurance Rates (by partition)";
 
-  Display = new SegmentFrequencyClass(Experiment, true);
+  SegmentFrequencyClass Display = new(Experiment, true);
 
   Body(DocumentClass document) = Block {
     Display.ShowChart;
@@ -384,7 +378,7 @@ namespace Figures.PartitionFrequencies {
     "Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
-  Display = new PartitionFrequencyClass(Experiment);
+  PartitionFrequencyClass Display = new(Experiment);
 
   Body(DocumentClass document) = Block {
     Display.ShowChart;
@@ -399,7 +393,7 @@ namespace Figures.Alignments {
     MainResults.AlignmentCutoff * 100.0; "% credible set of alignments";
   };
 
-  Display = new AlignmentChartClass(MainResults);
+  AlignmentChartClass Display = new(MainResults);
 
   Body(DocumentClass document) = Block {
     Display.ShowChart(ExtentSize);

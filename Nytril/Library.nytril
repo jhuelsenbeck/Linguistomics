@@ -347,7 +347,7 @@ class LanguageClass: FactClass {
     Description;
 
     if (valid MapImage)
-      ShowMap(ExtentSize);
+      ShowMap(new(4 inches, 2 inches));
   };
 
   static ImageClass LoadImage(name) = new ImageClass(Info.ImageFolder FileName(name));
@@ -687,7 +687,7 @@ class DataSetClass {
         MaxLanguageName = taxon.Variable.Length;
     }
     Taxa     = tlist.Values;
-    WordList = new VectorClass(Taxa.Length, null);
+    WordList = new(Taxa.Length, null);
 
     // Build a dictionary with IPA text as the key
     var dictionary = new SegmentDictionary(256);
@@ -893,8 +893,10 @@ class DataSetClass {
 abstract class CountBaseClass {
   MatrixClass  TMatrix;
   var          Factor;
+  var          VFlags;
 
   Constructor {
+    VFlags = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
   }
 
   GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);
@@ -908,10 +910,9 @@ abstract class CountBaseClass {
     var border   = 0.5 pts;
     var size     = ExtentSize - border*2;
     var d        = size / (segments.Length+1);
-    var vflags   = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
 
     Canvas {
-      TextHeight: Math.Min(d.Height * 0.6, d.Width * 0.5);
+      TextHeight: Math.Min(d.Height * 0.7, d.Width * 0.6);
       Border: border;
 
       var y   = d.Height;
@@ -919,9 +920,9 @@ abstract class CountBaseClass {
         var x = d.Width;
         foreach (var s1 in segments) {
           if (s0.Index != s1.Index) {
-            var value = TMatrix.GetValue(s0.Index, s1.Index);
-            if (valid value) {
-              AddEntry(value, vflags) {
+            var entry = AddEntry(s0, s1);
+            if (valid entry) {
+              entry {
                 X: x;
                 Y: y;
                 Size: d;
@@ -983,7 +984,7 @@ abstract class CountBaseClass {
     };
   };
 
-  abstract AddEntry(value, vflags);
+  abstract AddEntry(SegmentClass s0, SegmentClass s1);
 }
 
 //======================================================================
@@ -1026,44 +1027,55 @@ class TransitionCountClass: CountBaseClass {
     Factor = 1.0 / tmax;
   }
 
-  override AddEntry(value, vflags) = Canvas {
-    TipAction: new TranActionClass(value.Values, value.Length*Factor);
-    HAlign: HAligns.Center;
-    VAlign: VAligns.Center;
+  override AddEntry(SegmentClass s0, SegmentClass s1) {
+    var value = TMatrix.GetValue(s0.Index, s1.Index);
+    if (invalid value)
+      return null;
 
-    var count = 0;
-    foreach (var e in value) {
-      var c0 = e.Word1.Padded[e.Index];
-      var c1 = e.Word2.Padded[e.Index];
-      if (c0.Features.HasFlag(vflags) != c1.Features.HasFlag(vflags))
-        ++count;
-    }
+    return Canvas {
+      TipAction: new TranActionClass(value.Values, value.Length*Factor);
+      HAlign: HAligns.Center;
+      VAlign: VAligns.Center;
 
-    if (count > 0) {
-      var f = Integer(255.0 * (1.0 - count / value.Length));
-      if (f < 255)
-        Background: new ColorClass(f, 255, f);
-    }
-    else {
-      var f = Integer((1.0 - value.Length * Factor) * 255.0);
-      if (f < 255)
-        Background: new ColorClass(255, f, f);
-    }
+      var count = 0;
+      foreach (var e in value) {
+        var c0 = e.Word1.Padded[e.Index];
+        var c1 = e.Word2.Padded[e.Index];
+        if (c0.Features.HasFlag(VFlags) != c1.Features.HasFlag(VFlags))
+          ++count;
+      }
 
-    value.Length;
-  };
+      if (count > 0) {
+        var f = Integer(255.0 * (1.0 - count / value.Length));
+        if (f < 255)
+          Background: new ColorClass(f, 255, f);
+      }
+      else {
+        var f = Integer((1.0 - value.Length * Factor) * 255.0);
+        if (f < 255)
+          Background: new ColorClass(255, f, f);
+      }
+
+      value.Length;
+    };
+  }
 }
 
 //======================================================================
 
 class AlignedCountClass: CountBaseClass {
+  ListClass<AlignActionClass> ActionList;
+  MatrixClass                 Actions;
+
   Constructor(ResultsClass results) {
     super.Constructor;
 
     var data     = results.Experiment.Data;
     var segments = data.UniqueSegments;
     var length   = segments.Length;
-    TMatrix = new MatrixClass(length, length, 0.0);
+    TMatrix    = new MatrixClass(length, length, 0.0);
+    Actions    = new MatrixClass(length, length, null);
+    ActionList = new(length * length);
     var scale = new VectorClass(length, 0);
 
     foreach (var alignindex in results.Alignments) {
@@ -1071,22 +1083,20 @@ class AlignedCountClass: CountBaseClass {
         var prob    = alignment.Prob;
         var words   = alignment.Alignments;
         var wlength = words.Length;
-        for (var i = 0; i < wlength; ++i) {
-          var p0 = words[i];
+        if (wlength > 1) {
+          var p0 = words[0];
           if (valid p0) {
-            for (var j = 0; j < wlength; ++j) {
-              if (i != j) {
-                var p1 = words[j];
-                if (valid p1) {
-                  var ml = Min(p0.Length, p1.Length);
-                  for (var index = 0; index < ml; ++index) {
-                    var s0 = p0[index];
-                    var s1 = p1[index];
-                    if (s0 != s1 and s0 >= 0 and s1 >= 0) {
-                      TMatrix.AddValue(s0, s1, prob);
-                      scale.AddValue(s0, 1);
-                      scale.AddValue(s1, 1);
-                    }
+            for (var j = 1; j < wlength; ++j) {
+              var p1 = words[j];
+              if (valid p1) {
+                var ml = Min(p0.Length, p1.Length);
+                for (var index = 0; index < ml; ++index) {
+                  var s0 = p0[index];
+                  var s1 = p1[index];
+                  if (s0 != s1 and s0 >= 0 and s1 >= 0) {
+                    TMatrix.AddValue(s0, s1, prob);
+                    scale.AddValue(s0, 1);
+                    scale.AddValue(s1, 1);
                   }
                 }
               }
@@ -1097,24 +1107,58 @@ class AlignedCountClass: CountBaseClass {
     }
 
     for (var i = 0; i < length; ++i) {
-      var si = scale[i];
-      for (var j = 0; j < length; ++j) {
-        TMatrix.MultValue(i, j, 1.0 / (si + scale[j]));
-      }
+      var si = 1.0 / scale[i];
+      for (var j = 0; j < length; ++j)
+        TMatrix.MultValue(i, j, si);
     }
 
-    Factor = 1.0 / TMatrix.FindMax;
+    Factor = 100.0 / TMatrix.FindMax;
+    foreach (var s0 in segments) {
+      foreach (var s1 in segments) {
+        var v = TMatrix.GetValue(s0.Index, s1.Index) * Factor;
+        if (v >= 1) {
+          var a = new AlignActionClass(s0, s1, v);
+          ActionList.Add(a);
+          Actions.SetValue(s0.Index, s1.Index, a);
+        }
+      }
+    }
   }
 
-  override AddEntry(value, vflags) {
-    if (value > 0.0) {
+  Most = Block {
+    var sorted = ActionList.Sort(true);
+    var max    = Math.Min(sorted.Length, 30);
+    Table {
+      Columns: [60 pts, 60 pts, 1 inch];
+      Row {
+        Style.HeaderCell {"From"};
+        Style.HeaderCell {"To"};
+        Style.HeaderCell {"% of max"};
+      };
+
+      for (var i = 0; i < max; ++i) {
+        var a = sorted[i];
+        Row {
+          Style.RowBar(i);
+          a.S0.ShowSegment;
+          a.S1.ShowSegment;
+          Span {TextDigits: 2; a.Percent};
+        }
+      }
+    };
+  };
+
+  override AddEntry(SegmentClass s0, SegmentClass s1) {
+    var a = Actions.GetValue(s0.Index, s1.Index);
+    if (valid a) {
       return Canvas {
+        TipAction: a;
         HAlign: HAligns.Center;
         VAlign: VAligns.Center;
 
-        var c = value * Factor;
-        Background: ColorClass.FromHSLA(0%, c, 100%, 100%);
-        Span {c * 100.0; TextDigits: 0};
+        var f = Integer(2.55 * (100.0 - a.Percent));
+        Background: new ColorClass(255, f, f);
+        Span {a.Percent; TextDigits: 0};
        };
      }
      return null;
