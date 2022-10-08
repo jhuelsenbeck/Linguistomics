@@ -7,8 +7,8 @@ Main.SymbolFamily = TextFamilies.CMUClassicalSerif;
 //======================================================================
 
 namespace NumberedGroup {
-  Table  = "table";
-  Figure = "figure";
+  Table  = "Table";
+  Figure = "Figure";
 }
 
 //======================================================================
@@ -224,7 +224,7 @@ namespace Style {
   ShowFigureNumber(figure) = Span {
     Lang.Figure;
     Space;
-    RefNumber(NumberedGroup.Figure, figure.GetVariableFullName);
+    DocFields.Reference(NumberedGroup.Figure, figure.GetVariableFullName);
   };
 
   FigureReference(ExperimentClass experiment, figure) = ShowFigureNumber(figure) {
@@ -233,22 +233,19 @@ namespace Style {
 
   ShowFigureDoc(DocumentClass document, figure) = Block {
     Paragraph {
-      AnchorGroup: NumberedGroup.Figure;
-      AnchorTag: figure.GetVariableFullName;
       SpaceBefore: 10 pts;
       SpaceAfter: 6 pts;
       KeepWithNext: true;
-      Frame {
-        Paragraph {
-          Span {
-            Bold;
-            SansSerif;
-            ShowFigureNumber(figure);
-            eos;
-          };
-          CaptionOrTitle(document, figure);
-        };
-      }
+
+      Span {
+        Bold;
+        SansSerif;
+        Lang.Figure;
+        Space;
+        DocFields.Sequence(NumberedGroup.Figure, figure.GetVariableFullName);
+        eos;
+      };
+      CaptionOrTitle(document, figure);
     };
 
     Paragraph {
@@ -263,14 +260,12 @@ namespace Style {
   ShowTableNumber(table) = Span {
     Lang.Table;
     Space;
-    RefNumber(NumberedGroup.Table, table.GetVariableFullName);
+    DocFields.Reference(NumberedGroup.Table, table.GetVariableFullName);
   };
 
   ShowTable(DocumentClass document, table, textheight=null) = Block {
     Paragraph {
       KeepWithNext: true;
-      AnchorTag: table.GetVariableFullName;
-      AnchorGroup: NumberedGroup.Table;
       SpaceBefore: 10 pts;
       SpaceAfter: 10 pts;
       ParAlignment: ParAlignments.Center;
@@ -289,7 +284,9 @@ namespace Style {
       Span {
         Bold;
         SansSerif;
-        ShowTableNumber(table);
+        Lang.Table;
+        Space;
+        DocFields.Sequence(NumberedGroup.Table, table.GetVariableFullName);
         eos;
       };
       CaptionOrTitle(document, table);
@@ -369,7 +366,7 @@ namespace Style {
     LeftIndent: 0.25 inches;
 
     Paragraph {
-      AnchorTag: person.GetVariableFullName;
+      DocFields.Anchor(person.GetVariableFullName);
       FirstIndent: -0.25 inches;
       CitationLib.GetFullName(person);
     };
@@ -404,7 +401,7 @@ namespace Style {
     Footer: Block {
       Distance: 0.5 inches;
       ParAlignment: ParAlignments.Center;
-      PageNumber;
+      DocFields.PageNumber;
     };
   };
 
@@ -579,7 +576,7 @@ namespace Style {
         ParAlignment: ParAlignments.Center;
         TextHeight: 14 pts;
         SpaceAfter: 8 pts;
-        AnchorTag: Lang.Appendix + each0;
+        DocFields.Anchor(Lang.Appendix + each0);
         "{0} {1} - "(Lang.Appendix, each1);
         appendix.Title;
       };

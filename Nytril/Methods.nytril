@@ -26,7 +26,7 @@ namespace Figures.TransitionRates {
     "The width of the lines is proportional to the estimated rates. ";
   };
 
-  Display = new CalcRatesClass(MainResults, Experiment.Data, Experiment.Rule);
+  CalcRatesClass Display = new(MainResults, Experiment.Data, Experiment.Rule);
 
   Body(DocumentClass document) {
     return Display.PartitionDiagram;
@@ -48,7 +48,7 @@ namespace Figures.AlignmentExamples {
     "Credible sets for cognate alignments";
   };
 
-  Display = new AlignmentChartClass(MainResults);
+  AlignmentChartClass Display = new(MainResults);
 
   Body(DocumentClass document) = Block {
     Display.ShowSet(MainResults.Data, Examples);
@@ -711,7 +711,7 @@ namespace StateSection {
     VAlign: VAligns.Center;
     HAlign: HAligns.Center;
     Padding: new ThicknessClass(1 pts, 1 pts, 3 pts, null);
-    Columns: [(1 inch) {Border: BorderR(Style.TableEdgeSize)}] + 5*[0.36 inches];
+    Columns: [(58 pts) {Border: BorderR(Style.TableEdgeSize)}] + 5*[0.36 inches];
     Row {
       Empty;
       Cell {
@@ -777,9 +777,9 @@ namespace PaperSections.WordSegmentRelationships {
       "For each word, the alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
       "This sample of alignments illustrate three key properties. ";
       "First, the distributions of credible sets exhibit extreme skew. ";
-      "There is always a clear best alignment.";
+      "There is always a clear best alignment. ";
       "Second, deletions occur predominantly at the end of the words. ";
-      "Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment.";
+      "Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment. ";
       "The alignment of the nasalized vowels is surprising, in that they are being aligned with nasal consonants, when in fact they are homologous with vowels.";
     };
 
@@ -795,7 +795,7 @@ namespace PaperSections.RomanceLanguagePhylogeny {
 
   Body(DocumentClass document) = Block {
     BodyPar {
-      "The majority-rule consensus tree (cutoff 00) is presented in Figure "; FigureReference(Experiment, Figures.ConsensusTree);
+      "The majority-rule consensus tree (cutoff 00) is presented in "; FigureReference(Experiment, Figures.ConsensusTree); eos;
       " Latin was specified as an outgroup, according to the widespread view that it is a sister to the most recent common ancestor of the Romance languages"; Citation {hall1950; Pages: 19; hall1974; Pages: 14; vallejo2012; Pages: 458};
     };
     ShowFigureDoc(document, Figures.ConsensusTree);
@@ -1179,10 +1179,8 @@ namespace PaperSections.Methods {
   Title = Lang.Methods;
 
   Body(DocumentClass document) = Block {
-    var data            = Experiment.Data;
-    var treefigure      = FigureReference(Experiment, Figures.ExampleTree);
-    var alignmentfigure = FigureReference(Experiment, Figures.Alignment);
-    var ec              = new ExampleConceptClass(data, data.ExampleConcept);
+    var data  = Experiment.Data;
+    var ec    = new ExampleConceptClass(data, data.ExampleConcept);
 
     FirstPar {
       "We use ancestral classes, in which the descendant forms are segmentally aligned. ";
@@ -1213,7 +1211,7 @@ namespace PaperSections.Methods {
     };
 
     BodyPar {
-      treefigure; " shows an example of a phylogeny for "; SampledLanguages(data.Taxa.Length); " languages. ";
+      FigureReference(Experiment, Figures.ExampleTree); " shows an example of a phylogeny for "; SampledLanguages(data.Taxa.Length); " languages. ";
       "In the terminology of evolutionary biology, the tree is composed of "; SQuote{"nodes"}; " and "; SQuoteEnd{"branches"};
       "(By contrast, mathematicians call nodes and branches "; SQuote{"vertices"} " and "; SQuote{"edges,"}; " respectively.) ";
       "The nodes represent the tips of the tree, each of which is assigned a language, and the points on the tree where the languages diverge from one another. ";
@@ -1221,13 +1219,13 @@ namespace PaperSections.Methods {
       "The interior nodes are labeled "; TipLabelInterior; " in preorder sequence (i.e., ordered sequentially from the tips to the root). ";
       "The root node is always assigned the label "; TipLastLabel; eos;
       "We denote the ancestor of node "; NodeIndex; " as "; AncestorNode(NodeIndex); eos;
-      "In the tree of "; treefigure; ", the ancestor of node 3 is "; Equation {AncestorNode(3); Equals; 12}; eos;
+      "In the tree of "; FigureReference(Experiment, Figures.ExampleTree); ", the ancestor of node 3 is "; Equation {AncestorNode(3); Equals; 12}; eos;
     };
 
     BodyPar {
-      "The branches connect the nodes of the tree and are represented as lines in "; treefigure; ". ";
+      "The branches connect the nodes of the tree and are represented as lines in "; FigureReference(Experiment, Figures.ExampleTree); eos;
       "The branch is assigned the label from its descendant node, so for example in the tree of ";
-      treefigure;
+      FigureReference(Experiment, Figures.ExampleTree);
       ", the branch connecting nodes 12 and 13 is assigned the label 12. ";
     };
 
@@ -1237,16 +1235,16 @@ namespace PaperSections.Methods {
       "A phylogeny is an information-rich graph. ";
       "For one, it contains information on the relationships of the languages. ";
       "This topological information is denoted "; Topology; eos;
-      treefigure;
+      FigureReference(Experiment, Figures.ExampleTree);
       " for example, suggests that "; French; " and ";  Walloon; " are each others’ closest relatives. ";
       "They are more closely related to each other than they are to any another language on the tree because they share a more recent common ancestor with each other than they do with any other language. ";
-      "This common ancestor is the node numbered 15 in "; treefigure; eos;
-      French; " and "; Walloon; ", together, are more closely related to "; Friulian; " in the tree of "; treefigure; eos;
+      "This common ancestor is the node numbered 15 in "; FigureReference(Experiment, Figures.ExampleTree); eos;
+      French; " and "; Walloon; ", together, are more closely related to "; Friulian; " in the tree of "; FigureReference(Experiment, Figures.ExampleTree); eos;
       "Both French and Walloon are equally related to "; Friulian; " because they both share the same common ancestor with ";
       Friulian; ", at the node numbered ";
-      data.LangNumber(Friulian); " in "; treefigure; eos;
+      data.LangNumber(Friulian); " in "; FigureReference(Experiment, Figures.ExampleTree); eos;
       "It is important to realize that there are many possible ways in which the languages can be related to one another, with the tree of ";
-      treefigure;
+      FigureReference(Experiment, Figures.ExampleTree);
       " depicting only one of the possibilities. ";
       "In fact, for the case in which ";
       SampledLanguages(data.Taxa.Length);
@@ -1419,7 +1417,7 @@ namespace PaperSections.Methods {
       SQuote {ec.CalloutSegment}; " of "; ec.Callout.Language; " as homologous to the ";
       SQuote {ec.CalloutSegment}; " of French based on the settings chosen by the user. ";
       "It may be that other alignments are nearly as good as the one that is illustrated. ";
-      alignmentfigure;
+      FigureReference(Experiment, Figures.Alignment);
       " shows two possible alignments of the word "
       ec.Name;
       eos;
@@ -1481,7 +1479,7 @@ namespace PaperSections.Methods {
           HomologyMap;
         };
       }; eos;
-      alignmentfigure;
+      FigureReference(Experiment, Figures.Alignment);
       " shows an example of two alignments for the word ";
       ec.Name;
       " that can be formed using two different homology maps. ";

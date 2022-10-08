@@ -78,8 +78,8 @@ class AlignPairClass {
 
   Languages(data, height) = VBox {
     HAlign: HAligns.Right;
-    Span {
-      Empty;
+    HBox {
+      Height: height;
     };
 
     foreach (var taxon in data.Taxa) {
@@ -91,12 +91,13 @@ class AlignPairClass {
     }
   };
 
-  Show(prob, cumulative, set) = VBox {
+  Show(prob, cumulative, set, boxheight) = VBox {
     Margin: PadB(10 pts);
     Border: 0.125 {Color: 50%};
     HAlign: HAligns.Center;
 
-    Span {
+    HBox {
+      Height: boxheight;
       TextDigits: 1;
       prob * 100.0;
       "%";
@@ -105,7 +106,7 @@ class AlignPairClass {
     VBox {
       foreach (var taxon in Data.Taxa) {
         HBox {
-          Height: BoxSize.Height;
+          Height: boxheight;
 
           var word = set[each0];
           if (valid word) {
@@ -176,18 +177,18 @@ class AlignPairClass {
         langbox;
       }
 
-      ShowBlocks(max);
+      ShowBlocks(max, BoxSize.Height);
     }
   };
 
-  ShowBlocks(max) = Span {
+  ShowBlocks(max, boxheight) = Span {
     var cumulative = 0.0;
     foreach (var a in Align.Data) {
       var prob = a.Prob;
       cumulative += prob;
       var alignments = a.Alignments;
       if (alignments.Length > 0) {
-        Show(prob, cumulative, alignments);
+        Show(prob, cumulative, alignments, boxheight);
         Space;
         if (each1 >= max)
           break;
@@ -196,11 +197,12 @@ class AlignPairClass {
   };
 
   ShowFigureDetails(max) = Block {
-    BoxSize = new(BoxSize.Width, 8 pts);
+    var h = 8 pts;
+    BoxSize = new(BoxSize.Width, h);
     TextHeight: 7 pts;
     Span {
-      Languages(Data, BoxSize.Height);
-      ShowBlocks(max);
+      Languages(Data, h);
+      ShowBlocks(max, h);
     }
   };
 }
@@ -279,11 +281,11 @@ class AlignmentChartClass {
     }
   };
 
-  ShowSet(DataSetClass data, CognateIdClass[] examples) = Table {
+  ShowSet(DataSetClass data, CognateIdClass[] examples) = MatrixBlock {
     var alignments = Results.Alignments;
     var chartwidth = 1 inch;
 
-    Columns: [ColumnClass.Fit(1 inch), chartwidth, ColumnClass.Expand];
+//    Columns: [ColumnClass.Fit(1 inch), chartwidth, ColumnClass.Expand];
     foreach (var e in examples) {
       var found = null;
       foreach (var a in alignments) {
@@ -296,18 +298,18 @@ class AlignmentChartClass {
       if (valid found) {
         var ap = new AlignPairClass(data, found);
         Row {
-          Cell {
+          VAlign: VAligns.Top;
+          Frame {
+            Width: 0.75 inch;
             Padding: PadR(10 pts);
-            VAlign: VAligns.Center;
             e.Concept;
-            Italic e.Cognate;
+            e.Cognate Italic;
           };
-          Cell {
-            ap.GetChart(new(chartwidth, data.Taxa.Length * (9 pts)), e.Count);
-          };
-          Cell {
+          ap.GetChart(new(chartwidth, data.Taxa.Length * (9 pts)), e.Count);
+          Frame {
+            Width: 5 inches;
             ap.ShowFigureDetails(e.Count);
-          };
+          }
         }
       }
     }
