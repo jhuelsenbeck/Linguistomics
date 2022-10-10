@@ -721,7 +721,7 @@ void McmcSummary::output(std::string pathName) {
         findex << "  [";
         for (int mj = 0; mj < numStates; ++mj)
             {
-            double r = m(mi,mj)
+            double r = m(mi,mj);
             if (mj)
                 findex << ",";
             if (mj < mi)
