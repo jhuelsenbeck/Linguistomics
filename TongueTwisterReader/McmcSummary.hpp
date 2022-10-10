@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "Container.hpp"
 #include "ParameterStatistics.hpp"
 #include "UserSettings.hpp"
 #include "RbBitSet.h"
@@ -22,6 +23,7 @@ class McmcSummary {
                                                 McmcSummary(RandomVariable* r);
                                                ~McmcSummary(void);
         McmcSummary&                            operator+=(const McmcSummary& rhs);
+        void                                    calculateAverageRates(DoubleMatrix& m);
         std::vector<CredibleInterval>           getCredibleIntervals(void);
         std::vector<double>                     getMeans(void);
         AlignmentDistribution*                  getAlignmentNamed(std::string str) const;
@@ -38,7 +40,10 @@ class McmcSummary {
         void                                    addPartion(std::map<RbBitSet,double>& parts);
         std::vector<std::string>                breakString(std::string str);
         std::string                             getCognateName(std::string str);
+        int                                     getFreqElement(std::string str);
+        void                                    getRateElements(std::string str, int& r1, int& r2);
         bool                                    hasSemicolon(std::string str);
+        int                                     inferNumberOfStates(void);
         std::map<int,std::string>               interpretTranslateString(std::vector<std::string> translateTokens);
         std::string                             interpretTreeString(std::string str);
         int                                     parseNumberFromFreqHeader(std::string str);

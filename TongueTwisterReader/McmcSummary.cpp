@@ -6,6 +6,7 @@
 #include <string>
 #include "Alignment.hpp"
 #include "AlignmentDistribution.hpp"
+#include "Container.hpp"
 #include "json.hpp"
 #include "McmcSummary.hpp"
 #include "Msg.hpp"
@@ -111,6 +112,219 @@ std::vector<std::string> McmcSummary::breakString(std::string str) {
     return broken;
 }
 
+void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
+
+    int numStates = 0;
+    
+    // 1. get state frequencies (and the number of states). We look
+    // up the apropriate ParameterStatistics objects for this
+    std::set<int> observedStates;
+    for (int i=0; i<stats.size(); i++)
+        {
+        ParameterStatistics* s = stats[i];
+        if (s->getName()[0] == 'F')
+            {
+            int st = getFreqElement(s->getName());
+            observedStates.insert(st);
+            }
+        }
+    for (int i=0; i<observedStates.size(); i++) // make certain all of the states from 0 to (numStates-1) are found
+        {
+        std::set<int>::iterator it = observedStates.find(i);
+        if (it == observedStates.end())
+            Msg::error("Could not find state " + std::to_string(i) + " in frequencies summary");
+        }
+    numStates = (int)observedStates.size();
+    std::vector<double> f(numStates);
+    for (int i=0; i<stats.size(); i++)
+        {
+        ParameterStatistics* s = stats[i];
+        if (s->getName()[0] == 'F')
+            {
+            int st = getFreqElement(s->getName());
+            f[st] = s->getMean();
+            }
+        }
+    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
+        {
+        int tempNumStates = statePartitions->getNumElements();
+        if (tempNumStates != numStates)
+            Msg::error("Mismatch in the number of states from the frequencies and the state partitions");
+        }
+
+    // allocate a vector to hold the exchangeability parameters
+    DoubleMatrix r(numStates,numStates);
+    for (int i=0; i<numStates; i++)
+        for (int j=0; j<numStates; j++)
+            r(i,j) = -1.0;
+    for (int i=0; i<stats.size(); i++)
+        {
+        ParameterStatistics* s = stats[i];
+        if (s->getName()[0] == 'R')
+            {
+            int r1, r2;
+            getRateElements(s->getName(), r1, r2);
+            if (statePartitions != NULL)
+                {
+                Subset* s1 = statePartitions->findSubsetIndexed(r1);
+                Subset* s2 = statePartitions->findSubsetIndexed(r2);
+                for (int x1 : s1->getValues())
+                    {
+                    for (int x2 : s2->getValues())
+                        {
+                        double ave = s->getMean();
+                        r(x1,x2) = ave;
+                        r(x2,x1) = ave;
+                        }
+                    }
+                
+                }
+            else
+                {
+                r(r1,r2) = s->getMean();
+                }
+            }
+        }
+    for (int i=0; i<numStates; i++)
+        {
+        for (int j=0; j<numStates; j++)
+            {
+            if (r(i,j) < 0.0 && i != j)
+                Msg::error("Could not find all rate parameters");
+            }
+        }
+
+
+    // fill in the rates (Q)
+    //DoubleMatrix m(numStates,numStates);
+    double averageRate = 0.0;
+    for (int i=0; i<numStates; i++)
+        {
+        double sum = 0.0;
+        for (int j=0; j<numStates; j++)
+            {
+            if (i != j)
+                {
+                m(i,j) = r(i,j) * f[j];
+                sum += m(i,j);
+                }
+            }
+        m(i,i) = -sum;
+        averageRate += f[i] * sum;
+        }
+        
+    // rescale so average is one (Q)
+    double scaleFactor = 1.0 / averageRate;
+    for (int i=0; i<numStates; i++)
+        for (int j=0; j<numStates; j++)
+            m(i,j) *= scaleFactor;
+            
+    // now get average rate from i to j (R)
+    for (int i=0; i<numStates; i++)
+        for (int j=0; j<numStates; j++)
+            m(i,j) *= f[i];
+            
+#   if 1
+    double sum = 0.0;
+    std::cout << "Frequencies:" << std::endl;
+    for (int i=0; i<f.size(); i++)
+        {
+        std::cout << "F[" << i << "] = " << f[i] << std::endl;
+        sum += f[i];
+        }
+    std::cout << "Frequencies sum = " << sum << std::endl;
+    std::cout << "Rates:" << std::endl;
+    sum = 0.0;
+    for (int i=0; i<numStates; i++)
+        {
+        for (int j=0; j<numStates; j++)
+            {
+            std::cout << r(i,j) << " ";
+            sum += r(i,j);
+            }
+        std::cout << std::endl;
+        }
+    std::cout << "Rates sum = " << sum << std::endl;
+    std::cout << "Average Rates:" << std::endl;
+    sum = 0.0;
+    for (int i=0; i<numStates; i++)
+        {
+        for (int j=0; j<numStates; j++)
+            {
+            if (i != j)
+                {
+                std::cout << m(i,j) << " ";
+                sum += m(i,j);
+                }
+            }
+        std::cout << std::endl;
+        }
+    std::cout << "Average rates  um = " << sum << std::endl;
+#   endif
+}
+
+int McmcSummary::getFreqElement(std::string str) {
+
+    int n = 0;
+    std::string tempStr = "";
+    bool readingBetweenSquareBrackets = false;
+    for (int i=0; i<str.length(); i++)
+        {
+        char c = str[i];
+        if (c == '[')
+            readingBetweenSquareBrackets = true;
+        else if (c == ']')
+            readingBetweenSquareBrackets = false;
+        else
+            {
+            if (readingBetweenSquareBrackets == true)
+                tempStr += std::string(1, c);
+            }
+        }
+    if (tempStr != "")
+        n = std::stoi(tempStr);
+    return n;
+}
+
+void McmcSummary::getRateElements(std::string str, int& r1, int& r2) {
+
+    r1 = 0;
+    r2 = 0;
+
+    std::string tempStr = "";
+    bool readingFirstNum = false, readingSecondNum = false;
+    for (int i=0; i<str.length(); i++)
+        {
+        char c = str[i];
+        if (c == '[')
+            {
+            readingFirstNum = true;
+            readingSecondNum = false;
+            }
+        else if (c == ']')
+            {
+            readingFirstNum = false;
+            readingSecondNum = false;
+            if (tempStr != "")
+                r2 = std::stoi(tempStr);
+            tempStr = "";
+            }
+        else if (c == '-')
+            {
+            readingFirstNum = false;
+            readingSecondNum = true;
+            if (tempStr != "")
+                r1 = std::stoi(tempStr);
+            tempStr = "";
+            }
+        else
+            {
+            if (readingFirstNum == true || readingSecondNum == true)
+                tempStr += std::string(1, c);
+            }
+        }
+}
+
 std::vector<CredibleInterval> McmcSummary::getCredibleIntervals(void) {
 
     std::vector<CredibleInterval> cis;
@@ -183,6 +397,36 @@ bool McmcSummary::hasSemicolon(std::string str) {
     if (found != std::string::npos)
         return true;
     return false;
+}
+
+int McmcSummary::inferNumberOfStates(void) {
+
+    // 1. get state frequencies (and the number of states). We look
+    // up the apropriate ParameterStatistics objects for this
+    std::set<int> observedStates;
+    for (int i=0; i<stats.size(); i++)
+        {
+        ParameterStatistics* s = stats[i];
+        if (s->getName()[0] == 'F')
+            {
+            int st = getFreqElement(s->getName());
+            observedStates.insert(st);
+            }
+        }
+    for (int i=0; i<observedStates.size(); i++) // make certain all of the states from 0 to (numStates-1) are found
+        {
+        std::set<int>::iterator it = observedStates.find(i);
+        if (it == observedStates.end())
+            Msg::error("Could not find state " + std::to_string(i) + " in frequencies summary");
+        }
+    int numStates = (int)observedStates.size();
+    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
+        {
+        int tempNumStates = statePartitions->getNumElements();
+        if (tempNumStates != numStates)
+            Msg::error("Mismatch in the number of states from the frequencies and the state partitions");
+        }
+    return numStates;
 }
 
 std::map<int,std::string> McmcSummary::interpretTranslateString(std::vector<std::string> translateTokens) {
@@ -462,6 +706,31 @@ void McmcSummary::output(std::string pathName) {
         }
         findex << "]";
     }
+    findex << "\n];\n\n";
+
+    // output average rates of change
+    // Hey Shawn, the matrix, m, has the average rates you need. No credible intervals on this information.
+    int numStates = inferNumberOfStates();
+    DoubleMatrix m(numStates,numStates);
+    calculateAverageRates(m);
+    findex << "AveRates[][] AverageRates = [\n";
+    for (int mi = 0; mi < numStates; ++mi)
+        {
+        if (mi)
+            findex << ",\n";
+        findex << "  [";
+        for (int mj = 0; mj < numStates; ++mj)
+            {
+            double r = m(mi,mj)
+            if (mj)
+                findex << ",";
+            if (mj < mi)
+                findex << "null";
+            else
+                stats[matrix++]->toFile(findex);
+            }
+        findex << "]";
+        }
     findex << "\n];\n\n";
 
 

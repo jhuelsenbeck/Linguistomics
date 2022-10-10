@@ -109,6 +109,14 @@ Subset* Partition::findSubsetWithValue(int x) {
     return NULL;
 }
 
+int Partition::getNumElements(void) {
+
+    int n = 0;
+    for (Subset* s : subsets)
+        n += s->getNumElements();
+    return n;
+}
+
 int Partition::indexOfSubsetWithValue(int x) {
 
     Subset* s = findSubsetWithValue(x);

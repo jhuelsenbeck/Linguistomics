@@ -15,6 +15,7 @@ class Partition {
                            ~Partition(void);
         bool                operator==(const Partition& rhs) const;
         void                addSubset(std::string s, std::vector<int> v);
+        int                 getNumElements(void);
         Subset*             findSubsetIndexed(int x);
         Subset*             findSubsetIndexed(int x) const;
         Subset*             findSubsetWithValue(int x);
