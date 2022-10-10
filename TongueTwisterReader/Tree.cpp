@@ -244,7 +244,7 @@ Node* Tree::addNode(void) {
     return newNode;
 }
 
-std::string Tree::getNewick(int brlenPrecision, std::map<RbBitSet,ParameterStatistics*>& partitions) {
+std::string Tree::getNewick(int brlenPrecision, std::map<RbBitSet,ParameterStatistics*>&) {
 
     
 

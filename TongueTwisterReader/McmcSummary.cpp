@@ -737,11 +737,11 @@ void McmcSummary::output(std::string pathName) {
     std::cout << "numRateClasses = " << numRateClasses << std::endl;
     
     // output average rates of change
-    // Hey Shawn, the matrix, m, has the average rates you need. No credible intervals on this information.
+    // No credible intervals on this information.
     int numStates = inferNumberOfStates();
     DoubleMatrix m(numStates,numStates);
     calculateAverageRates(m);
-    findex << "AveRates[][] AverageRates = [\n";
+    findex << "AverageRates = [\n";
     for (int mi = 0; mi < numStates; ++mi)
         {
         if (mi)
