@@ -43,6 +43,7 @@ class McmcSummary {
         int                                     getFreqElement(std::string str);
         void                                    getRateElements(std::string str, int& r1, int& r2);
         bool                                    hasSemicolon(std::string str);
+        int                                     inferNumberOfRates(void);
         int                                     inferNumberOfStates(void);
         std::map<int,std::string>               interpretTranslateString(std::vector<std::string> translateTokens);
         std::string                             interpretTreeString(std::string str);

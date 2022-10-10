@@ -399,6 +399,31 @@ bool McmcSummary::hasSemicolon(std::string str) {
     return false;
 }
 
+int McmcSummary::inferNumberOfRates(void) {
+
+    int numRateClasses = 0;
+    for (int i=0; i<stats.size(); i++)
+        {
+        ParameterStatistics* s = stats[i];
+        if (s->getName()[0] == 'R')
+            numRateClasses++;
+        }
+    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
+        {
+        int numSubsets = statePartitions->numSubsets();
+        int tempNumRates = numSubsets * (numSubsets-1) / 2;
+        std::set<Subset*>& subsets = statePartitions->getSubsets();
+        for (Subset* s : subsets)
+            {
+            if (s->getNumElements() > 1)
+                tempNumRates++;
+            }
+        if (tempNumRates != numRateClasses)
+            Msg::error("Mismatch in the number of rate classes");
+        }
+    return numRateClasses;
+}
+
 int McmcSummary::inferNumberOfStates(void) {
 
     // 1. get state frequencies (and the number of states). We look
@@ -707,7 +732,10 @@ void McmcSummary::output(std::string pathName) {
         findex << "]";
     }
     findex << "\n];\n\n";
-
+    
+    int numRateClasses = inferNumberOfRates();
+    std::cout << "numRateClasses = " << numRateClasses << std::endl;
+    
     // output average rates of change
     // Hey Shawn, the matrix, m, has the average rates you need. No credible intervals on this information.
     int numStates = inferNumberOfStates();
@@ -724,10 +752,7 @@ void McmcSummary::output(std::string pathName) {
             double r = m(mi,mj);
             if (mj)
                 findex << ",";
-            if (mj < mi)
-                findex << "null";
-            else
-                stats[matrix++]->toFile(findex);
+            findex << r;
             }
         findex << "]";
         }
