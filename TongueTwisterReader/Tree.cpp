@@ -388,20 +388,25 @@ void Tree::print(void) {
     listNode(root, 3);
 }
 
+void Tree::writeData(Node* p, std::stringstream& ss, int brlenPrecision) {
+    ss << "[&Probability=" << p->getCladeProbability() << "]";
+    ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBrlen();
+}
+
 void Tree::writeTree(Node* p, std::stringstream& ss, int brlenPrecision) {
 
     if (p != NULL)
         {
         if (p->getIsLeaf() == true)
             {
-            //ss << p->getIndex()+1;
             ss << p->getName();
-            ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBrlen() << ":" << p->getCladeProbability();
+            writeData(p, ss, brlenPrecision);
             }
         else
             {
             ss << "(";
             }
+
         std::vector<Node*> myDescendants = p->getDescendants();
         for (int i=0; i<(int)myDescendants.size(); i++)
             {
@@ -413,7 +418,7 @@ void Tree::writeTree(Node* p, std::stringstream& ss, int brlenPrecision) {
             {
             ss << ")";
             if (p != NULL && p != root)
-                ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBrlen() << ":" << p->getCladeProbability();
+              writeData(p, ss, brlenPrecision);
             }
         }
 }

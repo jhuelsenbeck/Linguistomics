@@ -28,6 +28,7 @@ class Tree {
         std::vector<std::string>    parseNewickString(std::string ns);
         void                        passDown(Node* p);
         void                        writeTree(Node* p, std::stringstream& ss, int brlenPrecision);
+        void                        writeData(Node* p, std::stringstream& ss, int brlenPrecision);
         std::vector<Node*>          nodes;
         std::vector<Node*>          downPassSequence;
         Node*                       root;
