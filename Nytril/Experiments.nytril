@@ -2,6 +2,37 @@ using Format, IO, Units, Languages;
 
 //======================================================================
 
+class LangNodeClass: NodeClass {
+  var Probability;
+
+  Constructor {
+    super.Constructor;
+  }
+
+  override NodeClass GetChildNode {
+    return new LangNodeClass;
+  }
+
+  override void ResolveData {
+    if (valid Name) {
+      var f = Languages.FindFirst(l => l.Name == Name);
+      if (valid f)
+        Label = f;
+    }
+    if (valid Probability and Probability != 1) {
+      Label = Span {
+        TextColor: Colors.LightGray;
+        TextHeight: 8 pts;
+        TextDigits: 1;
+        Probability * 100.0;
+        "%";
+      };
+    }
+  }
+}
+
+//======================================================================
+
 class RunExperimentClass {
   static OutFileName = Info.ExecuteFolder Folder("out");
 
@@ -29,7 +60,7 @@ class RunExperimentClass {
     var treefile = Info.ExperimentRoot RootFolder Info.ExecuteFolder FileName("consensus.tre");
     Complete = FileExists(treefile);
     if (Complete)
-      Tree = Read(treefile).Tree;
+      Tree = ReadTree(new LangNodeClass, treefile).Tree;
   }
 
   ArgString(arg, text) = Span {
