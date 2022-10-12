@@ -612,16 +612,20 @@ class WordPairClass {
 class ResultsClass {
   ExperimentClass   Experiment;
   DataSetClass      Data;
+  RuleClass         Rule;
   AlignIndexClass[] Alignments;
   StatClass[][]     TransitionStats;
-  var               AlignmentCutoff,
+  var               AverageRates,
+                    AlignmentCutoff,
                     EquilibriumFrequencies;
 
   Constructor(ExperimentClass experiment) {
     Experiment = experiment;
     Data       = experiment.Data;
+    Rule       = experiment.Rule;
 
-    var results = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run1") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
+    var results = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run3") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
+    AverageRates           = results.AverageRates;
     TransitionStats        = results.TransitionStats;
     EquilibriumFrequencies = results.EquilibriumFrequencies;
     AlignmentCutoff        = results.AlignmentCutoff;
@@ -893,43 +897,42 @@ class DataSetClass {
 //======================================================================
 
 abstract class CountBaseClass {
-  MatrixClass  TMatrix;
-  var          Factor;
-  var          VFlags;
+  var            VFlags;
+  SegmentClass[] Segments;
 
-  Constructor {
-    VFlags = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
+  Constructor(ExperimentClass experiment) {
+    VFlags   = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
+    Segments = experiment.Rule.PartSegments;
   }
 
   GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);
 
-  PartitionBox(RuleClass rule) = Paragraph {
+  PartitionBox() = Paragraph {
     Style.SansSerif;
 
-    var segments = rule.PartSegments;
-    var grid     = 0.125 pts;
-    var gcolor   = 65%;
-    var border   = 0.5 pts;
-    var size     = ExtentSize - border*2;
-    var d        = size / (segments.Length+1);
+    var grid   = 0.125 pts;
+    var gcolor = 65%;
+    var border = 0.5 pts;
+    var size   = ExtentSize - border*2;
+    var length = Segments.Length;
+    var d      = size / (length+1);
+
 
     Canvas {
       TextHeight: Math.Min(d.Height * 0.7, d.Width * 0.6);
       Border: border;
 
-      var y   = d.Height;
-      foreach (var s0 in segments) {
+      var y = d.Height;
+      for (var i = 0; i < length; ++i) {
         var x = d.Width;
-        foreach (var s1 in segments) {
-          if (s0.Index != s1.Index) {
-            var entry = AddEntry(s0, s1);
-            if (valid entry) {
-              entry {
-                X: x;
-                Y: y;
-                Size: d;
-              };
-            }
+        for (var j = 0; j < length; ++j) {
+          var entry = AddEntry(i, j);
+          if (valid entry) {
+            entry {
+              X: x;
+              Y: y;
+              Size: d;
+            };
           }
           x += d.Width;
         }
@@ -938,7 +941,7 @@ abstract class CountBaseClass {
 
       y = d.Height;
       var p = 0;
-      foreach (var s in segments) {
+      foreach (var s in Segments) {
         Canvas {
           Size: d;
           Background: GetColor(s);
@@ -964,7 +967,7 @@ abstract class CountBaseClass {
 
         var x = d.Width;
         p = 0;
-        foreach (var s in segments) {
+        foreach (var s in Segments) {
           Canvas {
             Size: d;
             Background: GetColor(s);
@@ -986,12 +989,15 @@ abstract class CountBaseClass {
     };
   };
 
-  abstract AddEntry(SegmentClass s0, SegmentClass s1);
+  abstract AddEntry(i, j);
 }
 
 //======================================================================
 
 class TransitionCountClass: CountBaseClass {
+  MatrixClass TMatrix;
+  var         Factor;
+
   Constructor(DataSetClass data) {
     super.Constructor;
 
@@ -1011,11 +1017,11 @@ class TransitionCountClass: CountBaseClass {
               var s0 = p0[index];
               var s1 = p1[index];
               if (s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation) {
-                var list = TMatrix.GetValue(s0.Index, s1.Index);
+                var list = TMatrix.GetValue(i, j);
                 var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
                 if (invalid list) {
                   list = new ListClass<WordPairClass>(128);
-                  TMatrix.SetValue(s0.Index, s1.Index, list);
+                  TMatrix.SetValue(i, j, list);
                 }
                 list.Add(p);
                 if (list.Length > tmax)
@@ -1029,8 +1035,8 @@ class TransitionCountClass: CountBaseClass {
     Factor = 1.0 / tmax;
   }
 
-  override AddEntry(SegmentClass s0, SegmentClass s1) {
-    var value = TMatrix.GetValue(s0.Index, s1.Index);
+  override AddEntry(i, j) {
+    var value = TMatrix.GetValue(i, j);
     if (invalid value)
       return null;
 
@@ -1070,88 +1076,37 @@ class AlignedCountClass: CountBaseClass {
   MatrixClass                 Actions;
 
   Constructor(ResultsClass results) {
-    super.Constructor;
+    super.Constructor(results.Experiment);
 
-    var data     = results.Experiment.Data;
-    var segments = data.UniqueSegments;
-    var length   = segments.Length;
-    TMatrix    = new MatrixClass(length, length, 0.0);
-    Actions    = new MatrixClass(length, length, null);
-    ActionList = new(length * length);
-    var scale = new VectorClass(length, 0);
+    var rates    = results.AverageRates;
+    var length   = Segments.Length;
+    System.Assert(length == rates.Length);
+    Actions      = new MatrixClass(length, length, null);
+    ActionList   = new(length * 10);
 
-    foreach (var alignindex in results.Alignments) {
-      foreach (var alignment in alignindex.Data) {
-        var prob    = alignment.Prob;
-        var words   = alignment.Alignments;
-        var wlength = words.Length;
-        if (wlength > 1) {
-          var p0 = words[0];
-          if (valid p0) {
-            for (var j = 1; j < wlength; ++j) {
-              var p1 = words[j];
-              if (valid p1) {
-                var ml = Min(p0.Length, p1.Length);
-                for (var index = 0; index < ml; ++index) {
-                  var s0 = p0[index];
-                  var s1 = p1[index];
-                  if (s0 != s1 and s0 >= 0 and s1 >= 0) {
-                    TMatrix.AddValue(s0, s1, prob);
-                    scale.AddValue(s0, 1);
-                    scale.AddValue(s1, 1);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
+    var max = 0.0;
     for (var i = 0; i < length; ++i) {
-      var si = 1.0 / scale[i];
-      for (var j = 0; j < length; ++j)
-        TMatrix.MultValue(i, j, si);
-    }
+      for (var j = 0; j < i; ++j) {
+        var rate = rates[i][j];
+        if (rate >= 0.0001) {
+          if (rate > max)
+            max = rate;
 
-    Factor = 100.0 / TMatrix.FindMax;
-    foreach (var s0 in segments) {
-      foreach (var s1 in segments) {
-        var v = TMatrix.GetValue(s0.Index, s1.Index) * Factor;
-        if (v >= 1) {
-          var a = new AlignActionClass(s0, s1, v);
+          var a = new AlignActionClass(Segments[i], Segments[j], rate);
           ActionList.Add(a);
-          Actions.SetValue(s0.Index, s1.Index, a);
+          Actions.SetValue(i, j, a);
         }
       }
     }
+
+    var f = 100.0 / max;
+    foreach (var a in ActionList)
+      a.Percent *= f;
+
   }
 
-  Most = Block {
-    var sorted = ActionList.Sort(true);
-    var max    = Math.Min(sorted.Length, 30);
-    Table {
-      Columns: [60 pts, 60 pts, 1 inch];
-      Row {
-        Style.HeaderCell {"From"};
-        Style.HeaderCell {"To"};
-        Style.HeaderCell {"% of max"};
-      };
-
-      for (var i = 0; i < max; ++i) {
-        var a = sorted[i];
-        Row {
-          Style.RowBar(i);
-          a.S0.ShowSegment;
-          a.S1.ShowSegment;
-          Span {TextDigits: 2; a.Percent};
-        }
-      }
-    };
-  };
-
-  override AddEntry(SegmentClass s0, SegmentClass s1) {
-    var a = Actions.GetValue(s0.Index, s1.Index);
+  override AddEntry(i, j) {
+    var a = Actions.GetValue(i, j);
     if (valid a) {
       return Canvas {
         TipAction: a;
@@ -1165,6 +1120,32 @@ class AlignedCountClass: CountBaseClass {
      }
      return null;
   }
+
+  Most = Block {
+    var sorted = ActionList.Sort(true);
+    var max    = Math.Min(sorted.Length, Integer(ExtentHeight * 0.07));
+    Table {
+      Columns: [60 pts, 60 pts, 1 inch];
+      Row {
+        Style.HeaderCell {
+          ColSpan: 2;
+          LeftIndent: 15 pts;
+          "Between";
+        };
+        Style.HeaderCell {"% of max"};
+      };
+
+      for (var i = 0; i < max; ++i) {
+        var a = sorted[i];
+        Row {
+          Style.RowBar(i);
+          a.S0.ShowSegment;
+          a.S1.ShowSegment;
+          Span {TextDigits: 1; a.Percent};
+        }
+      }
+    };
+  };
 }
 
 //======================================================================
