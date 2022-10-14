@@ -171,7 +171,6 @@ namespace Figures.ExchangeabilityChart {
         }
       };
 
-
       VBox {
         HAlign: HAligns.Left;
 
@@ -293,19 +292,21 @@ namespace Figures.FractionGapsChart {
 //======================================================================
 
 namespace Figures.AlignedTransitions {
-  Title = "Segment transitions";
+  MinRate = 0.00005;
+  Title   = "Segment transitions above {0}%"(MinRate*100);
 
-  AlignedCountClass Display = new(MainResults);
+  AlignedCountClass Display = new(MainResults, MinRate);
 
-  Body(DocumentClass document) = Display.PartitionBox();
+  Body(DocumentClass document) = Display.PartitionBox;
 }
 
 //======================================================================
 
 namespace Figures.AlignedMost {
-  Title = "Greatest Segment Change";
+  Top   = 25;
+  Title = "Top {0} Segment Transition Probabilities"(Top);
 
-  Body(DocumentClass document) = AlignedTransitions.Display.Most;
+  Body(DocumentClass document) = AlignedTransitions.Display.Most(Top);
 }
 
 //======================================================================
@@ -467,14 +468,6 @@ namespace Figures.LanguagesUsed {
   Title = Lang.Languages;
 
   Body(DocumentClass document) = SegmentDisplay.ShowLanguages(Experiment.Data);
-}
-
-//======================================================================
-
-namespace Figures.UniqueCharacters {
-  Title = Lang.UniqueSegments;
-
-  Body(DocumentClass document) = SegmentDisplay.ShowSegmentAssignments(Experiment.Data);
 }
 
 //======================================================================
@@ -928,7 +921,7 @@ namespace PaperSections.DataSummary {
       "The raw data set contains many cognates and word forms, but data for this experiment was limited to only those cognates that have word forms from ";
       data.WordCutoff == data.Taxa.Length ? "all " : "at least ";
       data.WordCutoff; " languages. ";
-      "There are in total "; data.UsedConcepts.Length; " concepts, "; data.UsedCognates.Length; " cognate sets, "; data.WordCount; " word forms, using "; data.UniqueCount; " unique segments. ";
+      "There are in total "; data.UsedConcepts.Length; " concepts, "; data.UsedCognates.Length; " cognate sets, "; data.WordCount; " word forms, using "; data.UniqueSegments.Length; " unique segments. ";
     };
 
 //    ShowTable(document, Figures.PartitionAssignments, 8 pts);
@@ -1042,7 +1035,7 @@ namespace PaperSections.ModelInference {
       " and the expected number of sound substitutions "; ExpectedEvents; " that occur along each branch of the tree. ";
       "Language evolves along the branches of the tree according to the TKF91 model"; Citation {thorne91}; " which allows either a word segment transition, insertion, or deletion to occur in an instant of time. ";
       "Insertions and deletions occur at rates "; InsertionRate; " and "; DeletionRate; " respectively, with "; InsertionLessThanDeletion; eos;
-      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  Experiment.Data.UniqueCount; " word segments). ";
+      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  Experiment.Data.UniqueSegments.Length; " word segments). ";
       "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters "; Span {Bold; RateMatrixParams}; eos;
     };
 
@@ -1070,6 +1063,7 @@ namespace PaperSections.ModelInference {
     };
 
     BodyPar {
+      var count = Experiment.Data.UniqueSegments.Length;
       "We examined three models of segmental transition. ";
       "The first (denoted "; SQuote{"JC69"}") is isomorphic to the Jukes-Cantor"; Citation{jukes69};
       " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate. ";
@@ -1081,15 +1075,15 @@ namespace PaperSections.ModelInference {
       //  rule.Filters;
       //};
       " and has an intermediate number of parameters (";
-      Experiment.Data.UniqueCount;
+      count;
       " parameters for the equilibrium distribution and ";
       (rule.Filters.Length-1)^2-1;
       " parameters describing rates among word segment groups). ";
       "The third ("; SQuote{"GTR"}; ") is a isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
       ", and has a large number of parameters (";
-      Experiment.Data.UniqueCount;
+      count;
       " parameters for the equilibrium distribution and ";
-      Combinations(Experiment.Data.UniqueCount, 2);
+      Combinations(count, 2);
       " exchangability parameters). ";
       "For both the second and third models, we consider the equilibrium frequencies of the model to be random variables with a flat Dirichlet prior distribution."
     };
@@ -2014,7 +2008,7 @@ namespace PaperSections.Conclusion {
     var data = Experiment.Data;
     AddVariable("Languages", data.Taxa.Length);
     AddVariable("Concepts", data.UsedCognates.Length);
-    AddVariable("Unique Segments", data.UniqueCount);
+    AddVariable("Unique Segments", data.UniqueSegments.Length);
   };
 }
 //======================================================================

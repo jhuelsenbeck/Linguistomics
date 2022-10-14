@@ -469,36 +469,46 @@ class TranActionClass: ActionClass {
 class AlignActionClass: ActionClass {
   SegmentClass S0,
                S1;
-  var          Percent;
+  var          Value,
+               Percent;
 
-  Constructor(SegmentClass s0, SegmentClass s1, percent) {
+  Constructor(SegmentClass s0, SegmentClass s1, value) {
     super.Constructor(Actions.RunQuery, s0);
-    S0      = s0;
-    S1      = s1;
-    Percent = percent;
+    S0    = s0;
+    S1    = s1;
+    Value = value * 100.0;
   }
 
-  override Compare(c, options) = Percent.Compare(c.Percent);
+  override Compare(c, options) = Value.Compare(c.Value);
 
   override GetQuery = MatchAny SegmentClass {
     S0;
     S1;
   };
 
-  ShowSegments = Block {
-    Paragraph {
-      S0.ShowSegment;
-      Tex.To;
-      S1.ShowSegment;
-    };
-    Paragraph {
-      TextDigits: 1;
-      Percent; "% of max";
-    };
+  override GetLayoutSpan = Span {
+    S0.ShowSegment;
+    Space;
+    Tex.leftrightarrow;
+    Space;
+    S1.ShowSegment;
+    Tip: this;
   };
 
   override GetLayoutTip = Frame {
-    ShowSegments;
+    TextHeight: 20 pts;
+
+    GetLayoutSpan;
+    Paragraph {
+      TextDigits: 2;
+      Value;
+      "%";
+    };
+    Paragraph {
+      TextDigits: 1;
+      Percent;
+      "% of max";
+    };
   };
 }
 //======================================================================
