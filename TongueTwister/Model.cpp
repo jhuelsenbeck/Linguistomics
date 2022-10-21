@@ -67,6 +67,9 @@ Model::Model(RandomVariable* r, ThreadPool& pool) : threadPool(pool) {
     
     // initialize transition probabilities
     initializeTransitionProbabilities(wordAlignments);
+    
+    // initialize the parameter string for parameter output
+    initializeParameterString();
 
     // delete the alignments
     for (int i=0; i<wordAlignments.size(); i++)
@@ -88,6 +91,7 @@ Model::~Model(void) {
     delete rateMatrix;
     if (rateMatrixHelper != NULL)
         delete rateMatrixHelper;
+    delete [] parameterString;
 }
 
 void Model::accept(void) {
@@ -163,6 +167,11 @@ double Model::getDeletionRate(void) {
 
 std::vector<double>& Model::getEquilibriumFrequencies(void) {
 
+#   if 1
+
+    return equilibirumFreqParameter->getValue();
+    
+#   else
     ParameterEquilibirumFrequencies* p = NULL;
     for (int i=0; i<parameters.size(); i++)
         {
@@ -171,10 +180,16 @@ std::vector<double>& Model::getEquilibriumFrequencies(void) {
             break;
         }
     return p->getValue();
+#   endif
 }
 
 std::vector<double>& Model::getExchangabilityRates(void) {
 
+#   if 1
+
+    return exchangeabilityParameter->getValue();
+
+#   else
     ParameterExchangabilityRates* p = NULL;
     for (int i=0; i<parameters.size(); i++)
         {
@@ -183,6 +198,7 @@ std::vector<double>& Model::getExchangabilityRates(void) {
             break;
         }
     return p->getValue();
+#   endif
 }
 
 std::vector<double>& Model::getIndelGammaRates(void) {
@@ -247,7 +263,7 @@ int Model::getNumParameterValues(void) {
     return n;
 }
 
-std::string& Model::getLastUpdate(void) {
+std::pair<Parameter*,int>& Model::getLastUpdate(void) {
 
     return parameters[updatedParameterIdx]->lastUpdateType;
 }
@@ -275,6 +291,27 @@ std::string Model::getParameterString(void) {
         if (pA == NULL && pT == NULL)
             str += parameters[i]->getString();
         }
+        
+    char* p = parameterString;
+    for (int i=0; i<parameters.size(); i++)
+        {
+        ParameterAlignment* pA = dynamic_cast<ParameterAlignment*>(parameters[i]);
+        ParameterTree* pT = dynamic_cast<ParameterTree*>(parameters[i]);
+        if (pA == NULL && pT == NULL)
+            {
+            char* parmStr = parameters[i]->getCString();
+            for (char* c=parmStr; *c != '\0'; c++)
+                {
+                (*p) = (*c);
+                p++;
+                }
+            }
+        }
+    (*p) = '\0';
+    
+    std::cout << str << std::endl;
+    printf("%s", parameterString);
+        
     return str;
 }
 
@@ -331,6 +368,11 @@ WordLnLikeTask* Model::getTaskList(size_t count) {
 
 Tree* Model::getTree(void) {
 
+#   if 1
+
+    return treeParameter->getActiveTree();
+    
+#   else
     Tree* t = NULL;
     for (int i=0; i<parameters.size(); i++)
         {
@@ -341,10 +383,16 @@ Tree* Model::getTree(void) {
             }
         }
     return t;
+#   endif
 }
 
 Tree* Model::getTree(RbBitSet& mask) {
 
+#   if 1
+
+    return treeParameter->getActiveTree(mask);
+
+#   else
     Tree* t = NULL;
     for (int i=0; i<parameters.size(); i++)
         {
@@ -355,10 +403,16 @@ Tree* Model::getTree(RbBitSet& mask) {
             }
         }
     return t;
+#   endif
 }
 
 Tree* Model::getTree(const RbBitSet& mask) {
 
+#   if 1
+
+    return treeParameter->getActiveTree(mask);
+
+#   else
     Tree* t = NULL;
     for (int i=0; i<parameters.size(); i++)
         {
@@ -369,6 +423,7 @@ Tree* Model::getTree(const RbBitSet& mask) {
             }
         }
     return t;
+#   endif
 }
 
 std::string Model::getUpdatedParameterName(void) {
@@ -520,15 +575,20 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         initializeStateSets(jsonPart);
         }
     
+    int parmId = 0;
+    
     // set up the tree parameter
     Parameter* pTree = new ParameterTree(rv, this, treeStr, canonicalTaxonList, wordAlignments, settings.getBranchLengthLambda());
     pTree->setProposalProbability(10.0);
     parameters.push_back(pTree);
+    treeParameter = dynamic_cast<ParameterTree*>(pTree);
+    pTree->setParameterId(parmId++);
 
     // set up the indel parameter
     Parameter* pIndel = new ParameterIndelRates(rv, this, "indel", 3.0, 1.0, 1.0);
     pIndel->setProposalProbability(1.0);
     parameters.push_back(pIndel);
+    pIndel->setParameterId(parmId++);
     
     // set up the indel rate variation parameter
     if (settings.getNumIndelCategories() > 1)
@@ -536,6 +596,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         Parameter* pIndelGamma = new ParameterIndelGammaShape(rv, this, "indel gamma", 2.0, settings.getNumIndelCategories());
         pIndelGamma->setProposalProbability(1.0);
         parameters.push_back(pIndelGamma);
+        pIndelGamma->setParameterId(parmId++);
         }
 
     // set up the gamma rate variation parameter
@@ -544,6 +605,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         Parameter* pRateGamma = new ParameterRatesGammaShape(rv, this, "rates gamma", 2.0, settings.getNumRateCategories());
         pRateGamma->setProposalProbability(1.0);
         parameters.push_back(pRateGamma);
+        pRateGamma->setParameterId(parmId++);
         }
 
     // set up the alignment parameter(s)
@@ -554,6 +616,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         Parameter* pAlign = new ParameterAlignment(rv, this, wordAlignments[i], alnName, i);
         pAlign->setProposalProbability(alnProposalProb);
         parameters.push_back(pAlign);
+        pAlign->setParameterId(parmId++);
         wordParameterAlignments.push_back( dynamic_cast<ParameterAlignment*>(pAlign) );
         wordLikelihoodCalculators.push_back( new LikelihoodCalculator(dynamic_cast<ParameterAlignment*>(pAlign), this) );
         }
@@ -576,11 +639,15 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates);
         pExchange->setProposalProbability(50.0);
         parameters.push_back(pExchange);
+        pExchange->setParameterId(parmId++);
+        exchangeabilityParameter = dynamic_cast<ParameterExchangabilityRates*>(pExchange);
         
         // set up equilibrium frequencies
         Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates);
         pEquil->setProposalProbability(50.0);
         parameters.push_back(pEquil);
+        pEquil->setParameterId(parmId++);
+        equilibirumFreqParameter = dynamic_cast<ParameterEquilibirumFrequencies*>(pEquil);
         }
     else if (substitutionModel == custom)
         {
@@ -590,11 +657,20 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates, labels);
         pExchange->setProposalProbability(5.0);
         parameters.push_back(pExchange);
+        pExchange->setParameterId(parmId++);
+        exchangeabilityParameter = dynamic_cast<ParameterExchangabilityRates*>(pExchange);
         
         // set up equilibrium frequencies
         Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates);
         pEquil->setProposalProbability(5.0);
         parameters.push_back(pEquil);
+        pEquil->setParameterId(parmId++);
+        equilibirumFreqParameter = dynamic_cast<ParameterEquilibirumFrequencies*>(pEquil);
+        }
+    else
+        {
+        exchangeabilityParameter = NULL;
+        equilibirumFreqParameter = NULL;
         }
         
     // set proposal probabilities
@@ -627,6 +703,16 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     for (int i=0; i<parameters.size(); i++)
         parameters[i]->print();
 #   endif
+}
+
+void Model::initializeParameterString(void) {
+
+    int len = 0;
+    for (int i=0; i<parameters.size(); i++)
+        len += parameters[i]->getParameterStringLength();
+    len += 200;
+    
+    parameterString = new char[len];
 }
 
 void Model::initializeStateSets(nlohmann::json& json) {

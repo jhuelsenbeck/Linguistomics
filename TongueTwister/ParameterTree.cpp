@@ -42,6 +42,8 @@ ParameterTree::ParameterTree(RandomVariable* r, Model* m, std::string treeStr, s
     
     if (checkSubtreeCompatibility(0.0001) == false)
         Msg::error("Subtrees are not compatible with the canonical tree");
+        
+    parmStrLen = 0;
 }
 
 ParameterTree::~ParameterTree(void) {
@@ -208,6 +210,24 @@ std::string ParameterTree::getString(void) {
 
     std::string str = fullTree.trees[0]->getNewick(5);
     return str;
+}
+
+char* ParameterTree::getCString(void) {
+
+    return parmStr;
+}
+
+std::string ParameterTree::getUpdateName(int idx) {
+
+    if (idx == 0)
+        return "local";
+    else if (idx == 1)
+        return "branch length";
+    else if (idx == 2)
+        return "tree length";
+    else if (idx == 3)
+        return "random tree";
+    return "";
 }
 
 void ParameterTree::initializeSubtrees(std::vector<Alignment*>& alns) {
@@ -382,7 +402,8 @@ double ParameterTree::update(int iter) {
 
 double ParameterTree::updateBrlen(void) {
 
-    lastUpdateType = "branch length";
+    lastUpdateType.first = this;
+    lastUpdateType.second = 1;
     
     if (isClockConstrained == false)
         {
@@ -534,7 +555,8 @@ double ParameterTree::updateNni(void) {
     if (isClockConstrained == true)
         Msg::error("Cannot update a clock constrained tree using NNI");
         
-    lastUpdateType = "local";
+    lastUpdateType.first = this;
+    lastUpdateType.second = 0;
 
     double tuning = log(2.0);
     Tree* t = fullTree.trees[0];
@@ -690,7 +712,8 @@ double ParameterTree::updateSpr(void) {
 
 double ParameterTree::updateTreeLength(void) {
 
-    lastUpdateType = "tree length";
+    lastUpdateType.first = this;
+    lastUpdateType.second = 2;
 
     // update the tree length
     Tree* t = getActiveTree();
@@ -752,7 +775,8 @@ double ParameterTree::updateTopologyFromPrior(void) {
     if (isClockConstrained == true)
         Msg::error("Cannot update a clock constrained topology from prior");
 
-    lastUpdateType = "random tree";
+    lastUpdateType.first = this;
+    lastUpdateType.second = 3;
     
     Tree* t = getActiveTree();
     std::vector<std::string> tNames;
@@ -782,7 +806,9 @@ double ParameterTree::updateBranchlengthsFromPrior(void) {
     if (isClockConstrained == true)
         Msg::error("Cannot update a clock constrained tree's branch lengths from prior");
 
-    lastUpdateType = "random branch lengths";
+    //lastUpdateType = "random branch lengths";
+    lastUpdateType.first = this;
+    lastUpdateType.second = 4;
 
     Tree* t = getActiveTree();
     double lnP1 = lnPriorProbability();

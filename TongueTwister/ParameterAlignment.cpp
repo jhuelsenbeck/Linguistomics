@@ -80,6 +80,7 @@ ParameterAlignment::ParameterAlignment(RandomVariable* r, Model* m, Alignment* a
     // allocate and initialize the alignment proposal object
     alignmentProposal = new AlignmentProposal(this, modelPtr->getTree(taxonMask), rv, modelPtr, 1.5, -5.0);
  
+    parmStrLen = 0;
     //print();
 }
 
@@ -249,6 +250,11 @@ std::string ParameterAlignment::getTaxonMaskString(void) {
     return str;
 }
 
+std::string ParameterAlignment::getUpdateName(int) {
+
+    return "alignment for " + parmName;
+}
+
 void ParameterAlignment::jsonStream(std::ofstream& strm) {
 
     int longestName = 0;
@@ -350,7 +356,8 @@ void ParameterAlignment::reject(void) {
 
 double ParameterAlignment::update(int) {
 
-    lastUpdateType = "alignment for " + parmName;
+    lastUpdateType.first = this;
+    lastUpdateType.second = 0;
 
     // update the alignment
     double lnProposalRatio = alignmentProposal->propose(alignment[0], alignment[1], 0.5);

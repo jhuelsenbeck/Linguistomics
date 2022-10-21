@@ -884,6 +884,7 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     
     // output average rates of change
     // No credible intervals on this information.
+#   if 0
     int numStates = inferNumberOfStates();
     DoubleMatrix m(numStates,numStates);
     calculateAverageRates(m);
@@ -903,6 +904,7 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
         findex << "]";
         }
     findex << "\n];\n\n";
+<<<<<<< Updated upstream
     
     DoubleMatrix q(numStates,numStates);
     calculateRates(q);
@@ -922,6 +924,9 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
         findex << "]";
         }
     findex << "\n];\n\n";
+=======
+#   endif
+>>>>>>> Stashed changes
 
 
     findex << "AlignIndexClass[] Alignments = [\n";
