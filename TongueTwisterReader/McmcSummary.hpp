@@ -23,6 +23,7 @@ class McmcSummary {
                                                 McmcSummary(RandomVariable* r);
                                                ~McmcSummary(void);
         McmcSummary&                            operator+=(const McmcSummary& rhs);
+        void                                    calculateRates(DoubleMatrix& m);
         void                                    calculateAverageRates(DoubleMatrix& m);
         std::vector<CredibleInterval>           getCredibleIntervals(void);
         std::vector<double>                     getMeans(void);
