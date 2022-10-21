@@ -9,10 +9,6 @@ class LangNodeClass: NodeClass {
     super.Constructor;
   }
 
-  override NodeClass GetChildNode {
-    return new LangNodeClass;
-  }
-
   override void ResolveData {
     if (valid Name) {
       var f = Languages.FindFirst(l => l.Name == Name);
@@ -60,7 +56,7 @@ class RunExperimentClass {
     var treefile = Info.ExperimentRoot RootFolder Info.ExecuteFolder FileName("consensus.tre");
     Complete = FileExists(treefile);
     if (Complete)
-      Tree = ReadTree(new LangNodeClass, treefile).Tree;
+      Tree = Read(treefile, FileFormats.Tree, LangNodeClass).Tree;
   }
 
   ArgString(arg, text) = Span {

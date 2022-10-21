@@ -80,8 +80,7 @@ namespace Figures.ExchangeabilityTable {
       Row {
         Empty;
         foreach (var r in stats) {
-          Frame {
-            Width: w;
+          Frame(w) {
             ParAlignment: ParAlignments.Center;
             TextHeight: th*0.8;
             var p = partitions[each0];
@@ -94,8 +93,7 @@ namespace Figures.ExchangeabilityTable {
       foreach (var r in stats) {
         Row {
           VAlign: VAligns.Center;
-          Frame {
-            Width: w;
+          Frame(w) {
             ParAlignment: ParAlignments.Right;
             var p = partitions[each0];
             TextColor: p.Color;
@@ -135,7 +133,6 @@ namespace Figures.ExchangeabilityChart {
     var tx         = 60 pts + bx;
     var dy         = ExtentHeight / (partitions.Length + 1);
     var d          = Math.Min(dy, (ExtentWidth  - tx) / partitions.Length);
-    var bsize      = new SizeClass(d, d);
 
     var max = 0.0;
     foreach (var r in stats) {
@@ -150,21 +147,18 @@ namespace Figures.ExchangeabilityChart {
 
     HBox {
       VBox {
-        Canvas {
-          Size: bx;
-        };
+        Canvas(bx, bx);
+
         foreach (var r in stats) {
           var p = partitions[each0];
-          HBox {
+          HBox(null, dy) {
             Separation: 10 pts;
-            Height: dy;
             VAlign: VAligns.Center;
             HAlignment: HAligns.Right;
             Frame {
               p.Filter;
             };
-            Canvas {
-              Size: new SizeClass(bx, dy);
+            Canvas(bx, dy) {
               Background: p.Color;
             };
           }
@@ -177,15 +171,13 @@ namespace Figures.ExchangeabilityChart {
         HBox {
           foreach (var r in stats) {
             var p = partitions[each0];
-            Canvas {
-              VAlign: VAligns.Center;
-              Size: new SizeClass(d, bx);
+            Canvas(d, bx) {
               Background: p.Color;
+              VAlign: VAligns.Center;
               HAlign: HAligns.Center;
-              Frame {
+              Frame(d) {
                 TextColor: p.Color.TextCompliment;
                 ParAlignment: ParAlignments.Center;
-                Width: d;
                 TextHeight: 75%;
                 p.Filter.Name;
               };
@@ -201,9 +193,8 @@ namespace Figures.ExchangeabilityChart {
                 if (valid c) {
                   var p = partitions[each0];
 
-                  Canvas {
+                  Canvas(d, d) {
                     Tip: c;
-                    Size: bsize;
                     var center = new PointClass(d * 0.5);
                     var x      = fc * c.Upper;
                     Figure {
@@ -221,7 +212,7 @@ namespace Figures.ExchangeabilityChart {
                   };
                 }
                 else
-                  Canvas {Size: bsize};
+                  Canvas(d, d);
               }
             };
           }
@@ -241,9 +232,8 @@ namespace Figures.PartitionVolatilityChart {
 
     var partitions = Experiment.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
-    Chart {
+    Chart(ExtentWidth, 4 inches) {
       Type: ChartTypes.Scatter;
-      Size: new SizeClass(ExtentWidth, 4 inches);
       ValueLabel: "Probability %" {
         TextHeight: 14 pts;
         Transform: Rotate(90 degrees);
@@ -297,7 +287,7 @@ namespace Figures.AlignedTransitions {
 
   AlignedCountClass Display = new(MainResults, MinRate);
 
-  Body(DocumentClass document) = Display.PartitionBox;
+  Body(DocumentClass document) = Display.PartitionBox(document);
 }
 
 //======================================================================
@@ -330,11 +320,9 @@ namespace Figures.AllSegmentFrequencies {
 namespace Figures.ConsensusTree {
   Title = Lang.ConsensusTree;
 
-  Body(DocumentClass document) = VBox {
-    Width: ExtentWidth;
+  Body(DocumentClass document) = VBox(ExtentWidth) {
     HAlign: HAligns.Center;
-    Style.TreeOptions {
-      Width: ExtentWidth;
+    Style.TreeOptions(ExtentWidth) {
       Root: Experiment.MainRun.Tree;
     };
   };
@@ -449,8 +437,7 @@ namespace Figures.ExampleTree {
     "An example tree showing the relationships of {0} languages."(SampledLanguages(Experiment.Data.Languages.Length));
   };
 
-  Body(DocumentClass document) = TreeOptions {
-    Width: 5 inches;
+  Body(DocumentClass document) = TreeOptions(5 inches) {
     Root: Experiment.NumberedTree;
   };
 }
@@ -572,8 +559,7 @@ namespace Figures.Alignment {
     content;
   };
 
-  ArrowFigure(SizeClass size) = Canvas {
-    Size: size;
+  ArrowFigure(SizeClass size) = Canvas(size.Width, size.Height) {
     Figure {
       Stroke: 1.5 {Color: ArrowColor};
       FigurePath {
@@ -669,7 +655,7 @@ namespace Figures.Alignment {
     };
     HBox {
       HomBox(example, data, 1, HMap1);
-      Canvas {Width: 0.25 inches};
+      Canvas(0.25 inches);
       HomBox(example, data, 2, HMap2);
     }
   };
@@ -981,9 +967,7 @@ namespace TableFigures.ManualAlignment {
       Row {
         word.Language;
         TextIpa {word};
-        Cell {
-          word.ShowPaddedBlocks(20 pts);
-        }
+        word.ShowPaddedBlocks(20 pts);
       };
     }
   };

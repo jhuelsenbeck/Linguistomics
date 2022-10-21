@@ -405,11 +405,9 @@ namespace Style {
     };
   };
 
-  ShowBibliography = Section {
+  ShowReferences = Section {
     SectionBreak: SectionBreaks.NextPage;
-    Format.Bibliography {
-      Title: Lang.References;
-    }
+    Format.Bibliography(Lang.References);
   };
 
   TableNotes = Paragraph {
@@ -515,8 +513,9 @@ namespace Style {
     Ellipse(new(0, 1 pts))
   };
 
-  TreeOptions = Tree {
-    TextHeight: 12 pts;
+  TreeOptions(width) = Tree(width, null) {
+    Style.SansSerif;
+    TextHeight: 11 pts;
     Default: new NodeClass(null) {
       NodeGap: 5 pts;
       Curvature: 20%;
@@ -545,9 +544,8 @@ namespace Style {
       }
     }
 
-    TreeOptions {
+    TreeOptions(ExtentWidth - 30 pts) {
       Reorder: true;
-      Width: ExtentWidth - 30 pts;
       if (valid axis) {
         ValueLabel: axis;
         ValueAxis: ChartAxis;
@@ -569,13 +567,16 @@ namespace Style {
   };
 
   ShowAppendix(DocumentClass doc, AppendixClass appendix) = PageSection {
+    var th = 14 pts;
+    var sa = 8 pts;
+
     Header: Block {
       Distance: 0.5 inches;
       Paragraph {
         Border: BorderB(1 pts);
         ParAlignment: ParAlignments.Center;
-        TextHeight: 14 pts;
-        SpaceAfter: 8 pts;
+        TextHeight: th;
+        SpaceAfter: sa;
         DocFields.Anchor(Lang.Appendix + each0);
         "{0} {1} - "(Lang.Appendix, each1);
         appendix.Title;
@@ -587,9 +588,7 @@ namespace Style {
     };
     caption;
     var height = GetLayoutSize(caption).Height;
-
-
-    var extent = SetExtentSize(new(ExtentWidth, ExtentHeight - height));
+    var extent = SetExtentSize(new(ExtentWidth, ExtentHeight - height - th - sa - 8 pts));
     appendix.GetBody(doc);
     SetExtent(extent);
   };

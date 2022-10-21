@@ -40,8 +40,7 @@ class EulerDiagramClass {
   FeatureFrame(DataSetClass data, x, y, width, name, features) = Canvas {
     X: EX(x);
     Y: EY(y);
-    Frame {
-      Width: EX(width);
+    Frame(EX(width)) {
       ParAlignment: ParAlignments.Center;
       if (valid name)
         Span {TitleStyle; name};
@@ -248,9 +247,8 @@ namespace MatchCell {
     return null;
   }
 
-  SegmentBox(HashSetClass set, SegmentClass segment, color) = Canvas {
+  SegmentBox(HashSetClass set, SegmentClass segment, color) = Canvas(DocMetrics.BoxSize.Width, DocMetrics.BoxSize.Height) {
     HAlign: HAligns.Center;
-    Size: DocMetrics.BoxSize;
     if (valid segment.?Ipa) {
       TextHeight: DocMetrics.BoxSize.Height - 6 pts;
       TextColor: color;
@@ -306,8 +304,7 @@ class TabOptionsClass {
           if (MatchError(matches))
             MatchCell.ErrorMatches(set, matches);
           else {
-            Canvas {
-              Size: DocMetrics.CellSize;
+            Canvas(DocMetrics.CellSize.Width, DocMetrics.CellSize.Height) {
               MatchCell.ShowBox(set, each matches, Colors.Black)
             }
           }
@@ -455,7 +452,6 @@ namespace MatchingVowels {
   };
 
   AddRow(DataSetClass data, SegmentSetClass set, open, features) = Row {
-    Height: 16 pts;
     Cell {
       VAlign: VAligns.Center;
       Style.TitleBackground;
@@ -576,11 +572,8 @@ namespace MatchingOther {
 namespace SegmentDisplay {
   CompareSegments(SegmentClass s0, SegmentClass s1, options) = s0.UsedCount - s1.UsedCount;
 
-  FrequencyChart(DataSetClass data, SizeClass size) = Chart {
+  FrequencyChart(DataSetClass data, SizeClass size) = Chart(size.Width, size.Height) {
     TextHeight: 11 pts;
-    Size: size;
-
-    SegmentClass[] sorted = data.UniqueSegments.Sort(true, ref CompareSegments);
     Style.SansSerif;
     Type: ChartTypes.Column;
     Legend: ChartLegend {Placement: Placements.Bottom};
@@ -588,6 +581,8 @@ namespace SegmentDisplay {
       Transform: Rotate(90 degrees);
       TransformFit: true;
     };
+
+    SegmentClass[] sorted = data.UniqueSegments.Sort(true, ref CompareSegments);
     XAxis: ChartAxis {
       TextHeight: 0.6 * size.Width / sorted.Length;
       (each sorted).ShowSegment;
@@ -602,24 +597,21 @@ namespace SegmentDisplay {
 
   ShowSegmentAssignments(DataSetClass data) = Paragraph {
     var textheight = 18 pts;
+    TextHeight: textheight;
 
     foreach (var segment in data.UniqueSegments) {
-      HBox {
-        Width: textheight * 2.5;
+      HBox(textheight * 3.25, null, PadLR(1)) {
         VAlign: VAligns.Center;
         Margin: 5;
-        Padding: PadLR(1);
         Border: 0.25 pts {Color: 85%};
         Span {
           HAlign: HAligns.Center;
           TextColor: Colors.LightGray;
+          TextHeight: 75%;
           each0;
         };
-        Space*5;
-        Span {
-          TextHeight: textheight;
-          segment.ShowSegment;
-        };
+        Space*4;
+        segment.ShowSegment;
       }
     }
   };
@@ -680,9 +672,8 @@ namespace SegmentDisplay {
           VAlign: VAligns.Top;
 
           foreach (TaxonClass taxon in group) {
-            VBox {
+            VBox(size.Width, size.Height) {
               Margin: PadR(space);
-              Size: size;
               HAlign: HAligns.Center;
 
               Paragraph {
@@ -691,11 +682,9 @@ namespace SegmentDisplay {
                 taxon.Language;
               };
 
-              HBox {
-                var s = new SizeClass(size.Width, size.Height - h);
-
+              var s = new SizeClass(size.Width, size.Height - h);
+              HBox(s.Width, s.Height) {
                 VAlign: VAligns.Center;
-                Size: s;
                 BorderRadius: 20 pts;
                 BorderStroke: border {Color: 90%};
                 BorderClip: true;

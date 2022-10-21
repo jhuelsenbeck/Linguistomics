@@ -21,8 +21,7 @@ class FilterClass {
     Name;
   };
 
-  override GetLayoutTip = Frame {
-    Width: 2 inches;
+  override GetLayoutTip = Frame(2 inches) {
     Paragraph {
       ParAlignment: ParAlignments.Center;
       TextHeight: 16 pts;
@@ -152,11 +151,9 @@ abstract class RuleClass {
     return segments.FindSlice(segment => MatchesRule(filter, segment));
   }
 
-  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame {
-    Width: 2 inches;
+  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame(2 inches) {
     Paragraph {
       ParAlignment: align;
-
       TextHeight: 18 pts;
       var matching = GetMatching(segments, filter);
       if (valid matching) {
@@ -458,11 +455,12 @@ class TranActionClass: ActionClass {
     ShowSegments(List.Length);
   };
 
-  override GetLayoutTip = Frame {
+  override GetLayoutTip {
     var count = Math.Min(List.Length, 30);
-    Width: Min(count*3, 6) inches;
-    ShowSegments(count);
-  };
+    return Frame(Min(count*3, 6) inches) {
+      ShowSegments(count);
+    };
+  }
 }
 //======================================================================
 
@@ -536,7 +534,7 @@ class CalcRatesClass {
     Transition = new TransitionClass(results, rule);
   }
 
-  void Calibrate(size) {
+  void Calibrate(SizeClass size) {
     var middle = new PointClass(size.Width * 0.5, size.Height * 0.5);
 
     MaxExtent    = Min(middle.X, middle.Y);
@@ -567,14 +565,11 @@ class CalcRatesClass {
       partition.Center = Graphics.ExtendPoint(middle, maxradius, partition.Angle);
   }
 
-  private MainDiagram(min) = Canvas {
-    var size = new SizeClass(min);
-
+  private MainDiagram(min) = Canvas(min, min) {
     TransformFit: true;
     Style.SansSerif;
 
-    Calibrate(size);
-    Size: size;
+    Calibrate(new(min));
 
     foreach (var p1 in Rule.Partitions) {
       var i = each0;
@@ -618,11 +613,10 @@ class CalcRatesClass {
         TipAction: p1;
       };
 
-      Canvas {
+      Canvas(fsize, fsize) {
         Position: pos;
         HAlign: HAligns.Center;
         VAlign: VAligns.Center;
-        Size: new SizeClass(fsize);
         Span {
           TextHeight: textheight;
           TextColor: p1.Color.TextCompliment;
