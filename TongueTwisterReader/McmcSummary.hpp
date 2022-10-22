@@ -23,6 +23,7 @@ class McmcSummary {
                                                 McmcSummary(RandomVariable* r);
                                                ~McmcSummary(void);
         McmcSummary&                            operator+=(const McmcSummary& rhs);
+        void                                    calculateRates(DoubleMatrix& m);
         void                                    calculateAverageRates(DoubleMatrix& m);
         std::vector<CredibleInterval>           getCredibleIntervals(void);
         std::vector<double>                     getMeans(void);
@@ -30,7 +31,7 @@ class McmcSummary {
         ParameterStatistics*                    getParameterNamed(std::string str) const;
         void                                    print(void);
         void                                    printPartitionSet(void);
-        void                                    output(std::string pathName);
+        void                                    output(std::string pathName, std::ofstream& findex);
         void                                    readAlnFile(std::string fn, int bi);
         void                                    readTreFile(std::string fn, int bi);
         void                                    readTsvFile(std::string fn, int bi);
