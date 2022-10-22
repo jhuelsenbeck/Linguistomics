@@ -31,6 +31,7 @@ class McmcSummary {
         ParameterStatistics*                    getParameterNamed(std::string str) const;
         void                                    print(void);
         void                                    printPartitionSet(void);
+
         void                                    output(std::string pathName, std::ofstream& findex);
         void                                    readAlnFile(std::string fn, int bi);
         void                                    readTreFile(std::string fn, int bi);
@@ -38,6 +39,7 @@ class McmcSummary {
         void                                    readConfigFile(std::string fn);
     
     private:
+        void                                    writeMatrix(std::ofstream& file, DoubleMatrix& m, std::string name);
         void                                    addPartion(std::map<RbBitSet,double>& parts);
         std::vector<std::string>                breakString(std::string str);
         std::string                             getCognateName(std::string str);

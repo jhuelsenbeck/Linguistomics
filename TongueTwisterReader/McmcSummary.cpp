@@ -826,6 +826,27 @@ void McmcSummary::printPartitionFreqs(void) {
         }
 }
 
+void McmcSummary::writeMatrix(std::ofstream& file, DoubleMatrix &m, std::string name) {
+    file << name << " = [\n";
+    auto rows = m.getNumRows();
+    auto cols = m.getNumCols();
+    for (int i = 0; i < rows; ++i)
+        {
+        if (i)
+            file << ",\n";
+        file << "  [";
+        for (int j = 0; j < cols; ++j)
+            {
+            double r = m(i, j);
+            if (j)
+                file << ",";
+            file << r;
+            }
+        file << "]";
+        }
+    file << "\n];\n\n";
+}
+
 void McmcSummary::output(std::string pathName, std::ofstream& findex) {
 
     auto stree = conTree->getNewick(4);
@@ -884,49 +905,16 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     
     // output average rates of change
     // No credible intervals on this information.
-#   if 0
     int numStates = inferNumberOfStates();
-    DoubleMatrix m(numStates,numStates);
-    calculateAverageRates(m);
-    findex << "AverageRates = [\n";
-    for (int mi = 0; mi < numStates; ++mi)
-        {
-        if (mi)
-            findex << ",\n";
-        findex << "  [";
-        for (int mj = 0; mj < numStates; ++mj)
-            {
-            double r = m(mi,mj);
-            if (mj)
-                findex << ",";
-            findex << r;
-            }
-        findex << "]";
-        }
-    findex << "\n];\n\n";
-<<<<<<< Updated upstream
-    
+    DoubleMatrix aveRates(numStates,numStates);
+    calculateAverageRates(aveRates);
+    writeMatrix(findex, aveRates, "AverageRates");
+
+
     DoubleMatrix q(numStates,numStates);
     calculateRates(q);
-    findex << "QRates = [\n";
-    for (int mi = 0; mi < numStates; ++mi)
-        {
-        if (mi)
-            findex << ",\n";
-        findex << "  [";
-        for (int mj = 0; mj < numStates; ++mj)
-            {
-            double r = q(mi,mj);
-            if (mj)
-                findex << ",";
-            findex << r;
-            }
-        findex << "]";
-        }
-    findex << "\n];\n\n";
-=======
-#   endif
->>>>>>> Stashed changes
+    writeMatrix(findex, q, "QRates");
+
 
 
     findex << "AlignIndexClass[] Alignments = [\n";
