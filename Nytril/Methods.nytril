@@ -71,9 +71,8 @@ namespace Figures.ExchangeabilityTable {
     var left       = 1 inch;
     var w          = (ExtentWidth - 1 inch) / stats.Length;
 
-    Table {
+    Table(PadR(4 pts)) {
       HAlign: HAligns.Center;
-      Padding: PadR(4 pts);
       Columns: [left] + [w] * stats.Length;
       TextDigits: 3;
 
@@ -293,7 +292,7 @@ namespace Figures.AlignedTransitions {
 //======================================================================
 
 namespace Figures.AlignedMost {
-  Top   = 25;
+  Top   = 15;
   Title = "Top {0} Segment Transition Probabilities"(Top);
 
   Body(DocumentClass document) = AlignedTransitions.Display.Most(Top);
@@ -552,10 +551,9 @@ namespace Figures.Alignment {
     Equation {label};
   };
 
-  ContentBox(content) = HBox {
+  ContentBox(content) = HBox(null, null, PadAll(2 pts)) {
     Margin: PadL(4 pts);
     Border: 1 {Color: ArrowColor};
-    Padding: 2 pts;
     content;
   };
 
@@ -684,12 +682,11 @@ namespace StateSection {
     MatrixRow(state);
   };
 
-  StateTable = Table {
+  StateTable = Table(new ThicknessClass(1 pts, 1 pts, 3 pts, null)) {
     ParAlignment: ParAlignments.Center;
 
     VAlign: VAligns.Center;
     HAlign: HAligns.Center;
-    Padding: new ThicknessClass(1 pts, 1 pts, 3 pts, null);
     Columns: [(58 pts) {Border: BorderR(Style.TableEdgeSize)}] + 5*[0.36 inches];
     Row {
       Empty;
@@ -706,8 +703,7 @@ namespace StateSection {
     StateRow(each States);
   };
 
-  StateMatrix = MatrixBlock {
-    Padding: PadB(3);
+  StateMatrix = MatrixBlock(PadB(3)) {
     Brackets: Brackets.FlatRound;
     foreach (var state in States) {
       Row {
@@ -954,7 +950,8 @@ namespace TableFigures.ManualAlignment {
   };
 
   Body(DocumentClass document) = LanguageTable {
-    TextHeight: ExtentWidth * 0.02;
+    var th = ExtentWidth * 0.02;
+    TextHeight: th;
 
     var cognate = Experiment.Data.GetCognate(Experiment.Data.FigureConcept);
 
@@ -967,7 +964,7 @@ namespace TableFigures.ManualAlignment {
       Row {
         word.Language;
         TextIpa {word};
-        word.ShowPaddedBlocks(20 pts);
+        word.ShowPaddedBlocks(th);
       };
     }
   };

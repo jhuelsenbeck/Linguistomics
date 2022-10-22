@@ -163,7 +163,7 @@ abstract class RuleClass {
     }
   };
 
-  ShowLegend(textheight, width) = VBox {
+  ShowLegend(textheight, width, padding) = VBox(null, null, padding) {
     Table {
       Style.SansSerif;
       TextHeight: textheight;
@@ -204,13 +204,11 @@ abstract class RuleClass {
 
       foreach (var partition in Partitions) {
         Row {
-          Cell {
+          Cell(PadR(3 pts)) {
             HAlign: HAligns.Right;
-            Padding: PadR(3 pts);
             Span {each1; ") "};
           };
-          Cell {
-            Padding: PadR(10 pts);
+          Cell(PadR(10 pts)) {
             partition.Filter.Name;
           };
 
@@ -484,12 +482,19 @@ class AlignActionClass: ActionClass {
     S1;
   };
 
-  override GetLayoutSpan = Span {
-    S0.ShowSegment;
+  ShowPartition(SegmentClass s) = Canvas(15 pts) {
+    HAlign: HAligns.Center;
+    Background: ChartColor(s.PartitionIndex);
+    s.ShowSegment;
+  };
+
+  override GetLayoutSpan = HBox {
+    VAlign: VAligns.Center;
+    ShowPartition(S0);
     Space;
     Tex.leftrightarrow;
     Space;
-    S1.ShowSegment;
+    ShowPartition(S1);
     Tip: this;
   };
 
@@ -631,7 +636,7 @@ class CalcRatesClass {
     VAlign: VAligns.Center;
 
     var legend = 1.5 inches;
-    Rule.ShowLegend(10 pts, legend);
+    Rule.ShowLegend(10 pts, legend, 0);
     MainDiagram(Min(ExtentWidth - legend, ExtentHeight));
   };
 

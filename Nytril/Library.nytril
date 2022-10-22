@@ -289,8 +289,7 @@ class AlignmentChartClass {
         var ap = new AlignPairClass(data, found);
         Row {
           VAlign: VAligns.Top;
-          Frame(0.75 inch) {
-            Padding: PadR(10 pts);
+          Frame(0.75 inch, null, PadR(10 pts)) {
             e.Concept;
             e.Cognate Italic;
           };
@@ -1117,27 +1116,33 @@ class AlignedCountClass: CountBaseClass {
     return null;
   }
 
-  Most(max) = Chart(ExtentWidth, 4 inches) {
-    var slice = ActionList.Sort(true).Slice(0..max);
+  Most(max) = HBox {
+    var lw = 1.5 inches;
+    Chart(ExtentWidth - lw, 4 inches) {
+      var slice = ActionList.Sort(true).Slice(0..max);
 
-    Type: ChartTypes.Column;
-    TextHeight: 9 pts;
-    ValueLabel: HBox {
-      TextHeight: 14 pts;
-      Transform: Rotate(90 degrees);
-      TransformFit: true;
-      "Transition Rate %";
+      Type: ChartTypes.Column;
+      TextHeight: 9 pts;
+      ValueLabel: HBox {
+        TextHeight: 12 pts;
+        Transform: Rotate(90 degrees);
+        TransformFit: true;
+        "Transition Rate %";
+      };
+
+      XAxis: ChartAxis {
+        Rotation: 20 degrees;
+        (each slice).GetLayoutSpan;
+      };
+
+      ChartSeries {
+        foreach (var s in slice)
+          new DataPointClass(each0, s.Value) {Reference: s};
+      };
     };
 
-    XAxis: ChartAxis {
-      Rotation: 25 degrees;
-      (each slice).GetLayoutSpan;
-    };
+    Experiment.Rule.ShowLegend(10 pts, lw, 0);
 
-    ChartSeries {
-      foreach (var s in slice)
-        new DataPointClass(each0, s.Value) {Reference: s};
-    };
   };
 }
 
@@ -1303,10 +1308,9 @@ abstract class FrequencyChartClass {
 
   ShowChart = HBox {
     VAlign: VAligns.Center;
-    Experiment.Rule.ShowLegend(10 pts, 1.4 inch) {
+    Experiment.Rule.ShowLegend(10 pts, 1.4 inch, 5) {
       Border: 0.25 {Color: 80%};
       Margin: PadR(12 pts);
-      Padding: 5;
     };
     OccurranceChart(new(ExtentWidth - 2 inches, ExtentHeight));
   };
@@ -1374,8 +1378,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     VAlign: VAligns.Bottom;
     foreach (var rate in SortedRates) {
       Row {
-        Cell {
-          Padding: PadR(3 pts);
+        Cell(PadR(3 pts)) {
           Frame(lw) {
             rate.Taxon.Language;
           };
@@ -1488,8 +1491,7 @@ class PartitionFrequencyClass: FrequencyChartClass {
     VAlign: VAligns.Bottom;
     foreach (var rate in SortedRates) {
       Row {
-        Cell {
-          Padding: PadR(3 pts);
+        Cell(PadR(3 pts)) {
           Frame(lw) {
             rate.Taxon.Language;
           };
