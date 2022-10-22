@@ -184,6 +184,23 @@ abstract class RuleClass {
     };
   };
 
+  ShowSimpleLegend(textheight) = VBox {
+    Style.SansSerif;
+    TextHeight: textheight;
+
+    foreach (var partition in Partitions) {
+      HBox {
+        VAlign: VAligns.Center;
+        Separation: 3 pts;
+        Canvas (textheight, textheight) {
+          BorderRadius: new SizeClass(3, 3);
+          Background: partition.Color;
+        };
+        partition.Filter;
+      }
+    }
+  };
+
   ShowPartitions = Block {
     Paragraph {
       "Model: ";
@@ -234,10 +251,9 @@ abstract class RuleClass {
       foreach (var filter in FiltersPlus) {
         var matching = GetMatching(segments, filter);
         if (valid matching) {
-          HBox {
+          HBox(null, null, PadLR(1)) {
             VAlign: VAligns.Center;
             Margin: 2;
-            Padding: PadLR(1);
             Border: 0.25 pts {Color: 80%};
             Span {
               TextFixed: true;
@@ -483,8 +499,9 @@ class AlignActionClass: ActionClass {
   };
 
   ShowPartition(SegmentClass s) = Canvas(15 pts) {
+    BorderRadius: new SizeClass(3, 3);
     HAlign: HAligns.Center;
-    Background: ChartColor(s.PartitionIndex);
+    Background: s.PartitionColor;
     s.ShowSegment;
   };
 

@@ -256,7 +256,7 @@ namespace Figures.PartitionVolatilityChart {
           var p = partitions[i];
           var m = s.Mean * 100.0;
           new DataPointClass(i, m) {
-            Fill: ChartColor(i);
+            Fill: p.Color;
             Reference: p;
             ErrorHi: s.Upper*100.0 - m;
             ErrorLo: m- s.Lower*100.0;
@@ -284,7 +284,18 @@ namespace Figures.AlignedTransitions {
   MinRate = 0.00005;
   Title   = "Segment transitions above {0}%"(MinRate*100);
 
-  AlignedCountClass Display = new(MainResults, MinRate);
+  AlignedCountClass Display = new(MainResults, MainResults.AverageRates, MinRate, true);
+
+  Body(DocumentClass document) = Display.PartitionBox(document);
+}
+
+//======================================================================
+
+namespace Figures.QRates {
+  MinRate = 0.005;
+  Title   = "Segment Rate of Change above {0}%"(MinRate*100);
+
+  AlignedCountClass Display = new(MainResults, MainResults.QRates, MinRate, false);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
 }

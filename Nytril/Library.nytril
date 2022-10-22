@@ -112,7 +112,7 @@ class AlignPairClass {
                   segment = IPASegments.GapSegment;
                 else if (c >= 0 and c < Data.UniqueSegments.Length) {
                   segment = Data.UniqueSegments[c];
-                  Background: ChartColor(segment.PartitionIndex);
+                  Background: segment.PartitionColor;
                 }
                 else
                   segment = IPASegments.MissingSegment;
@@ -599,6 +599,7 @@ class ResultsClass {
   AlignIndexClass[] Alignments;
   StatClass[][]     TransitionStats;
   var               AverageRates,
+                    QRates,
                     AlignmentCutoff,
                     EquilibriumFrequencies;
 
@@ -609,6 +610,7 @@ class ResultsClass {
 
     var results = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run3") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
     AverageRates           = results.AverageRates;
+    QRates                 = results.QRates;
     TransitionStats        = results.TransitionStats;
     EquilibriumFrequencies = results.EquilibriumFrequencies;
     AlignmentCutoff        = results.AlignmentCutoff;
@@ -892,8 +894,6 @@ abstract class CountBaseClass {
     MaxDigits = 3;
   }
 
-  GetColor(SegmentClass s) = ChartColor(s.PartitionIndex);
-
   PartitionBox(DocumentClass document) = Paragraph {
     Style.SansSerif;
 
@@ -923,7 +923,7 @@ abstract class CountBaseClass {
       foreach (var s in Segments) {
         Canvas(d.Width, d.Height) {
           Y: y;
-          Background: GetColor(s);
+          Background: s.PartitionColor;
           HAlign: HAligns.Center;
           VAlign: VAligns.Center;
           s.ShowSegment;
@@ -944,7 +944,7 @@ abstract class CountBaseClass {
         foreach (var s in Segments) {
           Canvas(d.Width, d.Height) {
             X : x;
-            Background: GetColor(s);
+            Background: s.PartitionColor;
             HAlign: HAligns.Center;
             VAlign: VAligns.Center;
             s.ShowSegment;
@@ -1053,11 +1053,12 @@ class PriorCountClass: CountBaseClass {
 class AlignedCountClass: CountBaseClass {
   ListClass<AlignActionClass> ActionList;
   MatrixClass                 Actions;
+  var                         Symmetric;
 
-  Constructor(ResultsClass results, minrate) {
+  Constructor(ResultsClass results, rates, minrate, symmetric) {
     super.Constructor(results.Experiment);
+    Symmetric = symmetric;
 
-    var rates   = results.AverageRates;
     var ordered = results.Data.UniqueSegments;
     var length  = Segments.Length;
 
@@ -1070,7 +1071,9 @@ class AlignedCountClass: CountBaseClass {
 
     var max = 0.0;
     for (var i = 0; i < length; ++i) {
-      for (var j = 0; j <= i; ++j) {
+      var jmax = symmetric ? i : length;
+
+      for (var j = 0; j < jmax; ++j) {
         var rate = rates[i][j];
         if (rate >= minrate) {
           if (rate > max)
@@ -1089,10 +1092,9 @@ class AlignedCountClass: CountBaseClass {
   }
 
   override AddEntry(i, j, x, y, SizeClass size) {
-    if (i >= j)
-      return ShowEntry(i, j, x, y, size);
-    else
+    if (Symmetric and i < j)
       return ShowEntry(j, i, x, y, size);
+    return ShowEntry(i, j, x, y, size);
   }
 
   ShowEntry(i, j, x, y, SizeClass size) {
@@ -1141,7 +1143,7 @@ class AlignedCountClass: CountBaseClass {
       };
     };
 
-    Experiment.Rule.ShowLegend(10 pts, lw, 0);
+    Experiment.Rule.ShowSimpleLegend(10 pts);
 
   };
 }
@@ -1356,7 +1358,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     return Canvas(width-1, height * f) {
       Margin: PadR(1);
       var s = Data.UniqueSegments[index];
-      Background: ChartColor(s.PartitionIndex);
+      Background: s.PartitionColor;
       TipAction: new SegmentActionClass(rate, s, rate.Count[index], f);
     };
   }
