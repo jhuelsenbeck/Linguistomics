@@ -26,7 +26,7 @@ namespace Figures.TransitionRates {
     "The width of the lines is proportional to the estimated rates. ";
   };
 
-  Display = new CalcRatesClass(MainResults, Experiment.Data, Experiment.Rule);
+  CalcRatesClass Display = new(MainResults, Experiment.Data, Experiment.Rule);
 
   Body(DocumentClass document) {
     return Display.PartitionDiagram;
@@ -48,7 +48,7 @@ namespace Figures.AlignmentExamples {
     "Credible sets for cognate alignments";
   };
 
-  Display = new AlignmentChartClass(MainResults);
+  AlignmentChartClass Display = new(MainResults);
 
   Body(DocumentClass document) = Block {
     Display.ShowSet(MainResults.Data, Examples);
@@ -71,17 +71,15 @@ namespace Figures.ExchangeabilityTable {
     var left       = 1 inch;
     var w          = (ExtentWidth - 1 inch) / stats.Length;
 
-    Table {
+    Table(PadR(4 pts)) {
       HAlign: HAligns.Center;
-      Padding: PadR(4 pts);
       Columns: [left] + [w] * stats.Length;
       TextDigits: 3;
 
       Row {
         Empty;
         foreach (var r in stats) {
-          Frame {
-            Width: w;
+          Frame(w) {
             ParAlignment: ParAlignments.Center;
             TextHeight: th*0.8;
             var p = partitions[each0];
@@ -94,8 +92,7 @@ namespace Figures.ExchangeabilityTable {
       foreach (var r in stats) {
         Row {
           VAlign: VAligns.Center;
-          Frame {
-            Width: w;
+          Frame(w) {
             ParAlignment: ParAlignments.Right;
             var p = partitions[each0];
             TextColor: p.Color;
@@ -135,7 +132,6 @@ namespace Figures.ExchangeabilityChart {
     var tx         = 60 pts + bx;
     var dy         = ExtentHeight / (partitions.Length + 1);
     var d          = Math.Min(dy, (ExtentWidth  - tx) / partitions.Length);
-    var bsize      = new SizeClass(d, d);
 
     var max = 0.0;
     foreach (var r in stats) {
@@ -150,27 +146,23 @@ namespace Figures.ExchangeabilityChart {
 
     HBox {
       VBox {
-        Canvas {
-          Size: bx;
-        };
+        Canvas(bx, bx);
+
         foreach (var r in stats) {
           var p = partitions[each0];
-          HBox {
+          HBox(null, dy) {
             Separation: 10 pts;
-            Height: dy;
             VAlign: VAligns.Center;
             HAlignment: HAligns.Right;
             Frame {
               p.Filter;
             };
-            Canvas {
-              Size: new SizeClass(bx, dy);
+            Canvas(bx, dy) {
               Background: p.Color;
             };
           }
         }
       };
-
 
       VBox {
         HAlign: HAligns.Left;
@@ -178,15 +170,13 @@ namespace Figures.ExchangeabilityChart {
         HBox {
           foreach (var r in stats) {
             var p = partitions[each0];
-            Canvas {
-              VAlign: VAligns.Center;
-              Size: new SizeClass(d, bx);
+            Canvas(d, bx) {
               Background: p.Color;
+              VAlign: VAligns.Center;
               HAlign: HAligns.Center;
-              Frame {
+              Frame(d) {
                 TextColor: p.Color.TextCompliment;
                 ParAlignment: ParAlignments.Center;
-                Width: d;
                 TextHeight: 75%;
                 p.Filter.Name;
               };
@@ -202,9 +192,8 @@ namespace Figures.ExchangeabilityChart {
                 if (valid c) {
                   var p = partitions[each0];
 
-                  Canvas {
+                  Canvas(d, d) {
                     Tip: c;
-                    Size: bsize;
                     var center = new PointClass(d * 0.5);
                     var x      = fc * c.Upper;
                     Figure {
@@ -222,7 +211,7 @@ namespace Figures.ExchangeabilityChart {
                   };
                 }
                 else
-                  Canvas {Size: bsize};
+                  Canvas(d, d);
               }
             };
           }
@@ -242,9 +231,8 @@ namespace Figures.PartitionVolatilityChart {
 
     var partitions = Experiment.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
-    Chart {
+    Chart(ExtentWidth, 4 inches) {
       Type: ChartTypes.Scatter;
-      Size: new SizeClass(ExtentWidth, 4 inches);
       ValueLabel: "Probability %" {
         TextHeight: 14 pts;
         Transform: Rotate(90 degrees);
@@ -268,7 +256,7 @@ namespace Figures.PartitionVolatilityChart {
           var p = partitions[i];
           var m = s.Mean * 100.0;
           new DataPointClass(i, m) {
-            Fill: ChartColor(i);
+            Fill: p.Color;
             Reference: p;
             ErrorHi: s.Upper*100.0 - m;
             ErrorLo: m- s.Lower*100.0;
@@ -293,19 +281,40 @@ namespace Figures.FractionGapsChart {
 //======================================================================
 
 namespace Figures.AlignedTransitions {
-  Title = "Segment transitions";
+  MinRate = 0.00005;
+  Title   = "Segment transitions above {0}%"(MinRate*100);
 
-  AlignedCountClass Display = new(MainResults);
+  AlignedCountClass Display = new(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax, MinRate, true);
 
-  Body(DocumentClass document) = Display.PartitionBox(Experiment.Rule);
+  Body(DocumentClass document) = Display.PartitionBox(document);
+}
+
+//======================================================================
+
+namespace Figures.QRatesMatrix {
+  MinRate = 0.005;
+  Title   = "Segment Rate of Change above {0}%"(MinRate*100);
+
+  AlignedCountClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, MinRate, false);
+
+  Body(DocumentClass document) = Display.PartitionBox(document);
+}
+
+//======================================================================
+
+namespace Figures.QRatesDiagonal {
+  Title = "Segment Stability";
+
+  Body(DocumentClass document) = new QRateDiagonalClass(MainResults, MainResults.Output.QRates).Display;
 }
 
 //======================================================================
 
 namespace Figures.AlignedMost {
-  Title = "Greatest Segment Change";
+  Top   = 15;
+  Title = "Top {0} Segment Transition Probabilities"(Top);
 
-  Body(DocumentClass document) = AlignedTransitions.Display.Most;
+  Body(DocumentClass document) = AlignedTransitions.Display.Most(Top);
 }
 
 //======================================================================
@@ -329,11 +338,9 @@ namespace Figures.AllSegmentFrequencies {
 namespace Figures.ConsensusTree {
   Title = Lang.ConsensusTree;
 
-  Body(DocumentClass document) = VBox {
-    Width: ExtentWidth;
+  Body(DocumentClass document) = VBox(ExtentWidth) {
     HAlign: HAligns.Center;
-    Style.TreeOptions {
-      Width: ExtentWidth;
+    Style.TreeOptions(ExtentWidth) {
       Root: Experiment.MainRun.Tree;
     };
   };
@@ -448,8 +455,7 @@ namespace Figures.ExampleTree {
     "An example tree showing the relationships of {0} languages."(SampledLanguages(Experiment.Data.Languages.Length));
   };
 
-  Body(DocumentClass document) = TreeOptions {
-    Width: 5 inches;
+  Body(DocumentClass document) = TreeOptions(5 inches) {
     Root: Experiment.NumberedTree;
   };
 }
@@ -467,14 +473,6 @@ namespace Figures.LanguagesUsed {
   Title = Lang.Languages;
 
   Body(DocumentClass document) = SegmentDisplay.ShowLanguages(Experiment.Data);
-}
-
-//======================================================================
-
-namespace Figures.UniqueCharacters {
-  Title = Lang.UniqueSegments;
-
-  Body(DocumentClass document) = SegmentDisplay.ShowSegmentAssignments(Experiment.Data);
 }
 
 //======================================================================
@@ -572,15 +570,13 @@ namespace Figures.Alignment {
     Equation {label};
   };
 
-  ContentBox(content) = HBox {
+  ContentBox(content) = HBox(null, null, PadAll(2 pts)) {
     Margin: PadL(4 pts);
     Border: 1 {Color: ArrowColor};
-    Padding: 2 pts;
     content;
   };
 
-  ArrowFigure(SizeClass size) = Canvas {
-    Size: size;
+  ArrowFigure(SizeClass size) = Canvas(size.Width, size.Height) {
     Figure {
       Stroke: 1.5 {Color: ArrowColor};
       FigurePath {
@@ -676,7 +672,7 @@ namespace Figures.Alignment {
     };
     HBox {
       HomBox(example, data, 1, HMap1);
-      Canvas {Width: 0.25 inches};
+      Canvas(0.25 inches);
       HomBox(example, data, 2, HMap2);
     }
   };
@@ -696,22 +692,21 @@ namespace StateSection {
 
   StateRow(state) = Row {
     Cell {
-      HAlign: HAligns.Right;
+      ParAlignment: ParAlignments.Right;
       Span {
-        each0 == States.Length div 2 ? Lang.From + Space*3 : Empty;
+        each0 == States.Length div 2 ? "From   " : Empty;
         state;
       }
     };
     MatrixRow(state);
   };
 
-  StateTable = Table {
+  StateTable = Table(new ThicknessClass(1 pts, 1 pts, 3 pts, null)) {
     ParAlignment: ParAlignments.Center;
 
     VAlign: VAligns.Center;
     HAlign: HAligns.Center;
-    Padding: new ThicknessClass(1 pts, 1 pts, 3 pts, null);
-    Columns: [(1 inch) {Border: BorderR(Style.TableEdgeSize)}] + 5*[0.36 inches];
+    Columns: [(58 pts) {Border: BorderR(Style.TableEdgeSize)}] + 5*[0.36 inches];
     Row {
       Empty;
       Cell {
@@ -727,8 +722,7 @@ namespace StateSection {
     StateRow(each States);
   };
 
-  StateMatrix = MatrixBlock {
-    Padding: PadB(3);
+  StateMatrix = MatrixBlock(PadB(3)) {
     Brackets: Brackets.FlatRound;
     foreach (var state in States) {
       Row {
@@ -777,9 +771,9 @@ namespace PaperSections.WordSegmentRelationships {
       "For each word, the alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
       "This sample of alignments illustrate three key properties. ";
       "First, the distributions of credible sets exhibit extreme skew. ";
-      "There is always a clear best alignment.";
+      "There is always a clear best alignment. ";
       "Second, deletions occur predominantly at the end of the words. ";
-      "Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment.";
+      "Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment. ";
       "The alignment of the nasalized vowels is surprising, in that they are being aligned with nasal consonants, when in fact they are homologous with vowels.";
     };
 
@@ -795,8 +789,8 @@ namespace PaperSections.RomanceLanguagePhylogeny {
 
   Body(DocumentClass document) = Block {
     BodyPar {
-      "The majority-rule consensus tree (cutoff 00) is presented in Figure "; FigureReference(Experiment, Figures.ConsensusTree);
-      " Latin was specified as an outgroup, according to the widespread view that it is a sister to the most recent common ancestor of the Romance languages"; Citation {hall1950; Pages: 19; coseriu1954; Pages:29; hall1974; Pages: 14; vallejo2012; Pages: 458}; eos;
+      "The majority-rule consensus tree (cutoff 00) is presented in "; FigureReference(Experiment, Figures.ConsensusTree); eos;
+      " Latin was specified as an outgroup, according to the widespread view that it is a sister to the most recent common ancestor of the Romance languages"; Citation {hall1950; Pages: 19; hall1974; Pages: 14; vallejo2012; Pages: 458};
     };
     ShowFigureDoc(document, Figures.ConsensusTree);
   };
@@ -928,7 +922,7 @@ namespace PaperSections.DataSummary {
       "The raw data set contains many cognates and word forms, but data for this experiment was limited to only those cognates that have word forms from ";
       data.WordCutoff == data.Taxa.Length ? "all " : "at least ";
       data.WordCutoff; " languages. ";
-      "There are in total "; data.UsedConcepts.Length; " concepts, "; data.UsedCognates.Length; " cognate sets, "; data.WordCount; " word forms, using "; data.UniqueCount; " unique segments. ";
+      "There are in total "; data.UsedConcepts.Length; " concepts, "; data.UsedCognates.Length; " cognate sets, "; data.WordCount; " word forms, using "; data.UniqueSegments.Length; " unique segments. ";
     };
 
 //    ShowTable(document, Figures.PartitionAssignments, 8 pts);
@@ -975,7 +969,8 @@ namespace TableFigures.ManualAlignment {
   };
 
   Body(DocumentClass document) = LanguageTable {
-    TextHeight: ExtentWidth * 0.02;
+    var th = ExtentWidth * 0.02;
+    TextHeight: th;
 
     var cognate = Experiment.Data.GetCognate(Experiment.Data.FigureConcept);
 
@@ -988,9 +983,7 @@ namespace TableFigures.ManualAlignment {
       Row {
         word.Language;
         TextIpa {word};
-        Cell {
-          word.ShowPaddedBlocks(20 pts);
-        }
+        word.ShowPaddedBlocks(th);
       };
     }
   };
@@ -1042,7 +1035,7 @@ namespace PaperSections.ModelInference {
       " and the expected number of sound substitutions "; ExpectedEvents; " that occur along each branch of the tree. ";
       "Language evolves along the branches of the tree according to the TKF91 model"; Citation {thorne91}; " which allows either a word segment transition, insertion, or deletion to occur in an instant of time. ";
       "Insertions and deletions occur at rates "; InsertionRate; " and "; DeletionRate; " respectively, with "; InsertionLessThanDeletion; eos;
-      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  Experiment.Data.UniqueCount; " word segments). ";
+      "Word segment substitution is modeled as a continuous-time Markov model with the IPA word segments as the states of the process (here, we use ";  Experiment.Data.UniqueSegments.Length; " word segments). ";
       "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters "; Span {Bold; RateMatrixParams}; eos;
     };
 
@@ -1070,6 +1063,7 @@ namespace PaperSections.ModelInference {
     };
 
     BodyPar {
+      var count = Experiment.Data.UniqueSegments.Length;
       "We examined three models of segmental transition. ";
       "The first (denoted "; SQuote{"JC69"}") is isomorphic to the Jukes-Cantor"; Citation{jukes69};
       " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate. ";
@@ -1081,15 +1075,15 @@ namespace PaperSections.ModelInference {
       //  rule.Filters;
       //};
       " and has an intermediate number of parameters (";
-      Experiment.Data.UniqueCount;
+      count;
       " parameters for the equilibrium distribution and ";
       (rule.Filters.Length-1)^2-1;
       " parameters describing rates among word segment groups). ";
       "The third ("; SQuote{"GTR"}; ") is a isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
       ", and has a large number of parameters (";
-      Experiment.Data.UniqueCount;
+      count;
       " parameters for the equilibrium distribution and ";
-      Combinations(Experiment.Data.UniqueCount, 2);
+      Combinations(count, 2);
       " exchangability parameters). ";
       "For both the second and third models, we consider the equilibrium frequencies of the model to be random variables with a flat Dirichlet prior distribution."
     };
@@ -1179,10 +1173,8 @@ namespace PaperSections.Methods {
   Title = Lang.Methods;
 
   Body(DocumentClass document) = Block {
-    var data            = Experiment.Data;
-    var treefigure      = FigureReference(Experiment, Figures.ExampleTree);
-    var alignmentfigure = FigureReference(Experiment, Figures.Alignment);
-    var ec              = new ExampleConceptClass(data, data.ExampleConcept);
+    var data  = Experiment.Data;
+    var ec    = new ExampleConceptClass(data, data.ExampleConcept);
 
     FirstPar {
       "We use ancestral classes, in which the descendant forms are segmentally aligned. ";
@@ -1213,7 +1205,7 @@ namespace PaperSections.Methods {
     };
 
     BodyPar {
-      treefigure; " shows an example of a phylogeny for "; SampledLanguages(data.Taxa.Length); " languages. ";
+      FigureReference(Experiment, Figures.ExampleTree); " shows an example of a phylogeny for "; SampledLanguages(data.Taxa.Length); " languages. ";
       "In the terminology of evolutionary biology, the tree is composed of "; SQuote{"nodes"}; " and "; SQuoteEnd{"branches"};
       "(By contrast, mathematicians call nodes and branches "; SQuote{"vertices"} " and "; SQuote{"edges,"}; " respectively.) ";
       "The nodes represent the tips of the tree, each of which is assigned a language, and the points on the tree where the languages diverge from one another. ";
@@ -1221,13 +1213,13 @@ namespace PaperSections.Methods {
       "The interior nodes are labeled "; TipLabelInterior; " in preorder sequence (i.e., ordered sequentially from the tips to the root). ";
       "The root node is always assigned the label "; TipLastLabel; eos;
       "We denote the ancestor of node "; NodeIndex; " as "; AncestorNode(NodeIndex); eos;
-      "In the tree of "; treefigure; ", the ancestor of node 3 is "; Equation {AncestorNode(3); Equals; 12}; eos;
+      "In the tree of "; FigureReference(Experiment, Figures.ExampleTree); ", the ancestor of node 3 is "; Equation {AncestorNode(3); Equals; 12}; eos;
     };
 
     BodyPar {
-      "The branches connect the nodes of the tree and are represented as lines in "; treefigure; ". ";
+      "The branches connect the nodes of the tree and are represented as lines in "; FigureReference(Experiment, Figures.ExampleTree); eos;
       "The branch is assigned the label from its descendant node, so for example in the tree of ";
-      treefigure;
+      FigureReference(Experiment, Figures.ExampleTree);
       ", the branch connecting nodes 12 and 13 is assigned the label 12. ";
     };
 
@@ -1237,16 +1229,16 @@ namespace PaperSections.Methods {
       "A phylogeny is an information-rich graph. ";
       "For one, it contains information on the relationships of the languages. ";
       "This topological information is denoted "; Topology; eos;
-      treefigure;
+      FigureReference(Experiment, Figures.ExampleTree);
       " for example, suggests that "; French; " and ";  Walloon; " are each others’ closest relatives. ";
       "They are more closely related to each other than they are to any another language on the tree because they share a more recent common ancestor with each other than they do with any other language. ";
-      "This common ancestor is the node numbered 15 in "; treefigure; eos;
-      French; " and "; Walloon; ", together, are more closely related to "; Friulian; " in the tree of "; treefigure; eos;
+      "This common ancestor is the node numbered 15 in "; FigureReference(Experiment, Figures.ExampleTree); eos;
+      French; " and "; Walloon; ", together, are more closely related to "; Friulian; " in the tree of "; FigureReference(Experiment, Figures.ExampleTree); eos;
       "Both French and Walloon are equally related to "; Friulian; " because they both share the same common ancestor with ";
       Friulian; ", at the node numbered ";
-      data.LangNumber(Friulian); " in "; treefigure; eos;
+      data.LangNumber(Friulian); " in "; FigureReference(Experiment, Figures.ExampleTree); eos;
       "It is important to realize that there are many possible ways in which the languages can be related to one another, with the tree of ";
-      treefigure;
+      FigureReference(Experiment, Figures.ExampleTree);
       " depicting only one of the possibilities. ";
       "In fact, for the case in which ";
       SampledLanguages(data.Taxa.Length);
@@ -1419,7 +1411,7 @@ namespace PaperSections.Methods {
       SQuote {ec.CalloutSegment}; " of "; ec.Callout.Language; " as homologous to the ";
       SQuote {ec.CalloutSegment}; " of French based on the settings chosen by the user. ";
       "It may be that other alignments are nearly as good as the one that is illustrated. ";
-      alignmentfigure;
+      FigureReference(Experiment, Figures.Alignment);
       " shows two possible alignments of the word "
       ec.Name;
       eos;
@@ -1481,7 +1473,7 @@ namespace PaperSections.Methods {
           HomologyMap;
         };
       }; eos;
-      alignmentfigure;
+      FigureReference(Experiment, Figures.Alignment);
       " shows an example of two alignments for the word ";
       ec.Name;
       " that can be formed using two different homology maps. ";
@@ -2016,7 +2008,7 @@ namespace PaperSections.Conclusion {
     var data = Experiment.Data;
     AddVariable("Languages", data.Taxa.Length);
     AddVariable("Concepts", data.UsedCognates.Length);
-    AddVariable("Unique Segments", data.UniqueCount);
+    AddVariable("Unique Segments", data.UniqueSegments.Length);
   };
 }
 //======================================================================

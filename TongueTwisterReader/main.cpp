@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <fstream>
 #include "McmcSummary.hpp"
 #include "RandomVariable.hpp"
 #include "UserSettings.hpp"
@@ -33,13 +34,14 @@ int main(int argc, char* argv[]) {
         readConfigurationFile(settings.getInputFile2(), summary2);
         readDirectory(settings.getInputFile2(), settings.getBurnIn(), summary2);
         summary1 += summary2;
-        summary1.output(settings.getPath());
-        }
-    else
-        {
-        summary1.output(settings.getPath());
         }
 
+    auto pathName = settings.getPath();
+    auto findex = new std::ofstream(pathName + "/alignments.nytril", std::ios::out);
+    summary1.output(pathName, *findex);
+    findex->close();
+    delete findex;
+  
     return 0;
 }
 

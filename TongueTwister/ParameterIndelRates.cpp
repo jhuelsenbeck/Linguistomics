@@ -25,6 +25,9 @@ ParameterIndelRates::ParameterIndelRates(RandomVariable* r, Model* m, std::strin
         } while(insertionRate[0] >= deletionRate[0]);
     insertionRate[1] = insertionRate[0];
     deletionRate[1]  = deletionRate[0];
+
+    parmStrLen = 40;
+    parmStr = new char[parmStrLen];
 }
 
 ParameterIndelRates::~ParameterIndelRates(void) {
@@ -136,6 +139,20 @@ std::string ParameterIndelRates::getString(void) {
     return str;
 }
 
+char* ParameterIndelRates::getCString(void) {
+
+    sprintf(parmStr, "%1.6lf\t%1.6lf", getInsertionRate(), getDeletionRate());
+    return parmStr;
+}
+
+std::string ParameterIndelRates::getUpdateName(int idx) {
+
+    if (idx == 0)
+        return "indel rates";
+    else
+        return "random indel rates";
+}
+
 double ParameterIndelRates::lnPriorProbability(void) {
 
     double lambda = getInsertionRate();
@@ -159,7 +176,8 @@ void ParameterIndelRates::reject(void) {
 
 double ParameterIndelRates::update(int) {
 
-    lastUpdateType = "indel rates";
+    lastUpdateType.first = this;
+    lastUpdateType.second = 0;
 
     // initialize some variables
     double window = 0.03;
@@ -275,6 +293,9 @@ double ParameterIndelRates::update(int) {
 }
 
 double ParameterIndelRates::updateFromPrior(void) {
+
+    lastUpdateType.first = this;
+    lastUpdateType.second = 1;
 
     return 0.0;
 }

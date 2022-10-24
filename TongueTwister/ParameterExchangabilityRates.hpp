@@ -21,6 +21,8 @@ class ParameterExchangabilityRates : public Parameter {
         std::string                     getJsonString(void);
         int                             getNumValues(void) { return numRates; }
         std::string                     getString(void);
+        char*                           getCString(void);
+        std::string                     getUpdateName(int idx);
         std::vector<double>&            getValue(void) { return rates[0]; }
         double                          lnPriorProbability(void);
         void                            print(void);
