@@ -21,6 +21,8 @@ class ParameterEquilibirumFrequencies : public Parameter {
         int                             getNumValues(void) { return numStates; }
         std::vector<double>&            getValue(void) { return freqs[0]; }
         std::string                     getString(void);
+        char*                           getCString(void);
+        std::string                     getUpdateName(int idx);
         double                          lnPriorProbability(void);
         void                            print(void);
         void                            reject(void);

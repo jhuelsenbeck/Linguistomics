@@ -15,6 +15,7 @@ class ParameterRatesGammaShape : public Parameter {
                                 ParameterRatesGammaShape(void) = delete;
                                 ParameterRatesGammaShape(const ParameterRatesGammaShape& p) = delete;
                                 ParameterRatesGammaShape(RandomVariable* r, Model* m, std::string n, double ep, int nc);
+                               ~ParameterRatesGammaShape(void);
         void                    accept(void);
         void                    fillParameterValues(double* x, int& start, int maxNumValues);
         std::string             getHeader(void);
@@ -22,6 +23,8 @@ class ParameterRatesGammaShape : public Parameter {
         int                     getNumValues(void) { return 1; }
         std::vector<double>&    getRates(void) { return rates[0]; }
         std::string             getString(void);
+        char*                   getCString(void);
+        std::string             getUpdateName(int idx);
         double                  lnPriorProbability(void);
         void                    print(void);
         void                    reject(void);

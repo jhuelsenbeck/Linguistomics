@@ -7,18 +7,20 @@ Main.SymbolFamily = TextFamilies.CMUClassicalSerif;
 //======================================================================
 
 namespace NumberedGroup {
-  Table  = "table";
-  Figure = "figure";
+  Table  = "Table";
+  Figure = "Figure";
 }
 
 //======================================================================
 
 namespace DocMetrics {
-  TableSpace      = 24 pts;
-  BoxSize         = new SizeClass(18 pts, 20 pts);
-  CellSize        = new SizeClass(BoxSize.Width * 2, BoxSize.Height);
-  SegmentColumns  = 4;
-  SegmentSize     = 40 pts;
+  TableSpace        = 24 pts;
+  BoxSize           = new SizeClass(18 pts, 20 pts);
+  CellSize          = new SizeClass(BoxSize.Width * 2, BoxSize.Height);
+  SegmentColumns    = 4;
+  SegmentSize       = 40 pts;
+  SegmentWidth      = 2 inches;
+  SegmentTextFactor = 0.55;
 }
 
 CaptionOrTitle(DocumentClass doc, figure) = Span {
@@ -207,8 +209,7 @@ namespace Style {
     SpaceAfter: 10 pts;
   };
 
-  LanguageTable = Table {
-    Padding: 2;
+  LanguageTable = Table(PadAll(2)) {
     Border: BorderTB(2 pts);
   };
 
@@ -224,7 +225,7 @@ namespace Style {
   ShowFigureNumber(figure) = Span {
     Lang.Figure;
     Space;
-    RefNumber(NumberedGroup.Figure, figure.GetVariableFullName);
+    DocFields.Reference(NumberedGroup.Figure, figure.GetVariableFullName);
   };
 
   FigureReference(ExperimentClass experiment, figure) = ShowFigureNumber(figure) {
@@ -233,22 +234,19 @@ namespace Style {
 
   ShowFigureDoc(DocumentClass document, figure) = Block {
     Paragraph {
-      AnchorGroup: NumberedGroup.Figure;
-      AnchorTag: figure.GetVariableFullName;
       SpaceBefore: 10 pts;
       SpaceAfter: 6 pts;
       KeepWithNext: true;
-      Frame {
-        Paragraph {
-          Span {
-            Bold;
-            SansSerif;
-            ShowFigureNumber(figure);
-            eos;
-          };
-          CaptionOrTitle(document, figure);
-        };
-      }
+
+      Span {
+        Bold;
+        SansSerif;
+        Lang.Figure;
+        Space;
+        DocFields.Sequence(NumberedGroup.Figure, figure.GetVariableFullName);
+        eos;
+      };
+      CaptionOrTitle(document, figure);
     };
 
     Paragraph {
@@ -263,14 +261,12 @@ namespace Style {
   ShowTableNumber(table) = Span {
     Lang.Table;
     Space;
-    RefNumber(NumberedGroup.Table, table.GetVariableFullName);
+    DocFields.Reference(NumberedGroup.Table, table.GetVariableFullName);
   };
 
   ShowTable(DocumentClass document, table, textheight=null) = Block {
     Paragraph {
       KeepWithNext: true;
-      AnchorTag: table.GetVariableFullName;
-      AnchorGroup: NumberedGroup.Table;
       SpaceBefore: 10 pts;
       SpaceAfter: 10 pts;
       ParAlignment: ParAlignments.Center;
@@ -289,7 +285,9 @@ namespace Style {
       Span {
         Bold;
         SansSerif;
-        ShowTableNumber(table);
+        Lang.Table;
+        Space;
+        DocFields.Sequence(NumberedGroup.Table, table.GetVariableFullName);
         eos;
       };
       CaptionOrTitle(document, table);
@@ -369,7 +367,7 @@ namespace Style {
     LeftIndent: 0.25 inches;
 
     Paragraph {
-      AnchorTag: person.GetVariableFullName;
+      DocFields.Anchor(person.GetVariableFullName);
       FirstIndent: -0.25 inches;
       CitationLib.GetFullName(person);
     };
@@ -404,15 +402,13 @@ namespace Style {
     Footer: Block {
       Distance: 0.5 inches;
       ParAlignment: ParAlignments.Center;
-      PageNumber;
+      DocFields.PageNumber;
     };
   };
 
-  ShowBibliography = Section {
+  ShowReferences = Section {
     SectionBreak: SectionBreaks.NextPage;
-    Format.Bibliography {
-      Title: Lang.References;
-    }
+    Format.Bibliography(Lang.References);
   };
 
   TableNotes = Paragraph {
@@ -518,8 +514,9 @@ namespace Style {
     Ellipse(new(0, 1 pts))
   };
 
-  TreeOptions = Tree {
-    TextHeight: 12 pts;
+  TreeOptions(width) = Tree(width, null) {
+    Style.SansSerif;
+    TextHeight: 11 pts;
     Default: new NodeClass(null) {
       NodeGap: 5 pts;
       Curvature: 20%;
@@ -528,10 +525,9 @@ namespace Style {
     };
   };
 
-  ShowTree(title, subtitle, NodeClass root, axis) = VBox {
+  ShowTree(title, subtitle, NodeClass root, axis) = VBox(null, null, PadLR(15 pts)) {
     BorderRadius: 8 pts;
     Margin: PadB(20 pts);
-    Padding: PadLR(15 pts);
     if (valid title) {
       Border: 0.5 pts {Color: 90%};
       Style.Header1 {
@@ -548,9 +544,8 @@ namespace Style {
       }
     }
 
-    TreeOptions {
+    TreeOptions(ExtentWidth - 30 pts) {
       Reorder: true;
-      Width: ExtentWidth - 30 pts;
       if (valid axis) {
         ValueLabel: axis;
         ValueAxis: ChartAxis;
@@ -572,14 +567,17 @@ namespace Style {
   };
 
   ShowAppendix(DocumentClass doc, AppendixClass appendix) = PageSection {
+    var th = 14 pts;
+    var sa = 8 pts;
+
     Header: Block {
       Distance: 0.5 inches;
       Paragraph {
         Border: BorderB(1 pts);
         ParAlignment: ParAlignments.Center;
-        TextHeight: 14 pts;
-        SpaceAfter: 8 pts;
-        AnchorTag: Lang.Appendix + each0;
+        TextHeight: th;
+        SpaceAfter: sa;
+        DocFields.Anchor(Lang.Appendix + each0);
         "{0} {1} - "(Lang.Appendix, each1);
         appendix.Title;
       };
@@ -590,9 +588,7 @@ namespace Style {
     };
     caption;
     var height = GetLayoutSize(caption).Height;
-
-
-    var extent = SetExtentSize(new(ExtentWidth, ExtentHeight - height));
+    var extent = SetExtentSize(new(ExtentWidth, ExtentHeight - height - th - sa - 8 pts));
     appendix.GetBody(doc);
     SetExtent(extent);
   };
@@ -614,12 +610,11 @@ namespace Style {
     LanguageRow(each list)
   };
 
-  HeaderCell = Cell {
+  HeaderCell = Cell(PadAll(2 pts)) {
     VAlign: VAligns.Center;
     SansSerif;
     TitleBackground;
     Border: BorderB(1 pts);
-    Padding: 2 pts;
   };
 
   TitleBar = Paragraph {

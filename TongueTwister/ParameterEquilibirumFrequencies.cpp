@@ -31,15 +31,20 @@ ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable*
         freqs[0][i] = 1.0 / numStates;
     Probability::Helper::normalize(freqs[0], minVal);
     freqs[1] = freqs[0];
+    
+    parmStrLen = numStates*12;
+    parmStr = new char[parmStrLen];
 }
 
 ParameterEquilibirumFrequencies::~ParameterEquilibirumFrequencies(void) {
 
+    delete [] parmStr;
 }
 
 void ParameterEquilibirumFrequencies::accept(void) {
 
-    freqs[1] = freqs[0];
+    for (int i=0; i<numStates; i++)
+        freqs[1][i] = freqs[0][i];
 }
 
 void ParameterEquilibirumFrequencies::fillParameterValues(double* x, int& start, int maxNumValues) {
@@ -87,6 +92,28 @@ std::string ParameterEquilibirumFrequencies::getString(void) {
     return str;
 }
 
+char* ParameterEquilibirumFrequencies::getCString(void) {
+
+    char tempStr[20];
+    char* p = parmStr;
+    for (int i=0; i<numStates; i++)
+        {
+        sprintf(tempStr, "%1.6lf\t", freqs[0][i]);
+        for (char* c=tempStr; *c != '\0'; c++)
+            {
+            (*p) = (*c);
+            p++;
+            }
+        }
+    (*p) = '\0';
+    return parmStr;
+}
+
+std::string ParameterEquilibirumFrequencies::getUpdateName(int) {
+
+    return "equilibrium frequencies";
+}
+
 double ParameterEquilibirumFrequencies::lnPriorProbability(void) {
 
     return Probability::Helper::lnGamma(numStates-1);
@@ -122,14 +149,16 @@ std::vector<int> ParameterEquilibirumFrequencies::randomlyChooseIndices(int k, i
 
 void ParameterEquilibirumFrequencies::reject(void) {
 
-    freqs[0] = freqs[1];
+    for (int i=0; i<numStates; i++)
+        freqs[0][i] = freqs[1][i];
     modelPtr->flipActiveLikelihood();
 
 }
 
 double ParameterEquilibirumFrequencies::update(int) {
 
-    lastUpdateType = "equilibrium frequencies";
+    lastUpdateType.first  = this;
+    lastUpdateType.second = 0;
 
     int k = 1;
     
@@ -277,7 +306,9 @@ double ParameterEquilibirumFrequencies::update(int) {
 
 double ParameterEquilibirumFrequencies::updateFromPrior(void) {
 
-    lastUpdateType = "random equilibrium frequencies";
+    //lastUpdateType = "random equilibrium frequencies";
+    lastUpdateType.first = this;
+    lastUpdateType.second = 1;
 
     // draw from the prior distribution, which is a flat Dirichlet distribution
     Probability::Dirichlet::rv(rv, alpha, freqs[0]);

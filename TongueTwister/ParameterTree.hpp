@@ -34,10 +34,12 @@ class ParameterTree : public Parameter {
         std::string                     getJsonString(void);
         std::string                     getHeader(void) { return ""; }
         int                             getNumValues(void) { return 1; }
+        std::string                     getUpdateName(int idx);
+        std::string                     getString(void);
+        char*                           getCString(void);
         double                          lnPriorProbability(void);
         void                            print(void);
         void                            printNewick(void);
-        std::string                     getString(void);
         void                            reject(void);
         double                          update(int iter);
         void                            updateSubtrees(void);
