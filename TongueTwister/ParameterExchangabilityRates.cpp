@@ -41,9 +41,6 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
         rates[0][i] = 1.0 / numRates;
     Probability::Helper::normalize(rates[0], minVal);
     rates[1] = rates[0];
-    
-    parmStrLen = numRates*12;
-    parmStr = new char[parmStrLen];
 }
 
 ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Model* m, std::string n, int ns, std::vector<std::string> labs) : Parameter(r, m, n) {
@@ -63,14 +60,10 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
         alpha[i] = 1.0;
     Probability::Dirichlet::rv(rv, alpha, rates[0]);
     rates[1] = rates[0];
-
-    parmStrLen = numRates*12;
-    parmStr = new char[parmStrLen];
 }
 
 ParameterExchangabilityRates::~ParameterExchangabilityRates(void) {
 
-    delete [] parmStr;
 }
 
 void ParameterExchangabilityRates::accept(void) {
@@ -121,35 +114,6 @@ std::string ParameterExchangabilityRates::getString(void) {
     return str;
 }
 
-char* ParameterExchangabilityRates::getCString(void) {
-
-    char tempStr[20];
-    char* p = parmStr;
-    for (int i=0; i<numRates; i++)
-        {
-        sprintf(tempStr, "%1.6lf\t", rates[0][i]);
-        for (char* c=tempStr; *c != '\0'; c++)
-            {
-            (*p) = (*c);
-            p++;
-            }
-        }
-    (*p) = '\0';
-    return parmStr;
-}
-
-std::string ParameterExchangabilityRates::getUpdateName(int idx) {
-
-    if (idx == 0)
-        return "exchangeability rates (k=1)";
-    else if (idx == 1)
-        return "exchangeability rates (k=10)";
-    else if (idx == 2)
-        return "exchangeability rates (All)";
-    else
-        return "random exchangeability rates";
-}
-
 double ParameterExchangabilityRates::lnPriorProbability(void) {
 
     return Probability::Helper::lnGamma(numRates-1);
@@ -192,6 +156,8 @@ void ParameterExchangabilityRates::reject(void) {
 
 double ParameterExchangabilityRates::update(int) {
 
+    lastUpdateType = "exchangeability rates (k=";
+
     // choose the number of rates to update
     int k = 1;
     double u = rv->uniformRv();
@@ -203,14 +169,13 @@ double ParameterExchangabilityRates::update(int) {
         k = numRates;
         
     k = 1;
-            
+        
+    lastUpdateType += std::to_string(k) + ")";
+    
     // update the rates
     double lnP = 0.0;
     if (k == 1)
         {
-        lastUpdateType.first = this;
-        lastUpdateType.second = 0;
-
         // resize vectors for move
         oldValues.resize(2, 0.0);
         newValues.resize(2, 0.0);
@@ -249,9 +214,6 @@ double ParameterExchangabilityRates::update(int) {
         }
     else if (k > 1 && k < numRates)
         {
-        lastUpdateType.first = this;
-        lastUpdateType.second = 1;
-
         // resize vectors for move
         oldValues.resize(k+1, 0.0);
         newValues.resize(k+1, 0.0);
@@ -304,9 +266,6 @@ double ParameterExchangabilityRates::update(int) {
         }
     else
         {
-        lastUpdateType.first = this;
-        lastUpdateType.second = 2;
-
         // resize vectors for move
         oldValues.resize(numRates);
         newValues.resize(numRates);
@@ -360,8 +319,7 @@ double ParameterExchangabilityRates::update(int) {
 
 double ParameterExchangabilityRates::updateFromPrior(void) {
 
-    lastUpdateType.first = this;
-    lastUpdateType.second = 3;
+    lastUpdateType = "random exchangeability rates";
 
     // draw from the prior distribution, which is a flat Dirichlet distribution
     Probability::Dirichlet::rv(rv, alpha, rates[0]);

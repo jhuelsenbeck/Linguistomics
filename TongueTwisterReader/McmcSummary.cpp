@@ -6,7 +6,6 @@
 #include <string>
 #include "Alignment.hpp"
 #include "AlignmentDistribution.hpp"
-#include "Container.hpp"
 #include "json.hpp"
 #include "McmcSummary.hpp"
 #include "Msg.hpp"
@@ -112,366 +111,6 @@ std::vector<std::string> McmcSummary::breakString(std::string str) {
     return broken;
 }
 
-void McmcSummary::calculateRates(DoubleMatrix& m) {
-
-    int numStates = 0;
-    
-    // 1. get state frequencies (and the number of states). We look
-    // up the apropriate ParameterStatistics objects for this
-    std::set<int> observedStates;
-    for (int i=0; i<stats.size(); i++)
-        {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'F')
-            {
-            int st = getFreqElement(s->getName());
-            observedStates.insert(st);
-            }
-        }
-    for (int i=0; i<observedStates.size(); i++) // make certain all of the states from 0 to (numStates-1) are found
-        {
-        std::set<int>::iterator it = observedStates.find(i);
-        if (it == observedStates.end())
-            Msg::error("Could not find state " + std::to_string(i) + " in frequencies summary");
-        }
-    numStates = (int)observedStates.size();
-    std::vector<double> f(numStates);
-    for (int i=0; i<stats.size(); i++)
-        {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'F')
-            {
-            int st = getFreqElement(s->getName());
-            f[st] = s->getMean();
-            }
-        }
-    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
-        {
-        int tempNumStates = statePartitions->getNumElements();
-        if (tempNumStates != numStates)
-            Msg::error("Mismatch in the number of states from the frequencies and the state partitions");
-        }
-
-    // allocate a vector to hold the exchangeability parameters
-    DoubleMatrix r(numStates,numStates);
-    for (int i=0; i<numStates; i++)
-        for (int j=0; j<numStates; j++)
-            r(i,j) = -1.0;
-    for (int i=0; i<stats.size(); i++)
-        {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'R')
-            {
-            int r1, r2;
-            getRateElements(s->getName(), r1, r2);
-            if (statePartitions != NULL)
-                {
-                Subset* s1 = statePartitions->findSubsetIndexed(r1);
-                Subset* s2 = statePartitions->findSubsetIndexed(r2);
-                for (int x1 : s1->getValues())
-                    {
-                    for (int x2 : s2->getValues())
-                        {
-                        double ave = s->getMean();
-                        r(x1,x2) = ave;
-                        r(x2,x1) = ave;
-                        }
-                    }
-                
-                }
-            else
-                {
-                r(r1,r2) = s->getMean();
-                }
-            }
-        }
-    for (int i=0; i<numStates; i++)
-        {
-        for (int j=0; j<numStates; j++)
-            {
-            if (r(i,j) < 0.0 && i != j)
-                Msg::error("Could not find all rate parameters");
-            }
-        }
-
-
-    // fill in the rates (Q)
-    //DoubleMatrix m(numStates,numStates);
-    double averageRate = 0.0;
-    for (int i=0; i<numStates; i++)
-        {
-        double sum = 0.0;
-        for (int j=0; j<numStates; j++)
-            {
-            if (i != j)
-                {
-                m(i,j) = r(i,j) * f[j];
-                sum += m(i,j);
-                }
-            }
-        m(i,i) = -sum;
-        averageRate += f[i] * sum;
-        }
-        
-    // rescale so average is one (Q)
-    double scaleFactor = 1.0 / averageRate;
-    for (int i=0; i<numStates; i++)
-        for (int j=0; j<numStates; j++)
-            m(i,j) *= scaleFactor;
-                        
-#   if 1
-    double sum = 0.0;
-    std::cout << "Frequencies:" << std::endl;
-    for (int i=0; i<f.size(); i++)
-        {
-        std::cout << "F[" << i << "] = " << f[i] << std::endl;
-        sum += f[i];
-        }
-    std::cout << "Frequencies sum = " << sum << std::endl;
-    std::cout << "Rates:" << std::endl;
-    sum = 0.0;
-    for (int i=0; i<numStates; i++)
-        {
-        for (int j=0; j<numStates; j++)
-            {
-            std::cout << r(i,j) << " ";
-            sum += r(i,j);
-            }
-        std::cout << std::endl;
-        }
-    std::cout << "Rates sum = " << sum << std::endl;
-    std::cout << "Average Rates:" << std::endl;
-    sum = 0.0;
-    for (int i=0; i<numStates; i++)
-        {
-        for (int j=0; j<numStates; j++)
-            {
-            if (i != j)
-                {
-                std::cout << m(i,j) << " ";
-                sum += m(i,j);
-                }
-            }
-        std::cout << std::endl;
-        }
-    std::cout << "Average rates  um = " << sum << std::endl;
-#   endif
-
-}
-
-void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
-
-    int numStates = 0;
-    
-    // 1. get state frequencies (and the number of states). We look
-    // up the apropriate ParameterStatistics objects for this
-    std::set<int> observedStates;
-    for (int i=0; i<stats.size(); i++)
-        {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'F')
-            {
-            int st = getFreqElement(s->getName());
-            observedStates.insert(st);
-            }
-        }
-    for (int i=0; i<observedStates.size(); i++) // make certain all of the states from 0 to (numStates-1) are found
-        {
-        std::set<int>::iterator it = observedStates.find(i);
-        if (it == observedStates.end())
-            Msg::error("Could not find state " + std::to_string(i) + " in frequencies summary");
-        }
-    numStates = (int)observedStates.size();
-    std::vector<double> f(numStates);
-    for (int i=0; i<stats.size(); i++)
-        {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'F')
-            {
-            int st = getFreqElement(s->getName());
-            f[st] = s->getMean();
-            }
-        }
-    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
-        {
-        int tempNumStates = statePartitions->getNumElements();
-        if (tempNumStates != numStates)
-            Msg::error("Mismatch in the number of states from the frequencies and the state partitions");
-        }
-
-    // allocate a vector to hold the exchangeability parameters
-    DoubleMatrix r(numStates,numStates);
-    for (int i=0; i<numStates; i++)
-        for (int j=0; j<numStates; j++)
-            r(i,j) = -1.0;
-    for (int i=0; i<stats.size(); i++)
-        {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'R')
-            {
-            int r1, r2;
-            getRateElements(s->getName(), r1, r2);
-            if (statePartitions != NULL)
-                {
-                Subset* s1 = statePartitions->findSubsetIndexed(r1);
-                Subset* s2 = statePartitions->findSubsetIndexed(r2);
-                for (int x1 : s1->getValues())
-                    {
-                    for (int x2 : s2->getValues())
-                        {
-                        double ave = s->getMean();
-                        r(x1,x2) = ave;
-                        r(x2,x1) = ave;
-                        }
-                    }
-                
-                }
-            else
-                {
-                r(r1,r2) = s->getMean();
-                }
-            }
-        }
-    for (int i=0; i<numStates; i++)
-        {
-        for (int j=0; j<numStates; j++)
-            {
-            if (r(i,j) < 0.0 && i != j)
-                Msg::error("Could not find all rate parameters");
-            }
-        }
-
-
-    // fill in the rates (Q)
-    //DoubleMatrix m(numStates,numStates);
-    double averageRate = 0.0;
-    for (int i=0; i<numStates; i++)
-        {
-        double sum = 0.0;
-        for (int j=0; j<numStates; j++)
-            {
-            if (i != j)
-                {
-                m(i,j) = r(i,j) * f[j];
-                sum += m(i,j);
-                }
-            }
-        m(i,i) = -sum;
-        averageRate += f[i] * sum;
-        }
-        
-    // rescale so average is one (Q)
-    double scaleFactor = 1.0 / averageRate;
-    for (int i=0; i<numStates; i++)
-        for (int j=0; j<numStates; j++)
-            m(i,j) *= scaleFactor;
-            
-    // now get average rate from i to j (R)
-    for (int i=0; i<numStates; i++)
-        for (int j=0; j<numStates; j++)
-            m(i,j) *= f[i];
-            
-#   if 1
-    double sum = 0.0;
-    std::cout << "Frequencies:" << std::endl;
-    for (int i=0; i<f.size(); i++)
-        {
-        std::cout << "F[" << i << "] = " << f[i] << std::endl;
-        sum += f[i];
-        }
-    std::cout << "Frequencies sum = " << sum << std::endl;
-    std::cout << "Rates:" << std::endl;
-    sum = 0.0;
-    for (int i=0; i<numStates; i++)
-        {
-        for (int j=0; j<numStates; j++)
-            {
-            std::cout << r(i,j) << " ";
-            sum += r(i,j);
-            }
-        std::cout << std::endl;
-        }
-    std::cout << "Rates sum = " << sum << std::endl;
-    std::cout << "Average Rates:" << std::endl;
-    sum = 0.0;
-    for (int i=0; i<numStates; i++)
-        {
-        for (int j=0; j<numStates; j++)
-            {
-            if (i != j)
-                {
-                std::cout << m(i,j) << " ";
-                sum += m(i,j);
-                }
-            }
-        std::cout << std::endl;
-        }
-    std::cout << "Average rates  um = " << sum << std::endl;
-#   endif
-}
-
-int McmcSummary::getFreqElement(std::string str) {
-
-    int n = 0;
-    std::string tempStr = "";
-    bool readingBetweenSquareBrackets = false;
-    for (int i=0; i<str.length(); i++)
-        {
-        char c = str[i];
-        if (c == '[')
-            readingBetweenSquareBrackets = true;
-        else if (c == ']')
-            readingBetweenSquareBrackets = false;
-        else
-            {
-            if (readingBetweenSquareBrackets == true)
-                tempStr += std::string(1, c);
-            }
-        }
-    if (tempStr != "")
-        n = std::stoi(tempStr);
-    return n;
-}
-
-void McmcSummary::getRateElements(std::string str, int& r1, int& r2) {
-
-    r1 = 0;
-    r2 = 0;
-
-    std::string tempStr = "";
-    bool readingFirstNum = false, readingSecondNum = false;
-    for (int i=0; i<str.length(); i++)
-        {
-        char c = str[i];
-        if (c == '[')
-            {
-            readingFirstNum = true;
-            readingSecondNum = false;
-            }
-        else if (c == ']')
-            {
-            readingFirstNum = false;
-            readingSecondNum = false;
-            if (tempStr != "")
-                r2 = std::stoi(tempStr);
-            tempStr = "";
-            }
-        else if (c == '-')
-            {
-            readingFirstNum = false;
-            readingSecondNum = true;
-            if (tempStr != "")
-                r1 = std::stoi(tempStr);
-            tempStr = "";
-            }
-        else
-            {
-            if (readingFirstNum == true || readingSecondNum == true)
-                tempStr += std::string(1, c);
-            }
-        }
-}
-
 std::vector<CredibleInterval> McmcSummary::getCredibleIntervals(void) {
 
     std::vector<CredibleInterval> cis;
@@ -544,61 +183,6 @@ bool McmcSummary::hasSemicolon(std::string str) {
     if (found != std::string::npos)
         return true;
     return false;
-}
-
-int McmcSummary::inferNumberOfRates(void) {
-
-    int numRateClasses = 0;
-    for (int i=0; i<stats.size(); i++)
-        {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'R')
-            numRateClasses++;
-        }
-    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
-        {
-        int numSubsets = statePartitions->numSubsets();
-        int tempNumRates = numSubsets * (numSubsets-1) / 2;
-        std::set<Subset*>& subsets = statePartitions->getSubsets();
-        for (Subset* s : subsets)
-            {
-            if (s->getNumElements() > 1)
-                tempNumRates++;
-            }
-        if (tempNumRates != numRateClasses)
-            Msg::error("Mismatch in the number of rate classes");
-        }
-    return numRateClasses;
-}
-
-int McmcSummary::inferNumberOfStates(void) {
-
-    // 1. get state frequencies (and the number of states). We look
-    // up the apropriate ParameterStatistics objects for this
-    std::set<int> observedStates;
-    for (int i=0; i<stats.size(); i++)
-        {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'F')
-            {
-            int st = getFreqElement(s->getName());
-            observedStates.insert(st);
-            }
-        }
-    for (int i=0; i<observedStates.size(); i++) // make certain all of the states from 0 to (numStates-1) are found
-        {
-        std::set<int>::iterator it = observedStates.find(i);
-        if (it == observedStates.end())
-            Msg::error("Could not find state " + std::to_string(i) + " in frequencies summary");
-        }
-    int numStates = (int)observedStates.size();
-    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
-        {
-        int tempNumStates = statePartitions->getNumElements();
-        if (tempNumStates != numStates)
-            Msg::error("Mismatch in the number of states from the frequencies and the state partitions");
-        }
-    return numStates;
 }
 
 std::map<int,std::string> McmcSummary::interpretTranslateString(std::vector<std::string> translateTokens) {
@@ -826,32 +410,7 @@ void McmcSummary::printPartitionFreqs(void) {
         }
 }
 
-void McmcSummary::writeMatrix(std::ofstream& file, DoubleMatrix &m, std::string name) {
-    file << name << " = [\n";
-    auto rows = m.getNumRows();
-    auto cols = m.getNumCols();
-    double max = 0;
-    for (int i = 0; i < rows; ++i)
-        {
-        if (i)
-            file << ",\n";
-        file << "  [";
-        for (int j = 0; j < cols; ++j)
-            {
-            double r = m(i, j);
-            if (r > max)
-                max = r;
-            if (j)
-                file << ",";
-            file << r;
-            }
-        file << "]";
-        }
-    file << "\n];\n";
-    file << name << "Max = " << max << ";\n\n";
-}
-
-void McmcSummary::output(std::string pathName, std::ofstream& findex) {
+void McmcSummary::output(std::string pathName) {
 
     auto stree = conTree->getNewick(4);
     auto tree  = new std::ofstream(pathName + "/consensus.tre", std::ios::out);
@@ -861,6 +420,7 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
 
     double cutoff = 0.95;
 
+    auto& findex = *new std::ofstream(pathName + "/alignments.nytril", std::ios::out);
     findex << "// This file is auto-generated by TongueTwisterReader. Do not edit\n\n";
     findex << "AlignmentCutoff = " << cutoff << ";\n\n";
 
@@ -903,22 +463,6 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
         findex << "]";
     }
     findex << "\n];\n\n";
-    
-    int numRateClasses = inferNumberOfRates();
-    std::cout << "numRateClasses = " << numRateClasses << std::endl;
-    
-    // output average rates of change
-    // No credible intervals on this information.
-    int numStates = inferNumberOfStates();
-    DoubleMatrix aveRates(numStates,numStates);
-    calculateAverageRates(aveRates);
-    writeMatrix(findex, aveRates, "AverageRates");
-
-
-    DoubleMatrix q(numStates,numStates);
-    calculateRates(q);
-    writeMatrix(findex, q, "QRates");
-
 
 
     findex << "AlignIndexClass[] Alignments = [\n";
@@ -981,11 +525,9 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
         }
         
     // output json representation to a file
-    auto file = new std::ofstream(pathName + "/summary.json", std::ios::out);
-    *file << j;
+    auto& file = *new std::ofstream(pathName + "/summary.json", std::ios::out);
+    file << j;
     std::cout << "JSON file written to: " << pathName << "summary.json" << std::endl;
-    file->close();
-    delete file;
 }
     
 int McmcSummary::parseNumberFromFreqHeader(std::string str) {

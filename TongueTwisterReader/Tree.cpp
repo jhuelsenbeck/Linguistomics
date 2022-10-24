@@ -198,42 +198,6 @@ Tree::Tree(std::map<RbBitSet,ParameterStatistics*>& partitions, std::map<int,std
         }
 
     initializeDownPassSequence();
-    
-    // assign probabilitie to the branches
-    std::vector<RbBitSet> tempPartitions(downPassSequence.size());
-    for (Node* p : downPassSequence)
-        {
-        RbBitSet& bs = tempPartitions[p->getIndex()];
-        bs.resize(numTaxa);
-        bs.unset();
-        if (p->getIsLeaf() == true)
-            {
-            bs.set(p->getIndex());
-            p->setCladeProbability(1.0);
-            }
-        else
-            {
-            std::vector<Node*> pDesc = p->getDescendants();
-            for (Node* d : pDesc)
-                bs |= tempPartitions[d->getIndex()];
-            
-            std::map<RbBitSet,ParameterStatistics*>::iterator it = partitions.find(bs);
-            double prob = 0.0;
-            if (it == partitions.end())
-                {
-                RbBitSet bs2 = bs;
-                bs2.flip();
-                it = partitions.find(bs2);
-                if (it == partitions.end())
-                    Msg::error("Could not find branch partition in list of partitions");
-                prob = (double)it->second->size()/num;
-                p->setCladeProbability(prob);
-                }
-            prob = (double)it->second->size()/num;
-            p->setCladeProbability(prob);
-            
-            }
-        }
 
 }
 
@@ -242,13 +206,6 @@ Node* Tree::addNode(void) {
     Node* newNode = new Node;
     nodes.push_back(newNode);
     return newNode;
-}
-
-std::string Tree::getNewick(int brlenPrecision, std::map<RbBitSet,ParameterStatistics*>&) {
-
-    
-
-    return getNewick(brlenPrecision);
 }
 
 std::string Tree::getNewick(int brlenPrecision) {
@@ -388,24 +345,20 @@ void Tree::print(void) {
     listNode(root, 3);
 }
 
-void Tree::writeData(Node* p, std::stringstream& ss, int brlenPrecision) {
-    ss << "[&Probability=" << p->getCladeProbability() << "]:" << std::fixed << std::setprecision(brlenPrecision) << p->getBrlen();
-}
-
 void Tree::writeTree(Node* p, std::stringstream& ss, int brlenPrecision) {
 
     if (p != NULL)
         {
         if (p->getIsLeaf() == true)
             {
+            //ss << p->getIndex()+1;
             ss << p->getName();
-            writeData(p, ss, brlenPrecision);
+            ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBrlen();
             }
         else
             {
             ss << "(";
             }
-
         std::vector<Node*> myDescendants = p->getDescendants();
         for (int i=0; i<(int)myDescendants.size(); i++)
             {
@@ -416,8 +369,8 @@ void Tree::writeTree(Node* p, std::stringstream& ss, int brlenPrecision) {
         if (p->getIsLeaf() == false)
             {
             ss << ")";
-            if (p != root)
-              writeData(p, ss, brlenPrecision);
+            if (p != NULL && p != root)
+                ss << ":" << std::fixed << std::setprecision(brlenPrecision) << p->getBrlen();
             }
         }
 }

@@ -12,8 +12,6 @@
 class Alignment;
 class LikelihoodCalculator;
 class ParameterAlignment;
-class ParameterEquilibirumFrequencies;
-class ParameterExchangabilityRates;
 class ParameterTree;
 class Partition;
 class RandomVariable;
@@ -42,12 +40,13 @@ class Model {
 
     public:
                                                 Model(void) = delete;
-                                       explicit Model(RandomVariable* r, ThreadPool& threadPool);
+                                                explicit Model(RandomVariable* r, ThreadPool& threadPool);
                                                ~Model(void);
         void                                    accept(void);
         void                                    fillParameterValues(double* x, int n);
         void                                    flipActiveLikelihood(void);
         void                                    flipActiveLikelihood(int idx);
+        std::string&                            getLastUpdate(void);
         ParameterAlignment*                     getAlignment(int idx);
         std::vector<ParameterAlignment*>        getAlignments(void);
         std::vector<std::string>&               getCanonicalTaxonList(void) { return canonicalTaxonList; }
@@ -58,7 +57,6 @@ class Model {
         std::vector<double>&                    getRatesGammaRates(void);
         int                                     getIndex(void) { return index; }
         double                                  getInsertionRate(void);
-        std::pair<Parameter*,int>&              getLastUpdate(void);
         int                                     getNumAlignments(void);
         std::string                             getParameterHeader(void);
         std::string                             getParameterString(void);
@@ -82,7 +80,6 @@ class Model {
     private:
         std::vector<Alignment*>                 initializeAlignments(nlohmann::json& j);
         void                                    initializeParameters(std::vector<Alignment*>& wordAlignments, nlohmann::json& j);
-        void                                    initializeParameterString(void);
         void                                    initializeStateSets(nlohmann::json& j);
         void                                    initializeTransitionProbabilities(std::vector<Alignment*>& wordAlignments);
         nlohmann::json                          parseJsonFile(void);
@@ -106,13 +103,10 @@ class Model {
         RateMatrixHelper*                       rateMatrixHelper;
         TransitionProbabilities*                transitionProbabilities;
         size_t                                  taskMax;
+        //ParameterId                             updatedParameterIdx;
         int                                     updatedParameterIdx;
         int                                     substitutionModel;
         int                                     index;
-        ParameterTree*                          treeParameter;
-        ParameterExchangabilityRates*           exchangeabilityParameter;
-        ParameterEquilibirumFrequencies*        equilibirumFreqParameter;
-        char*                                   parameterString;
 };
 
 #endif

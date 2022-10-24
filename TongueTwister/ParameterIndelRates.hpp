@@ -23,8 +23,6 @@ class ParameterIndelRates : public Parameter {
         double                          getInsertionRate(void);
         int                             getNumValues(void) { return 2; }
         std::string                     getString(void);
-        char*                           getCString(void);
-        std::string                     getUpdateName(int idx);
         double                          lnPriorProbability(void);
         void                            print(void);
         void                            reject(void);

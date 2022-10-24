@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include "Parameter.hpp"
 #include "UpdateInfo.hpp"
 
 
@@ -10,21 +9,21 @@ UpdateInfo::UpdateInfo(void) {
 
 UpdateInfo::~UpdateInfo(void) {
 
-    for (std::map<std::pair<Parameter*,int>,AcceptTries*>::iterator it = info.begin(); it != info.end(); it++)
+    for (std::map<std::string,AcceptTries*>::iterator it = info.begin(); it != info.end(); it++)
         delete it->second;
     info.clear();
 }
 
-void UpdateInfo::accept(std::pair<Parameter*,int>& key) {
+void UpdateInfo::accept(std::string& key) {
 
     AcceptTries* at = getUpdateInfo(key);
     at->numTries++;
     at->numAccepts++;
 }
 
-AcceptTries* UpdateInfo::getUpdateInfo(std::pair<Parameter*,int>& key) {
+AcceptTries* UpdateInfo::getUpdateInfo(std::string& key) {
 
-    std::map<std::pair<Parameter*,int>,AcceptTries*>::iterator it = info.find(key);
+    std::map<std::string,AcceptTries*>::iterator it = info.find(key);
     if (it == info.end())
         {
         AcceptTries* newInfo = new AcceptTries;
@@ -37,18 +36,16 @@ AcceptTries* UpdateInfo::getUpdateInfo(std::pair<Parameter*,int>& key) {
 void UpdateInfo::print(void) {
 
     int len = 0;
-    for (std::map<std::pair<Parameter*,int>,AcceptTries*>::iterator it = info.begin(); it != info.end(); it++)
+    for (std::map<std::string,AcceptTries*>::iterator it = info.begin(); it != info.end(); it++)
         {
-        std::string updateName = it->first.first->getUpdateName(it->first.second);
-        if (updateName.length() > len)
-            len = (int)updateName.length();
+        if (it->first.length() > len)
+            len = (int)it->first.length();
         }
         
-    for (std::map<std::pair<Parameter*,int>,AcceptTries*>::iterator it = info.begin(); it != info.end(); it++)
+    for (std::map<std::string,AcceptTries*>::iterator it = info.begin(); it != info.end(); it++)
         {
-        std::string updateName = it->first.first->getUpdateName(it->first.second);
-        std::cout << "   * Acceptance rate for update of " << updateName << " ";
-        for (int i=0; i<len-updateName.length(); i++)
+        std::cout << "   * Acceptance rate for update of " << it->first << " ";
+        for (int i=0; i<len-it->first.length(); i++)
             std::cout << " ";
         std::cout << "= ";
         if (it->second->numTries > 0)
@@ -60,7 +57,7 @@ void UpdateInfo::print(void) {
         }
 }
 
-void UpdateInfo::reject(std::pair<Parameter*,int>& key) {
+void UpdateInfo::reject(std::string& key) {
 
     AcceptTries* at = getUpdateInfo(key);
     at->numTries++;

@@ -3,7 +3,6 @@
 
 #include <map>
 #include <string>
-class Parameter;
 
 
 
@@ -17,19 +16,19 @@ struct AcceptTries {
 class UpdateInfo {
 
     public:
-        static UpdateInfo&                                  updateInfo(void) {
-                                                                static UpdateInfo uiPool;
-                                                                return uiPool;
-                                                                }
-        void                                                accept(std::pair<Parameter*,int>& key);
-        void                                                print(void);
-        void                                                reject(std::pair<Parameter*,int>& key);
-        AcceptTries*                                        getUpdateInfo(std::pair<Parameter*,int>& key);
+        static UpdateInfo&                  updateInfo(void) {
+                                                static UpdateInfo uiPool;
+                                                return uiPool;
+                                            }
+        void                                accept(std::string& key);
+        void                                print(void);
+        void                                reject(std::string& key);
+        AcceptTries*                        getUpdateInfo(std::string& key);
         
     private:
-                                                            UpdateInfo(void);
-                                                           ~UpdateInfo(void);
-        std::map<std::pair<Parameter*,int>,AcceptTries*>    info;
+                                            UpdateInfo(void);
+                                           ~UpdateInfo(void);
+        std::map<std::string,AcceptTries*>  info;
 };
 
 #endif

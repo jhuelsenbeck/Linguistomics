@@ -26,9 +26,10 @@ class DiagnosticsViewClass: DocumentClass {
     };
 
     var size = new SizeClass(ExtentWidth, 3 inches);
-    Chart(size.Width, size.Height) {
+    Chart {
       Type: ChartTypes.Column;
       TextHeight: 10 pts;
+      Size: size;
       ValueLabel: "%";
 
       XAxis: ChartAxis {
@@ -47,9 +48,10 @@ class DiagnosticsViewClass: DocumentClass {
     };
 
     var coverage = Data.CoverageByLanguages;
-    Chart(size.Width, size.Height) {
+    Chart {
       Type: ChartTypes.Column;
       TextHeight: 10 pts;
+      Size: size;
 
       ValueLabel: Lang.Cognates {
         Transform: Rotate(90 degrees);
@@ -69,12 +71,11 @@ class DiagnosticsViewClass: DocumentClass {
     };
   };
 
-  override GetDocument = Document(new(new(0.5 inches, 0.75 inches, 0.5 inches, 0.5 inches))) {
+  override GetDocument = Document {
     TextHeight: 9 pts;
 
     AppendixClass[] appendices = [
       new("Cognate Coverage", ShowCognateCoverage),
-      new AppendixFigureClass(Figures.UniqueSegments),
       new AppendixFigureClass(Figures.SegmentTransitionCounts),
       new("Concept Groups", SegmentDisplay.ShowConceptGroups(Data)),
       new("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(Data)),

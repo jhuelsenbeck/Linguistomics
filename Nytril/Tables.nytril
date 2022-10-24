@@ -40,7 +40,8 @@ class EulerDiagramClass {
   FeatureFrame(DataSetClass data, x, y, width, name, features) = Canvas {
     X: EX(x);
     Y: EY(y);
-    Frame(EX(width)) {
+    Frame {
+      Width: EX(width);
       ParAlignment: ParAlignments.Center;
       if (valid name)
         Span {TitleStyle; name};
@@ -152,10 +153,11 @@ namespace DisplayWords {
     }
   };
 
-  HeaderCell(d) = Cell(PadAll(2 pts)) {
+  HeaderCell(d) = Cell {
     Style.SansSerif;
     Style.TitleBackground;
     Border: BorderB(1 pts);
+    Padding: 2 pts;
     d
   };
 
@@ -194,7 +196,8 @@ namespace AllWords {
   };
 
   AddRow(TaxonClass taxon, CognateClass[] cognates, textheight) = Row {
-    Cell(PadL(1 pt)) {
+    Cell {
+      Padding: PadL(1 pt);
       Style.SansSerif;
       TextColor: Colors.DarkGray;
       taxon.Language;
@@ -245,8 +248,9 @@ namespace MatchCell {
     return null;
   }
 
-  SegmentBox(HashSetClass set, SegmentClass segment, color) = Canvas(DocMetrics.BoxSize.Width, DocMetrics.BoxSize.Height) {
+  SegmentBox(HashSetClass set, SegmentClass segment, color) = Canvas {
     HAlign: HAligns.Center;
+    Size: DocMetrics.BoxSize;
     if (valid segment.?Ipa) {
       TextHeight: DocMetrics.BoxSize.Height - 6 pts;
       TextColor: color;
@@ -302,7 +306,8 @@ class TabOptionsClass {
           if (MatchError(matches))
             MatchCell.ErrorMatches(set, matches);
           else {
-            Canvas(DocMetrics.CellSize.Width, DocMetrics.CellSize.Height) {
+            Canvas {
+              Size: DocMetrics.CellSize;
               MatchCell.ShowBox(set, each matches, Colors.Black)
             }
           }
@@ -324,10 +329,11 @@ class TabOptionsClass {
 
   AddRow(DataSetClass data, SegmentSetClass set, places, f) = Row {
     var features = f | All;
-    Cell(PadLR(2 pts)) {
+    Cell {
       VAlign: VAligns.Center;
       Border: BorderR(0.5 pts);
       Style.TitleBackground;
+      Padding: PadLR(2 pts);
       TextHeight: 7 pts;
 
       if (valid RowLabels)
@@ -449,6 +455,7 @@ namespace MatchingVowels {
   };
 
   AddRow(DataSetClass data, SegmentSetClass set, open, features) = Row {
+    Height: 16 pts;
     Cell {
       VAlign: VAligns.Center;
       Style.TitleBackground;
@@ -569,8 +576,11 @@ namespace MatchingOther {
 namespace SegmentDisplay {
   CompareSegments(SegmentClass s0, SegmentClass s1, options) = s0.UsedCount - s1.UsedCount;
 
-  FrequencyChart(DataSetClass data, SizeClass size) = Chart(size.Width, size.Height) {
+  FrequencyChart(DataSetClass data, SizeClass size) = Chart {
     TextHeight: 11 pts;
+    Size: size;
+
+    SegmentClass[] sorted = data.UniqueSegments.Sort(true, ref CompareSegments);
     Style.SansSerif;
     Type: ChartTypes.Column;
     Legend: ChartLegend {Placement: Placements.Bottom};
@@ -578,10 +588,8 @@ namespace SegmentDisplay {
       Transform: Rotate(90 degrees);
       TransformFit: true;
     };
-
-    SegmentClass[] sorted = data.UniqueSegments.Sort(true, ref CompareSegments);
     XAxis: ChartAxis {
-      TextHeight: DocMetrics.SegmentTextFactor * size.Width / sorted.Length;
+      TextHeight: 0.6 * size.Width / sorted.Length;
       (each sorted).ShowSegment;
     };
     ValueAxis: ChartAxis;
@@ -593,28 +601,29 @@ namespace SegmentDisplay {
   };
 
   ShowSegmentAssignments(DataSetClass data) = Paragraph {
-    var textheight = 18 pts;
-    TextHeight: textheight;
-
     foreach (var segment in data.UniqueSegments) {
-      HBox(textheight * 3.25, null, PadLR(1)) {
+      HBox {
         VAlign: VAligns.Center;
         Margin: 5;
+        Padding: PadLR(1);
         Border: 0.25 pts {Color: 85%};
         Span {
           HAlign: HAligns.Center;
           TextColor: Colors.LightGray;
-          TextHeight: 75%;
-          each0;
+          each1;
         };
-        Space*4;
-        segment.ShowSegment;
+        Space*5;
+        Span {
+          TextHeight: 18 pts;
+          segment.ShowSegment;
+        };
       }
     }
   };
 
-  SegmentCell(SegmentClass segment) = Cell(PadAll(2 pts)) {
+  SegmentCell(SegmentClass segment) = Cell {
     Border: 0.25 pts {Color: Colors.LightGray};
+    Padding: 2 pts;
     segment.Display(segment.GetVariableFullName, 16 pts)
   };
 
@@ -663,12 +672,14 @@ namespace SegmentDisplay {
       HAlign: HAligns.Center;
 
       foreach (var group in taxagroup) {
-        HBox(null, null, PadT(space)) {
+        HBox {
+          Padding: PadT(space);
           VAlign: VAligns.Top;
 
           foreach (TaxonClass taxon in group) {
-            VBox(size.Width, size.Height) {
+            VBox {
               Margin: PadR(space);
+              Size: size;
               HAlign: HAligns.Center;
 
               Paragraph {
@@ -677,9 +688,11 @@ namespace SegmentDisplay {
                 taxon.Language;
               };
 
-              var s = new SizeClass(size.Width, size.Height - h);
-              HBox(s.Width, s.Height) {
+              HBox {
+                var s = new SizeClass(size.Width, size.Height - h);
+
                 VAlign: VAligns.Center;
+                Size: s;
                 BorderRadius: 20 pts;
                 BorderStroke: border {Color: 90%};
                 BorderClip: true;

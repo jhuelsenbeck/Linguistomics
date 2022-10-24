@@ -45,11 +45,9 @@ class ParameterAlignment : public Parameter {
         int                             getPrintWidth(void) { return printWidth; }
         std::vector<std::vector<int> >  getRawSequenceMatrix(void) { return sequences; }
         std::string                     getString(void) { return ""; }
-        char*                           getCString(void) { return parmStr; }
         RbBitSet                        getTaxonMask(void);
         std::string                     getTaxonMaskString(void);
         std::vector<std::string>        getTaxonNames(void) { return taxonNames; }
-        std::string                     getUpdateName(int idx);
         void                            jsonStream(std::ofstream& strm);
         int                             lengthOfLongestSequence(void);
         double                          lnPriorProbability(void);

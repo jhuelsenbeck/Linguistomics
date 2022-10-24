@@ -21,7 +21,8 @@ class FilterClass {
     Name;
   };
 
-  override GetLayoutTip = Frame(DocMetrics.SegmentWidth) {
+  override GetLayoutTip = Frame {
+    Width: 2 inches;
     Paragraph {
       ParAlignment: ParAlignments.Center;
       TextHeight: 16 pts;
@@ -151,9 +152,11 @@ abstract class RuleClass {
     return segments.FindSlice(segment => MatchesRule(filter, segment));
   }
 
-  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame(DocMetrics.SegmentWidth) {
+  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame {
+    Width: 2 inches;
     Paragraph {
       ParAlignment: align;
+
       TextHeight: 18 pts;
       var matching = GetMatching(segments, filter);
       if (valid matching) {
@@ -163,9 +166,8 @@ abstract class RuleClass {
     }
   };
 
-  ShowLegend(textheight, width, padding) = VBox(null, null, padding) {
+  ShowLegend(textheight, width) = VBox {
     Table {
-      Style.SansSerif;
       TextHeight: textheight;
       Columns: [textheight*1.7, textheight, width - textheight * 2.7];
 
@@ -184,49 +186,14 @@ abstract class RuleClass {
     };
   };
 
-  ShowSimpleLegend(textheight) = VBox {
-    Style.SansSerif;
-    TextHeight: textheight;
-
-    foreach (var partition in Partitions) {
-      HBox {
-        VAlign: VAligns.Center;
-        Separation: 3 pts;
-        Canvas (textheight, textheight) {
-          BorderRadius: new SizeClass(3, 3);
-          Background: partition.Color;
-        };
-        partition.Filter;
-      }
-    }
-  };
-
-  ShowBlockLegend(textheight) = Frame {
-    Paragraph {
-      Separator: Space*4;
-      TextHeight: textheight;
-      foreach (var partition in Partitions) {
-        HBox {
-          VAlign: VAligns.Center;
-          Separation: 3 pts;
-          Canvas (textheight, textheight) {
-            BorderRadius: new SizeClass(3, 3);
-            Background: partition.Color;
-          };
-          partition.Filter;
-        }
-      }
-    }
-  };
-
   ShowPartitions = Block {
+    TextHeight: ExtentWidth * 0.03;
     Paragraph {
       "Model: ";
       Style.DQuote {Name};
     };
 
     Table {
-      TextHeight: ExtentWidth * 0.03;
       Columns: [ColumnClass.Fit(72 pts), ColumnClass.Fit(2 inch), ColumnClass.Fit(3 inches)];
       Border: BorderB(1);
 
@@ -239,11 +206,13 @@ abstract class RuleClass {
 
       foreach (var partition in Partitions) {
         Row {
-          Cell(PadR(3 pts)) {
+          Cell {
             HAlign: HAligns.Right;
+            Padding: PadR(3 pts);
             Span {each1; ") "};
           };
-          Cell(PadR(10 pts)) {
+          Cell {
+            Padding: PadR(10 pts);
             partition.Filter.Name;
           };
 
@@ -269,9 +238,10 @@ abstract class RuleClass {
       foreach (var filter in FiltersPlus) {
         var matching = GetMatching(segments, filter);
         if (valid matching) {
-          HBox(null, null, PadLR(1)) {
+          HBox {
             VAlign: VAligns.Center;
             Margin: 2;
+            Padding: PadLR(1);
             Border: 0.25 pts {Color: 80%};
             Span {
               TextFixed: true;
@@ -487,66 +457,47 @@ class TranActionClass: ActionClass {
     ShowSegments(List.Length);
   };
 
-  override GetLayoutTip {
+  override GetLayoutTip = Frame {
     var count = Math.Min(List.Length, 30);
-    return Frame(Min(count*3, 6) inches) {
-      ShowSegments(count);
-    };
-  }
+    Width: Min(count*3, 6) inches;
+    ShowSegments(count);
+  };
 }
 //======================================================================
 
 class AlignActionClass: ActionClass {
   SegmentClass S0,
                S1;
-  var          Value,
-               Percent;
+  var          Percent;
 
-  Constructor(SegmentClass s0, SegmentClass s1, value) {
+  Constructor(SegmentClass s0, SegmentClass s1, percent) {
     super.Constructor(Actions.RunQuery, s0);
-    S0    = s0;
-    S1    = s1;
-    Value = value * 100.0;
+    S0      = s0;
+    S1      = s1;
+    Percent = percent;
   }
 
-  override Compare(c, options) = Value.Compare(c.Value);
+  override Compare(c, options) = Percent.Compare(c.Percent);
 
   override GetQuery = MatchAny SegmentClass {
     S0;
     S1;
   };
 
-  ShowPartition(SegmentClass s) = Canvas(25 pts) {
-    BorderRadius: new SizeClass(3, 3);
-    HAlign: HAligns.Center;
-    Background: s.PartitionColor;
-    s.ShowSegment;
-  };
-
-  override GetLayoutSpan = HBox {
-    VAlign: VAligns.Center;
-    ShowPartition(S0);
-    Space;
-    Tex.leftrightarrow;
-    Space;
-    ShowPartition(S1);
-    Tip: this;
-  };
-
-  override GetLayoutTip = Frame {
-    TextHeight: 20 pts;
-
-    GetLayoutSpan;
+  ShowSegments = Block {
     Paragraph {
-      TextDigits: 2;
-      Value;
-      "%";
+      S0.ShowSegment;
+      Tex.To;
+      S1.ShowSegment;
     };
     Paragraph {
       TextDigits: 1;
-      Percent;
-      "% of max";
+      Percent; "% of max";
     };
+  };
+
+  override GetLayoutTip = Frame {
+    ShowSegments;
   };
 }
 //======================================================================
@@ -574,7 +525,7 @@ class CalcRatesClass {
     Transition = new TransitionClass(results, rule);
   }
 
-  void Calibrate(SizeClass size) {
+  void Calibrate(size) {
     var middle = new PointClass(size.Width * 0.5, size.Height * 0.5);
 
     MaxExtent    = Min(middle.X, middle.Y);
@@ -605,11 +556,12 @@ class CalcRatesClass {
       partition.Center = Graphics.ExtendPoint(middle, maxradius, partition.Angle);
   }
 
-  private MainDiagram(min) = Canvas(min, min) {
-    TransformFit: true;
-    Style.SansSerif;
+  private MainDiagram(min) = Canvas {
+    var size = new SizeClass(min);
 
-    Calibrate(new(min));
+    TransformFit: true;
+    Calibrate(size);
+    Size: size;
 
     foreach (var p1 in Rule.Partitions) {
       var i = each0;
@@ -653,10 +605,11 @@ class CalcRatesClass {
         TipAction: p1;
       };
 
-      Canvas(fsize, fsize) {
+      Canvas {
         Position: pos;
         HAlign: HAligns.Center;
         VAlign: VAligns.Center;
+        Size: new SizeClass(fsize);
         Span {
           TextHeight: textheight;
           TextColor: p1.Color.TextCompliment;
@@ -671,7 +624,7 @@ class CalcRatesClass {
     VAlign: VAligns.Center;
 
     var legend = 1.5 inches;
-    Rule.ShowLegend(10 pts, legend, 0);
+    Rule.ShowLegend(10 pts, legend);
     MainDiagram(Min(ExtentWidth - legend, ExtentHeight));
   };
 

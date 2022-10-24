@@ -452,10 +452,23 @@ void Mcmc::runPosterior(void) {
                    lnR -= power(idx1) * (curLnL[idx1] + curLnP[idx1]) + power(idx2) * (curLnL[idx2] + curLnP[idx2]); // original condition
             int chainIndex1 = modelPtr[idx1]->getIndex();
             int chainIndex2 = modelPtr[idx2]->getIndex();
+            std::string swap12 = "Swap(" + std::to_string(chainIndex1) + "," + std::to_string(chainIndex2) + ")";
+            std::string swap21 = "Swap(" + std::to_string(chainIndex2) + "," + std::to_string(chainIndex1) + ")";
             if ( log(rv->uniformRv()) < lnR )
                 {
                 modelPtr[idx1]->setIndex(chainIndex2);
                 modelPtr[idx2]->setIndex(chainIndex1);
+                if (chainIndex1 < chainIndex2)
+                    updateInfo.accept(swap12);
+                else
+                    updateInfo.accept(swap21);
+                }
+            else
+                {
+                if (chainIndex1 < chainIndex2)
+                    updateInfo.reject(swap12);
+                else
+                    updateInfo.reject(swap21);
                 }
             }
         
@@ -548,8 +561,6 @@ void Mcmc::sample(int gen, double lnL, double lnP) {
     for (int i=0; i<numParmValues; i++)
         parmStrm << parmValues[i] << '\t';
     parmStrm << std::endl;
-    
-    getColdModel()->getParameterString();
     
     // output to tree file
     treeStrm << "   tree t_" << gen << " = " << ts << ";";

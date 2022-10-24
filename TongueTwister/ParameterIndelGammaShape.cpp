@@ -29,20 +29,12 @@ ParameterIndelGammaShape::ParameterIndelGammaShape(RandomVariable* r, Model* m, 
     Probability::Gamma::discretization(rates[0], alpha[0], alpha[0], numCategories, false);
 
     rates[1] = rates[0];
-
-    parmStrLen = 20;
-    parmStr = new char[parmStrLen];
 }
 
-ParameterIndelGammaShape::~ParameterIndelGammaShape(void) {
-
-    delete [] parmStr;
-}
 void ParameterIndelGammaShape::accept(void) {
 
     alpha[1] = alpha[0];
-    for (int i=0; i<numCategories; i++)
-        rates[1][i] = rates[0][i];
+    rates[1] = rates[0];
 }
 
 void ParameterIndelGammaShape::fillParameterValues(double* x, int& start, int maxNumValues) {
@@ -75,17 +67,6 @@ std::string ParameterIndelGammaShape::getString(void) {
     return str;
 }
 
-char* ParameterIndelGammaShape::getCString(void) {
-
-    sprintf(parmStr, "%1.6lf\t", alpha[0]);
-    return parmStr;
-}
-
-std::string ParameterIndelGammaShape::getUpdateName(int) {
-
-    return "indel shape parameter";
-}
-
 double ParameterIndelGammaShape::lnPriorProbability(void) {
 
     return log(expPriorVal) - expPriorVal * alpha[0];
@@ -100,15 +81,13 @@ void ParameterIndelGammaShape::print(void) {
 void ParameterIndelGammaShape::reject(void) {
 
     alpha[0] = alpha[1];
-    for (int i=0; i<numCategories; i++)
-        rates[0][i] = rates[1][i];
+    rates[0] = rates[1];
     modelPtr->flipActiveLikelihood();
 }
 
 double ParameterIndelGammaShape::update(int) {
 
-    lastUpdateType.first = this;
-    lastUpdateType.second = 0;
+    lastUpdateType = "indel shape parameter";
     
     double tuning = log(4.0);
 

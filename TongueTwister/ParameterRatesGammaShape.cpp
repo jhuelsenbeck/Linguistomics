@@ -28,14 +28,6 @@ ParameterRatesGammaShape::ParameterRatesGammaShape(RandomVariable* r, Model* m, 
     rates[1].resize(numCategories);
     Probability::Gamma::discretization(rates[0], alpha[0], alpha[0], numCategories, false);
     rates[1] = rates[0];
-
-    parmStrLen = 20;
-    parmStr = new char[parmStrLen];
-}
-
-ParameterRatesGammaShape::~ParameterRatesGammaShape(void) {
-
-    delete [] parmStr;
 }
 
 void ParameterRatesGammaShape::accept(void) {
@@ -74,17 +66,6 @@ std::string ParameterRatesGammaShape::getString(void) {
     return str;
 }
 
-char* ParameterRatesGammaShape::getCString(void) {
-
-    sprintf(parmStr, "%1.6lf\t", alpha[0]);
-    return parmStr;
-}
-
-std::string ParameterRatesGammaShape::getUpdateName(int) {
-
-    return "gamma shape parameter";
-}
-
 double ParameterRatesGammaShape::lnPriorProbability(void) {
 
     return log(expPriorVal) - expPriorVal * alpha[0];
@@ -105,8 +86,7 @@ void ParameterRatesGammaShape::reject(void) {
 
 double ParameterRatesGammaShape::update(int) {
 
-    lastUpdateType.first = this;
-    lastUpdateType.second = 0;
+    lastUpdateType = "gamma shape parameter";
     
     double tuning = log(4.0);
 
