@@ -21,7 +21,7 @@
 #include "Tree.hpp"
 #include "UserSettings.hpp"
 
-//==============================================================================================
+#pragma mark - WordLnLikeTask
 
 WordLnLikeTask::WordLnLikeTask() {
 
@@ -43,8 +43,8 @@ void WordLnLikeTask::Run(MathCache& cache) {
     *ThreadLnL = lnL;
     *WordLnL = lnL;
 }
-//==============================================================================================
 
+#pragma mark - Model
 
 Model::Model(RandomVariable* r, ThreadPool& pool) : threadPool(pool) {
 
@@ -54,7 +54,7 @@ Model::Model(RandomVariable* r, ThreadPool& pool) : threadPool(pool) {
     partitionInfo = NULL;
     taskList = NULL;
     taskMax = 1;
-    GetTaskList(1024);
+    getTaskList(1024);
 
     // read the json file
     nlohmann::json j = parseJsonFile();
@@ -93,21 +93,6 @@ Model::~Model(void) {
         delete rateMatrixHelper;
     delete [] parameterString;
 }
-
-WordLnLikeTask* Model::GetTaskList(size_t count) {
-
-    if (count > taskMax) 
-        {
-        // Increment size in powers of 2 to reduce reallocations
-        while (count > taskMax)
-            taskMax *= 2;
-
-        delete[] taskList;
-        taskList = new WordLnLikeTask[taskMax];
-        }
-    return taskList;
-}
-
 
 void Model::accept(void) {
 
@@ -366,6 +351,19 @@ std::string Model::getStateSetsJsonString(void) {
     str += "]";
     
     return str;
+}
+
+WordLnLikeTask* Model::getTaskList(size_t count) {
+
+    if (count > taskMax)
+        {
+        // Increment size in powers of 2 to reduce reallocations
+        while (count > taskMax)
+            taskMax *= 2;
+        delete[] taskList;
+        taskList = new WordLnLikeTask[taskMax];
+        }
+    return taskList;
 }
 
 Tree* Model::getTree(void) {
@@ -757,7 +755,7 @@ void Model::initializeTransitionProbabilities(std::vector<Alignment*>& wordAlign
 double Model::lnLikelihood(void) {
     // set up thread pool for calculating the likelihood under the TKF91 model
     auto wpsize = wordParameterAlignments.size();
-    auto task   = GetTaskList(wpsize);
+    auto task   = getTaskList(wpsize);
     for (int i=0; i<wpsize; i++)
         {
         if (updateLikelihood[i] == true)

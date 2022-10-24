@@ -21,6 +21,7 @@ class Node {
         void                addNeighbor(Node* p) { neighbors.insert(p); }
         Node*               getAncestor(void) { return ancestor; }
         double              getBrlen(void) { return branchStats.brlen; }
+        double              getCladeProbability(void) { return cladeProbability; }
         std::vector<Node*>  getDescendants(void);
         int                 getIndex(void) { return index; }
         bool                getIsLeaf(void) { return isLeaf; }
@@ -33,6 +34,7 @@ class Node {
         void                removeNeighbor(Node* p) { neighbors.erase(p); }
         void                setAncestor(Node* p) { ancestor = p; }
         void                setBrlen(double x) { branchStats.brlen = x; }
+        void                setCladeProbability(double x) { cladeProbability = x; }
         void                setIndex(int x) { index = x; }
         void                setIsLeaf(bool tf) { isLeaf = tf; }
         void                setLowerCi(double x) { branchStats.lowerCi = x; }
@@ -47,6 +49,7 @@ class Node {
         std::string         name;
         bool                isLeaf;
         BranchStatistics    branchStats;
+        double              cladeProbability;
 };
 
 #endif

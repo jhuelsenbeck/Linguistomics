@@ -15,6 +15,7 @@ class Subset {
         bool            containsValue(int x);
         int             getIndex(void) { return index; }
         std::string     getLabel(void) { return label; }
+        int             getNumElements(void) { return (int)vals.size(); }
         std::set<int>&  getValues(void) { return vals; }
         void            setIndex(int x) { index = x; }
     

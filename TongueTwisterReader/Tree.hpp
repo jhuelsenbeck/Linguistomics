@@ -17,6 +17,7 @@ class Tree {
                                     Tree(std::string newickString, std::map<int, std::string> translateMap);
                                     Tree(std::map<RbBitSet,ParameterStatistics*>& partitions, std::map<int,std::string> translateMap);
         std::string                 getNewick(int brlenPrecision);
+        std::string                 getNewick(int brlenPrecision, std::map<RbBitSet,ParameterStatistics*>& partitions);
         std::map<RbBitSet,double>   getPartitions(void);
         void                        initializeDownPassSequence(void);
         void                        print(void);

@@ -9,9 +9,8 @@
 #define ForElements(v) for (auto v = this->begin(), end = this->end(); v < end; ++v)
 #define ForLeftRight(a) const auto* right = a.begin(); for (auto left = this->begin(), end = this->end(); left < end; ++left, ++right)
 
-#ifndef _CONSOLE
 #pragma mark - BufferTemplate Definition -
-#endif
+
 
 class BufferAllocator {
     public:
@@ -134,9 +133,7 @@ class BufferTemplate: public BufferAllocator {
 
 
 
-#ifndef _CONSOLE
 #pragma mark - ArrayTemplate Definition -
-#endif
 
 template<typename T>
 class ArrayTemplate: public BufferTemplate<T> {
@@ -176,9 +173,7 @@ class ArrayTemplate: public BufferTemplate<T> {
 
 
 
-#ifndef _CONSOLE
 #pragma mark - MatrixTemplate Definition -
-#endif
 
 template<typename T>
 class MatrixTemplate : public BufferTemplate<T> {
@@ -409,10 +404,8 @@ class MatrixTemplate : public BufferTemplate<T> {
 
 
 
-#ifndef _CONSOLE
-#pragma mark - Type Definition -
-#endif
 
+#pragma mark - Type Definitions -
 
 typedef ArrayTemplate<int>    IntArray;
 typedef ArrayTemplate<double> DoubleArray;

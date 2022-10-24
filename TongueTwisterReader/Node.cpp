@@ -8,6 +8,7 @@ Node::Node(void) {
     ancestor = NULL;
     name = "";
     isLeaf = false;
+    cladeProbability    = 0.0;
     branchStats.brlen   = 0.0;
     branchStats.prob    = 0.0;
     branchStats.lowerCi = 0.0;
