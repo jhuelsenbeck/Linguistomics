@@ -830,6 +830,7 @@ void McmcSummary::writeMatrix(std::ofstream& file, DoubleMatrix &m, std::string 
     file << name << " = [\n";
     auto rows = m.getNumRows();
     auto cols = m.getNumCols();
+    double max = 0;
     for (int i = 0; i < rows; ++i)
         {
         if (i)
@@ -838,13 +839,16 @@ void McmcSummary::writeMatrix(std::ofstream& file, DoubleMatrix &m, std::string 
         for (int j = 0; j < cols; ++j)
             {
             double r = m(i, j);
+            if (r > max)
+                max = r;
             if (j)
                 file << ",";
             file << r;
             }
         file << "]";
         }
-    file << "\n];\n\n";
+    file << "\n];\n";
+    file << name << "Max = " << max << ";\n\n";
 }
 
 void McmcSummary::output(std::string pathName, std::ofstream& findex) {
