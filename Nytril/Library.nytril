@@ -598,8 +598,7 @@ class ResultsClass {
   RuleClass         Rule;
   AlignIndexClass[] Alignments;
   StatClass[][]     TransitionStats;
-  var               AverageRates,
-                    QRates,
+  var               Output,
                     AlignmentCutoff,
                     EquilibriumFrequencies;
 
@@ -608,13 +607,11 @@ class ResultsClass {
     Data       = experiment.Data;
     Rule       = experiment.Rule;
 
-    var results = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run3") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
-    AverageRates           = results.AverageRates;
-    QRates                 = results.QRates;
-    TransitionStats        = results.TransitionStats;
-    EquilibriumFrequencies = results.EquilibriumFrequencies;
-    AlignmentCutoff        = results.AlignmentCutoff;
-    Alignments             = results.Alignments;
+    Output = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run3") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
+    TransitionStats        = Output.TransitionStats;
+    EquilibriumFrequencies = Output.EquilibriumFrequencies;
+    AlignmentCutoff        = Output.AlignmentCutoff;
+    Alignments             = Output.Alignments;
 
     var alist = new ListClass<AlignIndexClass>(1024);
     foreach (var a in Alignments) {
@@ -1055,7 +1052,7 @@ class AlignedCountClass: CountBaseClass {
   MatrixClass                 Actions;
   var                         Symmetric;
 
-  Constructor(ResultsClass results, rates, minrate, symmetric) {
+  Constructor(ResultsClass results, rates, maxrate, minrate, symmetric) {
     super.Constructor(results.Experiment);
     Symmetric = symmetric;
 
@@ -1069,15 +1066,12 @@ class AlignedCountClass: CountBaseClass {
     Actions    = new MatrixClass(length, length, null);
     ActionList = new(length * 10);
 
-    var max = 0.0;
     for (var i = 0; i < length; ++i) {
       var jmax = symmetric ? i : length;
 
       for (var j = 0; j < jmax; ++j) {
         var rate = rates[i][j];
         if (rate >= minrate) {
-          if (rate > max)
-            max = rate;
           var a = new AlignActionClass(ordered[i], ordered[j], rate);
           ActionList.Add(a);
           Actions.SetValue(i, j, a);
@@ -1085,7 +1079,7 @@ class AlignedCountClass: CountBaseClass {
       }
     }
 
-    var f = 1.0 / max;
+    var f = 1.0 / maxrate;
     foreach (var a in ActionList)
       a.Percent = a.Value * f;
 
@@ -1144,6 +1138,84 @@ class AlignedCountClass: CountBaseClass {
     };
 
     Experiment.Rule.ShowSimpleLegend(10 pts);
+
+  };
+}
+
+//======================================================================
+
+class SegDataClass {
+  PartitionClass Partition;
+  SegmentClass   Segment;
+  var            Value;
+
+  Constructor(ResultsClass results, rates, i) {
+    Segment   = results.Data.UniqueSegments[i];
+    Partition = results.Rule.Partitions[Segment.PartitionIndex];
+    Value     = Math.Abs(rates[i][i]);
+  }
+
+  override GetLayoutTip = VBox {
+    HAlign: HAligns.Center;
+
+    Span {
+      "Rate: ";
+      TextDigits: 3;
+      Value;
+    };
+    VBox(DocMetrics.SegmentWidth) {
+      HAlign: HAligns.Center;
+      Background: Partition.Color;
+      HBox {
+        Partition.Name;
+      };
+    };
+    Segment.GetLayoutTip;
+  };
+}
+
+//======================================================================
+
+class QRateDiagonalClass {
+  SegDataClass[] Data;
+
+  Constructor(ResultsClass results, rates) {
+    var data = new SegDataClass(results, rates, each 0..<rates.Length);
+    Data = data.Sort(true, ref CompareData);
+  }
+
+  CompareData(SegDataClass d0, SegDataClass d1, options) = d0.Value.Compare(d1.Value);
+
+  Display = VBox {
+    HAlign: HAligns.Center;
+    Style.SansSerif;
+
+    Chart(ExtentWidth, 4 inches) {
+      TextHeight: 11 pts;
+      Type: ChartTypes.Column;
+
+      ValueLabel: "Rate of Change" {
+        Transform: Rotate(90 degrees);
+        TransformFit: true;
+      };
+
+      XAxis: ChartAxis {
+        TextHeight: DocMetrics.SegmentTextFactor * ExtentWidth / Data.Length;
+        (each (each Data).Segment).ShowSegment;
+      };
+
+      ValueAxis: ChartAxis;
+      ChartSeries {
+        foreach (var d in Data) {
+          new DataPointClass(each0, d.Value) {
+            Reference: d;
+            Fill: d.Segment.PartitionColor;
+          };
+        }
+      };
+    };
+
+    Experiment.Rule.ShowBlockLegend(9 pts);
 
   };
 }

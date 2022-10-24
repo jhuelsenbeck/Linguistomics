@@ -284,20 +284,28 @@ namespace Figures.AlignedTransitions {
   MinRate = 0.00005;
   Title   = "Segment transitions above {0}%"(MinRate*100);
 
-  AlignedCountClass Display = new(MainResults, MainResults.AverageRates, MinRate, true);
+  AlignedCountClass Display = new(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax, MinRate, true);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
 }
 
 //======================================================================
 
-namespace Figures.QRates {
+namespace Figures.QRatesMatrix {
   MinRate = 0.005;
   Title   = "Segment Rate of Change above {0}%"(MinRate*100);
 
-  AlignedCountClass Display = new(MainResults, MainResults.QRates, MinRate, false);
+  AlignedCountClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, MinRate, false);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
+}
+
+//======================================================================
+
+namespace Figures.QRatesDiagonal {
+  Title = "Segment Stability";
+
+  Body(DocumentClass document) = new QRateDiagonalClass(MainResults, MainResults.Output.QRates).Display;
 }
 
 //======================================================================

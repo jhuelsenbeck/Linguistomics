@@ -21,7 +21,7 @@ class FilterClass {
     Name;
   };
 
-  override GetLayoutTip = Frame(2 inches) {
+  override GetLayoutTip = Frame(DocMetrics.SegmentWidth) {
     Paragraph {
       ParAlignment: ParAlignments.Center;
       TextHeight: 16 pts;
@@ -151,7 +151,7 @@ abstract class RuleClass {
     return segments.FindSlice(segment => MatchesRule(filter, segment));
   }
 
-  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame(2 inches) {
+  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame(DocMetrics.SegmentWidth) {
     Paragraph {
       ParAlignment: align;
       TextHeight: 18 pts;
@@ -197,6 +197,24 @@ abstract class RuleClass {
           Background: partition.Color;
         };
         partition.Filter;
+      }
+    }
+  };
+
+  ShowBlockLegend(textheight) = Frame {
+    Paragraph {
+      Separator: Space*4;
+      TextHeight: textheight;
+      foreach (var partition in Partitions) {
+        HBox {
+          VAlign: VAligns.Center;
+          Separation: 3 pts;
+          Canvas (textheight, textheight) {
+            BorderRadius: new SizeClass(3, 3);
+            Background: partition.Color;
+          };
+          partition.Filter;
+        }
       }
     }
   };
@@ -498,7 +516,7 @@ class AlignActionClass: ActionClass {
     S1;
   };
 
-  ShowPartition(SegmentClass s) = Canvas(15 pts) {
+  ShowPartition(SegmentClass s) = Canvas(25 pts) {
     BorderRadius: new SizeClass(3, 3);
     HAlign: HAligns.Center;
     Background: s.PartitionColor;
