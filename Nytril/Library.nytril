@@ -1112,10 +1112,10 @@ class AlignedCountClass: CountBaseClass {
     return null;
   }
 
-  Most(max) = HBox {
+  Most(max) = VBox {
     var lw = 1.5 inches;
-    Chart(ExtentWidth - lw, 4 inches) {
-      var slice = ActionList.Sort(true).Slice(0..max);
+    Chart(100%, 4 inches) {
+      var slice = ActionList.Sort(true).Slice(0..<max);
 
       Type: ChartTypes.Column;
       TextHeight: 9 pts;
@@ -1127,6 +1127,7 @@ class AlignedCountClass: CountBaseClass {
       };
 
       XAxis: ChartAxis {
+        TextHeight: 10 pts;
         Rotation: 20 degrees;
         (each slice).GetLayoutSpan;
       };
@@ -1136,8 +1137,9 @@ class AlignedCountClass: CountBaseClass {
           new DataPointClass(each0, s.Value) {Reference: s};
       };
     };
+    Separation: 20 pts;
 
-    Experiment.Rule.ShowSimpleLegend(10 pts);
+    Experiment.Rule.ShowBlockLegend(10 pts);
 
   };
 }
@@ -1176,10 +1178,10 @@ class SegDataClass {
 
 //======================================================================
 
-class QRateDiagonalClass {
+class DiagonalClass {
   SegDataClass[] Data;
 
-  Constructor(ResultsClass results, rates) {
+  Constructor(ResultsClass results, rates, max) {
     var data = new SegDataClass(results, rates, each 0..<rates.Length);
     Data = data.Sort(true, ref CompareData);
   }

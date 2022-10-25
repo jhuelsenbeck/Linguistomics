@@ -280,41 +280,50 @@ namespace Figures.FractionGapsChart {
 
 //======================================================================
 
-namespace Figures.AlignedTransitions {
+namespace Figures.AverageTransitions {
   MinRate = 0.00005;
-  Title   = "Segment transitions above {0}%"(MinRate*100);
+  Title   = "Average transitions above {0}%"(MinRate*100);
 
   AlignedCountClass Display = new(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax, MinRate, true);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
 }
 
+namespace Figures.AverageDiagonal {
+  Title = "Average Diagonal";
+
+  Body(DocumentClass document) = new DiagonalClass(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax).Display;
+}
+
+namespace Figures.AverageMost {
+  Top   = 15;
+  Title = "Average Top {0}"(Top);
+
+  Body(DocumentClass document) = AverageTransitions.Display.Most(Top);
+}
+
 //======================================================================
 
 namespace Figures.QRatesMatrix {
   MinRate = 0.005;
-  Title   = "Segment Rate of Change above {0}%"(MinRate*100);
+  Title   = "Q above {0}%"(MinRate*100);
 
   AlignedCountClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, MinRate, false);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
 }
 
-//======================================================================
-
 namespace Figures.QRatesDiagonal {
-  Title = "Segment Stability";
+  Title = "Q Diagonal";
 
-  Body(DocumentClass document) = new QRateDiagonalClass(MainResults, MainResults.Output.QRates).Display;
+  Body(DocumentClass document) = new DiagonalClass(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax).Display;
 }
 
-//======================================================================
-
-namespace Figures.AlignedMost {
+namespace Figures.QRatesMost {
   Top   = 15;
-  Title = "Top {0} Segment Transition Probabilities"(Top);
+  Title = "Q Top {0}"(Top);
 
-  Body(DocumentClass document) = AlignedTransitions.Display.Most(Top);
+  Body(DocumentClass document) = QRatesMatrix.Display.Most(Top);
 }
 
 //======================================================================
