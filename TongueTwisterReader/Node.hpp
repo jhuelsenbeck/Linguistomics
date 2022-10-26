@@ -44,12 +44,12 @@ class Node {
     
     private:
         std::set<Node*>     neighbors;
-        Node*               ancestor;
-        int                 index;
         std::string         name;
-        bool                isLeaf;
-        BranchStatistics    branchStats;
+        Node*               ancestor;
         double              cladeProbability;
+        BranchStatistics    branchStats;
+        int                 index;
+        bool                isLeaf;
 };
 
 #endif
