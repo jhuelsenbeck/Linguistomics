@@ -26,8 +26,6 @@ namespace sym {
   r     = Classical "r";
   n     = Classical "n";
   q     = Extra "q";
-  qij   = sym.q sub sym.ij;
-  qii   = sym.q sub sym.ii;
   ni    = sym.n sub sym.i;
   D(x)  = Span {Classical Italic "d"; x};
   theta = Span {Style.GreekFamily; "θ"};
@@ -120,10 +118,12 @@ namespace Defs {
   DefClass ISegment                = new(#0e1f8bcd-f299-4852-a98c-5031c53e1b72#, Segment sub sym.i, "ith segment", "");
   DefClass HomologyMap             = new(#8b2c537a-0161-47ab-8376-aa2cfd3e5377#, Bold "H", "Homology map", "The map describing the alignment of the segments");
   DefClass RateMatrix              = new(#a8a039e6-63af-4496-bb50-22e5bdf5d312#, Bold Classical "Q", "Rate Matrix", "");
+  DefClass AverageMatrix           = new(#f66d7a9a-af00-4278-9d48-cb2697f1aae8#, Bold Classical "M", "Average Matrix", "");
   DefClass RateMatrixScale         = new(#c19ebb53-371c-460e-adf0-86e960231174#, Extra Italic Tex.beta, "Rate matrix scaling factor", "Scales the rate matrix such that the average rate of segmental substitution is one");
   DefClass StateProbability        = new(#4d420b31-d22f-4915-8ae8-15f2f4bbb87d#, Classical Bold "P", "Probability", "The probability the process ends in certain state");
   DefClass MarginalLikelihood      = new(#c2f230d4-4050-4ee3-98b6-ec1c52405ce5#, "P", "Marginal Likelihood", "The average probability of the observations");
   DefClass EquilibriumDistribution = new(#37149ed6-e98a-431c-b40d-7069c0a8c7ca#, Tex.pi GreekFamily , "Equilibrium distribution", "");
+  DefClass Probability             = new(#6083d6c3-2d27-4780-96bc-2de6c966774f#, Tex.pi GreekFamily , "Probability", "");
   DefClass InsertionRate           = new(#1a94ba3d-d7da-4634-bbf6-88b03d84cffc#, Tex.lambda GreekFamily , "Segment insertion rate", "Rate of segment insertion");
   DefClass DeletionRate            = new(#0c0d91ab-e586-451e-8519-74bead5be54d#, Tex.mu GreekFamily , "Rate of segment deletion", "");
   DefClass WordLength              = new(#5018b4ef-62b3-47fe-8086-64802e6f5a63#, Classical "n", "Word length", "Number of segments in a word");
@@ -141,6 +141,9 @@ namespace Defs {
   DefClass FunctionF               = new(#431c5ec9-7a2b-433d-8bff-b4d9bfa37704#, Classical "f", "Function");
   DefClass EulerNumber             = new(#431c5ec9-7a2b-433d-8bff-b4d9bfa37704#, Classical "e", "Root of the natural log or Euler number");
   DefClass DirichletRate           = new(#aba00649-6075-4f81-860d-8d92dede6ca8#, "r", "Dirichlet Rate", "");
+  DefClass mij                     = new(#c8dbe5ac-e663-4e68-b6b4-e518fe1735e7#, "m", "i,j th element of the average rate matrix", "");
+  DefClass qij                     = new(#2679fc01-b547-4c0e-b497-ade507e3c701#, sym.q sub sym.ij, "i,j th element of the rate matrix", "");
+  DefClass qii                     = new(#cb0fbe81-c587-43d8-a4fb-f355d5a5d9b5#, sym.q sub sym.ii, "i,i th element of the rate matrix", "");
 }
 
 //======================================================================
@@ -231,6 +234,28 @@ EquationClass Equations.PossibleTrees = new(#38134545-1719-4b8b-9af4-cb18eab9d09
   };
 };
 
+EquationClass Equations.OffDiagonalComponents = new(#d9a505a2-118d-4ec9-add8-0374707c9932#, "Off-diagonal Components") {
+  Formula: Equation {
+    qii;
+    Equals;
+    Negative;
+    Summation {
+      Lower: sym.j;
+      qij;
+    }
+  };
+};
+
+EquationClass Equations.AverageRateElement = new(#30d89e17-902a-459d-b9fa-afb5d1db44b2#, "Average Rate Matrix Element") {
+  Formula: Equation {
+    mij sub sym.ij;
+    Equals;
+    Probability sub sym.i;
+    qij;
+  };
+};
+
+
 EquationClass Equations.InDelDistribution = new(#db4b99ec-6725-4b11-b873-f8ab6698ac16#, "Indel Distribution") {
   Formula: Equation {
     RateParameter;
@@ -238,7 +263,7 @@ EquationClass Equations.InDelDistribution = new(#db4b99ec-6725-4b11-b873-f8ab669
     Negative;
     Summation {
       Lower: sym.i;
-      InParens {sym.ni; sym.qii};
+      InParens {sym.ni; qii};
       Plus;
       WordLength;
       InsertionRate;
@@ -254,7 +279,7 @@ EquationClass Equations.InDelProbability = new(#01728f12-67b4-4bd0-ab13-e4124d4a
     Negative;
     Summation {
       Lower: sym.i;
-      InParens {sym.ni; sym.qii};
+      InParens {sym.ni; qii};
     };
     Divide;
     RateParameter;
@@ -399,7 +424,7 @@ EquationClass Equations.BayesTheorem = new(#7a57afd3-1293-4a75-8518-9ce32bbe9fa8
 
 EquationClass Equations.RateChange = new(#f7a964f6-414b-4e40-9d31-e63eadf32f8f#, "Rate change") {
   Formula: Equation {
-    sym.qij;
+    qij;
     Tex.geq;
     0;
     InParens {
@@ -414,7 +439,7 @@ EquationClass Equations.RatesOfChangeBetweenStates = new(#a7b02873-4fe5-47b8-9e3
   Formula: Equation {
     RateMatrix;
     Equals;
-    InBraces {sym.qij};
+    InBraces {qij};
     Equals;
     StateSection.StateMatrix;
     Space;
@@ -424,12 +449,12 @@ EquationClass Equations.RatesOfChangeBetweenStates = new(#a7b02873-4fe5-47b8-9e3
 
 EquationClass Equations.DiagonalElements = new(#49b4a095-118d-4bbe-9fe3-80a5e13ddf28#, "The diagonal elements of the rate matrix") {
   Formula: Equation {
-    sym.qii;
+    qii;
     Equals;
     Negative;
     Summation {
       Lower: Span {sym.j Tex.neq; sym.i};
-      sym.qij;
+      qij;
     }
   };
 };

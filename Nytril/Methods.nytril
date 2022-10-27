@@ -1533,7 +1533,7 @@ namespace PaperSections.Methods {
       "where ";
       RateChange;
       " is the rate of change from segment "; sym.i; " to segment "; sym.j; eos;
-      "The diagonal elements of the rate matrix "; sym.qii; " are specified such that each row sums to zero (i.e., ";
+      "The diagonal elements of the rate matrix "; qii; " are specified such that each row sums to zero (i.e., ";
       DiagonalElements;
       "); this negative value can be interpreted as the rate at which the process moves away from state "; sym.i; eos;
       "Note that the information on rates of change between all pairs of states is not typically represented in table form, but rather in matrix form as";
@@ -1550,13 +1550,13 @@ namespace PaperSections.Methods {
     BodyPar {
       "A continuous-time Markov model has a simple physical interpretation. ";
       "Specifically, when the process is in state "; sym.i; ", one waits an exponentially-distributed time with parameter ";
-      Equation {Negative; sym.qii}; " until the next  segmental substitution occurs. ";
+      Equation {Negative; qii}; " until the next  segmental substitution occurs. ";
       "The change, when it occurs, is to state ";
       Equation {sym.j};
       " with probability ";
       Equation {
         Negative;
-        sym.qij; Divide; sym.qii;
+        qij; Divide; qii;
       }; eos;
       "Several important quantities can be calculated using the information contained in the rate matrix, ";
       RateMatrix; eos;
@@ -1893,7 +1893,7 @@ namespace PaperSections.Methods {
       Row {
         Span {Model sub 1; ":"};
         Equation {
-          sym.qij;
+          qij;
           Equals;
           Tex.alpha;
           " (i.e., all elements of rate matrix are equal)";
@@ -1902,7 +1902,7 @@ namespace PaperSections.Methods {
       Row {
         Span {Model sub 2; ":"};
         Equation {
-          sym.qij;
+          qij;
           Equals;
           VBox {
             Brackets: Brackets.FlatCurly.Left;
@@ -1912,9 +1912,6 @@ namespace PaperSections.Methods {
         };
       };
     };
-    PageBreak;
-    ShowFigureDoc(document, Figures.TransitionRates);
-    ShowFigureDoc(document, Figures.AllSegmentFrequencies);
   };
 }
 
@@ -2007,17 +2004,54 @@ SegmentTable(ExampleConceptClass example, DataSetClass data, aligned) = BodyTabl
 //======================================================================
 
 namespace PaperSections.Conclusion {
-  Title = Lang.Conclusion;
-
-  AddVariable(name, value) = Paragraph {
-    value; Space; name;
-  };
+  Title = "The Rate Matrix in this model of Linguistics";
 
   Body(DocumentClass document) = Block {
-    var data = Experiment.Data;
-    AddVariable("Languages", data.Taxa.Length);
-    AddVariable("Concepts", data.UsedCognates.Length);
-    AddVariable("Unique Segments", data.UniqueSegments.Length);
+    FirstPar {
+      "Our model describes how the segments evolve along the branches of the tree. We have three events that can occur to change a word: an insertion of a single segment, a deletion of a single segment, and a substitution of a segment.";
+    };
+
+
+    BodyPar {
+      "A substitution is the replacement of a word segment by another segment. We model substitutions as occurring according to a continuous-time Markov model. Such a model can be understood if you know two things: the possible states and the rate of change between all pairs of states. For our work, the states are the "; MainResults.Data.UniqueSegments.Length; " possible segments. The rates of change between all pairs of states are contained in a rate matrix, which we denote "; RateMatrix; eos;
+   };
+
+    BodyPar {
+      "You can completely describe the substitution process if you have "; RateMatrix; eos; "We use "; RateMatrix; " to calculate transition probabilities (by exponentiating the product of the rate matrix and the branch length) and also to get the stationary frequencies of the process (which are the probability of capturing the process in some state after infinite time has passed)."
+    };
+
+    BodyPar {
+      "Now, for understanding the rate matrix. Let’s denote "; qij; " as the rate of change from state "; sym.i; " to state "; sym.j; ". (It’s simply an element of the rate matrix, "; RateMatrix; "). This is literally the rate of change to that state when the process is in state "; sym.i; ". Comparing rates in the rate matrix can be useful. You can say things such as, “ This rate is higher than that rate. This makes sense because everyone knows that such changes occur frequently in language.” I would especially compare rates in a single row. Does it make sense to see, for example, that when changes occur, they are more likely to be to other states in the same class? Does it make sense that when we have a change and a segment is in the green class that it is more likely to be to a word segment in the dark gray and brown classes? That’s how I read "; FigureReference(Experiment, Figures.QRatesMatrix); eos;
+    };
+
+    BodyPar {
+      "That said, I think the diagonals are quite interesting because they give you an idea of the relative volatility of the word segments. The diagonals are simply the negative of the sum of the off-diagonal components of the row:"
+    };
+
+    Equations.OffDiagonalComponents;
+
+
+    BodyPar {
+      "where "; sym.j; " is iterated over all states (for "; sym.i; Tex.neq; sym.j; "). What does this mean? Let’s consider two segments one of which has a diagonal value of –1.0 and the other that has a value of –2.0. The rate of change for the first, then, is 1.0 and the second is 2.0. This means that the second segment is in a sense more volatile than the first. When we are in the second segment, we move to another state at a rate 2.0 which is twice the rate of the first segment."
+    };
+
+    BodyPar {
+      "What should you look for here with respect to the linguistic data? Well, I don’t know. I’m hoping that, with this interpretation under his belt, David will see patterns that make sense. Are certain word segments known to be more volatile in language? Are others known to be more conservative? Does this background knowledge in the field match up with the rates we are getting (the diagonal values)?"
+    };
+
+    BodyPar {
+      "The other graphs show the average rates. The average rates can be calculated from the rate matrix, "; RateMatrix; ". To distinguish the average rate matrix from the rate matrix, "; RateMatrix; ", I will denote it "; AverageMatrix; ". The "; sym.ij sup "th"; " element of this average rate matrix is calculated as "; AverageRateElement; ". In words, the average rate of change from state "; sym.i; " to state "; sym.j; " is equal to the probability of starting in state "; sym.i; " and then moving to state "; sym.j; "."
+    };
+
+    BodyPar {
+      "What do the average rates tell us? I think the interpretation is a little more confusing, but still well defined. We are looking at averages now, over all of the characters and taking into account their frequencies. A segment that is frequent in the data set will have a boost, here, because "; Probability sub sym.i; " will be higher."
+    };
+
+    BodyPar {
+      "Perhaps the best way to think of this is as follows: "; AverageMatrix; " tells you the average rates and takes into account the probability of starting in state "; sym.i; eos; RateMatrix; ", by contrast, assumes you are already in state "; sym.i; " and tells you how rapidly you move to various states (from "; sym.i; " to the other possible states). I believe for our purposes, you should concentrate on "; RateMatrix; eos;
+    };
+
+    ShowFigureDoc(document, Figures.QRatesMatrix);
   };
 }
 //======================================================================
