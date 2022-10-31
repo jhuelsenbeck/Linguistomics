@@ -314,14 +314,14 @@ namespace Figures.QRatesMatrix {
 }
 
 namespace Figures.QRatesDiagonal {
-  Title = "Q Diagonal";
+  Title = "The absolute values of the diagonal elements of Q";
 
   Body(DocumentClass document) = new DiagonalClass(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax).Display;
 }
 
 namespace Figures.QRatesMost {
   Top   = 15;
-  Title = "Q Top {0}"(Top);
+  Title = "The {0}"(Top)" segmental transitions with the highest rates";
 
   Body(DocumentClass document) = QRatesMatrix.Display.Most(Top);
 }
@@ -749,12 +749,22 @@ namespace PaperSections.WordTransformation {
     var modelname = Span {TextCase: TextCases.AllLower; Experiment.Rule.Name};
 
     FirstPar {
-      "The "; modelname; " model allows different rates for different groups of word segments, ";
-      FigureReference(Experiment, Figures.TransitionRates); " summarizes the estimated rates of change within and between each segmental class under the "; modelname; "model. ";
-      "The curved lines representing the within-class transition rates are particularly illuminating. ";
+      "The "; modelname; " model allows different rates for different groups of word segments. ";
+      FigureReference(Experiment, Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the Q matrix under the "; modelname; " model. ";
+      "These diagonal elements can be interpreted as a measure of segmental volatility, since it is the sum of the rates at which it transitions to other segments. ";
+      "The distribution of the diagonal elements reveals a number of properties of the segmental changes in our dataset. First and foremost, the segments most likely to change (in blue) are all long vowels. ";
+      "This is precisely what we expect since one of the signal events that characterized the emergence of the Romance languages was the loss of phonemic vowel length. ";
+      "With the exception of the affricates (in red), the most volatile segmental classes are all vowels. ";
+      "Non-syllabic segmental classes on the whole are decidedly less resistant to change. ";
+
+      "Why the clustering?";
+
 
     };
-    ShowFigureDoc(document, Figures.TransitionRates);
+    //ShowFigureDoc(document, Figures.TransitionRates);
+    ShowFigureDoc(document, Figures.QRatesDiagonal);
+    ShowFigureDoc(document, Figures.QRatesMost);
+};
 }
 //======================================================================
 
