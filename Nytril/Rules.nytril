@@ -483,13 +483,15 @@ class AlignActionClass: ActionClass {
   SegmentClass S0,
                S1;
   var          Value,
-               Percent;
+               Percent,
+               Symmetric;
 
-  Constructor(SegmentClass s0, SegmentClass s1, value) {
+  Constructor(SegmentClass s0, SegmentClass s1, value, symmetric) {
     super.Constructor(Actions.RunQuery, s0);
-    S0    = s0;
-    S1    = s1;
-    Value = value * 100.0;
+    S0        = s0;
+    S1        = s1;
+    Value     = value * 100.0;
+    Symmetric = symmetric;
   }
 
   override Compare(c, options) = Value.Compare(c.Value);
@@ -510,7 +512,7 @@ class AlignActionClass: ActionClass {
     VAlign: VAligns.Center;
     ShowPartition(S0);
     Space;
-    Tex.leftrightarrow;
+    Symmetric ? Tex.leftrightarrow : Tex.rightarrow;
     Space;
     ShowPartition(S1);
     Tip: this;
