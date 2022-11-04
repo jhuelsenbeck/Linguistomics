@@ -845,7 +845,8 @@ namespace PaperSections.Discussion {
      "For instance, Latin "; textit{"buccam"}; SQuote{"mouth"}; " and Romanian "; textit{"bucă"}; " share a homologous "; IPASegments.u; " against Italian "; textit{"bocca"}; eos;
      "If word-forms with Romanian "; IPASegments.u; " are not present in sufficient number in the dataset, they will not play the role in topological inference that they do in the traditional literature. ";
      "The issue of segmental sampling is discussed further below. ";
-     "Another possibility that may account for the topology is that the model is somehow misled by the superficial similarity (in both segmental composition and the preservation of segmental material) of Latin and Italian into putting them closer together on the tree than they actually are. ";
+     "A second possibility that may account for the topology is that the model is somehow misled by the superficial similarity (in both segmental composition and the preservation of segmental material) of Latin and Italian into putting them closer together on the tree than they actually are. ";
+     "Finally, it is important to bear in mind that the transition model is homogenous. Such a model is unlikely to be linguistically realistic and may also influence topological estimation. ";
      };
 
 
@@ -898,7 +899,7 @@ namespace PaperSections.Discussion {
       "Our method models insertions, deletions, and transitions among segments. ";
       "An effort was made to exclude word-forms that involve changes of multiple segments (such as occur in morphological change). ";
       "Metathesis, a change in which two segments exhcange positions, is modeled as separate transitions from the input and output segments. ";
-      "For instance, the Latin verb "; textit{"exprimere"}; " begins with a "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
+      "For instance, the Latin verb "; textit{"exprimere"}; " begins with "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
       "The initial vowel has been lost and "; IPASegments.k; " and "; IPASegments.s; " have undergone metathesis. ";
       "Under our model, this change is treated as two separate transitions, one from "; IPASegments.k; " to "; IPASegments.s; " and another from "; IPASegments.s; " to "; IPASegments.k; eos;
     };
@@ -1085,28 +1086,21 @@ namespace PaperSections.ModelInference {
 
     BodyPar {
       var count = Experiment.Data.UniqueSegments.Length;
-      "We examined three models of segmental transition. ";
-      "The first (denoted "; SQuote{"JC69"}") is isomorphic to the Jukes-Cantor"; Citation{jukes69};
-      " model of molecular evolution that constrains all rates of change to be equal and has no free parameters to estimate. ";
-      "The second ("; SQuote{rule.Name}; ") model allows different rates among ";
-      Cardinal(rule.Filters.Length); " classes of segments ("; ShowTableNumber(Figures.PartitionAssignments); ") that share articulatory properties";
+      "Our model of segmental transitions is based on phonological natural classes, which are groups of segments that share articulatory properties. ";
+      "The segmental inventory of our dataset was exhaustively partitioned into ten classes, which are presented in "; ShowTableNumber(Figures.PartitionAssignments); eos;
+      "This ("; SQuote{rule.Name}; ") model allows different rates among then ";
+      Cardinal(rule.Filters.Length); " classes of segments ";
       //Span {
       //  Separator: CommaSpace;
       //  LastSeparator: " and ";
       //  rule.Filters;
       //};
-      " and has an intermediate number of parameters (";
+      " It has ";
       count;
       " parameters for the equilibrium distribution and ";
       (rule.Filters.Length-1)^2-1;
-      " parameters describing rates among word segment groups). ";
-      "The third ("; SQuote{"GTR"}; ") is a isomorphic to the general time reversible model of molecular evolution"; Citation {tavare86};
-      ", and has a large number of parameters (";
-      count;
-      " parameters for the equilibrium distribution and ";
-      Combinations(count, 2);
-      " exchangability parameters). ";
-      "For both the second and third models, we consider the equilibrium frequencies of the model to be random variables with a flat Dirichlet prior distribution."
+      " parameters describing rates among natural classes. ";
+      "The equilibrium frequencies are modeled as random variables drawn from a flat Dirichlet prior distribution. ";
     };
 
     ShowTable(document, Figures.PartitionAssignments);
@@ -1129,7 +1123,7 @@ namespace PaperSections.DataCuration {
     };
 
     BodyPar {
-      "Words from the "; Experiment.Data.Taxa.Length; " languages in our study, coded in standard unicode IPA, are organized into groups by concept, and then by cognate class. ";
+      "Word-forms from the "; Experiment.Data.Taxa.Length; " languages in our study, coded in standard unicode IPA, are organized into classes by concept and then by cognate class. ";
       "For example, the concept "; SQuote{TextCase: TextCases.AllLower; example.Name}; " is coded in the following way:";
     };
 
