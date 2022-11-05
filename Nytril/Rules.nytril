@@ -184,32 +184,32 @@ abstract class RuleClass {
     };
   };
 
-  ShowBlockLegend(textheight) = Frame {
+  ShowBlockLegend(PartitionClass[] partitions, textheight) = Frame {
     Paragraph {
       Separator: Space*4;
       TextHeight: textheight;
-      foreach (var partition in Partitions) {
+      foreach (var p in partitions) {
         HBox {
           VAlign: VAligns.Center;
           Separation: 3 pts;
           Canvas (textheight, textheight) {
             BorderRadius: new SizeClass(3, 3);
-            Background: partition.Color;
+            Background: p.Color;
           };
-          partition.Filter;
+          p.Filter;
         }
       }
     }
   };
 
-  ShowPartitions = Block {
+  ShowPartitions(textheight) = Block {
     Paragraph {
       "Model: ";
       Style.DQuote {Name};
     };
 
     Table {
-      TextHeight: ExtentWidth * 0.03;
+      TextHeight: textheight;
       Columns: [ColumnClass.Fit(72 pts), ColumnClass.Fit(2 inch), ColumnClass.Fit(3 inches)];
       Border: BorderB(1);
 
@@ -501,22 +501,25 @@ class AlignActionClass: ActionClass {
     S1;
   };
 
-  ShowPartition(SegmentClass s) = Canvas(25 pts) {
+  ShowPartition(SegmentClass s, textheight) = Canvas(textheight * 2.5) {
     BorderRadius: new SizeClass(3, 3);
     HAlign: HAligns.Center;
     Background: s.PartitionColor;
     s.ShowSegment;
   };
 
-  override GetLayoutSpan = HBox {
+  ShowBox(textheight) = HBox {
+    TextHeight: textheight;
     VAlign: VAligns.Center;
-    ShowPartition(S0);
+    ShowPartition(S0, textheight);
     Space;
     Symmetric ? Tex.leftrightarrow : Tex.rightarrow;
     Space;
-    ShowPartition(S1);
+    ShowPartition(S1, textheight);
     Tip: this;
   };
+
+  override GetLayoutSpan = ShowBox(11 pts);
 
   override GetLayoutTip = Frame {
     TextHeight: 20 pts;

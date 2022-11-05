@@ -1050,11 +1050,13 @@ class PriorCountClass: CountBaseClass {
 class AlignedCountClass: CountBaseClass {
   ListClass<AlignActionClass> ActionList;
   MatrixClass                 Actions;
+  ResultsClass                Results;
   var                         Symmetric;
 
   Constructor(ResultsClass results, rates, maxrate, minrate, symmetric) {
     super.Constructor(results.Experiment);
     Symmetric = symmetric;
+    Results   = results;
 
     var ordered = results.Data.UniqueSegments;
     var length  = Segments.Length;
@@ -1113,12 +1115,11 @@ class AlignedCountClass: CountBaseClass {
   }
 
   Most(max) = VBox {
-    var lw = 1.5 inches;
+    var slice = ActionList.Sort(true).Slice(0..<max);
+    var lw    = 1.5 inches;
     Chart(100%, 4 inches) {
-      var slice = ActionList.Sort(true).Slice(0..<max);
-
       Type: ChartTypes.Column;
-      TextHeight: 9 pts;
+      TextHeight: 10 pts;
       ValueLabel: HBox {
         TextHeight: 12 pts;
         Transform: Rotate(90 degrees);
@@ -1126,10 +1127,10 @@ class AlignedCountClass: CountBaseClass {
         "Transition Rate %";
       };
 
+      var fs = 200.0 / max;
       XAxis: ChartAxis {
-        TextHeight: 10 pts;
-        Rotation: 20 degrees;
-        (each slice).GetLayoutSpan;
+        Rotation: 30 degrees;
+        (each slice).ShowBox(fs);
       };
 
       ChartSeries {
@@ -1139,8 +1140,24 @@ class AlignedCountClass: CountBaseClass {
     };
     Separation: 20 pts;
 
-    Experiment.Rule.ShowBlockLegend(10 pts);
+    // Show only partitions that are present in the chart
+    var partitions = Results.Rule.Partitions;
+    var pmax       = partitions.Length;
+    var set        = new HashSetClass(pmax);
+    var list       = new ListClass<PartitionClass>(pmax);
+    foreach (var s in slice) {
+      var i = s.S0.PartitionIndex;
+      if (set.Add(i))
+        list.Add(partitions[i]);
+      i = s.S1.PartitionIndex;
+      if (set.Add(i))
+        list.Add(partitions[i]);
+    }
 
+    Canvas(ExtentWidth) {
+      HAlign: HAligns.Center;
+      Experiment.Rule.ShowBlockLegend(list.Values, 11 pts);
+    }
   };
 }
 
@@ -1179,11 +1196,25 @@ class SegDataClass {
 //======================================================================
 
 class DiagonalClass {
-  SegDataClass[] Data;
+  SegDataClass[]   Data;
+  SegmentClass[]   Segments;
+  PartitionClass[] Partitions;
 
   Constructor(ResultsClass results, rates, max) {
     var data = new SegDataClass(results, rates, each 0..<rates.Length);
-    Data = data.Sort(true, ref CompareData);
+    Data     = data.Sort(true, ref CompareData);
+    Segments = (each Data).Segment;
+
+    var partitions = results.Rule.Partitions;
+    var pmax        = partitions.Length;
+    var set        = new HashSetClass(pmax);
+    var list       = new ListClass<PartitionClass>(pmax);
+    foreach (var s in Segments) {
+      var i = s.PartitionIndex;
+      if (set.Add(i))
+        list.Add(partitions[i]);
+    }
+    Partitions = list.Values;
   }
 
   CompareData(SegDataClass d0, SegDataClass d1, options) = d0.Value.Compare(d1.Value);
@@ -1203,7 +1234,7 @@ class DiagonalClass {
 
       XAxis: ChartAxis {
         TextHeight: DocMetrics.SegmentTextFactor * ExtentWidth / Data.Length;
-        (each (each Data).Segment).ShowSegment;
+        (each Segments).ShowSegment;
       };
 
       ValueAxis: ChartAxis;
@@ -1217,7 +1248,7 @@ class DiagonalClass {
       };
     };
 
-    Experiment.Rule.ShowBlockLegend(9 pts);
+    Experiment.Rule.ShowBlockLegend(Partitions, 9 pts);
 
   };
 }
