@@ -281,10 +281,11 @@ namespace Figures.FractionGapsChart {
 //======================================================================
 
 namespace Figures.AverageTransitions {
+  Top     = 15;
   MinRate = 0.00005;
   Title   = "Average transitions above {0}%"(MinRate*100);
 
-  AlignedCountClass Display = new(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax, MinRate, true);
+  AlignedCountClass Display = new(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax, MinRate, true, Top);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
 }
@@ -296,19 +297,19 @@ namespace Figures.AverageDiagonal {
 }
 
 namespace Figures.AverageMost {
-  Top   = 15;
-  Title = "Average Top {0}"(Top);
+  Title = "Average Top {0}"(Figures.AverageTransitions.Top);
 
-  Body(DocumentClass document) = AverageTransitions.Display.Most(Top);
+  Body(DocumentClass document) = AverageTransitions.Display.Most;
 }
 
 //======================================================================
 
 namespace Figures.QRatesMatrix {
+  Top     = 30;
   MinRate = 0.005;
   Title   = "Q above {0}%"(MinRate*100);
 
-  AlignedCountClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, MinRate, false);
+  AlignedCountClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, MinRate, false, Top);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
 }
@@ -316,14 +317,20 @@ namespace Figures.QRatesMatrix {
 namespace Figures.QRatesDiagonal {
   Title = "Segmental stability as measured by the instantaneous rate of change";
 
-  Body(DocumentClass document) = new DiagonalClass(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax).Display;
+  DiagonalClass Diagonal = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax);
+  Body(DocumentClass document) = Diagonal.Display;
 }
 
 namespace Figures.QRatesMost {
-  Top   = 15;
-  Title = "The {0}"(Top)" segmental transitions with the highest rates";
+  Title = "The {0} segmental transitions with the highest rates"(Figures.QRatesMatrix.Top);
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Most(Top);
+  Body(DocumentClass document) = QRatesMatrix.Display.Most;
+}
+
+namespace Figures.QRatePairs {
+  Title = "The top {0} segmental transition pairs"(Figures.QRatesMatrix.Top);
+
+  Body(DocumentClass document) = QRatesMatrix.Display.Pairs;
 }
 
 //======================================================================
@@ -689,53 +696,56 @@ namespace Figures.Alignment {
 //======================================================================
 
 namespace StateSection {
-  States  = 'A'..'E' step 1;
-
-  MatrixRow(state) = {
-    foreach (var s in States) {
+  MatrixRow(states, state) = {
+    foreach (var s in states) {
       Cell {
         sym.q sub (state s);
       }
     }
   };
 
-  StateRow(state) = Row {
+  StateRow(states, state) = Row {
     Cell {
       ParAlignment: ParAlignments.Right;
       Span {
-        each0 == States.Length div 2 ? "From   " : Empty;
+        each0 == states.Length div 2 ? "From   " : Empty;
         state;
       }
     };
-    MatrixRow(state);
+    MatrixRow(states, state);
   };
 
-  StateTable = Table(new ThicknessClass(1 pts, 1 pts, 3 pts, null)) {
-    ParAlignment: ParAlignments.Center;
+  GetStates(count) = 'A'..('A' + count - 1) step 1;
 
+  StateTable(count) = Table(new ThicknessClass(1 pts, 1 pts, 3 pts, null)) {
+    ParAlignment: ParAlignments.Center;
     VAlign: VAligns.Center;
     HAlign: HAligns.Center;
-    Columns: [(58 pts) {Border: BorderR(Style.TableEdgeSize)}] + 5*[0.36 inches];
+
+    var states = GetStates(count);
+    Columns: [(58 pts) {Border: BorderR(Style.TableEdgeSize)}] + count*[0.36 inches];
     Row {
       Empty;
       Cell {
-        ColSpan: States.Length;
+        ColSpan: states.Length;
         Lang.To;
       };
     };
     Row {
       Border: BorderB(Style.TableEdgeSize);
       Empty;
-      States;
+      states;
     };
-    StateRow(each States);
+    StateRow(states, each states);
   };
 
-  StateMatrix = MatrixBlock(PadB(3)) {
+  StateMatrix(count) = MatrixBlock(PadB(3)) {
+    var states = GetStates(count);
+
     Brackets: Brackets.FlatRound;
-    foreach (var state in States) {
+    foreach (var state in states) {
       Row {
-        MatrixRow(state);
+        MatrixRow(states, state);
       }
     }
   };
@@ -1189,7 +1199,8 @@ namespace PaperSections.Contributions {
 //======================================================================
 
 namespace PaperSections.Methods {
-  Title = Lang.Methods;
+  Title      = Lang.Methods;
+  StateCount = 5;
 
   Body(DocumentClass document) = Block {
     var data  = Experiment.Data;
@@ -1528,14 +1539,14 @@ namespace PaperSections.Methods {
     BodyPar {
       "Substitution of one segment for another is modeled using a continuous-time Markov model in which the possible states are the set of segments in the phonemic representations. ";
       "At the heart of a continuous-time Markov chain is a rate matrix describing the rate of change between all pairs ofstates. ";
-      "As an example, consider a simplified Markov process with only five segments as states. ";
+      "As an example, consider a simplified Markov process with only "; Cardinal(StateCount); " segments as states. ";
       "The rates of change between the pairs of states can be represented in table form as";
     };
 
     BodyPar {
       ParAlignment: ParAlignments.Center;
       Frame {
-        StateSection.StateTable;
+        StateSection.StateTable(StateCount);
       };
     };
 
@@ -1560,20 +1571,17 @@ namespace PaperSections.Methods {
     BodyPar {
       "A continuous-time Markov model has a simple physical interpretation. ";
       "Specifically, when the process is in state "; sym.i; ", one waits an exponentially-distributed time with parameter ";
-      Equation {Negative; qii}; " until the next  segmental substitution occurs. ";
+      Negative qii; " until the next  segmental substitution occurs. ";
       "The change, when it occurs, is to state ";
-      Equation {sym.j};
+      sym.j;
       " with probability ";
-      Equation {
-        Negative;
-        qij; Divide; qii;
-      }; eos;
+      Equation {Negative; qij; Divide; qii;}; eos;
       "Several important quantities can be calculated using the information contained in the rate matrix, ";
       RateMatrix; eos;
       "For one, the probability the process ends in state ";
-      Equation {sym.j};
+      sym.j;
       " conditional on starting in state ";
-      Equation {sym.i};
+      sym.i;
       " after a period ";
       ExpectedEvents;
       " can be calculated through exponentiation of the rate matrix, ";
@@ -1625,7 +1633,7 @@ namespace PaperSections.Methods {
       " segments in length, of which ";
       WordLength sub sym.i;
       " of them are of segment type ";
-      Equation {sym.i};
+      sym.i;
       ", the time until the next event occurs is exponentially-distributed with parameter ";
     };
 
@@ -1633,21 +1641,14 @@ namespace PaperSections.Methods {
 
     BodyPar {
       "When an event occurs, it is a substitution with probability ";
-      Equation {
-        InDelProbability;
-      };
+      InDelProbability;
       ", an insertion with probability ";
-      Equation {
-        EventInsertionProbability;
-      };
+      EventInsertionProbability;
       ", and a deletion with probability ";
-      Equation {
-        EventDeletionProbability;
-      }; eos;
+      EventDeletionProbability;
+      eos;
       "Importantly, the process allows the alignment map ";
-      Equation {
-        InParens {HomologyMap};
-      };
+      InParens {HomologyMap};
       " to be treated as a parameter of the model. ";
     };
 
@@ -1662,11 +1663,11 @@ namespace PaperSections.Methods {
     BodyContinue {
       "where the vertical bar indicates a conditional statement. ";
       "In words, the posterior probability distribution of the parameters is equal to the likelihood ";
-      Equation {InBrackets {PPO}};
+      InBrackets {PPO};
       " times the prior probability distribution ";
-      Equation {InBrackets {PP}};
+      InBrackets {PP};
       ", divided by the marginal likelihood ";
-      Equation {InBrackets {PO}}; eos;
+      InBrackets {PO}; eos;
     };
 
     BodyPar {
@@ -1692,7 +1693,7 @@ namespace PaperSections.Methods {
         "The insertion and deletion rates of  segments";
       };
       ParamRow {
-        Equation {HomologyMap};
+        HomologyMap;
         HomologyMap.Description;
       };
     };
@@ -1911,7 +1912,8 @@ namespace PaperSections.Methods {
       };
       Row {
         Span {Model sub 2; ":"};
-        Equation {
+        HBox {
+          VAlign: VAligns.Center;
           qij;
           Equals;
           VBox {
@@ -1984,7 +1986,7 @@ POP = Prob("Observations | Parameter(s)");
 PP  = Prob("Parameter(s)");
 PO  = Prob("Observations");
 
-InsertDelete(by) = Equation {
+InsertDelete(by) = Span {
   InsertionRate;
   by;
   DeletionRate;

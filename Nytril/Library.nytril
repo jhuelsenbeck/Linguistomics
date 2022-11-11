@@ -1051,12 +1051,15 @@ class AlignedCountClass: CountBaseClass {
   ListClass<AlignActionClass> ActionList;
   MatrixClass                 Actions;
   ResultsClass                Results;
-  var                         Symmetric;
+  var                         Top,
+                              Symmetric;
+  AlignActionClass[]          TopSlice;
 
-  Constructor(ResultsClass results, rates, maxrate, minrate, symmetric) {
+  Constructor(ResultsClass results, rates, maxrate, minrate, symmetric, top) {
     super.Constructor(results.Experiment);
     Symmetric = symmetric;
     Results   = results;
+    Top       = top;
 
     var ordered = results.Data.UniqueSegments;
     var length  = Segments.Length;
@@ -1074,7 +1077,7 @@ class AlignedCountClass: CountBaseClass {
       for (var j = 0; j < jmax; ++j) {
         var rate = rates[i][j];
         if (rate >= minrate) {
-          var a = new AlignActionClass(ordered[i], ordered[j], rate, symmetric);
+          var a = new AlignActionClass(ordered[i], ordered[j], rate, rates[j][i], symmetric);
           ActionList.Add(a);
           Actions.SetValue(i, j, a);
         }
@@ -1085,6 +1088,7 @@ class AlignedCountClass: CountBaseClass {
     foreach (var a in ActionList)
       a.Percent = a.Value * f;
 
+    TopSlice = ActionList.Sort(true).Slice(0..<top);
   }
 
   override AddEntry(i, j, x, y, SizeClass size) {
@@ -1114,9 +1118,7 @@ class AlignedCountClass: CountBaseClass {
     return null;
   }
 
-  Most(max) = VBox {
-    var slice = ActionList.Sort(true).Slice(0..<max);
-    var lw    = 1.5 inches;
+  Most = VBox {
     Chart(100%, 4 inches) {
       Type: ChartTypes.Column;
       TextHeight: 10 pts;
@@ -1127,25 +1129,28 @@ class AlignedCountClass: CountBaseClass {
         "Transition Rate %";
       };
 
-      var fs = 200.0 / max;
+      var fs = 200.0 / Top;
       XAxis: ChartAxis {
         Rotation: 30 degrees;
-        (each slice).ShowBox(fs);
+        (each TopSlice).ShowBox(fs);
       };
 
       ChartSeries {
-        foreach (var s in slice)
+        foreach (var s in TopSlice)
           new DataPointClass(each0, s.Value) {Reference: s};
       };
     };
     Separation: 20 pts;
+    ShowLegend;
+  };
 
+  ShowLegend = {
     // Show only partitions that are present in the chart
     var partitions = Results.Rule.Partitions;
     var pmax       = partitions.Length;
     var set        = new HashSetClass(pmax);
     var list       = new ListClass<PartitionClass>(pmax);
-    foreach (var s in slice) {
+    foreach (var s in TopSlice) {
       var i = s.S0.PartitionIndex;
       if (set.Add(i))
         list.Add(partitions[i]);
@@ -1159,6 +1164,47 @@ class AlignedCountClass: CountBaseClass {
       Experiment.Rule.ShowBlockLegend(list.Values, 11 pts);
     }
   };
+
+  Pairs = VBox {
+    Chart(100%, 4 inches) {
+      Type: ChartTypes.StackedColumn;
+
+      Legend: ChartLegend {
+        Vertical: true;
+        Placement: Placements.Right
+      };
+      TextHeight: 10 pts;
+      ValueLabel: HBox {
+        TextHeight: 12 pts;
+        Transform: Rotate(90 degrees);
+        TransformFit: true;
+        "Transition Rate %";
+      };
+
+      var fs = 200.0 / Top;
+      XAxis: ChartAxis {
+        Rotation: 30 degrees;
+        (each TopSlice).ShowBox(fs);
+      };
+
+      ChartSeries {
+        Fill: Colors.Green;
+        Label: Tex.rightarrow;
+        foreach (var s in TopSlice)
+          new DataPointClass(each0, s.Value) {Reference: s};
+      };
+
+      ChartSeries {
+        Fill: Colors.Red;
+        Label: Tex.leftarrow;
+        foreach (var s in TopSlice)
+          new DataPointClass(each0, s.Opposite) {Reference: s};
+      };
+    };
+    Separation: 20 pts;
+    ShowLegend;
+  };
+
 }
 
 //======================================================================
@@ -1249,7 +1295,6 @@ class DiagonalClass {
     };
 
     Experiment.Rule.ShowBlockLegend(Partitions, 9 pts);
-
   };
 }
 
