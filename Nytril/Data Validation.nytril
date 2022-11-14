@@ -3,21 +3,23 @@ using Format, Units, IO;
 //======================================================================
 
 class DiagnosticsViewClass: DocumentClass {
-  DataSetClass Data;
+  DataSetClass         Data;
+   SegmentDisplayClass Display;
 
   Constructor(DataSetClass data) {
     super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
-    Data = data;
+    Data    = data;
+    Display = new(data);
   }
 
   ShowSegmentTables = Block {
     SegmentSetClass set = new(512);
-    MatchingVowels.ShowTable(Data, set);
+    MatchingVowels.ShowTable(Display.DisplaySegments, set);
     MatchingConsonants.PulmonicTable.ShowTable(Data, set);
     MatchingConsonants.NonPulmonicTable.ShowTable(Data, set);
     MatchingConsonants.PulmonicAffricatesTable.ShowTable(Data, set);
     MatchingConsonants.EjectiveAffricatesTable.ShowTable(Data, set);
-    MatchingOther.ShowTable(Data, set);
+    MatchingOther.ShowTable(Display.DisplaySegments, set);
   };
 
   ShowCognateCoverage = Block {
@@ -74,15 +76,15 @@ class DiagnosticsViewClass: DocumentClass {
 
     AppendixClass[] appendices = [
       new("Cognate Coverage", ShowCognateCoverage),
-      new AppendixFigureClass(Figures.UniqueSegments),
+      new(Lang.UniqueSegments, Display.ShowSegmentAssignments),
       new AppendixFigureClass(Figures.SegmentTransitionCounts),
-      new("Concept Groups", SegmentDisplay.ShowConceptGroups(Data)),
-      new("Words containing each segment", SegmentDisplay.ShowWordsForEachSegment(Data)),
+      new("Concept Groups", Display.ShowConceptGroups),
+      new("Words containing each segment", Display.ShowWordsForEachSegment),
       new("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),
       new("Segment Groups", ShowSegmentTables),
-      new(Lang.IPAFullName, SegmentDisplay.SegmentTable(Data)),
+      new(Lang.IPAFullName, Display.IPASegmentTable),
       new(Lang.Diacritics, MatchingDiacritics.ShowTable),
-      new(Lang.Languages, SegmentDisplay.ShowLanguageDetails(Data)),
+      new(Lang.Languages, Display.ShowLanguageDetails),
       new(Lang.ConceptsUsed, AllWords.ShowTable(10 pts, Data)),
 //      new("Euler Feature Diagram", new EulerDiagramClass().FeatureChart(Data)),
     ];

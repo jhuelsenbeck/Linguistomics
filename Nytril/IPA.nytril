@@ -103,22 +103,23 @@ flags SegmentFeatures {
 typedef SegmentSetClass HashSetClass<SegmentClass>;
 
 class SegmentClass: FactClass {
-  field Ipa,
-        Features;
-  var   Index,
-        UsedCount,
-        UsedFrequency,
-        CharacterLetter,
-        PartitionIndex,
-        Sampa,
-        Impossible,
-        Punctuation,
-        Gap,
-        Description,
-        Diacritic,
-        Open,
-        Backness,
-        Place;
+  field          Ipa,
+                 Features;
+  PartitionClass Partition;
+  var            Index,
+                 UsedCount,
+                 UsedFrequency,
+                 CharacterLetter,
+                 PartitionIndex,
+                 Sampa,
+                 Impossible,
+                 Punctuation,
+                 Gap,
+                 Description,
+                 Diacritic,
+                 Open,
+                 Backness,
+                 Place;
 
   Constructor(ipa, sampa, impossible=false) {
     super.Constructor(ipa ?? Empty);
@@ -162,7 +163,10 @@ class SegmentClass: FactClass {
     ShowSegment;
   };
 
-  PartitionColor = ChartColor(PartitionIndex);
+  void SetPartition(PartitionClass p, index) {
+    Partition      = p;
+    PartitionIndex = index;
+  }
 
   ShowSegment = Span {
     Style.IPAFamily;

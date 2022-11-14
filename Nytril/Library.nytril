@@ -4,11 +4,11 @@ using Format, Units, Math, IO, LinkTypes;
 
 class AlignDataClass {
   var Prob,
-      Alignments;
+      WordSet;
 
-  Constructor(prob, alignments) {
-    Prob       = prob;
-    Alignments = alignments;
+  Constructor(prob, wordset) {
+    Prob    = prob;
+    WordSet = wordset;
   }
 }
 
@@ -18,12 +18,12 @@ class AlignIndexClass {
   var              ConceptName,
                    CognateName;
   CognateClass     Cognate;
-  AlignDataClass[] Data;
+  AlignDataClass[] Alignments;
 
-  Constructor(concept, cognate, AlignDataClass[] data) {
+  Constructor(concept, cognate, AlignDataClass[] alignments) {
     ConceptName = concept;
     CognateName = cognate;
-    Data        = data;
+    Alignments  = alignments;
   }
 }
 
@@ -62,18 +62,17 @@ class StatClass {
 
 class AlignPairClass {
   DataSetClass    Data;
-  AlignIndexClass Align;
+  AlignIndexClass Cognate;
   SizeClass       BoxSize;
   var             Name;
 
-  Constructor(DataSetClass data, AlignIndexClass align) {
+  Constructor(DataSetClass data, AlignIndexClass cognate) {
     Data    = data;
-    Align   = align;
+    Cognate = cognate;
     BoxSize = new SizeClass(14 pts, 14 pts);
-
-    Name = align.ConceptName;
-    if (align.CognateName != DefaultCognate)
-      Name += "-" + align.CognateName;
+    Name    = cognate.ConceptName;
+    if (cognate.CognateName != DefaultCognate)
+      Name += "-" + cognate.CognateName;
   }
 
   Languages(data, height) = VBox {
@@ -88,7 +87,7 @@ class AlignPairClass {
     }
   };
 
-  Show(prob, cumulative, set, boxheight) = VBox {
+  Show(prob, cumulative, wordset, boxheight) = VBox {
     Margin: PadB(10 pts);
     Border: 0.125 {Color: 50%};
     HAlign: HAligns.Center;
@@ -102,7 +101,7 @@ class AlignPairClass {
     VBox {
       foreach (var taxon in Data.Taxa) {
         HBox(null, boxheight) {
-          var word = set[each0];
+          var word = wordset[each0];
           if (valid word) {
             foreach (var c in word) {
               Canvas(BoxSize.Width, BoxSize.Height) {
@@ -112,7 +111,8 @@ class AlignPairClass {
                   segment = IPASegments.GapSegment;
                 else if (c >= 0 and c < Data.UniqueSegments.Length) {
                   segment = Data.UniqueSegments[c];
-                  Background: segment.PartitionColor;
+                  Background: segment.Partition.Color;
+                  TextColor: segment.Partition.TextColor;
                 }
                 else
                   segment = IPASegments.MissingSegment;
@@ -132,7 +132,7 @@ class AlignPairClass {
     TextHeight: 6 pts;
     ValueLabel: "%";
     ChartSeries {
-      foreach (var a in Align.Data) {
+      foreach (var a in Cognate.Alignments) {
         a.Prob * 100.0;
         if (each1 >= max)
           break;
@@ -152,7 +152,7 @@ class AlignPairClass {
       Name;
     };
 
-    if (Align.Data.Length > 1)
+    if (Cognate.Alignments.Length > 1)
       GetChart(new(3 inch, 0.75 inch), max);
 
     var langbox = Languages(Data, BoxSize.Height);
@@ -175,12 +175,12 @@ class AlignPairClass {
 
   ShowBlocks(max, boxheight) = Span {
     var cumulative = 0.0;
-    foreach (var a in Align.Data) {
+    foreach (var a in Cognate.Alignments) {
       var prob = a.Prob;
       cumulative += prob;
-      var alignments = a.Alignments;
-      if (alignments.Length > 0) {
-        Show(prob, cumulative, alignments, boxheight);
+      var wordset = a.WordSet;
+      if (wordset.Length > 0) {
+        Show(prob, cumulative, wordset, boxheight);
         Space;
         if (each1 >= max)
           break;
@@ -196,6 +196,24 @@ class AlignPairClass {
       Languages(Data, h);
       ShowBlocks(max, h);
     }
+  };
+
+  ShowFigureData(AlignIndexClass index, AlignDataClass align) = Frame {
+    var h = 8 pts;
+    BoxSize = new(BoxSize.Width, h);
+    Paragraph {
+      SpaceBefore: 6 pts;
+      TextHeight: 12 pts;
+      index.Cognate.GetTitle;
+    };
+
+    Paragraph {
+      TextHeight: 7 pts;
+      Span {
+        Languages(Data, h);
+        Show(align.Prob, align.Prob, align.WordSet, h);
+      }
+    };
   };
 }
 
@@ -233,7 +251,6 @@ class AlignmentChartClass {
     var x      = bsize.Width * 0.5;
     AlignIndexClass[][] rows = Results.Alignments / xitems;
 
-
     TextHeight: Math.Min(9 pts, bsize.Height - 3.2 pt);
 
     foreach (var row in rows) {
@@ -247,7 +264,7 @@ class AlignmentChartClass {
             Block {
               Paragraph {
                 TextColor: Colors.LightGray;
-                a.Data.Length;
+                a.Alignments.Length;
               };
               Paragraph {
                 Span {
@@ -275,7 +292,6 @@ class AlignmentChartClass {
     var alignments = Results.Alignments;
     var chartwidth = 1 inch;
 
-//    Columns: [ColumnClass.Fit(1 inch), chartwidth, ColumnClass.Expand];
     foreach (var e in examples) {
       var found = null;
       foreach (var a in alignments) {
@@ -607,7 +623,7 @@ class ResultsClass {
     Data       = experiment.Data;
     Rule       = experiment.Rule;
 
-    Output = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run3") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
+    Output                 = IO.ReadScript(experiment.RootFolder Folder("Custom") Folder("Posterior") Folder("Run3") Info.ExecuteFolder FileName("Alignments") Extensions.Nytril).Root;
     TransitionStats        = Output.TransitionStats;
     EquilibriumFrequencies = Output.EquilibriumFrequencies;
     AlignmentCutoff        = Output.AlignmentCutoff;
@@ -627,7 +643,7 @@ class ResultsClass {
   }
 
   static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
-    var c = a0.Data.Length.Compare(a1.Data.Length);
+    var c = a0.Alignments.Length.Compare(a1.Alignments.Length);
     if (c == 0)
       return a0.ConceptName.Compare(a1.ConceptName);
     return c;
@@ -637,9 +653,7 @@ class ResultsClass {
 
 class DataSetClass {
   LanguageClass[]             Languages;
-  SegmentClass[]              UniqueSegments,
-                              SortedSegments,
-                              DisplaySegments;
+  SegmentClass[]              UniqueSegments;
   CognateClass[]              UsedCognates,
                               SortedCognates;
   ConceptClass[]              UsedConcepts;
@@ -743,9 +757,6 @@ class DataSetClass {
       segment.Index         = each0;
       segment.UsedFrequency = Real(segment.UsedCount) / SegmentCount;
     }
-
-    DisplaySegments = UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
-    SortedSegments  = UniqueSegments.Sort(true, ref CompareAlpha);
   }
 
   Coverage(TaxonClass taxon) {
@@ -779,13 +790,6 @@ class DataSetClass {
     if (invalid SortedCognates)
       SortedCognates = UsedCognates.Sort(false);
     return SortedCognates;
-  }
-
-  static CompareAlpha(SegmentClass s0, SegmentClass s1, options) {
-    var i = s0.Ipa.Length.Compare(s1.Ipa.Length);
-    if (i == 0)
-      i = -s0.Ipa.Compare(s1.Ipa);
-    return i;
   }
 
   CognateClass GetCognate(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);
@@ -920,7 +924,8 @@ abstract class CountBaseClass {
       foreach (var s in Segments) {
         Canvas(d.Width, d.Height) {
           Y: y;
-          Background: s.PartitionColor;
+          Background: s.Partition.Color;
+          TextColor: s.Partition.TextColor;
           HAlign: HAligns.Center;
           VAlign: VAligns.Center;
           s.ShowSegment;
@@ -941,7 +946,8 @@ abstract class CountBaseClass {
         foreach (var s in Segments) {
           Canvas(d.Width, d.Height) {
             X : x;
-            Background: s.PartitionColor;
+            Background: s.Partition.Color;
+            TextColor: s.Partition.TextColor;
             HAlign: HAligns.Center;
             VAlign: VAligns.Center;
             s.ShowSegment;
@@ -1051,15 +1057,13 @@ class AlignedCountClass: CountBaseClass {
   ListClass<AlignActionClass> ActionList;
   MatrixClass                 Actions;
   ResultsClass                Results;
-  var                         Top,
-                              Symmetric;
-  AlignActionClass[]          TopSlice;
+  var                         Symmetric;
+  AlignActionClass[]          SortedActions;
 
-  Constructor(ResultsClass results, rates, maxrate, minrate, symmetric, top) {
+  Constructor(ResultsClass results, rates, maxrate, minrate, symmetric) {
     super.Constructor(results.Experiment);
     Symmetric = symmetric;
     Results   = results;
-    Top       = top;
 
     var ordered = results.Data.UniqueSegments;
     var length  = Segments.Length;
@@ -1075,9 +1079,10 @@ class AlignedCountClass: CountBaseClass {
       var jmax = symmetric ? i : length;
 
       for (var j = 0; j < jmax; ++j) {
-        var rate = rates[i][j];
-        if (rate >= minrate) {
-          var a = new AlignActionClass(ordered[i], ordered[j], rate, rates[j][i], symmetric);
+        var rate    = rates[i][j];
+        var reverse = rates[j][i];
+        if (rate >= minrate or reverse > minrate) {
+          var a = new AlignActionClass(results, ordered[i], ordered[j], rate, reverse, symmetric);
           ActionList.Add(a);
           Actions.SetValue(i, j, a);
         }
@@ -1086,9 +1091,9 @@ class AlignedCountClass: CountBaseClass {
 
     var f = 1.0 / maxrate;
     foreach (var a in ActionList)
-      a.Percent = a.Value * f;
+      a.Percent = a.Rate * f;
 
-    TopSlice = ActionList.Sort(true).Slice(0..<top);
+    SortedActions = ActionList.Sort(true);
   }
 
   override AddEntry(i, j, x, y, SizeClass size) {
@@ -1118,45 +1123,18 @@ class AlignedCountClass: CountBaseClass {
     return null;
   }
 
-  Most = VBox {
-    Chart(100%, 4 inches) {
-      Type: ChartTypes.Column;
-      TextHeight: 10 pts;
-      ValueLabel: HBox {
-        TextHeight: 12 pts;
-        Transform: Rotate(90 degrees);
-        TransformFit: true;
-        "Transition Rate %";
-      };
-
-      var fs = 200.0 / Top;
-      XAxis: ChartAxis {
-        Rotation: 30 degrees;
-        (each TopSlice).ShowBox(fs);
-      };
-
-      ChartSeries {
-        foreach (var s in TopSlice)
-          new DataPointClass(each0, s.Value) {Reference: s};
-      };
-    };
-    Separation: 20 pts;
-    ShowLegend;
-  };
-
-  ShowLegend = {
+  ShowLegend(AlignActionClass[] actions) = {
     // Show only partitions that are present in the chart
-    var partitions = Results.Rule.Partitions;
-    var pmax       = partitions.Length;
-    var set        = new HashSetClass(pmax);
-    var list       = new ListClass<PartitionClass>(pmax);
-    foreach (var s in TopSlice) {
-      var i = s.S0.PartitionIndex;
+    var pmax = Results.Rule.Partitions.Length;
+    var set  = new HashSetClass(pmax);
+    var list = new ListClass<PartitionClass>(pmax);
+    foreach (var s in actions) {
+      var i = s.S0.Partition;
       if (set.Add(i))
-        list.Add(partitions[i]);
-      i = s.S1.PartitionIndex;
+        list.Add(i);
+      i = s.S1.Partition;
       if (set.Add(i))
-        list.Add(partitions[i]);
+        list.Add(i);
     }
 
     Canvas(ExtentWidth) {
@@ -1165,44 +1143,57 @@ class AlignedCountClass: CountBaseClass {
     }
   };
 
-  Pairs = VBox {
-    Chart(100%, 4 inches) {
+  ShowChart(AlignActionClass[] actions) = Chart(100%, 4 inches) {
+    Type: ChartTypes.Column;
+    TextHeight: 10 pts;
+    ValueLabel: HBox {
+      TextHeight: 12 pts;
+      Transform: Rotate(90 degrees);
+      TransformFit: true;
+      "Transition Rate %";
+    };
+
+    var fs = 200.0 / actions.Length;
+    XAxis: ChartAxis {
+      Rotation: 30 degrees;
+      (each actions).ShowBox(fs);
+    };
+
+    ChartSeries {
+      Fill: Colors.Green;
+      Label: Tex.rightarrow;
+      foreach (var a in actions)
+        new DataPointClass(each0, a.Rate) {Reference: a};
+    };
+  };
+
+  Most(top) = VBox {
+    var actions = SortedActions.Slice(0..<top);
+    ShowChart(actions);
+    Separation: 20 pts;
+    ShowLegend(actions);
+  };
+
+  Pairs(top, predicate) = VBox {
+    var subset  = SortedActions.FindSlice(predicate);
+    var actions = subset.Slice(0..<top);
+
+    ShowChart(actions) {
       Type: ChartTypes.StackedColumn;
 
       Legend: ChartLegend {
         Vertical: true;
-        Placement: Placements.Right
+        Placement: Placements.Right;
       };
-      TextHeight: 10 pts;
-      ValueLabel: HBox {
-        TextHeight: 12 pts;
-        Transform: Rotate(90 degrees);
-        TransformFit: true;
-        "Transition Rate %";
-      };
-
-      var fs = 200.0 / Top;
-      XAxis: ChartAxis {
-        Rotation: 30 degrees;
-        (each TopSlice).ShowBox(fs);
-      };
-
-      ChartSeries {
-        Fill: Colors.Green;
-        Label: Tex.rightarrow;
-        foreach (var s in TopSlice)
-          new DataPointClass(each0, s.Value) {Reference: s};
-      };
-
       ChartSeries {
         Fill: Colors.Red;
         Label: Tex.leftarrow;
-        foreach (var s in TopSlice)
-          new DataPointClass(each0, s.Opposite) {Reference: s};
+        foreach (var a in actions)
+          new DataPointClass(each0, a.Reverse);
       };
     };
     Separation: 20 pts;
-    ShowLegend;
+    ShowLegend(actions);
   };
 
 }
@@ -1216,7 +1207,7 @@ class SegDataClass {
 
   Constructor(ResultsClass results, rates, i) {
     Segment   = results.Data.UniqueSegments[i];
-    Partition = results.Rule.Partitions[Segment.PartitionIndex];
+    Partition = Segment.Partition;
     Value     = Math.Abs(rates[i][i]);
   }
 
@@ -1288,7 +1279,7 @@ class DiagonalClass {
         foreach (var d in Data) {
           new DataPointClass(each0, d.Value) {
             Reference: d;
-            Fill: d.Segment.PartitionColor;
+            Fill: d.Segment.Partition.Color;
           };
         }
       };
@@ -1508,7 +1499,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     return Canvas(width-1, height * f) {
       Margin: PadR(1);
       var s = Data.UniqueSegments[index];
-      Background: s.PartitionColor;
+      Background: s.Partition.Color;
       TipAction: new SegmentActionClass(rate, s, rate.Count[index], f);
     };
   }

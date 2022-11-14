@@ -38,7 +38,8 @@ class PartitionClass: FactClass {
   SegmentClass[] Segments;
   PointClass     Center;
   FilterClass    Filter;
-  ColorClass     Color;
+  ColorClass     Color,
+                 TextColor;
   var            Index,
                  Radius,
                  Angle,
@@ -46,11 +47,16 @@ class PartitionClass: FactClass {
 
   Constructor(index, FilterClass filter, SegmentClass[] segments) {
     super.Constructor(filter.Name);
-    Name     = filter.Name;
-    Color    = ChartColor(index);
-    Index    = index;
-    Filter   = filter;
-    Segments = segments;
+    Name      = filter.Name;
+    Color     = ChartColor(index);
+    TextColor = Color.TextCompliment;
+    Index     = index;
+    Filter    = filter;
+    Segments  = segments;
+
+    foreach (var s in segments)
+      s.SetPartition(this, index);
+
     Link.Connect(this, segments);
   }
 
@@ -131,8 +137,6 @@ abstract class RuleClass {
       var find = GetMatching(segments, filter);
       if (valid find) {
         list.Add(new PartitionClass(i, filter, find));
-        foreach (var s in find)
-          s.PartitionIndex = i;
         ++i;
       }
     }
@@ -184,6 +188,9 @@ abstract class RuleClass {
     };
   };
 
+  static SizeClass BorderSize = new SizeClass(3, 3);
+
+
   ShowBlockLegend(PartitionClass[] partitions, textheight) = Frame {
     Paragraph {
       Separator: Space*4;
@@ -193,7 +200,7 @@ abstract class RuleClass {
           VAlign: VAligns.Center;
           Separation: 3 pts;
           Canvas (textheight, textheight) {
-            BorderRadius: new SizeClass(3, 3);
+            BorderRadius: BorderSize;
             Background: p.Color;
           };
           p.Filter;
@@ -479,34 +486,45 @@ class TranActionClass: ActionClass {
 }
 //======================================================================
 
+class AlignSortClass {
+  AlignDataClass  Data;
+  AlignIndexClass Congate;
+
+  Constructor(AlignDataClass data, AlignIndexClass cognate) {
+    Data    = data;
+    Congate = cognate;
+  }
+}
+//======================================================================
+
 class AlignActionClass: ActionClass {
+  ResultsClass Results;
   SegmentClass S0,
                S1;
-  var          Value,
-               Opposite,
+  var          Rate,
+               Reverse,
                Percent,
                Symmetric;
 
-  Constructor(SegmentClass s0, SegmentClass s1, value, opposite, symmetric) {
-    super.Constructor(Actions.RunQuery, s0);
+  Constructor(ResultsClass results, SegmentClass s0, SegmentClass s1, rate, reverse, symmetric) {
+    super.Constructor(Actions.TipDocument, s0);
+    Results   = results;
     S0        = s0;
     S1        = s1;
-    Value     = value * 100.0;
-    Opposite  = opposite * 100.0;
+    Rate      = rate * 100.0;
+    Reverse   = reverse * 100.0;
     Symmetric = symmetric;
   }
 
-  override Compare(c, options) = Value.Compare(c.Value);
+  static SizeClass BorderSize = new SizeClass(3, 3);
 
-  override GetQuery = MatchAny SegmentClass {
-    S0;
-    S1;
-  };
+  override Compare(c, options) = Rate.Compare(c.Rate);
 
   ShowPartition(SegmentClass s, textheight) = Canvas(textheight * 2.5) {
-    BorderRadius: new SizeClass(3, 3);
+    BorderRadius: BorderSize;
     HAlign: HAligns.Center;
-    Background: s.PartitionColor;
+    Background: s.Partition.Color;
+    TextColor: s.Partition.TextColor;
     s.ShowSegment;
   };
 
@@ -515,7 +533,10 @@ class AlignActionClass: ActionClass {
     VAlign: VAligns.Center;
     ShowPartition(S0, textheight);
     Space;
-    Symmetric ? Tex.leftrightarrow : Tex.rightarrow;
+    Span {
+      TipAction: this;
+      Symmetric ? Tex.leftrightarrow : Tex.rightarrow;
+    };
     Space;
     ShowPartition(S1, textheight);
     Tip: this;
@@ -523,21 +544,79 @@ class AlignActionClass: ActionClass {
 
   override GetLayoutSpan = ShowBox(11 pts);
 
-  override GetLayoutTip = Frame {
-    TextHeight: 20 pts;
-
+  GetExamples(range) = Block {
+    TextHeight: 14 pts;
     GetLayoutSpan;
     Paragraph {
       TextDigits: 2;
-      Value;
-      "%";
+      Rate;
+      "% ";
+      Span {
+        "(";
+        TextDigits: 1;
+        Percent;
+        "% of max)";
+      };
     };
-    Paragraph {
-      TextDigits: 1;
-      Percent;
-      "% of max";
-    };
+
+    var sorted = GetList().Slice(range);
+    if (valid sorted) {
+      Paragraph {
+        SpaceBefore: 6 pts;
+        "Examples:";
+      };
+
+      Paragraph {
+        Separator: Space;
+        foreach (var s in sorted)
+          new AlignPairClass(Results.Data, s.Congate).ShowFigureData(s.Congate, s.Data);
+      };
+    }
   };
+
+  override GetLayoutTip = GetExamples(0..<10);
+
+  override GetDocument = GetExamples(0..);
+
+  static CompareProb(AlignSortClass s1, AlignSortClass s2, options) = s1.Data.Prob.Compare(s2.Data.Prob);
+
+  AlignSortClass[] GetList {
+    // Find cognate sets that have the first segment in one language and the second in another language
+
+    var i0   = S0.Index;
+    var i1   = S1.Index;
+    var list = new ListClass<AlignSortClass>(1024);
+
+    foreach (var cognate in Results.Alignments) {
+      AlignDataClass found = null;
+
+      foreach (var alignment in cognate.Alignments) {
+        foreach (var w1 in alignment.WordSet) {
+          foreach (var seg in w1) {
+            if (seg == i0) {
+              var ni = each0;
+              foreach (var w2 in alignment.WordSet) {
+                if (w2[ni] == i1) {
+                  found = alignment;
+                  break;
+                }
+              }
+            }
+            if (valid found)
+              break;
+          }
+          if (valid found)
+            break;
+        }
+        if (valid found)
+          break;
+      }
+
+      if (valid found)
+        list.Add(new(found, cognate));
+    }
+    return list.Sort(true, ref CompareProb);
+  }
 }
 //======================================================================
 

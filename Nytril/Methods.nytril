@@ -48,10 +48,8 @@ namespace Figures.AlignmentExamples {
     "Credible sets for cognate alignments";
   };
 
-  AlignmentChartClass Display = new(MainResults);
-
   Body(DocumentClass document) = Block {
-    Display.ShowSet(MainResults.Data, Examples);
+    Figures.Alignments.Display.ShowSet(MainResults.Data, Examples);
   };
 }
 
@@ -280,12 +278,13 @@ namespace Figures.FractionGapsChart {
 
 //======================================================================
 
+TopCount = 15;
+
 namespace Figures.AverageTransitions {
-  Top     = 15;
   MinRate = 0.00005;
   Title   = "Average transitions above {0}%"(MinRate*100);
 
-  AlignedCountClass Display = new(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax, MinRate, true, Top);
+  AlignedCountClass Display = new(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax, MinRate, true);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
 }
@@ -297,19 +296,18 @@ namespace Figures.AverageDiagonal {
 }
 
 namespace Figures.AverageMost {
-  Title = "Average Top {0}"(Figures.AverageTransitions.Top);
+  Title = "Average Top {0}"(TopCount);
 
-  Body(DocumentClass document) = AverageTransitions.Display.Most;
+  Body(DocumentClass document) = AverageTransitions.Display.Most(TopCount);
 }
 
 //======================================================================
 
 namespace Figures.QRatesMatrix {
-  Top     = 30;
   MinRate = 0.005;
   Title   = "Q above {0}%"(MinRate*100);
 
-  AlignedCountClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, MinRate, false, Top);
+  AlignedCountClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, MinRate, false);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
 }
@@ -321,16 +319,39 @@ namespace Figures.QRatesDiagonal {
   Body(DocumentClass document) = Diagonal.Display;
 }
 
-namespace Figures.QRatesMost {
-  Title = "The {0} segmental transitions with the highest rates"(Figures.QRatesMatrix.Top);
+TransitionTitle(type) = "The top {0} {1} transitions"(TopCount, type);
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Most;
+namespace Figures.QRatesMost {
+  Title = TransitionTitle("segmental");
+
+  Body(DocumentClass document) = QRatesMatrix.Display.Most(TopCount);
 }
 
-namespace Figures.QRatePairs {
-  Title = "The top {0} segmental transition pairs"(Figures.QRatesMatrix.Top);
+namespace Figures.QRatesVowelVowel {
+  Title = TransitionTitle("Consonant-Vowel");
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Pairs;
+  Predicate(AlignActionClass a) = a.S0.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
+                                  a.S1.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel);
+
+  Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
+}
+
+namespace Figures.QRatesConsonantConsonant {
+  Title = TransitionTitle("Consonant-Consonant");
+
+  Predicate(AlignActionClass a) = a.S0.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
+                                  a.S1.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
+
+  Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
+}
+
+namespace Figures.QRatesVowelConsonant {
+  Title = TransitionTitle("Vowel-Consonant");
+
+  Predicate(AlignActionClass a) = a.S0.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel) and
+                                  a.S1.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
+
+  Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
 }
 
 //======================================================================
@@ -342,7 +363,7 @@ namespace Figures.AllSegmentFrequencies {
     "The frequency of occurrance of each segment for all languages";
   };
 
-  Display = SegmentDisplay.FrequencyChart(Experiment.Data, new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
+  Display = new SegmentDisplayClass(Experiment.Data).FrequencyChart(new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
 
   Body(DocumentClass document) = Block {
     Display;
@@ -488,7 +509,15 @@ namespace Figures.ExampleConcepts {
 namespace Figures.LanguagesUsed {
   Title = Lang.Languages;
 
-  Body(DocumentClass document) = SegmentDisplay.ShowLanguages(Experiment.Data);
+  Body(DocumentClass document) = Utility.ShowLanguages(Experiment.Data);
+}
+
+//======================================================================
+
+namespace Figures.UniqueSegments {
+  Title = Lang.UniqueSegments;
+
+  Body(DocumentClass document) = new SegmentDisplayClass(Experiment.Data).ShowSegmentAssignments;
 }
 
 //======================================================================

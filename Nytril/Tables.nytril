@@ -35,9 +35,9 @@ class EulerDiagramClass {
 
   FeatureMask = Vowel Nasal Vocoid Approximant Vibrant Lateral Affricate Occlusive Strident Sibilant Obstruent Continuant Fricative Rhotic Liquid Trill TapFlap;
 
-  FeatureSegments(DataSetClass data, features) = data.DisplaySegments.FindSlice(s => s.Features.HasFlagMask(FeatureMask, features));
+  FeatureSegments(SegmentClass[] segments, features) = segments.FindSlice(s => s.Features.HasFlagMask(FeatureMask, features));
 
-  FeatureFrame(DataSetClass data, x, y, width, name, features) = Canvas {
+  FeatureFrame(SegmentClass[] segments, x, y, width, name, features) = Canvas {
     X: EX(x);
     Y: EY(y);
     Frame(EX(width)) {
@@ -46,12 +46,12 @@ class EulerDiagramClass {
         Span {TitleStyle; name};
       Paragraph {
         Separator: Space;
-        (each FeatureSegments(data, features)).ShowSegment;
+        (each FeatureSegments(segments, features)).ShowSegment;
       }
     }
   };
 
-  FeatureChart(DataSetClass data) = Canvas {
+  FeatureChart(SegmentClass[] segments) = Canvas {
     TextHeight: 16 pts;
 
     VNameFrame(Lang.Occlusive, 10, 0, 90, 34, new(255, 238, 238)) {
@@ -74,6 +74,7 @@ class EulerDiagramClass {
       VAlign: VAligns.Center;
       NameBox(Lang.TapFlap);
     };
+
     Enclosure(25, 83, 53, 7, new(247, 247, 255)) {
       HAlign: HAligns.Left;
       VAlign: VAligns.Center;
@@ -112,26 +113,26 @@ class EulerDiagramClass {
       NameBox(Lang.Lateral, 90 degrees);
     };
 
-    FeatureFrame(data, 11, 1, 84, Lang.Nasal, Nasal Occlusive);
-    FeatureFrame(data, 12, 14, 17, Lang.Plosive, Stop Occlusive);
-    FeatureFrame(data, 32, 14, 20, Lang.Affricate, Affricate Occlusive);
-    FeatureFrame(data, 54, 20, 7, null, Affricate Occlusive Strident);
-    FeatureFrame(data, 65, 18, 18, Lang.Sibilant, Affricate Occlusive Strident Sibilant);
-    FeatureFrame(data, 14, 38, 22, Lang.Fricative, Fricative Obstruent Continuant);
-    FeatureFrame(data, 54, 38, 6, null, Fricative Obstruent Continuant Strident);
-    FeatureFrame(data, 64, 36, 20, null, Fricative Obstruent Continuant Strident Sibilant);
-    FeatureFrame(data, 66, 44, 10, null, Fricative Obstruent Continuant Strident Rhotic Liquid);
-    FeatureFrame(data, 80, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid);
-    FeatureFrame(data, 12, 53, 19, Lang.Vowel, Vowel Vocoid Continuant);
-    FeatureFrame(data, 36, 60, 19, Lang.SemiVowel, Vocoid Semivowel Approximant Continuant);
-    FeatureFrame(data, 57, 62, 5, null, Vocoid Approximant);
-    FeatureFrame(data, 66, 60, 10, null, Vocoid Approximant Rhotic Liquid);
-    FeatureFrame(data, 82, 58, 5, null, Vocoid Approximant Rhotic Liquid Lateral);
-    FeatureFrame(data, 54, 76, 10, null, Vibrant TapFlap);
-    FeatureFrame(data, 66, 76, 10, null, Vibrant TapFlap Rhotic Liquid);
-    FeatureFrame(data, 77, 77, 10, null, Vibrant TapFlap Rhotic Liquid Lateral);
-    FeatureFrame(data, 54, 84, 10, null, Vibrant Trill);
-    FeatureFrame(data, 66, 84, 10, null, Vibrant Trill Rhotic Liquid);
+    FeatureFrame(segments, 11, 1, 84, Lang.Nasal, Nasal Occlusive);
+    FeatureFrame(segments, 12, 14, 17, Lang.Plosive, Stop Occlusive);
+    FeatureFrame(segments, 32, 14, 20, Lang.Affricate, Affricate Occlusive);
+    FeatureFrame(segments, 54, 20, 7, null, Affricate Occlusive Strident);
+    FeatureFrame(segments, 65, 18, 18, Lang.Sibilant, Affricate Occlusive Strident Sibilant);
+    FeatureFrame(segments, 14, 38, 22, Lang.Fricative, Fricative Obstruent Continuant);
+    FeatureFrame(segments, 54, 38, 6, null, Fricative Obstruent Continuant Strident);
+    FeatureFrame(segments, 64, 36, 20, null, Fricative Obstruent Continuant Strident Sibilant);
+    FeatureFrame(segments, 66, 44, 10, null, Fricative Obstruent Continuant Strident Rhotic Liquid);
+    FeatureFrame(segments, 80, 44, 10, null, Fricative Obstruent Continuant Strident Lateral Liquid);
+    FeatureFrame(segments, 12, 53, 19, Lang.Vowel, Vowel Vocoid Continuant);
+    FeatureFrame(segments, 36, 60, 19, Lang.SemiVowel, Vocoid Semivowel Approximant Continuant);
+    FeatureFrame(segments, 57, 62, 5, null, Vocoid Approximant);
+    FeatureFrame(segments, 66, 60, 10, null, Vocoid Approximant Rhotic Liquid);
+    FeatureFrame(segments, 82, 58, 5, null, Vocoid Approximant Rhotic Liquid Lateral);
+    FeatureFrame(segments, 54, 76, 10, null, Vibrant TapFlap);
+    FeatureFrame(segments, 66, 76, 10, null, Vibrant TapFlap Rhotic Liquid);
+    FeatureFrame(segments, 77, 77, 10, null, Vibrant TapFlap Rhotic Liquid Lateral);
+    FeatureFrame(segments, 54, 84, 10, null, Vibrant Trill);
+    FeatureFrame(segments, 66, 84, 10, null, Vibrant Trill Rhotic Liquid);
   };
 }
 //======================================================================
@@ -336,7 +337,7 @@ class TabOptionsClass {
         f;
     };
 
-    var all = data.DisplaySegments + ImpossibleSegments;
+    var all = data.UniqueSegments + ImpossibleSegments;
     foreach (var place in places)
       SegmentBlock(set, all.FindSlice(s => s.?Place == place and CheckFlags(s.Features, features)));
   };
@@ -419,13 +420,13 @@ namespace MatchingConsonants {
 namespace MatchingVowels {
   FeatureMask = Vowel LongVowel Nasal Diphthong NonSylabic;
 
-  AddCell(DataSetClass data, SegmentSetClass set, open, backness, features) = Cell {
+  AddCell(SegmentClass[] segments, SegmentSetClass set, open, backness, features) = Cell {
     Style.SegmentBottom;
     HAlign: HAligns.Center;
     TextHeight: DocMetrics.BoxSize.Height;
 
     var filter  = segment => segment.Backness == backness and segment.Open == open and segment.Features.HasFlagMask(FeatureMask, features);
-    var matches = data.DisplaySegments.FindSlice(filter);
+    var matches = segments.FindSlice(filter);
     switch (matches.Length) {
       case 0:
         break;
@@ -448,16 +449,16 @@ namespace MatchingVowels {
     }
   };
 
-  AddRow(DataSetClass data, SegmentSetClass set, open, features) = Row {
+  AddRow(SegmentClass[] segments, SegmentSetClass set, open, features) = Row {
     Cell {
       VAlign: VAligns.Center;
       Style.TitleBackground;
       open.Name;
     };
-    AddCell(data, set, open, each Backnesses, features)
+    AddCell(segments, set, open, each Backnesses, features)
   };
 
-  ShowVowelTable(DataSetClass data, SegmentSetClass set, features) = Block {
+  ShowVowelTable(SegmentClass[] segments, SegmentSetClass set, features) = Block {
     Style.TitleBar {Separator: "-"; each features};
     Table {
       HAlign: HAligns.Center;
@@ -474,11 +475,11 @@ namespace MatchingVowels {
           };
         }
       };
-      AddRow(data, set, each Opens, features);
+      AddRow(segments, set, each Opens, features);
     };
   };
 
-  ShowTable(DataSetClass data, SegmentSetClass set) = Block {
+  ShowTable(SegmentClass[] segments, SegmentSetClass set) = Block {
     var features = [
       Vowel,
       Vowel LongVowel,
@@ -491,7 +492,7 @@ namespace MatchingVowels {
     ];
 
     Lang.SymbolPairRounded;
-    ShowVowelTable(data, set, each features);
+    ShowVowelTable(segments, set, each features);
   };
 }
 //======================================================================
@@ -553,103 +554,20 @@ namespace MatchingOther {
     AddCell(each segments)
   };
 
-  ShowTable(DataSetClass data, SegmentSetClass set) = Block {
+  ShowTable(SegmentClass[] segments, SegmentSetClass set) = Block {
     Style.TitleBar {Lang.OtherSegments};
     Table {
       Style.TableBorder;
       Columns: [DocMetrics.CellSize.Width, ExtentWidth * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv;
-      var segments = data.DisplaySegments.FindSlice(segment => not set.Contains(segment));
-      AddRow(each (segments / ColumnDiv));
+      var slice = segments.FindSlice(segment => not set.Contains(segment));
+      AddRow(each (slice / ColumnDiv));
     };
     Style.TableNotes;
   };
 }
 //======================================================================
 
-namespace SegmentDisplay {
-  CompareSegments(SegmentClass s0, SegmentClass s1, options) = s0.UsedCount - s1.UsedCount;
-
-  FrequencyChart(DataSetClass data, SizeClass size) = Chart(size.Width, size.Height) {
-    TextHeight: 11 pts;
-    Style.SansSerif;
-    Type: ChartTypes.Column;
-    Legend: ChartLegend {Placement: Placements.Bottom};
-    ValueLabel: Lang.FrequencyPercent {
-      Transform: Rotate(90 degrees);
-      TransformFit: true;
-    };
-
-    SegmentClass[] sorted = data.UniqueSegments.Sort(true, ref CompareSegments);
-    XAxis: ChartAxis {
-      TextHeight: DocMetrics.SegmentTextFactor * size.Width / sorted.Length;
-      (each sorted).ShowSegment;
-    };
-    ValueAxis: ChartAxis;
-    ChartSeries {
-      TextDigits: 3;
-      Label: Lang.Experiment;
-      (each (each sorted).UsedFrequency) * 100.0;
-    };
-  };
-
-  ShowSegmentAssignments(DataSetClass data) = Paragraph {
-    var textheight = 18 pts;
-    TextHeight: textheight;
-
-    foreach (var segment in data.UniqueSegments) {
-      HBox(textheight * 3.25, null, PadLR(1)) {
-        VAlign: VAligns.Center;
-        Margin: 5;
-        Border: 0.25 pts {Color: 85%};
-        Span {
-          HAlign: HAligns.Center;
-          TextColor: Colors.LightGray;
-          TextHeight: 75%;
-          each0;
-        };
-        Space*4;
-        segment.ShowSegment;
-      }
-    }
-  };
-
-  SegmentCell(SegmentClass segment) = Cell(PadAll(2 pts)) {
-    Border: 0.25 pts {Color: Colors.LightGray};
-    segment.Display(segment.GetVariableFullName, 16 pts)
-  };
-
-  SegmentTable(DataSetClass data) = Block {
-    var c = DocMetrics.SegmentColumns;
-
-    Table {
-      Columns: [ExtentWidth / c] * c;
-      foreach (var s in (data.SortedSegments / c)) {
-        Row {
-          SegmentCell(each s);
-        }
-      }
-    };
-    Style.TableNotes;
-  };
-
-  ShowLanguageDetails(DataSetClass data) = Block {
-    foreach (var taxon in data.Taxa) {
-      var language = taxon.Language;
-      Style.Header2 {
-        language.Name;
-      };
-      Block {
-        Paragraph {
-          ParAlignment: ParAlignments.Center;
-          if (valid language.MapImage)
-            language.ShowMap(new(5 inches, 3 inches));
-        };
-        language.Description;
-        language.Details;
-      }
-    }
-  };
-
+namespace Utility {
   ShowLanguages(DataSetClass data) = Block {
     var rows      = 2;
     var cols      = (data.Taxa.Length + 1) div rows;
@@ -695,8 +613,111 @@ namespace SegmentDisplay {
       }
     }
   };
+}
+//======================================================================
 
-  ShowConceptGroups(DataSetClass data) = Block {
+class SegmentDisplayClass {
+  DataSetClass   Data;
+  SegmentClass[] SortedSegments,
+                 DisplaySegments;
+
+  Constructor(DataSetClass data) {
+    Data            = data;
+    DisplaySegments = data.UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
+    SortedSegments  = data.UniqueSegments.Sort(true, ref CompareAlpha);
+  }
+
+  static CompareSegments(SegmentClass s0, SegmentClass s1, options) = s0.UsedCount - s1.UsedCount;
+
+  static CompareAlpha(SegmentClass s0, SegmentClass s1, options) {
+    var i = s0.Ipa.Length.Compare(s1.Ipa.Length);
+    if (i == 0)
+      i = -s0.Ipa.Compare(s1.Ipa);
+    return i;
+  }
+
+  FrequencyChart(SizeClass size) = Chart(size.Width, size.Height) {
+    TextHeight: 11 pts;
+    Style.SansSerif;
+    Type: ChartTypes.Column;
+    Legend: ChartLegend {Placement: Placements.Bottom};
+    ValueLabel: Lang.FrequencyPercent {
+      Transform: Rotate(90 degrees);
+      TransformFit: true;
+    };
+
+    SegmentClass[] sorted = DisplaySegments.Sort(true, ref CompareSegments);
+    XAxis: ChartAxis {
+      TextHeight: DocMetrics.SegmentTextFactor * size.Width / sorted.Length;
+      (each sorted).ShowSegment;
+    };
+    ValueAxis: ChartAxis;
+    ChartSeries {
+      TextDigits: 3;
+      Label: Lang.Experiment;
+      (each (each sorted).UsedFrequency) * 100.0;
+    };
+  };
+
+  ShowSegmentAssignments = Paragraph {
+    var textheight = 18 pts;
+    TextHeight: textheight;
+
+    foreach (var segment in DisplaySegments) {
+      HBox(textheight * 3.25, null, PadLR(1)) {
+        VAlign: VAligns.Center;
+        Margin: 5;
+        Border: 0.25 pts {Color: 85%};
+        Span {
+          HAlign: HAligns.Center;
+          TextColor: Colors.LightGray;
+          TextHeight: 75%;
+          each0;
+        };
+        Space*4;
+        segment.ShowSegment;
+      }
+    }
+  };
+
+  SegmentCell(SegmentClass segment) = Cell(PadAll(2 pts)) {
+    Border: 0.25 pts {Color: Colors.LightGray};
+    segment.Display(segment.GetVariableFullName, 16 pts)
+  };
+
+  IPASegmentTable = Block {
+    var c = DocMetrics.SegmentColumns;
+
+    Table {
+      Columns: [ExtentWidth / c] * c;
+      foreach (var s in (SortedSegments / c)) {
+        Row {
+          SegmentCell(each s);
+        }
+      }
+    };
+    Style.TableNotes;
+  };
+
+  ShowLanguageDetails = Block {
+    foreach (var taxon in Data.Taxa) {
+      var language = taxon.Language;
+      Style.Header2 {
+        language.Name;
+      };
+      Block {
+        Paragraph {
+          ParAlignment: ParAlignments.Center;
+          if (valid language.MapImage)
+            language.ShowMap(new(5 inches, 3 inches));
+        };
+        language.Description;
+        language.Details;
+      }
+    }
+  };
+
+  ShowConceptGroups = Block {
     var groups = WordGroups[1..];
     Table {
       Style.TableBorder;
@@ -718,7 +739,7 @@ namespace SegmentDisplay {
           };
         }
       };
-      foreach (var concept in data.UsedConcepts) {
+      foreach (var concept in Data.UsedConcepts) {
         Row {
           Style.RowBar(each0);
           each0;
@@ -736,8 +757,8 @@ namespace SegmentDisplay {
     }
   };
 
-  ShowWordsForEachSegment(DataSetClass data) = Block {
-    foreach (var segment in data.SortedSegments) {
+  ShowWordsForEachSegment = Block {
+    foreach (var segment in SortedSegments) {
       Paragraph {
         TabStops: [0.5 inches];
         KeepWithNext: true;
@@ -752,7 +773,7 @@ namespace SegmentDisplay {
         SpaceAfter: 10 pts;
         Span {
           Separator: Space*2;
-          foreach (var cognate in data.GetSortedCognates) {
+          foreach (var cognate in Data.GetSortedCognates) {
             foreach (var word in cognate.Words) {
               if (word.Segments.FindAny(segment)) {
                 Span {
