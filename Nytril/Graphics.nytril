@@ -147,7 +147,7 @@ class EquationClass: FactClass {
   override GetLayoutTip = Block {
     Paragraph {
       SpaceAfter: 10 pts;
-      TextFamily: TextFamilies.Arial;
+      TextFamily: Style.SansSerif;
       Bold;
       Name;
     };
@@ -159,6 +159,17 @@ class EquationClass: FactClass {
   };
 
   override GetLayoutFact = GetLayoutTip;
+}
+//======================================================================
+
+class AuthorClass {
+  PersonClass Person;
+  var         EqualContribution;
+
+  Constructor(PersonClass person, equal) {
+    Person            = person;
+    EqualContribution = equal;
+  }
 }
 //======================================================================
 
@@ -188,6 +199,7 @@ namespace Style {
   SlideHeader          = Colors.SlateGray;
 
   eos                  = ". ";
+  EqualContribution    = "†";
   SQuote               = Span {Begin: "‘"; End: "’"};
   SQuoteEnd            = Span {Begin: "‘"; End: ".’ "};
   DQuote               = Span {Begin: "“"; End: "”"};
@@ -316,31 +328,33 @@ namespace Style {
     TipAction: person;
   };
 
-  ShowAuthor(PersonClass person) = Span {
-    CitationLib.GetFullName(person) {
+  ShowAuthor(AuthorClass author) = Span {
+    CitationLib.GetFullName(author.Person) {
       Bold;
-      TipAction: person.FindFirstFact(WebsiteLink);
+      TipAction: author.Person.FindFirstFact(WebsiteLink);
     };
 
     Span {
-      Separator: Comma;
       TextAlignment: TextAlignments.Superscript;
+      Separator: Comma;
       each1;
-      "+";
+      if (author.EqualContribution)
+        EqualContribution;
     };
   };
 
-  ShowAuthorDetails(PersonClass person) = Block {
+  ShowAuthorDetails(AuthorClass author) = Block {
+    var person     = author.Person;
     var department = person.FindFirstFact(DepartmentLink);
-    if (valid department) {
-      LeftIndent: NoteIndexIndent;
-      Paragraph {
-        FirstIndent: -NoteIndexIndent;
-        Span {
-          TextAlignment: TextAlignments.Superscript;
-          each1;
-        };
-        Tab;
+    LeftIndent: NoteIndexIndent;
+    Paragraph {
+      FirstIndent: -NoteIndexIndent;
+      Span {
+        TextAlignment: TextAlignments.Superscript;
+        each1;
+      };
+      Tab;
+      if (valid department) {
         department.Name;
         CommaSpace;
 
@@ -352,14 +366,19 @@ namespace Style {
           }
           CitationLib.ShowLocation(org, CommaSpace, true);
         }
-      };
-    }
+      }
+      else {
+        var email = person.FindFirstFact(WorkEmailLink);
+        if (valid email)
+          email.Value;
+      }
 
-    TipAction: person.FindFirstFact(WorkEmailLink);
+      TipAction: person.FindFirstFact(WorkEmailLink);
+    }
   };
 
-  ShowAuthorList(authors) = Block {
-    TextFamily: TextFamilies.Arial;
+  ShowAuthorList(AuthorClass[] authors) = Block {
+    TextFamily: Style.SansSerif;
     Paragraph {
       TextHeight: 12 pts;
       SpaceAfter: 10 pts;
@@ -376,10 +395,10 @@ namespace Style {
         FirstIndent: -NoteIndexIndent;
         Span {
           TextAlignment: TextAlignments.Superscript;
-          "+";
+          EqualContribution;
         };
         Tab;
-        "These authors contributed equally to this work";
+        Lang.EqualContribution;
       };
     };
   };

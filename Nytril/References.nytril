@@ -43,14 +43,14 @@ namespace Cities {
 }
 //======================================================================
 
-Authors = [
-  People.DMGoldstein,
-  People.SHMcCreight,
-  People.EBuchi,
-  People.JPHuelsenbeck,
+AuthorClass[] AuthorList = [
+  new(People.DMGoldstein, true),
+  new(People.SHMcCreight, true),
+  new(People.EBuchi, false),
+  new(People.JPHuelsenbeck, true),
 ];
 
-Colaborators(PersonClass author) = Authors.FindSlice(p => p != author);
+Authors = (each AuthorList).Person;
 
 namespace People {
   PersonClass DMGoldstein = new(#a3f46f7d-97db-4ca7-bdca-3846f26c33cf#, "David", "M.", "Goldstein") {
@@ -62,6 +62,7 @@ namespace People {
 
   PersonClass EBuchi = new(#c87906ff-2ef9-4f06-8f1c-684f12dca06a#, "Éva", null, "Buchi") {
     WorkEmailLink to new EmailClass("eva.buchi@atilf.fr");
+    DepartmentLink to Organizations.UniversityofParisSorbonne;
   };
 
   PersonClass SHMcCreight = new(#1c36c96b-43e5-426f-8c67-e9e05edf6326#, "Shawn", "H.", "McCreight") {
@@ -111,6 +112,10 @@ namespace People {
   PersonClass EugenioCoseriu   = new(#23c31224-76e1-4517-b147-02a0ad59bcae#, "Eugenio", null, "Coseriu");
 }
 
+CityClass Cities.Paris = new(#bb7307c9-0329-47dc-a976-07d5e9beb55b#, "Paris") {
+  Link to Countries.France;
+};
+
 //======================================================================
 
 namespace Organizations {
@@ -124,6 +129,10 @@ namespace Organizations {
 
   OrganizationClass UCLA = new(#ba7841e6-ced8-4cc7-9cb5-3acd488367b3#, "University of California, Los Angeles", "UCLA") {
     StreetAddress("UCLA", Cities.LosAngeles, "90095-1543");
+  };
+
+  OrganizationClass UniversityofParisSorbonne = new(#dd490791-eb1c-46ca-96d6-db95bd8d3de0#, "Université de Paris-Sorbonne") {
+    StreetAddress("21, rue de l'école de médecine", Cities.Paris, "75006");
   };
 
   OrganizationClass UCLALinguistics = new(#baea0c18-4bc2-4220-9a72-e9ee64846cc9#, "Department of Linguistics") {
