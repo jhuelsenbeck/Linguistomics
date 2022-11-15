@@ -883,16 +883,12 @@ class DataSetClass {
 abstract class CountBaseClass {
   var            VFlags,
                  MaxDigits;
-  VectorClass    PartIndex;
-  SegmentClass[] Segments;
+  SegmentClass[] PartSegments;
 
   Constructor(ExperimentClass experiment) {
-    VFlags    = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
-    Segments  = experiment.Rule.PartSegments;
-    PartIndex = new(Segments.Length, 0);
-    foreach (var s in Segments)
-      PartIndex.SetValue(s.Index, each0);
-    MaxDigits = 3;
+    VFlags       = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
+    PartSegments = experiment.Rule.PartSegments;
+    MaxDigits    = 3;
   }
 
   PartitionBox(DocumentClass document) = Paragraph {
@@ -902,7 +898,7 @@ abstract class CountBaseClass {
     var gcolor = 65%;
     var border = 0.5 pts;
     var size   = ExtentSize - border*2;
-    var length = Segments.Length;
+    var length = PartSegments.Length;
     var d      = size / (length+1);
 
     Canvas {
@@ -913,7 +909,7 @@ abstract class CountBaseClass {
       for (var i = 0; i < length; ++i) {
         var x = d.Width;
         for (var j = 0; j < length; ++j) {
-          AddEntry(i, j, x, y, d);
+          AddEntry(PartSegments[i], PartSegments[j], x, y, d);
           x += d.Width;
         }
         y += d.Height;
@@ -921,7 +917,7 @@ abstract class CountBaseClass {
 
       y = d.Height;
       var p = 0;
-      foreach (var s in Segments) {
+      foreach (var s in PartSegments) {
         Canvas(d.Width, d.Height) {
           Y: y;
           Background: s.Partition.Color;
@@ -943,7 +939,7 @@ abstract class CountBaseClass {
       Canvas(size.Width, d.Height) {
         var x = d.Width;
         p = 0;
-        foreach (var s in Segments) {
+        foreach (var s in PartSegments) {
           Canvas(d.Width, d.Height) {
             X : x;
             Background: s.Partition.Color;
@@ -965,7 +961,7 @@ abstract class CountBaseClass {
     };
   };
 
-  abstract AddEntry(i, j, x, y, SizeClass size);
+  abstract AddEntry(SegmentClass si, SegmentClass sj, x, y, SizeClass size);
 }
 
 //======================================================================
@@ -986,22 +982,20 @@ class PriorCountClass: CountBaseClass {
     foreach (var cognate in data.UsedCognates) {
       var length = cognate.Words.Length;
       for (var i = 0; i < length; ++i) {
-        var p0 = cognate.Words[i].Padded;
+        var pi = cognate.Words[i].Padded;
         for (var j = 0; j < length; ++j) {
           if (i != j) {
-            var p1 = cognate.Words[j].Padded;
-            var ml = Min(p0.Length, p1.Length);
+            var pj = cognate.Words[j].Padded;
+            var ml = Min(pi.Length, pj.Length);
             for (var index = 0; index < ml; ++index) {
-              var s0 = p0[index];
-              var s1 = p1[index];
-              if (s0.Index != s1.Index and not s0.Punctuation and not s1.Punctuation) {
-                var si   = PartIndex[s0.Index];
-                var sj   = PartIndex[s1.Index];
-                var list = TMatrix.GetValue(si, sj);
+              var si = pi[index];
+              var sj = pj[index];
+              if (si.Index != sj.Index and not si.Punctuation and not sj.Punctuation) {
+                var list = TMatrix.GetValue(si.Index, sj.Index);
                 var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
                 if (invalid list) {
                   list = new ListClass<WordPairClass>(128);
-                  TMatrix.SetValue(si, sj, list);
+                  TMatrix.SetValue(si.Index, sj.Index, list);
                 }
                 list.Add(p);
                 if (list.Length > tmax)
@@ -1015,8 +1009,8 @@ class PriorCountClass: CountBaseClass {
     Factor = 1.0 / tmax;
   }
 
-  override AddEntry(i, j, x, y, SizeClass size) {
-    var value = TMatrix.GetValue(i, j);
+  override AddEntry(SegmentClass si, SegmentClass sj, x, y, SizeClass size) {
+    var value = TMatrix.GetValue(si.Index, sj.Index);
     if (invalid value)
       return null;
 
@@ -1066,14 +1060,14 @@ class AlignedCountClass: CountBaseClass {
     Results   = results;
 
     var ordered = results.Data.UniqueSegments;
-    var length  = Segments.Length;
+    var length  = PartSegments.Length;
 
     System.Assert(length == rates.Length);
     System.Assert(length == ordered.Length);
 
 
     Actions    = new MatrixClass(length, length, null);
-    ActionList = new(length * 10);
+    ActionList = new(length * length);
 
     for (var i = 0; i < length; ++i) {
       var jmax = symmetric ? i : length;
@@ -1096,16 +1090,7 @@ class AlignedCountClass: CountBaseClass {
     SortedActions = ActionList.Sort(true);
   }
 
-  override AddEntry(i, j, x, y, SizeClass size) {
-    if (Symmetric and i < j)
-      return ShowEntry(j, i, x, y, size);
-    return ShowEntry(i, j, x, y, size);
-  }
-
-  ShowEntry(i, j, x, y, SizeClass size) {
-    var si = Segments[i];
-    var sj = Segments[j];
-
+  override AddEntry(SegmentClass si, SegmentClass sj, x, y, SizeClass size) {
     var a = Actions.GetValue(si.Index, sj.Index);
     if (valid a) {
       return Canvas(size.Width, size.Height) {
