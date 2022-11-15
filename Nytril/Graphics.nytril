@@ -234,14 +234,18 @@ namespace Style {
     SpaceAfter: 6 pts;
   };
 
-  ShowFigureNumber(figure) = Span {
+  FigureReference(figure) = Span {
     Lang.Figure;
     Space;
     DocFields.Reference(NumberedGroup.Figure, figure.GetVariableFullName);
+    TipAction: new FigureActionClass(figure);
   };
 
-  FigureReference(ExperimentClass experiment, figure) = ShowFigureNumber(figure) {
-    TipAction: new FigureActionClass(experiment, figure);
+  TableReference(table) = Span {
+    Lang.Table;
+    Space;
+    DocFields.Reference(NumberedGroup.Table, table.GetVariableFullName);
+    TipAction: new TableActionClass(table);
   };
 
   ShowFigureDoc(DocumentClass document, figure) = Block {
@@ -270,12 +274,6 @@ namespace Style {
     };
   };
 
-  ShowTableNumber(table) = Span {
-    Lang.Table;
-    Space;
-    DocFields.Reference(NumberedGroup.Table, table.GetVariableFullName);
-  };
-
   ShowTable(DocumentClass document, table, textheight=null) = Block {
     Paragraph {
       KeepWithNext: true;
@@ -293,7 +291,6 @@ namespace Style {
     Paragraph {
       ParAlignment: ParAlignments.Center;
       SpaceAfter: 10 pts;
-
       Span {
         Bold;
         SansSerif;
@@ -729,16 +726,34 @@ namespace Style {
 //======================================================================
 
 class FigureActionClass: ActionClass {
-  var             Figure;
-  ExperimentClass Experiment;
+  var Figure;
 
-  Constructor(ExperimentClass experiment, figure) {
+  Constructor(figure) {
     super.Constructor(Actions.ToAnchor, figure.GetVariableFullName);
-    Experiment = experiment;
-    Figure     = figure;
+    Figure = figure;
   }
 
   override GetLayoutTip = Style.ShowFigureDoc(null, Figure);
+}
+
+//======================================================================
+
+class TableActionClass: ActionClass {
+  var Table;
+
+  Constructor(table) {
+    super.Constructor(Actions.ToAnchor, table.GetVariableFullName);
+    Table = table;
+  }
+
+  override GetLayoutTip = Block {
+    Paragraph {
+      TextHeight: 12 pts;
+      SpaceAfter: 6 pts;
+      CaptionOrTitle(null, Table);
+    };
+    Table.Body(null);
+  };
 }
 
 //======================================================================
