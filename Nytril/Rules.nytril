@@ -1,43 +1,10 @@
 using Format, Units, SegmentFeatures, Math, Style, LinkTypes;
 //======================================================================
 
-class FilterClass {
-  field        Name;
-  var          CircleName;
-  DataSetClass Data;
-  RuleClass    Rule;
-
-  Constructor(DataSetClass data, RuleClass rule, name) {
-    Data       = data;
-    Rule       = rule;
-    Name       = name;
-    CircleName = name.Substitute(name.FindIndex(c => c == Space), LineBreak);
-  }
-
-  virtual Matches(SegmentClass segment) = true;
-
-  override GetLayoutSpan = Span {
-    TipAction: this;
-    Name;
-  };
-
-  override GetLayoutTip = Frame(DocMetrics.SegmentWidth) {
-    Paragraph {
-      ParAlignment: ParAlignments.Center;
-      TextHeight: 16 pts;
-      Border: BorderB(1);
-      Name;
-    };
-    Rule.ShowFilterSegments(Data.UniqueSegments, this, ParAlignments.Left);
-  };
-}
-//======================================================================
-
 class PartitionClass: FactClass {
   field          Name;
   SegmentClass[] Segments;
   PointClass     Center;
-  FilterClass    Filter;
   ColorClass     Color,
                  TextColor;
   var            Index,
@@ -45,13 +12,12 @@ class PartitionClass: FactClass {
                  Angle,
                  Outer;
 
-  Constructor(index, FilterClass filter, SegmentClass[] segments) {
-    super.Constructor(filter.Name);
-    Name      = filter.Name;
+  Constructor(index, name, SegmentClass[] segments) {
+    super.Constructor(name);
+    Name      = name;
     Color     = ChartColor(index);
     TextColor = Color.TextCompliment;
     Index     = index;
-    Filter    = filter;
     Segments  = segments;
 
     foreach (var s in segments)
@@ -62,14 +28,65 @@ class PartitionClass: FactClass {
 
   override IconClass GetIcon = Icons.sort;
 
-  override GetLayoutTip = Filter.GetLayoutTip;
+  ShowFilterSegments(align) = Frame(DocMetrics.SegmentWidth) {
+    Paragraph {
+      ParAlignment: align;
+      TextHeight: 18 pts;
+      Separator: Space;
+      (each Segments).ShowSegment;
+    }
+  };
+
+  override GetLayoutTip = Frame(DocMetrics.SegmentWidth) {
+    Paragraph {
+      ParAlignment: ParAlignments.Center;
+      TextHeight: 16 pts;
+      Border: BorderB(1);
+      Name;
+    };
+    ShowFilterSegments(ParAlignments.Left);
+  };
+
+  override GetLayoutSpan = Span {
+    TipAction: this;
+    Name;
+  };
+}
+//======================================================================
+
+class PartitionInfoClass {
+  var Name,
+      SegmentIndices;
+
+  Constructor(name, segments) {
+    Name           = name;
+    SegmentIndices = segments;
+  }
+}
+
+//======================================================================
+
+class FilterClass {
+  field          Name;
+  SegmentClass[] Segments;
+  RuleClass      Rule;
+
+  Constructor(SegmentClass[] segments, RuleClass rule, name) {
+    Segments = segments;
+    Rule     = rule;
+    Name     = name;
+  }
+
+  virtual Matches(SegmentClass segment) = true;
+
+  override GetLayoutSpan = Span {
+    TipAction: this;
+    Name;
+  };
 }
 //======================================================================
 
 abstract class RuleClass {
-  static SizeClass BorderSize = new SizeClass(2, 2);
-
-  DataSetClass           Data;
   ListClass<FilterClass> FilterList;
   FilterClass[]          Filters,
                          FiltersPlus;
@@ -79,8 +96,7 @@ abstract class RuleClass {
                          Matrix,
                          Numbers;
 
-  Constructor(DataSetClass data, name) {
-    Data       = data;
+  Constructor(name) {
     Name       = name;
     Numbers    = false;
     FilterList = new(128);
@@ -115,12 +131,6 @@ abstract class RuleClass {
     }
   }
 
-  void GetFilters {
-    Filters = FilterList.Values;
-    FilterList.Add(new FilterClass(Data, this, "Residue"));
-    FiltersPlus = FilterList.Values;
-  }
-
   virtual void AssignCharacters(SegmentClass[] segments) {
     var last = Nexus.CharacterList.Length-1;
     foreach (var segment in segments) {
@@ -129,7 +139,13 @@ abstract class RuleClass {
         index = last;
       SetSegmentCharacter(segment);
     }
-    GetFilters;
+    GetFilters(segments);
+  }
+
+  void GetFilters(SegmentClass[] segments) {
+    Filters = FilterList.Values;
+    FilterList.Add(new FilterClass(segments, this, "Residue"));
+    FiltersPlus = FilterList.Values;
   }
 
   void AssignPartitions(SegmentClass[] segments) {
@@ -138,12 +154,12 @@ abstract class RuleClass {
     foreach (var filter in FiltersPlus) {
       var find = GetMatching(segments, filter);
       if (valid find) {
-        list.Add(new PartitionClass(i, filter, find));
+        list.Add(new PartitionClass(i, filter.Name, find));
         ++i;
       }
     }
     Partitions   = list.Values;
-    PartSegments = Data.UniqueSegments.Sort(true, ref ComparePartSegments);
+    PartSegments = segments.Sort(true, ref ComparePartSegments);
   }
 
   static ComparePartSegments(SegmentClass s0, SegmentClass s1, options) {
@@ -156,18 +172,6 @@ abstract class RuleClass {
   SegmentClass[] GetMatching(SegmentClass[] segments, FilterClass filter) {
     return segments.FindSlice(segment => MatchesRule(filter, segment));
   }
-
-  ShowFilterSegments(SegmentClass[] segments, FilterClass filter, align) = Frame(DocMetrics.SegmentWidth) {
-    Paragraph {
-      ParAlignment: align;
-      TextHeight: 18 pts;
-      var matching = GetMatching(segments, filter);
-      if (valid matching) {
-        Separator: Space;
-        (each matching).ShowSegment;
-      }
-    }
-  };
 
   ShowLegend(textheight, width, padding) = VBox(null, null, padding) {
     Table {
@@ -184,7 +188,7 @@ abstract class RuleClass {
             TextHeight: 125%;
             Tex.blackcirc;
           };
-          partition.Filter;
+          partition;
         }
       }
     };
@@ -203,7 +207,7 @@ abstract class RuleClass {
             BorderRadius: BorderSize;
             Background: p.Color;
           };
-          p.Filter;
+          p;
         }
       }
     }
@@ -234,7 +238,7 @@ abstract class RuleClass {
             Span {each1; ") "};
           };
           Cell(PadR(10 pts)) {
-            partition.Filter.Name;
+            partition.Name;
           };
 
           Span {
@@ -292,8 +296,8 @@ abstract class RuleClass {
 class SingleFilterClass: FilterClass {
   SegmentClass Segment;
 
-  Constructor(DataSetClass data, RuleClass rule, SegmentClass segment) {
-    super.Constructor(data, rule, segment.Ipa);
+  Constructor(SegmentClass[] segments, RuleClass rule, SegmentClass segment) {
+    super.Constructor(segments, rule, segment.Ipa);
     Segment = segment;
   }
 
@@ -305,8 +309,8 @@ class FeatureMaskClass: FilterClass {
   var Mask,
       Flags;
 
-  Constructor(DataSetClass data, RuleClass rule, name, mask, flag) {
-    super.Constructor(data, rule, name);
+  Constructor(SegmentClass[] segments, RuleClass rule, name, mask, flag) {
+    super.Constructor(segments, rule, name);
     Mask  = mask;
     Flags = flag;
     rule.FilterList.Add(this);
@@ -319,8 +323,8 @@ class FeatureMaskClass: FilterClass {
 class SegmentListClass: FilterClass {
   SegmentClass[] List;
 
-  Constructor(DataSetClass data, RuleClass rule, name, SegmentClass[] list) {
-    super.Constructor(data, rule, name);
+  Constructor(SegmentClass[] segments, RuleClass rule, name, SegmentClass[] list) {
+    super.Constructor(segments, rule, name);
     List = list;
   }
 
@@ -329,8 +333,8 @@ class SegmentListClass: FilterClass {
 //======================================================================
 
 class VowelListClass: SegmentListClass {
-  Constructor(DataSetClass data, RuleClass rule, SegmentClass[] list) {
-    super.Constructor(data, rule, list.FirstElement.Ipa, list);
+  Constructor(SegmentClass[] segments, RuleClass rule, SegmentClass[] list) {
+    super.Constructor(segments, rule, list.FirstElement.Ipa, list);
   }
 
   override Matches(SegmentClass segment) = List.FindAny(segment);
@@ -338,22 +342,22 @@ class VowelListClass: SegmentListClass {
 //======================================================================
 
 class NaturalPartitionClass: RuleClass {
-  Constructor(DataSetClass data) {
-    super.Constructor(data, "Natural Class");
+  Constructor(SegmentClass[] segments) {
+    super.Constructor("Natural Class");
     Numbers = true;
 
-    new FeatureMaskClass(data, this, "Long Vowel", Vowel LongVowel, Vowel LongVowel);
-    new FeatureMaskClass(data, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal);
-    new FeatureMaskClass(data, this, "Diphthong", Diphthong, Diphthong);
-    new FeatureMaskClass(data, this, "Short Vowel", Vowel, Vowel);
-    new FeatureMaskClass(data, this, "Nasal Consonant", Nasal, Nasal);
-    new FeatureMaskClass(data, this, "Liquid", Vowel Liquid, Liquid);
-    new FeatureMaskClass(data, this, "Approximant", Vowel Approximant, Approximant);
-    new FeatureMaskClass(data, this, "Affricate", Vowel Affricate, Affricate);
-    new FeatureMaskClass(data, this, "Fricatives", Vowel Fricative, Fricative);
-    new FeatureMaskClass(data, this, "Stops", Vowel, NoFeature);
-    GetFilters;
-    AssignPartitions(data.UniqueSegments);
+    new FeatureMaskClass(segments, this, "Long Vowel", Vowel LongVowel, Vowel LongVowel);
+    new FeatureMaskClass(segments, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal);
+    new FeatureMaskClass(segments, this, "Diphthong", Diphthong, Diphthong);
+    new FeatureMaskClass(segments, this, "Short Vowel", Vowel, Vowel);
+    new FeatureMaskClass(segments, this, "Nasal Consonant", Nasal, Nasal);
+    new FeatureMaskClass(segments, this, "Liquid", Vowel Liquid, Liquid);
+    new FeatureMaskClass(segments, this, "Approximant", Vowel Approximant, Approximant);
+    new FeatureMaskClass(segments, this, "Affricate", Vowel Affricate, Affricate);
+    new FeatureMaskClass(segments, this, "Fricatives", Vowel Fricative, Fricative);
+    new FeatureMaskClass(segments, this, "Stops", Vowel, NoFeature);
+    GetFilters(segments);
+    AssignPartitions(segments);
   }
 }
 //======================================================================
@@ -362,13 +366,9 @@ class PartitionActionClass: ActionClass {
   StatClass      Rate;
   PartitionClass P1,
                  P2;
-  RuleClass      Rule;
-  DataSetClass   Data;
 
   Constructor(DataSetClass data, RuleClass rule, StatClass rate, PartitionClass p1, PartitionClass p2) {
-    super.Constructor(Actions.ToSource, Rule);
-    Rule = rule;
-    Data = data;
+    super.Constructor(Actions.ToSource, rule);
     Rate = rate;
     P1   = p1;
     P2   = p2;
@@ -379,11 +379,11 @@ class PartitionActionClass: ActionClass {
     HBox {
       TextBackground: 90%;
       Span {
-        p.Filter.Name;
+        p.Name;
       };
     };
     HBox {
-      Rule.ShowFilterSegments(Data.UniqueSegments, p.Filter, ParAlignments.Center);
+      p.ShowFilterSegments(ParAlignments.Center);
     };
   };
 
@@ -519,7 +519,7 @@ class AlignActionClass: ActionClass {
   override Compare(c, options) = Rate.Compare(c.Rate);
 
   ShowPartition(SegmentClass s, textheight) = Canvas(textheight * 2.5) {
-    BorderRadius: RuleClass.BorderSize;
+    BorderRadius: Style.BorderSize;
     HAlign: HAligns.Center;
     Background: s.Partition.Color;
     TextColor: s.Partition.TextColor;

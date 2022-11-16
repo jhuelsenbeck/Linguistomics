@@ -150,7 +150,7 @@ class ModelFolderClass {
     Name       = name ?? model;
     Model      = model;
     RootFolder = Folder(experiment.ShortName) Folder(model);
-    Posterior  = new ModeClass(this, "Posterior", 5_000_000, 0, 1000, false);
+    Posterior  = new ModeClass(this, "Posterior", Info.Generations, 0, Info.PreBurn, false);
     Marginal   = new ModeClass(this, "Marginal", 50_000, 0, 100, true);
   }
 
@@ -205,7 +205,7 @@ class ExperimentClass: FactClass {
     }
 
     Data   = data;
-    Rule   = new NaturalPartitionClass(data);
+    Rule   = new NaturalPartitionClass(data.UniqueSegments);
     Custom = new ModelFolderClass(this, "Custom", Rule.Name);
     JC69   = new ModelFolderClass(this, "JC69");
     GTR    = new ModelFolderClass(this, "GTR");

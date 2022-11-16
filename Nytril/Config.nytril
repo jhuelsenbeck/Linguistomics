@@ -4,7 +4,8 @@ using Format, Units, Math, IO, LinkTypes;
 
 namespace Info {
   Title          = "Understanding Linguistic History Using an Event-Based Model";
-  NumberOfCycles = 5_000_000;
+  Generations    = 5_000_000;
+  PreBurn        = 1000;
   LinkMin        = 5;
   EXEFolder      = Folders.Repository;
   EXERelative    = Folder("x64") Folder("release");
@@ -24,6 +25,15 @@ namespace Info {
 namespace DocMetrics {
   ExtentClass DocExtent = new(new(0.75 inches, 0.9 inches, 0.75 inches, 1 inches));
 }
+
+ShowString(text) = Span {
+  if (valid text) {
+    TextColor: Style.StringColor;
+    QuoteString(text);
+  }
+  else
+    "Empty";
+};
 
 //======================================================================
 
@@ -83,11 +93,6 @@ class ConfigFileClass {
       if (not last)
         Comma;
     };
-  };
-
-  ShowString(text) = Span {
-    TextColor: Style.StringColor;
-    QuoteString(text);
   };
 
   Variable(v) = Span {
@@ -174,32 +179,28 @@ class ConfigFileClass {
     };
 
     ArraySpan("PriorFrequencies") {
-      Span {
-        TextDigits: 6;
-        Separator: Comma;
-        (each data.UniqueSegments).UsedFrequency;
-      };
+      TextDigits: 6;
+      Separator: CommaSpace;
+      (each data.UniqueSegments).UsedFrequency;
     };
 
     ArraySpan("PartitionSets") {
-      Span {
-        Separator: Comma;
-        foreach (var partition in Experiment.Rule.Partitions) {
+      Separator: Comma;
+      foreach (var partition in Experiment.Rule.Partitions) {
+        Span {
+          "{";
+          Variable("Name");
+          ShowString(partition.Name);
+          CommaSpace;
+          Variable("Set");
+          "[";
           Span {
-            "{";
-            Variable("Name");
-            ShowString(partition.Filter.Name);
-            CommaSpace;
-            Variable("Set");
-            "[";
-            Span {
-              Separator: CommaSpace;
-              (each partition.Segments).Index;
-            };
-            "]}";
-          }
+            Separator: CommaSpace;
+            (each partition.Segments).Index;
+          };
+          "]}";
         }
-      };
+      }
     };
 
     Span {

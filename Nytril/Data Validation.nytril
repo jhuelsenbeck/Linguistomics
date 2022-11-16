@@ -107,7 +107,6 @@ class ConfigurationViewClass: DocumentClass {
 
     AppendixClass[] appendices = [
       new(Name, new ConfigFileClass(Experiment, Experiment.MainRun).Show),
-//      new(Lang.NytrilSourceCode, Style.SourceFile(each System.SourceList)),
     ];
 
     Style.ShowAppendix(this, each appendices);
@@ -116,74 +115,163 @@ class ConfigurationViewClass: DocumentClass {
 
 //======================================================================
 
-CreateArchiveFile(DataSetClass data) = TextBlock {
-  "using Format, WordGroups;";
-  "namespace Concepts;";
+class WordViewClass: DocumentClass {
+  DataSetClass     Data;
+  PartitionClass[] Partitions;
 
-  var first = Empty;
-  var any   = false;
+  Constructor(DataSetClass data, PartitionClass[] partitions) {
+    super.Constructor(#a12b9731-b78e-49e1-986f-a72af5d1ec25#, "Word File");
+    Data       = data;
+    Partitions = partitions;
+  }
 
-  foreach (var cognate in data.UsedCognates) {
-    var concept = cognate.Concept;
-    var cname   = concept.Name;
-    if (first != cname) {
-      if (any)
-        "}";
+  override GetDocument = Document {
+    TextHeight: 9 pts;
+    CreateArchiveFile;
+  };
 
-      Empty;
-      Span {
-        "namespace ";
-        concept.Name;
-        " {";
-      };
+  Keyword(text) = Span {
+    Style.KeywordFormat;
+    text;
+    Space;
+  };
+
+  Variable(text) = Span {
+    TextColor: new ColorClass(43, 145, 175);
+    text;
+  };
+
+  ShowUniqueSegments = Span {
+    Variable("Segments"); " = [";
+    Span {
+      Separator: CommaSpace;
+      ShowString(each ((each Data.UniqueSegments).Ipa));
+    };
+    "];";
+  };
+
+  ShowSegmentIndices(SegmentClass[] segments) = Span {
+    "[";
+    Span {
+      Separator: CommaSpace;
+      (each segments).Index;
+    };
+    "]";
+  };
+
+  ShowPartitions = TextBlock {
+    Span {
+      Variable("PartitionInfoClass"); "[] "; Variable("Partitions"); " = [";
+    };
+
+    foreach (var p in Partitions) {
       TextBlock {
-        IndentSpace: 2;
-        Span {"Confidence = "; concept.Confidence; ";"};
-        Span {"WordType   = WordTypes."; concept.WordType.GetSourceName; ";"};
-        Span {"WordGroup  = ";
-          Span {
-            Separator: Space;
-            (each concept.WordGroup).GetSourceName;
-          };
-          ";";
-        };
-        Empty;
+        Span {
+          "  new(";
+          ShowString(p.Name);
+          ", ";
+          ShowSegmentIndices(p.Segments);
+          "),"
+        }
       };
     }
+    "];";
+  };
 
+  ShowVariable(value) = Span {
+    Variable(value.GetVariableName); " = "; value; ";";
+  };
+
+  ShowVariables = TextBlock {
+    Keyword("namespace") Variable("Info") " {";
     TextBlock {
       IndentSpace: 2;
+      ShowVariable(Info.Generations);
+      ShowVariable(Info.PreBurn);
+    };
+    "}";
+  };
 
-      Empty;
-      Span {
-        "namespace ";
-        cognate.Name;
-        " {";
-      };
+  CreateArchiveFile = TextBlock {
+    Span {
+      Keyword("using");
+      "Format, WordGroups;";
+    };
+    Empty;
+    ShowVariables;
+    Empty;
+
+    ShowUniqueSegments;
+    Empty;
+    ShowPartitions;
+    Empty;
+
+    var first = Empty;
+    var any   = false;
+
+    foreach (var cognate in Data.UsedCognates) {
+      var concept = cognate.Concept;
+      var cname   = concept.Name;
+      if (first != cname) {
+        if (any)
+          "}";
+
+        Empty;
+        Span {
+          Keyword("namespace");
+          Variable("Concepts"); ".";
+          Variable(concept.Name);
+          " {";
+        };
+        TextBlock {
+          IndentSpace: 2;
+          Span {Variable("Confidence"); " = "; concept.Confidence; ";"};
+          Span {Variable("WordType"); " = WordTypes."; concept.WordType.GetSourceName; ";"};
+          Span {Variable("WordGroup"); " = ";
+            Span {
+              Separator: Space;
+              (each concept.WordGroup).GetSourceName;
+            };
+            ";";
+          };
+          Empty;
+        };
+      }
 
       TextBlock {
         IndentSpace: 2;
-        foreach (var word in cognate.Words) {
-          Span {
-            word.Language.Name;
 
-            Space * (data.MaxLanguageName - word.Language.Name.Length);
-            " = ";
-            Quote;
-            word.Text;
-            Quote;
-            ";";
+        Empty;
+        Span {
+          Keyword("namespace");
+          Variable(cognate.Name);
+          " {";
+        };
+
+        TextBlock {
+          IndentSpace: 2;
+          foreach (var word in cognate.Words) {
+            if (valid word.Segments) {
+              Span {
+                Variable(word.Language.Name);
+                Space * (Data.MaxLanguageName - word.Language.Name.Length);
+                " = ";
+                ShowSegmentIndices(word.Segments);
+                ";";
+              }
+            }
           }
-        }
-      }
+        };
+
+        "}";
+      };
+      any   = true;
+      first = cname;
+    }
+    if (any)
       "}";
-    };
-    any   = true;
-    first = cname;
-  }
-  if (any)
-    "}";
-};
+  };
+}
 
 //======================================================================
 

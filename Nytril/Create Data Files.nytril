@@ -32,8 +32,9 @@ Main.Run = new RunInitClass;
 
 
 namespace Main.Documents {
-  DocumentClass Diagnostic    = new DiagnosticsViewClass(RawData);
-  DocumentClass Configuration = new ConfigurationViewClass(Experiment);
+  DiagnosticsViewClass   Diagnostic    = new(RawData);
+  ConfigurationViewClass Configuration = new(Experiment);
+  WordViewClass          Words         = new(RawData, Experiment.Rule.Partitions);
 }
 
 //======================================================================
@@ -51,7 +52,7 @@ class RunInitClass: RunClass {
       CreateFolder(root);
     (each experiment.Models).InitFolders(experiment);
 
-    Write(CreateArchiveFile(experiment.Data), root Info.WordFile);
+    Write(Main.Documents.Words.CreateArchiveFile, root Info.WordFile);
   }
 
   override AskQuestion {
