@@ -84,7 +84,7 @@ class RunExperimentClass {
     ArgSpan {
       ArgString(null, mac ? Info.MacReaderEXE : Info.ReaderEXE);
       ArgString("i", root Info.ExecuteFolder);
-      ArgString("b", 15000);
+      ArgString("b", PreBurn);
       ArgString("o", root Info.OutFileName);
     };
     Pause(mac);
@@ -150,10 +150,10 @@ class ModelFolderClass {
   ModeClass Posterior,
             Marginal;
 
-  Constructor(ExperimentClass experiment, model, name=null) {
+  Constructor(DataSetClass data, model, name=null) {
     Name       = name ?? model;
     Model      = model;
-    RootFolder = Folder(experiment.ShortName) Folder(model);
+    RootFolder = Folder(data.FolderName) Folder(model);
     Posterior  = new ModeClass(this, "Posterior", Info.Generations, 0, Info.PreBurn, false);
     Marginal   = new ModeClass(this, "Marginal", 50_000, 0, 100, true);
   }
@@ -192,27 +192,17 @@ class ExperimentClass: FactClass {
                       GTR;
   ModelFolderClass[]  Models;
   RunExperimentClass  MainRun;
-  var                 RootFolder,
-                      MacFolder,
-                      ShortName;
+  var                 MacFolder;
 
-  Constructor(DataSetClass data, id, shortname, name, includewords, LanguageClass[] languages, cutoff) {
+  Constructor(DataSetClass data, id, name) {
     super.Constructor(id);
 
-    Name       = name;
-    ShortName  = shortname;
-    RootFolder = Info.ExperimentRoot Folder(shortname);
-
-    if (invalid data) {
-      var concepts = IO.ReadScript(RootFolder Info.WordFile).Concepts;
-      data = new DataSetClass(concepts, includewords, languages, cutoff);
-    }
-
+    Name   = name;
     Data   = data;
     Rule   = new NaturalPartitionClass(data.UniqueSegments);
-    Custom = new ModelFolderClass(this, "Custom", Rule.Name);
-    JC69   = new ModelFolderClass(this, "JC69");
-    GTR    = new ModelFolderClass(this, "GTR");
+    Custom = new ModelFolderClass(data, "Custom", Rule.Name);
+    JC69   = new ModelFolderClass(data, "JC69");
+    GTR    = new ModelFolderClass(data, "GTR");
     Models = [
       Custom,
       JC69,

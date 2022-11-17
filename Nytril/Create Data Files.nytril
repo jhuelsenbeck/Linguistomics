@@ -25,16 +25,23 @@ include "LanguageSet";
 
 //======================================================================
 
-DataSetClass    RawData    = new(Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, EuroRomance, 1);
-ExperimentClass Experiment = new EuropeExperimentClass(RawData);
+class RawDataSetClass: DataSetClass {
+  Constructor {
+    super.Constructor("Europe");
+    ReadRawWords(Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, EuroRomance, 1);
+  }
+}
+
+//======================================================================
+
+ExperimentClass Experiment = new EuropeExperimentClass(new RawDataSetClass);
 
 Main.Run = new RunInitClass;
 
-
 namespace Main.Documents {
-  DiagnosticsViewClass   Diagnostic    = new(RawData);
+  DiagnosticsViewClass   Diagnostic    = new(Experiment.Data);
   ConfigurationViewClass Configuration = new(Experiment);
-  WordViewClass          Words         = new(RawData, Experiment.Rule.Partitions);
+  WordViewClass          Words         = new(Experiment.Data, Experiment.Rule.Partitions);
 }
 
 //======================================================================
@@ -46,7 +53,7 @@ class RunInitClass: RunClass {
 
   override void Execute {
     var experiment = Experiment;
-    var root       = experiment.RootFolder;
+    var root       = experiment.Data.RootFolder;
 
     if (not FolderExists(root))
       CreateFolder(root);

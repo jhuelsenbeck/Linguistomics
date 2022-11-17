@@ -666,18 +666,26 @@ class DataSetClass {
                               WordCutoff,
                               ExampleConcept,
                               FigureConcept,
-                              DataConcept;
+                              DataConcept,
+                              RootFolder,
+                              FolderName;
 
-  Constructor(concepts, includewords, LanguageClass[] languages, cutoff=-1) {
-    ExampleConcept  = concepts.Stone;
-    FigureConcept   = concepts.What;
-    DataConcept     = concepts.Mountain;
-    Languages       = languages;
+  Constructor(folder) {
+    FolderName      = folder;
+    RootFolder      = Info.ExperimentRoot Folder(folder);
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
-    WordCutoff      = cutoff < 0 ? languages.Length : cutoff;
-    TaxonSet        = new(languages.Length);
+  }
+
+  void ReadRawWords(concepts, includewords, LanguageClass[] languages, cutoff=-1) {
+    ExampleConcept = concepts.Stone;
+    FigureConcept  = concepts.What;
+    DataConcept    = concepts.Mountain;
+    Languages      = languages;
+    WordCutoff     = cutoff < 0 ? languages.Length : cutoff;
+    TaxonSet       = new(languages.Length);
+
     ListClass<TaxonClass> tlist = new(languages.Length);
 
     foreach (var l in languages) {
@@ -1124,7 +1132,7 @@ class AlignedCountClass: CountBaseClass {
 
     Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
-      Experiment.Rule.ShowBlockLegend(list.Values, 11 pts);
+      Results.Experiment.Rule.ShowBlockLegend(list.Values, 11 pts);
     }
   };
 
@@ -1221,8 +1229,10 @@ class DiagonalClass {
   SegDataClass[]   Data;
   SegmentClass[]   Segments;
   PartitionClass[] Partitions;
+  ResultsClass     Results;
 
   Constructor(ResultsClass results, rates, max) {
+    Results = results;
     var data = new SegDataClass(results, rates, each 0..<rates.Length);
     Data     = data.Sort(true, ref CompareData);
     Segments = (each Data).Segment;
@@ -1270,7 +1280,7 @@ class DiagonalClass {
       };
     };
 
-    Experiment.Rule.ShowBlockLegend(Partitions, 9 pts);
+    Results.Experiment.Rule.ShowBlockLegend(Partitions, 9 pts);
   };
 }
 

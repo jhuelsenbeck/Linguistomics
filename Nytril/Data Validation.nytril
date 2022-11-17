@@ -133,7 +133,6 @@ class WordViewClass: DocumentClass {
   Keyword(text) = Span {
     Style.KeywordFormat;
     text;
-    Space;
   };
 
   Variable(text) = Span {
@@ -167,7 +166,7 @@ class WordViewClass: DocumentClass {
     foreach (var p in Partitions) {
       TextBlock {
         Span {
-          "  new(";
+          "  "; Keyword("new"); "(";
           ShowString(p.Name);
           ", ";
           ShowSegmentIndices(p.Segments);
@@ -183,7 +182,7 @@ class WordViewClass: DocumentClass {
   };
 
   ShowVariables = TextBlock {
-    Keyword("namespace") Variable("Info") " {";
+    Keyword("namespace ") Variable("Info") " {";
     TextBlock {
       IndentSpace: 2;
       ShowVariable(Info.Generations);
@@ -194,7 +193,7 @@ class WordViewClass: DocumentClass {
 
   CreateArchiveFile = TextBlock {
     Span {
-      Keyword("using");
+      Keyword("using ");
       "Format, WordGroups;";
     };
     Empty;
@@ -218,7 +217,7 @@ class WordViewClass: DocumentClass {
 
         Empty;
         Span {
-          Keyword("namespace");
+          Keyword("namespace ");
           Variable("Concepts"); ".";
           Variable(concept.Name);
           " {";
@@ -226,8 +225,8 @@ class WordViewClass: DocumentClass {
         TextBlock {
           IndentSpace: 2;
           Span {Variable("Confidence"); " = "; concept.Confidence; ";"};
-          Span {Variable("WordType"); " = WordTypes."; concept.WordType.GetSourceName; ";"};
-          Span {Variable("WordGroup"); " = ";
+          Span {Variable("WordType"); "   = WordTypes."; concept.WordType.GetSourceName; ";"};
+          Span {Variable("WordGroup"); "  = ";
             Span {
               Separator: Space;
               (each concept.WordGroup).GetSourceName;
@@ -243,7 +242,7 @@ class WordViewClass: DocumentClass {
 
         Empty;
         Span {
-          Keyword("namespace");
+          Keyword("namespace ");
           Variable(cognate.Name);
           " {";
         };
