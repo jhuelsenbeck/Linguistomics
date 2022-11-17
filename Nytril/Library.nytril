@@ -608,51 +608,8 @@ class WordPairClass {
 }
 //======================================================================
 
-class ResultsClass {
-  ExperimentClass   Experiment;
-  DataSetClass      Data;
-  RuleClass         Rule;
-  AlignIndexClass[] Alignments;
-  StatClass[][]     TransitionStats;
-  var               Output,
-                    AlignmentCutoff,
-                    EquilibriumFrequencies;
-
-  Constructor(ExperimentClass experiment) {
-    Experiment = experiment;
-    Data       = experiment.Data;
-    Rule       = experiment.Rule;
-
-    Output                 = IO.ReadScript(experiment.MainRun.Alignments).Root;
-    TransitionStats        = Output.TransitionStats;
-    EquilibriumFrequencies = Output.EquilibriumFrequencies;
-    AlignmentCutoff        = Output.AlignmentCutoff;
-    Alignments             = Output.Alignments;
-
-    var alist = new ListClass<AlignIndexClass>(1024);
-    foreach (var a in Alignments) {
-      foreach (var c in Data.UsedCognates) {
-        if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
-          a.Cognate = c;
-          alist.Add(a);
-          break;
-        }
-      }
-    }
-    Alignments = alist.Values.Sort(false, ref CompareAlignment);
-  }
-
-  static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
-    var c = a0.Alignments.Length.Compare(a1.Alignments.Length);
-    if (c == 0)
-      return a0.ConceptName.Compare(a1.ConceptName);
-    return c;
-  }
-}
-//======================================================================
-
 class DataSetClass {
-  LanguageClass[]             Languages;
+  LanguageClass[]             LanguageSet;
   SegmentClass[]              UniqueSegments;
   CognateClass[]              UsedCognates,
                               SortedCognates;
@@ -660,7 +617,8 @@ class DataSetClass {
   TaxonClass[]                Taxa;
   DictionaryClass<TaxonClass> TaxonSet;
   VectorClass                 WordList;
-  var                         MaxLanguageName,
+  var                         Name,
+                              MaxLanguageName,
                               WordCount,
                               SegmentCount,
                               WordCutoff,
@@ -669,20 +627,40 @@ class DataSetClass {
                               DataConcept,
                               RootFolder,
                               FolderName;
+  RuleClass                   Rule;
+  ModelFolderClass            Custom,
+                              JC69,
+                              GTR;
+  ModelFolderClass[]          Models;
+  RunExperimentClass          MainRun;
+  var                         MacFolder;
 
-  Constructor(folder) {
+  Constructor(name, folder) {
+    Name            = name;
     FolderName      = folder;
     RootFolder      = Info.ExperimentRoot Folder(folder);
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
+
+    Rule   = new NaturalPartitionClass;
+    Custom = new ModelFolderClass(this, "Custom", Rule.Name);
+    JC69   = new ModelFolderClass(this, "JC69");
+    GTR    = new ModelFolderClass(this, "GTR");
+    Models = [
+      Custom,
+      JC69,
+      GTR,
+    ];
+
+    MainRun = Custom.Posterior.Run[2];
   }
 
   void ReadRawWords(concepts, includewords, LanguageClass[] languages, cutoff=-1) {
     ExampleConcept = concepts.Stone;
     FigureConcept  = concepts.What;
     DataConcept    = concepts.Mountain;
-    Languages      = languages;
+    LanguageSet    = languages;
     WordCutoff     = cutoff < 0 ? languages.Length : cutoff;
     TaxonSet       = new(languages.Length);
 
@@ -765,6 +743,8 @@ class DataSetClass {
       segment.Index         = each0;
       segment.UsedFrequency = Real(segment.UsedCount) / SegmentCount;
     }
+
+    Rule.Init(UniqueSegments);
   }
 
   Coverage(TaxonClass taxon) {
@@ -884,6 +864,179 @@ class DataSetClass {
       }
     };
   };
+
+  NodeClass GetPriorTree(portuguese) = new Branch {
+    new Leaf(Languages.Latin);
+    new Branch {
+      new Leaf(Languages.Italian);
+      new Branch {
+        new Branch {
+          new Leaf(Languages.Spanish);
+          portuguese;
+        };
+        new Branch {
+          new Branch {
+            new Leaf(Languages.Friulian);
+            new Branch {
+              new Leaf(Languages.Catalan);
+              new Branch {
+                new Leaf(Languages.French);
+                new Leaf(Languages.Walloon);
+              };
+            }
+          };
+          new Leaf(Languages.Romanian);
+        };
+      }
+    }
+  };
+
+  virtual NodeClass PriorTree = GetPriorTree(new Leaf(Languages.Portuguese));
+
+  virtual NodeClass NumberedTree = GetNumberedTree(new NLeaf(this, Languages.Portuguese, 2));
+
+  ShowTrees(ModelFolderClass folder) = Block {
+    var any = false;
+    foreach (var r in folder.Posterior.Run) {
+      if (valid r.Tree) {
+        any = true;
+        break;
+      }
+    }
+
+    if (any) {
+      Style.Header1 {
+        Lang.Model;
+        ColonSpace;
+        folder.Name;
+      };
+
+      foreach (var r in folder.Posterior.Run) {
+        if (valid r.Tree)
+          Style.ShowTree("Run {0}"(each1), null, r.Tree, null);
+      }
+    }
+  };
+
+
+  ShowExperiment = Block {
+    Style.Header1 {
+      Lang.Experiment;
+      Space;
+      each1;
+      Space;
+      Style.DQuote {Name};
+    };
+
+    Style.ShowTree("Prior", null, PriorTree, null);
+    ShowTrees(Custom);
+    ShowTrees(JC69);
+    ShowTrees(GTR);
+  };
+
+  NodeClass GetNumberedTree(portuguese) = new NBranch(19) {
+    new NLeaf(this, Languages.Latin, 7);
+    new NBranch(18) {
+      new NLeaf(this, Languages.Romanian, 6);
+      new NBranch(17) {
+        new NBranch(16) {
+          new NBranch(15) {
+            new NLeaf(this, Languages.Walloon, 3);
+            new NLeaf(this, Languages.French, 3);
+          };
+          new NBranch(14) {
+            new NBranch(13) {
+              portuguese;
+              new NLeaf(this, Languages.Spanish, 2);
+            };
+            new NLeaf(this, Languages.Catalan, 3);
+          }
+        };
+        new NBranch(11) {
+          new NLeaf(this, Languages.Friulian, 4);
+          new NLeaf(this, Languages.Italian, 4);
+        };
+      }
+    }
+  };
+
+  override IconClass GetIcon = Icons.science;
+
+  CalculateLoad(SegmentClass[] segments, sum) {
+    return sum;
+  }
+
+  ShowFunctionalLoad = Block {
+    Style.Header1 {
+      "Functional Load of \"{0}\" model"(Rule.Name);
+    };
+
+    Table {
+      Columns: [1.5 inch, 1 inch {HAlign: HAligns.Right}];
+      Row {
+        Lang.Partition;
+        Lang.FrequencyPercent;
+        Lang.FunctionalLoad;
+      };
+
+      foreach (var part in Rule.Partitions) {
+        var sum = 0;//Math.Sum((each part.Segments).UsedFrequency);
+        Row {
+          part.Name;
+          Cell {
+            TextDigits: 2;
+            sum;
+          };
+          Cell {
+            TextDigits: 2;
+            CalculateLoad(part.Segments, sum);
+          }
+        };
+      }
+    }
+  };
+
+}
+
+//======================================================================
+
+class ResultsClass {
+  DataSetClass      Data;
+  RuleClass         Rule;
+  AlignIndexClass[] Alignments;
+  StatClass[][]     TransitionStats;
+  var               Output,
+                    AlignmentCutoff,
+                    EquilibriumFrequencies;
+
+  Constructor(DataSetClass data) {
+    Data                   = data;
+    Rule                   = data.Rule;
+    Output                 = IO.ReadScript(data.MainRun.Alignments).Root;
+    TransitionStats        = Output.TransitionStats;
+    EquilibriumFrequencies = Output.EquilibriumFrequencies;
+    AlignmentCutoff        = Output.AlignmentCutoff;
+    Alignments             = Output.Alignments;
+
+    var alist = new ListClass<AlignIndexClass>(1024);
+    foreach (var a in Alignments) {
+      foreach (var c in Data.UsedCognates) {
+        if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
+          a.Cognate = c;
+          alist.Add(a);
+          break;
+        }
+      }
+    }
+    Alignments = alist.Values.Sort(false, ref CompareAlignment);
+  }
+
+  static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
+    var c = a0.Alignments.Length.Compare(a1.Alignments.Length);
+    if (c == 0)
+      return a0.ConceptName.Compare(a1.ConceptName);
+    return c;
+  }
 }
 
 //======================================================================
@@ -893,9 +1046,9 @@ abstract class CountBaseClass {
                  MaxDigits;
   SegmentClass[] PartSegments;
 
-  Constructor(ExperimentClass experiment) {
+  Constructor(DataSetClass data) {
     VFlags       = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
-    PartSegments = experiment.Rule.PartSegments;
+    PartSegments = data.Rule.PartSegments;
     MaxDigits    = 3;
   }
 
@@ -978,11 +1131,10 @@ class PriorCountClass: CountBaseClass {
   MatrixClass TMatrix;
   var         Factor;
 
-  Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment);
+  Constructor(DataSetClass data) {
+    super.Constructor(data);
     MaxDigits = 4;
 
-    var data  = experiment.Data;
     var count = data.UniqueSegments.Length;
     TMatrix = new MatrixClass(count, count, null);
     var tmax = 1;
@@ -1063,7 +1215,7 @@ class AlignedCountClass: CountBaseClass {
   AlignActionClass[]          SortedActions;
 
   Constructor(ResultsClass results, rates, maxrate, minrate, symmetric) {
-    super.Constructor(results.Experiment);
+    super.Constructor(results.Data);
     Symmetric = symmetric;
     Results   = results;
 
@@ -1132,7 +1284,7 @@ class AlignedCountClass: CountBaseClass {
 
     Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
-      Results.Experiment.Rule.ShowBlockLegend(list.Values, 11 pts);
+      Results.Data.Rule.ShowBlockLegend(list.Values, 11 pts);
     }
   };
 
@@ -1280,7 +1432,7 @@ class DiagonalClass {
       };
     };
 
-    Results.Experiment.Rule.ShowBlockLegend(Partitions, 9 pts);
+    Results.Data.Rule.ShowBlockLegend(Partitions, 9 pts);
   };
 }
 
@@ -1359,7 +1511,6 @@ class SegmentActionClass: ActionClass {
 //======================================================================
 
 abstract class FrequencyChartClass {
-  ExperimentClass  Experiment;
   PartitionClass[] Partitions;
   DataSetClass     Data;
   TaxonClass[]     Taxa;
@@ -1372,10 +1523,9 @@ abstract class FrequencyChartClass {
                    SortedIndexes,
                    MaxDistance;
 
- Constructor(ExperimentClass experiment, count) {
-    Experiment = experiment;
-    Partitions = experiment.Rule.Partitions;
-    Data       = experiment.Data;
+ Constructor(DataSetClass data, count) {
+    Partitions = data.Rule.Partitions;
+    Data       = data;
     Taxa       = Data.Taxa;
     RateCount  = count;
     Rates      = new RateDataClass(count, each Taxa);
@@ -1446,7 +1596,7 @@ abstract class FrequencyChartClass {
 
   ShowChart = HBox {
     VAlign: VAligns.Center;
-    Experiment.Rule.ShowLegend(10 pts, 1.4 inch, 5) {
+    Data.Rule.ShowLegend(10 pts, 1.4 inch, 5) {
       Border: 0.25 {Color: 80%};
       Margin: PadR(12 pts);
     };
@@ -1458,10 +1608,10 @@ abstract class FrequencyChartClass {
 class SegmentFrequencyClass: FrequencyChartClass {
   VectorClass PartitionMax;
 
-  Constructor(ExperimentClass experiment, group) {
-    super.Constructor(experiment, experiment.Data.UniqueSegments.Length);
+  Constructor(DataSetClass data, group) {
+    super.Constructor(data, data.UniqueSegments.Length);
 
-    PartitionMax = new(experiment.Rule.Partitions.Length, 0);
+    PartitionMax = new(data.Rule.Partitions.Length, 0);
 
     foreach (var cognate in Data.UsedCognates) {
       foreach (var word in cognate.Words) {
@@ -1586,10 +1736,10 @@ class PartitionRateActionClass: ActionClass {
 //======================================================================
 
 class PartitionFrequencyClass: FrequencyChartClass {
-  Constructor(ExperimentClass experiment) {
-    super.Constructor(experiment, experiment.Rule.Partitions.Length);
+  Constructor(DataSetClass data) {
+    super.Constructor(data, data.Rule.Partitions.Length);
 
-    foreach (var cognate in Data.UsedCognates) {
+    foreach (var cognate in data.UsedCognates) {
       foreach (var word in cognate.Words) {
         var rate = Rates[word.Taxon.Index];
         foreach (var segment in word.Segments) {

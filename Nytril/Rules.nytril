@@ -67,14 +67,12 @@ class PartitionInfoClass {
 //======================================================================
 
 class FilterClass {
-  field          Name;
-  SegmentClass[] Segments;
-  RuleClass      Rule;
+  field     Name;
+  RuleClass Rule;
 
-  Constructor(SegmentClass[] segments, RuleClass rule, name) {
-    Segments = segments;
-    Rule     = rule;
-    Name     = name;
+  Constructor(RuleClass rule, name) {
+    Rule = rule;
+    Name = name;
   }
 
   virtual Matches(SegmentClass segment) = true;
@@ -102,6 +100,24 @@ abstract class RuleClass {
     FilterList = new(128);
   }
 
+  void Init(SegmentClass[] segments) {
+    Filters = FilterList.Values;
+    FilterList.Add(new FilterClass(this, "Residue"));
+    FiltersPlus = FilterList.Values;
+
+    var list = new ListClass<PartitionClass>(segments.Length);
+    var i    = 0;
+    foreach (var filter in FiltersPlus) {
+      var find = GetMatching(segments, filter);
+      if (valid find) {
+        list.Add(new PartitionClass(i, filter.Name, find));
+        ++i;
+      }
+    }
+    Partitions   = list.Values;
+    PartSegments = segments.Sort(true, ref ComparePartSegments);
+  }
+
   MatchesRule(FilterClass filter, SegmentClass segment) {
     foreach (var f in FiltersPlus) {
       if (f == filter)
@@ -120,46 +136,6 @@ abstract class RuleClass {
       ++c;
     }
     return c;
-  }
-
-  void SetSegmentCharacter(SegmentClass segment) {
-    if (not Numbers) {
-      if (segment.Index < Nexus.CharacterList.Length)
-        segment.CharacterLetter = Nexus.CharacterList[segment.Index];
-      else
-        System.Assert(false, "Too many characters");
-    }
-  }
-
-  virtual void AssignCharacters(SegmentClass[] segments) {
-    var last = Nexus.CharacterList.Length-1;
-    foreach (var segment in segments) {
-      var index = GetFilterIndex(segment);
-      if (index > last)
-        index = last;
-      SetSegmentCharacter(segment);
-    }
-    GetFilters(segments);
-  }
-
-  void GetFilters(SegmentClass[] segments) {
-    Filters = FilterList.Values;
-    FilterList.Add(new FilterClass(segments, this, "Residue"));
-    FiltersPlus = FilterList.Values;
-  }
-
-  void AssignPartitions(SegmentClass[] segments) {
-    var list = new ListClass<PartitionClass>(segments.Length);
-    var i    = 0;
-    foreach (var filter in FiltersPlus) {
-      var find = GetMatching(segments, filter);
-      if (valid find) {
-        list.Add(new PartitionClass(i, filter.Name, find));
-        ++i;
-      }
-    }
-    Partitions   = list.Values;
-    PartSegments = segments.Sort(true, ref ComparePartSegments);
   }
 
   static ComparePartSegments(SegmentClass s0, SegmentClass s1, options) {
@@ -296,8 +272,8 @@ abstract class RuleClass {
 class SingleFilterClass: FilterClass {
   SegmentClass Segment;
 
-  Constructor(SegmentClass[] segments, RuleClass rule, SegmentClass segment) {
-    super.Constructor(segments, rule, segment.Ipa);
+  Constructor(RuleClass rule, SegmentClass segment) {
+    super.Constructor(rule, segment.Ipa);
     Segment = segment;
   }
 
@@ -309,8 +285,8 @@ class FeatureMaskClass: FilterClass {
   var Mask,
       Flags;
 
-  Constructor(SegmentClass[] segments, RuleClass rule, name, mask, flag) {
-    super.Constructor(segments, rule, name);
+  Constructor(RuleClass rule, name, mask, flag) {
+    super.Constructor(rule, name);
     Mask  = mask;
     Flags = flag;
     rule.FilterList.Add(this);
@@ -323,8 +299,8 @@ class FeatureMaskClass: FilterClass {
 class SegmentListClass: FilterClass {
   SegmentClass[] List;
 
-  Constructor(SegmentClass[] segments, RuleClass rule, name, SegmentClass[] list) {
-    super.Constructor(segments, rule, name);
+  Constructor(RuleClass rule, name, SegmentClass[] list) {
+    super.Constructor(rule, name);
     List = list;
   }
 
@@ -333,8 +309,8 @@ class SegmentListClass: FilterClass {
 //======================================================================
 
 class VowelListClass: SegmentListClass {
-  Constructor(SegmentClass[] segments, RuleClass rule, SegmentClass[] list) {
-    super.Constructor(segments, rule, list.FirstElement.Ipa, list);
+  Constructor(RuleClass rule, SegmentClass[] list) {
+    super.Constructor(rule, list.FirstElement.Ipa, list);
   }
 
   override Matches(SegmentClass segment) = List.FindAny(segment);
@@ -342,22 +318,20 @@ class VowelListClass: SegmentListClass {
 //======================================================================
 
 class NaturalPartitionClass: RuleClass {
-  Constructor(SegmentClass[] segments) {
+  Constructor {
     super.Constructor("Natural Class");
     Numbers = true;
 
-    new FeatureMaskClass(segments, this, "Long Vowel", Vowel LongVowel, Vowel LongVowel);
-    new FeatureMaskClass(segments, this, "Nasal Vowel", Vowel Nasal, Vowel Nasal);
-    new FeatureMaskClass(segments, this, "Diphthong", Diphthong, Diphthong);
-    new FeatureMaskClass(segments, this, "Short Vowel", Vowel, Vowel);
-    new FeatureMaskClass(segments, this, "Nasal Consonant", Nasal, Nasal);
-    new FeatureMaskClass(segments, this, "Liquid", Vowel Liquid, Liquid);
-    new FeatureMaskClass(segments, this, "Approximant", Vowel Approximant, Approximant);
-    new FeatureMaskClass(segments, this, "Affricate", Vowel Affricate, Affricate);
-    new FeatureMaskClass(segments, this, "Fricatives", Vowel Fricative, Fricative);
-    new FeatureMaskClass(segments, this, "Stops", Vowel, NoFeature);
-    GetFilters(segments);
-    AssignPartitions(segments);
+    new FeatureMaskClass(this, "Long Vowel", Vowel LongVowel, Vowel LongVowel);
+    new FeatureMaskClass(this, "Nasal Vowel", Vowel Nasal, Vowel Nasal);
+    new FeatureMaskClass(this, "Diphthong", Diphthong, Diphthong);
+    new FeatureMaskClass(this, "Short Vowel", Vowel, Vowel);
+    new FeatureMaskClass(this, "Nasal Consonant", Nasal, Nasal);
+    new FeatureMaskClass(this, "Liquid", Vowel Liquid, Liquid);
+    new FeatureMaskClass(this, "Approximant", Vowel Approximant, Approximant);
+    new FeatureMaskClass(this, "Affricate", Vowel Affricate, Affricate);
+    new FeatureMaskClass(this, "Fricatives", Vowel Fricative, Fricative);
+    new FeatureMaskClass(this, "Stops", Vowel, NoFeature);
   }
 }
 //======================================================================

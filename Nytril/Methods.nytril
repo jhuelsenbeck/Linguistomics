@@ -5,7 +5,7 @@ using Format, Units, Math, IO, Style, Defs, Equations, Languages, References;
 namespace Figures.PartitionAssignments {
   Title = Lang.PartitionRules;
 
-  Body(DocumentClass document) = MainResults.Experiment.Rule.ShowPartitions(12 pts);
+  Body(DocumentClass document) = MainResults.Rule.ShowPartitions(12 pts);
 }
 
 //======================================================================
@@ -13,7 +13,7 @@ namespace Figures.PartitionAssignments {
 namespace Figures.ExperimentalRuns {
   Title = "Experimental Runs";
 
-  Body(DocumentClass document) = MainResults.Experiment.ShowExperiment;
+  Body(DocumentClass document) = MainResults.Data.ShowExperiment;
 }
 
 //======================================================================
@@ -64,7 +64,7 @@ namespace Figures.ExchangeabilityTable {
     TextHeight: th;
 
     var stats      = MainResults.TransitionStats;
-    var partitions = MainResults.Experiment.Rule.Partitions;
+    var partitions = MainResults.Rule.Partitions;
     var dy         = 2 pts;
     var left       = 1 inch;
     var w          = (ExtentWidth - 1 inch) / stats.Length;
@@ -124,7 +124,7 @@ namespace Figures.ExchangeabilityChart {
     Style.SansSerif;
     TextHeight: ExtentWidth * 0.015;
 
-    var partitions = MainResults.Experiment.Rule.Partitions;
+    var partitions = MainResults.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
@@ -227,7 +227,7 @@ namespace Figures.PartitionVolatilityChart {
   Body(DocumentClass document) = Block {
     Style.SansSerif;
 
-    var partitions = MainResults.Experiment.Rule.Partitions;
+    var partitions = MainResults.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
     Chart(ExtentWidth, 4 inches) {
       Type: ChartTypes.Scatter;
@@ -363,7 +363,7 @@ namespace Figures.AllSegmentFrequencies {
     "The frequency of occurrance of each segment for all languages";
   };
 
-  Display = new SegmentDisplayClass(MainResults.Experiment.Data).FrequencyChart(new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
+  Display = new SegmentDisplayClass(MainResults.Data).FrequencyChart(new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
 
   Body(DocumentClass document) = Block {
     Display;
@@ -378,7 +378,7 @@ namespace Figures.ConsensusTree {
   Body(DocumentClass document) = VBox(ExtentWidth) {
     HAlign: HAligns.Center;
     Style.TreeOptions(ExtentWidth) {
-      Root: MainResults.Experiment.MainRun.Tree;
+      Root: MainResults.Data.MainRun.Tree;
     };
   };
 }
@@ -389,13 +389,13 @@ namespace Figures.SegmentOccuranceRates {
   Title = "Segment Occurance Rates";
 
   Caption(DocumentClass document) = Span {
-    var l0 = MainResults.Experiment.Data.Taxa[0].Language;
+    var l0 = MainResults.Data.Taxa[0].Language;
 
     "Comparison of occurance rates of segments in each language. Segments are sorted by the rates in ";
     l0; ". Bars are normalized to the rate of the most frequently ocurring segment in each language. Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
-  SegmentFrequencyClass Display = new(MainResults.Experiment, false);
+  SegmentFrequencyClass Display = new(MainResults.Data, false);
 
   Body(DocumentClass document) = Display.ShowChart;
 }
@@ -404,7 +404,7 @@ namespace Figures.SegmentOccuranceRates {
 namespace Figures.SegmentOccuranceGrouped {
   Title = "Segment Occurance Rates (by partition)";
 
-  SegmentFrequencyClass Display = new(MainResults.Experiment, true);
+  SegmentFrequencyClass Display = new(MainResults.Data, true);
 
   Body(DocumentClass document) = Block {
     Display.ShowChart;
@@ -422,7 +422,7 @@ namespace Figures.PartitionFrequencies {
     "Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
   };
 
-  PartitionFrequencyClass Display = new(MainResults.Experiment);
+  PartitionFrequencyClass Display = new(MainResults.Data);
 
   Body(DocumentClass document) = Block {
     Display.ShowChart;
@@ -489,11 +489,11 @@ namespace Figures.ExampleTree {
   Title = "Example Tree";
 
   Caption(DocumentClass document) = Span {
-    "An example tree showing the relationships of {0} languages."(SampledLanguages(MainResults.Data.Languages.Length));
+    "An example tree showing the relationships of {0} languages."(SampledLanguages(MainResults.Data.LanguageSet.Length));
   };
 
   Body(DocumentClass document) = TreeOptions(5 inches) {
-    Root: MainResults.Experiment.NumberedTree;
+    Root: MainResults.Data.NumberedTree;
   };
 }
 //======================================================================
@@ -1182,8 +1182,8 @@ namespace PaperSections.DataCuration {
 
     BodyPar {
       "After the raw input is parsed, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
-      "The MCMC analysis runs for "; Span {MainResults.Experiment.MainRun.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
-      "Samples taken during the first "; Span {MainResults.Experiment.MainRun.PreBurn; TextGroup: true}; " cycles of the chain are discarded as burn-in. ";
+      "The MCMC analysis runs for "; Span {MainResults.Data.MainRun.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
+      "Samples taken during the first "; Span {MainResults.Data.MainRun.PreBurn; TextGroup: true}; " cycles of the chain are discarded as burn-in. ";
       "When the analysis is complete, the results are read back into the control program. ";
       "The resulting tables, trees and graphical figures are automatically combined with narrative elements created by the authors to make the final paper and supplimental materials. ";
     }

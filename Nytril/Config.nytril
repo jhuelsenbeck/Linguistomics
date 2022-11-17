@@ -40,12 +40,12 @@ ShowString(text) = Span {
 //======================================================================
 
 class ConfigFileClass {
-  ExperimentClass    Experiment;
+  DataSetClass       Data;
   RunExperimentClass Run;
 
-  Constructor(ExperimentClass experiment, RunExperimentClass run) {
-    Experiment = experiment;
-    Run        = run;
+  Constructor(DataSetClass data, RunExperimentClass run) {
+    Data = data;
+    Run  = run;
   }
 
   AddScope = TextBlock {
@@ -60,7 +60,7 @@ class ConfigFileClass {
     var n = word.Language.GetVariableName;
     ShowString(n);
     CommaSpace;
-    Space * (Experiment.Data.MaxLanguageName - n.Length);
+    Space * (Data.MaxLanguageName - n.Length);
     Variable("Segments");
     "[";
     Span {
@@ -125,14 +125,12 @@ class ConfigFileClass {
     Span {
       Variable("Tree");
       Quote;
-      Nexus.Newick(Experiment.PriorTree);
+      Nexus.Newick(Data.PriorTree);
       ";"; Quote; ",";
     };
 
-    var data = Experiment.Data;
-
     TextBlock {
-      Span {Variable("NumberOfStates"); data.UniqueSegments.Length; CommaSpace};
+      Span {Variable("NumberOfStates"); Data.UniqueSegments.Length; CommaSpace};
 
       Span {Variable("McmcSettings"); "{"};
         StringVar("Model", ToLower(Run.Mode.Model.Model));
@@ -177,18 +175,18 @@ class ConfigFileClass {
 
     ArraySpan("Taxa") {
       Separator: CommaSpace;
-      ShowString(each (each data.Taxa).Variable);
+      ShowString(each (each Data.Taxa).Variable);
     };
 
     ArraySpan("PriorFrequencies") {
       TextDigits: 6;
       Separator: CommaSpace;
-      (each data.UniqueSegments).UsedFrequency;
+      (each Data.UniqueSegments).UsedFrequency;
     };
 
     ArraySpan("PartitionSets") {
       Separator: Comma;
-      foreach (var partition in Experiment.Rule.Partitions) {
+      foreach (var partition in Data.Rule.Partitions) {
         Span {
           "{";
           Variable("Name");
@@ -209,8 +207,8 @@ class ConfigFileClass {
       Variable("Words"); "[";
     };
     TextBlock {
-      var last = data.UsedCognates.Length-1;
-      foreach (var cognate in data.UsedCognates)
+      var last = Data.UsedCognates.Length-1;
+      foreach (var cognate in Data.UsedCognates)
         AddCognate(cognate, each0 == last);
     };
     "]";

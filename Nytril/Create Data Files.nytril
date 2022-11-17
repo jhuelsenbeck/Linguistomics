@@ -25,23 +25,18 @@ include "LanguageSet";
 
 //======================================================================
 
-class RawDataSetClass: DataSetClass {
-  Constructor {
-    super.Constructor("Europe");
-    ReadRawWords(Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, EuroRomance, 1);
-  }
+DataSetClass DataSet {
+  var data = new EuropeExperimentClass;
+  data.ReadRawWords(Concepts, WordGroups.Swadesh100 WordGroups.Leipzig WordGroups.Swadesh207, EuroRomance, 1);
+  return data;
 }
-
-//======================================================================
-
-ExperimentClass Experiment = new EuropeExperimentClass(new RawDataSetClass);
 
 Main.Run = new RunInitClass;
 
 namespace Main.Documents {
-  DiagnosticsViewClass   Diagnostic    = new(Experiment.Data);
-  ConfigurationViewClass Configuration = new(Experiment);
-  WordViewClass          Words         = new(Experiment.Data, Experiment.Rule.Partitions);
+  DiagnosticsViewClass   Diagnostic    = new(DataSet);
+  ConfigurationViewClass Configuration = new(DataSet);
+  WordViewClass          Words         = new(DataSet, DataSet.Rule.Partitions);
 }
 
 //======================================================================
@@ -52,18 +47,18 @@ class RunInitClass: RunClass {
   }
 
   override void Execute {
-    var experiment = Experiment;
-    var root       = experiment.Data.RootFolder;
+    var data = DataSet;
+    var root = data.RootFolder;
 
     if (not FolderExists(root))
       CreateFolder(root);
-    (each experiment.Models).InitFolders(experiment);
+    (each data.Models).InitFolders(data);
 
     Write(Main.Documents.Words.CreateArchiveFile, root Info.WordFile);
   }
 
   override AskQuestion {
-    return "Overwrite configuration files for experiment \"{0}\"?"(Experiment.Name);
+    return "Overwrite configuration files for experiment \"{0}\"?"(DataSet.Name);
   }
 }
 
@@ -76,7 +71,7 @@ namespace Figures.SegmentTransitionCounts {
     "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled red box. The chart has diagonal symmetry.";
   };
 
-  PriorCountClass Display = new(Experiment);
+  PriorCountClass Display = new(DataSet);
 
   Body(DocumentClass document) = Display.PartitionBox(document);
 }

@@ -108,7 +108,7 @@ class RunExperimentClass {
       IO.Write("Blank;", tree);
   }
 
-  void InitFolders(ExperimentClass experiment) {
+  void InitFolders(DataSetClass data) {
     var path = Info.ExperimentRoot RootFolder;
 
     CreateFolder(path);
@@ -116,7 +116,7 @@ class RunExperimentClass {
     WriteRuns(path, false, path, "WinRunReader.bat", "WinRunAll.bat");
     WriteRuns(path, true, Empty, "MacRunReader.sh", "MacRunAll.sh");
 
-    Write(new ConfigFileClass(experiment, this).Show, path Info.ConfigFile);
+    Write(new ConfigFileClass(data, this).Show, path Info.ConfigFile);
   }
 }
 
@@ -135,9 +135,9 @@ class ModeClass {
     Run        = new RunExperimentClass(this, each 1..3, generations, preburn, print, marginal);
   }
 
-  void InitFolders(ExperimentClass experiment) {
+  void InitFolders(DataSetClass data) {
     CreateFolder(Info.ExperimentRoot RootFolder);
-    (each Run).InitFolders(experiment);
+    (each Run).InitFolders(data);
   }
 }
 
@@ -158,10 +158,10 @@ class ModelFolderClass {
     Marginal   = new ModeClass(this, "Marginal", 50_000, 0, 100, true);
   }
 
-  void InitFolders(ExperimentClass experiment) {
+  void InitFolders(DataSetClass data) {
     CreateFolder(Info.ExperimentRoot RootFolder);
-    Posterior.InitFolders(experiment);
-    Marginal.InitFolders(experiment);
+    Posterior.InitFolders(data);
+    Marginal.InitFolders(data);
   }
 }
 
@@ -179,170 +179,6 @@ class NBranch: NodeClass {
     super.Constructor(name);
     BranchLength = branch;
   }
-}
-
-//======================================================================
-
-class ExperimentClass: FactClass {
-  field               Name;
-  RuleClass           Rule;
-  DataSetClass        Data;
-  ModelFolderClass    Custom,
-                      JC69,
-                      GTR;
-  ModelFolderClass[]  Models;
-  RunExperimentClass  MainRun;
-  var                 MacFolder;
-
-  Constructor(DataSetClass data, id, name) {
-    super.Constructor(id);
-
-    Name   = name;
-    Data   = data;
-    Rule   = new NaturalPartitionClass(data.UniqueSegments);
-    Custom = new ModelFolderClass(data, "Custom", Rule.Name);
-    JC69   = new ModelFolderClass(data, "JC69");
-    GTR    = new ModelFolderClass(data, "GTR");
-    Models = [
-      Custom,
-      JC69,
-      GTR,
-    ];
-
-    MainRun = Custom.Posterior.Run[2];
-  }
-
-  NodeClass GetPriorTree(portuguese) = new Branch {
-    new Leaf(Latin);
-    new Branch {
-      new Leaf(Italian);
-      new Branch {
-        new Branch {
-          new Leaf(Spanish);
-          portuguese;
-        };
-        new Branch {
-          new Branch {
-            new Leaf(Friulian);
-            new Branch {
-              new Leaf(Catalan);
-              new Branch {
-                new Leaf(French);
-                new Leaf(Walloon);
-              };
-            }
-          };
-          new Leaf(Romanian);
-        };
-      }
-    }
-  };
-
-  virtual NodeClass PriorTree = GetPriorTree(new Leaf(Portuguese));
-
-  virtual NodeClass NumberedTree = GetNumberedTree(new NLeaf(Data, Portuguese, 2));
-
-  ShowTrees(ModelFolderClass folder) = Block {
-    var any = false;
-    foreach (var r in folder.Posterior.Run) {
-      if (valid r.Tree) {
-        any = true;
-        break;
-      }
-    }
-
-    if (any) {
-      Style.Header1 {
-        Lang.Model;
-        ColonSpace;
-        folder.Name;
-      };
-
-      foreach (var r in folder.Posterior.Run) {
-        if (valid r.Tree)
-          Style.ShowTree("Run {0}"(each1), null, r.Tree, null);
-      }
-    }
-  };
-
-
-  ShowExperiment = Block {
-    Style.Header1 {
-      Lang.Experiment;
-      Space;
-      each1;
-      Space;
-      Style.DQuote {Name};
-    };
-
-    Style.ShowTree("Prior", null, PriorTree, null);
-    ShowTrees(Custom);
-    ShowTrees(JC69);
-    ShowTrees(GTR);
-  };
-
-  NodeClass GetNumberedTree(portuguese) = new NBranch(19) {
-    new NLeaf(Data, Latin, 7);
-    new NBranch(18) {
-      new NLeaf(Data, Romanian, 6);
-      new NBranch(17) {
-        new NBranch(16) {
-          new NBranch(15) {
-            new NLeaf(Data, Walloon, 3);
-            new NLeaf(Data, French, 3);
-          };
-          new NBranch(14) {
-            new NBranch(13) {
-              portuguese;
-              new NLeaf(Data, Spanish, 2);
-            };
-            new NLeaf(Data, Catalan, 3);
-          }
-        };
-        new NBranch(11) {
-          new NLeaf(Data, Friulian, 4);
-          new NLeaf(Data, Italian, 4);
-        };
-      }
-    }
-  };
-
-  override IconClass GetIcon = Icons.science;
-
-  CalculateLoad(SegmentClass[] segments, sum) {
-    return sum;
-  }
-
-  ShowFunctionalLoad = Block {
-    Style.Header1 {
-      "Functional Load of \"{0}\" model"(Rule.Name);
-    };
-
-    Table {
-      Columns: [1.5 inch, 1 inch {HAlign: HAligns.Right}];
-      Row {
-        Lang.Partition;
-        Lang.FrequencyPercent;
-        Lang.FunctionalLoad;
-      };
-
-      foreach (var part in Rule.Partitions) {
-        var sum = 0;//Math.Sum((each part.Segments).UsedFrequency);
-        Row {
-          part.Name;
-          Cell {
-            TextDigits: 2;
-            sum;
-          };
-          Cell {
-            TextDigits: 2;
-            CalculateLoad(part.Segments, sum);
-          }
-        };
-      }
-    }
-  };
-
 }
 
 //======================================================================
