@@ -29,8 +29,6 @@ class LangNodeClass: NodeClass {
 //======================================================================
 
 class RunExperimentClass {
-  static OutFileName = Info.ExecuteFolder Folder("out");
-
   var        Name,
              RootFolder,
              Generations,
@@ -39,23 +37,26 @@ class RunExperimentClass {
              Seed,
              Tree,
              Complete,
-             Marginal;
+             Marginal,
+             Alignments;
    ModeClass Mode;
 
-  Constructor(ModeClass mode, name, generations, preburn, print, marginal) {
-    Name        = name;
+  Constructor(ModeClass mode, index, generations, preburn, print, marginal) {
+    Name        = "Run" + index;
     Mode        = mode;
     Generations = generations;
     PreBurn     = preburn;
     Print       = print;
     Marginal    = marginal;
-    RootFolder  = mode.RootFolder Folder(name);
+    RootFolder  = mode.RootFolder Folder(Name);
     Seed        = Math.Random(0..0xFFFFFFFF);
 
-    var treefile = Info.ExperimentRoot RootFolder Info.ExecuteFolder FileName("consensus.tre");
+    var treefile = Info.ExperimentRoot RootFolder Info.TreeFile;
     Complete = FileExists(treefile);
     if (Complete)
       Tree = Read(treefile, FileFormats.Tree, LangNodeClass).Tree;
+
+    Alignments = Info.ExperimentRoot RootFolder Info.ExecuteFolder FileName("Alignments") Extensions.Nytril;
   }
 
   ArgString(arg, text) = Span {
@@ -84,7 +85,7 @@ class RunExperimentClass {
       ArgString(null, mac ? Info.MacReaderEXE : Info.ReaderEXE);
       ArgString("i", root Info.ExecuteFolder);
       ArgString("b", 15000);
-      ArgString("o", root OutFileName);
+      ArgString("o", root Info.OutFileName);
     };
     Pause(mac);
   };
@@ -93,7 +94,7 @@ class RunExperimentClass {
     ArgSpan {
       ArgString(null, mac ? Info.MacMCMCEXE : Info.MCMCEXE);
       ArgString("d", Info.ConfigFile);
-      ArgString("o", root OutFileName);
+      ArgString("o", root Info.OutFileName);
     };
     RunReader(mac, root);
   };
@@ -101,7 +102,10 @@ class RunExperimentClass {
   void WriteRuns(path, mac, root, reader, all) {
     Write(RunReader(mac, root), path FileName(reader), FileFormats.UTF8);
     Write(RunAll(mac, root), path FileName(all), FileFormats.UTF8);
-    IO.Write("Blank;", root Info.ExecuteFolder FileName("consensus.tre"));
+
+    var tree = root Info.TreeFile;
+    if (not FileExists(tree))
+      IO.Write("Blank;", tree);
   }
 
   void InitFolders(ExperimentClass experiment) {
@@ -128,7 +132,7 @@ class ModeClass {
     Name       = model.Name + "-" + name;
     Model      = model;
     RootFolder = model.RootFolder Folder(name);
-    Run        = new RunExperimentClass(this, each ["Run1", "Run2", "Run3"], generations, preburn, print, marginal);
+    Run        = new RunExperimentClass(this, each 1..3, generations, preburn, print, marginal);
   }
 
   void InitFolders(ExperimentClass experiment) {
