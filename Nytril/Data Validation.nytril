@@ -125,11 +125,6 @@ class WordViewClass: DocumentClass {
     Partitions = partitions;
   }
 
-  override GetDocument = Document {
-    TextHeight: 9 pts;
-    CreateArchiveFile;
-  };
-
   Keyword(text) = Span {
     Style.KeywordFormat;
     text;
@@ -145,6 +140,24 @@ class WordViewClass: DocumentClass {
     Span {
       Separator: CommaSpace;
       ShowString(each ((each Data.UniqueSegments).Ipa));
+    };
+    "];";
+  };
+
+  ShowLanguages = TextBlock {
+    Span {Variable("LanguageSet"); " = [";};
+    TextBlock {
+      IndentSpace: 2;
+
+      foreach (var l in Data.LanguageSet) {
+        Span {
+          Variable("Languages");
+          ".";
+          Variable(l.Name);
+          if (each1 < Data.LanguageSet.Length)
+            CommaSpace;
+        }
+      }
     };
     "];";
   };
@@ -177,9 +190,11 @@ class WordViewClass: DocumentClass {
     "];";
   };
 
-  ShowVariable(value) = Span {
-    Variable(value.GetVariableName); " = "; value; ";";
+  ShowVar(name, value) = Span {
+    Variable(name); " = "; value; ";";
   };
+
+  ShowVariable(value) = ShowVar(value.GetVariableName, value);
 
   ShowVariables = TextBlock {
     Keyword("namespace ") Variable("Info") " {";
@@ -187,88 +202,68 @@ class WordViewClass: DocumentClass {
       IndentSpace: 2;
       ShowVariable(Info.Generations);
       ShowVariable(Info.PreBurn);
+      ShowVar("WordCutoff", Data.WordCutoff);
     };
     "}";
   };
 
-  CreateArchiveFile = TextBlock {
-    Span {
-      Keyword("using ");
-      "Format, WordGroups;";
-    };
-    Empty;
-    ShowVariables;
-    Empty;
+  override GetDocument = Document {
+    TextHeight: 9 pts;
 
-    ShowUniqueSegments;
-    Empty;
-    ShowPartitions;
-    Empty;
+    TextBlock {
+      Span {
+        Keyword("using ");
+        "Format, WordGroups;";
+      };
+      Empty;
+      ShowVariables;
+      Empty;
 
-    var first = Empty;
-    var any   = false;
+      ShowUniqueSegments;
+      Empty;
+      ShowLanguages;
+      Empty;
+      ShowPartitions;
+      Empty;
 
-    foreach (var cognate in Data.UsedCognates) {
-      var concept = cognate.Concept;
-      var cname   = concept.Name;
-      if (first != cname) {
-        if (any)
-          "}";
+      Span {Keyword("namespace "); Variable("Concepts"); " {"};
+      Empty;
 
-        Empty;
+      foreach (var cognate in Data.UsedCognates) {
+        var concept = cognate.Concept;
+        var lvector = new VectorClass(Data.LanguageSet.Length, null);
+
+        foreach (var word in cognate.Words) {
+          if (valid word.Segments)
+            lvector.SetValue(word.Language.LangIndex, word);
+        }
+
         Span {
-          Keyword("namespace ");
-          Variable("Concepts"); ".";
           Variable(concept.Name);
-          " {";
-        };
-        TextBlock {
-          IndentSpace: 2;
-          Span {Variable("Confidence"); " = "; concept.Confidence; ";"};
-          Span {Variable("WordType"); "   = WordTypes."; concept.WordType.GetSourceName; ";"};
-          Span {Variable("WordGroup"); "  = ";
-            Span {
-              Separator: Space;
-              (each concept.WordGroup).GetSourceName;
-            };
-            ";";
-          };
-          Empty;
-        };
-      }
-
-      TextBlock {
-        IndentSpace: 2;
-
-        Empty;
-        Span {
-          Keyword("namespace ");
+          ".";
           Variable(cognate.Name);
-          " {";
+          " = [";
         };
 
         TextBlock {
           IndentSpace: 2;
-          foreach (var word in cognate.Words) {
-            if (valid word.Segments) {
-              Span {
-                Variable(word.Language.Name);
-                Space * (Data.MaxLanguageName - word.Language.Name.Length);
-                " = ";
+          foreach (var word in lvector) {
+            Span {
+              if (valid word)
                 ShowSegmentIndices(word.Segments);
-                ";";
-              }
+              else
+                Keyword("null");
+              Comma;
             }
           }
         };
 
-        "}";
-      };
-      any   = true;
-      first = cname;
-    }
-    if (any)
+        "];";
+      }
+
+      Empty;
       "}";
+    };
   };
 }
 
