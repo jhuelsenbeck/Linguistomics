@@ -324,8 +324,9 @@ class AlignmentChartClass {
 class LanguageClass: FactClass {
   field      Name,
              Cases;
-  var        MapAttribution;
   ImageClass MapImage;
+  var        LangIndex,
+             MapAttribution;
 
   Constructor(id, name, cases=0) {
     super.Constructor(id);
@@ -390,15 +391,24 @@ class WordClass: FactClass {
                  Aligned,
                  Padded;
 
-  Constructor(SegmentDictionary dictionary, TaxonClass taxon, CognateClass cognate, text) {
-    super.Constructor(valid cognate ? text+cognate.Concept.Name+cognate.Name+taxon.Variable : #71f32657-a37c-4f1d-abba-87b928e9d80b#);
-
-    // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
-    Text     = text.GetString(NormalizationForms.FormC);
-    Plain    = Text.FindSlice(c => c != IPASegments.GapSegment.Ipa and c != IPASegments.PrimaryStress.Ipa);
+  Constructor(id, text, TaxonClass taxon, CognateClass cognate) {
+    super.Constructor(id);
+    Text     = text;
+    Plain    = text;
     Taxon    = taxon;
     Language = taxon.Language;
     Cognate  = cognate;
+  }
+
+  void Init {
+    Segments = [];
+    Aligned  = [];
+  }
+
+  void InitRaw(SegmentDictionary dictionary) {
+    // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
+    Text  = Text.GetString(NormalizationForms.FormC);
+    Plain = Text.FindSlice(c => c != IPASegments.GapSegment.Ipa and c != IPASegments.PrimaryStress.Ipa);
 
     if (valid Text) {
       var segments = dictionary.FindTokens(Text, IPA.NullSegment);
@@ -408,16 +418,25 @@ class WordClass: FactClass {
       // Test that the word's text is the same as the segments converted back into text
       var view = Span {(each segments).Ipa};
       System.Assert(Text == view.GetString(), "Round-trip error with text {0}-{1}"(Text, view), Text);
+      Connect;
+    }
+    else
+      Init;
+  }
 
-      Link.Connect(this, Segments);
-      Link.Connect(this, cognate);
-      Link.Connect(this, Language);
-      Link.Connect(Language, cognate);
-    }
-    else {
-      Segments = [];
-      Aligned  = [];
-    }
+  void InitExperiment(plain, SegmentClass[] segments) {
+    Plain    = plain;
+    Aligned  = segments;
+    Padded   = segments;
+    Segments = segments.FindSlice(s => not s.Punctuation);
+    Connect;
+  }
+
+  void Connect {
+    Link.Connect(this, Segments);
+    Link.Connect(this, Cognate);
+    Link.Connect(this, Language);
+    Link.Connect(Language, Cognate);
   }
 
   override IconClass GetIcon = Icons.text_snippet;
@@ -498,11 +517,14 @@ class ConceptClass: FactClass {
 
   Constructor(variable) {
     super.Constructor(variable.GetVariableFullName);
-    Variable   = variable;
-    Name       = variable.GetVariableName;
-    Confidence = variable.Confidence;
-    WordType   = variable.WordType;
-    WordGroup  = variable.WordGroup;
+    Variable = variable;
+    Name     = variable.GetVariableName;
+  }
+
+  void Check {
+    Confidence = Variable.Confidence;
+    WordType   = Variable.WordType;
+    WordGroup  = Variable.WordGroup;
 
     System.Assert(Confidence > 0);
     System.Assert(WordType != WordTypes.None);
@@ -521,20 +543,18 @@ class ConceptClass: FactClass {
 
 class CognateClass: FactClass {
   field        Name;
-  DataSetClass Data;
   ConceptClass Concept;
   WordClass[]  Words;
   var          MaxLength,
                Variable;
 
-  Constructor(DataSetClass data, ConceptClass concept, variable) {
+  Constructor(ConceptClass concept, variable) {
     super.Constructor(variable.GetVariableFullName);
 
-    Name       = variable.GetVariableName;
-    Data       = data;
-    Concept    = concept;
-    Variable   = variable;
-    MaxLength  = 0;
+    Name      = variable.GetVariableName;
+    Variable  = variable;
+    Concept   = concept;
+    MaxLength = 0;
 
     Link.Connect(this, concept);
   }
@@ -621,27 +641,37 @@ class DataSetClass {
                               MaxLanguageName,
                               WordCount,
                               SegmentCount,
-                              WordCutoff,
                               ExampleConcept,
                               FigureConcept,
                               DataConcept,
                               RootFolder,
                               FolderName;
+  SegmentDictionary           SegmentLookup;
   RuleClass                   Rule;
+  WordClass                   DefWord;
   ModelFolderClass            Custom,
                               JC69,
                               GTR;
   ModelFolderClass[]          Models;
   RunExperimentClass          MainRun;
-  var                         MacFolder;
+  var                         WordCutoff,
+                              MacFolder,
+                              WordFile;
+  ListClass                   PlainBuffer,
+                              TextBuffer;
+  ListClass<SegmentClass>     SegmentBuffer;
 
   Constructor(name, folder) {
     Name            = name;
     FolderName      = folder;
     RootFolder      = Info.ExperimentRoot Folder(folder);
+    WordFile        = RootFolder Info.WordFile;
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
+    TextBuffer      = new(64);
+    PlainBuffer     = new(64);
+    SegmentBuffer   = new(64);
 
     Rule   = new NaturalPartitionClass;
     Custom = new ModelFolderClass(this, "Custom", Rule.Name);
@@ -653,37 +683,26 @@ class DataSetClass {
       GTR,
     ];
 
-    MainRun = Custom.Posterior.Run[2];
-  }
-
-  void ReadRawWords(concepts, includewords, LanguageClass[] languages, cutoff=-1) {
-    ExampleConcept = concepts.Stone;
-    FigureConcept  = concepts.What;
-    DataConcept    = concepts.Mountain;
-    LanguageSet    = languages;
-    WordCutoff     = cutoff < 0 ? languages.Length : cutoff;
-    TaxonSet       = new(languages.Length);
-
-    ListClass<TaxonClass> tlist = new(languages.Length);
-
-    foreach (var l in languages) {
-      var taxon = new TaxonClass(l);
-      tlist.Add(taxon);
-      TaxonSet.Add(taxon, taxon.Variable);
-      if (taxon.Variable.Length > MaxLanguageName)
-        MaxLanguageName = taxon.Variable.Length;
-    }
-    Taxa     = tlist.Values;
-    WordList = new(Taxa.Length, null);
+    MainRun  = Custom.Posterior.Run[0];
+//    MainRun  = Custom.Posterior.Run[2];
 
     // Build a dictionary with IPA text as the key
-    var dictionary = new SegmentDictionary(256);
+    SegmentLookup = new SegmentDictionary(256);
     foreach (var segment in IPASegments) {
       if (valid segment.Ipa)
-        dictionary.Add(segment, segment.Ipa);
+        SegmentLookup.Add(segment, segment.Ipa);
     }
 
-    var clist       = new ListClass<CognateClass>(1024);
+  }
+
+  void ReadRawWords(concepts, includewords, LanguageClass[] languageset, cutoff=-1) {
+    if (cutoff < 0)
+      cutoff = languageset.Length;
+    WordCutoff = cutoff;
+
+    AddLanguageSet(languageset);
+
+    var cognatelist = new ListClass<CognateClass>(1024);
     var conceptlist = new ListClass<ConceptClass>(256);
 
     foreach (var conceptvar in concepts) {
@@ -710,21 +729,16 @@ class DataSetClass {
             foreach (var word in cognate) {
               if (valid word) {
                 var taxon = TaxonSet.FindKey(word.GetVariableName);
-                if (valid taxon) {
-                  ++taxon.WordCount;
+                if (valid taxon)
                   ++count;
-                }
               }
             }
 
-            if (count >= WordCutoff) {
+            if (count >= cutoff) {
               var concept = new ConceptClass(conceptvar);
+              concept.Check;
               conceptlist.Add(concept);
-
-
-              WordCount += count;
-              var c = new CognateClass(this, concept, cognate);
-              clist.Add(c);
+              cognatelist.Add(new(concept, cognate));
             }
           }
         }
@@ -733,15 +747,103 @@ class DataSetClass {
 
 
     UsedConcepts = conceptlist.Values.Sort(false);
-    UsedCognates = clist.Values;
+    UsedCognates = cognatelist.Values;
 
     foreach (var cognate in UsedCognates)
-      ComputeCognate(dictionary, cognate);
+      ComputeRawCognate(cognate);
 
-    UniqueSegments = GetUniqueSegments;
+    var set = new SegmentSetClass(512);
+    foreach (var cognate in UsedCognates) {
+      foreach (var word in cognate.Words) {
+        foreach (var segment in word.Segments) {
+          if (!segment.Punctuation)
+            set.Add(segment);
+        }
+      }
+    }
+    UniqueSegments = set.Values;
+
+    CompletedRead(concepts);
+  }
+
+  void ReadExperiment {
+    var run = ReadScript(WordFile).Root;
+
+    WordCutoff  = run.Info.WordCutoff;
+    AddLanguageSet(run.LanguageSet);
+
+    var slist = new ListClass<SegmentClass>(run.Segments.Length);
+    foreach (var text in run.Segments) {
+      var s = SegmentLookup.FindKey(text);
+      if (valid s)
+        slist.Add(s);
+      else
+        System.Assert(false, "Missing Segment " + text);
+    }
+
+    UniqueSegments = slist.Values;
+
+    var concepts    = run.Concepts;
+    var conceptlist = new ListClass<ConceptClass>(concepts.Length);
+    var cognatelist = new ListClass<CognateClass>(concepts.Length * 2);
+
+    foreach (var conceptvar in concepts) {
+      var concept = new ConceptClass(conceptvar);
+      conceptlist.Add(concept);
+
+      foreach (var wordlist in conceptvar) {
+        var vname = wordlist.GetVariableName();
+        foreach (var word in wordlist) {
+          if (valid word) {
+            var taxon = Taxa[each0];
+            if (valid taxon) {
+              ++taxon.WordCount;
+              ++WordCount;
+              var cognate = new CognateClass(concept, wordlist);
+              cognatelist.Add(cognate);
+              ComputeExperimentCognate(taxon, concept, cognate, wordlist);
+            }
+          }
+        }
+      }
+    }
+
+    UsedConcepts = conceptlist.Values;
+    UsedCognates = cognatelist.Values;
+
+    CompletedRead(concepts);
+  }
+
+  void AddLanguageSet(languageset) {
+    LanguageSet = languageset;
+    TaxonSet    = new(LanguageSet.Length);
+
+    ListClass<TaxonClass> tlist = new(LanguageSet.Length);
+
+    foreach (var l in LanguageSet) {
+      l.LangIndex = each0;
+
+      var taxon = new TaxonClass(l);
+      tlist.Add(taxon);
+      TaxonSet.Add(taxon, taxon.Variable);
+      if (taxon.Variable.Length > MaxLanguageName)
+        MaxLanguageName = taxon.Variable.Length;
+    }
+    Taxa     = tlist.Values;
+    WordList = new(Taxa.Length, null);
+    DefWord  = new WordClass(#71f32657-a37c-4f1d-abba-87b928e9d80b#, Empty, Taxa[0], null);
+    DefWord.Init;
+  }
+
+  void CompletedRead(concepts) {
+    ExampleConcept = concepts.Stone;
+    FigureConcept  = concepts.What;
+    DataConcept    = concepts.Mountain;
+
+    var factor = 1.0 / SegmentCount;
     foreach (var segment in UniqueSegments) {
       segment.Index         = each0;
-      segment.UsedFrequency = Real(segment.UsedCount) / SegmentCount;
+      segment.UsedFrequency = factor * segment.UsedCount;
     }
 
     Rule.Init(UniqueSegments);
@@ -782,31 +884,17 @@ class DataSetClass {
 
   CognateClass GetCognate(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);
 
-  SegmentClass[] GetUniqueSegments {
-    var set = new SegmentSetClass(512);
-    foreach (var cognate in UsedCognates) {
-      foreach (var word in cognate.Words) {
-        foreach (var segment in word.Segments) {
-          if (!segment.Punctuation)
-            set.Add(segment);
-        }
-      }
-    }
-    return set.Values;
-  }
-
   LangNumber(LanguageClass language) = Languages.FindFirstIndex(language)+1;
 
-  void ComputeCognate(SegmentDictionary dictionary, CognateClass cognate) {
-    var defword = new WordClass(null, Taxa[0], null, Empty);
-
-    WordList.SetAllValues(defword);
+  void ComputeRawCognate(CognateClass cognate) {
+    WordList.SetAllValues(DefWord);
     var maxlength = 0;
 
-    foreach (var langword in cognate.Variable) {
-      var taxon = TaxonSet.FindKey(langword.GetVariableName);
+    foreach (var text in cognate.Variable) {
+      var taxon = TaxonSet.FindKey(text.GetVariableName);
       if (valid taxon) {
-        var word = new WordClass(dictionary, taxon, cognate, langword);
+        var word = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.Variable, text, taxon, cognate);
+        word.InitRaw(SegmentLookup);
         maxlength = Math.Max(maxlength, word.Aligned.Length);
 
         foreach (var s in word.Segments) {
@@ -845,6 +933,53 @@ class DataSetClass {
       }
       System.Assert(gapcount < count, "Column with all gaps", cognate.Variable);
     }
+  }
+
+  void ComputeExperimentCognate(TaxonClass taxon, ConceptClass concept, CognateClass cognate, wordlist) {
+    WordList.SetAllValues(DefWord);
+    var maxlength = 0;
+
+    foreach (var wordsegments in wordlist) {
+      if (valid wordsegments) {
+        TextBuffer.Clear();
+        PlainBuffer.Clear();
+        SegmentBuffer.Clear();
+
+        var gs  = IPASegments.GapSegment;
+        var gap = gs.Ipa[0];
+        foreach (var index in wordsegments) {
+          if (index < 0) {
+            TextBuffer.Add(gap);
+            SegmentBuffer.Add(gs);
+          }
+          else {
+            var s = UniqueSegments[index];
+            SegmentBuffer.Add(s);
+            foreach (var c in s.Ipa) {
+              TextBuffer.Add(c);
+              PlainBuffer.Add(c);
+            }
+            ++s.UsedCount;
+            ++SegmentCount;
+          }
+        }
+
+        var text    = TextBuffer.Values;
+        var word    = new WordClass(text, text, taxon, cognate);
+        word.InitExperiment(PlainBuffer.Values, SegmentBuffer.Values);
+        WordList.SetValue(each0 /*taxon.Index*/, word);
+
+        maxlength = Math.Max(maxlength, word.Aligned.Length);
+
+        foreach (var s in word.Segments) {
+          ++SegmentCount;
+          ++s.UsedCount;
+        }
+      }
+    }
+
+    cognate.Words     = WordList.Values;
+    cognate.MaxLength = maxlength;
   }
 
   ShowWord(SegmentClass segment) = Block {
