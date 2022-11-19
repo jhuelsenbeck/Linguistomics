@@ -251,6 +251,22 @@ namespace Style {
     TipAction: new TableActionClass(table);
   };
 
+  Keyword(text) = Span {
+    Style.KeywordFormat;
+    text;
+  };
+
+  Variable(text) = Span {
+    TextColor: new ColorClass(43, 145, 175);
+    text;
+  };
+
+  NameSpace(text) = Span {
+    Keyword("namespace ");
+    Variable(text);
+    " {"
+  };
+
   ShowFigureDoc(DocumentClass document, figure) = Block {
     Paragraph {
       SpaceBefore: 10 pts;
@@ -690,13 +706,57 @@ namespace Style {
     FirstIndent: 0;
   };
 
-  SourcePar(concept) = Paragraph {
+  SourcePar(DataSetClass data, concept) = Paragraph {
     ParAlignment: ParAlignments.Left;
     SpaceBefore: 6 pts;
     LeftIndent: 0.25 inches;
     TextHeight: 8 pts;
-    TextFixed: true;
-    SourceSelection(concept, SourceSelectOptions.Line SourceSelectOptions.Children);
+
+    TextBlock {
+      Span {
+        Nexus.Keyword("namespace ");
+        concept.GetVariableName;
+        " {";
+      };
+      TextBlock {
+        IndentSpace: 2;
+        foreach (var cognate in concept) {
+          Span {
+            Nexus.Keyword("namespace ");
+            cognate.GetVariableName;
+            " {";
+          };
+          TextBlock {
+            IndentSpace: 2;
+            foreach (var word in cognate) {
+              var taxon = data.Taxa[each0];
+              Span {
+                taxon.Language;
+                Span {
+                  Space * (data.MaxLanguageName - taxon.Language.Name.Length);
+                  " = ";
+                  Span {
+                    TextColor: Style.StringColor;
+                    Quote;
+                    foreach (var i in word) {
+                      if (i < 0)
+                        "-";
+                      else
+                        data.UniqueSegments[i].Ipa;
+                    }
+                    Quote;
+                  }
+                  ";";
+                };
+              };
+            }
+          };
+          "}";
+        }
+      };
+      "}";
+    }
+//    SourceSelection(concept, SourceSelectOptions.Line SourceSelectOptions.Children);
   };
 
   BodyTable = Table {

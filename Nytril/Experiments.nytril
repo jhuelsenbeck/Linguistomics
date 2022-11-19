@@ -31,21 +31,18 @@ class LangNodeClass: NodeClass {
 class RunExperimentClass {
   var        Name,
              RootFolder,
-             Generations,
-             PreBurn,
+             Config,
              Print,
              Seed,
              Tree,
              Complete,
              Marginal,
-             Alignments;
+             AlignmentFile;
    ModeClass Mode;
 
-  Constructor(ModeClass mode, index, generations, preburn, print, marginal) {
+  Constructor(config, ModeClass mode, index, print, marginal) {
     Name        = "Run" + index;
     Mode        = mode;
-    Generations = generations;
-    PreBurn     = preburn;
     Print       = print;
     Marginal    = marginal;
     RootFolder  = mode.RootFolder Folder(Name);
@@ -56,7 +53,9 @@ class RunExperimentClass {
     if (Complete)
       Tree = Read(treefile, FileFormats.Tree, LangNodeClass).Tree;
 
-    Alignments = Info.ExperimentRoot RootFolder Info.ExecuteFolder FileName("Alignments") Extensions.Nytril;
+    AlignmentFile = Info.ExperimentRoot RootFolder Info.AlignmentFile;
+
+    Config = config ?? {Generations: 5_000_000; PreBurn: 15000};//IO.ReadScript(Info.ExperimentRoot RootFolder Info.ParametersFile).Root;
   }
 
   ArgString(arg, text) = Span {
@@ -84,7 +83,7 @@ class RunExperimentClass {
     ArgSpan {
       ArgString(null, mac ? Info.MacReaderEXE : Info.ReaderEXE);
       ArgString("i", root Info.ExecuteFolder);
-      ArgString("b", PreBurn);
+      ArgString("b", Config.PreBurn);
       ArgString("o", root Info.OutFileName);
     };
     Pause(mac);
@@ -99,13 +98,15 @@ class RunExperimentClass {
     RunReader(mac, root);
   };
 
+  GetParameters = TextBlock {
+    "Generations = {0};"(Config.Generations);
+    "PreBurn     = {0};"(Config.PreBurn);
+  };
+
   void WriteRuns(path, mac, root, reader, all) {
     Write(RunReader(mac, root), path FileName(reader), FileFormats.UTF8);
     Write(RunAll(mac, root), path FileName(all), FileFormats.UTF8);
-
-//    var tree = root Info.TreeFile;
-//    if (not FileExists(tree))
-//      IO.Write("Blank;", tree);
+    Write(GetParameters, path Info.ParametersFile);
   }
 
   void InitFolders(DataSetClass data) {
@@ -128,11 +129,11 @@ class ModeClass {
   ModelFolderClass     Model;
   RunExperimentClass[] Run;
 
-  Constructor(ModelFolderClass model, name, generations, preburn, print, marginal) {
+  Constructor(config, ModelFolderClass model, name, print, marginal) {
     Name       = model.Name + "-" + name;
     Model      = model;
     RootFolder = model.RootFolder Folder(name);
-    Run        = new RunExperimentClass(this, each 1..3, generations, preburn, print, marginal);
+    Run        = new RunExperimentClass(config, this, each 1..3, print, marginal);
   }
 
   void InitFolders(DataSetClass data) {
@@ -150,12 +151,12 @@ class ModelFolderClass {
   ModeClass Posterior,
             Marginal;
 
-  Constructor(DataSetClass data, model, name=null) {
+  Constructor(config, DataSetClass data, model, name=null) {
     Name       = name ?? model;
     Model      = model;
     RootFolder = Folder(data.FolderName) Folder(model);
-    Posterior  = new ModeClass(this, "Posterior", Info.Generations, 0, Info.PreBurn, false);
-    Marginal   = new ModeClass(this, "Marginal", 50_000, 0, 100, true);
+    Posterior  = new ModeClass(config, this, "Posterior", 1000, false);
+    Marginal   = new ModeClass({Generations: 50_000; PreBurn: 0}, this, "Marginal", 100, true);
   }
 
   void InitFolders(DataSetClass data) {

@@ -4,8 +4,8 @@ using Format, Units, Math, IO, LinkTypes;
 
 namespace Info {
   Title          = "Understanding Linguistic History Using an Event-Based Model";
-  Generations    = 100_000;  // 5_000_000
-  PreBurn        = 100;      // 1000
+  Generations    = 5_000_000;
+  PreBurn        = 15_000;
   LinkMin        = 5;
   EXEFolder      = Folders.Repository;
   EXERelative    = Folder("x64") Folder("release");
@@ -20,6 +20,8 @@ namespace Info {
   ExperimentRoot = Folders.Repository Folder("Experiments");
   WordFile       = FileName("Words") Extensions.Nytril;
   ExecuteFolder  = Folder("Execute");
+  AlignmentFile  = ExecuteFolder FileName("alignments") Extensions.Nytril;
+  ParametersFile = ExecuteFolder FileName("parameters") Extensions.Nytril;
   TreeFile       = ExecuteFolder FileName("consensus.tre");
   OutFileName    = ExecuteFolder Folder("out");
 }
@@ -140,14 +142,14 @@ class ConfigFileClass {
         AddVar("PrintFreq", Run.Print);
         if (Run.Marginal) {
           AddVar("FirstBurnLength", 1_000_000);
-          AddVar("PreburnLength", Run.PreBurn);
+          AddVar("PreburnLength", Run.Config.PreBurn);
           AddVar("TuneLength", 0);
           AddVar("BurnLength", 10_000);
           AddVar("SampleLength", 25_000);
           AddVar("SampleFreq", 50);
         }
         else {
-          AddVar("NumCycles", Run.Generations);
+          AddVar("NumCycles", Run.Config.Generations);
           AddVar("SampleFreq", 100);
         }
         AddVar("TreeLengthPriorVal", 0.15, false);

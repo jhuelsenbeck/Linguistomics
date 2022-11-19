@@ -661,7 +661,7 @@ class DataSetClass {
                               TextBuffer;
   ListClass<SegmentClass>     SegmentBuffer;
 
-  Constructor(name, folder) {
+  Constructor(config, name, folder) {
     Name            = name;
     FolderName      = folder;
     RootFolder      = Info.ExperimentRoot Folder(folder);
@@ -674,9 +674,9 @@ class DataSetClass {
     SegmentBuffer   = new(64);
 
     Rule   = new NaturalPartitionClass;
-    Custom = new ModelFolderClass(this, "Custom", Rule.Name);
-    JC69   = new ModelFolderClass(this, "JC69");
-    GTR    = new ModelFolderClass(this, "GTR");
+    Custom = new ModelFolderClass(config, this, "Custom", Rule.Name);
+    JC69   = new ModelFolderClass(config, this, "JC69");
+    GTR    = new ModelFolderClass(config, this, "GTR");
     Models = [
       Custom,
       JC69,
@@ -790,20 +790,10 @@ class DataSetClass {
       var concept = new ConceptClass(conceptvar);
       conceptlist.Add(concept);
 
-      foreach (var wordlist in conceptvar) {
-        var vname = wordlist.GetVariableName();
-        foreach (var word in wordlist) {
-          if (valid word) {
-            var taxon = Taxa[each0];
-            if (valid taxon) {
-              ++taxon.WordCount;
-              ++WordCount;
-              var cognate = new CognateClass(concept, wordlist);
-              cognatelist.Add(cognate);
-              ComputeExperimentCognate(taxon, concept, cognate, wordlist);
-            }
-          }
-        }
+      foreach (var cognatevar in conceptvar) {
+        var cognate = new CognateClass(concept, cognatevar);
+        cognatelist.Add(cognate);
+        ComputeExperimentCognate(concept, cognate, cognatevar);
       }
     }
 
@@ -934,45 +924,48 @@ class DataSetClass {
     }
   }
 
-  void ComputeExperimentCognate(TaxonClass taxon, ConceptClass concept, CognateClass cognate, wordlist) {
+  void ComputeExperimentCognate(ConceptClass concept, CognateClass cognate, cognatevar) {
     WordList.SetAllValues(DefWord);
+
     var maxlength = 0;
 
-    foreach (var wordsegments in wordlist) {
-      if (valid wordsegments) {
-        TextBuffer.Clear();
-        PlainBuffer.Clear();
-        SegmentBuffer.Clear();
 
-        var gs  = IPASegments.GapSegment;
-        var gap = gs.Ipa[0];
-        foreach (var index in wordsegments) {
-          if (index < 0) {
-            TextBuffer.Add(gap);
-            SegmentBuffer.Add(gs);
-          }
-          else {
-            var s = UniqueSegments[index];
-            SegmentBuffer.Add(s);
-            foreach (var c in s.Ipa) {
-              TextBuffer.Add(c);
-              PlainBuffer.Add(c);
+    foreach (var word in cognatevar) {
+      if (valid word) {
+        var taxon = Taxa[each0];
+        if (valid taxon) {
+          ++taxon.WordCount;
+          ++WordCount;
+
+          TextBuffer.Clear();
+          PlainBuffer.Clear();
+          SegmentBuffer.Clear();
+
+          var gs  = IPASegments.GapSegment;
+          var gap = gs.Ipa[0];
+          foreach (var index in word) {
+            if (index < 0) {
+              TextBuffer.Add(gap);
+              SegmentBuffer.Add(gs);
             }
-            ++s.UsedCount;
-            ++SegmentCount;
+            else {
+              var s = UniqueSegments[index];
+              SegmentBuffer.Add(s);
+              foreach (var c in s.Ipa) {
+                TextBuffer.Add(c);
+                PlainBuffer.Add(c);
+              }
+              ++s.UsedCount;
+              ++SegmentCount;
+            }
           }
-        }
 
-        var text    = TextBuffer.Values;
-        var word    = new WordClass(text, text, taxon, cognate);
-        word.InitExperiment(PlainBuffer.Values, SegmentBuffer.Values);
-        WordList.SetValue(each0 /*taxon.Index*/, word);
-
-        maxlength = Math.Max(maxlength, word.Aligned.Length);
-
-        foreach (var s in word.Segments) {
-          ++SegmentCount;
-          ++s.UsedCount;
+          var text = TextBuffer.Values;
+          var w    = new WordClass(text, text, taxon, cognate);
+          w.InitExperiment(PlainBuffer.Values, SegmentBuffer.Values);
+          if (w.Aligned.Length > maxlength)
+            maxlength = w.Aligned.Length;
+          WordList.SetValue(taxon.Index, w);
         }
       }
     }
@@ -1146,7 +1139,7 @@ class ResultsClass {
   Constructor(DataSetClass data) {
     Data                   = data;
     Rule                   = data.Rule;
-    Output                 = IO.ReadScript(data.MainRun.Alignments).Root;
+    Output                 = IO.ReadScript(data.MainRun.AlignmentFile).Root;
     TransitionStats        = Output.TransitionStats;
     EquilibriumFrequencies = Output.EquilibriumFrequencies;
     AlignmentCutoff        = Output.AlignmentCutoff;
@@ -1646,7 +1639,7 @@ class SegmentActionClass: ActionClass {
 
 abstract class FrequencyChartClass {
   PartitionClass[] Partitions;
-  DataSetClass     Data;
+  RuleClass        Rule;
   TaxonClass[]     Taxa;
   VectorClass      UsedCount,
                    UsedFrequency;
@@ -1659,8 +1652,8 @@ abstract class FrequencyChartClass {
 
  Constructor(DataSetClass data, count) {
     Partitions = data.Rule.Partitions;
-    Data       = data;
-    Taxa       = Data.Taxa;
+    Rule       = data.Rule;
+    Taxa       = data.Taxa;
     RateCount  = count;
     Rates      = new RateDataClass(count, each Taxa);
   }
@@ -1730,7 +1723,7 @@ abstract class FrequencyChartClass {
 
   ShowChart = HBox {
     VAlign: VAligns.Center;
-    Data.Rule.ShowLegend(10 pts, 1.4 inch, 5) {
+    Rule.ShowLegend(10 pts, 1.4 inch, 5) {
       Border: 0.25 {Color: 80%};
       Margin: PadR(12 pts);
     };
@@ -1740,14 +1733,16 @@ abstract class FrequencyChartClass {
 //======================================================================
 
 class SegmentFrequencyClass: FrequencyChartClass {
-  VectorClass PartitionMax;
+  VectorClass    PartitionMax;
+  SegmentClass[] Segments;
 
   Constructor(DataSetClass data, group) {
     super.Constructor(data, data.UniqueSegments.Length);
 
+    Segments     = data.UniqueSegments;
     PartitionMax = new(data.Rule.Partitions.Length, 0);
 
-    foreach (var cognate in Data.UsedCognates) {
+    foreach (var cognate in data.UsedCognates) {
       foreach (var word in cognate.Words) {
         var rate = Rates[word.Taxon.Index];
         foreach (var segment in word.Segments) {
@@ -1764,7 +1759,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
   CompareGroups(i0, i1, options) {
     var f0 = FirstRate[i0];
     var f1 = FirstRate[i1];
-    var d  = PartitionMax[Data.UniqueSegments[f0.Index].PartitionIndex] - PartitionMax[Data.UniqueSegments[f1.Index].PartitionIndex];
+    var d  = PartitionMax[Segments[f0.Index].PartitionIndex] - PartitionMax[Segments[f1.Index].PartitionIndex];
     if (d == 0) {
       d = f0.Frequency.Compare(f1.Frequency);
       if (d == 0)
@@ -1777,7 +1772,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     var f = rate.Frequency[index].Frequency / rate.MaxFrequency;
     return Canvas(width-1, height * f) {
       Margin: PadR(1);
-      var s = Data.UniqueSegments[index];
+      var s = Segments[index];
       Background: s.Partition.Color;
       TipAction: new SegmentActionClass(rate, s, rate.Count[index], f);
     };
@@ -1789,12 +1784,13 @@ class SegmentFrequencyClass: FrequencyChartClass {
   };
 
   override OccurranceChart(SizeClass size) = MatrixBlock {
-    var lw = 70 pts;
-    var cw = size.Width - lw;
-    var bw = cw / Data.UniqueSegments.Length;
-    var bh = bw * 1.5;
-    var h  = (size.Height - bh) / Taxa.Length;
-    var r0 = SortedRates[0];
+    var lw     = 70 pts;
+    var cw     = size.Width - lw;
+    var bw     = cw / Segments.Length;
+    var bh     = bw * 1.5;
+    var h      = (size.Height - bh) / Taxa.Length;
+    var r0     = SortedRates[0];
+    var factor = 1.0 / MaxDistance;
 
     TextHeight: 12 pts;
     VAlign: VAligns.Bottom;
@@ -1805,7 +1801,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
             rate.Taxon.Language;
           };
           if (rate.Distance > 0) {
-            var frac = rate.Distance / MaxDistance;
+            var frac = factor * rate.Distance;
             Canvas(lw * frac, 2) {
               Background: Colors.Red;
               Tip: new TipClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)));
@@ -1820,7 +1816,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
       Empty;
       TextHeight: 1.1 * bw;
       HBox {
-        SegmentLabel(Data.UniqueSegments, each SortedIndexes, bw, bh);
+        SegmentLabel(Segments, each SortedIndexes, bw, bh);
       };
     }
   };
@@ -1911,6 +1907,8 @@ class PartitionFrequencyClass: FrequencyChartClass {
 
     TextHeight: 11 pts;
     VAlign: VAligns.Bottom;
+
+    var factor = 1.0 / MaxDistance;
     foreach (var rate in SortedRates) {
       Row {
         Cell(PadR(3 pts)) {
@@ -1918,7 +1916,7 @@ class PartitionFrequencyClass: FrequencyChartClass {
             rate.Taxon.Language;
           };
 
-          var frac = rate.Distance / MaxDistance;
+          var frac = factor * rate.Distance;
           Canvas(lw * frac, 2) {
             Background: Colors.Red;
             Tip: new TipClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)));

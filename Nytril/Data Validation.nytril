@@ -125,18 +125,8 @@ class WordViewClass: DocumentClass {
     Partitions = partitions;
   }
 
-  Keyword(text) = Span {
-    Style.KeywordFormat;
-    text;
-  };
-
-  Variable(text) = Span {
-    TextColor: new ColorClass(43, 145, 175);
-    text;
-  };
-
   ShowUniqueSegments = Span {
-    Variable("Segments"); " = [";
+    Style.Variable("Segments"); " = [";
     Span {
       Separator: CommaSpace;
       ShowString(each ((each Data.UniqueSegments).Ipa));
@@ -145,15 +135,15 @@ class WordViewClass: DocumentClass {
   };
 
   ShowLanguages = TextBlock {
-    Span {Variable("LanguageSet"); " = [";};
+    Span {Style.Variable("LanguageSet"); " = [";};
     TextBlock {
       IndentSpace: 2;
 
       foreach (var l in Data.LanguageSet) {
         Span {
-          Variable("Languages");
+          Style.Variable("Languages");
           ".";
-          Variable(l.Name);
+          Style.Variable(l.Name);
           if (each1 < Data.LanguageSet.Length)
             CommaSpace;
         }
@@ -173,13 +163,13 @@ class WordViewClass: DocumentClass {
 
   ShowPartitions = TextBlock {
     Span {
-      Variable("PartitionInfoClass"); "[] "; Variable("Partitions"); " = [";
+      Style.Variable("PartitionInfoClass"); "[] "; Style.Variable("Partitions"); " = [";
     };
 
     foreach (var p in Partitions) {
       TextBlock {
         Span {
-          "  "; Keyword("new"); "(";
+          "  "; Style.Keyword("new"); "(";
           ShowString(p.Name);
           ", ";
           ShowSegmentIndices(p.Segments);
@@ -191,17 +181,15 @@ class WordViewClass: DocumentClass {
   };
 
   ShowVar(name, value) = Span {
-    Variable(name); " = "; value; ";";
+    Style.Variable(name); " = "; value; ";";
   };
 
   ShowVariable(value) = ShowVar(value.GetVariableName, value);
 
   ShowVariables = TextBlock {
-    Keyword("namespace ") Variable("Info") " {";
+    Style.NameSpace("Info");
     TextBlock {
       IndentSpace: 2;
-      ShowVariable(Info.Generations);
-      ShowVariable(Info.PreBurn);
       ShowVar("WordCutoff", Data.WordCutoff);
     };
     "}";
@@ -212,7 +200,7 @@ class WordViewClass: DocumentClass {
 
     TextBlock {
       Span {
-        Keyword("using ");
+        Style.Keyword("using ");
         "Format, WordGroups;";
       };
       Empty;
@@ -226,7 +214,7 @@ class WordViewClass: DocumentClass {
       ShowPartitions;
       Empty;
 
-      Span {Keyword("namespace "); Variable("Concepts"); " {"};
+      Style.NameSpace("Concepts");
       Empty;
 
       foreach (var cognate in Data.UsedCognates) {
@@ -234,14 +222,14 @@ class WordViewClass: DocumentClass {
         var lvector = new VectorClass(Data.LanguageSet.Length, null);
 
         foreach (var word in cognate.Words) {
-          if (valid word.Segments)
+          if (valid word.Aligned)
             lvector.SetValue(word.Language.LangIndex, word);
         }
 
         Span {
-          Variable(concept.Name);
+          Style.Variable(concept.Name);
           ".";
-          Variable(cognate.Name);
+          Style.Variable(cognate.Name);
           " = [";
         };
 
@@ -250,9 +238,9 @@ class WordViewClass: DocumentClass {
           foreach (var word in lvector) {
             Span {
               if (valid word)
-                ShowSegmentIndices(word.Segments);
+                ShowSegmentIndices(word.Aligned);
               else
-                Keyword("null");
+                Style.Keyword("null");
               Comma;
             }
           }
