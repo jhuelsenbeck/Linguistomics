@@ -3,7 +3,7 @@ using Format, Units, SegmentFeatures, Math, Style, LinkTypes;
 
 class PartitionClass: FactClass {
   field          Name;
-  SegmentClass[] Segments;
+  SegPartClass[] Segments;
   PointClass     Center;
   ColorClass     Color,
                  TextColor;
@@ -12,7 +12,7 @@ class PartitionClass: FactClass {
                  Angle,
                  Outer;
 
-  Constructor(index, name, SegmentClass[] segments) {
+  Constructor(index, name, SegPartClass[] segments) {
     super.Constructor(name);
     Name      = name;
     Color     = ChartColor(index);
@@ -89,7 +89,7 @@ abstract class RuleClass {
   FilterClass[]          Filters,
                          FiltersPlus;
   PartitionClass[]       Partitions;
-  SegmentClass[]         PartSegments;
+  SegPartClass[]         Segments;
   var                    Name,
                          Matrix,
                          Numbers;
@@ -100,7 +100,7 @@ abstract class RuleClass {
     FilterList = new(128);
   }
 
-  void Init(SegmentClass[] segments) {
+  void Init(SegPartClass[] segments) {
     Filters = FilterList.Values;
     FilterList.Add(new FilterClass(this, "Residue"));
     FiltersPlus = FilterList.Values;
@@ -110,12 +110,13 @@ abstract class RuleClass {
     foreach (var filter in FiltersPlus) {
       var find = GetMatching(segments, filter);
       if (valid find) {
-        list.Add(new PartitionClass(i, filter.Name, find));
+        var part = new PartitionClass(i, filter.Name, find);
+        list.Add(part);
         ++i;
       }
     }
-    Partitions   = list.Values;
-    PartSegments = segments.Sort(true, ref ComparePartSegments);
+    Partitions = list.Values;
+    Segments   = segments.Sort(true, ref ComparePartSegments);
   }
 
   MatchesRule(FilterClass filter, SegmentClass segment) {
@@ -138,15 +139,15 @@ abstract class RuleClass {
     return c;
   }
 
-  static ComparePartSegments(SegmentClass s0, SegmentClass s1, options) {
+  static ComparePartSegments(SegPartClass s0, SegPartClass s1, options) {
     var i = s1.PartitionIndex - s0.PartitionIndex;
     if (i == 0)
       i = s0.UsedCount - s1.UsedCount;
     return i;
   }
 
-  SegmentClass[] GetMatching(SegmentClass[] segments, FilterClass filter) {
-    return segments.FindSlice(segment => MatchesRule(filter, segment));
+  SegPartClass[] GetMatching(SegPartClass[] segments, FilterClass filter) {
+    return segments.FindSlice(part => MatchesRule(filter, part.Segment));
   }
 
   ShowLegend(textheight, width, padding) = VBox(null, null, padding) {
@@ -226,7 +227,7 @@ abstract class RuleClass {
     };
   };
 
-  ShowDescription(SegmentClass[] segments) = Block {
+  ShowDescription(SegPartClass[] segments) = Block {
     Paragraph {
       TextHeight: 14 pts;
       Name;
@@ -473,14 +474,14 @@ class AlignSortClass {
 
 class AlignActionClass: ActionClass {
   ResultsClass Results;
-  SegmentClass S0,
+  SegPartClass S0,
                S1;
   var          Rate,
                Reverse,
                Percent,
                Symmetric;
 
-  Constructor(ResultsClass results, SegmentClass s0, SegmentClass s1, rate, reverse, symmetric) {
+  Constructor(ResultsClass results, SegPartClass s0, SegPartClass s1, rate, reverse, symmetric) {
     super.Constructor(Actions.TipDocument, s0);
     Results   = results;
     S0        = s0;
@@ -492,7 +493,11 @@ class AlignActionClass: ActionClass {
 
   override Compare(c, options) = Rate.Compare(c.Rate);
 
-  ShowPartition(SegmentClass s, textheight) = Canvas(textheight * 2.5) {
+  ReverseRating {
+    return Rate - 0.1 * Reverse;
+  }
+
+  ShowPartition(SegPartClass s, textheight) = Canvas(textheight * 2.5) {
     BorderRadius: Style.BorderSize;
     HAlign: HAligns.Center;
     Background: s.Partition.Color;

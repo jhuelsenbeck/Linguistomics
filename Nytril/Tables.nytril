@@ -144,7 +144,7 @@ namespace DisplayWords {
       word.ShowConcept;
     };
     Cell {
-      word.Plain;
+      word.ShowPlain;
     };
     Cell {
       Span {
@@ -238,15 +238,15 @@ namespace AllWords {
 }
 
 namespace MatchCell {
-  SegmentText(HashSetClass set, SegmentClass segment) {
-    if (not segment.Impossible) {
+  SegmentText(HashSetClass set, SegPartClass segment) {
+    if (not segment.Segment.Impossible) {
       set.Add(segment);
       return segment.ShowSegment;
     }
     return null;
   }
 
-  SegmentBox(HashSetClass set, SegmentClass segment, color) = Canvas(DocMetrics.BoxSize.Width, DocMetrics.BoxSize.Height) {
+  SegmentBox(HashSetClass set, SegPartClass segment, color) = Canvas(DocMetrics.BoxSize.Width, DocMetrics.BoxSize.Height) {
     HAlign: HAligns.Center;
     if (valid segment.?Ipa) {
       TextHeight: DocMetrics.BoxSize.Height - 6 pts;
@@ -257,7 +257,7 @@ namespace MatchCell {
       Style.ImpossibleBackground;
   };
 
-  ShowBox(HashSetClass set, SegmentClass segment, color) = SegmentBox(set, segment, color) {
+  ShowBox(HashSetClass set, SegPartClass segment, color) = SegmentBox(set, segment, color) {
     if (segment.Features.HasFlag(Voiced))
       X: DocMetrics.BoxSize.Width;
   };
@@ -296,7 +296,7 @@ class TabOptionsClass {
   SegmentBlock(SegmentSetClass set, matches) = Cell {
     Style.SegmentBottom;
     if (valid matches) {
-      if (matches.Length == 1 and matches[0].Impossible)
+      if (matches.Length == 1 and matches[0].Segment.Impossible)
         Style.ImpossibleBackground;
       else {
         Span {
@@ -312,8 +312,8 @@ class TabOptionsClass {
     }
   };
 
-  MatchInclude(SegmentClass segment, place) {
-    return segment.?Place == place and
+  MatchInclude(SegPartClass segment, place) {
+    return segment.Segment.?Place == place and
            segment.Features.NotFlag(Exclude) and
            segment.Features.HasFlag(Include) and
            Manners.FindAny(manner => CheckFlags(segment.Features, manner | All));
@@ -337,9 +337,9 @@ class TabOptionsClass {
         f;
     };
 
-    var all = data.UniqueSegments + ImpossibleSegments;
+    var all = data.UniqueSegments + new SegPartClass(each ImpossibleSegments);
     foreach (var place in places)
-      SegmentBlock(set, all.FindSlice(s => s.?Place == place and CheckFlags(s.Features, features)));
+      SegmentBlock(set, all.FindSlice(s => s.Segment.?Place == place and CheckFlags(s.Features, features)));
   };
 
   ShowTable(DataSetClass data, SegmentSetClass set) = Block {
@@ -420,12 +420,12 @@ namespace MatchingConsonants {
 namespace MatchingVowels {
   FeatureMask = Vowel LongVowel Nasal Diphthong NonSylabic;
 
-  AddCell(SegmentClass[] segments, SegmentSetClass set, open, backness, features) = Cell {
+  AddCell(SegPartClass[] segments, SegmentSetClass set, open, backness, features) = Cell {
     Style.SegmentBottom;
     HAlign: HAligns.Center;
     TextHeight: DocMetrics.BoxSize.Height;
 
-    var filter  = segment => segment.Backness == backness and segment.Open == open and segment.Features.HasFlagMask(FeatureMask, features);
+    var filter  = s => s.Segment.Backness == backness and s.Segment.Open == open and s.Features.HasFlagMask(FeatureMask, features);
     var matches = segments.FindSlice(filter);
     switch (matches.Length) {
       case 0:
@@ -449,7 +449,7 @@ namespace MatchingVowels {
     }
   };
 
-  AddRow(SegmentClass[] segments, SegmentSetClass set, open, features) = Row {
+  AddRow(SegPartClass[] segments, SegmentSetClass set, open, features) = Row {
     Cell {
       VAlign: VAligns.Center;
       Style.TitleBackground;
@@ -458,8 +458,11 @@ namespace MatchingVowels {
     AddCell(segments, set, open, each Backnesses, features)
   };
 
-  ShowVowelTable(SegmentClass[] segments, SegmentSetClass set, features) = Block {
-    Style.TitleBar {Separator: "-"; each features};
+  ShowVowelTable(SegPartClass[] segments, SegmentSetClass set, features) = Block {
+    Style.TitleBar {
+      Separator: "-";
+      each features
+    };
     Table {
       HAlign: HAligns.Center;
       Style.TableBorder;
@@ -479,20 +482,16 @@ namespace MatchingVowels {
     };
   };
 
-  ShowTable(SegmentClass[] segments, SegmentSetClass set) = Block {
-    var features = [
-      Vowel,
-      Vowel LongVowel,
-      Vowel Nasal,
-      Vowel LongVowel Nasal,
-      Vowel Diphthong,
-      Vowel Nasal Diphthong,
-      Vowel NonSylabic,
-      Vowel NonSylabic Diphthong,
-    ];
-
+  ShowTable(SegPartClass[] segments, SegmentSetClass set) = Block {
     Lang.SymbolPairRounded;
-    ShowVowelTable(segments, set, each features);
+    ShowVowelTable(segments, set, Vowel);
+    ShowVowelTable(segments, set, Vowel LongVowel);
+    ShowVowelTable(segments, set, Vowel Nasal);
+    ShowVowelTable(segments, set, Vowel LongVowel Nasal);
+    ShowVowelTable(segments, set, Vowel Diphthong);
+    ShowVowelTable(segments, set, Vowel Nasal Diphthong);
+    ShowVowelTable(segments, set, Vowel NonSylabic);
+    ShowVowelTable(segments, set, Vowel NonSylabic Diphthong);
   };
 }
 //======================================================================
@@ -536,25 +535,26 @@ namespace MatchingDiacritics {
 namespace MatchingOther {
   ColumnDiv = 2;
 
-  AddCell(SegmentClass segment) = {
+  AddCell(SegPartClass segment) = {
+    var s = segment.Segment;
     Cell {
       VAlign: VAligns.Center;
       HAlign: HAligns.Center;
-      DocFields.Anchor(segment.GetVariableFullName);
+      DocFields.Anchor(s.GetVariableFullName);
       TextHeight: 18 pts;
-      segment.ShowSegment;
+      s.ShowSegment;
     };
     Cell {
       VAlign: VAligns.Center;
-      segment.SegmentName;
+      s.SegmentName;
     }
   };
 
-  AddRow(SegmentClass[] segments) = Row {
+  AddRow(SegPartClass[] segments) = Row {
     AddCell(each segments)
   };
 
-  ShowTable(SegmentClass[] segments, SegmentSetClass set) = Block {
+  ShowTable(SegPartClass[] segments, SegmentSetClass set) = Block {
     Style.TitleBar {Lang.OtherSegments};
     Table {
       Style.TableBorder;
@@ -618,7 +618,7 @@ namespace Utility {
 
 class SegmentDisplayClass {
   DataSetClass   Data;
-  SegmentClass[] SortedSegments,
+  SegPartClass[] SortedSegments,
                  DisplaySegments;
 
   Constructor(DataSetClass data) {
@@ -627,9 +627,9 @@ class SegmentDisplayClass {
     SortedSegments  = data.UniqueSegments.Sort(true, ref CompareAlpha);
   }
 
-  static CompareSegments(SegmentClass s0, SegmentClass s1, options) = s0.UsedCount - s1.UsedCount;
+  static CompareSegments(SegPartClass s0, SegPartClass s1, options) = s0.UsedCount - s1.UsedCount;
 
-  static CompareAlpha(SegmentClass s0, SegmentClass s1, options) {
+  static CompareAlpha(SegPartClass s0, SegPartClass s1, options) {
     var i = s0.Ipa.Length.Compare(s1.Ipa.Length);
     if (i == 0)
       i = -s0.Ipa.Compare(s1.Ipa);
@@ -646,7 +646,7 @@ class SegmentDisplayClass {
       TransformFit: true;
     };
 
-    SegmentClass[] sorted = DisplaySegments.Sort(true, ref CompareSegments);
+    SegPartClass[] sorted = DisplaySegments.Sort(true, ref CompareSegments);
     XAxis: ChartAxis {
       TextHeight: DocMetrics.SegmentTextFactor * size.Width / sorted.Length;
       (each sorted).ShowSegment;
@@ -680,9 +680,9 @@ class SegmentDisplayClass {
     }
   };
 
-  SegmentCell(SegmentClass segment) = Cell(PadAll(2 pts)) {
+  SegmentCell(SegPartClass segment) = Cell(PadAll(2 pts)) {
     Border: 0.25 pts {Color: Colors.LightGray};
-    segment.Display(segment.GetVariableFullName, 16 pts)
+    segment.Segment.Display(segment.GetVariableFullName, 16 pts);
   };
 
   IPASegmentTable = Block {
@@ -778,7 +778,7 @@ class SegmentDisplayClass {
               if (word.Segments.FindAny(segment)) {
                 Span {
                   TipAction: word;
-                  word.Plain;
+                  word.ShowPlain;
                 }
               }
             }

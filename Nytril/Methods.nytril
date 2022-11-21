@@ -345,6 +345,16 @@ namespace Figures.QRatesConsonantConsonant {
   Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
 }
 
+namespace Figures.QRatesAsperation {
+  Title = TransitionTitle("pulmonic");
+
+  Predicate(AlignActionClass a) = a.S0.Features.HasFlagMask(SegmentFeatures.Pulmonic | SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
+                                  a.S1.Features.HasFlagMask(SegmentFeatures.Pulmonic | SegmentFeatures.Vowel, SegmentFeatures.Pulmonic) and
+                                  a.Rate > a.Reverse*2;
+
+  Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
+}
+
 namespace Figures.QRatesVowelConsonant {
   Title = TransitionTitle("Vowel-Consonant");
 
@@ -356,9 +366,16 @@ namespace Figures.QRatesVowelConsonant {
 
 
 namespace Figures.QRatesOneWay {
-  Title = TransitionTitle("One Way");
+  Title = TransitionTitle("highly directed");
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, a => a.Rate > a.Reverse * 10);
+  Body(DocumentClass document) {
+    var sorted = QRatesMatrix.Display.ActionList.Sort(true, ref ByReverseRate);
+    return QRatesMatrix.Display.ShowChartPairs(TopCount, sorted);
+  }
+
+  ByReverseRate(AlignActionClass a1, AlignActionClass a2, options) {
+    return a1.ReverseRating.Compare(a2.ReverseRating);
+  }
 }
 
 //======================================================================
@@ -585,7 +602,7 @@ namespace Figures.Alignment {
     }
   };
 
-  AlignSegments(SegmentClass[] segments, map) = Span {
+  AlignSegments(SegPartClass[] segments, map) = Span {
     IPAFamily;
 
     var i = 0;

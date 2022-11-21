@@ -100,17 +100,15 @@ flags SegmentFeatures {
 }
 //======================================================================
 
-typedef SegmentSetClass HashSetClass<SegmentClass>;
+typedef SegmentSetClass HashSetClass<SegPartClass>;
+typedef SegmentDictionary DictionaryClass<SegmentClass>;
+typedef SegPartDictionary DictionaryClass<SegPartClass>;
+
 
 class SegmentClass: FactClass {
   field          Ipa,
                  Features;
-  PartitionClass Partition;
-  var            Index,
-                 UsedCount,
-                 UsedFrequency,
-                 CharacterLetter,
-                 PartitionIndex,
+  var            CharacterLetter,
                  Sampa,
                  Impossible,
                  Punctuation,
@@ -125,15 +123,12 @@ class SegmentClass: FactClass {
     super.Constructor(ipa ?? Empty);
     Ipa             = ipa?.GetString(NormalizationForms.FormC);
     CharacterLetter = Ipa;
-    Index           = -1;
-    PartitionIndex  = 0;
     Sampa           = sampa;
     Impossible      = impossible;
     Punctuation     = false;
     Diacritic       = false;
     Gap             = false;
     Features        = NoFeature;
-    UsedCount       = 0;
   }
 
   override IconClass GetIcon = Icons.record_voice_over;
@@ -162,11 +157,6 @@ class SegmentClass: FactClass {
   ShowBlock = Canvas(10 pts, 8 pts) {
     ShowSegment;
   };
-
-  void SetPartition(PartitionClass p, index) {
-    Partition      = p;
-    PartitionIndex = index;
-  }
 
   ShowSegment = Span {
     Style.IPAFamily;
@@ -243,6 +233,49 @@ class SegmentClass: FactClass {
 }
 //======================================================================
 
+class SegPartClass: FactClass {
+  SegmentClass   Segment;
+  PartitionClass Partition;
+  field          Ipa,
+                 Features;
+  var            PartitionIndex,
+                 Index,
+                 UsedCount,
+                 UsedFrequency,
+                 Punctuation;
+
+  Constructor(SegmentClass s) {
+    super.Constructor(s.FactId);
+
+    Segment        = s;
+    PartitionIndex = 0;
+    Index          = -1;
+    UsedCount      = 0;
+    UsedFrequency  = 0;
+    Punctuation    = s.Punctuation;
+    Ipa            = s.Ipa;
+    Features       = s.Features;
+  }
+
+  void SetPartition(PartitionClass p, index) {
+    Partition      = p;
+    PartitionIndex = index;
+  }
+
+  ShowSegment = Segment.ShowSegment;
+
+  ShowBlock = Segment.ShowBlock;
+
+  override GetLayoutTip = Segment.GetLayoutTip;
+
+  override GetLayoutFact = Segment.GetLayoutFact;
+}
+
+SegPartClass IPAParts.Gap     = new(IPASegments.GapSegment);
+SegPartClass IPAParts.Missing = new(IPASegments.MissingSegment);
+
+//======================================================================
+
 class PunctuationClass: SegmentClass {
   Constructor(ipa, sampa=null) {
     super.Constructor(ipa, sampa);
@@ -291,64 +324,64 @@ class VowelClass: SegmentClass {
 
 //======================================================================
 
-namespace ImpossibleSegments {
-  ImpossibleClass I10 = new(Pulmonic Nasal, Places.Pharyngeal);
-  ImpossibleClass I11 = new(Pulmonic Nasal, Places.Glottal);
-  ImpossibleClass I12 = new(Pulmonic Stop Voiced, Places.Pharyngeal);
-  ImpossibleClass I13 = new(Pulmonic Stop Voiced, Places.Glottal);
-  ImpossibleClass I14 = new(Pulmonic Sibilant Fricative, Places.Bilabial);
-  ImpossibleClass I15 = new(Pulmonic Sibilant Fricative Labial Dental, Places.LabioDental);
-  ImpossibleClass I16 = new(Pulmonic Sibilant Fricative Lingual Labial, Places.LinguoLabial);
-  ImpossibleClass I17 = new(Pulmonic Sibilant Fricative, Places.Velar);
-  ImpossibleClass I18 = new(Pulmonic Sibilant Fricative, Places.Uvular);
-  ImpossibleClass I19 = new(Pulmonic Sibilant Fricative, Places.Pharyngeal);
-  ImpossibleClass I20 = new(Pulmonic Sibilant Fricative, Places.Glottal);
-  ImpossibleClass I21 = new(Pulmonic Trill, Places.Velar);
-  ImpossibleClass I22 = new(Pulmonic Trill, Places.Glottal);
-  ImpossibleClass I23 = new(Pulmonic TapFlap, Places.Velar);
-  ImpossibleClass I24 = new(Pulmonic TapFlap, Places.Glottal);
-  ImpossibleClass I25 = new(Pulmonic Lateral Fricative, Places.Bilabial);
-  ImpossibleClass I26 = new(Pulmonic Lateral Fricative Labial Dental, Places.LabioDental);
-  ImpossibleClass I27 = new(Pulmonic Lateral Fricative, Places.Pharyngeal);
-  ImpossibleClass I28 = new(Pulmonic Lateral Fricative, Places.Glottal);
-  ImpossibleClass I29 = new(Pulmonic Lateral Approximant, Places.Bilabial);
-  ImpossibleClass I30 = new(Pulmonic Lateral Approximant Labial Dental, Places.LabioDental);
-  ImpossibleClass I31 = new(Pulmonic Lateral Approximant, Places.Pharyngeal);
-  ImpossibleClass I32 = new(Pulmonic Lateral Approximant, Places.Glottal);
-  ImpossibleClass I33 = new(Pulmonic Lateral TapFlap, Places.Bilabial);
-  ImpossibleClass I34 = new(Pulmonic Lateral TapFlap Labial Dental, Places.LabioDental);
-  ImpossibleClass I35 = new(Pulmonic Lateral TapFlap, Places.Pharyngeal);
-  ImpossibleClass I36 = new(Pulmonic Lateral TapFlap, Places.Glottal);
-  ImpossibleClass I37 = new(Pulmonic Sibilant Affricate, Places.Bilabial);
-  ImpossibleClass I38 = new(Pulmonic Sibilant Affricate Labial Dental, Places.LabioDental);
-  ImpossibleClass I39 = new(Pulmonic Sibilant Affricate, Places.Velar);
-  ImpossibleClass I40 = new(Pulmonic Sibilant Affricate, Places.Uvular);
-  ImpossibleClass I41 = new(Pulmonic Sibilant Affricate, Places.Pharyngeal);
-  ImpossibleClass I42 = new(Pulmonic Sibilant Affricate, Places.Glottal);
-  ImpossibleClass I43 = new(Pulmonic Lateral Affricate, Places.Bilabial);
-  ImpossibleClass I44 = new(Pulmonic Lateral Affricate Labial Dental, Places.LabioDental);
-  ImpossibleClass I45 = new(Pulmonic Lateral Affricate, Places.Pharyngeal);
-  ImpossibleClass I46 = new(Pulmonic Lateral Affricate, Places.Glottal);
-  ImpossibleClass I47 = new(Ejective Lateral Fricative Affricate, Places.Bilabial);
-  ImpossibleClass I48 = new(Ejective Lateral Fricative Affricate Labial Dental, Places.LabioDental);
-  ImpossibleClass I49 = new(Ejective Lateral Fricative Affricate, Places.Pharyngeal);
-  ImpossibleClass I50 = new(Ejective Central Affricate, Places.Glottal);
-  ImpossibleClass I51 = new(Ejective Lateral Affricate, Places.Bilabial);
-  ImpossibleClass I52 = new(Ejective Lateral Affricate Labial Dental, Places.LabioDental);
-  ImpossibleClass I53 = new(Ejective Lateral Affricate, Places.Pharyngeal);
-  ImpossibleClass I54 = new(Ejective Lateral Affricate, Places.Glottal);
-  ImpossibleClass I55 = new(Ejective Tenuis Click Affricate, Places.Velar);
-  ImpossibleClass I56 = new(Ejective Tenuis Click Affricate, Places.Uvular);
-  ImpossibleClass I57 = new(Ejective Tenuis Click Affricate, Places.Pharyngeal);
-  ImpossibleClass I58 = new(Ejective Nasal Click Affricate, Places.Velar);
-  ImpossibleClass I59 = new(Ejective Nasal Click Affricate, Places.Uvular);
-  ImpossibleClass I60 = new(Ejective Nasal Click Affricate, Places.Pharyngeal);
-  ImpossibleClass I61 = new(Ejective Tenuis Lateral Click Affricate, Places.Bilabial);
-  ImpossibleClass I62 = new(Ejective Tenuis Lateral Click Affricate Labial Dental, Places.LabioDental);
-  ImpossibleClass I63 = new(Ejective Tenuis Lateral Click Affricate, Places.Velar);
-  ImpossibleClass I64 = new(Ejective Tenuis Lateral Click Affricate, Places.Uvular);
-  ImpossibleClass I65 = new(Ejective Tenuis Lateral Click Affricate, Places.Pharyngeal);
-}
+ImpossibleClass[] ImpossibleSegments = [
+  new(Pulmonic Nasal, Places.Pharyngeal),
+  new(Pulmonic Nasal, Places.Glottal),
+  new(Pulmonic Stop Voiced, Places.Pharyngeal),
+  new(Pulmonic Stop Voiced, Places.Glottal),
+  new(Pulmonic Sibilant Fricative, Places.Bilabial),
+  new(Pulmonic Sibilant Fricative Labial Dental, Places.LabioDental),
+  new(Pulmonic Sibilant Fricative Lingual Labial, Places.LinguoLabial),
+  new(Pulmonic Sibilant Fricative, Places.Velar),
+  new(Pulmonic Sibilant Fricative, Places.Uvular),
+  new(Pulmonic Sibilant Fricative, Places.Pharyngeal),
+  new(Pulmonic Sibilant Fricative, Places.Glottal),
+  new(Pulmonic Trill, Places.Velar),
+  new(Pulmonic Trill, Places.Glottal),
+  new(Pulmonic TapFlap, Places.Velar),
+  new(Pulmonic TapFlap, Places.Glottal),
+  new(Pulmonic Lateral Fricative, Places.Bilabial),
+  new(Pulmonic Lateral Fricative Labial Dental, Places.LabioDental),
+  new(Pulmonic Lateral Fricative, Places.Pharyngeal),
+  new(Pulmonic Lateral Fricative, Places.Glottal),
+  new(Pulmonic Lateral Approximant, Places.Bilabial),
+  new(Pulmonic Lateral Approximant Labial Dental, Places.LabioDental),
+  new(Pulmonic Lateral Approximant, Places.Pharyngeal),
+  new(Pulmonic Lateral Approximant, Places.Glottal),
+  new(Pulmonic Lateral TapFlap, Places.Bilabial),
+  new(Pulmonic Lateral TapFlap Labial Dental, Places.LabioDental),
+  new(Pulmonic Lateral TapFlap, Places.Pharyngeal),
+  new(Pulmonic Lateral TapFlap, Places.Glottal),
+  new(Pulmonic Sibilant Affricate, Places.Bilabial),
+  new(Pulmonic Sibilant Affricate Labial Dental, Places.LabioDental),
+  new(Pulmonic Sibilant Affricate, Places.Velar),
+  new(Pulmonic Sibilant Affricate, Places.Uvular),
+  new(Pulmonic Sibilant Affricate, Places.Pharyngeal),
+  new(Pulmonic Sibilant Affricate, Places.Glottal),
+  new(Pulmonic Lateral Affricate, Places.Bilabial),
+  new(Pulmonic Lateral Affricate Labial Dental, Places.LabioDental),
+  new(Pulmonic Lateral Affricate, Places.Pharyngeal),
+  new(Pulmonic Lateral Affricate, Places.Glottal),
+  new(Ejective Lateral Fricative Affricate, Places.Bilabial),
+  new(Ejective Lateral Fricative Affricate Labial Dental, Places.LabioDental),
+  new(Ejective Lateral Fricative Affricate, Places.Pharyngeal),
+  new(Ejective Central Affricate, Places.Glottal),
+  new(Ejective Lateral Affricate, Places.Bilabial),
+  new(Ejective Lateral Affricate Labial Dental, Places.LabioDental),
+  new(Ejective Lateral Affricate, Places.Pharyngeal),
+  new(Ejective Lateral Affricate, Places.Glottal),
+  new(Ejective Tenuis Click Affricate, Places.Velar),
+  new(Ejective Tenuis Click Affricate, Places.Uvular),
+  new(Ejective Tenuis Click Affricate, Places.Pharyngeal),
+  new(Ejective Nasal Click Affricate, Places.Velar),
+  new(Ejective Nasal Click Affricate, Places.Uvular),
+  new(Ejective Nasal Click Affricate, Places.Pharyngeal),
+  new(Ejective Tenuis Lateral Click Affricate, Places.Bilabial),
+  new(Ejective Tenuis Lateral Click Affricate Labial Dental, Places.LabioDental),
+  new(Ejective Tenuis Lateral Click Affricate, Places.Velar),
+  new(Ejective Tenuis Lateral Click Affricate, Places.Uvular),
+  new(Ejective Tenuis Lateral Click Affricate, Places.Pharyngeal),
+];
 
 //======================================================================
 

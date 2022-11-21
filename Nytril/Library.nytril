@@ -106,17 +106,17 @@ class AlignPairClass {
             foreach (var c in word) {
               Canvas(BoxSize.Width, BoxSize.Height) {
                 HAlign: HAligns.Center;
-                SegmentClass segment;
+                SegPartClass part;
                 if (c == -1)
-                  segment = IPASegments.GapSegment;
+                  part = IPAParts.Gap;
                 else if (c >= 0 and c < Data.UniqueSegments.Length) {
-                  segment = Data.UniqueSegments[c];
-                  Background: segment.Partition.Color;
-                  TextColor: segment.Partition.TextColor;
+                  part = Data.UniqueSegments[c];
+                  Background: part.Partition.Color;
+                  TextColor: part.Partition.TextColor;
                 }
                 else
-                  segment = IPASegments.MissingSegment;
-                segment.ShowSegment;
+                  part = IPAParts.Missing;
+                part.ShowSegment;
               };
             }
           }
@@ -379,22 +379,19 @@ class LanguageClass: FactClass {
 
 //======================================================================
 
-typedef SegmentDictionary DictionaryClass<SegmentClass>;
-
 class WordClass: FactClass {
-  field          Plain,
-                 Text;
+  field          Text;
   LanguageClass  Language;
   TaxonClass     Taxon;
   CognateClass   Cognate;
-  SegmentClass[] Segments,
+  SegPartClass[] Segments,
                  Aligned,
                  Padded;
+  var            Variable;
 
   Constructor(id, text, TaxonClass taxon, CognateClass cognate) {
     super.Constructor(id);
     Text     = text;
-    Plain    = text;
     Taxon    = taxon;
     Language = taxon.Language;
     Cognate  = cognate;
@@ -405,14 +402,22 @@ class WordClass: FactClass {
     Aligned  = [];
   }
 
-  void InitRaw(SegmentDictionary dictionary) {
+  ShowPlain = Span {
+    Action: new ActionClass(Actions.ToSource, Variable);
+    foreach (var c in Text) {
+      if (c != IPASegments.GapSegment.Ipa and c != IPASegments.PrimaryStress.Ipa)
+        c;
+    }
+  };
+
+  void InitRaw(variable, SegPartDictionary lookup) {
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
-    Text  = Text.GetString(NormalizationForms.FormC);
-    Plain = Text.FindSlice(c => c != IPASegments.GapSegment.Ipa and c != IPASegments.PrimaryStress.Ipa);
+    Text     = Text.GetString(NormalizationForms.FormC);
+    Variable = variable;
 
     if (valid Text) {
-      var segments = dictionary.FindTokens(Text, IPA.NullSegment);
-      Aligned  = segments.FindSlice(s => s.Gap or (not s.Punctuation));
+      var segments = lookup.FindTokens(Text, IPA.NullSegment);
+      Aligned  = segments.FindSlice(s => s.Segment.Gap or (not s.Punctuation));
       Segments = segments.FindSlice(s => not s.Punctuation);
 
       // Test that the word's text is the same as the segments converted back into text
@@ -424,11 +429,11 @@ class WordClass: FactClass {
       Init;
   }
 
-  void InitExperiment(plain, SegmentClass[] segments) {
-    Plain    = plain;
-    Aligned  = segments;
-    Padded   = segments;
-    Segments = segments.FindSlice(s => not s.Punctuation);
+  void InitExperiment(variable, plain, SegPartClass[] segments) {
+    Variable  = variable;
+    Aligned   = segments;
+    Padded    = segments;
+    Segments  = segments.FindSlice(s => not s.Punctuation);
     Connect;
   }
 
@@ -495,7 +500,7 @@ class WordClass: FactClass {
       GetIcon;
       Space;
       Quote;
-      Plain;
+      ShowPlain;
       Quote;
       Tab;
       Language;
@@ -628,16 +633,30 @@ class WordPairClass {
 }
 //======================================================================
 
+
 class DataSetClass {
   LanguageClass[]             LanguageSet;
-  SegmentClass[]              UniqueSegments;
+  SegPartClass[]              UniqueSegments;
   CognateClass[]              UsedCognates,
                               SortedCognates;
   ConceptClass[]              UsedConcepts;
   TaxonClass[]                Taxa;
   DictionaryClass<TaxonClass> TaxonSet;
   VectorClass                 WordList;
-  var                         Name,
+  RuleClass                   Rule;
+  WordClass                   DefWord;
+  ModelFolderClass            Custom,
+                              JC69,
+                              GTR;
+  ModelFolderClass[]          Models;
+  ListClass                   PlainBuffer,
+                              TextBuffer;
+  ListClass<SegPartClass>     SegmentBuffer;
+  RunExperimentClass          MainRun;
+  var                         WordCutoff,
+                              MacFolder,
+                              WordFile,
+                              Name,
                               MaxLanguageName,
                               WordCount,
                               SegmentCount,
@@ -646,22 +665,8 @@ class DataSetClass {
                               DataConcept,
                               RootFolder,
                               FolderName;
-  SegmentDictionary           SegmentLookup;
-  RuleClass                   Rule;
-  WordClass                   DefWord;
-  ModelFolderClass            Custom,
-                              JC69,
-                              GTR;
-  ModelFolderClass[]          Models;
-  RunExperimentClass          MainRun;
-  var                         WordCutoff,
-                              MacFolder,
-                              WordFile;
-  ListClass                   PlainBuffer,
-                              TextBuffer;
-  ListClass<SegmentClass>     SegmentBuffer;
 
-  Constructor(config, name, folder) {
+  Constructor(config, name, folder, runindex) {
     Name            = name;
     FolderName      = folder;
     RootFolder      = Info.ExperimentRoot Folder(folder);
@@ -683,15 +688,7 @@ class DataSetClass {
       GTR,
     ];
 
-    MainRun = Custom.Posterior.Run[0];
-
-    // Build a dictionary with IPA text as the key
-    SegmentLookup = new SegmentDictionary(256);
-    foreach (var segment in IPASegments) {
-      if (valid segment.Ipa)
-        SegmentLookup.Add(segment, segment.Ipa);
-    }
-
+    MainRun = Custom.Posterior.Run[runindex];
   }
 
   void ReadRawWords(concepts, includewords, LanguageClass[] languageset, cutoff=-1) {
@@ -748,8 +745,14 @@ class DataSetClass {
     UsedConcepts = conceptlist.Values.Sort(false);
     UsedCognates = cognatelist.Values;
 
+    var lookup = new SegPartDictionary(IPASegments.Length);
+    foreach (var segment in IPASegments) {
+      if (valid segment.Ipa)
+        lookup.Add(new(segment), segment.Ipa);
+    }
+
     foreach (var cognate in UsedCognates)
-      ComputeRawCognate(cognate);
+      ComputeRawCognate(lookup, cognate);
 
     var set = new SegmentSetClass(512);
     foreach (var cognate in UsedCognates) {
@@ -771,11 +774,17 @@ class DataSetClass {
     WordCutoff  = run.Info.WordCutoff;
     AddLanguageSet(run.LanguageSet);
 
-    var slist = new ListClass<SegmentClass>(run.Segments.Length);
+    var slist  = new ListClass<SegPartClass>(run.Segments.Length);
+    var lookup = new SegmentDictionary(IPASegments.Length);
+    foreach (var segment in IPASegments) {
+      if (valid segment.Ipa)
+        lookup.Add(segment, segment.Ipa);
+    }
+
     foreach (var text in run.Segments) {
-      var s = SegmentLookup.FindKey(text);
+      var s = lookup.FindKey(text);
       if (valid s)
-        slist.Add(s);
+        slist.Add(new(s));
       else
         System.Assert(false, "Missing Segment " + text);
     }
@@ -875,15 +884,14 @@ class DataSetClass {
 
   LangNumber(LanguageClass language) = Languages.FindFirstIndex(language)+1;
 
-  void ComputeRawCognate(CognateClass cognate) {
+  void ComputeRawCognate(SegPartDictionary lookup, CognateClass cognate) {
     WordList.SetAllValues(DefWord);
     var maxlength = 0;
-
     foreach (var text in cognate.Variable) {
       var taxon = TaxonSet.FindKey(text.GetVariableName);
       if (valid taxon) {
         var word = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.Variable, text, taxon, cognate);
-        word.InitRaw(SegmentLookup);
+        word.InitRaw(text, lookup);
         maxlength = Math.Max(maxlength, word.Aligned.Length);
 
         foreach (var s in word.Segments) {
@@ -901,7 +909,7 @@ class DataSetClass {
       var a = word.Aligned;
       if (valid a) {
         if (a.Length < maxlength)
-          word.Padded = a + [IPASegments.GapSegment] * (maxlength - a.Length);
+          word.Padded = a + [IPAParts.Gap] * (maxlength - a.Length);
         else
           word.Padded = a;
       }
@@ -916,7 +924,7 @@ class DataSetClass {
       foreach (var word in cognate.Words) {
         if (valid word.Aligned) {
           ++count;
-          if (word.Padded[i] == IPASegments.GapSegment)
+          if (word.Padded[i] == IPAParts.Gap)
             ++gapcount;
         }
       }
@@ -941,7 +949,7 @@ class DataSetClass {
           PlainBuffer.Clear();
           SegmentBuffer.Clear();
 
-          var gs  = IPASegments.GapSegment;
+          var gs  = IPAParts.Gap;
           var gap = gs.Ipa[0];
           foreach (var index in word) {
             if (index < 0) {
@@ -962,7 +970,7 @@ class DataSetClass {
 
           var text = TextBuffer.Values;
           var w    = new WordClass(text, text, taxon, cognate);
-          w.InitExperiment(PlainBuffer.Values, SegmentBuffer.Values);
+          w.InitExperiment(word, PlainBuffer.Values, SegmentBuffer.Values);
           if (w.Aligned.Length > maxlength)
             maxlength = w.Aligned.Length;
           WordList.SetValue(taxon.Index, w);
@@ -986,7 +994,7 @@ class DataSetClass {
       foreach (var cognate in UsedCognates) {
         foreach (var word in cognate.Words) {
           if (word.Segments.FindAny(segment))
-            word.Plain;
+            word.ShowPlain;
         }
       }
     };
@@ -1089,7 +1097,7 @@ class DataSetClass {
 
   override IconClass GetIcon = Icons.science;
 
-  CalculateLoad(SegmentClass[] segments, sum) {
+  CalculateLoad(SegPartClass[] segments, sum) {
     return sum;
   }
 
@@ -1128,13 +1136,13 @@ class DataSetClass {
 //======================================================================
 
 class ResultsClass {
-  DataSetClass      Data;
-  RuleClass         Rule;
-  AlignIndexClass[] Alignments;
-  StatClass[][]     TransitionStats;
-  var               Output,
-                    AlignmentCutoff,
-                    EquilibriumFrequencies;
+  DataSetClass       Data;
+  RuleClass          Rule;
+  AlignIndexClass[]  Alignments;
+  StatClass[][]      TransitionStats;
+  var                Output,
+                     AlignmentCutoff,
+                     EquilibriumFrequencies;
 
   Constructor(DataSetClass data) {
     Data                   = data;
@@ -1171,12 +1179,12 @@ class ResultsClass {
 abstract class CountBaseClass {
   var            VFlags,
                  MaxDigits;
-  SegmentClass[] PartSegments;
+  SegPartClass[] Segments;
 
   Constructor(DataSetClass data) {
-    VFlags       = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
-    PartSegments = data.Rule.PartSegments;
-    MaxDigits    = 3;
+    VFlags    = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
+    Segments  = data.Rule.Segments;
+    MaxDigits = 3;
   }
 
   PartitionBox(DocumentClass document) = Paragraph {
@@ -1186,7 +1194,7 @@ abstract class CountBaseClass {
     var gcolor = 65%;
     var border = 0.5 pts;
     var size   = ExtentSize - border*2;
-    var length = PartSegments.Length;
+    var length = Segments.Length;
     var d      = size / (length+1);
 
     Canvas {
@@ -1197,7 +1205,7 @@ abstract class CountBaseClass {
       for (var i = 0; i < length; ++i) {
         var x = d.Width;
         for (var j = 0; j < length; ++j) {
-          AddEntry(PartSegments[i], PartSegments[j], x, y, d);
+          AddEntry(Segments[i], Segments[j], x, y, d);
           x += d.Width;
         }
         y += d.Height;
@@ -1205,7 +1213,7 @@ abstract class CountBaseClass {
 
       y = d.Height;
       var p = 0;
-      foreach (var s in PartSegments) {
+      foreach (var s in Segments) {
         Canvas(d.Width, d.Height) {
           Y: y;
           Background: s.Partition.Color;
@@ -1227,7 +1235,7 @@ abstract class CountBaseClass {
       Canvas(size.Width, d.Height) {
         var x = d.Width;
         p = 0;
-        foreach (var s in PartSegments) {
+        foreach (var s in Segments) {
           Canvas(d.Width, d.Height) {
             X : x;
             Background: s.Partition.Color;
@@ -1249,7 +1257,7 @@ abstract class CountBaseClass {
     };
   };
 
-  abstract AddEntry(SegmentClass si, SegmentClass sj, x, y, SizeClass size);
+  abstract AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size);
 }
 
 //======================================================================
@@ -1277,7 +1285,7 @@ class PriorCountClass: CountBaseClass {
             for (var index = 0; index < ml; ++index) {
               var si = pi[index];
               var sj = pj[index];
-              if (si.Index != sj.Index and not si.Punctuation and not sj.Punctuation) {
+              if (si != sj and not si.Punctuation and not sj.Punctuation) {
                 var list = TMatrix.GetValue(si.Index, sj.Index);
                 var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
                 if (invalid list) {
@@ -1296,7 +1304,7 @@ class PriorCountClass: CountBaseClass {
     Factor = 1.0 / tmax;
   }
 
-  override AddEntry(SegmentClass si, SegmentClass sj, x, y, SizeClass size) {
+  override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
     var value = TMatrix.GetValue(si.Index, sj.Index);
     if (invalid value)
       return null;
@@ -1347,7 +1355,7 @@ class AlignedCountClass: CountBaseClass {
     Results   = results;
 
     var ordered = results.Data.UniqueSegments;
-    var length  = PartSegments.Length;
+    var length  = Segments.Length;
 
     System.Assert(length == rates.Length);
     System.Assert(length == ordered.Length);
@@ -1377,7 +1385,7 @@ class AlignedCountClass: CountBaseClass {
     SortedActions = ActionList.Sort(true);
   }
 
-  override AddEntry(SegmentClass si, SegmentClass sj, x, y, SizeClass size) {
+  override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
     var a = Actions.GetValue(si.Index, sj.Index);
     if (valid a) {
       return Canvas(size.Width, size.Height) {
@@ -1446,8 +1454,7 @@ class AlignedCountClass: CountBaseClass {
     ShowLegend(actions);
   };
 
-  Pairs(top, predicate) = VBox {
-    var subset  = SortedActions.FindSlice(predicate);
+  ShowChartPairs(top, subset) = VBox {
     var actions = subset.Slice(0..<top);
 
     ShowChart(actions) {
@@ -1468,13 +1475,14 @@ class AlignedCountClass: CountBaseClass {
     ShowLegend(actions);
   };
 
+  Pairs(top, predicate) = ShowChartPairs(top, SortedActions.FindSlice(predicate));
 }
 
 //======================================================================
 
 class SegDataClass {
   PartitionClass Partition;
-  SegmentClass   Segment;
+  SegPartClass   Segment;
   var            Value;
 
   Constructor(ResultsClass results, rates, i) {
@@ -1506,7 +1514,7 @@ class SegDataClass {
 
 class DiagonalClass {
   SegDataClass[]   Data;
-  SegmentClass[]   Segments;
+  SegPartClass[]   Segments;
   PartitionClass[] Partitions;
   ResultsClass     Results;
 
@@ -1597,12 +1605,12 @@ class RateDataClass {
 
 class SegmentActionClass: ActionClass {
   RateDataClass Rate;
-  SegmentClass  Segment;
+  SegPartClass  Segment;
   TaxonClass    Taxon;
   var           Count,
                 Percent;
 
-  Constructor(RateDataClass rate, SegmentClass segment, count, percent) {
+  Constructor(RateDataClass rate, SegPartClass segment, count, percent) {
     super.Constructor(Actions.RunQuery, null);
     Segment = segment;
     Taxon   = rate.Taxon;
@@ -1734,7 +1742,7 @@ abstract class FrequencyChartClass {
 
 class SegmentFrequencyClass: FrequencyChartClass {
   VectorClass    PartitionMax;
-  SegmentClass[] Segments;
+  SegPartClass[] Segments;
 
   Constructor(DataSetClass data, group) {
     super.Constructor(data, data.UniqueSegments.Length);
@@ -1778,7 +1786,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     };
   }
 
-  SegmentLabel(SegmentClass[] segments, index, width, height) = HBox(width, height) {
+  SegmentLabel(SegPartClass[] segments, index, width, height) = HBox(width, height) {
     HAlign: HAligns.Center;
     segments[index].ShowSegment;
   };
