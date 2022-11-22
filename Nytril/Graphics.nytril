@@ -268,6 +268,9 @@ namespace Style {
   };
 
   ShowFigureDoc(DocumentClass document, figure) = Block {
+
+    var title = CaptionOrTitle(document, figure);
+    var th    = GetLayoutSize(title).Height;
     Paragraph {
       SpaceBefore: 10 pts;
       SpaceAfter: 6 pts;
@@ -281,15 +284,18 @@ namespace Style {
         DocFields.Sequence(NumberedGroup.Figure, figure.GetVariableFullName);
         eos;
       };
-      CaptionOrTitle(document, figure);
+      title;
     };
 
     Paragraph {
       ParAlignment: ParAlignments.Center;
       SpaceAfter: 6 pts;
+
+      var extent = SetExtentSize(new(ExtentWidth, ExtentHeight - th*2));
       Frame {
         figure.Body(document);
-      }
+      };
+      SetExtent(extent);
     };
   };
 
