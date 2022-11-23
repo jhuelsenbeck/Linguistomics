@@ -278,7 +278,7 @@ namespace Figures.FractionGapsChart {
 
 //======================================================================
 
-TopCount = 30;
+TopCount = 15;
 
 namespace Figures.AverageTransitions {
   MinRate = 0.00005;
@@ -298,7 +298,7 @@ namespace Figures.AverageDiagonal {
 namespace Figures.AverageMost {
   Title = "Average Top {0}"(TopCount);
 
-  Body(DocumentClass document) = AverageTransitions.Display.Most(TopCount);
+  Body(DocumentClass document) = AverageTransitions.Display.Extrema(TopCount, true);
 }
 
 //======================================================================
@@ -321,10 +321,16 @@ namespace Figures.QRatesDiagonal {
 
 TransitionTitle(type) = "The top {0} {1} transitions"(TopCount, type);
 
-namespace Figures.QRatesMost {
+namespace Figures.QRatesTop {
   Title = TransitionTitle("segmental");
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Most(TopCount);
+  Body(DocumentClass document) = QRatesMatrix.Display.Extrema(TopCount, true);
+}
+
+namespace Figures.QRatesBottom {
+  Title = "The bottom {0} segmental transitions"(TopCount);
+
+  Body(DocumentClass document) = QRatesMatrix.Display.Extrema(TopCount, false);
 }
 
 namespace Figures.QRatesVowelVowel {
@@ -825,15 +831,15 @@ namespace PaperSections.WordTransformation {
     ShowFigureDoc(document, Figures.QRatesDiagonal);
 
     BodyPar {
-      FigureReference(Figures.QRatesMost); " presents the thirty transitions with the highest instantaneous rates of change. ";
+      FigureReference(Figures.QRatesTop); " presents the "; Cardinal(TopCount); " transitions with the highest instantaneous rates of change. ";
       "In contrast to "; FigureReference(Figures.QRatesDiagonal); " above, the focus here is on individual sound changes. ";
-      "The results paint a similar picture, however. The input segments in " FigureReference(Figures.QRatesMost); " are either long vowels or diphthongs. ";
+      "The results paint a similar picture, however. The input segments in " FigureReference(Figures.QRatesTop); " are either long vowels or diphthongs. ";
       "The output segments are similarly restricted. ";
       "Although there are eight transitions in the graph, there are only two output segments, the mid-high front vowel /e/ and the high back vowel /u/. ";
       };
 
 
-    ShowFigureDoc(document, Figures.QRatesMost);
+    ShowFigureDoc(document, Figures.QRatesTop);
 };
 }
 //======================================================================
