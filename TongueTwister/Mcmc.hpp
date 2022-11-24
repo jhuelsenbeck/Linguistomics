@@ -4,6 +4,7 @@
 #include <chrono>
 #include <fstream>
 #include <string>
+#include <vector>
 class Model;
 class RandomVariable;
 

@@ -77,7 +77,7 @@ std::string ParameterIndelGammaShape::getString(void) {
 
 char* ParameterIndelGammaShape::getCString(void) {
 
-    sprintf(parmStr, "%1.6lf\t", alpha[0]);
+    snprintf(parmStr, sizeof(parmStr), "%1.6lf\t", alpha[0]);
     return parmStr;
 }
 

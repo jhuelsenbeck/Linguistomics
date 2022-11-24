@@ -123,11 +123,11 @@ std::string ParameterExchangabilityRates::getString(void) {
 
 char* ParameterExchangabilityRates::getCString(void) {
 
-    char tempStr[20];
+    char tempStr[24];
     char* p = parmStr;
     for (int i=0; i<numRates; i++)
         {
-        sprintf(tempStr, "%1.6lf\t", rates[0][i]);
+        snprintf(tempStr, sizeof(tempStr), "%1.6lf\t", rates[0][i]);
         for (char* c=tempStr; *c != '\0'; c++)
             {
             (*p) = (*c);
