@@ -5,7 +5,7 @@
 
 
 AlnMatrix::AlnMatrix(int nr, int maxNs) : IntMatrix(nr, maxNs) {
-
+    numSites = 0;
     numRows = nr;
     maxNumSites = maxNs;
 }

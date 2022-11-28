@@ -4,7 +4,7 @@
 
 
 IndelMatrix::IndelMatrix(int nt, int maxNs) : IntMatrix(maxNs, nt) {
-
+    numSites = 0;
     numTaxa = nt;
     maxNumSites = maxNs;
 }

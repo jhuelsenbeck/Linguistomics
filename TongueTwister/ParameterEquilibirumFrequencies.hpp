@@ -8,7 +8,6 @@ class Model;
 
 
 class ParameterEquilibirumFrequencies : public Parameter {
-
     public:
                                         ParameterEquilibirumFrequencies(void) = delete;
                                         ParameterEquilibirumFrequencies(const ParameterEquilibirumFrequencies& pr) = delete;

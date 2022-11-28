@@ -42,7 +42,7 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
     Probability::Helper::normalize(rates[0], minVal);
     rates[1] = rates[0];
     
-    parmStrLen = numRates*12;
+    parmStrLen = numRates* Model::PrintNumberSize;
     parmStr = new char[parmStrLen];
 }
 
@@ -64,7 +64,7 @@ ParameterExchangabilityRates::ParameterExchangabilityRates(RandomVariable* r, Mo
     Probability::Dirichlet::rv(rv, alpha, rates[0]);
     rates[1] = rates[0];
 
-    parmStrLen = numRates*12;
+    parmStrLen = numRates* Model::PrintNumberSize;
     parmStr = new char[parmStrLen];
 }
 
@@ -123,18 +123,10 @@ std::string ParameterExchangabilityRates::getString(void) {
 
 char* ParameterExchangabilityRates::getCString(void) {
 
-    char tempStr[24];
     char* p = parmStr;
     for (int i=0; i<numRates; i++)
-        {
-        snprintf(tempStr, sizeof(tempStr), "%1.6lf\t", rates[0][i]);
-        for (char* c=tempStr; *c != '\0'; c++)
-            {
-            (*p) = (*c);
-            p++;
-            }
-        }
-    (*p) = '\0';
+        p += snprintf(p, parmStrLen - (p - parmStr), "%1.6lf\t", rates[0][i]);
+    *p = '\0';
     return parmStr;
 }
 

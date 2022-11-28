@@ -8,7 +8,8 @@
 
 
 RateMatrix::RateMatrix(void) {
-
+    Q[0] = NULL;
+    Q[1] = NULL;
     numStates = 0;
     activeMatrix = 0;
     isInitialized = false;

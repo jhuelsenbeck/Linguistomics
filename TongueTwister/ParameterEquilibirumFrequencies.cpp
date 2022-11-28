@@ -32,7 +32,7 @@ ParameterEquilibirumFrequencies::ParameterEquilibirumFrequencies(RandomVariable*
     Probability::Helper::normalize(freqs[0], minVal);
     freqs[1] = freqs[0];
     
-    parmStrLen = numStates*12;
+    parmStrLen = numStates*Model::PrintNumberSize;
     parmStr = new char[parmStrLen];
 }
 
@@ -93,19 +93,10 @@ std::string ParameterEquilibirumFrequencies::getString(void) {
 }
 
 char* ParameterEquilibirumFrequencies::getCString(void) {
-
-    char tempStr[24];
     char* p = parmStr;
     for (int i=0; i<numStates; i++)
-        {
-        snprintf(tempStr, sizeof(tempStr), "%1.6lf\t", freqs[0][i]);
-        for (char* c=tempStr; *c != '\0'; c++)
-            {
-            (*p) = (*c);
-            p++;
-            }
-        }
-    (*p) = '\0';
+        p += snprintf(p, parmStrLen - (p - parmStr), "%1.6lf\t", freqs[0][i]);
+    *p = '\0';
     return parmStr;
 }
 

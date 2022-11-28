@@ -141,7 +141,7 @@ std::string ParameterIndelRates::getString(void) {
 
 char* ParameterIndelRates::getCString(void) {
 
-    snprintf(parmStr, sizeof(parmStr), "%1.6lf\t%1.6lf", getInsertionRate(), getDeletionRate());
+    snprintf(parmStr, parmStrLen, "%1.6lf\t%1.6lf", getInsertionRate(), getDeletionRate());
     return parmStr;
 }
 

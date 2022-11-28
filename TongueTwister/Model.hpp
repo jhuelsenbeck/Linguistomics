@@ -41,6 +41,8 @@ class WordLnLikeTask: public ThreadTask {
 class Model {
 
     public:
+        static const int                        PrintNumberSize = 12;
+
                                                 Model(void) = delete;
                                        explicit Model(RandomVariable* r, ThreadPool& threadPool);
                                                ~Model(void);

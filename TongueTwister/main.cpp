@@ -31,11 +31,13 @@ int main(int argc, char* argv[]) {
     printHeader();
 
     // set up the phylogenetic model
-    Model** model = new Model*[settings.getNumChains()];
-    for (int i=0; i<settings.getNumChains(); i++)
+    auto chains = settings.getNumChains();
+    Model** model = new Model*[chains];
+    for (int i=0; i< chains; i++)
         {
-        model[i] = new Model(rv, threadPool);
-        model[i]->setIndex(i); 
+        auto m = new Model(rv, threadPool);
+        m->setIndex(i);
+        model[i] = m;
         }
     
     // run the Markov chain Monte Carlo algorithm
@@ -43,7 +45,7 @@ int main(int argc, char* argv[]) {
     chain.run();
     
     delete rv;
-    for (int i=0; i<settings.getNumChains(); i++)
+    for (int i=0; i< chains; i++)
         delete model[i];
     delete [] model;
     

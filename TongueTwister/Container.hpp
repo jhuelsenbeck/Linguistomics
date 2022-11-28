@@ -40,6 +40,8 @@ class BufferTemplate: public BufferAllocator {
 
     public:
         BufferTemplate() {
+            endBuffer = NULL;
+            numElements = 0;
         }
 
         explicit BufferTemplate(const BufferTemplate<T>& a) {
@@ -395,8 +397,10 @@ class MatrixTemplate : public BufferTemplate<T> {
         }
 
         void divideByPowerOfTwo(int power) {
-            if (power > 0)
-              multiply(1.0 / (double)(1UL << power));
+            if (power > 0) {
+              auto factor = 1L << power;
+              multiply(1.0 / (double)factor);
+            }
         }
 
 

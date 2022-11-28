@@ -76,7 +76,7 @@ std::string ParameterRatesGammaShape::getString(void) {
 
 char* ParameterRatesGammaShape::getCString(void) {
 
-    snprintf(parmStr, sizeof(parmStr), "%1.6lf\t", alpha[0]);
+    snprintf(parmStr, parmStrLen, "%1.6lf\t", alpha[0]);
     return parmStr;
 }
 
