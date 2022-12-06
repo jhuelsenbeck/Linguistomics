@@ -286,7 +286,7 @@ namespace Figures.AverageTransitions {
 
   AlignedCountClass Display = new(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax, MinRate, true);
 
-  Body(DocumentClass document) = Display.PartitionBox(document);
+  Body(DocumentClass document) = Display.PartitionBox;
 }
 
 namespace Figures.AverageDiagonal {
@@ -303,13 +303,21 @@ namespace Figures.AverageMost {
 
 //======================================================================
 
+namespace Figures.AsymmetriesMatrix {
+  Title = "Asymmetries";
+
+  AsymmetriesClass Display = new(MainResults, MainResults.Output.QRates);
+
+  Body(DocumentClass document) = Display.PartitionBox;
+}
+
 namespace Figures.QRatesMatrix {
   MinRate = 0.005;
   Title   = "Q above {0}%"(MinRate*100);
 
   AlignedCountClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, MinRate, false);
 
-  Body(DocumentClass document) = Display.PartitionBox(document);
+  Body(DocumentClass document) = Display.PartitionBox;
 }
 
 namespace Figures.QRatesDiagonal {
@@ -698,9 +706,7 @@ namespace Figures.Alignment {
           Tex.downarrow;
           X: 1 pts;
         };
-        Span {
-          "=";
-        };
+        "=";
       }
     };
     Row {
@@ -742,7 +748,7 @@ namespace Figures.Alignment {
     };
     HBox {
       HomBox(example, data, 1, HMap1);
-      Canvas(0.25 inches);
+      Separation: 24 pts;
       HomBox(example, data, 2, HMap2);
     }
   };
@@ -1194,7 +1200,7 @@ namespace PaperSections.DataCuration {
       "The dashes ("; SQuote{"-"}; ") denote the absence of a homologous segment present in other word-forms. ";
       "A challenge for programming in linguistics is that the IPA representation of words are expressed in Unicode (UCS), not ASCII or ANSI. ";
       "This requires care with file formats, text encodings and diacritic compositional form. ";
-      "Furthermore, each text string can comprise several UCS code-points, so that the mapping between string characters and segments is not one-to-one. ";
+      "Furthermore, each IPA segment string can comprise several UCS code-points, so that the mapping between string characters and segments is not one-to-one. ";
       "Below is an example of a more complex encoding. The numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
     };
 
@@ -1462,11 +1468,7 @@ namespace PaperSections.Methods {
       SQuote {ec.Name};
     };
 
-    BodyPar {
-      Frame {
-        SegmentTable(ec, data, true);
-      }
-    };
+    SegmentTable(ec, data, true);
 
     BodyContinue {
       "The word for "; SQuote {ec.Cognate.Concept.Name};  " in "; ec.Taxon.Language; ", for example, is "
@@ -1526,11 +1528,7 @@ namespace PaperSections.Methods {
       SQuote {ec.Name}; " is:";
     };
 
-    BodyPar {
-      Frame {
-        SegmentTable(ec, MainResults.Data, false);
-      }
-    };
+    SegmentTable(ec, MainResults.Data, false);
 
     BodyPar {
       "Here, the segments for "; ec.Taxon.Language; " would be ";
@@ -1588,7 +1586,7 @@ namespace PaperSections.Methods {
 
     BodyPar {
       "Substitution of one segment for another is modeled using a continuous-time Markov model in which the possible states are the set of segments in the phonemic representations. ";
-      "At the heart of a continuous-time Markov chain is a rate matrix describing the rate of change between all pairs ofstates. ";
+      "At the heart of a continuous-time Markov chain is a rate matrix describing the rate of change between all pairs of states. ";
       "As an example, consider a simplified Markov process with only "; Cardinal(StateCount); " segments as states. ";
       "The rates of change between the pairs of states can be represented in table form as";
     };
@@ -1791,6 +1789,8 @@ namespace PaperSections.Methods {
     };
 
     NumberedList {
+      ParAlignment: ParAlignments.Left;
+
       Paragraph {
         "The current state of the chain is denoted ";
         RateMatrixParams; eos;
@@ -2044,23 +2044,14 @@ InsertDelete(by) = Span {
 };
 
 SegmentTable(ExampleConceptClass example, DataSetClass data, aligned) = BodyTable {
-  TextHeight: 10 pts;
-  Columns: [1.5 inches]*2;
+  Columns: [1.5 inches, 16 pts];
 
   var words = example.Cognate.Words;
   foreach (var taxon in data.Taxa) {
     Row {
-      Cell {
-        taxon.Language;
-      };
-
-      Cell {
-        IPAFamily;
-        Span {
-          var list = aligned ? words[taxon.Index].Padded : words[taxon.Index].Segments;
-          (each list).ShowBlock;
-        }
-      };
+      taxon.Language;
+      var list = aligned ? words[taxon.Index].Padded : words[taxon.Index].Segments;
+      (each list).ShowSegment;
     }
   }
 };

@@ -1190,7 +1190,7 @@ abstract class CountBaseClass {
     MaxDigits = 3;
   }
 
-  PartitionBox(DocumentClass document) = Paragraph {
+  PartitionBox = Paragraph {
     Style.SansSerif;
 
     var grid   = 0.125 pts;
@@ -1479,6 +1479,66 @@ class AlignedCountClass: CountBaseClass {
   };
 
   Pairs(top, predicate) = ShowChartPairs(top, SortedActions.FindSlice(predicate));
+}
+
+//======================================================================
+
+class AsymmetriesClass: CountBaseClass {
+  ListClass<AlignActionClass> ActionList;
+  MatrixClass                 Actions;
+  ResultsClass                Results;
+  var                         Factor;
+
+  Constructor(ResultsClass results, rates) {
+    super.Constructor(results.Data);
+    Results   = results;
+
+    var ordered = results.Data.UniqueSegments;
+    var length  = Segments.Length;
+
+    Actions    = new MatrixClass(length, length, null);
+    ActionList = new(length * length);
+
+    var maxrate = 0.0;
+    for (var i = 0; i < length; ++i) {
+      for (var j = 0; j < i; ++j) {
+        var a = new AlignActionClass(results, ordered[i], ordered[j], rates[i][j], rates[j][i], false);
+
+        var asym = a.Asymmetry;
+        if (asym > maxrate)
+          maxrate = asym;
+
+        ActionList.Add(a);
+        Actions.SetValue(i, j, a);
+      }
+    }
+    Factor = 100.0 / maxrate;
+
+//    var f = 100.0 / maxrate;
+//    foreach (var a in ActionList)
+//      a.Percent = a.Diff * f;
+  }
+
+  override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
+    var a = Actions.GetValue(si.Index, sj.Index);
+    if (valid a) {
+      var asym = a.Asymmetry * Factor;
+      if (asym > 0.5) {
+        return Canvas(size.Width, size.Height) {
+          X: x;
+          Y: y;
+          HAlign: HAligns.Center;
+          VAlign: VAligns.Center;
+          TipAction: a;
+
+          var f    = Integer(2.55 * (100.0 - asym));
+          Background: new ColorClass(f, 255, f);
+          Span {asym; TextDigits: 0};
+        };
+      }
+    }
+    return null;
+  }
 }
 
 //======================================================================
