@@ -480,6 +480,7 @@ class AlignActionClass: ActionClass {
   var          Rate,
                Reverse,
                Percent,
+               RPercent,
                Symmetric;
 
   Constructor(ResultsClass results, SegPartClass s0, SegPartClass s1, rate, reverse, symmetric) {
@@ -487,8 +488,8 @@ class AlignActionClass: ActionClass {
     Results   = results;
     S0        = s0;
     S1        = s1;
-    Rate      = rate * 100.0;
-    Reverse   = reverse * 100.0;
+    Rate      = rate;
+    Reverse   = reverse;
     Symmetric = symmetric;
   }
 
@@ -496,13 +497,6 @@ class AlignActionClass: ActionClass {
 
   ReverseRating {
     return Rate - 0.1 * Reverse;
-  }
-
-  Asymmetry {
-    var sum = Rate + Reverse;
-    if (sum > 0)
-      return Math.Abs(Rate - Reverse) / sum;
-    return 0;
   }
 
   ShowPartition(SegPartClass s, textheight) = Canvas(textheight * 2.5) {
@@ -529,20 +523,27 @@ class AlignActionClass: ActionClass {
 
   override GetLayoutSpan = ShowBox(11 pts);
 
+  ShowNumber(name, number, percent) = Paragraph {
+    name;
+    ": ";
+    Span {
+      TextDigits: 5;
+      number;
+    };
+    " (";
+    Span {
+      TextDigits: 1;
+      percent;
+      Lang.PercentOfMax;
+    };
+    ")";
+  };
+
   GetExamples(range) = Block {
     TextHeight: 14 pts;
     GetLayoutSpan;
-    Paragraph {
-      TextDigits: 2;
-      Rate;
-      "% (";
-      Span {
-        TextDigits: 1;
-        Percent;
-        Lang.PercentOfMax;
-      };
-      ")";
-    };
+    ShowNumber("Rate", Rate, Percent);
+    ShowNumber("Reverse", Reverse, RPercent);
 
     var sorted = GetList().Slice(range);
     if (valid sorted) {
