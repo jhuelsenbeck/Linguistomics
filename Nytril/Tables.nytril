@@ -312,17 +312,6 @@ class TabOptionsClass {
     }
   };
 
-  MatchInclude(SegPartClass segment, place) {
-    return segment.Segment.?Place == place and
-           segment.Features.NotFlag(Exclude) and
-           segment.Features.HasFlag(Include) and
-           Manners.FindAny(manner => CheckFlags(segment.Features, manner | All));
-  }
-
-  MatchPlace(DataSetClass data, place) {
-    return data.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
-  }
-
   AddRow(DataSetClass data, SegmentSetClass set, places, f) = Row {
     var features = f | All;
     Cell(PadLR(2 pts)) {
@@ -342,13 +331,24 @@ class TabOptionsClass {
       SegmentBlock(set, all.FindSlice(s => s.Segment.?Place == place and CheckFlags(s.Features, features)));
   };
 
+  MatchInclude(SegPartClass segment, Places place) {
+    return segment.Segment.?Place == place and
+           segment.Features.NotFlag(Exclude) and
+           segment.Features.HasFlag(Include) and
+           Manners.FindAny(manner => CheckFlags(segment.Features, manner | All));
+  }
+
+  MatchPlace(DataSetClass data, place) {
+    return data.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
+  }
+
   ShowTable(DataSetClass data, SegmentSetClass set) = Block {
-    var places = Places.FindSlice(place => MatchPlace(data, place));
+    var places = Places.Values.FindSlice(place => MatchPlace(data, place));
     Style.TitleBar {Title};
     Table {
       Style.TableBorder;
       Columns: [ColWidth {Border: BorderR(0.5 pts)}] +
-               [DocMetrics.CellSize.Width {HAlign: HAligns.Center; Border: BorderR(0.25 pts)}] * places.Length;
+               [DocMetrics.CellSize.Width {HAlign: HAligns.Center; Border: BorderR(0.25 pts)}];
 
       Row {
         TextHeight: 6 pts;
@@ -467,7 +467,7 @@ namespace MatchingVowels {
       HAlign: HAligns.Center;
       Style.TableBorder;
       var border = Border: BorderR(0.5 pts);
-      Columns: [(1 inch) border] + [DocMetrics.BoxSize.Width*4 border] * Backnesses.Length;
+      Columns: [(1 inch) border] + [DocMetrics.BoxSize.Width*4 border] * Backnesses.Count;
       Row {
         TextHeight: 10 pts;
         Style.HeaderCell;
@@ -718,7 +718,7 @@ class SegmentDisplayClass {
   };
 
   ShowConceptGroups = Block {
-    var groups = WordGroups[1..];
+    WordGroups[] groups = WordGroups.Values[1..];
     Table {
       Style.TableBorder;
       Columns: [0.25 inches] + [1 inch] * (2+groups.Length);
