@@ -309,8 +309,8 @@ std::string Model::getParameterString(void) {
         }
     (*p) = '\0';
     
-    std::cout << str << std::endl;
-    printf("%s", parameterString);
+    //std::cout << str << std::endl;
+    //printf("%s", parameterString);
         
     return str;
 }

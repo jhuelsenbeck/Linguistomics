@@ -11,6 +11,9 @@ void printHeader(void);
 
 int main(int argc, char* argv[]) {
 
+    // print the header
+    printHeader();
+
     // Read the user settings from the command-line arguments. See the
     // header of UserSettings.cpp for a full list of command options.
     UserSettings& settings = UserSettings::userSettings();
@@ -27,9 +30,6 @@ int main(int argc, char* argv[]) {
     else
         rv = new RandomVariable(settings.getSeed());
         
-    // print the header
-    printHeader();
-
     // set up the phylogenetic model
     auto chains = settings.getNumChains();
     Model** model = new Model*[chains];
@@ -55,6 +55,7 @@ int main(int argc, char* argv[]) {
 void printHeader(void) {
 
     std::cout << "   TongueTwister 1.0" << std::endl;
+    std::cout << "   * Running on " << std::thread::hardware_concurrency() << " threads" << std::endl;
     std::cout << "   * John P. Huelsenbeck (University of California, Berkeley)" << std::endl;
     std::cout << "   * Shawn McCreight (University of California, Berkeley)" << std::endl;
     std::cout << "   * David Goldstein (University of California, Los Angeles)" << std::endl;
