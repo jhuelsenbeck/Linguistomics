@@ -345,7 +345,18 @@ double ParameterExchangabilityRates::update(int) {
     
     modelPtr->setUpdateLikelihood();
     modelPtr->flipActiveLikelihood();
-
+    
+    // quick check that the exchangability rates are still valid
+    double sum = 0.0;
+    bool isBad = false;
+    for (int i=0; i<rates[0].size(); i++)
+        {
+        sum += rates[0][i];
+        if (rates[0][i] < 0.0)
+            isBad = true;
+        }
+    if (isBad == true || fabs(1.0-sum) > 0.000001)
+        lnP = -1e100;
 
     return lnP;
 }
