@@ -324,7 +324,6 @@ class AlignmentChartClass {
 class LanguageClass: FactClass {
   field var  Name,
              Cases;
-  ImageClass MapImage;
   var        LangIndex,
              MapAttribution;
 
@@ -344,6 +343,8 @@ class LanguageClass: FactClass {
     Name;
   };
 
+  virtual MapImage(SizeClass size) = null;
+
   override GetLayoutTip = Block {
     Paragraph {
       Bold;
@@ -352,29 +353,35 @@ class LanguageClass: FactClass {
     };
     Description;
 
-    if (valid MapImage)
-      ShowMap(new(4 inches, 2 inches));
+    ShowMap(new(4 inches, 2 inches));
   };
 
   static ImageClass LoadImage(name) = new ImageClass(Info.ImageFolder FileName(name));
 
-  ShowMap(SizeClass size) = HBox {
-    HAlign: HAligns.Center;
+  ShowMap(SizeClass size) {
+    var h     = 6 pts;
+    var image = MapImage(new(size.Width, size.Height - h*2));
+    if (valid image) {
+      return HBox {
+        HAlign: HAligns.Center;
 
-    VBox {
-      var h = 6 pts;
-      MapImage.FitSize(new(size.Width, size.Height - h*2));
+        VBox {
+          image;
 
-      if (valid MapAttribution) {
-        Frame(size.Width) {
-          TextHeight: h;
-          TextColor: 80%;
-          Lang.Credit;
-          MapAttribution;
+          if (valid MapAttribution) {
+            Frame(size.Width) {
+              TextHeight: h;
+              TextColor: 80%;
+              Lang.Credit;
+              MapAttribution;
+            }
+          }
         }
-      }
+      };
     }
-  };
+    else
+      return null;
+  }
 }
 
 //======================================================================
@@ -633,7 +640,6 @@ class WordPairClass {
 }
 //======================================================================
 
-
 class DataSetClass {
   LanguageClass[]             LanguageSet;
   SegPartClass[]              UniqueSegments;
@@ -768,7 +774,8 @@ class DataSetClass {
     }
     UniqueSegments = set.Values;
 
-    CompletedRead(concepts);
+    GetConceptExamples(concepts);
+    CompletedRead;
   }
 
   void ReadExperiment {
@@ -812,7 +819,8 @@ class DataSetClass {
     UsedConcepts = conceptlist.Values;
     UsedCognates = cognatelist.Values;
 
-    CompletedRead(concepts);
+    GetConceptExamples(concepts);
+    CompletedRead;
   }
 
   void AddLanguageSet(languageset) {
@@ -836,11 +844,13 @@ class DataSetClass {
     DefWord.Init;
   }
 
-  void CompletedRead(concepts) {
+  virtual void GetConceptExamples(concepts) {
     ExampleConcept = concepts.Stone;
     FigureConcept  = concepts.What;
     DataConcept    = concepts.Mountain;
+  }
 
+  void CompletedRead {
     var factor = 1.0 / SegmentCount;
     foreach (var segment in UniqueSegments) {
       segment.Index         = each0;

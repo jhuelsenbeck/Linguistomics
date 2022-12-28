@@ -1,20 +1,13 @@
 using IO, WordGroups, Languages;
 
-namespace Trial;
-
 include "Concepts/Test";
 
-Generations   = 1_000_000;
-PrintFreq     = 10000;
-
-RunFolder     = Folder("Test");
-ResultsFolder = Folder("rwin");
-
-ExampleConcept = Concepts.Woman;
-FigureConcept  = Concepts.Rain;
-DataConcept    = Concepts.Woman;
-
-IncludeWordGroups = Leipzig Swadesh100 Swadesh207;
+namespace Languages {
+  LanguageClass LanguageA  = new TestLanguageClass(#fcb91dfe-cfde-470d-962e-2cf2dc248e79#, "Language A");
+  LanguageClass LanguageB  = new TestLanguageClass(#1d71a11c-41c3-46f0-94f3-2a7b96b0d2f1#, "Language B") {LanguageParent to LanguageA};
+  LanguageClass LanguageC  = new TestLanguageClass(#3b6800d8-fa4d-418f-a9f1-3cad83ac3860#, "Language C") {LanguageParent to LanguageB};
+  LanguageClass LanguageD  = new TestLanguageClass(#b648d3a2-7c51-4df6-9a4a-047a0ae2285e#, "Language D") {LanguageParent to LanguageB};
+}
 
 LanguageClass[] LanguageList = [
   LanguageA,
@@ -23,73 +16,62 @@ LanguageClass[] LanguageList = [
   LanguageD,
 ];
 
-NumberedTree = Branch(1) {
-  Leaf(LanguageA, 1);
-  Branch(2) {
-    Leaf(LanguageB, 3);
-    Branch(4) {
-      Leaf(LanguageC, 5);
-      Leaf(LanguageD, 6);
+//======================================================================
+
+GetPriorTree = Branch {
+  new Leaf(LanguageA);
+  new Branch {
+    new Leaf(LanguageB);
+    new Branch {
+      new Leaf(LanguageC);
+      new Leaf(LanguageD);
     };
   }
 };
 
 //======================================================================
 
-GetPriorTree(portuguese) = Branch {
-  Leaf(Latin);
-  Branch {
-    Leaf(Romanian);
-    Branch {
-      Branch {
-        Branch {
-          Leaf(Walloon);
-          Leaf(French);
-        };
-        Branch {
-          Branch {
-            portuguese;
-            Leaf(Spanish);
-          };
-          Leaf(Catalan);
-        }
-      };
-      Branch {
-        Leaf(Friulian);
-        Leaf(Italian);
-      }
-    }
-  }
-};
-
-//======================================================================
-
-class TestExperimentClass: ExperimentClass {
-  Constructor {
-    var data = new DataSetClass(Swadesh100 Leipzig Swadesh207, LanguageList, "207-word Swadesh list of basic vocabulary");
-
-    super.Constructor(null, #8bbc5666-8f8d-49d9-b67d-fc12321ace43#, "All words", "All-100", LanguageList, Swadesh100 Leipzig Swadesh207, new NaturalPartitionClass(data));
+class TestExperimentClass: DataSetClass {
+  Constructor(info) {
+    super.Constructor(info, "Test", "Test", 0);
   }
 
-  override NodeClass PriorTree = GetPriorTree(Branch {
-    Leaf(LanguageA);
-    Branch {
-      Leaf(LanguageB);
-      Branch {
-        Leaf(LanguageC);
-        Leaf(LanguageD);
+  override NodeClass PriorTree = new Branch {
+    new Leaf(LanguageA);
+    new Branch {
+      new Leaf(LanguageB);
+      new Branch {
+        new Leaf(LanguageC);
+        new Leaf(LanguageD);
       };
     }
-  });
+  };
 
-  override NodeClass NumberedTree = GetNumberedTree(NBranch(12, 1) {NLeaf(Portuguese, 1); NLeaf(PortugueseB, 1)});
+  override NodeClass NumberedTree = new NBranch(1) {
+    new NLeaf(this, LanguageA, 1);
+    new NBranch(2) {
+      new NLeaf(this, LanguageB, 3);
+      new NBranch(4) {
+        new NLeaf(this, LanguageC, 5);
+        new NLeaf(this, LanguageD, 6);
+      };
+    }
+  };
+
+  override void GetConceptExamples(concepts) {
+    ExampleConcept = concepts.Woman;
+    FigureConcept  = concepts.Rain;
+    DataConcept    = concepts.Woman;
+  }
 }
 
 //======================================================================
 
-ExperimentClass[] Experiments = [
-   new TestExperimentClass,
-];
+DataSetClass DataSet {
+  var data = new TestExperimentClass(Info);
+  data.ReadRawWords(Concepts, Swadesh100 Leipzig Swadesh207, LanguageList, -1);
+  return data;
+}
 
 //======================================================================
 
