@@ -194,15 +194,13 @@ namespace Figures.ExchangeabilityChart {
                     Tip: c;
                     var center = new PointClass(d * 0.5);
                     var x      = fc * c.Upper;
-                    Figure {
-                      Fill: 80%;
+                    Figure(80%) {
                       Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                       x = fc * c.Lower;
                       Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
 
-                    Figure {
-                      Stroke: 1;
+                    Figure(null, 1) {
                       x = fc * c.Mean;
                       Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
@@ -655,22 +653,19 @@ namespace Figures.Alignment {
 
   ContentBox(content) = HBox(null, null, PadAll(2 pts)) {
     Margin: PadL(4 pts);
-    Border: 1 {Color: ArrowColor};
+    Border: new EdgeClass(0.5 pts, ArrowColor);
     content;
   };
 
   ArrowFigure(SizeClass size) = Canvas(size.Width, size.Height) {
-    Figure {
-      Stroke: 1.5 {Color: ArrowColor};
+    Figure(null, new(1.5, ArrowColor)) {
       FigurePath {
         MoveTo(0, 0);
         QuadTo(new(size.Width*0.92, size.Height*0.4), new(size.Width - Arrowhead*0.5, size.Height - Arrowhead));
       };
     };
-    Figure {
-      Fill: ArrowColor;
-      FigurePath {
-        Closed: true;
+    Figure(ArrowColor) {
+      FigurePath(true) {
         MoveTo(size.Width - Arrowhead, size.Height - Arrowhead);
         LineTo(size.Width, size.Height - Arrowhead);
         LineTo(size.Width - Arrowhead * 0.5, size.Height);

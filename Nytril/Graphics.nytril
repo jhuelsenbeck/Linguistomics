@@ -549,8 +549,7 @@ namespace Style {
 
   TimelineRow(options, node) = HBox {
     X: options.Width - options.Width * node.BranchLength / options.MaxYear;
-    Figure {
-      Fill: Colors.Green;
+    Figure(Colors.Green) {
       Rectangle(new(0, new(5, options.TextHeight)))
     };
     Paragraph {
@@ -566,9 +565,7 @@ namespace Style {
     Marker: i => "{0}."(i+1);
   };
 
-  BranchMarker = Figure {
-    Stroke: 1 pt {Color: Colors.Gray};
-    Fill: Colors.Black;
+  BranchMarker = Figure(Colors.Black, new StrokeClass(1 pt, Colors.Gray)) {
     Ellipse(new(0, 1 pts))
   };
 
@@ -587,7 +584,7 @@ namespace Style {
     BorderRadius: 8 pts;
     Margin: PadB(20 pts);
     if (valid title) {
-      Border: 0.5 pts {Color: 90%};
+      Border:new EdgeClass(0.5 pts, 90%);
       Style.Header1 {
         HAlignment: HAligns.Center;
         title;
@@ -656,15 +653,14 @@ namespace Style {
     lang.GetVariableName;
   };
 
-  ShowLanguageList(list) = Table {
-    Padding: PadLR(2);
+  ShowLanguageList(list) = Table(PadLR(2)) {
     Columns: [1.5 inch];
     Row {
       Background: Colors.DarkGray;
       TextColor: Colors.White;
       Lang.Name;
     };
-    Border: 0.25 pts {Color: Colors.DarkGray};
+    Border: new EdgeClass(0.25 pts, Colors.DarkGray);
     LanguageRow(each list)
   };
 
@@ -862,17 +858,14 @@ namespace Graphics {
     return ArcTan2(p2.Y - p1.Y, p2.X - p1.X);
   }
 
-  Line(LineStyleClass line, PointClass p1, PointClass p2) = Figure {
-    Stroke: line.LineSize {Color: line.LineColor; LineCap: LineCaps.Round};
+  Line(LineStyleClass line, PointClass p1, PointClass p2) = Figure(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
     FigurePath {
       p1;
       LineTo(p2);
     };
   };
 
-  TwoArrowLine(LineStyleClass line, PointClass p1, PointClass p2) = Figure {
-    Fill: line.LineColor;
-
+  TwoArrowLine(LineStyleClass line, PointClass p1, PointClass p2) = Figure(line.LineColor) {
     var angle = GetAngle(p1, p2);
     var opp   = angle - Ninety;
     var a1    = ExtendPoint(p1, line.Edge, angle + OneEighty - line.Angle);
@@ -882,10 +875,8 @@ namespace Graphics {
     var b2    = ExtendPoint(b1, line.Flat, opp);
     var b3    = ExtendPoint(b2, line.LineSize, opp);
 
-    FigurePath {
-      Closed: true;
+    FigurePath(true) {
       p1;
-
       LineTo(a1);
       LineTo(a2);
       LineTo(b2);
@@ -898,9 +889,7 @@ namespace Graphics {
     }
   };
 
-  CircleLine(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure {
-    Stroke: line.LineSize {Color: line.LineColor; LineCap: LineCaps.Round};
-
+  CircleLine(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
     var angle1 = angle + anglegap;
     var angle2 = angle - anglegap;
     var an1    = angle1 - Ninety;
@@ -914,9 +903,7 @@ namespace Graphics {
     }
   };
 
-  CircleArrow(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure {
-    Fill: line.LineColor;
-
+  CircleArrow(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure(line.LineColor) {
     var angle1 = angle + anglegap;
     var angle2 = angle - anglegap;
     var an1    = angle1 - Ninety;
@@ -930,8 +917,7 @@ namespace Graphics {
     var b2     = ExtendPoint(b1, line.Flat, an2 - Ninety);
     var b3     = ExtendPoint(b2, line.LineSize, an2 - Ninety);
 
-    FigurePath {
-      Closed: true;
+    FigurePath(true) {
       p1;
       LineTo(a1);
       LineTo(a2);
