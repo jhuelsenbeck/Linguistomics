@@ -63,9 +63,9 @@ class SegmentClass {
       Via,
       To;
 
-  Constructor(description, text, code) {
+  Constructor(description, string text, code) {
     Description = description.Replace("-", "_");
-    Text        = text.GetString(NormalizationForms.FormC);
+    Text        = text.Normalize(NormalizationForms.FormC);
     Code        = code;
     Props       = 0;
     From        = MouthPlacements.None;
@@ -125,7 +125,7 @@ class LogSchemaClass: DbSchemaClass {
   }
 
   void AddFeature(name, DictionaryClass fset, SegmentClass s) {
-    name = String(ToUpper(name[0]) + name[1..]);
+    name = (ToUpper(name[0]) + name[1..]) as string;
 
     switch (name) {
       case "From_high":
@@ -241,7 +241,7 @@ class LogSchemaClass: DbSchemaClass {
     }
 
     var fp = fset.FindKey(name);
-    if (not valid fp) {
+    if (fp is null) {
       fp = new FeatureClass(name, fset.Length);
       fset.Add(fp, name);
     }
@@ -280,7 +280,7 @@ class LogSchemaClass: DbSchemaClass {
       Span {
         "S";
         segment.Code;
-        Space * (5 - String(segment.Code).Length);
+        Space * (5 - (segment.Code as string).Length);
         "= new ";
 
         if ((segment.Props & vowel) != 0)

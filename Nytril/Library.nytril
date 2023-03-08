@@ -10,6 +10,11 @@ class AlignDataClass {
     Prob    = prob;
     WordSet = wordset;
   }
+
+  override GetLayoutTip = Span {
+    TextDigits: 2;
+    "{0}% probability"(Prob*100);
+  };
 }
 
 //======================================================================
@@ -102,7 +107,7 @@ class AlignPairClass {
       foreach (var taxon in Data.Taxa) {
         HBox(null, boxheight) {
           var word = wordset[each0];
-          if (valid word) {
+          if (word is valid) {
             foreach (var c in word) {
               Canvas(BoxSize.Width, BoxSize.Height) {
                 HAlign: HAligns.Center;
@@ -133,7 +138,7 @@ class AlignPairClass {
     ValueLabel: "%";
     ChartSeries {
       foreach (var a in Cognate.Alignments) {
-        a.Prob * 100.0;
+        new DataPointClass(each0, a.Prob * 100.0) {Reference: a};
         if (each1 >= max)
           break;
       }
@@ -245,7 +250,7 @@ class AlignmentChartClass {
     Border: 0.5;
 
     // Try to make proportional squares
-    var xitems = Integer(size.Width / 130);
+    var xitems = size.Width / 130 as int;
     var yitems = (Results.Alignments.Length + xitems - 1) div xitems;
     var bsize  = new SizeClass(size.Width / xitems, size.Height / yitems);
     var x      = bsize.Width * 0.5;
@@ -301,7 +306,7 @@ class AlignmentChartClass {
         }
       }
 
-      if (valid found) {
+      if (found is valid) {
         var ap = new AlignPairClass(data, found);
         Row {
           VAlign: VAligns.Top;
@@ -361,14 +366,14 @@ class LanguageClass: FactClass {
   ShowMap(SizeClass size) {
     var h     = 6 pts;
     var image = MapImage(new(size.Width, size.Height - h*2));
-    if (valid image) {
+    if (image is valid) {
       return HBox {
         HAlign: HAligns.Center;
 
         VBox {
           image;
 
-          if (valid MapAttribution) {
+          if (MapAttribution is valid) {
             Frame(size.Width) {
               TextHeight: h;
               TextColor: 80%;
@@ -419,17 +424,18 @@ class WordClass: FactClass {
 
   void InitRaw(variable, SegPartDictionary lookup) {
     // IPA text and word text must be in the same unicode normaization form so comparisons are accurate
-    Text     = Text.GetString(NormalizationForms.FormC);
     Variable = variable;
 
-    if (valid Text) {
+    if (Text is valid) {
+      Text = (Text as string).Normalize(NormalizationForms.FormC);
+
       var segments = lookup.FindTokens(Text, IPA.NullSegment);
       Aligned  = segments.FindSlice(s => s.Segment.Gap or (not s.Punctuation));
       Segments = segments.FindSlice(s => not s.Punctuation);
 
       // Test that the word's text is the same as the segments converted back into text
       var view = Span {(each segments).Ipa};
-      System.Assert(Text == view.GetString(), "Round-trip error with text {0}-{1}"(Text, view), Text);
+      System.Assert(Text == (view as string), "Round-trip error with text {0}-{1}"(Text, view), Text);
       Connect;
     }
     else
@@ -528,9 +534,9 @@ class ConceptClass: FactClass {
             WordGroup;
 
   Constructor(variable) {
-    super.Constructor(variable.GetVariableFullName);
+    super.Constructor(variable.GetVariable.FullName);
     Variable = variable;
-    Name     = variable.GetVariableName;
+    Name     = variable.GetVariable.Name;
   }
 
   void Check {
@@ -561,9 +567,9 @@ class CognateClass: FactClass {
                Variable;
 
   Constructor(ConceptClass concept, variable) {
-    super.Constructor(variable.GetVariableFullName);
+    super.Constructor(variable.GetVariable.FullName);
 
-    Name      = variable.GetVariableName;
+    Name      = variable.GetVariable.Name;
     Variable  = variable;
     Concept   = concept;
     MaxLength = 0;
@@ -600,7 +606,7 @@ class TaxonClass {
   Constructor(LanguageClass language) {
     Index     = each0;
     Language  = language;
-    Variable  = language.GetVariableName;
+    Variable  = language.GetVariable.Name;
     WordCount = 0;
   }
 
@@ -696,7 +702,7 @@ class DataSetClass {
 
     MainRun = Custom.Posterior.Run[runindex];
 
-    if (invalid config)
+    if (config is null)
       ReadExperiment;
   }
 
@@ -718,7 +724,7 @@ class DataSetClass {
 
       if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(includewords)) {
         foreach (var cognate in conceptvar) {
-          var vname = cognate.GetVariableName();
+          var vname = cognate.GetVariable.Name;
           var inc   = true;
 
           switch (vname) {
@@ -732,9 +738,9 @@ class DataSetClass {
           if (inc) {
             var count = 0;
             foreach (var word in cognate) {
-              if (valid word) {
-                var taxon = TaxonSet.FindKey(word.GetVariableName);
-                if (valid taxon)
+              if (word is valid) {
+                var taxon = TaxonSet.FindKey(word.GetVariable.Name);
+                if (taxon is valid)
                   ++count;
               }
             }
@@ -756,7 +762,7 @@ class DataSetClass {
 
     var lookup = new SegPartDictionary(IPASegments.Length);
     foreach (var segment in IPASegments) {
-      if (valid segment.Ipa)
+      if (segment.Ipa is valid)
         lookup.Add(new(segment), segment.Ipa);
     }
 
@@ -787,13 +793,13 @@ class DataSetClass {
     var slist  = new ListClass<SegPartClass>(run.Segments.Length);
     var lookup = new SegmentDictionary(IPASegments.Length);
     foreach (var segment in IPASegments) {
-      if (valid segment.Ipa)
+      if (segment.Ipa is valid)
         lookup.Add(segment, segment.Ipa);
     }
 
     foreach (var text in run.Segments) {
       var s = lookup.FindKey(text);
-      if (valid s)
+      if (s is valid)
         slist.Add(new(s));
       else
         System.Assert(false, "Missing Segment " + text);
@@ -866,7 +872,7 @@ class DataSetClass {
     var used  = 0.0;
     foreach (var c in UsedCognates) {
       var word = c.Words[index];
-      if (valid word && valid word.Text)
+      if (word is valid and word.Text is valid)
         ++used;
 
       ++count;
@@ -879,7 +885,7 @@ class DataSetClass {
     foreach (var c in UsedCognates) {
       var used = 0;
       foreach (var word in c.Words) {
-        if (valid word && valid word.Text)
+        if (word is valid and word.Text is valid)
           ++used;
       }
       count.AddValue(used, 1.0);
@@ -888,8 +894,7 @@ class DataSetClass {
   }
 
   CognateClass[] GetSortedCognates {
-    if (invalid SortedCognates)
-      SortedCognates = UsedCognates.Sort(false);
+    SortedCognates ??= UsedCognates.Sort(false);
     return SortedCognates;
   }
 
@@ -901,8 +906,8 @@ class DataSetClass {
     WordList.SetAllValues(DefWord);
     var maxlength = 0;
     foreach (var text in cognate.Variable) {
-      var taxon = TaxonSet.FindKey(text.GetVariableName);
-      if (valid taxon) {
+      var taxon = TaxonSet.FindKey(text.GetVariable.Name);
+      if (taxon is valid) {
         var word = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.Variable, text, taxon, cognate);
         word.InitRaw(text, lookup);
         maxlength = Math.Max(maxlength, word.Aligned.Length);
@@ -920,7 +925,7 @@ class DataSetClass {
 
     foreach (var word in cognate.Words) {
       var a = word.Aligned;
-      if (valid a) {
+      if (a is valid) {
         if (a.Length < maxlength)
           word.Padded = a + [IPAParts.Gap] * (maxlength - a.Length);
         else
@@ -935,7 +940,7 @@ class DataSetClass {
       var gapcount = 0;
 
       foreach (var word in cognate.Words) {
-        if (valid word.Aligned) {
+        if (word.Aligned is valid) {
           ++count;
           if (word.Padded[i] == IPAParts.Gap)
             ++gapcount;
@@ -952,9 +957,9 @@ class DataSetClass {
 
 
     foreach (var word in cognatevar) {
-      if (valid word) {
+      if (word is valid) {
         var taxon = Taxa[each0];
-        if (valid taxon) {
+        if (taxon is valid) {
           ++taxon.WordCount;
           ++WordCount;
 
@@ -1046,7 +1051,7 @@ class DataSetClass {
   ShowTrees(ModelFolderClass folder) = Block {
     var any = false;
     foreach (var r in folder.Posterior.Run) {
-      if (valid r.Tree) {
+      if (r.Tree is valid) {
         any = true;
         break;
       }
@@ -1060,7 +1065,7 @@ class DataSetClass {
       };
 
       foreach (var r in folder.Posterior.Run) {
-        if (valid r.Tree)
+        if (r.Tree is valid)
           Style.ShowTree("Run {0}"(each1), null, r.Tree, null);
       }
     }
@@ -1273,14 +1278,14 @@ abstract class CountBaseClass {
   abstract AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size);
 
   Greenish(frac) {
-    var f = Integer(255.0 - frac * 255.0);
+    var f = (255.0 - frac * 255.0) as int;
     if (f < 255)
       return new ColorClass(f, 255, f);
     return null;
   }
 
   Redish(frac) {
-    var f = Integer(255.0 - frac * 255.0);
+    var f = (255.0 - frac * 255.0) as int;
     if (f < 255)
       return new ColorClass(255, f, f);
     return null;
@@ -1315,7 +1320,7 @@ class PriorCountClass: CountBaseClass {
               if (si != sj and not si.Punctuation and not sj.Punctuation) {
                 var list = TMatrix.GetValue(si.Index, sj.Index);
                 var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
-                if (invalid list) {
+                if (list is null) {
                   list = new ListClass<WordPairClass>(128);
                   TMatrix.SetValue(si.Index, sj.Index, list);
                 }
@@ -1333,7 +1338,7 @@ class PriorCountClass: CountBaseClass {
 
   override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
     var value = TMatrix.GetValue(si.Index, sj.Index);
-    if (invalid value)
+    if (value is null)
       return null;
 
     return Canvas(size.Width, size.Height) {
@@ -1483,7 +1488,7 @@ class AlignedCountClass: CountBaseClass {
 
   override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
     var a = Actions.GetValue(si.Index, sj.Index);
-    if (valid a) {
+    if (a is valid) {
       return Canvas(size.Width, size.Height) {
         X: x;
         Y: y;
@@ -1509,7 +1514,7 @@ class AsymmetriesClass: AlignedCountClass {
 
   override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
     var a = Actions.GetValue(si.Index, sj.Index);
-    if (valid a) {
+    if (a is valid) {
       return Canvas(size.Width, size.Height) {
         X: x;
         Y: y;
@@ -1860,7 +1865,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
             var frac = factor * rate.Distance;
             Canvas(lw * frac, 2) {
               Background: Colors.Red;
-              Tip: new TipClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)));
+              Tip: new TipClass("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language));
             };
           }
         };
@@ -1975,7 +1980,7 @@ class PartitionFrequencyClass: FrequencyChartClass {
           var frac = factor * rate.Distance;
           Canvas(lw * frac, 2) {
             Background: Colors.Red;
-            Tip: new TipClass(String("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language)));
+            Tip: new TipClass("{0}% different from {1}"(frac*100.0 {TextDigits: 1}, r0.Taxon.Language));
           };
         };
         LangCanvas(rate, bw, h);

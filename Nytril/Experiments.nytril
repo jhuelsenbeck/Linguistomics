@@ -10,12 +10,12 @@ class LangNodeClass: NodeClass {
   }
 
   override void ResolveData {
-    if (valid Name) {
+    if (Name is valid) {
       var f = Languages.FindFirst(l => l.Name == Name);
-      if (valid f)
+      if (f is valid)
         Label = f;
     }
-    if (valid Probability and HasChildren) {
+    if (Probability is valid and HasChildren) {
       Label = Span {
         TextColor: Colors.LightGray;
         TextHeight: 8 pts;
@@ -57,9 +57,8 @@ class RunExperimentClass {
     Config        = config ?? IO.ReadScript(Info.ExperimentRoot RootFolder Info.ParametersFile).Root;
   }
 
-  ArgString(arg, text) = Span {
-    var path = String(text);
-    if (valid arg) {
+  ArgString(arg, string path) = Span {
+    if (arg is valid) {
       "-";
       arg;
       Space;

@@ -31,7 +31,7 @@ namespace DocMetrics {
 }
 
 ShowString(text) = Span {
-  if (valid text) {
+  if (text is valid) {
     TextColor: Style.StringColor;
     QuoteString(text);
   }
@@ -59,7 +59,7 @@ class ConfigFileClass {
   AddWord(WordClass word, last) = Span {
     "  {";
     Variable("Taxon");
-    var n = word.Language.GetVariableName;
+    var n = word.Language.GetVariable.Name;
     ShowString(n);
     CommaSpace;
     Space * (Data.MaxLanguageName - n.Length);
@@ -86,7 +86,7 @@ class ConfigFileClass {
     };
 
     TextBlock {
-      var good = cognate.Words.FindSlice(w => valid w.Aligned);
+      var good = cognate.Words.FindSlice(w => w.Aligned is valid);
       var lg   = good.Length-1;
       foreach (var word in good)
         AddWord(word, each0 == lg);

@@ -1,4 +1,4 @@
-using Format, Units, SegmentFeatures, Math, Style, LinkTypes;
+using Format, Units, SegmentFeatures, Style, LinkTypes;
 //======================================================================
 
 class PartitionClass: FactClass {
@@ -109,7 +109,7 @@ abstract class RuleClass {
     var i    = 0;
     foreach (var filter in FiltersPlus) {
       var find = GetMatching(segments, filter);
-      if (valid find) {
+      if (find is valid) {
         var part = new PartitionClass(i, filter.Name, find);
         list.Add(part);
         ++i;
@@ -239,7 +239,7 @@ abstract class RuleClass {
       var i = 0;
       foreach (var filter in FiltersPlus) {
         var matching = GetMatching(segments, filter);
-        if (valid matching) {
+        if (matching is valid) {
           HBox(null, null, PadLR(1)) {
             VAlign: VAligns.Center;
             Margin: 2;
@@ -454,7 +454,7 @@ class TranActionClass: ActionClass {
 
   override GetLayoutTip {
     var count = Math.Min(List.Length, 30);
-    return Frame(Min(count*3, 6) inches) {
+    return Frame(Math.Min(count*3, 6) inches) {
       ShowSegments(count);
     };
   }
@@ -545,7 +545,7 @@ class AlignActionClass: ActionClass {
     ShowNumber("Reverse", Reverse, RPercent);
 
     var sorted = GetList().Slice(range);
-    if (valid sorted) {
+    if (sorted is valid) {
       Paragraph {
         SpaceBefore: 6 pts;
         "Examples:";
@@ -587,17 +587,17 @@ class AlignActionClass: ActionClass {
                 }
               }
             }
-            if (valid found)
+            if (found is valid)
               break;
           }
-          if (valid found)
+          if (found is valid)
             break;
         }
-        if (valid found)
+        if (found is valid)
           break;
       }
 
-      if (valid found)
+      if (found is valid)
         list.Add(new(found, cognate));
     }
     return list.Sort(true, ref CompareProb);
@@ -631,14 +631,14 @@ class CalcRatesClass {
   void Calibrate(SizeClass size) {
     var middle = new PointClass(size.Width * 0.5, size.Height * 0.5);
 
-    MaxExtent    = Min(middle.X, middle.Y);
+    MaxExtent    = Math.Min(middle.X, middle.Y);
     MaxRadius    = MaxExtent * 0.2;
     MaxLine      = MaxRadius * 0.3;
     LoopRadius   = MaxRadius * 0.25;
     LoopDistance = LoopRadius * 0.5;
 
 
-    var fmax = MaxRadius / Sqrt(Transition.MaxFrequency); // Proportional to area, so use SQRT of frequency
+    var fmax = MaxRadius / Math.Sqrt(Transition.MaxFrequency); // Proportional to area, so use SQRT of frequency
 
     RateScale = MaxLine / Transition.MaxRate;
 
@@ -647,12 +647,12 @@ class CalcRatesClass {
 
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;
-      partition.Radius = Sqrt(eq[each0]) * fmax;
+      partition.Radius = Math.Sqrt(eq[each0]) * fmax;
     }
 
     var maxradius = 0.0;
     foreach (var partition in Rule.Partitions)
-      maxradius = Max(maxradius, partition.Radius + Transition.Rates.GetValue(each0, each0).Upper * RateScale);
+      maxradius = Math.Max(maxradius, partition.Radius + Transition.Rates.GetValue(each0, each0).Upper * RateScale);
     maxradius = MaxExtent - maxradius - LoopRadius - LoopDistance - ArrowGap;
 
     foreach (var partition in Rule.Partitions)
@@ -670,7 +670,7 @@ class CalcRatesClass {
 
       foreach (var p2 in Rule.Partitions) {
         var rate = Transition.Rates.GetValue(each0, i);
-        if (valid rate) {
+        if (rate is valid) {
           var  hover = new PartitionActionClass(Data, Rule, rate, p1, p2);
 
           if (p1 == p2) {
@@ -725,7 +725,7 @@ class CalcRatesClass {
 
     var legend = 1.5 inches;
     Rule.ShowLegend(10 pts, legend, 0);
-    MainDiagram(Min(ExtentWidth - legend, ExtentHeight));
+    MainDiagram(Math.Min(ExtentWidth - legend, ExtentHeight));
   };
 
   TranLink(i0, i1) = "Tran{0}:{1}"(i0, i1);

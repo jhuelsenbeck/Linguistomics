@@ -41,7 +41,7 @@ class EulerDiagramClass {
     Y: EY(y);
     Frame(EX(width)) {
       ParAlignment: ParAlignments.Center;
-      if (valid name)
+      if (name is valid)
         Span {TitleStyle; name};
       Paragraph {
         Separator: Space;
@@ -173,7 +173,7 @@ namespace DisplayWords {
       var i = 0;
       foreach (var cognate in data.GetSortedCognates) {
         foreach (var word in cognate.Words[taxon.Index]) {
-          if (valid word.Segments)
+          if (word.Segments is valid)
             WordRow(word, i++);
         }
       }
@@ -224,7 +224,7 @@ namespace AllWords {
 
   ShowConceptTable(DataSetClass data, CognateClass cognate) = ConceptTable(data, 10 pts, 7, [cognate]);
 
-  ShowTable(textheight, DataSetClass data, max=1000000) = Block {
+  ShowTable(textheight, DataSetClass data, int max=1000000) = Block {
     TextHeight: textheight;
     var wordsperline = Math.Round(ExtentWidth / (13 * (textheight intu pixels)));
 
@@ -247,7 +247,7 @@ namespace MatchCell {
 
   SegmentBox(HashSetClass set, SegPartClass segment, color) = Canvas(DocMetrics.BoxSize.Width, DocMetrics.BoxSize.Height) {
     HAlign: HAligns.Center;
-    if (valid segment.?Ipa) {
+    if (segment.?Ipa is valid) {
       TextHeight: DocMetrics.BoxSize.Height - 6 pts;
       TextColor: color;
       SegmentText(set, segment)
@@ -294,7 +294,7 @@ class TabOptionsClass {
 
   SegmentBlock(SegmentSetClass set, matches) = Cell {
     Style.SegmentBottom;
-    if (valid matches) {
+    if (matches is valid) {
       if (matches.Length == 1 and matches[0].Segment.Impossible)
         Style.ImpossibleBackground;
       else {
@@ -319,7 +319,7 @@ class TabOptionsClass {
       Style.TitleBackground;
       TextHeight: 7 pts;
 
-      if (valid RowLabels)
+      if (RowLabels is valid)
         RowLabels[each0];
       else
         f;
@@ -504,7 +504,7 @@ namespace MatchingDiacritics {
     Paragraph {
       LeftIndent: 30 pts;
       FirstIndent: -30 pts;
-      DocFields.Anchor(segment.GetVariableFullName);
+      DocFields.Anchor(segment.GetVariable);
       segment.ShowSegment {
         TextHeight: 18 pts;
       };
@@ -539,7 +539,7 @@ namespace MatchingOther {
     Cell {
       VAlign: VAligns.Center;
       HAlign: HAligns.Center;
-      DocFields.Anchor(s.GetVariableFullName);
+      DocFields.Anchor(s.GetVariable);
       TextHeight: 18 pts;
       s.ShowSegment;
     };
@@ -654,7 +654,8 @@ class SegmentDisplayClass {
     ChartSeries {
       TextDigits: 3;
       Label: Lang.Experiment;
-      (each (each sorted).UsedFrequency) * 100.0;
+      foreach (var s in sorted)
+        new DataPointClass(each0, s.UsedFrequency * 100.0) {Reference: s};
     };
   };
 
@@ -681,7 +682,7 @@ class SegmentDisplayClass {
 
   SegmentCell(SegPartClass segment) = Cell(PadAll(2 pts)) {
     Border: new EdgeClass(0.25 pts, Colors.LightGray);
-    segment.Segment.Display(segment.GetVariableFullName, 16 pts);
+    segment.Segment.Display(segment.GetVariable?.FullName, 16 pts);
   };
 
   IPASegmentTable = Block {

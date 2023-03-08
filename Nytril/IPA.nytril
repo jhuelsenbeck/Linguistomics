@@ -121,7 +121,8 @@ class SegmentClass: FactClass {
 
   Constructor(ipa, sampa, impossible=false) {
     super.Constructor(ipa ?? Empty);
-    Ipa             = ipa?.GetString(NormalizationForms.FormC);
+    if (ipa is valid)
+      Ipa = (ipa as string).Normalize(NormalizationForms.FormC);
     CharacterLetter = Ipa;
     Sampa           = sampa;
     Impossible      = impossible;
@@ -175,32 +176,30 @@ class SegmentClass: FactClass {
 
   ShowDoc = Style.TextIpa {
     TipAction: this;
-    Ipa
+    Ipa;
   };
 
   override GetLayoutSpan = Style.TextIpa {
     TipAction: this;
-    Ipa
+    Ipa;
   };
 
   ShowCodePoint = Paragraph {
     TextHeight: 8 pts;
     ParBackground: 95%;
-    TextFixed: true;
-    TextRadix: 16;
-    TextDigits: 4;
     Span {
+      TextFixed: true;
+      TextRadix: 16;
+      TextDigits: 4;
       Separator: CommaSpace;
-      if (valid Ipa)
-        Integer(each Ipa);
+      each Ipa as int;
     }
   };
 
   Display(location, size) = Block {
     ParAlignment: ParAlignments.Center;
     Paragraph {
-      if (valid location)
-        DocFields.Anchor(location);
+      DocFields.Anchor(location);
       SpaceBefore: 8 pts;
       SpaceAfter: 8 pts;
       Style.IPAFamily;

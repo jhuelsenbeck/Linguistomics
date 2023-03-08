@@ -113,7 +113,7 @@ class DefClass: FactClass {
       Tab;
       Name;
     };
-    if (valid Description) {
+    if (Description is valid) {
       Paragraph {
         LeftIndent: 0.5 inches;
         SpaceAfter: 6 pts;
@@ -240,14 +240,14 @@ namespace Style {
   FigureReference(figure) = Span {
     Lang.Figure;
     Space;
-    DocFields.Reference(NumberedGroup.Figure, figure.GetVariableFullName);
+    DocFields.Reference(NumberedGroup.Figure, figure.GetVariable);
     TipAction: new FigureActionClass(figure);
   };
 
   TableReference(table) = Span {
     Lang.Table;
     Space;
-    DocFields.Reference(NumberedGroup.Table, table.GetVariableFullName);
+    DocFields.Reference(NumberedGroup.Table, table.GetVariable);
     TipAction: new TableActionClass(table);
   };
 
@@ -281,7 +281,7 @@ namespace Style {
         SansSerif;
         Lang.Figure;
         Space;
-        DocFields.Sequence(NumberedGroup.Figure, figure.GetVariableFullName);
+        DocFields.Sequence(NumberedGroup.Figure, figure.GetVariable);
         eos;
       };
       title;
@@ -321,7 +321,7 @@ namespace Style {
         SansSerif;
         Lang.Table;
         Space;
-        DocFields.Sequence(NumberedGroup.Table, table.GetVariableFullName);
+        DocFields.Sequence(NumberedGroup.Table, table.GetVariable);
         eos;
       };
       CaptionOrTitle(document, table);
@@ -329,7 +329,7 @@ namespace Style {
   };
 
   Initials(name) {
-    if (valid name)
+    if (name is valid)
       return Span {name[0]; "."};
   }
 
@@ -372,12 +372,12 @@ namespace Style {
         each1;
       };
       Tab;
-      if (valid department) {
+      if (department is valid) {
         department.Name;
         CommaSpace;
 
         var org = department.FindFirstFact(DepartmentLink, true) ?? department;
-        if (valid org) {
+        if (org is valid) {
           if (org != department) {
             org.Name;
             CommaSpace;
@@ -385,11 +385,8 @@ namespace Style {
           CitationLib.ShowLocation(org, CommaSpace, true);
         }
       }
-      else {
-        var email = person.FindFirstFact(WorkEmailLink);
-        if (valid email)
-          email.Value;
-      }
+      else
+        person.FindFirstFact(WorkEmailLink)?.Value;
 
       TipAction: person.FindFirstFact(WorkEmailLink);
     }
@@ -425,7 +422,7 @@ namespace Style {
     LeftIndent: 0.25 inches;
 
     Paragraph {
-      DocFields.Anchor(person.GetVariableFullName);
+      DocFields.Anchor(person.GetVariable);
       FirstIndent: -0.25 inches;
       CitationLib.GetFullName(person);
     };
@@ -433,7 +430,7 @@ namespace Style {
     CitationLib.ShowLocation(person, CommaSpace, true);
 
     var email = person.FindFirstFact(WorkEmailLink);
-    if (valid email) {
+    if (email is valid) {
       Paragraph {
         Lang.EMail;
         ColonSpace;
@@ -442,7 +439,7 @@ namespace Style {
     }
 
     var site = person.FindFirstFact(WebsiteLink);
-    if (valid site) {
+    if (site is valid) {
       Paragraph {
         site;
       };
@@ -475,7 +472,7 @@ namespace Style {
 
   AnimalRow(a) = Row {
     TextHeight: 10 pts;
-    a.GetVariableName;
+    a.GetVariable.Name;
     Cell {
       Span {
         TextFixed: true;
@@ -583,13 +580,13 @@ namespace Style {
   ShowTree(title, subtitle, NodeClass root, axis) = VBox(null, null, PadLR(15 pts)) {
     BorderRadius: 8 pts;
     Margin: PadB(20 pts);
-    if (valid title) {
+    if (title is valid) {
       Border:new EdgeClass(0.5 pts, 90%);
       Style.Header1 {
         HAlignment: HAligns.Center;
         title;
       };
-      if (valid subtitle) {
+      if (subtitle is valid) {
         Paragraph {
           TextHeight: 10 pts;
           HAlignment: HAligns.Center;
@@ -601,7 +598,7 @@ namespace Style {
 
     TreeOptions(ExtentWidth - 30 pts) {
       Reorder: true;
-      if (valid axis) {
+      if (axis is valid) {
         ValueLabel: axis;
         ValueAxis: ChartAxis;
       }
@@ -713,7 +710,7 @@ namespace Style {
     TextBlock {
       Span {
         Nexus.Keyword("namespace ");
-        concept.GetVariableName;
+        concept.GetVariable.Name;
         " {";
       };
       TextBlock {
@@ -721,7 +718,7 @@ namespace Style {
         foreach (var cognate in concept) {
           Span {
             Nexus.Keyword("namespace ");
-            cognate.GetVariableName;
+            cognate.GetVariable.Name;
             " {";
           };
           TextBlock {
@@ -790,7 +787,7 @@ class FigureActionClass: ActionClass {
   var Figure;
 
   Constructor(figure) {
-    super.Constructor(Actions.ToAnchor, figure.GetVariableFullName);
+    super.Constructor(Actions.ToAnchor, figure.GetVariable);
     Figure = figure;
   }
 
@@ -803,7 +800,7 @@ class TableActionClass: ActionClass {
   var Table;
 
   Constructor(table) {
-    super.Constructor(Actions.ToAnchor, table.GetVariableFullName);
+    super.Constructor(Actions.ToAnchor, table.GetVariable);
     Table = table;
   }
 
