@@ -92,13 +92,13 @@ class AlignPairClass {
     }
   };
 
-  Show(prob, cumulative, wordset, boxheight) = VBox {
+  ShowBlock(prob, cumulative, wordset, boxheight, digits) = VBox {
     Margin: PadB(10 pts);
     Border: new EdgeClass(0.125, 50%);
     HAlign: HAligns.Center;
 
     HBox(null, boxheight) {
-      TextDigits: 1;
+      TextDigits: digits;
       prob * 100.0;
       "%";
     };
@@ -130,7 +130,9 @@ class AlignPairClass {
     };
   };
 
-  override GetLayoutTip = ShowDetails(9, true, 10 pts);
+  override GetLayoutTip = ShowDetails(9, true, 10 pts, 1);
+
+  override GetDocument = ShowDetails(5000, true, 10 pts, 3);
 
   GetChart(SizeClass size, max) = Chart(size.Width, size.Height) {
     Type: ChartTypes.Column;
@@ -145,7 +147,7 @@ class AlignPairClass {
     };
   };
 
-  ShowDetails(max, tip, textheight) = Block {
+  ShowDetails(max, tip, textheight, int digits) = Block {
     TextHeight: textheight;
 
     Paragraph {
@@ -174,18 +176,18 @@ class AlignPairClass {
         langbox;
       }
 
-      ShowBlocks(max, BoxSize.Height);
+      ShowBlocks(max, BoxSize.Height, digits);
     }
   };
 
-  ShowBlocks(max, boxheight) = Span {
+  ShowBlocks(max, boxheight, int digits) = Span {
     var cumulative = 0.0;
     foreach (var a in Cognate.Alignments) {
       var prob = a.Prob;
       cumulative += prob;
       var wordset = a.WordSet;
       if (wordset.Length > 0) {
-        Show(prob, cumulative, wordset, boxheight);
+        ShowBlock(prob, cumulative, wordset, boxheight, digits);
         Space;
         if (each1 >= max)
           break;
@@ -199,7 +201,7 @@ class AlignPairClass {
     TextHeight: 7 pts;
     Span {
       Languages(Data, h);
-      ShowBlocks(max, h);
+      ShowBlocks(max, h, 1);
     }
   };
 
@@ -216,7 +218,7 @@ class AlignPairClass {
       TextHeight: 7 pts;
       Span {
         Languages(Data, h);
-        Show(align.Prob, align.Prob, align.WordSet, h);
+        ShowBlock(align.Prob, align.Prob, align.WordSet, h, 1);
       }
     };
   };
@@ -286,7 +288,7 @@ class AlignmentChartClass {
 
   ShowAll = Block {
     foreach (var a in Results.Alignments) {
-      new AlignPairClass(Results.Data, a).ShowDetails(5, false, 10 pts);
+      new AlignPairClass(Results.Data, a).ShowDetails(5, false, 10 pts, 3);
       Paragraph {
         Border: BorderT(1);
       };
@@ -402,7 +404,7 @@ class WordClass: FactClass {
   var            Variable;
 
   Constructor(id, text, TaxonClass taxon, CognateClass cognate) {
-    super.Constructor(id);
+    super.Constructor(guid.FromHash(id));
     Text     = text;
     Taxon    = taxon;
     Language = taxon.Language;
@@ -534,7 +536,7 @@ class ConceptClass: FactClass {
             WordGroup;
 
   Constructor(variable) {
-    super.Constructor(variable.GetVariable.FullName);
+    super.Constructor(guid.FromHash(variable.GetVariable.FullName));
     Variable = variable;
     Name     = variable.GetVariable.Name;
   }
@@ -567,7 +569,7 @@ class CognateClass: FactClass {
                Variable;
 
   Constructor(ConceptClass concept, variable) {
-    super.Constructor(variable.GetVariable.FullName);
+    super.Constructor(guid.FromHash(variable.GetVariable.FullName));
 
     Name      = variable.GetVariable.Name;
     Variable  = variable;
