@@ -106,18 +106,18 @@ typedef SegPartDictionary DictionaryClass<SegPartClass>;
 
 
 class SegmentClass: FactClass {
-  field var Ipa,
-            Features;
-  var       CharacterLetter,
-            Sampa,
-            Impossible,
-            Punctuation,
-            Gap,
-            Description,
-            Diacritic,
-            Open,
-            Backness,
-            Place;
+  field var             Ipa;
+  field SegmentFeatures Features;
+  Opens                 Open;
+  Backnesses            Backness;
+  Places                Place;
+  bool                  Punctuation,
+                        Gap,
+                        Diacritic;
+  var                   CharacterLetter,
+                        Sampa,
+                        Impossible,
+                        Description;
 
   Constructor(ipa, sampa, impossible=false) {
     super.Constructor(guid.FromHash(ipa ?? Empty));
@@ -134,7 +134,7 @@ class SegmentClass: FactClass {
 
   override IconClass GetIcon = Icons.record_voice_over;
 
-  ShowFeature(feature) = feature == SegmentFeatures.NoFeature ? null : feature;
+  ShowFeature(SegmentFeatures feature) = feature == SegmentFeatures.NoFeature ? null : feature;
 
   SegmentName = Span {
     if (Features.HasFlag(Vowel)) {
@@ -232,7 +232,7 @@ class SegmentClass: FactClass {
 }
 //======================================================================
 
-class SegPartClass: FactClass {
+class SegPartClass {
   SegmentClass   Segment;
   PartitionClass Partition;
   field var      Ipa,
@@ -244,8 +244,6 @@ class SegPartClass: FactClass {
                  Punctuation;
 
   Constructor(SegmentClass s) {
-    super.Constructor(s.FactId);
-
     Segment        = s;
     PartitionIndex = 0;
     Index          = -1;
