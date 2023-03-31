@@ -384,8 +384,8 @@ double ParameterTree::update(int iter) {
     UserSettings& settings = UserSettings::userSettings();
     
     // pick a tree parameter to update
-    double probNni   = 0.50;
-    double probBrlen = 0.25;
+    double probNni   = 0.00;
+    double probBrlen = 0.75;
     if (iter < settings.getNumMcmcCycles() * 0.25 || settings.getCalculateMarginalLikelihood() == true || isClockConstrained == true)
         {
         probNni = 0.0;
