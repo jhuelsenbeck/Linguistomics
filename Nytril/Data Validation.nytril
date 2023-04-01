@@ -24,6 +24,14 @@ class DiagnosticsViewClass: DocumentClass {
 
   ShowCognateCoverage = Block {
     Style.Header1 {
+      Lang.Trees;
+    };
+    Paragraph {
+      foreach (var tree in Data.PriorTrees)
+        Style.ShowTree(Lang.Tree+each1, ExtentWidth * 0.3, null, tree, null);
+    };
+
+    Style.Header1 {
       "By Language";
     };
 
@@ -103,7 +111,8 @@ class ConfigurationViewClass: DocumentClass {
   }
 
   override GetDocument = Document {
-    new ConfigFileClass(Data, Data.Custom.Posterior.Run[0]).Show;
+    foreach (var tree in Data.PriorTrees)
+      new ConfigFileClass(Data, Data.Custom.Posterior.Run[0], tree).Show;
   };
 }
 

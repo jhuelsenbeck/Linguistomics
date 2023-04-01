@@ -44,10 +44,12 @@ ShowString(text) = Span {
 class ConfigFileClass {
   DataSetClass       Data;
   RunExperimentClass Run;
+  NodeClass          Prior;
 
-  Constructor(DataSetClass data, RunExperimentClass run) {
-    Data = data;
-    Run  = run;
+  Constructor(DataSetClass data, RunExperimentClass run, NodeClass prior) {
+    Data  = data;
+    Run   = run;
+    Prior = prior;
   }
 
   AddScope = TextBlock {
@@ -124,11 +126,10 @@ class ConfigFileClass {
     TextFixed: true;
     TextHeight: 9 pts;
 
-    var tree = Data.PriorTree;
     Span {
       Variable("Tree");
       Quote;
-      Nexus.Newick(tree);
+      Nexus.Newick(Prior);
       ";"; Quote; ",";
     };
 

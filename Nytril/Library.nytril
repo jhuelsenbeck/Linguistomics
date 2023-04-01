@@ -1020,35 +1020,129 @@ class DataSetClass {
     };
   };
 
-  NodeClass GetPriorTree(portuguese) = new Branch {
+  virtual NodeClass PortugueseClade    = new Leaf(Languages.Portuguese);
+  virtual NodeClass PortugueseNumbered = new NLeaf(this, Languages.Portuguese, 2);
+
+  CatalanClade = new Branch {
+    new Leaf(Languages.Catalan);
+    new Branch {
+      new Leaf(Languages.French);
+      new Leaf(Languages.Walloon);
+    };
+  };
+
+  NodeClass NumberedTree = new NBranch(19) {
+    new NLeaf(this, Languages.Latin, 7);
+    new NBranch(18) {
+      new NLeaf(this, Languages.Romanian, 6);
+      new NBranch(17) {
+        new NBranch(16) {
+          new NBranch(15) {
+            new NLeaf(this, Languages.Walloon, 3);
+            new NLeaf(this, Languages.French, 3);
+          };
+          new NBranch(14) {
+            new NBranch(13) {
+              PortugueseNumbered;
+              new NLeaf(this, Languages.Spanish, 2);
+            };
+            new NLeaf(this, Languages.Catalan, 3);
+          }
+        };
+        new NBranch(11) {
+          new NLeaf(this, Languages.Friulian, 4);
+          new NLeaf(this, Languages.Italian, 4);
+        };
+      }
+    }
+  };
+
+/*
+  NodeClass Tree0 = new Branch {
     new Leaf(Languages.Latin);
     new Branch {
       new Leaf(Languages.Italian);
       new Branch {
         new Branch {
           new Leaf(Languages.Spanish);
-          portuguese;
+          PortugueseLeaf;
         };
         new Branch {
           new Branch {
             new Leaf(Languages.Friulian);
-            new Branch {
-              new Leaf(Languages.Catalan);
-              new Branch {
-                new Leaf(Languages.French);
-                new Leaf(Languages.Walloon);
-              };
-            }
+            CatalanClade;
           };
           new Leaf(Languages.Romanian);
         };
       }
     }
   };
+*/
 
-  virtual NodeClass PriorTree = GetPriorTree(new Leaf(Languages.Portuguese));
+  virtual NodeClass[] PriorTrees = [
+    // (Latin,(Romanian,(Italian,(Friulian,((Spanish,Portuguese),(Catalan,(French,Walloon)))))));
+    new Branch {
+      new Leaf(Languages.Latin);
+      new Branch {
+        new Leaf(Languages.Romanian);
+        new Branch {
+          new Leaf(Languages.Italian);
+          new Branch {
+            new Leaf(Languages.Friulian);
+            new Branch {
+              new Branch {
+                new Leaf(Languages.Spanish);
+                PortugueseClade;
+              };
+              CatalanClade;
+            };
+          }
+        }
+      }
+    },
 
-  virtual NodeClass NumberedTree = GetNumberedTree(new NLeaf(this, Languages.Portuguese, 2));
+    // (Latin,(Romanian,((Italian,Friulian),((Spanish,Portuguese),(Catalan,(French,Walloon))))));
+    new Branch {
+      new Leaf(Languages.Latin);
+      new Branch {
+        new Leaf(Languages.Romanian);
+        new Branch {
+          new Branch {
+            new Leaf(Languages.Italian);
+            new Leaf(Languages.Friulian);
+          };
+          new Branch {
+            new Branch {
+              new Leaf(Languages.Spanish);
+              PortugueseClade;
+            };
+            CatalanClade;
+          };
+        };
+      };
+    },
+
+    // (Latin,(Romanian,((Spanish,Portuguese),((Catalan,(French,Walloon)),(Italian,Friulian)))));
+    new Branch {
+      new Leaf(Languages.Latin);
+      new Branch {
+        new Leaf(Languages.Romanian);
+        new Branch {
+          new Branch {
+            new Leaf(Languages.Spanish);
+            PortugueseClade;
+          };
+          new Branch {
+            CatalanClade;
+            new Branch {
+              new Leaf(Languages.Italian);
+              new Leaf(Languages.Friulian);
+            };
+          };
+        };
+      };
+    },
+  ];
 
   ShowTrees(ModelFolderClass folder) = Block {
     var any = false;
@@ -1068,7 +1162,7 @@ class DataSetClass {
 
       foreach (var r in folder.Posterior.Run) {
         if (r.Tree is valid)
-          Style.ShowTree("Run {0}"(each1), null, r.Tree, null);
+          Style.ShowTree("Run {0}"(each1), ExtentWidth, null, r.Tree, null);
       }
     }
   };
@@ -1083,36 +1177,14 @@ class DataSetClass {
       Style.DQuote {Name};
     };
 
-    Style.ShowTree("Prior", null, PriorTree, null);
+    Span {
+      foreach (var tree in PriorTrees)
+        Style.ShowTree(Lang.Tree+each1, 30%, null, tree, null);
+    };
+
     ShowTrees(Custom);
     ShowTrees(JC69);
     ShowTrees(GTR);
-  };
-
-  NodeClass GetNumberedTree(portuguese) = new NBranch(19) {
-    new NLeaf(this, Languages.Latin, 7);
-    new NBranch(18) {
-      new NLeaf(this, Languages.Romanian, 6);
-      new NBranch(17) {
-        new NBranch(16) {
-          new NBranch(15) {
-            new NLeaf(this, Languages.Walloon, 3);
-            new NLeaf(this, Languages.French, 3);
-          };
-          new NBranch(14) {
-            new NBranch(13) {
-              portuguese;
-              new NLeaf(this, Languages.Spanish, 2);
-            };
-            new NLeaf(this, Languages.Catalan, 3);
-          }
-        };
-        new NBranch(11) {
-          new NLeaf(this, Languages.Friulian, 4);
-          new NLeaf(this, Languages.Italian, 4);
-        };
-      }
-    }
   };
 
   override IconClass GetIcon = Icons.science;

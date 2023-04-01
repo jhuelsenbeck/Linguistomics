@@ -107,7 +107,7 @@ class RunExperimentClass {
     Write(GetParameters, path Info.ParametersFile);
   }
 
-  void InitFolders(DataSetClass data) {
+  void InitFolders(DataSetClass data, NodeClass prior) {
     var path = Info.ExperimentRoot RootFolder;
 
     CreateFolder(path);
@@ -115,7 +115,7 @@ class RunExperimentClass {
     WriteRuns(path, false, path, "WinRunReader.bat", "WinRunAll.bat");
     WriteRuns(path, true, Empty, "MacRunReader.sh", "MacRunAll.sh");
 
-    Write(new ConfigFileClass(data, this).Show, path Info.ConfigFile);
+    Write(new ConfigFileClass(data, this, prior).Show, path Info.ConfigFile);
   }
 }
 
@@ -136,7 +136,11 @@ class ModeClass {
 
   void InitFolders(DataSetClass data) {
     CreateFolder(Info.ExperimentRoot RootFolder);
-    (each Run).InitFolders(data);
+
+    // Fix me
+    foreach (var prior in data.PriorTrees) {
+      (each Run).InitFolders(data, prior);
+    }
   }
 }
 

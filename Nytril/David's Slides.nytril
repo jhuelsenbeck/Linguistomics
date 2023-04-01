@@ -262,9 +262,14 @@ namespace DavidSlides.PreviousResearch {
       "There’s much more uncertainty after that";
     };
 
-    Items.Item3.Body(DocumentClass document) = ShowTree("Romance phylogeny", null, LanguageBranches.Romance, Lang.Years);
+    Items.Item3.Body(DocumentClass document) = ShowTree("Romance phylogeny", ExtentWidth - 30 pts, null, LanguageBranches.Romance, Lang.Years);
 
-    Items.Item4.Body(DocumentClass document) = ShowTree("Prior Tree", null, MainResults.Data.PriorTree, null);
+    Items.Item4.Body(DocumentClass document) = Block {
+      Span {
+        foreach (var tree in MainResults.Data.PriorTrees)
+          ShowTree(Lang.Tree+each1, 30%, null, tree, null);
+      };
+    };
 
     Items.Item5.Text = Span {
       "Chang et al lexical data; others";
@@ -671,7 +676,7 @@ namespace DavidSlides.Results {
     Title = "Majority-rule consensus tree ({0})"(MainResults.Data.MainRun.Name);
 
     Body(DocumentClass document) = Block {
-      ShowTree(null, null, MainResults.Data.MainRun.Tree, Lang.Branches);
+      ShowTree(null, 100%, null, MainResults.Data.MainRun.Tree, Lang.Branches);
     };
   }
 
