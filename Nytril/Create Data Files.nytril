@@ -28,7 +28,7 @@ Main.Run = new RunInitClass;
 
 namespace Main.Documents {
   DiagnosticsViewClass   Diagnostic    = new(DataSet);
-  ConfigurationViewClass Configuration = new(DataSet);
+  ConfigurationViewClass Configuration = new(DataSet, DataSet.TreeSets[0]);
   WordViewClass          Words         = new(DataSet, DataSet.Rule.Partitions);
 }
 
@@ -45,7 +45,7 @@ class RunInitClass: RunClass {
 
     if (not FolderExists(root))
       CreateFolder(root);
-    (each data.Models).InitFolders(data);
+    (each data.TreeSets).InitFolders(data);
 
     Write(new WordViewClass(data, data.Rule.Partitions).GetDocument, data.WordFile);
   }

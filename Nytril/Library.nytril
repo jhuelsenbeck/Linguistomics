@@ -646,6 +646,7 @@ class WordPairClass {
 
   override GetLayoutTip = ShowDescription(12 pts);
 }
+
 //======================================================================
 
 class DataSetClass {
@@ -659,54 +660,41 @@ class DataSetClass {
   VectorClass                 WordList;
   RuleClass                   Rule;
   WordClass                   DefWord;
-  ModelFolderClass            Custom,
-                              JC69,
-                              GTR;
-  ModelFolderClass[]          Models;
+  TreeSetClass[]              TreeSets;
   ListClass                   PlainBuffer,
                               TextBuffer;
   ListClass<SegPartClass>     SegmentBuffer;
   RunExperimentClass          MainRun;
   var                         WordCutoff,
-                              MacFolder,
-                              WordFile,
+                              RootFolder,
                               Name,
                               MaxLanguageName,
                               WordCount,
                               SegmentCount,
                               ExampleConcept,
                               FigureConcept,
-                              DataConcept,
-                              RootFolder,
-                              FolderName;
+                              WordFile,
+                              DataConcept;
 
-  Constructor(config, name, folder, runindex) {
+  Constructor(config, name, rootfolder, runindex) {
     Name            = name;
-    FolderName      = folder;
-    RootFolder      = Info.ExperimentRoot Folder(folder);
-    WordFile        = RootFolder Info.WordFile;
+    RootFolder      = rootfolder;
+    WordFile        = rootfolder Info.WordFileName;
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
     TextBuffer      = new(64);
     PlainBuffer     = new(64);
     SegmentBuffer   = new(64);
-
-    Rule   = new NaturalPartitionClass;
-    Custom = new ModelFolderClass(config, this, "Custom", Rule.Name);
-    JC69   = new ModelFolderClass(config, this, "JC69");
-    GTR    = new ModelFolderClass(config, this, "GTR");
-    Models = [
-      Custom,
-      JC69,
-      GTR,
-    ];
-
-    MainRun = Custom.Posterior.Run[runindex];
+    Rule            = new NaturalPartitionClass;
+    TreeSets        = AddTree(config, each PriorTrees);
+    MainRun         = TreeSets[0].Custom.Run[runindex];
 
     if (config is null)
       ReadExperiment;
   }
+
+  TreeSetClass AddTree(config, NodeClass root) = new(config, "Tree"+each1, RootFolder, root, Rule);
 
   void ReadRawWords(concepts, includewords, LanguageClass[] languageset, cutoff=-1) {
     if (cutoff < 0)
@@ -1144,10 +1132,10 @@ class DataSetClass {
     },
   ];
 
-  ShowTrees(ModelFolderClass folder) = Block {
+  ShowTrees(ModelClass model) = Block {
     var any = false;
-    foreach (var r in folder.Posterior.Run) {
-      if (r.Tree is valid) {
+    foreach (var r in model.Run) {
+      if (r.ResultTree is not null) {
         any = true;
         break;
       }
@@ -1157,16 +1145,15 @@ class DataSetClass {
       Style.Header1 {
         Lang.Model;
         ColonSpace;
-        folder.Name;
+        model.Name;
       };
 
-      foreach (var r in folder.Posterior.Run) {
-        if (r.Tree is valid)
-          Style.ShowTree("Run {0}"(each1), ExtentWidth, null, r.Tree, null);
+      foreach (var r in model.Run) {
+        if (r.ResultTree is not null)
+          Style.ShowTree("Run {0}"(each1), ExtentWidth, null, r.ResultTree, null);
       }
     }
   };
-
 
   ShowExperiment = Block {
     Style.Header1 {
@@ -1182,9 +1169,13 @@ class DataSetClass {
         Style.ShowTree(Lang.Tree+each1, 30%, null, tree, null);
     };
 
-    ShowTrees(Custom);
-    ShowTrees(JC69);
-    ShowTrees(GTR);
+    foreach (var treeset in TreeSets) {
+      Style.Header2 {
+        Lang.Tree;
+        each1;
+      };
+      ShowTrees(each treeset.Models);
+    }
   };
 
   override IconClass GetIcon = Icons.science;
