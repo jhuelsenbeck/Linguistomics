@@ -253,7 +253,7 @@ class AlignmentChartClass {
 
     // Try to make proportional squares
     var xitems = size.Width / 130 as int;
-    var yitems = (Results.Alignments.Length + xitems - 1) div xitems;
+    var yitems = Math.Floor((Results.Alignments.Length + xitems - 1) / xitems);
     var bsize  = new SizeClass(size.Width / xitems, size.Height / yitems);
     var x      = bsize.Width * 0.5;
     AlignIndexClass[][] rows = Results.Alignments / xitems;
@@ -263,22 +263,20 @@ class AlignmentChartClass {
     foreach (var row in rows) {
       HBox {
         foreach (var a in row) {
-          Canvas(bsize.Width, bsize.Height) {
-            VAlign: VAligns.Center;
-            Border: new EdgeClass(0.25 pts, 90%);
+          VBox(bsize.Width, bsize.Height) {
+            HAlign: HAligns.Center;
+            Border: new EdgeClass(0.25 pts, 90%, 1);
 
             var ap = new AlignPairClass(Results.Data, a);
-            Block {
-              Paragraph {
-                TextColor: Colors.LightGray;
-                a.Alignments.Length;
+            Paragraph {
+              Span {
+                ap.Name;
+                TipAction: new ActionClass(Actions.TipDocument, ap);
               };
-              Paragraph {
-                Span {
-                  ap.Name;
-                  TipAction: new ActionClass(Actions.TipDocument, ap);
-                };
-              };
+            };
+            Paragraph {
+              TextColor: Colors.LightGray;
+              a.Alignments.Length;
             };
           }
         }
@@ -329,10 +327,10 @@ class AlignmentChartClass {
 //======================================================================
 
 class LanguageClass: FactClass {
-  field var  Name,
-             Cases;
-  var        LangIndex,
-             MapAttribution;
+  field string Name;
+  field int    Cases;
+  int          LangIndex;
+  var          MapAttribution;
 
   Constructor(id, name, cases=0) {
     super.Constructor(id);
@@ -394,7 +392,7 @@ class LanguageClass: FactClass {
 //======================================================================
 
 class WordClass: FactClass {
-  field var      Text;
+  field string   Text;
   LanguageClass  Language;
   TaxonClass     Taxon;
   CognateClass   Cognate;
@@ -529,11 +527,11 @@ class WordClass: FactClass {
 //======================================================================
 
 class ConceptClass: FactClass {
-  field var Name,
-            Confidence;
-  var       Variable,
-            WordType,
-            WordGroup;
+  field string Name;
+  field double Confidence;
+  var          Variable;
+  WordTypes    WordType;
+  WordGroups   WordGroup;
 
   Constructor(variable) {
     super.Constructor(guid.FromHash(variable.GetVariable.FullName));
@@ -562,7 +560,7 @@ class ConceptClass: FactClass {
 //======================================================================
 
 class CognateClass: FactClass {
-  field var    Name;
+  field string Name;
   ConceptClass Concept;
   WordClass[]  Words;
   var          MaxLength,
@@ -678,8 +676,8 @@ class DataSetClass {
 
   Constructor(config, name, rootfolder, runindex) {
     Name            = name;
-    RootFolder      = rootfolder;
-    WordFile        = rootfolder Info.WordFileName;
+    RootFolder      = Folder(rootfolder);
+    WordFile        = RootFolder Info.WordFileName;
     WordCount       = 0;
     SegmentCount    = 0;
     MaxLanguageName = 0;
@@ -775,7 +773,7 @@ class DataSetClass {
   }
 
   void ReadExperiment {
-    var run = ReadScript(WordFile).Root;
+    var run = ReadScript(Info.ExperimentRoot WordFile).Root;
 
     WordCutoff  = run.Info.WordCutoff;
     AddLanguageSet(run.LanguageSet);
