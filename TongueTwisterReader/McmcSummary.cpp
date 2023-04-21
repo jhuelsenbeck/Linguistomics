@@ -114,7 +114,7 @@ std::vector<std::string> McmcSummary::breakString(std::string str) {
 
 void McmcSummary::calculateRates(DoubleMatrix& m) {
 
-    int numStates = 0;
+    int ns = 0;
     
     // 1. get state frequencies (and the number of states). We look
     // up the apropriate ParameterStatistics objects for this
@@ -134,8 +134,12 @@ void McmcSummary::calculateRates(DoubleMatrix& m) {
         if (it == observedStates.end())
             Msg::error("Could not find state " + std::to_string(i) + " in frequencies summary");
         }
-    numStates = (int)observedStates.size();
+    ns = (int)observedStates.size();
+    if (ns != 0 && ns != numStates)
+        Msg::error("Inconsistent number of states (calculateRates)");
     std::vector<double> f(numStates);
+    for (int i=0; i<f.size(); i++)
+        f[i] = 1.0 / numStates;
     for (int i=0; i<stats.size(); i++)
         {
         ParameterStatistics* s = stats[i];
@@ -145,18 +149,20 @@ void McmcSummary::calculateRates(DoubleMatrix& m) {
             f[st] = s->getMean();
             }
         }
-    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
+    if (statePartitions != NULL && ns != 0) // check consistencey with a state partition object, if we have one
         {
         int tempNumStates = statePartitions->getNumElements();
         if (tempNumStates != numStates)
-            Msg::error("Mismatch in the number of states from the frequencies and the state partitions");
+            Msg::error("Mismatch in the number of states from the frequencies and the state partitions (calculateRates)");
         }
 
     // allocate a vector to hold the exchangeability parameters
     DoubleMatrix r(numStates,numStates);
     for (int i=0; i<numStates; i++)
+        {
         for (int j=0; j<numStates; j++)
-            r(i,j) = -1.0;
+            r(i,j) = 1.0;
+        }
     for (int i=0; i<stats.size(); i++)
         {
         ParameterStatistics* s = stats[i];
@@ -261,7 +267,7 @@ void McmcSummary::calculateRates(DoubleMatrix& m) {
 
 void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
 
-    int numStates = 0;
+    int ns = 0;
     
     // 1. get state frequencies (and the number of states). We look
     // up the apropriate ParameterStatistics objects for this
@@ -281,8 +287,12 @@ void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
         if (it == observedStates.end())
             Msg::error("Could not find state " + std::to_string(i) + " in frequencies summary");
         }
-    numStates = (int)observedStates.size();
+    ns = (int)observedStates.size();
+    if (ns != 0 && ns != numStates)
+        Msg::error("Inconsistency in the number of states (2)");
     std::vector<double> f(numStates);
+    for (int i=0, n=(int)f.size(); i<n; i++)
+        f[i] = 1.0 / numStates;
     for (int i=0; i<stats.size(); i++)
         {
         ParameterStatistics* s = stats[i];
@@ -292,23 +302,28 @@ void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
             f[st] = s->getMean();
             }
         }
-    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
+    if (statePartitions != NULL && ns == numStates) // check consistencey with a state partition object, if we have one
         {
         int tempNumStates = statePartitions->getNumElements();
         if (tempNumStates != numStates)
-            Msg::error("Mismatch in the number of states from the frequencies and the state partitions");
+            Msg::error("Mismatch in the number of states from the frequencies and the state partitions (calculateAverageRates)");
         }
 
     // allocate a vector to hold the exchangeability parameters
     DoubleMatrix r(numStates,numStates);
     for (int i=0; i<numStates; i++)
+        {
         for (int j=0; j<numStates; j++)
-            r(i,j) = -1.0;
+            r(i,j) = 1.0;
+        r(i,i) = 0.0;
+        }
+    int nr = 0;
     for (int i=0; i<stats.size(); i++)
         {
         ParameterStatistics* s = stats[i];
         if (s->getName()[0] == 'R')
             {
+            nr++;
             int r1, r2;
             getRateElements(s->getName(), r1, r2);
             if (statePartitions != NULL)
@@ -336,11 +351,10 @@ void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
         {
         for (int j=0; j<numStates; j++)
             {
-            if (r(i,j) < 0.0 && i != j)
+            if (r(i,j) < 0.0 && i != j && nr != 0)
                 Msg::error("Could not find all rate parameters");
             }
         }
-
 
     // fill in the rates (Q)
     //DoubleMatrix m(numStates,numStates);
@@ -555,7 +569,7 @@ int McmcSummary::inferNumberOfRates(void) {
         if (s->getName()[0] == 'R')
             numRateClasses++;
         }
-    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
+    if (statePartitions != NULL && numRateClasses > 0) // check consistencey with a state partition object, if we have one
         {
         int numSubsets = statePartitions->numSubsets();
         int tempNumRates = numSubsets * (numSubsets-1) / 2;
@@ -591,14 +605,14 @@ int McmcSummary::inferNumberOfStates(void) {
         if (it == observedStates.end())
             Msg::error("Could not find state " + std::to_string(i) + " in frequencies summary");
         }
-    int numStates = (int)observedStates.size();
-    if (statePartitions != NULL) // check consistencey with a state partition object, if we have one
+    int ns = (int)observedStates.size();
+    if (statePartitions != NULL && ns != 0) // check consistencey with a state partition object, if we have one
         {
         int tempNumStates = statePartitions->getNumElements();
-        if (tempNumStates != numStates)
-            Msg::error("Mismatch in the number of states from the frequencies and the state partitions");
+        if (tempNumStates != ns)
+            Msg::error("Mismatch in the number of states from the frequencies and the state partitions (inferNumberOfStates)");
         }
-    return numStates;
+    return ns;
 }
 
 std::map<int,std::string> McmcSummary::interpretTranslateString(std::vector<std::string> translateTokens) {
@@ -887,6 +901,9 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     int  matrix = 6;
     auto pcount = 10;
 
+    int numRateClasses = inferNumberOfRates();
+    std::cout << "numRateClasses = " << numRateClasses << std::endl;
+#   if 0
     findex << "StatClass[][] TransitionStats = [\n";
     for (int mi = 0; mi < pcount; ++mi) {
         if (mi)
@@ -903,13 +920,13 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
         findex << "]";
     }
     findex << "\n];\n\n";
-    
-    int numRateClasses = inferNumberOfRates();
-    std::cout << "numRateClasses = " << numRateClasses << std::endl;
+#   endif
     
     // output average rates of change
     // No credible intervals on this information.
-    int numStates = inferNumberOfStates();
+    int ns = inferNumberOfStates();
+    if (numStates != ns && ns != 0)
+        Msg::error("Inconsistency in the number of states");
     DoubleMatrix aveRates(numStates,numStates);
     calculateAverageRates(aveRates);
     writeMatrix(findex, aveRates, "AverageRates");
@@ -929,6 +946,7 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     for (int i=0; i<alignments.size(); i++)
         {
         auto& a = alignments[i];
+        std::cout << "putting alignment " << a->getName() << " into json object" << std::endl;
         if (a->size() > 0)
             {
             auto cogAlns = a->toJson(cutoff, findex);
@@ -940,7 +958,7 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     findex << "];\n\n";
 
     // output the pooled partition subset frequencies (if a subset is available)
-    if (statePartitions != NULL)
+    if (statePartitions != NULL && ns != 0)
         {
         std::map<int,double> subsetFreqs;
         
@@ -1120,6 +1138,34 @@ Partition* McmcSummary::readPartition(std::string fn) {
         {
         nlohmann::json jsPart = j["PartitionSets"];
         return new Partition(jsPart);
+        }
+}
+
+int McmcSummary::readNumStates(std::string fn) {
+
+    std::ifstream ifs(fn);
+    nlohmann::json j;
+    try
+        {
+        j = nlohmann::json::parse(ifs);
+        }
+    catch (nlohmann::json::parse_error& ex)
+        {
+        Msg::warning("Error parsing JSON file" + fn + " at byte " + std::to_string(ex.byte));
+        return 0;
+        }
+
+
+    auto it = j.find("NumberOfStates");
+    if (it == j.end())
+        {
+        Msg::warning("Could not find partition set in the JSON configuration file");
+        return 0;
+        }
+    else
+        {
+        int ns = j["NumberOfStates"];
+        return ns;
         }
 }
 

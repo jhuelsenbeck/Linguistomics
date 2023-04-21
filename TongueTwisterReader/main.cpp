@@ -10,6 +10,7 @@
 void printHeader(void);
 void readConfigurationFile(std::string pathName, McmcSummary& summary);
 void readDirectory(std::string filePath, int bi, McmcSummary& summary);
+int readNumStates(std::string pathName, McmcSummary& summary);
 Partition* readPartition(std::string pathName, McmcSummary& summary);
 
 
@@ -85,6 +86,10 @@ void readDirectory(std::string folder, int bi, McmcSummary& summary) {
     Partition* part = readPartition(folder, summary);
     if (part == NULL)
         Msg::warning("Could not find partition in configuration file");
+        
+    int numStates = readNumStates(folder, summary);
+    if (numStates == 0)
+        Msg::error("Could not find the NumberOfStates key in the JSON file");
 
     for (const auto& entry : std::filesystem::directory_iterator(folder))
         {
@@ -117,6 +122,26 @@ void readDirectory(std::string folder, int bi, McmcSummary& summary) {
         if (show)
             std::cout << filePath << std::endl;
         }
+}
+
+int readNumStates(std::string pathName, McmcSummary& summary) {
+
+    int ns = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(pathName))
+        {
+        std::filesystem::path fp = entry.path();
+        #ifdef _CONSOLE
+        auto filePath      = fp.string();
+        auto fileExtension = fp.extension();
+        #else
+        auto filePath      = fp;
+        auto fileExtension = fp.extension();
+        #endif
+
+        if (fileExtension == ".config")
+            ns = summary.readNumStates(filePath);
+        }
+    return ns;
 }
 
 Partition* readPartition(std::string pathName, McmcSummary& summary) {

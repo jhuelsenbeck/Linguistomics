@@ -38,6 +38,7 @@ class McmcSummary {
         void                                    readTsvFile(std::string fn, int bi);
         void                                    readConfigFile(std::string fn);
         Partition*                              readPartition(std::string fn);
+        int                                     readNumStates(std::string fn);
     
     private:
         void                                    writeMatrix(std::ofstream& file, DoubleMatrix& m, std::string name);
@@ -61,6 +62,7 @@ class McmcSummary {
         bool                                    hasPartitions;
         Partition*                              statePartitions;
         std::vector<std::string>                taxa;
+        int                                     numStates;
 };
 
 #endif
