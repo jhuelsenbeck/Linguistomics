@@ -135,6 +135,7 @@ void Partition::print(void) {
             len = (int)n.length();
         }
         
+    std::cout << "Partition address = " << this << std::endl;
     for (int i=1; i<=subsets.size(); i++)
         {
         Subset* s = findSubsetIndexed(i);

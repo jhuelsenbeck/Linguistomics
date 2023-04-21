@@ -33,10 +33,11 @@ class McmcSummary {
         void                                    printPartitionSet(void);
 
         void                                    output(std::string pathName, std::ofstream& findex);
-        void                                    readAlnFile(std::string fn, int bi);
+        void                                    readAlnFile(std::string fn, int bi, Partition* prt);
         void                                    readTreFile(std::string fn, int bi);
         void                                    readTsvFile(std::string fn, int bi);
         void                                    readConfigFile(std::string fn);
+        Partition*                              readPartition(std::string fn);
     
     private:
         void                                    writeMatrix(std::ofstream& file, DoubleMatrix& m, std::string name);

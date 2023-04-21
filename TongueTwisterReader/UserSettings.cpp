@@ -12,6 +12,7 @@ UserSettings::UserSettings(void) {
     // dafault values
     inFile  = "";
     inFile2 = "";
+    inFile3 = "";
     outFile = "";
     burnIn  = 5000;
 }
@@ -45,6 +46,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 inFile = cmd;
             else if (arg == "-i2")
                 inFile2 = cmd;
+            else if (arg == "-i3")
+                inFile3 = cmd;
             else if (arg == "-o")
                 outFile = cmd;
             else if (arg == "-b")

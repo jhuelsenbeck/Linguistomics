@@ -1006,7 +1006,7 @@ int McmcSummary::parseNumberFromFreqHeader(std::string str) {
     return num;
 }
 
-void McmcSummary::readAlnFile(std::string fn, int bi) {
+void McmcSummary::readAlnFile(std::string fn, int bi, Partition* prt) {
 
     std::ifstream ifs(fn);
     nlohmann::json j;
@@ -1035,6 +1035,8 @@ void McmcSummary::readAlnFile(std::string fn, int bi) {
         nlohmann::json jsPart = j["PartitionSets"];
         part = new Partition(jsPart);
         }
+    if (part == NULL)
+        part = prt;
 
     AlignmentDistribution* dist = new AlignmentDistribution(rv, part);
     alignments.push_back(dist);
@@ -1091,6 +1093,34 @@ void McmcSummary::readConfigFile(std::string fn) {
     
     if (statePartitions != NULL)
         statePartitions->print();
+}
+
+Partition* McmcSummary::readPartition(std::string fn) {
+
+    std::ifstream ifs(fn);
+    nlohmann::json j;
+    try
+        {
+        j = nlohmann::json::parse(ifs);
+        }
+    catch (nlohmann::json::parse_error& ex)
+        {
+        Msg::warning("Error parsing JSON file" + fn + " at byte " + std::to_string(ex.byte));
+        return NULL;
+        }
+
+
+    auto it = j.find("PartitionSets");
+    if (it == j.end())
+        {
+        Msg::warning("Could not find partition set in the JSON configuration file");
+        return NULL;
+        }
+    else
+        {
+        nlohmann::json jsPart = j["PartitionSets"];
+        return new Partition(jsPart);
+        }
 }
 
 void McmcSummary::readTreFile(std::string fn, int bi) {

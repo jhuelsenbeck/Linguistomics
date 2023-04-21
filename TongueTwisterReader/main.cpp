@@ -3,12 +3,14 @@
 #include <string>
 #include <fstream>
 #include "McmcSummary.hpp"
+#include "Msg.hpp"
 #include "RandomVariable.hpp"
 #include "UserSettings.hpp"
 
 void printHeader(void);
 void readConfigurationFile(std::string pathName, McmcSummary& summary);
 void readDirectory(std::string filePath, int bi, McmcSummary& summary);
+Partition* readPartition(std::string pathName, McmcSummary& summary);
 
 
 
@@ -34,6 +36,15 @@ int main(int argc, char* argv[]) {
         readConfigurationFile(settings.getInputFile2(), summary2);
         readDirectory(settings.getInputFile2(), settings.getBurnIn(), summary2);
         summary1 += summary2;
+        }
+
+    // read the third set of input, if available
+    if (settings.getInputFile3() != "")
+        {
+        McmcSummary summary3(&rv);
+        readConfigurationFile(settings.getInputFile3(), summary3);
+        readDirectory(settings.getInputFile3(), settings.getBurnIn(), summary3);
+        summary1 += summary3;
         }
 
     auto pathName = settings.getPath();
@@ -71,6 +82,10 @@ void readConfigurationFile(std::string pathName, McmcSummary& summary) {
 
 void readDirectory(std::string folder, int bi, McmcSummary& summary) {
 
+    Partition* part = readPartition(folder, summary);
+    if (part == NULL)
+        Msg::warning("Could not find partition in configuration file");
+
     for (const auto& entry : std::filesystem::directory_iterator(folder))
         {
         std::filesystem::path fp = entry.path();
@@ -91,7 +106,7 @@ void readDirectory(std::string folder, int bi, McmcSummary& summary) {
         else if (fileExtension == ".aln")
             {
             show = true;
-            summary.readAlnFile(filePath, bi);
+            summary.readAlnFile(filePath, bi, part);
             }
         else if (fileExtension == ".tre")
             {
@@ -102,4 +117,24 @@ void readDirectory(std::string folder, int bi, McmcSummary& summary) {
         if (show)
             std::cout << filePath << std::endl;
         }
+}
+
+Partition* readPartition(std::string pathName, McmcSummary& summary) {
+
+    Partition* part = NULL;
+    for (const auto& entry : std::filesystem::directory_iterator(pathName))
+        {
+        std::filesystem::path fp = entry.path();
+        #ifdef _CONSOLE
+        auto filePath      = fp.string();
+        auto fileExtension = fp.extension();
+        #else
+        auto filePath      = fp;
+        auto fileExtension = fp.extension();
+        #endif
+
+        if (fileExtension == ".config")
+            part = summary.readPartition(filePath);
+        }
+    return part;
 }

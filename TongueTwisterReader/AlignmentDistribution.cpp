@@ -31,7 +31,8 @@ AlignmentDistribution::~AlignmentDistribution(void) {
 AlignmentDistribution& AlignmentDistribution::operator+=(const AlignmentDistribution& rhs) {
 
     // check that the partition information is the same in each
-    if ( this->partition->isEqualTo(*(rhs.partition)) == false )
+    //if ( this->partition->isEqualTo(*(rhs.partition)) == false )
+    if ( !(*(this->partition) == *(rhs.partition)) )
         Msg::error("Cannot combine alignments with different partition information");
 
     // combine the information
