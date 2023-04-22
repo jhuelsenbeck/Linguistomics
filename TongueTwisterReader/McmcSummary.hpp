@@ -39,6 +39,7 @@ class McmcSummary {
         void                                    readConfigFile(std::string fn);
         Partition*                              readPartition(std::string fn);
         int                                     readNumStates(std::string fn);
+        void                                    setNumStates(int x) { numStates = x; }
     
     private:
         void                                    writeMatrix(std::ofstream& file, DoubleMatrix& m, std::string name);

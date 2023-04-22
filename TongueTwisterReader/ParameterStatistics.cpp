@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 #include "Msg.hpp"
 #include "ParameterStatistics.hpp"
 
@@ -42,17 +43,22 @@ ParameterStatistics& ParameterStatistics::operator+=(const ParameterStatistics& 
 CredibleInterval ParameterStatistics::getCredibleInterval(void) {
 
     size_t size = values.size();
-    sortValues();
-    size_t lp = size / 40;
-    size_t up = size - lp - 1;
-
-    CredibleInterval ci(values[lp], values[up], 0.0);
+    CredibleInterval ci(0.0, 0.0, 0.0);
     if (size == 0)
         {
-        ci.median = 0.0;
         }
     else
         {
+        sortValues();
+        size_t lp = size / 40;
+        size_t up = size - lp - 1;
+        /*std::cout << name << std::endl;
+        std::cout << "  lp=" << lp << std::endl;
+        std::cout << "  up=" << up << std::endl;
+        std::cout << "  N =" << values.size() << std::endl;*/
+
+        ci.lower = values[lp];
+        ci.upper = values[up];
         if (size % 2 == 0)
             ci.median = (values[size / 2 - 1] + values[size / 2]) / 2.0;
         else

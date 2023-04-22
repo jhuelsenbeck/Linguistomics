@@ -156,6 +156,8 @@ void McmcSummary::calculateRates(DoubleMatrix& m) {
             Msg::error("Mismatch in the number of states from the frequencies and the state partitions (calculateRates)");
         }
 
+    int nr = inferNumberOfRates();
+
     // allocate a vector to hold the exchangeability parameters
     DoubleMatrix r(numStates,numStates);
     for (int i=0; i<numStates; i++)
@@ -163,34 +165,44 @@ void McmcSummary::calculateRates(DoubleMatrix& m) {
         for (int j=0; j<numStates; j++)
             r(i,j) = 1.0;
         }
-    for (int i=0; i<stats.size(); i++)
+        
+    if (nr > 0)
         {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'R')
+        bool usingCustom = false;
+        if (nr > 0 && nr < numStates * (numStates-1)/2)
+            usingCustom = true;
+
+        for (int i=0; i<stats.size(); i++)
             {
-            int r1, r2;
-            getRateElements(s->getName(), r1, r2);
-            if (statePartitions != NULL)
+            ParameterStatistics* s = stats[i];
+            if (s->getName()[0] == 'R')
                 {
-                Subset* s1 = statePartitions->findSubsetIndexed(r1);
-                Subset* s2 = statePartitions->findSubsetIndexed(r2);
-                for (int x1 : s1->getValues())
+                int r1, r2;
+                getRateElements(s->getName(), r1, r2);
+                if (usingCustom == true)
                     {
-                    for (int x2 : s2->getValues())
+                    Subset* s1 = statePartitions->findSubsetIndexed(r1);
+                    Subset* s2 = statePartitions->findSubsetIndexed(r2);
+                    for (int x1 : s1->getValues())
                         {
-                        double ave = s->getMean();
-                        r(x1,x2) = ave;
-                        r(x2,x1) = ave;
+                        for (int x2 : s2->getValues())
+                            {
+                            double ave = s->getMean();
+                            r(x1,x2) = ave;
+                            r(x2,x1) = ave;
+                            }
                         }
+                    
                     }
-                
-                }
-            else
-                {
-                r(r1,r2) = s->getMean();
+                else
+                    {
+                    r(r1-1,r2-1) = s->getMean();
+                    r(r2-1,r1-1) = s->getMean();
+                    }
                 }
             }
         }
+        
     for (int i=0; i<numStates; i++)
         {
         for (int j=0; j<numStates; j++)
@@ -308,6 +320,8 @@ void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
         if (tempNumStates != numStates)
             Msg::error("Mismatch in the number of states from the frequencies and the state partitions (calculateAverageRates)");
         }
+        
+    int nr = inferNumberOfRates();
 
     // allocate a vector to hold the exchangeability parameters
     DoubleMatrix r(numStates,numStates);
@@ -317,36 +331,47 @@ void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
             r(i,j) = 1.0;
         r(i,i) = 0.0;
         }
-    int nr = 0;
-    for (int i=0; i<stats.size(); i++)
+        
+    if (nr > 0)
         {
-        ParameterStatistics* s = stats[i];
-        if (s->getName()[0] == 'R')
+        bool usingCustom = false;
+        if (nr > 0 && nr < numStates * (numStates-1)/2)
+            usingCustom = true;
+        for (int i=0; i<stats.size(); i++)
             {
-            nr++;
-            int r1, r2;
-            getRateElements(s->getName(), r1, r2);
-            if (statePartitions != NULL)
+            ParameterStatistics* s = stats[i];
+            if (s->getName()[0] == 'R')
                 {
-                Subset* s1 = statePartitions->findSubsetIndexed(r1);
-                Subset* s2 = statePartitions->findSubsetIndexed(r2);
-                for (int x1 : s1->getValues())
+                nr++;
+                int r1, r2;
+                getRateElements(s->getName(), r1, r2);
+                if (usingCustom == true)
                     {
-                    for (int x2 : s2->getValues())
+                    // custom model
+                    Subset* s1 = statePartitions->findSubsetIndexed(r1);
+                    Subset* s2 = statePartitions->findSubsetIndexed(r2);
+                    for (int x1 : s1->getValues())
                         {
-                        double ave = s->getMean();
-                        r(x1,x2) = ave;
-                        r(x2,x1) = ave;
+                        for (int x2 : s2->getValues())
+                            {
+                            double ave = s->getMean();
+                            r(x1,x2) = ave;
+                            r(x2,x1) = ave;
+                            }
                         }
+                    
                     }
-                
-                }
-            else
-                {
-                r(r1,r2) = s->getMean();
+                else
+                    {
+                    // GTR
+                    r(r1-1,r2-1) = s->getMean();
+                    r(r2-1,r1-1) = s->getMean();
+                    }
                 }
             }
         }
+    
+        
     for (int i=0; i<numStates; i++)
         {
         for (int j=0; j<numStates; j++)
@@ -569,7 +594,11 @@ int McmcSummary::inferNumberOfRates(void) {
         if (s->getName()[0] == 'R')
             numRateClasses++;
         }
-    if (statePartitions != NULL && numRateClasses > 0) // check consistencey with a state partition object, if we have one
+    std::cout << "stats.size() = " << stats.size() << std::endl;
+    std::cout << "numRateClasses = " << numRateClasses << std::endl;
+    std::cout << "numStates*(numStates-1)/2 = " << numStates*(numStates-1)/2 << std::endl;
+    
+    if ( statePartitions != NULL && numRateClasses > 0 && numRateClasses != numStates*(numStates-1)/2 ) // check consistencey with a state partition object, if we have one
         {
         int numSubsets = statePartitions->numSubsets();
         int tempNumRates = numSubsets * (numSubsets-1) / 2;
@@ -892,35 +921,86 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     auto jStats = nlohmann::json::array();
     for (int i=0; i<stats.size(); i++)
         {
+        std::cout << stats[i] << std::endl;
         nlohmann::json cogStats = stats[i]->toJson();
         jStats.push_back(cogStats);
         }
     j["stats"] = jStats;
 
-
-    int  matrix = 6;
-    auto pcount = 10;
-
     int numRateClasses = inferNumberOfRates();
     std::cout << "numRateClasses = " << numRateClasses << std::endl;
-#   if 0
-    findex << "StatClass[][] TransitionStats = [\n";
-    for (int mi = 0; mi < pcount; ++mi) {
-        if (mi)
-            findex << ",\n";
-        findex << "  [";
-        for (int mj = 0; mj < pcount; ++mj) {
-            if (mj)
-                findex << ",";
-            if (mj < mi)
-                findex << "null";
-            else
-                stats[matrix++]->toFile(findex);
+    if (numRateClasses == 0)
+        {
+        // have the JC69 model
         }
-        findex << "]";
-    }
-    findex << "\n];\n\n";
-#   endif
+    else if (numStates * (numStates-1) / 2 == numRateClasses)
+        {
+        // have the GTR model
+        }
+    else
+        {
+        // have the custom model
+        int numSubsets = statePartitions->numSubsets();
+
+        DoubleMatrix lo(numSubsets,numSubsets);
+        DoubleMatrix md(numSubsets,numSubsets);
+        DoubleMatrix hi(numSubsets,numSubsets);
+        for (int i=0; i<numSubsets; i++)
+            {
+            for (int j=0; j<numSubsets; j++)
+                {
+                lo(i,j) = -1.0;
+                md(i,j) = -1.0;
+                hi(i,j) = -1.0;
+                }
+            }
+        for (int i=0; i<stats.size(); i++)
+            {
+            ParameterStatistics* s = stats[i];
+            if (s->getName()[0] == 'R')
+                {
+                int r1 = 0, r2 = 0;
+                getRateElements(s->getName(), r1, r2);
+                CredibleInterval interval = s->getCredibleInterval();
+                double mdVal = s->getMean();
+                double loVal = interval.lower;
+                double hiVal = interval.upper;
+                r1--;
+                r2--;
+                lo(r1,r2) = loVal;
+                lo(r2,r1) = loVal;
+                md(r1,r2) = mdVal;
+                md(r2,r1) = mdVal;
+                hi(r1,r2) = hiVal;
+                hi(r2,r1) = hiVal;
+                std::cout << s->getName() << " " << r1 << " " << r2 << std::endl;
+                }
+            }
+        for (int i=0; i<numSubsets; i++)
+            {
+            for (int j=0; j<numSubsets; j++)
+                {
+                if (md(i,j) < 0.0)
+                    Msg::error("Failed to initialize all partition rates");
+                }
+            }
+            
+        findex << "StatClass[][] TransitionStats = [\n";
+        for (int i = 0; i < numSubsets; ++i)
+            {
+            if (i)
+                findex << ",\n";
+            findex << "  [";
+            for (int j = 0; j < numSubsets; ++j)
+                {
+                if (j)
+                    findex << ",";
+                findex << "new(" << lo(i,j) << "," << md(i,j) << "," << hi(i,j) << ")";
+                }
+            findex << "]";
+            }
+        findex << "\n];\n\n";
+        }
     
     // output average rates of change
     // No credible intervals on this information.

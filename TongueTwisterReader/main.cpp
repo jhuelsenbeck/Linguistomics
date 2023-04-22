@@ -88,8 +88,10 @@ void readDirectory(std::string folder, int bi, McmcSummary& summary) {
         Msg::warning("Could not find partition in configuration file");
         
     int numStates = readNumStates(folder, summary);
+    std::cout << "  * Number of states = " << numStates << std::endl;
     if (numStates == 0)
         Msg::error("Could not find the NumberOfStates key in the JSON file");
+    summary.setNumStates(numStates);
 
     for (const auto& entry : std::filesystem::directory_iterator(folder))
         {
