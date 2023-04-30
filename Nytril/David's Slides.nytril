@@ -693,11 +693,17 @@ namespace DavidSlides.Results {
   }
 
   namespace Slide.Slide2 {
-    Title = "Majority-rule consensus tree ({0})"(MainResults.Data.MainRun.Name);
+    Title = "Majority-rule consensus tree (Old Method)";
 
-//    Body(DocumentClass document) = Block {
-//      ShowTree(null, 100%, null, MainResults.Data.MainRun.Tree, Lang.Branches);
-//    };
+
+    GetOldTree {
+      var treefile = Info.ExperimentRoot IO.Folder("Europe") IO.Folder("Custom") IO.Folder("Posterior") IO.Folder("Run1") Info.TreeFile;
+      return IO.Read(treefile, IO.FileFormats.Tree, LangNodeClass).Tree;
+    }
+
+    Body(DocumentClass document) = Block {
+      ShowTree(null, 100%, null, GetOldTree, Lang.Branches);
+    };
   }
 
   namespace Slide.Slide3 {
