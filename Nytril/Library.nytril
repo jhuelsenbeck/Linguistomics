@@ -600,14 +600,16 @@ class CognateClass: FactClass {
 class TaxonClass {
   var           Variable,
                 Index,
-                WordCount;
+                WordCount,
+                SegmentCount;
   LanguageClass Language;
 
   Constructor(LanguageClass language) {
-    Index     = each0;
-    Language  = language;
-    Variable  = language.GetVariable.Name;
-    WordCount = 0;
+    Index        = each0;
+    Language     = language;
+    Variable     = language.GetVariable.Name;
+    WordCount    = 0;
+    SegmentCount = 0
   }
 
   override GetLayoutTip = Span {
@@ -900,10 +902,14 @@ class DataSetClass {
         word.InitRaw(text, lookup);
         maxlength = Math.Max(maxlength, word.Aligned.Length);
 
+        int count = 0;
         foreach (var s in word.Segments) {
-          ++SegmentCount;
-          ++s.UsedCount;
+          if (s.Index >= 0)
+            ++count;
         }
+
+        SegmentCount       += count;
+        taxon.SegmentCount += count;
         WordList.SetValue(taxon.Index, word);
       }
     }
@@ -955,8 +961,9 @@ class DataSetClass {
           PlainBuffer.Clear();
           SegmentBuffer.Clear();
 
-          var gs  = IPAParts.Gap;
-          var gap = gs.Ipa[0];
+          var gs    = IPAParts.Gap;
+          var gap   = gs.Ipa[0];
+          var count = 0;
           foreach (var index in word) {
             if (index < 0) {
               TextBuffer.Add(gap);
@@ -970,9 +977,13 @@ class DataSetClass {
                 PlainBuffer.Add(c);
               }
               ++s.UsedCount;
-              ++SegmentCount;
+              ++count;
             }
           }
+
+          SegmentCount       += count;
+          taxon.SegmentCount += count;
+
 
           var text = TextBuffer.Values;
           var w    = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.Variable, text, taxon, cognate);
