@@ -278,11 +278,12 @@ namespace Figures.FractionGapsChart {
 
 TopCount = 15;
 
-namespace Figures.AverageTransitions {
-  MinRate = 0.00005;
-  Title   = "Average transitions above {0}%"(MinRate*100);
+RateMatrixClass AverageRates = new(MainResults.Output.AverageRates);
 
-  AlignedCountClass Display = new(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax, MinRate, true);
+namespace Figures.AverageTransitions {
+  Title   = "Average transitions";
+
+  AlignedCountClass Display = new(MainResults, AverageRates, true);
 
   Body(DocumentClass document) = Display.PartitionBox;
 }
@@ -290,7 +291,7 @@ namespace Figures.AverageTransitions {
 namespace Figures.AverageDiagonal {
   Title = "Average Diagonal";
 
-  Body(DocumentClass document) = new DiagonalClass(MainResults, MainResults.Output.AverageRates, MainResults.Output.AverageRatesMax).Display;
+  Body(DocumentClass document) = new DiagonalClass(MainResults, AverageRates).Display;
 }
 
 namespace Figures.AverageMost {
@@ -301,19 +302,20 @@ namespace Figures.AverageMost {
 
 //======================================================================
 
+RateMatrixClass QRates = new(MainResults.Output.QRates);
+
 namespace Figures.AsymmetriesMatrix {
   Title = "Asymmetries";
 
-  AsymmetriesClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, Figures.AverageTransitions.MinRate, false);
+  AsymmetriesClass Display = new(MainResults, QRates, false);
 
   Body(DocumentClass document) = Display.PartitionBox;
 }
 
 namespace Figures.QRatesMatrix {
-  MinRate = 0.005;
-  Title   = "Q above {0}%"(MinRate*100);
+  Title   = "Rate Matrix \"Q\"";
 
-  AlignedCountClass Display = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax, MinRate, false);
+  AlignedCountClass Display = new(MainResults, QRates, false);
 
   Body(DocumentClass document) = Display.PartitionBox;
 }
@@ -321,7 +323,7 @@ namespace Figures.QRatesMatrix {
 namespace Figures.QRatesDiagonal {
   Title = "Segmental stability as measured by the instantaneous rate of change";
 
-  DiagonalClass Diagonal = new(MainResults, MainResults.Output.QRates, MainResults.Output.QRatesMax);
+  DiagonalClass Diagonal = new(MainResults, QRates);
   Body(DocumentClass document) = Diagonal.Display;
 }
 
