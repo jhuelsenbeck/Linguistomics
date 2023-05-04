@@ -1452,7 +1452,17 @@ class RateMatrixClass {
     for (var i = 0; i < length; ++i) {
       for (var j = 0; j < length; ++j) {
         var r = rates[i][j];
-        max = Math.Max(max, r);
+
+        if (r < 0) {
+          r   = -Math.Log(-r, 10);
+          max = Math.Max(max, r);
+          r = -r;
+        }
+        else {
+          r   = -Math.Log(r, 10);
+          max = Math.Max(max, r);
+        }
+
         Values.SetValue(i, j, r);
       }
     }
@@ -1594,8 +1604,8 @@ class AlignedCountClass: CountBaseClass {
         TipAction: a;
 
         Background: Redish(a.Percent);
-        if (a.Percent >= 0.005)
-          Span {a.Percent * 100.0; TextDigits: 0};
+//        if (a.Percent >= 0.30)
+  //        Span {a.Percent * 100.0; TextDigits: 0};
       };
     }
     return null;
@@ -1620,8 +1630,8 @@ class AsymmetriesClass: AlignedCountClass {
         TipAction: a;
 
         Background: a.Rate >= a.Reverse ? Greenish((a.Rate - a.Reverse) * Factor) : Redish((a.Reverse - a.Rate) * Factor);
-        if (a.Percent >= 0.005)
-          Span {a.Percent * 100.0; TextDigits: 0};
+//        if (a.Percent >= 0.30)
+//          Span {a.Percent * 100.0; TextDigits: 0};
       };
     }
     return null;
