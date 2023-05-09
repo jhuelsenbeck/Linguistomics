@@ -333,6 +333,12 @@ namespace Figures.AverageAll {
   Body(DocumentClass document) = QRatesMatrix.Display.ShowAllRates;
 }
 
+namespace Figures.AverageSorted {
+  Title = "Rate vs. Reverse Rate";
+
+  Body(DocumentClass document) = QRatesMatrix.Display.ShowSortedRates;
+}
+
 TransitionTitle(type) = "The top {0} {1} transitions"(TopCount, type);
 
 namespace Figures.QRatesTop {
@@ -350,8 +356,8 @@ namespace Figures.QRatesBottom {
 namespace Figures.QRatesVowelVowel {
   Title = TransitionTitle("Consonant-Vowel");
 
-  Predicate(AlignActionClass a) = a.S0.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
-                                  a.S1.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel);
+  Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
+                                  a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel);
 
   Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
 }
@@ -359,8 +365,8 @@ namespace Figures.QRatesVowelVowel {
 namespace Figures.QRatesConsonantConsonant {
   Title = TransitionTitle("Consonant-Consonant");
 
-  Predicate(AlignActionClass a) = a.S0.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
-                                  a.S1.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
+  Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
+                                  a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
 
   Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
 }
@@ -368,8 +374,8 @@ namespace Figures.QRatesConsonantConsonant {
 namespace Figures.QRatesAsperation {
   Title = TransitionTitle("pulmonic");
 
-  Predicate(AlignActionClass a) = a.S0.Features.HasFlagMask(SegmentFeatures.Pulmonic | SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
-                                  a.S1.Features.HasFlagMask(SegmentFeatures.Pulmonic | SegmentFeatures.Vowel, SegmentFeatures.Pulmonic) and
+  Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Pulmonic | SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
+                                  a.F1.HasFlagMask(SegmentFeatures.Pulmonic | SegmentFeatures.Vowel, SegmentFeatures.Pulmonic) and
                                   a.Rate > a.Reverse*2;
 
   Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
@@ -378,8 +384,8 @@ namespace Figures.QRatesAsperation {
 namespace Figures.QRatesVowelConsonant {
   Title = TransitionTitle("Vowel-Consonant");
 
-  Predicate(AlignActionClass a) = a.S0.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel) and
-                                  a.S1.Features.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
+  Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel) and
+                                  a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
 
   Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
 }

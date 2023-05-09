@@ -1528,9 +1528,8 @@ class AlignedCountClass: CountBaseClass {
 
   ShowChart(AlignActionClass[] actions) = Chart(100%, 4 inches) {
     Type: ChartTypes.Column;
-    TextHeight: 10 pts;
+    TextHeight: 12 pts;
     ValueLabel: HBox {
-      TextHeight: 12 pts;
       Transform: Rotate(90 degrees);
       TransformFit: true;
       Lang.RateChange;
@@ -1557,36 +1556,51 @@ class AlignedCountClass: CountBaseClass {
   };
 
 
+  MinusLog(text) = Span {
+    Tex.Minus; "Log" sub 10; "("; text; ")";
+  };
+
   ShowAllRates = VBox {
-    Chart(100%, 4 inches) {
+    Chart(100%, ExtentHeight - 48 pts) {
       Type: ChartTypes.Scatter;
-      TextHeight: 10 pts;
+      TextHeight: 12 pts;
+
       ValueLabel: HBox {
-        TextHeight: 12 pts;
         Transform: Rotate(90 degrees);
         TransformFit: true;
-        Span {Tex.Minus; "Log" sub 10; "(Rate)"};
+        MinusLog(Lang.RateChange);
       };
 
       XAxis: ChartAxis {
-        Rotation: 70 degrees;
+        Rotation: 90 degrees;
         TextHeight: 7 pts;
-        (each (each Results.Data.UniqueSegments).Segment).Ipa;
+        foreach (var sa in Results.Rule.Segments) {
+          var p = Results.Rule.Partitions[sa.PartitionIndex];
+          HBox(15 pts) {
+            HAlign: HAligns.Center;
+            Background: p.Color;
+            TextColor: p.TextColor;
+            sa.Segment.Ipa;
+          }
+        }
       };
+
+      var special = Markers.Circle(Colors.Red);
 
       ChartSeries {
         Marker: Markers.Dot;
 
-        var length = ActionMatrix.Cols;
-        for (var i = 0; i < length; ++i) {
-          for (var j = 0; j < length; ++j) {
-            if (i != j) {
-              var a = ActionMatrix.GetValue(i, j);
-              var x = -Math.Log(Math.Abs(a.Rate), 10);// + Math.Log(Math.Abs(a.Reverse), 10);
+        foreach (var si in Results.Rule.Segments) {
+          var i = each0;
 
-              new DataPointClass(i, x) {
+          foreach (var sj in Results.Rule.Segments) {
+            if (si.Index != sj.Index) {
+              var a = ActionMatrix.GetValue(si.Index, sj.Index);
+              var y = -Math.Log(Math.Abs(a.Rate), 10);
+
+              new DataPointClass(i, y) {
                 Reference: a;
-                Fill: a.S1.Partition.Color
+                Fill: a.S1.Partition.Color;
               };
             }
           }
@@ -1597,7 +1611,47 @@ class AlignedCountClass: CountBaseClass {
     Separation: 20 pts;
     Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
-      Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 11 pts);
+      Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 10 pts);
+    }
+  };
+
+  ShowSortedRates = VBox {
+    Chart(100%, ExtentHeight - 48 pts) {
+      Type: ChartTypes.Scatter;
+      TextHeight: 12 pts;
+      ValueLabel: HBox {
+        Transform: Rotate(90 degrees);
+        TransformFit: true;
+        MinusLog(Lang.RateChange);
+      };
+      XLabel: MinusLog("Reverse Rate");
+
+      var special = Markers.Circle(Colors.Red);
+
+      ChartSeries {
+        Marker: Markers.Dot;
+
+        foreach (var si in Results.Rule.Segments) {
+          foreach (var sj in Results.Rule.Segments) {
+            if (si.Index < sj.Index) {
+              var a = ActionMatrix.GetValue(si.Index, sj.Index);
+              var x = -Math.Log(Math.Abs(a.Rate), 10);
+              var y = -Math.Log(Math.Abs(a.Reverse), 10);
+
+              new DataPointClass(x, y) {
+                Reference: a;
+                Marker: a.S1.Partition.Marker;
+              };
+            }
+          }
+        }
+      };
+    };
+
+    Separation: 20 pts;
+    Canvas(ExtentWidth) {
+      HAlign: HAligns.Center;
+      Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 10 pts);
     }
   };
 

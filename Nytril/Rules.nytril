@@ -7,7 +7,8 @@ class PartitionClass: FactClass {
   PointClass     Center;
   ColorClass     Color,
                  TextColor;
-  var            Index,
+  var            Marker,
+                 Index,
                  Radius,
                  Angle,
                  Outer;
@@ -16,6 +17,7 @@ class PartitionClass: FactClass {
     super.Constructor(guid.FromHash(name));
     Name      = name;
     Color     = ChartColor(index);
+    Marker    = Markers.Dot(Color);
     TextColor = Color.TextCompliment;
     Index     = index;
     Segments  = segments;
@@ -473,21 +475,25 @@ class AlignSortClass {
 //======================================================================
 
 class AlignActionClass: ActionClass {
-  ResultsClass Results;
-  SegPartClass S0,
-               S1;
-  var          Rate,
-               Reverse,
-               ReverseRating,
-               Percent,
-               RPercent,
-               Symmetric;
+  ResultsClass    Results;
+  SegPartClass    S0,
+                  S1;
+  SegmentFeatures F0,
+                  F1;
+  var             Rate,
+                  Reverse,
+                  ReverseRating,
+                  Percent,
+                  RPercent,
+                  Symmetric;
 
   Constructor(ResultsClass results, SegPartClass s0, SegPartClass s1, rate, reverse, symmetric) {
     super.Constructor(Actions.TipDocument, s0);
     Results       = results;
     S0            = s0;
     S1            = s1;
+    F0            = s0.Features;
+    F1            = s1.Features;
     Rate          = rate;
     Reverse       = reverse;
     ReverseRating = rate - reverse;
