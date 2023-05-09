@@ -278,12 +278,12 @@ namespace Figures.FractionGapsChart {
 
 TopCount = 15;
 
-RateMatrixClass AverageRates = new(MainResults.Output.AverageRates);
+RateMatrixClass AverageRates = new(MainResults.Output.AverageRates, true);
 
 namespace Figures.AverageTransitions {
   Title = "Average transitions";
 
-  AlignedCountClass Display = new(MainResults, AverageRates, true);
+  AlignedCountClass Display = new(MainResults, AverageRates);
 
   Body(DocumentClass document) = Display.PartitionBox;
 }
@@ -302,12 +302,12 @@ namespace Figures.AverageMost {
 
 //======================================================================
 
-RateMatrixClass QRates = new(MainResults.Output.QRates);
+RateMatrixClass QRates = new(MainResults.Output.QRates, false);
 
 namespace Figures.AsymmetriesMatrix {
   Title = "Asymmetries";
 
-  AsymmetriesClass Display = new(MainResults, QRates, false);
+  AsymmetriesClass Display = new(MainResults, QRates);
 
   Body(DocumentClass document) = Display.PartitionBox;
 }
@@ -315,7 +315,7 @@ namespace Figures.AsymmetriesMatrix {
 namespace Figures.QRatesMatrix {
   Title = "Rate Matrix \"Q\"";
 
-  AlignedCountClass Display = new(MainResults, QRates, false);
+  AlignedCountClass Display = new(MainResults, QRates);
 
   Body(DocumentClass document) = Display.PartitionBox;
 }
@@ -325,6 +325,12 @@ namespace Figures.QRatesDiagonal {
 
   DiagonalClass Diagonal = new(MainResults, QRates);
   Body(DocumentClass document) = Diagonal.Display;
+}
+
+namespace Figures.AverageAll {
+  Title = "All Rates";
+
+  Body(DocumentClass document) = QRatesMatrix.Display.ShowAllRates;
 }
 
 TransitionTitle(type) = "The top {0} {1} transitions"(TopCount, type);

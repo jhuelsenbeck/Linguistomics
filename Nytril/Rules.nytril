@@ -478,25 +478,25 @@ class AlignActionClass: ActionClass {
                S1;
   var          Rate,
                Reverse,
+               ReverseRating,
                Percent,
                RPercent,
                Symmetric;
 
   Constructor(ResultsClass results, SegPartClass s0, SegPartClass s1, rate, reverse, symmetric) {
     super.Constructor(Actions.TipDocument, s0);
-    Results   = results;
-    S0        = s0;
-    S1        = s1;
-    Rate      = rate;
-    Reverse   = reverse;
-    Symmetric = symmetric;
+    Results       = results;
+    S0            = s0;
+    S1            = s1;
+    Rate          = rate;
+    Reverse       = reverse;
+    ReverseRating = rate - reverse;
+    Symmetric     = symmetric;
   }
 
   override Compare(c, CompareOptions options) = Rate.Compare(c.Rate);
 
-  ReverseRating {
-    return Rate - 0.1 * Reverse;
-  }
+  static CompareProb(AlignSortClass s1, AlignSortClass s2, CompareOptions options) = s1.Data.Prob.Compare(s2.Data.Prob);
 
   ShowPartition(SegPartClass s, textheight) = Canvas(textheight * 2.5) {
     BorderRadius: Style.BorderSize;
@@ -542,7 +542,8 @@ class AlignActionClass: ActionClass {
     TextHeight: 14 pts;
     GetLayoutSpan;
     ShowNumber("Rate", Rate, Percent);
-    ShowNumber("Reverse", Reverse, RPercent);
+    if (!Symmetric)
+      ShowNumber("Reverse", Reverse, RPercent);
 
     var sorted = GetList().Slice(range);
     if (sorted is valid) {
@@ -562,8 +563,6 @@ class AlignActionClass: ActionClass {
   override GetLayoutTip = GetExamples(0..<10);
 
   override GetDocument = GetExamples(0..);
-
-  static CompareProb(AlignSortClass s1, AlignSortClass s2, options) = s1.Data.Prob.Compare(s2.Data.Prob);
 
   AlignSortClass[] GetList {
     // Find cognate sets that have the first segment in one language and the second in another language

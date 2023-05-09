@@ -1441,33 +1441,13 @@ class PriorCountClass: CountBaseClass {
 
 class RateMatrixClass {
   MatrixClass Values;
+  bool        Symmetric;
   var         MaxValue;
 
-  Constructor(rates) {
-
-    var length = rates.Length;
-    double max = 0.0;
-    Values = new MatrixClass(length, length, 0.0, 0.0);
-
-    for (var i = 0; i < length; ++i) {
-      for (var j = 0; j < length; ++j) {
-        var r = rates[i][j];
-
-        if (r < 0) {
-          r   = -Math.Log(-r, 10);
-          max = Math.Max(max, r);
-          r = -r;
-        }
-        else {
-          r   = -Math.Log(r, 10);
-          max = Math.Max(max, r);
-        }
-
-        Values.SetValue(i, j, r);
-      }
-    }
-
-    MaxValue = max;
+  Constructor(rates, bool symmetric) {
+    Symmetric = symmetric;
+    Values    = Math.Matrix(rates);
+    MaxValue  = Values.FindMax;
   }
 }
 
@@ -1478,14 +1458,12 @@ class AlignedCountClass: CountBaseClass {
   ListClass<AlignActionClass>   ActionList;
   MatrixClass<AlignActionClass> ActionMatrix;
   ResultsClass                  Results;
-  var                           Factor,
-                                Symmetric;
+  var                           Factor;
   AlignActionClass[]            SortedActions;
 
-  Constructor(ResultsClass results, RateMatrixClass rates, bool symmetric) {
+  Constructor(ResultsClass results, RateMatrixClass rates) {
     super.Constructor(results.Data);
-    Symmetric = symmetric;
-    Results   = results;
+    Results = results;
 
     var ordered = results.Data.UniqueSegments;
     var length  = Segments.Length;
@@ -1500,14 +1478,21 @@ class AlignedCountClass: CountBaseClass {
     var values   = rates.Values;
 
     for (var i = 0; i < length; ++i) {
-      var jmax = symmetric ? i : length;
+      var jmax = rates.Symmetric ? i : length;
 
       for (var j = 0; j < jmax; ++j) {
-        var rate    = values.GetValue(i, j);
-        var reverse = values.GetValue(j, i);
-        var a = new AlignActionClass(results, ordered[i], ordered[j], rate, reverse, symmetric);
-        ActionList.Add(a);
-        ActionMatrix.SetValue(i, j, a);
+        var rate = values.GetValue(i, j);
+        if (rates.Symmetric) {
+          var a = new AlignActionClass(results, ordered[i], ordered[j], rate, rate, rates.Symmetric);
+          ActionList.Add(a);
+          ActionMatrix.SetValue(i, j, a);
+        }
+        else {
+          var reverse = values.GetValue(j, i);
+          var a       = new AlignActionClass(results, ordered[i], ordered[j], rate, reverse, rates.Symmetric);
+          ActionList.Add(a);
+          ActionMatrix.SetValue(i, j, a);
+        }
       }
     }
 
@@ -1548,7 +1533,7 @@ class AlignedCountClass: CountBaseClass {
       TextHeight: 12 pts;
       Transform: Rotate(90 degrees);
       TransformFit: true;
-      "Transition Rate %";
+      Lang.RateChange;
     };
 
     var fs = 200.0 / actions.Length;
@@ -1569,6 +1554,51 @@ class AlignedCountClass: CountBaseClass {
     ShowChart(actions);
     Separation: 20 pts;
     ShowLegend(actions);
+  };
+
+
+  ShowAllRates = VBox {
+    Chart(100%, 4 inches) {
+      Type: ChartTypes.Scatter;
+      TextHeight: 10 pts;
+      ValueLabel: HBox {
+        TextHeight: 12 pts;
+        Transform: Rotate(90 degrees);
+        TransformFit: true;
+        Span {Tex.Minus; "Log" sub 10; "(Rate)"};
+      };
+
+      XAxis: ChartAxis {
+        Rotation: 70 degrees;
+        TextHeight: 7 pts;
+        (each (each Results.Data.UniqueSegments).Segment).Ipa;
+      };
+
+      ChartSeries {
+        Marker: Markers.Dot;
+
+        var length = ActionMatrix.Cols;
+        for (var i = 0; i < length; ++i) {
+          for (var j = 0; j < length; ++j) {
+            if (i != j) {
+              var a = ActionMatrix.GetValue(i, j);
+              var x = -Math.Log(Math.Abs(a.Rate), 10);// + Math.Log(Math.Abs(a.Reverse), 10);
+
+              new DataPointClass(i, x) {
+                Reference: a;
+                Fill: a.S1.Partition.Color
+              };
+            }
+          }
+        }
+      };
+    };
+
+    Separation: 20 pts;
+    Canvas(ExtentWidth) {
+      HAlign: HAligns.Center;
+      Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 11 pts);
+    }
   };
 
   ShowChartPairs(top, subset) = VBox {
@@ -1615,8 +1645,8 @@ class AlignedCountClass: CountBaseClass {
 //======================================================================
 
 class AsymmetriesClass: AlignedCountClass {
-  Constructor(ResultsClass results, RateMatrixClass rates, symmetric) {
-    super.Constructor(results, rates, symmetric);
+  Constructor(ResultsClass results, RateMatrixClass rates) {
+    super.Constructor(results, rates);
   }
 
   override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
@@ -1629,7 +1659,8 @@ class AsymmetriesClass: AlignedCountClass {
         VAlign: VAligns.Center;
         TipAction: a;
 
-        Background: a.Rate >= a.Reverse ? Greenish((a.Rate - a.Reverse) * Factor) : Redish((a.Reverse - a.Rate) * Factor);
+        var r = (a.Rate - a.Reverse) * Factor * 0.5;
+        Background: r > 0 ? Greenish(r) : Redish(-r);
 //        if (a.Percent >= 0.30)
 //          Span {a.Percent * 100.0; TextDigits: 0};
       };
@@ -1685,7 +1716,7 @@ class DiagonalClass {
     Segments = (each Data).Segment;
 
     var partitions = results.Rule.Partitions;
-    var pmax        = partitions.Length;
+    var pmax       = partitions.Length;
     var set        = new HashSetClass(pmax);
     var list       = new ListClass<PartitionClass>(pmax);
     foreach (var s in Segments) {
@@ -1706,7 +1737,7 @@ class DiagonalClass {
       TextHeight: 11 pts;
       Type: ChartTypes.Column;
 
-      ValueLabel: "Rate of Change" {
+      ValueLabel: Lang.RateChange {
         Transform: Rotate(90 degrees);
         TransformFit: true;
       };
