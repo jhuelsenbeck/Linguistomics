@@ -136,7 +136,8 @@ class ModelClass {
 
   void InitFolders(DataSetClass data) {
     CreateFolder(Info.ExperimentRoot RootFolder);
-    (each Run).InitFolders(data, TreeSet.Tree);
+    foreach (var r in Run)
+      r.InitFolders(data, TreeSet.Tree);
   }
 }
 
@@ -144,7 +145,9 @@ class ModelClass {
 
 class TreeSetClass {
   NodeClass    Tree;
-  ModelClass   Custom;
+  ModelClass   Custom,
+               GTR,
+               JC69;
   ModelClass[] Models;
   var          Name,
                RootFolder;
@@ -154,15 +157,14 @@ class TreeSetClass {
     Tree       = tree;
     RootFolder = Folder(root) Folder(name);
     Custom     = new(config, this, "Custom");
-    Models = [
-      Custom,
-      new(config, this, "JC69"),
-      new(config, this, "GTR"),
-    ];
+    JC69       = new(config, this, "JC69");
+    GTR        = new(config, this, "GTR");
+    Models     = [Custom, JC69, GTR];
   }
 
   void InitFolders(DataSetClass data) {
-    (each Models).InitFolders(data);
+    foreach (var m in Models)
+      m.InitFolders(data);
   }
 }
 

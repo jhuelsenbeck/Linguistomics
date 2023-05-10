@@ -1231,19 +1231,36 @@ class ResultsClass {
   DataSetClass       Data;
   RuleClass          Rule;
   AlignIndexClass[]  Alignments;
-  StatClass[][]      TransitionStats;
-  var                Output,
-                     AlignmentCutoff,
+  MatrixClass<StatClass> TransitionStats;
+  RateMatrixClass    AverageRates,
+                     QRates;
+  var                AlignmentCutoff,
                      EquilibriumFrequencies;
 
   Constructor(DataSetClass data) {
-    Data                   = data;
-    Rule                   = data.Rule;
-    Output                 = IO.ReadScript(data.MainRun.AlignmentFile).Root;
-    TransitionStats        = Output.TransitionStats;
-    EquilibriumFrequencies = Output.EquilibriumFrequencies;
-    AlignmentCutoff        = Output.AlignmentCutoff;
-    Alignments             = Output.Alignments;
+    Data = data;
+    Rule = data.Rule;
+
+
+    var align = IO.ReadScript(data.MainRun.AlignmentFile).Root;
+
+    QRates                 = new(align.QRates, false);
+    AverageRates           = new(align.AverageRates, true);
+
+
+    EquilibriumFrequencies = align.EquilibriumFrequencies;
+    AlignmentCutoff        = align.AlignmentCutoff;
+    Alignments             = align.Alignments;
+
+
+    var ts = align?.TransitionStats;
+    if (ts is not null)
+      TransitionStats = Math.Matrix(ts);
+    else {
+      var length = QRates.Length;
+      var bs = new StatClass(0, 0.5, 1);
+      TransitionStats = new(length, length, bs, bs);
+    }
 
     var alist = new ListClass<AlignIndexClass>(1024);
     foreach (var a in Alignments) {
@@ -1560,6 +1577,13 @@ class AlignedCountClass: CountBaseClass {
     Tex.Minus; "Log" sub 10; "("; text; ")";
   };
 
+  LogRate(r) {
+    if (r < 0)
+      return Math.Log(-r, 10);
+    else
+      return -Math.Log(r, 10);
+  }
+
   ShowAllRates = VBox {
     Chart(100%, ExtentHeight - 48 pts) {
       Type: ChartTypes.Scatter;
@@ -1596,7 +1620,7 @@ class AlignedCountClass: CountBaseClass {
           foreach (var sj in Results.Rule.Segments) {
             if (si.Index != sj.Index) {
               var a = ActionMatrix.GetValue(si.Index, sj.Index);
-              var y = -Math.Log(Math.Abs(a.Rate), 10);
+              var y = LogRate(a.Rate);
 
               new DataPointClass(i, y) {
                 Reference: a;
@@ -1626,7 +1650,8 @@ class AlignedCountClass: CountBaseClass {
       };
       XLabel: MinusLog("Reverse Rate");
 
-      var special = Markers.Circle(Colors.Red);
+      var group   = Markers.TriangleUp(Colors.Green) {TextHeight: 12 pts};
+      var special = Markers.Square(Colors.Red) {TextHeight: 15 pts};
 
       ChartSeries {
         Marker: Markers.Dot;
@@ -1635,12 +1660,15 @@ class AlignedCountClass: CountBaseClass {
           foreach (var sj in Results.Rule.Segments) {
             if (si.Index < sj.Index) {
               var a = ActionMatrix.GetValue(si.Index, sj.Index);
-              var x = -Math.Log(Math.Abs(a.Rate), 10);
-              var y = -Math.Log(Math.Abs(a.Reverse), 10);
+              var x = LogRate(a.Rate);
+              var y = LogRate(a.Reverse);
 
               new DataPointClass(x, y) {
                 Reference: a;
-                Marker: a.S1.Partition.Marker;
+                if (a.S0.Segment.Ipa == "p")
+                  Marker: a.S1.Segment.Ipa == "b" or a.S1.Segment.Ipa == "f" ? special : group;
+                else
+                  Marker: a.S1.Partition.Marker;
               };
             }
           }
