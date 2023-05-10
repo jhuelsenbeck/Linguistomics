@@ -1643,12 +1643,14 @@ class AlignedCountClass: CountBaseClass {
     Chart(100%, ExtentHeight - 48 pts) {
       Type: ChartTypes.Scatter;
       TextHeight: 12 pts;
+
+      XLabel: MinusLog(Lang.RateChange);
+
       ValueLabel: HBox {
         Transform: Rotate(90 degrees);
         TransformFit: true;
-        MinusLog(Lang.RateChange);
+        MinusLog("Reverse Rate");
       };
-      XLabel: MinusLog("Reverse Rate");
 
       var group   = Markers.TriangleUp(Colors.Green) {TextHeight: 12 pts};
       var special = Markers.Square(Colors.Red) {TextHeight: 15 pts};
@@ -1660,10 +1662,7 @@ class AlignedCountClass: CountBaseClass {
           foreach (var sj in Results.Rule.Segments) {
             if (si.Index < sj.Index) {
               var a = ActionMatrix.GetValue(si.Index, sj.Index);
-              var x = LogRate(a.Rate);
-              var y = LogRate(a.Reverse);
-
-              new DataPointClass(x, y) {
+              new DataPointClass(LogRate(a.Rate), LogRate(a.Reverse)) {
                 Reference: a;
                 if (a.S0.Segment.Ipa == "p")
                   Marker: a.S1.Segment.Ipa == "b" or a.S1.Segment.Ipa == "f" ? special : group;
