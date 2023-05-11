@@ -433,6 +433,9 @@ class WordClass: FactClass {
       Aligned  = segments.FindSlice(s => s.Segment.Gap or (not s.Punctuation));
       Segments = segments.FindSlice(s => not s.Punctuation);
 
+      foreach (var s in Segments)
+        s.Index = each0;
+
       // Test that the word's text is the same as the segments converted back into text
       var view = Span {(each segments).Ipa};
       System.Assert(Text == (view as string), "Round-trip error with text {0}-{1}"(Text, view), Text);
@@ -1677,6 +1680,39 @@ class AlignedCountClass: CountBaseClass {
                 }
 //              };
             }
+          }
+        }
+      };
+    };
+
+    Separation: 20 pts;
+    Canvas(ExtentWidth) {
+      HAlign: HAligns.Center;
+      Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 10 pts);
+    }
+  };
+
+  ShowRateDifference = VBox {
+    Chart(100%, ExtentHeight - 48 pts) {
+      Type: ChartTypes.Scatter;
+      TextHeight: 12 pts;
+
+      XLabel: "Transitions";
+
+      ValueLabel: HBox {
+        Transform: Rotate(90 degrees);
+        TransformFit: true;
+        MinusLog("Rate Difference");
+      };
+
+      var sorted = ActionList.Sort(true, ref AlignActionClass.CompareDif);
+      ChartSeries {
+        TextHeight: 6 pts;
+        Marker: Markers.Dot;
+        foreach (var a in sorted) {
+          new DataPointClass(each0, a.ReverseRating) {
+            Reference: a;
+            Marker: a.S0.Partition.Marker;
           }
         }
       };

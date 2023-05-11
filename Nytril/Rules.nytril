@@ -495,13 +495,16 @@ class AlignActionClass: ActionClass {
     F1            = s1.Features;
     Rate          = rate;
     Reverse       = reverse;
-    ReverseRating = rate - reverse;
+    ReverseRating = Math.Log(Math.Abs(rate), 10) - Math.Log(Math.Abs(reverse), 10);
     Symmetric     = symmetric;
   }
 
   override Compare(c, CompareOptions options) = Rate.Compare(c.Rate);
 
-  static CompareProb(AlignSortClass s1, AlignSortClass s2, CompareOptions options) = s1.Data.Prob.Compare(s2.Data.Prob);
+  static int CompareProb(AlignSortClass s1, AlignSortClass s2, CompareOptions options) = s1.Data.Prob.Compare(s2.Data.Prob);
+
+  static int CompareDif(AlignActionClass a0, AlignActionClass a1, CompareOptions options) = a0.ReverseRating.Compare(a1.ReverseRating);
+
 
   ShowPartition(SegPartClass s, textheight) = Canvas(textheight * 2.5) {
     BorderRadius: Style.BorderSize;
