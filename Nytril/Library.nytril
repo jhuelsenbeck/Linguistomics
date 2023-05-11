@@ -1656,19 +1656,26 @@ class AlignedCountClass: CountBaseClass {
       var special = Markers.Square(Colors.Red) {TextHeight: 15 pts};
 
       ChartSeries {
+        TextHeight: 6 pts;
         Marker: Markers.Dot;
-
         foreach (var si in Results.Rule.Segments) {
           foreach (var sj in Results.Rule.Segments) {
             if (si.Index < sj.Index) {
               var a = ActionMatrix.GetValue(si.Index, sj.Index);
               new DataPointClass(LogRate(a.Rate), LogRate(a.Reverse)) {
                 Reference: a;
-                if (a.S0.Segment.Ipa == "p")
-                  Marker: a.S1.Segment.Ipa == "b" or a.S1.Segment.Ipa == "f" ? special : group;
-                else
-                  Marker: a.S1.Partition.Marker;
-              };
+//                if (a.S0.Segment.Ipa == "p")
+//                  Marker: a.S1.Segment.Ipa == "b" or a.S1.Segment.Ipa == "f" ? special : group;
+//                else {
+                  Marker: Canvas(4 pts, 4 pts) {
+                    HAlign: HAligns.Center;
+                    VAlign: VAligns.Center;
+                    Background: a.S0.Partition.Color;
+                    BorderRadius: 2 pts;
+                    a.S1.Partition.Marker;
+                  };
+                }
+//              };
             }
           }
         }
