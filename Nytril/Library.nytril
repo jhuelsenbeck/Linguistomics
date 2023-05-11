@@ -1705,14 +1705,19 @@ class AlignedCountClass: CountBaseClass {
         MinusLog("Rate Difference");
       };
 
-      var sorted = ActionList.Sort(true, ref AlignActionClass.CompareDif);
+      var sorted  = ActionList.Sort(true, ref AlignActionClass.CompareDif);
+      var group   = Markers.TriangleUp(Colors.Green) {TextHeight: 8 pts};
+      var special = Markers.Square(Colors.Red) {TextHeight: 10 pts};
       ChartSeries {
         TextHeight: 6 pts;
         Marker: Markers.Dot;
         foreach (var a in sorted) {
           new DataPointClass(each0, a.ReverseRating) {
             Reference: a;
-            Marker: a.S0.Partition.Marker;
+            if (a.S0.Segment.Ipa == "p")
+              Marker: a.S1.Segment.Ipa == "b" or a.S1.Segment.Ipa == "f" ? special : group;
+            else
+              Marker: a.S0.Partition.Marker;
           }
         }
       };
