@@ -474,6 +474,9 @@ class AlignSortClass {
 //======================================================================
 
 class AlignActionClass: ActionClass {
+  static double MaxRate    = 10.0;
+  static double RateFactor = 1.0 / MaxRate;
+
   ResultsClass    Results;
   SegPartClass    S0,
                   S1;
@@ -481,30 +484,54 @@ class AlignActionClass: ActionClass {
                   F1;
   var             Rate,
                   Reverse,
-                  ReverseRating,
-                  Percent,
-                  RPercent,
+                  Direction;
+  bool            Negative,
                   Symmetric;
 
   Constructor(ResultsClass results, SegPartClass s0, SegPartClass s1, rate, reverse, symmetric) {
     super.Constructor(Actions.TipDocument, s0);
-    Results       = results;
-    S0            = s0;
-    S1            = s1;
-    F0            = s0.Features;
-    F1            = s1.Features;
-    Rate          = rate;
-    Reverse       = reverse;
-    ReverseRating = Math.Log(Math.Abs(rate), 10) - Math.Log(Math.Abs(reverse), 10);
-    Symmetric     = symmetric;
+    Results    = results;
+    S0         = s0;
+    S1         = s1;
+    F0         = s0.Features;
+    F1         = s1.Features;
+
+    if (rate >= -1E-10 and rate <= 1E-10)
+      rate = 0.0;
+
+    Rate       = GetLogRate(rate);
+    Reverse    = GetLogRate(reverse);
+    Direction  = Rate - Reverse;
+    Symmetric  = symmetric;
   }
 
   override Compare(c, CompareOptions options) = Rate.Compare(c.Rate);
 
   static int CompareProb(AlignSortClass s1, AlignSortClass s2, CompareOptions options) = s1.Data.Prob.Compare(s2.Data.Prob);
 
-  static int CompareDif(AlignActionClass a0, AlignActionClass a1, CompareOptions options) = a0.ReverseRating.Compare(a1.ReverseRating);
+  static int CompareDirection(AlignActionClass a0, AlignActionClass a1, CompareOptions options) = a0.Direction.Compare(a1.Direction);
 
+  static GetLogRate(r) {
+    if (r < 0)
+      return -MaxRate - Math.Log(-r, 10);
+    else if (r > 0)
+      return MaxRate + Math.Log(r, 10);
+    else
+      return 0;
+  }
+
+  static ColorClass Greenish(frac) {
+    return ColorClass.FromHSLA(124, 0.8, 1.0 - frac * 0.75, 1.0);
+  }
+
+  static ColorClass Redish(frac) {
+    return ColorClass.FromHSLA(9, 0.8, 1.0 - frac * 0.75, 1.0);
+  }
+
+  ColorClass DirectionColor {
+    var r = Direction * RateFactor;
+    return r < 0 ? Redish(-r) : Greenish(r);
+  }
 
   ShowPartition(SegPartClass s, textheight) = Canvas(textheight * 2.5) {
     BorderRadius: Style.BorderSize;
@@ -530,28 +557,26 @@ class AlignActionClass: ActionClass {
 
   override GetLayoutSpan = ShowBox(11 pts);
 
-  ShowNumber(name, number, percent) = Paragraph {
+  private ShowNumber(name, number) = Paragraph {
     name;
     ": ";
     Span {
       TextDigits: 5;
       number;
     };
-    " (";
-    Span {
-      TextDigits: 1;
-      percent;
-      Lang.PercentOfMax;
-    };
-    ")";
   };
 
   GetExamples(range) = Block {
     TextHeight: 14 pts;
     GetLayoutSpan;
-    ShowNumber("Rate", Rate, Percent);
-    if (!Symmetric)
-      ShowNumber("Reverse", Reverse, RPercent);
+    ShowNumber(RateDescriptor(Lang.Rate), Rate);
+    if (!Symmetric) {
+      ShowNumber(RateDescriptor("Reverse"), Reverse);
+      Span {
+        TextBackground: DirectionColor;
+        ShowNumber(RateDescriptor("Direction"), Direction);
+      }
+    }
 
     var sorted = GetList().Slice(range);
     if (sorted is valid) {

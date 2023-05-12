@@ -65,6 +65,13 @@ class StatClass {
 
 //======================================================================
 
+RateDescriptor(text) = Span {
+  text;
+//  Tex.Minus; "Log" sub 10; "("; text; ")";
+};
+
+//======================================================================
+
 class AlignPairClass {
   DataSetClass    Data;
   AlignIndexClass Cognate;
@@ -1231,14 +1238,14 @@ class DataSetClass {
 //======================================================================
 
 class ResultsClass {
-  DataSetClass       Data;
-  RuleClass          Rule;
-  AlignIndexClass[]  Alignments;
+  DataSetClass           Data;
+  RuleClass              Rule;
+  AlignIndexClass[]      Alignments;
   MatrixClass<StatClass> TransitionStats;
-  RateMatrixClass    AverageRates,
-                     QRates;
-  var                AlignmentCutoff,
-                     EquilibriumFrequencies;
+  AlignedCountClass      AverageRates,
+                         QRates;
+  var                    AlignmentCutoff,
+                         EquilibriumFrequencies;
 
   Constructor(DataSetClass data) {
     Data = data;
@@ -1247,10 +1254,8 @@ class ResultsClass {
 
     var align = IO.ReadScript(data.MainRun.AlignmentFile).Root;
 
-    QRates                 = new(align.QRates, false);
-    AverageRates           = new(align.AverageRates, true);
-
-
+    QRates                 = new(this, align.QRates, false);
+    AverageRates           = new(this, align.AverageRates, true);
     EquilibriumFrequencies = align.EquilibriumFrequencies;
     AlignmentCutoff        = align.AlignmentCutoff;
     Alignments             = align.Alignments;
@@ -1370,20 +1375,6 @@ abstract class CountBaseClass {
   };
 
   abstract AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size);
-
-  Greenish(frac) {
-    var f = (255.0 - frac * 255.0) as int;
-    if (f < 255)
-      return new ColorClass(f, 255, f);
-    return null;
-  }
-
-  Redish(frac) {
-    var f = (255.0 - frac * 255.0) as int;
-    if (f < 255)
-      return new ColorClass(255, f, f);
-    return null;
-  }
 }
 
 //======================================================================
@@ -1450,7 +1441,7 @@ class PriorCountClass: CountBaseClass {
           ++count;
       }
 
-      Background: count > 0 ? Greenish(count / value.Length) : Redish(value.Length * Factor);
+      Background: count > 0 ? AlignActionClass.Greenish(count / value.Length) : AlignActionClass.Redish(value.Length * Factor);
       if (value.Length > 0)
         value.Length;
     };
@@ -1459,71 +1450,41 @@ class PriorCountClass: CountBaseClass {
 
 //======================================================================
 
-class RateMatrixClass {
-  MatrixClass Values;
-  bool        Symmetric;
-  var         MaxValue;
-
-  Constructor(rates, bool symmetric) {
-    Symmetric = symmetric;
-    Values    = Math.Matrix(rates);
-    MaxValue  = Values.FindMax;
-  }
-}
-
-//======================================================================
-
-
 class AlignedCountClass: CountBaseClass {
   ListClass<AlignActionClass>   ActionList;
   MatrixClass<AlignActionClass> ActionMatrix;
   ResultsClass                  Results;
-  var                           Factor;
-  AlignActionClass[]            SortedActions;
+  AlignActionClass[]            SortedActions,
+                                SortByDirection;
+  MatrixClass                   RateMatrix;
+  bool                          Symmetric;
 
-  Constructor(ResultsClass results, RateMatrixClass rates) {
+  Constructor(ResultsClass results, rates, bool symmetric) {
     super.Constructor(results.Data);
-    Results = results;
+    Results    = results;
+    Symmetric  = symmetric;
+    RateMatrix = Math.Matrix(rates);
 
     var ordered = results.Data.UniqueSegments;
     var length  = Segments.Length;
 
-    System.Assert(length == rates.Values.Rows);
-    System.Assert(length == rates.Values.Cols);
+    System.Assert(length == RateMatrix.Rows);
+    System.Assert(length == RateMatrix.Cols);
     System.Assert(length == ordered.Length);
-
 
     ActionMatrix = new(length, length, null);
     ActionList   = new(length * length);
-    var values   = rates.Values;
 
     for (var i = 0; i < length; ++i) {
-      var jmax = rates.Symmetric ? i : length;
-
-      for (var j = 0; j < jmax; ++j) {
-        var rate = values.GetValue(i, j);
-        if (rates.Symmetric) {
-          var a = new AlignActionClass(results, ordered[i], ordered[j], rate, rate, rates.Symmetric);
-          ActionList.Add(a);
-          ActionMatrix.SetValue(i, j, a);
-        }
-        else {
-          var reverse = values.GetValue(j, i);
-          var a       = new AlignActionClass(results, ordered[i], ordered[j], rate, reverse, rates.Symmetric);
-          ActionList.Add(a);
-          ActionMatrix.SetValue(i, j, a);
-        }
+      for (var j = 0; j < length; ++j) {
+        var a = new AlignActionClass(results, ordered[i], ordered[j], RateMatrix.GetValue(i, j), RateMatrix.GetValue(j, i), symmetric);
+        ActionList.Add(a);
+        ActionMatrix.SetValue(i, j, a);
       }
     }
 
-    var f = 1.0 / rates.MaxValue;
-    foreach (var a in ActionList) {
-      a.Percent  = a.Rate * f;
-      a.RPercent = a.Reverse * f;
-    }
-
-    Factor        = f;
-    SortedActions = ActionList.Sort(true);
+    SortedActions   = ActionList.Sort(true);
+    SortByDirection = ActionList.Sort(true, ref AlignActionClass.CompareDirection);
   }
 
   ShowLegend(AlignActionClass[] actions) = {
@@ -1552,7 +1513,7 @@ class AlignedCountClass: CountBaseClass {
     ValueLabel: HBox {
       Transform: Rotate(90 degrees);
       TransformFit: true;
-      Lang.RateChange;
+      Lang.RateFactor;
     };
 
     var fs = 200.0 / actions.Length;
@@ -1575,18 +1536,6 @@ class AlignedCountClass: CountBaseClass {
     ShowLegend(actions);
   };
 
-
-  MinusLog(text) = Span {
-    Tex.Minus; "Log" sub 10; "("; text; ")";
-  };
-
-  LogRate(r) {
-    if (r < 0)
-      return Math.Log(-r, 10);
-    else
-      return -Math.Log(r, 10);
-  }
-
   ShowAllRates = VBox {
     Chart(100%, ExtentHeight - 48 pts) {
       Type: ChartTypes.Scatter;
@@ -1595,7 +1544,7 @@ class AlignedCountClass: CountBaseClass {
       ValueLabel: HBox {
         Transform: Rotate(90 degrees);
         TransformFit: true;
-        MinusLog(Lang.RateChange);
+        RateDescriptor(Lang.RateFactor);
       };
 
       XAxis: ChartAxis {
@@ -1623,7 +1572,7 @@ class AlignedCountClass: CountBaseClass {
           foreach (var sj in Results.Rule.Segments) {
             if (si.Index != sj.Index) {
               var a = ActionMatrix.GetValue(si.Index, sj.Index);
-              var y = LogRate(a.Rate);
+              var y = a.Rate;
 
               new DataPointClass(i, y) {
                 Reference: a;
@@ -1642,17 +1591,17 @@ class AlignedCountClass: CountBaseClass {
     }
   };
 
-  ShowSortedRates = VBox {
+  ShowRateDirected = VBox {
     Chart(100%, ExtentHeight - 48 pts) {
       Type: ChartTypes.Scatter;
       TextHeight: 12 pts;
 
-      XLabel: MinusLog(Lang.RateChange);
+      XLabel: RateDescriptor(Lang.RateFactor);
 
       ValueLabel: HBox {
         Transform: Rotate(90 degrees);
         TransformFit: true;
-        MinusLog("Reverse Rate");
+        RateDescriptor("Direction");
       };
 
       var group   = Markers.TriangleUp(Colors.Green) {TextHeight: 12 pts};
@@ -1665,7 +1614,7 @@ class AlignedCountClass: CountBaseClass {
           foreach (var sj in Results.Rule.Segments) {
             if (si.Index < sj.Index) {
               var a = ActionMatrix.GetValue(si.Index, sj.Index);
-              new DataPointClass(LogRate(a.Rate), LogRate(a.Reverse)) {
+              new DataPointClass(a.Rate, a.Direction) {
                 Reference: a;
 //                if (a.S0.Segment.Ipa == "p")
 //                  Marker: a.S1.Segment.Ipa == "b" or a.S1.Segment.Ipa == "f" ? special : group;
@@ -1692,7 +1641,7 @@ class AlignedCountClass: CountBaseClass {
     }
   };
 
-  ShowRateDifference = VBox {
+  ShowDirection = VBox {
     Chart(100%, ExtentHeight - 48 pts) {
       Type: ChartTypes.Scatter;
       TextHeight: 12 pts;
@@ -1702,17 +1651,16 @@ class AlignedCountClass: CountBaseClass {
       ValueLabel: HBox {
         Transform: Rotate(90 degrees);
         TransformFit: true;
-        MinusLog("Rate Difference");
+        RateDescriptor("Direction");
       };
 
-      var sorted  = ActionList.Sort(true, ref AlignActionClass.CompareDif);
       var group   = Markers.TriangleUp(Colors.Green) {TextHeight: 8 pts};
       var special = Markers.Square(Colors.Red) {TextHeight: 10 pts};
       ChartSeries {
         TextHeight: 6 pts;
         Marker: Markers.Dot;
-        foreach (var a in sorted) {
-          new DataPointClass(each0, a.ReverseRating) {
+        foreach (var a in SortByDirection) {
+          new DataPointClass(each0, a.Direction) {
             Reference: a;
             if (a.S0.Segment.Ipa == "p")
               Marker: a.S1.Segment.Ipa == "b" or a.S1.Segment.Ipa == "f" ? special : group;
@@ -1730,7 +1678,7 @@ class AlignedCountClass: CountBaseClass {
     }
   };
 
-  ShowChartPairs(top, subset) = VBox {
+  ShowChartPairs(top, AlignActionClass[] subset) = VBox {
     var actions = subset.Slice(0..<top);
 
     ShowChart(actions) {
@@ -1761,37 +1709,7 @@ class AlignedCountClass: CountBaseClass {
         HAlign: HAligns.Center;
         VAlign: VAligns.Center;
         TipAction: a;
-
-        Background: Redish(a.Percent);
-//        if (a.Percent >= 0.30)
-  //        Span {a.Percent * 100.0; TextDigits: 0};
-      };
-    }
-    return null;
-  }
-}
-
-//======================================================================
-
-class AsymmetriesClass: AlignedCountClass {
-  Constructor(ResultsClass results, RateMatrixClass rates) {
-    super.Constructor(results, rates);
-  }
-
-  override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
-    var a = ActionMatrix.GetValue(si.Index, sj.Index);
-    if (a is valid) {
-      return Canvas(size.Width, size.Height) {
-        X: x;
-        Y: y;
-        HAlign: HAligns.Center;
-        VAlign: VAligns.Center;
-        TipAction: a;
-
-        var r = (a.Rate - a.Reverse) * Factor * 0.5;
-        Background: r > 0 ? Greenish(r) : Redish(-r);
-//        if (a.Percent >= 0.30)
-//          Span {a.Percent * 100.0; TextDigits: 0};
+        Background: a.DirectionColor;
       };
     }
     return null;
@@ -1805,10 +1723,10 @@ class SegDataClass {
   SegPartClass   Segment;
   var            Value;
 
-  Constructor(ResultsClass results, RateMatrixClass rates, i) {
+  Constructor(ResultsClass results, AlignedCountClass rates, i) {
     Segment   = results.Data.UniqueSegments[i];
     Partition = Segment.Partition;
-    Value     = Math.Abs(rates.Values.GetValue(i, i));
+    Value     = Math.Abs(rates.RateMatrix.GetValue(i, i));
   }
 
   override GetLayoutTip = VBox {
@@ -1838,9 +1756,9 @@ class DiagonalClass {
   PartitionClass[] Partitions;
   ResultsClass     Results;
 
-  Constructor(ResultsClass results, RateMatrixClass rates) {
+  Constructor(ResultsClass results, AlignedCountClass rates) {
     Results = results;
-    var data = new SegDataClass(results, rates, each 0..<rates.Values.Cols);
+    var data = new SegDataClass(results, rates, each 0..<rates.RateMatrix.Cols);
     Data     = data.Sort(true, ref CompareData);
     Segments = (each Data).Segment;
 
@@ -1866,7 +1784,7 @@ class DiagonalClass {
       TextHeight: 11 pts;
       Type: ChartTypes.Column;
 
-      ValueLabel: Lang.RateChange {
+      ValueLabel: Lang.RateFactor {
         Transform: Rotate(90 degrees);
         TransformFit: true;
       };

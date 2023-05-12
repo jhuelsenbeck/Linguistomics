@@ -281,9 +281,7 @@ TopCount = 15;
 namespace Figures.AverageTransitions {
   Title = "Average transitions";
 
-  AlignedCountClass Display = new(MainResults, MainResults.AverageRates);
-
-  Body(DocumentClass document) = Display.PartitionBox;
+  Body(DocumentClass document) = MainResults.AverageRates.PartitionBox;
 }
 
 namespace Figures.AverageDiagonal {
@@ -295,25 +293,15 @@ namespace Figures.AverageDiagonal {
 namespace Figures.AverageMost {
   Title = "Average Top {0}"(TopCount);
 
-  Body(DocumentClass document) = AverageTransitions.Display.Extrema(TopCount, true);
+  Body(DocumentClass document) = MainResults.AverageRates.Extrema(TopCount, true);
 }
 
 //======================================================================
 
-namespace Figures.AsymmetriesMatrix {
-  Title = "Asymmetries";
-
-  AsymmetriesClass Display = new(MainResults, MainResults.QRates);
-
-  Body(DocumentClass document) = Display.PartitionBox;
-}
-
 namespace Figures.QRatesMatrix {
   Title = "Rate Matrix \"Q\"";
 
-  AlignedCountClass Display = new(MainResults, MainResults.QRates);
-
-  Body(DocumentClass document) = Display.PartitionBox;
+  Body(DocumentClass document) = MainResults.QRates.PartitionBox;
 }
 
 namespace Figures.QRatesDiagonal {
@@ -326,19 +314,19 @@ namespace Figures.QRatesDiagonal {
 namespace Figures.AverageAll {
   Title = "All Rates";
 
-  Body(DocumentClass document) = QRatesMatrix.Display.ShowAllRates;
+  Body(DocumentClass document) = MainResults.QRates.ShowAllRates;
 }
 
 namespace Figures.AverageSorted {
-  Title = "Rate vs. Reverse Rate";
+  Title = "Rate vs. Direction";
 
-  Body(DocumentClass document) = QRatesMatrix.Display.ShowSortedRates;
+  Body(DocumentClass document) = MainResults.QRates.ShowRateDirected;
 }
 
-namespace Figures.RateDifference {
-  Title = "Rate - Reverse Rate";
+namespace Figures.RateDirection {
+  Title = "Directionality";
 
-  Body(DocumentClass document) = QRatesMatrix.Display.ShowRateDifference;
+  Body(DocumentClass document) = MainResults.QRates.ShowDirection;
 }
 
 TransitionTitle(type) = "The top {0} {1} transitions"(TopCount, type);
@@ -346,13 +334,13 @@ TransitionTitle(type) = "The top {0} {1} transitions"(TopCount, type);
 namespace Figures.QRatesTop {
   Title = TransitionTitle("segmental");
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Extrema(TopCount, true);
+  Body(DocumentClass document) = MainResults.QRates.Extrema(TopCount, true);
 }
 
 namespace Figures.QRatesBottom {
   Title = "The bottom {0} segmental transitions"(TopCount);
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Extrema(TopCount, false);
+  Body(DocumentClass document) = MainResults.QRates.Extrema(TopCount, false);
 }
 
 namespace Figures.QRatesVowelVowel {
@@ -361,7 +349,7 @@ namespace Figures.QRatesVowelVowel {
   Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
                                   a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel);
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
+  Body(DocumentClass document) = MainResults.QRates.Pairs(TopCount, ref Predicate);
 }
 
 namespace Figures.QRatesConsonantConsonant {
@@ -370,17 +358,7 @@ namespace Figures.QRatesConsonantConsonant {
   Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
                                   a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
-}
-
-namespace Figures.QRatesAsperation {
-  Title = TransitionTitle("pulmonic");
-
-  Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Pulmonic | SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
-                                  a.F1.HasFlagMask(SegmentFeatures.Pulmonic | SegmentFeatures.Vowel, SegmentFeatures.Pulmonic) and
-                                  a.Rate > a.Reverse*2;
-
-  Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
+  Body(DocumentClass document) = MainResults.QRates.Pairs(TopCount, ref Predicate);
 }
 
 namespace Figures.QRatesVowelConsonant {
@@ -389,7 +367,7 @@ namespace Figures.QRatesVowelConsonant {
   Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel) and
                                   a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
 
-  Body(DocumentClass document) = QRatesMatrix.Display.Pairs(TopCount, ref Predicate);
+  Body(DocumentClass document) = MainResults.QRates.Pairs(TopCount, ref Predicate);
 }
 
 
@@ -397,12 +375,11 @@ namespace Figures.QRatesOneWay {
   Title = TransitionTitle("highly directed");
 
   Body(DocumentClass document) {
-    var sorted = QRatesMatrix.Display.ActionList.Sort(true, ref ByReverseRate);
-    return QRatesMatrix.Display.ShowChartPairs(TopCount, sorted);
+    return MainResults.QRates.ShowChartPairs(TopCount, MainResults.QRates.SortByDirection);
   }
 
-  ByReverseRate(AlignActionClass a1, AlignActionClass a2, options) {
-    return a1.ReverseRating.Compare(a2.ReverseRating);
+  ByDirection(AlignActionClass a1, AlignActionClass a2, options) {
+    return a1.Direction.Compare(a2.Direction);
   }
 }
 
