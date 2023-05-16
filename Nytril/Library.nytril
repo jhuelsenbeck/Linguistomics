@@ -322,7 +322,7 @@ class AlignmentChartClass {
             e.Cognate Italic;
           };
           ap.GetChart(new(chartwidth, data.Taxa.Length * (9 pts)), e.Count);
-          Frame(5 inches) {
+          Frame(ExtentWidth) {
             ap.ShowFigureDetails(e.Count);
           }
         }
@@ -1516,7 +1516,7 @@ class AlignedCountClass: CountBaseClass {
       Lang.RateFactor;
     };
 
-    var fs = 200.0 / actions.Length;
+    var fs = Math.Min(200.0 / actions.Length, 12 pts);
     XAxis: ChartAxis {
       Rotation: 30 degrees;
       (each actions).ShowBox(fs);
@@ -1577,6 +1577,7 @@ class AlignedCountClass: CountBaseClass {
               new DataPointClass(i, y) {
                 Reference: a;
                 Fill: a.S1.Partition.Color;
+//                  Fill: a.DirectionColor;
               };
             }
           }
@@ -1679,7 +1680,7 @@ class AlignedCountClass: CountBaseClass {
   };
 
   ShowChartPairs(top, AlignActionClass[] subset) = VBox {
-    var actions = subset.Slice(0..<top);
+    var actions = top < 0 ? subset : subset.Slice(0..<top);
 
     ShowChart(actions) {
       Type: ChartTypes.StackedColumn;
