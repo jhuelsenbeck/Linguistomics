@@ -1720,62 +1720,51 @@ class AlignedCountClass: CountBaseClass {
 //======================================================================
 
 class SegDataClass {
-  PartitionClass Partition;
-  SegPartClass   Segment;
-  var            Value;
+  AlignActionClass Value;
+  double           Rate;
 
-  Constructor(ResultsClass results, AlignedCountClass rates, i) {
-    Segment   = results.Data.UniqueSegments[i];
-    Partition = Segment.Partition;
-    Value     = Math.Abs(rates.RateMatrix.GetValue(i, i));
+  Constructor(AlignActionClass value) {
+    Value = value;
+    Rate  = -value.Rate;
   }
 
   override GetLayoutTip = VBox {
     HAlign: HAligns.Center;
 
     Span {
-      "Rate: ";
-      TextDigits: 3;
-      Value;
+      Lang.RateFactor; ColonSpace;
+      TextDigits: 2;
+      Value.Rate;
     };
     VBox(DocMetrics.SegmentWidth) {
       HAlign: HAligns.Center;
-      Background: Partition.Color;
+      Background: Value.S0.Partition.Color;
       HBox {
-        Partition.Name;
+        Value.S0.Partition.Name;
       };
     };
-    Segment.GetLayoutTip;
+    Value.S0.GetLayoutTip;
   };
+
 }
 
 //======================================================================
 
 class DiagonalClass {
-  SegDataClass[]   Data;
-  SegPartClass[]   Segments;
-  PartitionClass[] Partitions;
-  ResultsClass     Results;
+  SegDataClass[] Diagonal;
+  ResultsClass   Results;
 
   Constructor(ResultsClass results, AlignedCountClass rates) {
     Results = results;
-    var data = new SegDataClass(results, rates, each 0..<rates.RateMatrix.Cols);
-    Data     = data.Sort(true, ref CompareData);
-    Segments = (each Data).Segment;
-
-    var partitions = results.Rule.Partitions;
-    var pmax       = partitions.Length;
-    var set        = new HashSetClass(pmax);
-    var list       = new ListClass<PartitionClass>(pmax);
-    foreach (var s in Segments) {
-      var i = s.PartitionIndex;
-      if (set.Add(i))
-        list.Add(partitions[i]);
-    }
-    Partitions = list.Values;
+    var m      = rates.ActionMatrix;
+    var length = m.Cols;
+    var list   = new ListClass<SegDataClass>(length);
+    for (int i = 0; i < length; ++i)
+      list.Add(new(m.GetValue(i, i)));
+    Diagonal = list.Sort(true, ref CompareData);
   }
 
-  CompareData(SegDataClass d0, SegDataClass d1, options) = d0.Value.Compare(d1.Value);
+  CompareData(SegDataClass d0, SegDataClass d1, options) = d0.Rate.Compare(d1.Rate);
 
   Display = VBox {
     HAlign: HAligns.Center;
@@ -1791,22 +1780,23 @@ class DiagonalClass {
       };
 
       XAxis: ChartAxis {
-        TextHeight: DocMetrics.SegmentTextFactor * ExtentWidth / Data.Length;
-        (each Segments).ShowSegment;
+        TextHeight: DocMetrics.SegmentTextFactor * ExtentWidth / Diagonal.Length;
+        foreach (var d in Diagonal)
+          d.Value.S0.ShowSegment;
       };
 
       ValueAxis: ChartAxis;
       ChartSeries {
-        foreach (var d in Data) {
-          new DataPointClass(each0, d.Value) {
+        foreach (var d in Diagonal) {
+          new DataPointClass(each0, d.Rate) {
             Reference: d;
-            Fill: d.Segment.Partition.Color;
+            Fill: d.Value.S0.Partition.Color;
           };
         }
       };
     };
 
-    Results.Data.Rule.ShowBlockLegend(Partitions, 9 pts);
+    Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 9 pts);
   };
 }
 
