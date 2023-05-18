@@ -471,53 +471,50 @@ class AlignSortClass {
     Congate = cognate;
   }
 }
+
 //======================================================================
 
-class AlignActionClass: ActionClass {
-  static double MaxRate    = 10.0;
-  static double RateFactor = 1.0 / MaxRate;
+class RateClass: ActionClass {
+  AlignedCountClass Count;
+  SegPartClass      S0,
+                    S1;
+  SegmentFeatures   F0,
+                    F1;
+  var               Original,
+                    Rate,
+                    Reverse,
+                    Direction;
+  bool              Diagonal,
+                    Symmetric;
 
-  ResultsClass    Results;
-  SegPartClass    S0,
-                  S1;
-  SegmentFeatures F0,
-                  F1;
-  var             Rate,
-                  Reverse,
-                  Direction;
-  bool            Negative,
-                  Symmetric;
-
-  Constructor(ResultsClass results, SegPartClass s0, SegPartClass s1, rate, reverse, symmetric) {
+  Constructor(AlignedCountClass count, SegPartClass s0, SegPartClass s1, rate, reverse, bool symmetric, bool diagonal) {
     super.Constructor(Actions.TipDocument, s0);
-    Results    = results;
-    S0         = s0;
-    S1         = s1;
-    F0         = s0.Features;
-    F1         = s1.Features;
 
-    if (rate >= -1E-10 and rate <= 1E-10)
-      rate = 0.0;
-
-    Rate       = GetLogRate(rate);
-    Reverse    = GetLogRate(reverse);
-    Direction  = Rate - Reverse;
-    Symmetric  = symmetric;
+    Count     = count;
+    S0        = s0;
+    S1        = s1;
+    F0        = s0.Features;
+    F1        = s1.Features;
+    Original  = rate;
+    Rate      = GetLogRate(rate);
+    Reverse   = GetLogRate(reverse);
+    Direction = Rate - Reverse;
+    Symmetric = symmetric;
+    Diagonal  = diagonal;
   }
 
-  override Compare(c, CompareOptions options) = Rate.Compare(c.Rate);
+  static int CompareRate(RateClass a0, RateClass a1, CompareOptions options) = a0.Rate.Compare(a1.Rate);
 
-  static int CompareProb(AlignSortClass s1, AlignSortClass s2, CompareOptions options) = s1.Data.Prob.Compare(s2.Data.Prob);
+  static int CompareDirection(RateClass a0, RateClass a1, CompareOptions options) = a0.Direction.Compare(a1.Direction);
 
-  static int CompareDirection(AlignActionClass a0, AlignActionClass a1, CompareOptions options) = a0.Direction.Compare(a1.Direction);
+  static bool SortDescending = true;
 
   static GetLogRate(r) {
     if (r < 0)
-      return -MaxRate - Math.Log(-r, 10);
+      return Math.Min(0, -11 - Math.Log(-r, 10));
     else if (r > 0)
-      return MaxRate + Math.Log(r, 10);
-    else
-      return 0;
+      return Math.Max(0, 11 + Math.Log(r, 10));
+    return 0;
   }
 
   bool IsPair(ipa0, ipa1) {
@@ -525,15 +522,20 @@ class AlignActionClass: ActionClass {
   }
 
   static ColorClass Greenish(frac) {
-    return ColorClass.FromHSLA(124, 0.8, 1.0 - frac * 0.75, 1.0);
+    return ColorClass.FromHSLA(124, 0.8, frac, 1.0);
   }
 
   static ColorClass Redish(frac) {
-    return ColorClass.FromHSLA(9, 0.8, 1.0 - frac * 0.75, 1.0);
+    return ColorClass.FromHSLA(9, 0.8, frac, 1.0);
+  }
+
+  ColorClass RateColor {
+    var r = 1.0 - Rate * (Diagonal ? Count.DiagFactor : Count.RateFactor);
+    return r < 0 ? Redish(-r) : Greenish(r);
   }
 
   ColorClass DirectionColor {
-    var r = Direction * RateFactor;
+    var r = 1.0 - Direction * Count.DirFactor;
     return r < 0 ? Redish(-r) : Greenish(r);
   }
 
@@ -573,11 +575,20 @@ class AlignActionClass: ActionClass {
   GetExamples(range) = Block {
     TextHeight: 14 pts;
     GetLayoutSpan;
-    ShowNumber(RateDescriptor(Lang.Rate), Rate);
+    Paragraph {
+      "Value: ";
+      TextScientific: true;
+      TextDigits: 2;
+      Original;
+    };
+
+    ShowNumber(RateDescriptor(Lang.RateFactor), Rate);
     if (!Symmetric) {
-      ShowNumber(RateDescriptor("Reverse"), Reverse);
+      ShowNumber(RateDescriptor("Reverse Factor"), Reverse);
       Span {
-        TextBackground: DirectionColor;
+        var c = DirectionColor;
+        TextBackground: c;
+        TextColor: c.TextCompliment;
         ShowNumber(RateDescriptor("Direction"), Direction);
       }
     }
@@ -592,7 +603,7 @@ class AlignActionClass: ActionClass {
       Paragraph {
         Separator: Space;
         foreach (var s in sorted)
-          new AlignPairClass(Results.Data, s.Congate).ShowFigureData(s.Congate, s.Data);
+          new AlignPairClass(Count.Results.Data, s.Congate).ShowFigureData(s.Congate, s.Data);
       };
     }
   };
@@ -601,6 +612,8 @@ class AlignActionClass: ActionClass {
 
   override GetDocument = GetExamples(0..);
 
+  static int CompareProb(AlignSortClass s1, AlignSortClass s2, CompareOptions options) = s1.Data.Prob.Compare(s2.Data.Prob);
+
   AlignSortClass[] GetList {
     // Find cognate sets that have the first segment in one language and the second in another language
 
@@ -608,7 +621,7 @@ class AlignActionClass: ActionClass {
     var i1   = S1.Index;
     var list = new ListClass<AlignSortClass>(1024);
 
-    foreach (var cognate in Results.Alignments) {
+    foreach (var cognate in Count.Results.Alignments) {
       AlignDataClass found = null;
 
       foreach (var alignment in cognate.Alignments) {
@@ -639,6 +652,7 @@ class AlignActionClass: ActionClass {
     return list.Sort(true, ref CompareProb);
   }
 }
+
 //======================================================================
 
 class CalcRatesClass {

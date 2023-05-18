@@ -278,14 +278,15 @@ namespace Figures.FractionGapsChart {
 
 TopCount = 15;
 
+/*
 namespace Figures.AverageTransitions {
-  Title = "Average transitions";
+  Title = "Average matrix";
 
   Body(DocumentClass document) = MainResults.AverageRates.PartitionBox;
 }
 
 namespace Figures.AverageDiagonal {
-  Title = "Average Diagonal";
+  Title = "Average Rates Diagonal";
 
   Body(DocumentClass document) = new DiagonalClass(MainResults, MainResults.AverageRates).Display;
 }
@@ -295,6 +296,7 @@ namespace Figures.AverageMost {
 
   Body(DocumentClass document) = MainResults.AverageRates.Extrema(TopCount, true);
 }
+*/
 
 //======================================================================
 
@@ -305,10 +307,9 @@ namespace Figures.QRatesMatrix {
 }
 
 namespace Figures.QRatesDiagonal {
-  Title = "Segmental stability as measured by the instantaneous rate of change";
+  Title = "Q Matrix Diagonal (sorted in descending order)";
 
-  DiagonalClass Diagonal = new(MainResults, MainResults.QRates);
-  Body(DocumentClass document) = Diagonal.Display;
+  Body(DocumentClass document) = new DiagonalClass(MainResults, MainResults.QRates).Display;
 }
 
 namespace Figures.AverageAll {
@@ -332,7 +333,7 @@ namespace Figures.RateDirection {
 namespace Figures.SpecificRates {
   Title = "Specific Rates";
 
-  Predicate(AlignActionClass a) {
+  Predicate(RateClass a) {
     return a.IsPair("p", "f") or
            a.IsPair("s", "h") or
            a.IsPair("k", "ʧ");
@@ -355,33 +356,14 @@ namespace Figures.QRatesBottom {
   Body(DocumentClass document) = MainResults.QRates.Extrema(TopCount, false);
 }
 
-namespace Figures.QRatesVowelVowel {
-  Title = TransitionTitle("Consonant-Vowel");
-
-  Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
-                                  a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel);
-
-  Body(DocumentClass document) = MainResults.QRates.Pairs(TopCount, ref Predicate);
-}
-
 namespace Figures.QRatesConsonantConsonant {
   Title = TransitionTitle("Consonant-Consonant");
 
-  Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
+  Predicate(RateClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
                                   a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
 
   Body(DocumentClass document) = MainResults.QRates.Pairs(TopCount, ref Predicate);
 }
-
-namespace Figures.QRatesVowelConsonant {
-  Title = TransitionTitle("Vowel-Consonant");
-
-  Predicate(AlignActionClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.Vowel) and
-                                  a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
-
-  Body(DocumentClass document) = MainResults.QRates.Pairs(TopCount, ref Predicate);
-}
-
 
 namespace Figures.QRatesOneWay {
   Title = TransitionTitle("highly directed");
@@ -390,7 +372,7 @@ namespace Figures.QRatesOneWay {
     return MainResults.QRates.ShowChartPairs(TopCount, MainResults.QRates.SortByDirection);
   }
 
-  ByDirection(AlignActionClass a1, AlignActionClass a2, options) {
+  ByDirection(RateClass a1, RateClass a2, options) {
     return a1.Direction.Compare(a2.Direction);
   }
 }

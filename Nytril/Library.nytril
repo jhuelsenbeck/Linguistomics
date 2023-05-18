@@ -1242,8 +1242,8 @@ class ResultsClass {
   RuleClass              Rule;
   AlignIndexClass[]      Alignments;
   MatrixClass<StatClass> TransitionStats;
-  AlignedCountClass      AverageRates,
-                         QRates;
+  AlignedCountClass      QRates /*,
+                         AverageRates */;
   var                    AlignmentCutoff,
                          EquilibriumFrequencies;
 
@@ -1255,7 +1255,7 @@ class ResultsClass {
     var align = IO.ReadScript(data.MainRun.AlignmentFile).Root;
 
     QRates                 = new(this, align.QRates, false);
-    AverageRates           = new(this, align.AverageRates, true);
+//    AverageRates           = new(this, align.AverageRates, true);
     EquilibriumFrequencies = align.EquilibriumFrequencies;
     AlignmentCutoff        = align.AlignmentCutoff;
     Alignments             = align.Alignments;
@@ -1280,7 +1280,7 @@ class ResultsClass {
         }
       }
     }
-    Alignments = alist.Values.Sort(false, ref CompareAlignment);
+    Alignments = alist.Values.Sort(RateClass.SortDescending, ref CompareAlignment);
   }
 
   static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
@@ -1296,12 +1296,12 @@ class ResultsClass {
 abstract class CountBaseClass {
   var            VFlags,
                  MaxDigits;
-  SegPartClass[] Segments;
+  SegPartClass[] LegendSegments;
 
   Constructor(DataSetClass data) {
-    VFlags    = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
-    Segments  = data.Rule.Segments;
-    MaxDigits = 3;
+    VFlags         = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
+    LegendSegments = data.Rule.Segments;
+    MaxDigits      = 3;
   }
 
   PartitionBox = Paragraph {
@@ -1311,7 +1311,7 @@ abstract class CountBaseClass {
     var gcolor = 65%;
     var border = 0.5 pts;
     var size   = ExtentSize - border*2;
-    var length = Segments.Length;
+    var length = LegendSegments.Length;
     var d      = size / (length+1);
 
     Canvas {
@@ -1322,7 +1322,7 @@ abstract class CountBaseClass {
       for (var i = 0; i < length; ++i) {
         var x = d.Width;
         for (var j = 0; j < length; ++j) {
-          AddEntry(Segments[i], Segments[j], x, y, d);
+          AddEntry(LegendSegments[i], LegendSegments[j], x, y, d);
           x += d.Width;
         }
         y += d.Height;
@@ -1330,7 +1330,7 @@ abstract class CountBaseClass {
 
       y = d.Height;
       var p = 0;
-      foreach (var s in Segments) {
+      foreach (var s in LegendSegments) {
         Canvas(d.Width, d.Height) {
           Y: y;
           Background: s.Partition.Color;
@@ -1352,7 +1352,7 @@ abstract class CountBaseClass {
       Canvas(size.Width, d.Height) {
         var x = d.Width;
         p = 0;
-        foreach (var s in Segments) {
+        foreach (var s in LegendSegments) {
           Canvas(d.Width, d.Height) {
             X : x;
             Background: s.Partition.Color;
@@ -1441,7 +1441,7 @@ class PriorCountClass: CountBaseClass {
           ++count;
       }
 
-      Background: count > 0 ? AlignActionClass.Greenish(count / value.Length) : AlignActionClass.Redish(value.Length * Factor);
+      Background: count > 0 ? RateClass.Greenish(count / value.Length) : RateClass.Redish(value.Length * Factor);
       if (value.Length > 0)
         value.Length;
     };
@@ -1451,48 +1451,97 @@ class PriorCountClass: CountBaseClass {
 //======================================================================
 
 class AlignedCountClass: CountBaseClass {
-  ListClass<AlignActionClass>   ActionList;
-  MatrixClass<AlignActionClass> ActionMatrix;
-  ResultsClass                  Results;
-  AlignActionClass[]            SortedActions,
-                                SortByDirection;
-  MatrixClass                   RateMatrix;
-  bool                          Symmetric;
+  ListClass<RateClass>   RateList;
+  MatrixClass<RateClass> Matrix;
+  ResultsClass           Results;
+  RuleClass              Rule;
+  PartitionClass[]       Partitions;
+  RateClass[]            SortedRates,
+                         SortByDirection;
+  double                 DiagFactor,
+                         RateFactor,
+                         DirFactor;
+  bool                   Symmetric;
 
   Constructor(ResultsClass results, rates, bool symmetric) {
     super.Constructor(results.Data);
     Results    = results;
     Symmetric  = symmetric;
-    RateMatrix = Math.Matrix(rates);
+    Rule       = results.Rule;
+    Partitions = Rule.Partitions;
 
+    var matrix  = Math.Matrix(rates);
     var ordered = results.Data.UniqueSegments;
-    var length  = Segments.Length;
+    var length  = LegendSegments.Length;
 
-    System.Assert(length == RateMatrix.Rows);
-    System.Assert(length == RateMatrix.Cols);
+    System.Assert(length == matrix.Rows);
+    System.Assert(length == matrix.Cols);
     System.Assert(length == ordered.Length);
 
-    ActionMatrix = new(length, length, null);
-    ActionList   = new(length * length);
+    Matrix   = new(length, length, null);
+    RateList = new(length * length);
+
+    double min  = 100.0;
+    double max  = -100.0;
+    double dmin = 100.0;
+    double dmax = -100.0;
 
     for (var i = 0; i < length; ++i) {
+//      var jmax = symmetric ? i : length;
       for (var j = 0; j < length; ++j) {
-        var a = new AlignActionClass(results, ordered[i], ordered[j], RateMatrix.GetValue(i, j), RateMatrix.GetValue(j, i), symmetric);
-        ActionList.Add(a);
-        ActionMatrix.SetValue(i, j, a);
+        var r = new RateClass(this, ordered[i], ordered[j], matrix.GetValue(i, j), matrix.GetValue(j, i), symmetric, i == j);
+        Matrix.SetValue(i, j, r);
+        if (i == j) {
+          dmax = Math.Max(dmax, r.Rate);
+          dmin = Math.Min(dmin, r.Rate);
+        }
+        else {
+          RateList.Add(r);
+          max = Math.Max(max, r.Rate);
+          min = Math.Min(min, r.Rate);
+        }
       }
     }
 
-    SortedActions   = ActionList.Sort(true);
-    SortByDirection = ActionList.Sort(true, ref AlignActionClass.CompareDirection);
+
+    DiagFactor      = 1.0 / Math.Abs(Math.Max(dmin, dmax));
+    RateFactor      = 1.0 / Math.Abs(Math.Max(min, max));
+    DirFactor       = 1.0 / Math.Abs(max - min);
+    SortedRates     = RateList.Sort(RateClass.SortDescending, ref RateClass.CompareRate);
+    SortByDirection = RateList.Sort(RateClass.SortDescending, ref RateClass.CompareDirection);
   }
 
-  ShowLegend(AlignActionClass[] actions) = {
+  override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
+    if (si.Index == sj.Index)
+      return null;
+
+    var rate = Matrix.GetValue(si.Index, sj.Index);
+    if (rate is not null) {
+      return Canvas(size.Width, size.Height) {
+        X: x;
+        Y: y;
+        HAlign: HAligns.Center;
+        VAlign: VAligns.Center;
+        TipAction: rate;
+        var c = rate.RateColor;
+        Span {
+          TextDigits: 0;
+          TextHeight: 5 pts;
+          TextColor: c.TextCompliment;
+          rate.Rate;
+        };
+        Background: c;
+      };
+    }
+    return null;
+  }
+
+  ShowLegend(RateClass[] rates) = {
     // Show only partitions that are present in the chart
-    var pmax = Results.Rule.Partitions.Length;
+    var pmax = Partitions.Length;
     var set  = new HashSetClass(pmax);
     var list = new ListClass<PartitionClass>(pmax);
-    foreach (var s in actions) {
+    foreach (var s in rates) {
       var i = s.S0.Partition;
       if (set.Add(i))
         list.Add(i);
@@ -1503,11 +1552,11 @@ class AlignedCountClass: CountBaseClass {
 
     Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
-      Results.Data.Rule.ShowBlockLegend(list.Values, 11 pts);
+      Rule.ShowBlockLegend(list.Values, 11 pts);
     }
   };
 
-  ShowChart(AlignActionClass[] actions) = Chart(100%, 4 inches) {
+  ShowChart(RateClass[] rates) = Chart(100%, 4 inches) {
     Type: ChartTypes.Column;
     TextHeight: 12 pts;
     ValueLabel: HBox {
@@ -1516,21 +1565,21 @@ class AlignedCountClass: CountBaseClass {
       Lang.RateFactor;
     };
 
-    var fs = Math.Min(200.0 / actions.Length, 12 pts);
+    var fs = Math.Min(200.0 / rates.Length, 12 pts);
     XAxis: ChartAxis {
       Rotation: 30 degrees;
-      (each actions).ShowBox(fs);
+      (each rates).ShowBox(fs);
     };
 
     ChartSeries(Colors.Green) {
       Label: Tex.rightarrow;
-      foreach (var a in actions)
+      foreach (var a in rates)
         new DataPointClass(each0, a.Rate) {Reference: a};
     };
   };
 
   Extrema(number, top) = VBox {
-    var actions = SortedActions.Slice(top ? 0..<number : (SortedActions.Length - number)..<SortedActions.Length);
+    var actions = SortedRates.Slice(top ? 0..<number : (SortedRates.Length - number)..<SortedRates.Length);
     ShowChart(actions);
     Separation: 20 pts;
     ShowLegend(actions);
@@ -1550,8 +1599,8 @@ class AlignedCountClass: CountBaseClass {
       XAxis: ChartAxis {
         Rotation: 90 degrees;
         TextHeight: 7 pts;
-        foreach (var sa in Results.Rule.Segments) {
-          var p = Results.Rule.Partitions[sa.PartitionIndex];
+        foreach (var sa in LegendSegments) {
+          var p = Partitions[sa.PartitionIndex];
           HBox(15 pts) {
             HAlign: HAligns.Center;
             Background: p.Color;
@@ -1566,19 +1615,18 @@ class AlignedCountClass: CountBaseClass {
       ChartSeries {
         Marker: Markers.Dot;
 
-        foreach (var si in Results.Rule.Segments) {
+        foreach (var si in LegendSegments) {
           var i = each0;
 
-          foreach (var sj in Results.Rule.Segments) {
+          foreach (var sj in LegendSegments) {
             if (si.Index != sj.Index) {
-              var a = ActionMatrix.GetValue(si.Index, sj.Index);
-              var y = a.Rate;
-
-              new DataPointClass(i, y) {
-                Reference: a;
-                Fill: a.S1.Partition.Color;
-//                  Fill: a.DirectionColor;
-              };
+              var a = Matrix.GetValue(si.Index, sj.Index);
+              if (a is not null) {
+                new DataPointClass(i, a.Rate) {
+                  Reference: a;
+                  Fill: a.S1.Partition.Color;
+                };
+              }
             }
           }
         }
@@ -1588,7 +1636,7 @@ class AlignedCountClass: CountBaseClass {
     Separation: 20 pts;
     Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
-      Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 10 pts);
+      Rule.ShowBlockLegend(Partitions, 10 pts);
     }
   };
 
@@ -1611,24 +1659,20 @@ class AlignedCountClass: CountBaseClass {
       ChartSeries {
         TextHeight: 6 pts;
         Marker: Markers.Dot;
-        foreach (var si in Results.Rule.Segments) {
-          foreach (var sj in Results.Rule.Segments) {
+        foreach (var si in LegendSegments) {
+          foreach (var sj in LegendSegments) {
             if (si.Index < sj.Index) {
-              var a = ActionMatrix.GetValue(si.Index, sj.Index);
+              var a = Matrix.GetValue(si.Index, sj.Index);
               new DataPointClass(a.Rate, a.Direction) {
                 Reference: a;
-//                if (a.S0.Segment.Ipa == "p")
-//                  Marker: a.S1.Segment.Ipa == "b" or a.S1.Segment.Ipa == "f" ? special : group;
-//                else {
-                  Marker: Canvas(4 pts, 4 pts) {
-                    HAlign: HAligns.Center;
-                    VAlign: VAligns.Center;
-                    Background: a.S0.Partition.Color;
-                    BorderRadius: 2 pts;
-                    a.S1.Partition.Marker;
-                  };
-                }
-//              };
+                Marker: Canvas(4 pts, 4 pts) {
+                  HAlign: HAligns.Center;
+                  VAlign: VAligns.Center;
+                  Background: a.S0.Partition.Color;
+                  BorderRadius: 2 pts;
+                  a.S1.Partition.Marker;
+                };
+              };
             }
           }
         }
@@ -1638,7 +1682,7 @@ class AlignedCountClass: CountBaseClass {
     Separation: 20 pts;
     Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
-      Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 10 pts);
+      Rule.ShowBlockLegend(Partitions, 10 pts);
     }
   };
 
@@ -1675,14 +1719,14 @@ class AlignedCountClass: CountBaseClass {
     Separation: 20 pts;
     Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
-      Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 10 pts);
+      Rule.ShowBlockLegend(Partitions, 10 pts);
     }
   };
 
-  ShowChartPairs(top, AlignActionClass[] subset) = VBox {
-    var actions = top < 0 ? subset : subset.Slice(0..<top);
+  ShowChartPairs(top, RateClass[] rates) = VBox {
+    var subset = top < 0 ? rates : rates.Slice(0..<top);
 
-    ShowChart(actions) {
+    ShowChart(subset) {
       Type: ChartTypes.StackedColumn;
 
       Legend: ChartLegend {
@@ -1691,59 +1735,46 @@ class AlignedCountClass: CountBaseClass {
       };
       ChartSeries(Colors.Red) {
         Label: Tex.leftarrow;
-        foreach (var a in actions)
+        foreach (var a in subset)
           new DataPointClass(each0, a.Reverse);
       };
     };
     Separation: 20 pts;
-    ShowLegend(actions);
+    ShowLegend(subset);
   };
 
-  Pairs(top, predicate) = ShowChartPairs(top, SortedActions.FindSlice(predicate));
-
-  override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
-    var a = ActionMatrix.GetValue(si.Index, sj.Index);
-    if (a is valid) {
-      return Canvas(size.Width, size.Height) {
-        X: x;
-        Y: y;
-        HAlign: HAligns.Center;
-        VAlign: VAligns.Center;
-        TipAction: a;
-        Background: a.DirectionColor;
-      };
-    }
-    return null;
-  }
+  Pairs(top, predicate) = ShowChartPairs(top, SortedRates.FindSlice(predicate));
 }
 
 //======================================================================
 
 class SegDataClass {
-  AlignActionClass Value;
-  double           Rate;
+  RateClass Rate;
+  double    Value;
 
-  Constructor(AlignActionClass value) {
-    Value = value;
-    Rate  = -value.Rate;
+  Constructor(RateClass rate) {
+    Rate  = rate;
+    Value = -rate.Original;
   }
 
-  override GetLayoutTip = VBox {
+  override GetLayoutTip = VBox(DocMetrics.SegmentWidth) {
     HAlign: HAligns.Center;
 
     Span {
+      TextBackground: Rate.S0.Partition.Color;
+      Rate.S0.Partition.Name;
+    };
+    Span {
+      "Value"; ColonSpace;
+      Value;
+    };
+    Span {
       Lang.RateFactor; ColonSpace;
       TextDigits: 2;
-      Value.Rate;
+      Rate.Rate;
     };
-    VBox(DocMetrics.SegmentWidth) {
-      HAlign: HAligns.Center;
-      Background: Value.S0.Partition.Color;
-      HBox {
-        Value.S0.Partition.Name;
-      };
-    };
-    Value.S0.GetLayoutTip;
+
+    Rate.S0.GetLayoutTip;
   };
 
 }
@@ -1756,15 +1787,18 @@ class DiagonalClass {
 
   Constructor(ResultsClass results, AlignedCountClass rates) {
     Results = results;
-    var m      = rates.ActionMatrix;
+    var m      = rates.Matrix;
     var length = m.Cols;
     var list   = new ListClass<SegDataClass>(length);
-    for (int i = 0; i < length; ++i)
-      list.Add(new(m.GetValue(i, i)));
+    for (int i = 0; i < length; ++i) {
+      var r = m.GetValue(i, i);
+      if (r is not null)
+        list.Add(new(r));
+    }
     Diagonal = list.Sort(true, ref CompareData);
   }
 
-  CompareData(SegDataClass d0, SegDataClass d1, options) = d0.Rate.Compare(d1.Rate);
+  CompareData(SegDataClass d0, SegDataClass d1, options) = d0.Value.Compare(d1.Value);
 
   Display = VBox {
     HAlign: HAligns.Center;
@@ -1774,7 +1808,7 @@ class DiagonalClass {
       TextHeight: 11 pts;
       Type: ChartTypes.Column;
 
-      ValueLabel: Lang.RateFactor {
+      ValueLabel: Span {Tex.Minus; Lang.Rate} {
         Transform: Rotate(90 degrees);
         TransformFit: true;
       };
@@ -1782,15 +1816,15 @@ class DiagonalClass {
       XAxis: ChartAxis {
         TextHeight: DocMetrics.SegmentTextFactor * ExtentWidth / Diagonal.Length;
         foreach (var d in Diagonal)
-          d.Value.S0.ShowSegment;
+          d.Rate.S0.ShowSegment;
       };
 
       ValueAxis: ChartAxis;
       ChartSeries {
         foreach (var d in Diagonal) {
-          new DataPointClass(each0, d.Rate) {
+          new DataPointClass(each0, d.Value) {
             Reference: d;
-            Fill: d.Value.S0.Partition.Color;
+            Fill: d.Rate.S0.Partition.Color;
           };
         }
       };
