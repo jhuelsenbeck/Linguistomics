@@ -99,9 +99,8 @@ class AlignPairClass {
     }
   };
 
-  ShowBlock(prob, cumulative, wordset, boxheight, digits) = VBox {
+  ShowBlock(prob, cumulative, wordset, boxheight, digits) = VBox(null, null, new EdgeClass(0.125, 0, 50%)) {
     Margin: PadB(10 pts);
-    Border: new EdgeClass(0.125, 50%);
     HAlign: HAligns.Center;
 
     HBox(null, boxheight) {
@@ -254,9 +253,8 @@ class AlignmentChartClass {
     Results = results;
   }
 
-  ShowChart(SizeClass size) = VBox(size.Width, size.Height) {
+  ShowChart(SizeClass size) = VBox(size.Width, size.Height, 0.5) {
     Style.SansSerif;
-    Border: 0.5;
 
     // Try to make proportional squares
     var xitems = size.Width / 130 as int;
@@ -270,9 +268,8 @@ class AlignmentChartClass {
     foreach (var row in rows) {
       HBox {
         foreach (var a in row) {
-          VBox(bsize.Width, bsize.Height) {
+          VBox(bsize.Width, bsize.Height, new EdgeClass(0.25 pts, 1, 90%)) {
             HAlign: HAligns.Center;
-            Border: new EdgeClass(0.25 pts, 90%, 1);
 
             var ap = new AlignPairClass(Results.Data, a);
             Paragraph {
@@ -294,9 +291,7 @@ class AlignmentChartClass {
   ShowAll = Block {
     foreach (var a in Results.Alignments) {
       new AlignPairClass(Results.Data, a).ShowDetails(5, false, 10 pts, 3);
-      Paragraph {
-        Border: BorderT(1);
-      };
+      Paragraph(BorderT(1));
     }
   };
 
@@ -486,8 +481,7 @@ class WordClass: FactClass {
     TextHeight: textheight;
 
     foreach (var segment in Padded) {
-      HBox(textheight*1.125) {
-        Border: BorderL(new(0.125 pts, 80%));
+      HBox(textheight*1.125, null, BorderL(new(0.125 pts, 0, 80%))) {
         HAlign: HAligns.Center;
         if (index == each0)
           Background: Colors.LightYellow;
@@ -510,8 +504,7 @@ class WordClass: FactClass {
       Cognate.GetTitle;
     };
     FieldPar(Lang.Segments) {
-      Frame {
-        Border: 0.5;
+      Frame(null, null, 0.5) {
         ShowPaddedBlocks(16 pts);
       }
     }
@@ -641,8 +634,7 @@ class WordPairClass {
     Word2 = w2;
   }
 
-  ShowDescription(textheight) = Frame {
-    Border: 0.25 pts;
+  ShowDescription(textheight) = Frame(null, null, 0.25 pts) {
     TextHeight: textheight;
     Paragraph {
       ParBackground: 90%;
@@ -1010,10 +1002,9 @@ class DataSetClass {
   }
 
   ShowWord(SegmentClass segment) = Block {
-    Paragraph {
+    Paragraph(BorderB(1)) {
       SpaceBefore: 10 pts;
       TextHeight: 14;
-      Border: BorderB(1);
       "Words containing \"{0}\""(segment.Ipa);
     };
     Paragraph {
@@ -1314,9 +1305,8 @@ abstract class CountBaseClass {
     var length = LegendSegments.Length;
     var d      = size / (length+1);
 
-    Canvas {
+    Canvas(null, null, border) {
       TextHeight: Math.Min(d.Height * 0.7, d.Width * 1.7 / MaxDigits);
-      Border: border;
 
       var y = d.Height;
       for (var i = 0; i < length; ++i) {
@@ -1986,18 +1976,14 @@ abstract class FrequencyChartClass {
   abstract SegmentBar(RateDataClass rate, index, width, height);
   abstract OccurranceChart(SizeClass size);
 
-  LangCanvas(RateDataClass rate, width, height) = HBox(null, height) {
-    var cborder = 0.25 pts;
-
+  LangCanvas(RateDataClass rate, width, height) = HBox(null, height, BorderB(0.25 pts)) {
     VAlign: VAligns.Bottom;
-    Border: BorderB(cborder);
-    SegmentBar(rate, each SortedIndexes, width, height - cborder);
+    SegmentBar(rate, each SortedIndexes, width, ExtentHeight);
   };
 
   ShowChart = HBox {
     VAlign: VAligns.Center;
-    Rule.ShowLegend(10 pts, 1.4 inch, 5) {
-      Border: new EdgeClass(0.25 pts, 80%);
+    Rule.ShowLegend(10 pts, 1.4 inch, new EdgeClass(0.25 pts, 5, 80%)) {
       Margin: PadR(12 pts);
     };
     OccurranceChart(new(ExtentWidth - 2 inches, ExtentHeight));

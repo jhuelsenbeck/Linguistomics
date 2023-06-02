@@ -10,8 +10,7 @@ class EulerDiagramClass {
   EX(x)      = ChartSize * x * 0.01;
   EY(y)      = ChartSize * y * 0.01;
 
-  Enclosure(x, y, w, h, ColorClass color) = Canvas(EX(w), EY(h)) {
-    Border: 1 pt;
+  Enclosure(x, y, w, h, ColorClass color) = Canvas(EX(w), EY(h), 1 pt) {
     BorderRadius: 6 pts;
     Background: color;
     X: EX(x);
@@ -152,17 +151,15 @@ namespace DisplayWords {
     }
   };
 
-  HeaderCell(d) = Cell(PadAll(2 pts)) {
+  HeaderCell(d) = Cell(new(new(0, 2 pts), new(0, 2 pts), new(0, 2 pts), new(1, 2 pts))) {
     Style.SansSerif;
     Style.TitleBackground;
-    Border: BorderB(1 pts);
     d
   };
 
   ShowLanguage(DataSetClass data, TaxonClass taxon) = Block {
     Style.TitleBar {taxon.Language};
-    Table {
-      Border: 0.5;
+    Table(0.5) {
       Columns: [2.1 inches, 1 inches, ColumnClass.Expand];
       Row {
         HeaderCell(Lang.Cognate);
@@ -205,9 +202,8 @@ namespace AllWords {
   ConceptTable(DataSetClass data, textheight, wordsperline, CognateClass[] cognates) = HBox {
     var first = 84 pts;
     var w     = (ExtentWidth - first) / wordsperline;
-    Table {
+    Table(0.5) {
       Style.IPAFamily;
-      Border: 0.5;
       Columns: [first] + [w] * wordsperline;
 
       Row {
@@ -313,9 +309,8 @@ class TabOptionsClass {
 
   AddRow(DataSetClass data, SegmentSetClass set, places, f) = Row {
     var features = f | All;
-    Cell(PadLR(2 pts)) {
+    Cell(new(new(0, 2 pts), null, new(0.5 pt, 2 pts), null)) {
       VAlign: VAligns.Center;
-      Border: BorderR(0.5 pts);
       Style.TitleBackground;
       TextHeight: 7 pts;
 
@@ -347,7 +342,7 @@ class TabOptionsClass {
     Table {
       Style.TableBorder;
       Columns: [new ColumnClass(ColWidth, BorderR(0.5 pts))] +
-               [new ColumnClass(DocMetrics.CellSize.Width, BorderR(0.25 pts), HAligns.Center)];
+               [new ColumnClass(DocMetrics.CellSize.Width, BorderR(0.25 pts), null, HAligns.Center)];
 
       Row {
         TextHeight: 6 pts;
@@ -595,10 +590,9 @@ namespace Utility {
               };
 
               var s = new SizeClass(size.Width, size.Height - h);
-              HBox(s.Width, s.Height) {
+              HBox(s.Width, s.Height, new EdgeClass(1, 0, 90%)) {
                 VAlign: VAligns.Center;
                 BorderRadius: 20 pts;
-                Border: new EdgeClass(1, 90%);
                 BorderClip: true;
 
                 Span {
@@ -664,10 +658,9 @@ class SegmentDisplayClass {
     TextHeight: textheight;
 
     foreach (var segment in DisplaySegments) {
-      HBox(textheight * 3.25, null, PadLR(1)) {
+      HBox(textheight * 3.25, null, new EdgeClass(0.25 pts, 1, 85%)) {
         VAlign: VAligns.Center;
         Margin: 5;
-        Border: new EdgeClass(0.25 pts, 85%);
         Span {
           HAlign: HAligns.Center;
           TextColor: Colors.LightGray;
@@ -680,8 +673,7 @@ class SegmentDisplayClass {
     }
   };
 
-  SegmentCell(SegPartClass segment) = Cell(PadAll(2 pts)) {
-    Border: new EdgeClass(0.25 pts, Colors.LightGray);
+  SegmentCell(SegPartClass segment) = Cell(new EdgeClass(0.25 pts, 2 pts, Colors.LightGray)) {
     segment.Segment.Display(segment.GetVariable?.FullName, 16 pts);
   };
 
