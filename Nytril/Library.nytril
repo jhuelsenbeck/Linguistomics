@@ -194,21 +194,24 @@ class AlignPairClass {
       var wordset = a.WordSet;
       if (wordset.Length > 0) {
         ShowBlock(prob, cumulative, wordset, boxheight, digits);
-        Space;
+        "   ";
         if (each1 >= max)
           break;
       }
     }
   };
 
-  ShowFigureDetails(max) = Block {
+  ShowFigureDetails(DataSetClass data, max) = Block {
     var h = 8 pts;
     BoxSize = new(BoxSize.Width, h);
     TextHeight: 7 pts;
-    Span {
-      Languages(Data, h);
-      ShowBlocks(max, h, 1);
-    }
+    Frame(ExtentWidth - 1 inches) {
+      Span {
+        GetChart(new(1 inch, data.Taxa.Length * (9 pts)), max);
+        Languages(Data, h);
+        ShowBlocks(max, h, 1);
+      }
+    };
   };
 
   ShowFigureData(AlignIndexClass index, AlignDataClass align) = Frame {
@@ -247,10 +250,12 @@ class CognateIdClass {
 //======================================================================
 
 class AlignmentChartClass {
-  ResultsClass Results;
+  DataSetClass      Data;
+  AlignIndexClass[] Alignments;
 
  Constructor(ResultsClass results) {
-    Results = results;
+    Data       = results.Data;
+    Alignments = results.Alignments
   }
 
   ShowChart(SizeClass size) = VBox(size.Width, size.Height, 0.5) {
@@ -258,10 +263,10 @@ class AlignmentChartClass {
 
     // Try to make proportional squares
     var xitems = size.Width / 130 as int;
-    var yitems = Math.Floor((Results.Alignments.Length + xitems - 1) / xitems);
+    var yitems = Math.Floor((Alignments.Length + xitems - 1) / xitems);
     var bsize  = new SizeClass(size.Width / xitems, size.Height / yitems);
     var x      = bsize.Width * 0.5;
-    AlignIndexClass[][] rows = Results.Alignments / xitems;
+    AlignIndexClass[][] rows = Alignments / xitems;
 
     TextHeight: Math.Min(9 pts, bsize.Height - 3.2 pt);
 
@@ -271,7 +276,7 @@ class AlignmentChartClass {
           VBox(bsize.Width, bsize.Height, new EdgeClass(0.25 pts, 1, 90%)) {
             HAlign: HAligns.Center;
 
-            var ap = new AlignPairClass(Results.Data, a);
+            var ap = new AlignPairClass(Data, a);
             Paragraph {
               Span {
                 ap.Name;
@@ -289,15 +294,14 @@ class AlignmentChartClass {
   };
 
   ShowAll = Block {
-    foreach (var a in Results.Alignments) {
-      new AlignPairClass(Results.Data, a).ShowDetails(5, false, 10 pts, 3);
+    foreach (var a in Alignments) {
+      new AlignPairClass(Data, a).ShowDetails(5, false, 10 pts, 3);
       Paragraph(BorderT(1));
     }
   };
 
   ShowSet(DataSetClass data, CognateIdClass[] examples) = MatrixBlock {
-    var alignments = Results.Alignments;
-    var chartwidth = 1 inch;
+    var alignments = Alignments;
 
     foreach (var e in examples) {
       var found = null;
@@ -316,9 +320,8 @@ class AlignmentChartClass {
             e.Concept;
             e.Cognate Italic;
           };
-          ap.GetChart(new(chartwidth, data.Taxa.Length * (9 pts)), e.Count);
           Frame(ExtentWidth) {
-            ap.ShowFigureDetails(e.Count);
+            ap.ShowFigureDetails(data, e.Count);
           }
         }
       }
@@ -1249,7 +1252,6 @@ class ResultsClass {
 //    AverageRates           = new(this, align.AverageRates, true);
     EquilibriumFrequencies = align.EquilibriumFrequencies;
     AlignmentCutoff        = align.AlignmentCutoff;
-    Alignments             = align.Alignments;
 
 
     var ts = align?.TransitionStats;
@@ -1262,7 +1264,7 @@ class ResultsClass {
     }
 
     var alist = new ListClass<AlignIndexClass>(1024);
-    foreach (var a in Alignments) {
+    foreach (var a in align.Alignments) {
       foreach (var c in Data.UsedCognates) {
         if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
           a.Cognate = c;
@@ -1271,7 +1273,7 @@ class ResultsClass {
         }
       }
     }
-    Alignments = alist.Values.Sort(RateClass.SortDescending, ref CompareAlignment);
+    Alignments = alist.Values.Sort(false, ref CompareAlignment);
   }
 
   static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
