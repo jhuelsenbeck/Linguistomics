@@ -2,14 +2,52 @@ using Format, Units, IO;
 
 //======================================================================
 
+class SearchDataClass: FactClass {
+  field string WordsContaining;
+
+  Constructor {
+    super.Constructor(#2298c73f-87fb-4b36-92de-0c3582b94f6c#);
+    ReadFromStorage;
+  }
+}
+
+//======================================================================
+
+class WordsContainingClass: ActionClass {
+  SearchDataClass Data;
+
+  Constructor(SearchDataClass data) {
+    super.Constructor(Actions.RunQuery, null, "Words Containing");
+    Data = data;
+  }
+
+  override GetQuery {
+    if (Data.WordsContaining is valid) {
+      return MatchAny WordClass {
+        MatchAny SegPartClass {
+          MatchAny SegmentClass {
+            Ipa: Data.WordsContaining;
+          };
+        }
+      };
+    }
+
+    return null;
+  }
+}
+
+//======================================================================
+
 class DiagnosticsViewClass: DocumentClass {
-  DataSetClass         Data;
-   SegmentDisplayClass Display;
+  DataSetClass        Data;
+  SegmentDisplayClass Display;
+  SearchDataClass     SearchData;
 
   Constructor(DataSetClass data) {
     super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
-    Data    = data;
-    Display = new(data);
+    Data       = data;
+    Display    = new(data);
+    SearchData = new;
   }
 
   ShowSegmentTables = Block {
@@ -79,7 +117,29 @@ class DiagnosticsViewClass: DocumentClass {
     };
   };
 
+  ShowQuery = Block {
+    TextHeight: 14 pts;
+
+    Paragraph {
+      HBox {
+        TextControl(new(SearchData, propof SearchDataClass.WordsContaining), 1 inches, null, new EdgeClass(1, 2)) {
+          "Find Words Containing";
+          Action: Actions.Refresh;
+        };
+
+        ButtonControl(null, null, PadAll(2)) {
+          BorderRadius: 3;
+          Action: new WordsContainingClass(SearchData);
+          TextColor: Colors.Green;
+          Icons.search;
+        };
+      }
+    };
+  };
+
   override GetDocument = Document(new(new(0.5 inches, 0.75 inches, 0.5 inches, 0.5 inches))) {
+    ShowQuery;
+
     TextHeight: 9 pts;
 
     AppendixClass[] appendices = [

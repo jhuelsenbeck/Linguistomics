@@ -108,21 +108,24 @@ class LogSchemaClass: DbSchemaClass {
       Empty;
       "  namespace Primary {";
 
-      var length = 0;
+      var max = 0;
       foreach (var word in concept.Words)
-        length = Math.Max(length, word.Text.Length);
+        max = Math.Max(max, word.Text.Length);
 
       foreach (var word in concept.Words) {
+        var l = word.Language;
         Span {
           Space*4;
-          word.Language;
-          Space * (20 - word.Language.Length);
+          l;
+          Space * (20 - l.Length);
           "= \"";
           Span {
             TextFamily: TextFamilies.CambriaMath;
             word.Text;
             "\";";
-            Space * (length - word.Language.Length + 2);
+
+            Space * Math.Max(0, (max - word.Text.Length + 2));
+
 
             if (word.Spelling is valid) {
               "  // ";

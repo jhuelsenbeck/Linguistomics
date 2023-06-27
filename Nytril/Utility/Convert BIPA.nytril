@@ -19,15 +19,16 @@ Main.Documents.MainDocument = new MyDocClass;
 
 //================================================================
 
-Main.Run = new FileRunClass;
-
-class FileRunClass: RunClass {
+class FileActionClass: ActionClass {
   Constructor {
-    super.Constructor(#df9fdd21-7689-4dc5-bf7a-ce1cafb52899#, "Create BIPA file");
+    super.Constructor(Actions.Execute, null, "Create BIPA file");
   }
 
-  override void Execute {
-    IO.Write(Schema.ShowDoc, Folders.Source Folders.Up FileName("BIPA.nytril"));
+  override EventResponseClass[] Execute {
+    if (IO.Write(Schema.ShowDoc, Folders.Source Folders.Up FileName("BIPA.nytril")))
+      return [EventResponses.MessageTip("Files created")];
+    else
+      return [EventResponses.MessageBox("Error", "Error creating Files", Icons.error)];
   }
 }
 

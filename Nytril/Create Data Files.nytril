@@ -15,7 +15,6 @@ include "Nexus";
 include "Config";
 include "Languages";
 include "Data Validation";
-include "Queries";
 
 // Choose between one of these 3 sets
 //include "LanguagePhonetic";
@@ -24,22 +23,28 @@ include "LanguageSet";
 
 //======================================================================
 
-Main.Run = new RunInitClass;
-
 namespace Main.Documents {
   DiagnosticsViewClass   Diagnostic    = new(DataSet);
   ConfigurationViewClass Configuration = new(DataSet, DataSet.TreeSets[0]);
   WordViewClass          Words         = new(DataSet, DataSet.Rule.Partitions);
+  CreateViewClass        CreateFiles   = new(DataSet);
 }
 
 //======================================================================
 
-class RunInitClass: RunClass {
-  Constructor() {
-    super.Constructor(#219d23b2-2af2-4ad8-ac19-182c7dcfd05d#, "Create Experiment Data Files");
+class CreateExperimentClass: ActionClass {
+  DataSetClass Data;
+
+  Constructor(DataSetClass data) {
+    super.Constructor(Actions.Execute, null, "Create experiment files");
+    Data = data;
   }
 
-  override void Execute {
+  override string ConfirmExecuteMessage {
+    return "Overwrite configuration files for experiment \"{0}\"?"(DataSet.Name);
+  }
+
+  override EventResponseClass[] Execute {
     var data = DataSet;
     var root = Info.ExperimentRoot data.RootFolder;
 
@@ -47,14 +52,50 @@ class RunInitClass: RunClass {
       CreateFolder(root);
     (each data.TreeSets).InitFolders(data);
 
-    Write(new WordViewClass(data, data.Rule.Partitions).GetDocument, Info.ExperimentRoot data.WordFile);
-  }
-
-  override AskQuestion {
-    return "Overwrite configuration files for experiment \"{0}\"?"(DataSet.Name);
+    if (Write(new WordViewClass(data, data.Rule.Partitions).GetDocument, Info.ExperimentRoot data.WordFile))
+      return ["Files Written"];
+    return ["Error creating files"];
   }
 }
 
+//======================================================================
+
+class CreateViewClass: DocumentClass {
+  DataSetClass Data;
+
+  Constructor(DataSetClass data) {
+    super.Constructor(#609a7aaf-af34-4de5-8406-bc0e054dde89#, "Create Experiment Files");
+    Data = data;
+  }
+
+  override GetDocument = Document {
+    Paragraph {
+      TextHeight: 120%;
+      Underline;
+      "Experimental parameters";
+    };
+    ShowField("Unique Segments", Data.UniqueSegments.Length);
+    ShowField("Output Path", Info.ExperimentRoot Data.RootFolder);
+    Paragraph;
+
+    var action = new CreateExperimentClass(Data);
+    ButtonControl(null, null, new EdgeClass(2, 3, Colors.Green)) {
+      BorderRadius: 5;
+      action.GetName;
+      Action: action;
+    };
+  };
+
+  ShowField(name, value) = Paragraph {
+    TabStops: [1.5 inch];
+    Span {
+      Bold
+      name;
+    };
+    Tab;
+    value;
+  };
+}
 //======================================================================
 
 namespace Figures.SegmentTransitionCounts {

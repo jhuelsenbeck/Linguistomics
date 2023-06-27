@@ -1100,9 +1100,8 @@ namespace PaperSections.ModelInference {
     };
 
     BodyPar {
-      var count = MainResults.Data.UniqueSegments.Length;
       "Our model of segmental transitions is based on phonological natural classes, which are groups of segments that share articulatory properties. ";
-      "The segmental inventory of our dataset was exhaustively partitioned into ten classes, which are presented in "; TableReference(Figures.PartitionAssignments); eos;
+      "The segmental inventory of our dataset was exhaustively partitioned into "; Cardinal(rule.Filters.Length); " classes, which are presented in "; TableReference(Figures.PartitionAssignments); eos;
       "This "; SQuote{rule.Name}; " model allows different rates among the ";
       Cardinal(rule.Filters.Length); " classes of segments ";
       //Span {
@@ -1110,11 +1109,8 @@ namespace PaperSections.ModelInference {
       //  LastSeparator: " and ";
       //  rule.Filters;
       //};
-      " It has ";
-      count;
-      " parameters for the equilibrium distribution and ";
-      (rule.Filters.Length-1)^2-1;
-      " parameters describing rates among natural classes. ";
+      " It has "; MainResults.Data.UniqueSegments.Length; " parameters for the equilibrium distribution and ";
+      (rule.Filters.Length-1)^2-1; " parameters describing rates among natural classes. ";
       "The equilibrium frequencies are modeled as random variables drawn from a flat Dirichlet prior distribution. ";
     };
 
@@ -1168,7 +1164,7 @@ namespace PaperSections.DataCuration {
       "The MCMC analysis runs for "; Span {MainResults.Data.MainRun.Config.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
       "Samples taken during the first "; Span {MainResults.Data.MainRun.Config.PreBurn; TextGroup: true}; " cycles of the chain are discarded as burn-in. ";
       "When the analysis is complete, the results are read back into the control program. ";
-      "The resulting tables, trees and graphical figures are automatically combined with narrative elements created by the authors to make the final paper and supplemental materials. ";
+      "The resulting tables, trees and graphical figures are automatically generated from the MCMC output and combined with narrative elements created by the authors to make the final paper and supplemental materials. ";
     }
   };
 }
