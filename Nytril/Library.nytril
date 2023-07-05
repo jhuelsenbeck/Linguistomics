@@ -460,6 +460,7 @@ class WordClass: FactClass {
 
   void Connect {
     Link.Connect(this, Segments);
+    Link.Connect(this, (each Segments).Segment);
     Link.Connect(this, Cognate);
     Link.Connect(this, Language);
     Link.Connect(Language, Cognate);
@@ -757,11 +758,8 @@ class DataSetClass {
 
     var lookup = new SegPartDictionary(IPASegments.Length);
     foreach (var segment in IPASegments) {
-      if (segment.Ipa is valid) {
-        var sp = new SegPartClass(segment);
-        Link.Connect(sp, segment);
-        lookup.Add(sp, segment.Ipa);
-      }
+      if (segment.Ipa is valid)
+        lookup.Add(new SegPartClass(segment), segment.Ipa);
     }
 
     foreach (var cognate in UsedCognates)
@@ -797,11 +795,8 @@ class DataSetClass {
 
     foreach (var text in run.Segments) {
       var s = lookup.FindKey(text);
-      if (s is valid) {
-        var sp = new SegPartClass(s);
-        Link.Connect(sp, s);
-        slist.Add(sp);
-      }
+      if (s is valid)
+        slist.Add(new SegPartClass(s));
       else
         System.Assert(false, "Missing Segment " + text);
     }
