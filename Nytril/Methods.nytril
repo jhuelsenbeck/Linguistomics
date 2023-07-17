@@ -312,6 +312,22 @@ namespace Figures.QRatesDiagonal {
   Body(DocumentClass document) = new DiagonalClass(MainResults, MainResults.QRates).Display;
 }
 
+namespace Figures.PriorTree {
+  Title = "Prior Tree";
+
+  Body(DocumentClass document) = Block {
+    Style.ShowTree(null, 50%, null, MainResults.Data.PriorTrees.FirstElement, null);
+  };
+}
+
+namespace Figures.LanguageDistribution {
+  Title = "Language Distribution";
+
+  Body(DocumentClass document) = Block {
+    IO.Read(Info.ImageFolder FileName("Language Distribution.png")).FitSize(new SizeClass(ExtentWidth, 3 inches));
+  };
+}
+
 namespace Figures.AverageAll {
   Title = "All Rates";
 
@@ -797,9 +813,21 @@ namespace PaperSections.WordTransformation {
   Title = "Segmental Stability";
 
   Body(DocumentClass document) = Block {
-    var modelname = Span {TextCase: TextCases.AllLower; MainResults.Rule.Name};
 
     FirstPar {
+      FigureReference(Figures.PriorTree); " shows the prior tree";
+    };
+    ShowFigureDoc(document, Figures.PriorTree);
+
+    BodyPar {
+      FigureReference(Figures.LanguageDistribution); " shows the geographic distribution of languages.";
+
+    };
+    ShowFigureDoc(document, Figures.LanguageDistribution);
+
+    BodyPar {
+      var modelname = Span {TextCase: TextCases.AllLower; MainResults.Rule.Name};
+
       //"The "; modelname; " model allows different rates for different groups of word segments. ";
       FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the Q matrix under the "; modelname; " model. ";
       "These diagonal elements can be interpreted as a measure of segmental volatility, since it is the sum of the rates at which it transitions to other segments. ";
@@ -823,11 +851,10 @@ namespace PaperSections.WordTransformation {
       "The results paint a similar picture, however. The input segments in " FigureReference(Figures.QRatesTop); " are either long vowels or diphthongs. ";
       "The output segments are similarly restricted. ";
       "Although there are eight transitions in the graph, there are only two output segments, the mid-high front vowel /e/ and the high back vowel /u/. ";
-      };
-
+    };
 
     ShowFigureDoc(document, Figures.QRatesTop);
-};
+  };
 }
 //======================================================================
 
