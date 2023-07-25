@@ -69,9 +69,8 @@ namespace Figures.ExchangeabilityTable {
     var left       = 1 inch;
     var w          = (ExtentWidth - 1 inch) / stats.Length;
 
-    Table(PadR(4 pts)) {
+    Table(PadR(4 pts), null, [left] + [w] * stats.Length) {
       HAlign: HAligns.Center;
-      Columns: [left] + [w] * stats.Length;
       TextDigits: 3;
 
       Row {
@@ -775,13 +774,12 @@ namespace StateSection {
 
   GetStates(count) = 'A'..('A' + (count - 1)) step 1;
 
-  StateTable(count) = Table(new ThicknessClass(1 pts, 1 pts, 3 pts, null)) {
+  StateTable(count) = Table(new ThicknessClass(1 pts, 1 pts, 3 pts, null), null, [new ColumnClass(58 pts, BorderR(Style.TableEdgeSize)), 0.36 inches]) {
     ParAlignment: ParAlignments.Center;
     VAlign: VAligns.Center;
     HAlign: HAligns.Center;
 
     var states = GetStates(count);
-    Columns: [new ColumnClass(58 pts, BorderR(Style.TableEdgeSize)), 0.36 inches];
     Row {
       Empty;
       Cell(null, states.Length) {
@@ -1036,13 +1034,11 @@ namespace TableFigures.ManualAlignment {
     eos;
   };
 
-  Body(DocumentClass document) = LanguageTable {
+  Body(DocumentClass document) = LanguageTable([1.5 inches, 2.1 inches, 2.5 inch]) {
     var th = ExtentWidth * 0.02;
     TextHeight: th;
 
     var cognate = MainResults.Data.GetCognate(MainResults.Data.FigureConcept);
-
-    Columns: [1.5 inches, 2.1 inches, 2.5 inch];
     LanguageTitleRow {
       Lang.Language; Lang.PhonemicRep; Lang.Alignment;
     };
@@ -1070,8 +1066,7 @@ namespace TableFigures.WordCountTable {
     };
   };
 
-  Body(DocumentClass document) = LanguageTable {
-    Columns: [1.5 inches]*3;
+  Body(DocumentClass document) = LanguageTable([1.5 inches]) {
     LanguageTitleRow {
       Lang.Language; Lang.WordForms; Lang.SegmentCount;
     };
@@ -1395,8 +1390,7 @@ namespace PaperSections.Methods {
       "Consider as an example the following DNA sequences sampled from three species,";
     };
 
-    BodyTable {
-      Columns: [1 inch, 5 inches];
+    BodyTable([1 inch, 5 inches]) {
       AnimalRow(each ExampleAnimals);
     };
 
@@ -1696,8 +1690,7 @@ namespace PaperSections.Methods {
       "In this study, parameters include:";
     };
 
-    BodyTable {
-      Columns: [new ColumnClass(1 inches, null, null, HAligns.Right), 20 pts, 4 inches];
+    BodyTable([new ColumnClass(1 inches, null, null, HAligns.Right), 20 pts, 4 inches]) {
       ParamRow {
         ParamList(Topology);
         "Tree Topologies";
@@ -1864,8 +1857,7 @@ namespace PaperSections.Methods {
       "Jeffreys (1961) provided a table to help with the interpretation of Bayes Factors:";
     };
 
-    BodyTable {
-      Columns: [1 inches, 1 inches, 3 inches];
+    BodyTable([1 inches, 1 inches, 3 inches]) {
       Row(BorderB(0.5 pts)) {
         BayesFactor;
         Span {"log" sub 10; BayesFactor};
@@ -1921,8 +1913,7 @@ namespace PaperSections.Methods {
       ":";
     };
 
-    BodyTable {
-      Columns: [0.5 inches, 5 inches];
+    BodyTable([0.5 inches, 5 inches]) {
       Row {
         Span {Model sub 1; ":"};
         Equation {
@@ -2015,9 +2006,7 @@ InsertDelete(by) = Span {
   DeletionRate;
 };
 
-SegmentTable(ExampleConceptClass example, DataSetClass data, aligned) = BodyTable {
-  Columns: [1.5 inches, 16 pts];
-
+SegmentTable(ExampleConceptClass example, DataSetClass data, aligned) = BodyTable([1.5 inches, 16 pts]) {
   var words = example.Cognate.Words;
   foreach (var taxon in data.Taxa) {
     Row {

@@ -159,8 +159,7 @@ namespace DisplayWords {
 
   ShowLanguage(DataSetClass data, TaxonClass taxon) = Block {
     Style.TitleBar {taxon.Language};
-    Table(0.5) {
-      Columns: [2.1 inches, 1 inches, ColumnClass.Expand];
+    Table(0.5, null, [2.1 inches, 1 inches, ColumnClass.Expand]) {
       Row {
         HeaderCell(Lang.Cognate);
         HeaderCell(Lang.IPA);
@@ -202,10 +201,8 @@ namespace AllWords {
   ConceptTable(DataSetClass data, textheight, wordsperline, CognateClass[] cognates) = HBox {
     var first = 84 pts;
     var w     = (ExtentWidth - first) / wordsperline;
-    Table(0.5) {
+    Table(0.5, null, [first] + [w] * wordsperline) {
       Style.IPAFamily;
-      Columns: [first] + [w] * wordsperline;
-
       Row {
         Style.TitleBackground;
         Style.SansSerif;
@@ -288,8 +285,7 @@ class TabOptionsClass {
 
   MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Features.HasFlag(Voiced) == matches[1].Features.HasFlag(Voiced));
 
-  SegmentBlock(SegmentSetClass set, matches) = Cell {
-    Style.SegmentBottom;
+  SegmentBlock(SegmentSetClass set, matches) = Cell(Style.SegmentBottom) {
     if (matches is valid) {
       if (matches.Length == 1 and matches[0].Segment.Impossible)
         Style.ImpossibleBackground;
@@ -339,11 +335,7 @@ class TabOptionsClass {
   ShowTable(DataSetClass data, SegmentSetClass set) = Block {
     var places = Places.Values.FindSlice(place => MatchPlace(data, place));
     Style.TitleBar {Title};
-    Table {
-      Style.TableBorder;
-      Columns: [new ColumnClass(ColWidth, BorderR(0.5 pts))] +
-               [new ColumnClass(DocMetrics.CellSize.Width, BorderR(0.25 pts), null, HAligns.Center)];
-
+    Table(Style.TableBorder, null, [new ColumnClass(ColWidth, BorderR(0.5 pts))] + [new ColumnClass(DocMetrics.CellSize.Width, BorderR(0.25 pts), null, HAligns.Center)]) {
       Row {
         TextHeight: 6 pts;
         Style.HeaderCell {
@@ -414,8 +406,7 @@ namespace MatchingConsonants {
 namespace MatchingVowels {
   FeatureMask = Vowel LongVowel Nasal Diphthong NonSylabic;
 
-  AddCell(SegPartClass[] segments, SegmentSetClass set, open, backness, features) = Cell {
-    Style.SegmentBottom;
+  AddCell(SegPartClass[] segments, SegmentSetClass set, open, backness, features) = Cell(Style.SegmentBottom) {
     HAlign: HAligns.Center;
     TextHeight: DocMetrics.BoxSize.Height;
 
@@ -457,11 +448,10 @@ namespace MatchingVowels {
       Separator: "-";
       each features
     };
-    Table {
+
+    var border = BorderR(0.5 pts);
+    Table(Style.TableBorder, null, [new ColumnClass(1 inch, border)] + [new ColumnClass(DocMetrics.BoxSize.Width*4, border)]) {
       HAlign: HAligns.Center;
-      Style.TableBorder;
-      var border = BorderR(0.5 pts);
-      Columns: [new ColumnClass(1 inch, border)] + [new ColumnClass(DocMetrics.BoxSize.Width*4, border)] * Backnesses.Count;
       Row {
         TextHeight: 10 pts;
         Style.HeaderCell;
@@ -514,9 +504,7 @@ namespace MatchingDiacritics {
 
   ShowTable = Block {
     Style.TitleBar {Lang.Diacritics};
-    Table {
-      Style.TableBorder;
-      Columns: [ExtentWidth / ColumnDiv] * ColumnDiv;
+    Table(Style.TableBorder, null, [ExtentWidth / ColumnDiv] * ColumnDiv) {
       AddRow(each (DiacriticModifiers / ColumnDiv));
     };
     Style.TableNotes;
@@ -550,9 +538,7 @@ namespace MatchingOther {
 
   ShowTable(SegPartClass[] segments, SegmentSetClass set) = Block {
     Style.TitleBar {Lang.OtherSegments};
-    Table {
-      Style.TableBorder;
-      Columns: [DocMetrics.CellSize.Width, ExtentWidth * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv;
+    Table(Style.TableBorder, null, [DocMetrics.CellSize.Width, ExtentWidth * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv) {
       var slice = segments.FindSlice(segment => not set.Contains(segment));
       AddRow(each (slice / ColumnDiv));
     };
@@ -680,8 +666,7 @@ class SegmentDisplayClass {
   IPASegmentTable = Block {
     var c = DocMetrics.SegmentColumns;
 
-    Table {
-      Columns: [ExtentWidth / c] * c;
+    Table(null, null, [ExtentWidth / c]) {
       foreach (var s in (SortedSegments / c)) {
         Row {
           SegmentCell(each s);
@@ -710,9 +695,7 @@ class SegmentDisplayClass {
 
   ShowConceptGroups = Block {
     WordGroups[] groups = WordGroups.Values[1..];
-    Table {
-      Style.TableBorder;
-      Columns: [0.25 inches] + [1 inch] * (2+groups.Length);
+    Table(Style.TableBorder, null, [0.25 inches] + [1 inch] * (2+groups.Length)) {
       Row {
         Style.HeaderCell;
         Style.HeaderCell {
@@ -750,8 +733,7 @@ class SegmentDisplayClass {
 
   ShowWordsForEachSegment = Block {
     foreach (var segment in SortedSegments) {
-      Paragraph {
-        TabStops: [0.5 inches];
+      Paragraph(null, [0.5 inches]) {
         KeepWithNext: true;
         TextHeight: 16 pts;
         ParBackground: 90%;
