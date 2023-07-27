@@ -303,8 +303,7 @@ class TabOptionsClass {
     }
   };
 
-  AddRow(DataSetClass data, SegmentSetClass set, places, f) = Row {
-    var features = f | All;
+  AddRow(DataSetClass data, SegmentSetClass set, places, manner) = Row {
     Cell(new(new(0, 2 pts), null, new(0.5 pt, 2 pts), null)) {
       VAlign: VAligns.Center;
       Style.TitleBackground;
@@ -313,10 +312,11 @@ class TabOptionsClass {
       if (RowLabels is valid)
         RowLabels[each0];
       else
-        f;
+        manner;
     };
 
-    var all = data.UniqueSegments + new SegPartClass(each ImpossibleSegments);
+    var features = manner | All;
+    var all      = data.UniqueSegments + new SegPartClass(each ImpossibleSegments);
     foreach (var place in places)
       SegmentBlock(set, all.FindSlice(s => s.Segment.?Place == place and CheckFlags(s.Features, features)));
   };
@@ -333,19 +333,28 @@ class TabOptionsClass {
   }
 
   ShowTable(DataSetClass data, SegmentSetClass set) = Block {
-    var places = Places.Values.FindSlice(place => MatchPlace(data, place));
-    Style.TitleBar {Title};
+    Style.TitleBar {
+      Title
+    };
+
     Table(Style.TableBorder, null, [new ColumnClass(ColWidth, BorderR(0.5 pts))] + [new ColumnClass(DocMetrics.CellSize.Width, BorderR(0.25 pts), null, HAligns.Center)]) {
+      var places = Places.Values.FindSlice(place => MatchPlace(data, place));
       Row {
         TextHeight: 6 pts;
         Style.HeaderCell {
           Bold;
           Lang.Manner;
         };
+
         foreach (var place in places) {
           Style.HeaderCell {
-            HAligns: HAligns.Center;
-            place.Name;
+            Paragraph {
+              ParAlignment: ParAlignments.Center;
+              place;
+            };
+//            HAligns: HAligns.Center;
+//            "XXXXXXXXXXX-XXXX";
+//            place;
           };
         }
       };
