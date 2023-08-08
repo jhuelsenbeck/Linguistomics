@@ -136,11 +136,12 @@ class EulerDiagramClass {
 //======================================================================
 
 namespace DisplayWords {
-  WordRow(WordClass word, index) = Row {
-    Style.RowBar(index);
-    Cell {
-      word.ShowConcept;
+  WordRow(WordClass word, index) = Style.RowBar(index) {
+    Span {
+      Style.SansSerif;
+      word.Cognate.GetTitle;
     };
+
     Cell {
       word.ShowPlain;
     };
@@ -264,7 +265,6 @@ namespace MatchCell {
 
 class TabOptionsClass {
    var Title,
-       ColWidth,
        Exclude,
        Include,
        All,
@@ -285,7 +285,7 @@ class TabOptionsClass {
 
   MatchError(matches) = matches.Length > 2 or (matches.Length == 2 and matches[0].Features.HasFlag(Voiced) == matches[1].Features.HasFlag(Voiced));
 
-  SegmentBlock(SegmentSetClass set, matches) = Cell(Style.SegmentBottom) {
+  SegmentBlock(SegmentSetClass set, matches) = Cell {
     if (matches is valid) {
       if (matches.Length == 1 and matches[0].Segment.Impossible)
         Style.ImpossibleBackground;
@@ -303,8 +303,8 @@ class TabOptionsClass {
     }
   };
 
-  AddRow(DataSetClass data, SegmentSetClass set, places, manner) = Row {
-    Cell(new(new(0, 2 pts), null, new(0.5 pt, 2 pts), null)) {
+  AddRow(DataSetClass data, SegmentSetClass set, Places[] places, manner) = Row(Style.SegmentBottom) {
+    Cell {
       VAlign: VAligns.Center;
       Style.TitleBackground;
       TextHeight: 7 pts;
@@ -337,42 +337,42 @@ class TabOptionsClass {
       Title
     };
 
-    Table(Style.TableBorder, null, [new ColumnClass(ColWidth, BorderR(0.5 pts))] + [new ColumnClass(DocMetrics.CellSize.Width, BorderR(0.25 pts), null, HAligns.Center)]) {
-      var places = Places.Values.FindSlice(place => MatchPlace(data, place));
-      Row {
-        TextHeight: 6 pts;
-        Style.HeaderCell {
-          Bold;
-          Lang.Manner;
-        };
+    var places = Places.Values.FindSlice(place => MatchPlace(data, place));
+    if (places.Length == 0)
+      Lang.None;
+    else {
+      var first  = 75 pts;
+      var cw     = Math.Min((ExtentWidth - first) / places.Length, 75 pts);
 
-        foreach (var place in places) {
+      Table(Style.TableBorder, null, [new ColumnClass(first, BorderR(0.5 pts))] + [new ColumnClass(cw, null, null, HAligns.Center)]) {
+        Row {
+          TextHeight: 6 pts;
           Style.HeaderCell {
-            Paragraph {
-              ParAlignment: ParAlignments.Center;
+            Bold;
+            Lang.Manner;
+          };
+
+          foreach (var place in places) {
+            Style.HeaderCell {
               place;
             };
-//            HAligns: HAligns.Center;
-//            "XXXXXXXXXXX-XXXX";
-//            place;
-          };
-        }
+          }
+        };
+        AddRow(data, set, places, each Manners);
       };
-      AddRow(data, set, places, each Manners);
-    };
 
-    Style.TableNotes {
-      Lang.ImpossibleShaded;
-      Space;
-      Notes;
-    };
+      Style.TableNotes {
+        Lang.ImpossibleShaded;
+        Space;
+        Notes;
+      };
+    }
   };
 }
 //======================================================================
 
 namespace MatchingConsonants {
   PulmonicTable = new TabOptionsClass(Lang.PConsonants) {
-    ColWidth: 45 pts;
     Exclude: Affricate Ejective;
     Include: Pulmonic;
     All: NoFeature;
@@ -382,7 +382,6 @@ namespace MatchingConsonants {
   };
 
   NonPulmonicTable = new TabOptionsClass(Lang.NPConsonants) {
-    ColWidth: 80 pts;
     Exclude: Vowel Pulmonic Central;
     Include: Ejective Click Implosive Palatalized Implosive Lateral Approximant;
     All: NoFeature;
@@ -392,7 +391,6 @@ namespace MatchingConsonants {
   };
 
   PulmonicAffricatesTable = new TabOptionsClass(Lang.PulmonicAffricates) {
-    ColWidth: 50 pts;
     Exclude: Vowel;
     Include: Affricate Sibilant Lateral;
     All: Pulmonic Affricate;
@@ -402,7 +400,6 @@ namespace MatchingConsonants {
   };
 
   EjectiveAffricatesTable = new TabOptionsClass(Lang.EjectiveAffricates) {
-    ColWidth: 50 pts;
     Exclude: Vowel Click Implosive Pulmonic;
     Include: Ejective Affricate Central Lateral;
     All: Ejective Affricate;
@@ -466,7 +463,6 @@ namespace MatchingVowels {
         Style.HeaderCell;
         foreach (var b in Backnesses) {
           Style.HeaderCell {
-            HAligns: HAligns.Center;
             b;
           };
         }
@@ -526,23 +522,19 @@ namespace MatchingDiacritics {
 namespace MatchingOther {
   ColumnDiv = 2;
 
-  AddCell(SegPartClass segment) = {
-    var s = segment.Segment;
-    Cell {
-      VAlign: VAligns.Center;
-      HAlign: HAligns.Center;
-      DocFields.Anchor(s.GetVariable);
-      TextHeight: 18 pts;
-      s.ShowSegment;
-    };
-    Cell {
-      VAlign: VAligns.Center;
+  AddRow(SegPartClass[] segments) = Row {
+    VAlign: VAligns.Center;
+    foreach (var segment in segments) {
+      var s = segment.Segment;
+      Cell {
+        HAlign: HAligns.Center;
+        Paragraph {
+          TextHeight: 18 pts;
+          s.ShowSegment;
+        };
+      };
       s.SegmentName;
     }
-  };
-
-  AddRow(SegPartClass[] segments) = Row {
-    AddCell(each segments)
   };
 
   ShowTable(SegPartClass[] segments, SegmentSetClass set) = Block {
@@ -629,7 +621,8 @@ class SegmentDisplayClass {
     Style.SansSerif;
     Type: ChartTypes.Column;
     Legend: ChartLegend {Placement: Placements.Bottom};
-    ValueLabel: Lang.FrequencyPercent {
+    ValueLabel: HBox {
+      Lang.FrequencyPercent;
       Transform: Rotate(90 degrees);
       TransformFit: true;
     };
@@ -708,23 +701,19 @@ class SegmentDisplayClass {
       Row {
         Style.HeaderCell;
         Style.HeaderCell {
-          HAligns: HAligns.Center;
           Lang.Concept;
         };
         Style.HeaderCell {
-          HAligns: HAligns.Center;
           "Type";
         };
         foreach (var g in groups) {
           Style.HeaderCell {
-            HAligns: HAligns.Center;
             g.Name;
           };
         }
       };
       foreach (var concept in Data.UsedConcepts) {
-        Row {
-          Style.RowBar(each0);
+        Style.RowBar(each0) {
           each0;
           concept.Name;
           concept.WordType.Name;

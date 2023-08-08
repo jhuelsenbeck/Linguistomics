@@ -146,7 +146,7 @@ class AlignPairClass {
     ValueLabel: "%";
     ChartSeries {
       foreach (var a in Cognate.Alignments) {
-        new DataPointClass(each0, a.Prob * 100.0) {Reference: a};
+        new DataPointClass(each0, a.Prob * 100.0) {Reference: a.Prob};
         if (each1 >= max)
           break;
       }
@@ -466,12 +466,6 @@ class WordClass: FactClass {
 
   override IconClass GetIcon = Icons.text_snippet;
 
-  ShowConcept = Span {
-    Style.SansSerif;
-    TipAction: this;
-    Cognate.GetTitle;
-  };
-
   override GetLayoutSpan = Span {
     foreach (var s in Segments) {
       if (!s.Punctuation)
@@ -586,10 +580,8 @@ class CognateClass: FactClass {
 
   GetTitle = Span {
     Concept.Name; '-'; Name;
-    TipAction: this;
+    Action: new ActionClass(Actions.ToSource, Variable);
   };
-
-//  override GetLayoutTip = AllWords.ShowConceptTable(Data, this);
 
   override Compare(c, CompareOptions options) {
     var i = Concept.Compare(c.Concept, options);
