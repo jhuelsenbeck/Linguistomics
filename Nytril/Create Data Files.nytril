@@ -44,7 +44,7 @@ class CreateExperimentClass: ActionClass {
     return "Overwrite configuration files for experiment \"{0}\"?"(DataSet.Name);
   }
 
-  override EventResponseClass[] Execute {
+  override EventResponseClass Execute {
     var data = DataSet;
     var root = Info.ExperimentRoot data.RootFolder;
 
@@ -53,8 +53,8 @@ class CreateExperimentClass: ActionClass {
     (each data.TreeSets).InitFolders(data);
 
     if (Write(new WordViewClass(data, data.Rule.Partitions).GetDocument, Info.ExperimentRoot data.WordFile))
-      return ["Files Written"];
-    return ["Error creating files"];
+      return EventResponses.MessageTip("Files Written");
+    return EventResponses.MessageTip("Error creating files");
   }
 }
 
