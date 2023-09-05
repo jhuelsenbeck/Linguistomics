@@ -35,7 +35,7 @@ namespace DocMetrics {
 ShowString(text) = Span {
   if (text is valid) {
     TextColor: Style.StringColor;
-    QuoteString(text);
+    text.ToQuoted;
   }
   else
     "Empty";
@@ -103,24 +103,24 @@ class ConfigFileClass {
     };
   };
 
-  Variable(v) = Span {
+  Variable(string v) = Span {
     TextColor: Style.VariableColor;
-    QuoteString(v) ": ";
+    (v as string).ToQuoted; ": ";
   };
 
-  ArraySpan(v) = Span {
+  ArraySpan(string v) = Span {
     Begin: Variable(v) {"["};
     End: "],";
   };
 
-  AddVar(name, text, comma=true) = Span {
+  AddVar(string name, text, comma=true) = Span {
     Variable(name);
     text;
     if (comma)
       Comma;
   };
 
-  StringVar(name, text, comma=true) = AddVar(name, ShowString(text), comma);
+  StringVar(string name, text, comma=true) = AddVar(name, ShowString(text), comma);
 
   BoolVar(name, value, comma=true) = StringVar(name, value ? "Yes" : "No", comma);
 
@@ -139,7 +139,7 @@ class ConfigFileClass {
       Span {Variable("NumberOfStates"); Data.UniqueSegments.Length; CommaSpace};
 
       Span {Variable("McmcSettings"); "{"};
-        StringVar("Model", ToLower(Run.Model.Name));
+        StringVar("Model", Run.Model.Name.ToLower);
         BoolVar("OnlyCompleteWords", false);
         AddVar("Seed", Run.Seed);
         BoolVar("CalcMarginal", Run.Marginal);
