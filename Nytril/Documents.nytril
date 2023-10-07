@@ -23,13 +23,6 @@ class PaperDocClass: PaperBaseClass {
     super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
   }
 
-  FooterBlock = Block {
-    Paragraph {
-      ParAlignment: ParAlignments.Right;
-      DocFields.PageNumber; "/"; DocFields.PageCount;
-    }
-  };
-
   ShowTitledContent(content) = Block {
     Style.Header2 {
       content.Title;
@@ -40,9 +33,12 @@ class PaperDocClass: PaperBaseClass {
 
   override GetDocument = BaseDocumentClass {
     PageSection {
-      Footer: FooterBlock {
-        Distance: 0.5 inches;
-        Even: FooterBlock;
+      Footer: MarginBlock(0.5 inches) {
+        Paragraph {
+          ParAlignment: ParAlignments.Right;
+          DocFields.PageNumber; "/"; DocFields.PageCount;
+        };
+
         First: Block;
       };
 
