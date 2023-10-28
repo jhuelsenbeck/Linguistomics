@@ -8,7 +8,7 @@ class PaperBaseClass: DocumentClass {
     Title = Info.Title;
   }
 
-  BaseDocumentClass = Document(DocMetrics.DocExtent) {
+  BaseDocumentClass = Document(new(new(0.75 inches, 0.9 inches, 0.75 inches, 1 inches))) {
     TextFamily: TextFamilies.TimesNewRoman;
     TextHeight: 12 pts;
 
@@ -79,13 +79,6 @@ class SupplimentalViewClass: PaperBaseClass {
     Title = Name;
   }
 
-  HeaderBlock = Block {
-    Span {
-      TextCase: TextCases.AllUpper;
-      Title;
-    }
-  };
-
   ShowTitledContent(content) = Block {
     Style.Header2 {
       content.Title;
@@ -101,9 +94,11 @@ class SupplimentalViewClass: PaperBaseClass {
     ];
 
     PageSection {
-      Header: HeaderBlock {
-        Distance: 0.125 inches;
-        Even: HeaderBlock;
+      Header: MarginBlock(0.125 inches) {
+        Span {
+          TextCase: TextCases.AllUpper;
+          Title;
+        };
         First: Block;
       };
 

@@ -26,7 +26,7 @@ namespace Figures.TransitionRates {
     "The width of the lines is proportional to the estimated rates. ";
   };
 
-  CalcRatesClass Display = new(MainResults);
+  readonly CalcRatesClass Display = new(MainResults);
 
   Body(DocumentClass document) {
     return Display.PartitionDiagram;
@@ -219,7 +219,7 @@ namespace Figures.ExchangeabilityChart {
 //======================================================================
 
 namespace Figures.PartitionVolatilityChart {
-  Title = "Partition Volatility";
+  readonly Title = "Partition Volatility";
 
   Body(DocumentClass document) = Block {
     Style.SansSerif;
@@ -265,7 +265,7 @@ namespace Figures.PartitionVolatilityChart {
 //======================================================================
 
 namespace Figures.FractionGapsChart {
-  Title = "Deletions at the right edge";
+  readonly Title = "Deletions at the right edge";
 
   Body(DocumentClass document) = Block {
     Style.SansSerif;
@@ -275,7 +275,7 @@ namespace Figures.FractionGapsChart {
 
 //======================================================================
 
-TopCount = 15;
+readonly TopCount = 15;
 
 /*
 namespace Figures.AverageTransitions {
@@ -300,19 +300,19 @@ namespace Figures.AverageMost {
 //======================================================================
 
 namespace Figures.QRatesMatrix {
-  Title = "Rate Matrix \"Q\"";
+  readonly Title = "Rate Matrix \"Q\"";
 
   Body(DocumentClass document) = MainResults.QRates.PartitionBox;
 }
 
 namespace Figures.QRatesDiagonal {
-  Title = "Q Matrix Diagonal (sorted in descending order)";
+  readonly Title = "Q Matrix Diagonal (sorted in descending order)";
 
   Body(DocumentClass document) = new DiagonalClass(MainResults, MainResults.QRates).Display;
 }
 
 namespace Figures.PriorTree {
-  Title = "Tree topology";
+  readonly Title = "Tree topology";
 
   Body(DocumentClass document) = Block {
     Style.ShowTree(null, 50%, null, MainResults.Data.PriorTrees.FirstElement, null);
@@ -320,7 +320,7 @@ namespace Figures.PriorTree {
 }
 
 namespace Figures.LanguageDistribution {
-  Title = "Language Distribution";
+  readonly Title = "Language Distribution";
 
   Body(DocumentClass document) = Block {
     ImageBox(IO.Read(Info.ImageFolder FileName("Language Distribution.png")), ExtentWidth, 3 inches);
@@ -328,25 +328,25 @@ namespace Figures.LanguageDistribution {
 }
 
 namespace Figures.AverageAll {
-  Title = "All Rates";
+  readonly Title = "All Rates";
 
   Body(DocumentClass document) = MainResults.QRates.ShowAllRates;
 }
 
 namespace Figures.AverageSorted {
-  Title = "Rate vs. Direction";
+  readonly Title = "Rate vs. Direction";
 
   Body(DocumentClass document) = MainResults.QRates.ShowRateDirected;
 }
 
 namespace Figures.RateDirection {
-  Title = "Directionality";
+  readonly Title = "Directionality";
 
   Body(DocumentClass document) = MainResults.QRates.ShowDirection;
 }
 
 namespace Figures.SpecificRates {
-  Title = "Specific Rates";
+  readonly Title = "Specific Rates";
 
   Predicate(RateClass a) {
     return a.IsPair("p", "f") or
@@ -360,28 +360,28 @@ namespace Figures.SpecificRates {
 TransitionTitle(type) = "The top {0} {1} transitions"(TopCount, type);
 
 namespace Figures.QRatesTop {
-  Title = TransitionTitle("segmental");
+  readonly Title = TransitionTitle("segmental");
 
   Body(DocumentClass document) = MainResults.QRates.Extrema(TopCount, true);
 }
 
 namespace Figures.QRatesBottom {
-  Title = "The bottom {0} segmental transitions"(TopCount);
+  readonly Title = "The bottom {0} segmental transitions"(TopCount);
 
   Body(DocumentClass document) = MainResults.QRates.Extrema(TopCount, false);
 }
 
 namespace Figures.QRatesConsonantConsonant {
-  Title = TransitionTitle("Consonant-Consonant");
+  readonly Title = TransitionTitle("Consonant-Consonant");
 
   Predicate(RateClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
-                                  a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
+                           a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
 
   Body(DocumentClass document) = MainResults.QRates.Pairs(TopCount, ref Predicate);
 }
 
 namespace Figures.QRatesOneWay {
-  Title = TransitionTitle("highly directed");
+  readonly Title = TransitionTitle("highly directed");
 
   Body(DocumentClass document) {
     return MainResults.QRates.ShowChartPairs(TopCount, MainResults.QRates.SortByDirection);
@@ -395,13 +395,13 @@ namespace Figures.QRatesOneWay {
 //======================================================================
 
 namespace Figures.AllSegmentFrequencies {
-  Title = "Segment occurrance rates for all languages";
+  readonly Title = "Segment occurrance rates for all languages";
 
   Caption(DocumentClass document) = Span {
     "The frequency of occurrance of each segment for all languages";
   };
 
-  Display = new SegmentDisplayClass(MainResults.Data).FrequencyChart(new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
+  readonly Display = new SegmentDisplayClass(MainResults.Data).FrequencyChart(new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
 
   Body(DocumentClass document) = Block {
     Display;
@@ -412,7 +412,7 @@ namespace Figures.AllSegmentFrequencies {
 
 
 namespace Figures.ConsensusTree {
-  Title = Lang.ConsensusTree;
+  readonly Title = Lang.ConsensusTree;
 
   Body(DocumentClass document) = VBox(ExtentWidth) {
     HAlign: HAligns.Center;
@@ -425,7 +425,7 @@ namespace Figures.ConsensusTree {
 //======================================================================
 
 namespace Figures.SegmentOccuranceRates {
-  Title = "Segment Occurance Rates";
+  readonly Title = "Segment Occurance Rates";
 
   Caption(DocumentClass document) = Span {
     var l0 = MainResults.Data.Taxa[0].Language;
@@ -441,9 +441,9 @@ namespace Figures.SegmentOccuranceRates {
 //======================================================================
 
 namespace Figures.SegmentOccuranceGrouped {
-  Title = "Segment Occurance Rates (by partition)";
+  readonly Title = "Segment Occurance Rates (by partition)";
 
-  SegmentFrequencyClass Display = new(MainResults.Data, true);
+  readonly SegmentFrequencyClass Display = new(MainResults.Data, true);
 
   Body(DocumentClass document) = Block {
     Display.ShowChart;
@@ -470,13 +470,13 @@ namespace Figures.PartitionFrequencies {
 //======================================================================
 
 namespace Figures.Alignments {
-  Title = "Alignments";
+  readonly Title = "Alignments";
 
   Caption(DocumentClass document) = Span {
     MainResults.AlignmentCutoff * 100.0; "% credible set of alignments";
   };
 
-  AlignmentChartClass Display = new(MainResults);
+  readonly AlignmentChartClass Display = new(MainResults);
 
   Body(DocumentClass document) = Block {
     Display.ShowChart(ExtentSize);
@@ -525,7 +525,7 @@ class ExampleConceptClass {
 //======================================================================
 
 namespace Figures.ExampleTree {
-  Title = "Example Tree";
+  readonly Title = "Example Tree";
 
   Caption(DocumentClass document) = Span {
     "An example tree showing the relationships of {0} languages."(SampledLanguages(MainResults.Data.LanguageSet.Length));
@@ -538,7 +538,7 @@ namespace Figures.ExampleTree {
 //======================================================================
 
 namespace Figures.ExampleConcepts {
-  Title = Lang.ConceptsExamples;
+  readonly Title = Lang.ConceptsExamples;
 
   Body(DocumentClass document) = AllWords.ShowTable(11 pts, MainResults.Data, 2);
 }
@@ -546,7 +546,7 @@ namespace Figures.ExampleConcepts {
 //======================================================================
 
 namespace Figures.LanguagesUsed {
-  Title = Lang.Languages;
+  readonly Title = Lang.Languages;
 
   Body(DocumentClass document) = Utility.ShowLanguages(MainResults.Data);
 }
@@ -554,7 +554,7 @@ namespace Figures.LanguagesUsed {
 //======================================================================
 
 namespace Figures.UniqueSegments {
-  Title = Lang.UniqueSegments;
+  readonly Title = Lang.UniqueSegments;
 
   Body(DocumentClass document) = new SegmentDisplayClass(MainResults.Data).ShowSegmentAssignments;
 }
@@ -562,13 +562,13 @@ namespace Figures.UniqueSegments {
 //======================================================================
 
 namespace Figures.Alignment {
-  Title       = Lang.Alignment;
-  ArrowWidth  = 40;
-  ArrowMargin = 10 pts;
-  Arrowhead   = 8 pts;
-  ArrowColor  = 80%;
+  readonly Title       = Lang.Alignment;
+  readonly ArrowWidth  = 40;
+  readonly ArrowMargin = 10 pts;
+  readonly Arrowhead   = 8 pts;
+  readonly ArrowColor  = 80%;
 
-  HMap1 = [
+  readonly HMap1 = [
     "00111110",
     "10001111",
     "10001110",
@@ -581,7 +581,7 @@ namespace Figures.Alignment {
     "10011111",
   ];
 
-  HMap2 = [
+  readonly HMap2 = [
     "111110000",
     "000111100",
     "000111111",
@@ -807,7 +807,7 @@ namespace StateSection {
 //======================================================================
 
 namespace PaperSections.WordTransformation {
-  Title = "Segmental Stability";
+  readonly Title = "Segmental Stability";
 
   Body(DocumentClass document) = Block {
 
@@ -846,7 +846,7 @@ namespace PaperSections.WordTransformation {
 //======================================================================
 
 namespace PaperSections.WordSegmentRelationships {
-  Title = "Segmental Alignments";
+  readonly Title = "Segmental Alignments";
 
   Body(DocumentClass document) = Block {
     FirstPar {
@@ -870,7 +870,7 @@ namespace PaperSections.WordSegmentRelationships {
 //======================================================================
 
 namespace PaperSections.Discussion {
-  Title = "Discussion";
+  readonly Title = "Discussion";
 
   Body(DocumentClass document) = Block {
 
@@ -889,7 +889,6 @@ namespace PaperSections.Discussion {
    };
 
    BodyPar {
-
      "Our method is not located within any one of these traditions, but rather has affinities with the phonemic approach and lexical diffusion. ";
      "Since our analysis is based on phonemic representations, it is phonemes that undergo insertions, deletions, and transitions. ";
      "These events are treated as independent, however. ";
@@ -897,29 +896,25 @@ namespace PaperSections.Discussion {
      "This is not modeled as a single transition in our framework. ";
      "Instead, a rate of change is inferred based on the homologies of ";
      IPASegments.ah; " and "; IPASegments.oh; " in the data and how often the former transitions to the latter.";
+   };
 
+   BodyPar {
+     "MORE DISCUSSION OF STABILITY/RESULTS. ALSO MENTION TIME REVERSIBILITY AND HOW THIS AFFECTS THE INTERPRETATION OF THE RESULTS?";
    };
 
 
-BodyPar {
-  "MORE DISCUSSION OF STABILITY/RESULTS. ALSO MENTION TIME REVERSIBILITY AND HOW THIS AFFECTS THE INTERPRETATION OF THE RESULTS?";
-  };
-
-
-    BodyPar {
-      "Our results are based on a unigram model of segmental transition, in which the three possible events described above are applicable only to individual segments. ";
-      "Certain patterns of sound change cannot be adequately captured under such a model. ";
-      "For instance, metathesis, a change in which two segments exchange positions, is modeled as two separate transitions. ";
-      "The Latin verb "; textit{"exprimere"}; " "; SQuote{"press out"}; " begins with "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
-      "The initial vowel has been lost and "; IPASegments.k; " and "; IPASegments.s; " have undergone metathesis. ";
-      "Under our model, this single event is treated as two, one from "; IPASegments.k; " to "; IPASegments.s; " and another from "; IPASegments.s; " to "; IPASegments.k; eos;
-      "A second limitation is that the context in which a segmental transition takes place plays no role in the estimation of transition rates. ";
-      "It is well known that the evolution of phonemes can be sensitive to neighboring sound changes (a phenomenon known as "; textit{"conditioned"}; " "; textit{"sound"}; " "; textit{"change"};"). ";
-    };
-
+   BodyPar {
+     "Our results are based on a unigram model of segmental transition, in which the three possible events described above are applicable only to individual segments. ";
+     "Certain patterns of sound change cannot be adequately captured under such a model. ";
+     "For instance, metathesis, a change in which two segments exchange positions, is modeled as two separate transitions. ";
+     "The Latin verb "; textit{"exprimere"}; " "; SQuote{"press out"}; " begins with "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; eos;
+     "The initial vowel has been lost and "; IPASegments.k; " and "; IPASegments.s; " have undergone metathesis. ";
+     "Under our model, this single event is treated as two, one from "; IPASegments.k; " to "; IPASegments.s; " and another from "; IPASegments.s; " to "; IPASegments.k; eos;
+     "A second limitation is that the context in which a segmental transition takes place plays no role in the estimation of transition rates. ";
+     "It is well known that the evolution of phonemes can be sensitive to neighboring sound changes (a phenomenon known as "; textit{"conditioned"}; " "; textit{"sound"}; " "; textit{"change"};"). ";
+   };
 
    BodyPar {
-
      "Under our framework a new issue in linguistic phylogenetics emerges, that of segmental sampling"; Citation {References.Dockum2019}; eos;
      "Certain segmental transitions can play a crucial role in topological inference, but under a sampling scheme such as ours, in which selection of concepts is guided by a Swadesh list, ";
      "there is no guarantee that the necessary segmental correspondences will be sampled. ";
@@ -927,7 +922,6 @@ BodyPar {
      "Some segments will be sampled more often than others simply because they are more frequent in a language. ";
      "The sampling can thus influence estimates of equilibrium frequencies and transition rates. ";
      "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will in all likelihood have to be modified under our framework to take into account issues of segmental distribution. ";
-
    };
 
    BodyPar {
@@ -942,7 +936,6 @@ BodyPar {
      "or to model the history of words along a phylogenetic tree.";
    };
 
-
    BodyPar {
      "In sum, our approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general, ";
      "which can be expanded and refined in various ways. For instance, it can be combined with methods of automatic cognate detection. ";
@@ -953,7 +946,7 @@ BodyPar {
 //======================================================================
 
 namespace PaperSections.MethodsSummary {
-  Title = Lang.Methods;
+  readonly Title = Lang.Methods;
 
   Body(DocumentClass document) = Block {
     FirstPar {
@@ -965,9 +958,9 @@ namespace PaperSections.MethodsSummary {
 //======================================================================
 
 namespace PaperSections.DataSummary {
-  Title = Lang.Data;
+  readonly Title = Lang.Data;
 
-  W = TextIpa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
+  readonly W = TextIpa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
 
   Body(DocumentClass document) = Block {
     var data = MainResults.Data;
@@ -1021,9 +1014,9 @@ namespace PaperSections.DataSummary {
 //======================================================================
 
 namespace TableFigures.ManualAlignment {
-  Title = "An example of an aligned cognate set";
+  readonly Title = "An example of an aligned cognate set";
 
-  WordDisplay = SQuote {
+  readonly WordDisplay = SQuote {
     TextCase: TextCases.AllLower;
     MainResults.Data.FigureConcept.GetVariable.Name;
   };
@@ -1056,7 +1049,6 @@ namespace TableFigures.ManualAlignment {
 //======================================================================
 
 namespace TableFigures.WordCountTable {
-
   Caption(DocumentClass document) = Span {
     "Manual alignment of the words for the concept ";
     SQuote {
@@ -1087,9 +1079,9 @@ namespace TableFigures.WordCountTable {
 //======================================================================
 
 namespace PaperSections.ModelInference {
-  Title = "Model and Statistical Inference";
+  readonly Title = "Model and Statistical Inference";
 
-  InsertionLessThanDeletion = Span {InsertionRate; Tex.lt; DeletionRate};
+  readonly InsertionLessThanDeletion = Span {InsertionRate; Tex.lt; DeletionRate};
 
   Body(DocumentClass document) = Block {
     var rule = MainResults.Rule;
