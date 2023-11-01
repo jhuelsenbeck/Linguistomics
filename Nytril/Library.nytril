@@ -20,10 +20,10 @@ class AlignDataClass {
 //======================================================================
 
 class AlignIndexClass {
-  var              ConceptName,
-                   CognateName;
-  CognateClass     Cognate;
-  AlignDataClass[] Alignments;
+  var                  ConceptName,
+                       CognateName;
+  var CognateClass     Cognate;
+  var AlignDataClass[] Alignments;
 
   Constructor(concept, cognate, AlignDataClass[] alignments) {
     ConceptName = concept;
@@ -73,10 +73,10 @@ RateDescriptor(text) = Span {
 //======================================================================
 
 class AlignPairClass {
-  DataSetClass    Data;
-  AlignIndexClass Cognate;
-  SizeClass       BoxSize;
-  var             Name;
+  var DataSetClass    Data;
+  var AlignIndexClass Cognate;
+  var SizeClass       BoxSize;
+  var                 Name;
 
   Constructor(DataSetClass data, AlignIndexClass cognate) {
     Data    = data;
@@ -248,8 +248,8 @@ class CognateIdClass {
 //======================================================================
 
 class AlignmentChartClass {
-  DataSetClass      Data;
-  AlignIndexClass[] Alignments;
+  var DataSetClass      Data;
+  var AlignIndexClass[] Alignments;
 
  Constructor(ResultsClass results) {
     Data       = results.Data;
@@ -332,7 +332,7 @@ class AlignmentChartClass {
 class LanguageClass: FactClass {
   field string Name;
   field int    Cases;
-  int          LangIndex;
+  var int      LangIndex;
   var          MapAttribution;
 
   Constructor(id, name, cases=0) {
@@ -395,14 +395,14 @@ class LanguageClass: FactClass {
 //======================================================================
 
 class WordClass: FactClass {
-  field string   Text;
-  LanguageClass  Language;
-  TaxonClass     Taxon;
-  CognateClass   Cognate;
-  SegPartClass[] Segments,
-                 Aligned,
-                 Padded;
-  var            Variable;
+  field string       Text;
+  var LanguageClass  Language;
+  var TaxonClass     Taxon;
+  var CognateClass   Cognate;
+  var SegPartClass[] Segments,
+                     Aligned,
+                     Padded;
+  var                Variable;
 
   Constructor(id, text, TaxonClass taxon, CognateClass cognate) {
     super.Constructor(guid.FromHash(id));
@@ -524,11 +524,11 @@ class WordClass: FactClass {
 //======================================================================
 
 class ConceptClass: FactClass {
-  field string Name;
-  field double Confidence;
-  var          Variable;
-  WordTypes    WordType;
-  WordGroups   WordGroup;
+  field string   Name;
+  field double   Confidence;
+  var            Variable;
+  var WordTypes  WordType;
+  var WordGroups WordGroup;
 
   Constructor(variable) {
     super.Constructor(guid.FromHash(variable.GetVariable.FullName));
@@ -557,11 +557,11 @@ class ConceptClass: FactClass {
 //======================================================================
 
 class CognateClass: FactClass {
-  field string Name;
-  ConceptClass Concept;
-  WordClass[]  Words;
-  var          MaxLength,
-               Variable;
+  field string     Name;
+  var ConceptClass Concept;
+  var WordClass[]  Words;
+  var              MaxLength,
+                   Variable;
 
   Constructor(ConceptClass concept, variable) {
     super.Constructor(guid.FromHash(variable.GetVariable.FullName));
@@ -593,11 +593,11 @@ class CognateClass: FactClass {
 //======================================================================
 
 class TaxonClass {
-  var           Variable,
-                Index,
-                WordCount,
-                SegmentCount;
-  LanguageClass Language;
+  var               Variable,
+                    Index,
+                    WordCount,
+                    SegmentCount;
+  var LanguageClass Language;
 
   Constructor(LanguageClass language) {
     Index        = each0;
@@ -616,9 +616,9 @@ class TaxonClass {
 //======================================================================
 
 class WordPairClass {
-  var       Index;
-  WordClass Word1,
-            Word2;
+  var           Index;
+  var WordClass Word1,
+                Word2;
 
   Constructor(index, WordClass w1, WordClass w2) {
     Index = index;
@@ -647,31 +647,31 @@ class WordPairClass {
 //======================================================================
 
 class DataSetClass {
-  LanguageClass[]             LanguageSet;
-  SegPartClass[]              UniqueSegments;
-  CognateClass[]              UsedCognates,
-                              SortedCognates;
-  ConceptClass[]              UsedConcepts;
-  TaxonClass[]                Taxa;
-  DictionaryClass<TaxonClass> TaxonSet;
-  VectorClass                 WordList;
-  RuleClass                   Rule;
-  WordClass                   DefWord;
-  TreeSetClass[]              TreeSets;
-  ListClass                   PlainBuffer,
-                              TextBuffer;
-  ListClass<SegPartClass>     SegmentBuffer;
-  RunExperimentClass          MainRun;
-  var                         WordCutoff,
-                              RootFolder,
-                              Name,
-                              MaxLanguageName,
-                              WordCount,
-                              SegmentCount,
-                              ExampleConcept,
-                              FigureConcept,
-                              WordFile,
-                              DataConcept;
+  var LanguageClass[]             LanguageSet;
+  var SegPartClass[]              UniqueSegments;
+  var CognateClass[]              UsedCognates,
+                                  SortedCognates;
+  var ConceptClass[]              UsedConcepts;
+  var TaxonClass[]                Taxa;
+  var DictionaryClass<TaxonClass> TaxonSet;
+  var VectorClass                 WordList;
+  var RuleClass                   Rule;
+  var WordClass                   DefWord;
+  var TreeSetClass[]              TreeSets;
+  var ListClass                   PlainBuffer,
+                                  TextBuffer;
+  var ListClass<SegPartClass>     SegmentBuffer;
+  var RunExperimentClass          MainRun;
+  var                             WordCutoff,
+                                  RootFolder,
+                                  Name,
+                                  MaxLanguageName,
+                                  WordCount,
+                                  SegmentCount,
+                                  ExampleConcept,
+                                  FigureConcept,
+                                  WordFile,
+                                  DataConcept;
 
   Constructor(config, name, rootfolder, runindex) {
     Name            = name;
@@ -1223,14 +1223,14 @@ class DataSetClass {
 //======================================================================
 
 class ResultsClass {
-  DataSetClass           Data;
-  RuleClass              Rule;
-  AlignIndexClass[]      Alignments;
-  MatrixClass<StatClass> TransitionStats;
-  AlignedCountClass      QRates /*,
-                         AverageRates */;
-  var                    AlignmentCutoff,
-                         EquilibriumFrequencies;
+  var DataSetClass           Data;
+  var RuleClass              Rule;
+  var AlignIndexClass[]      Alignments;
+  var MatrixClass<StatClass> TransitionStats;
+  var AlignedCountClass      QRates /*,
+                             AverageRates */;
+  var                        AlignmentCutoff,
+                             EquilibriumFrequencies;
 
   Constructor(DataSetClass data) {
     Data = data;
@@ -1278,9 +1278,9 @@ class ResultsClass {
 //======================================================================
 
 abstract class CountBaseClass {
-  var            VFlags,
-                 MaxDigits;
-  SegPartClass[] LegendSegments;
+  var                VFlags,
+                     MaxDigits;
+  var SegPartClass[] LegendSegments;
 
   Constructor(DataSetClass data) {
     VFlags         = SegmentFeatures.Vowel | SegmentFeatures.Semivowel;
@@ -1363,8 +1363,8 @@ abstract class CountBaseClass {
 //======================================================================
 
 class PriorCountClass: CountBaseClass {
-  MatrixClass TMatrix;
-  var         Factor;
+  var MatrixClass TMatrix;
+  var             Factor;
 
   Constructor(DataSetClass data) {
     super.Constructor(data);
@@ -1437,17 +1437,17 @@ class PriorCountClass: CountBaseClass {
 //======================================================================
 
 class AlignedCountClass: CountBaseClass {
-  ListClass<RateClass>   RateList;
-  MatrixClass<RateClass> Matrix;
-  ResultsClass           Results;
-  RuleClass              Rule;
-  PartitionClass[]       Partitions;
-  RateClass[]            SortedRates,
-                         SortByDirection;
-  double                 DiagFactor,
-                         RateFactor,
-                         DirFactor;
-  bool                   Symmetric;
+  var ListClass<RateClass>   RateList;
+  var MatrixClass<RateClass> Matrix;
+  var ResultsClass           Results;
+  var RuleClass              Rule;
+  var PartitionClass[]       Partitions;
+  var RateClass[]            SortedRates,
+                             SortByDirection;
+  var double                 DiagFactor,
+                             RateFactor,
+                             DirFactor;
+  var bool                   Symmetric;
 
   Constructor(ResultsClass results, rates, bool symmetric) {
     super.Constructor(results.Data);
@@ -1735,8 +1735,8 @@ class AlignedCountClass: CountBaseClass {
 //======================================================================
 
 class SegDataClass {
-  RateClass Rate;
-  double    Value;
+  var RateClass Rate;
+  var double    Value;
 
   Constructor(RateClass rate) {
     Rate  = rate;
@@ -1770,8 +1770,8 @@ class SegDataClass {
 //======================================================================
 
 class DiagonalClass {
-  SegDataClass[] Diagonal;
-  ResultsClass   Results;
+  var SegDataClass[] Diagonal;
+  var ResultsClass   Results;
 
   Constructor(ResultsClass results, AlignedCountClass rates) {
     Results = results;
@@ -1838,12 +1838,12 @@ class FrequencyClass {
 //======================================================================
 
 class RateDataClass {
-  TaxonClass       Taxon;
-  VectorClass      Count;
-  FrequencyClass[] Frequency;
-  var              TotalCount,
-                   MaxFrequency,
-                   Distance;
+  var TaxonClass       Taxon;
+  var VectorClass      Count;
+  var FrequencyClass[] Frequency;
+  var                  TotalCount,
+                       MaxFrequency,
+                       Distance;
 
   Constructor(count, TaxonClass taxon) {
     Taxon        = taxon;
@@ -1856,11 +1856,11 @@ class RateDataClass {
 //======================================================================
 
 class SegmentActionClass: ActionClass {
-  RateDataClass Rate;
-  SegPartClass  Segment;
-  TaxonClass    Taxon;
-  var           Count,
-                Percent;
+  var RateDataClass Rate;
+  var SegPartClass  Segment;
+  var TaxonClass    Taxon;
+  var               Count,
+                    Percent;
 
   Constructor(RateDataClass rate, SegPartClass segment, count, percent) {
     super.Constructor(Actions.RunQuery, null);
@@ -1898,17 +1898,17 @@ class SegmentActionClass: ActionClass {
 //======================================================================
 
 abstract class FrequencyChartClass {
-  PartitionClass[] Partitions;
-  RuleClass        Rule;
-  TaxonClass[]     Taxa;
-  VectorClass      UsedCount,
-                   UsedFrequency;
-  FrequencyClass[] FirstRate;
-  RateDataClass[]  Rates,
-                   SortedRates;
-  var              RateCount,
-                   SortedIndexes,
-                   MaxDistance;
+  var PartitionClass[] Partitions;
+  var RuleClass        Rule;
+  var TaxonClass[]     Taxa;
+  var VectorClass      UsedCount,
+                       UsedFrequency;
+  var FrequencyClass[] FirstRate;
+  var RateDataClass[]  Rates,
+                       SortedRates;
+  var                  RateCount,
+                       SortedIndexes,
+                       MaxDistance;
 
  Constructor(DataSetClass data, count) {
     Partitions = data.Rule.Partitions;
@@ -1989,8 +1989,8 @@ abstract class FrequencyChartClass {
 //======================================================================
 
 class SegmentFrequencyClass: FrequencyChartClass {
-  VectorClass    PartitionMax;
-  SegPartClass[] Segments;
+  var VectorClass    PartitionMax;
+  var SegPartClass[] Segments;
 
   Constructor(DataSetClass data, group) {
     super.Constructor(data, data.UniqueSegments.Length);
@@ -2081,11 +2081,11 @@ class SegmentFrequencyClass: FrequencyChartClass {
 //======================================================================
 
 class PartitionRateActionClass: ActionClass {
-  RateDataClass  Rate;
-  PartitionClass Partition;
-  TaxonClass     Taxon;
-  var            Count,
-                 Percent;
+  var RateDataClass  Rate;
+  var PartitionClass Partition;
+  var TaxonClass     Taxon;
+  var                Count,
+                     Percent;
 
   Constructor(RateDataClass rate, PartitionClass partition, count, percent) {
     super.Constructor(Actions.RunQuery, null);

@@ -14,7 +14,7 @@ class SearchDataClass: FactClass {
 //======================================================================
 
 class WordsContainingClass: ActionClass {
-  SearchDataClass Data;
+  var SearchDataClass Data;
 
   Constructor(SearchDataClass data) {
     super.Constructor(Actions.RunQuery, null, "Words Containing");
@@ -37,9 +37,9 @@ class WordsContainingClass: ActionClass {
 //======================================================================
 
 class DiagnosticsViewClass: DocumentClass {
-  DataSetClass        Data;
-  SegmentDisplayClass Display;
-  SearchDataClass     SearchData;
+  var DataSetClass        Data;
+  var SegmentDisplayClass Display;
+  var SearchDataClass     SearchData;
 
   Constructor(DataSetClass data) {
     super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
@@ -162,8 +162,8 @@ class DiagnosticsViewClass: DocumentClass {
 //======================================================================
 
 class ConfigurationViewClass: DocumentClass {
-  DataSetClass Data;
-  TreeSetClass TreeSet;
+  var DataSetClass Data;
+  var TreeSetClass TreeSet;
 
   Constructor(DataSetClass data, TreeSetClass treeset) {
     super.Constructor(#7fc3842e-41d2-4b65-bcd0-be2fd9ede5b2#, "Configuration File");
@@ -179,8 +179,8 @@ class ConfigurationViewClass: DocumentClass {
 //======================================================================
 
 class WordViewClass: DocumentClass {
-  DataSetClass     Data;
-  PartitionClass[] Partitions;
+  var DataSetClass     Data;
+  var PartitionClass[] Partitions;
 
   Constructor(DataSetClass data, PartitionClass[] partitions) {
     super.Constructor(#a12b9731-b78e-49e1-986f-a72af5d1ec25#, "Word File");
@@ -189,7 +189,7 @@ class WordViewClass: DocumentClass {
   }
 
   ShowUniqueSegments = Span {
-    Style.Variable("Segments"); " = [";
+    Style.ReadOnly; Style.Variable("Segments"); " = [";
     Span {
       Separator: CommaSpace;
       ShowString(each ((each Data.UniqueSegments).Ipa));
@@ -198,7 +198,7 @@ class WordViewClass: DocumentClass {
   };
 
   ShowLanguages = TextBlock {
-    Span {Style.Variable("LanguageSet"); " = [";};
+    Span {Style.ReadOnly; Style.Variable("LanguageSet"); " = [";};
     TextBlock {
       IndentSpace: 2;
 
@@ -226,7 +226,7 @@ class WordViewClass: DocumentClass {
 
   ShowPartitions = TextBlock {
     Span {
-      Style.Variable("PartitionInfoClass"); "[] "; Style.Variable("Partitions"); " = [";
+      Style.ReadOnly; Style.Variable("PartitionInfoClass"); "[] "; Style.Variable("Partitions"); " = [";
     };
 
     foreach (var p in Partitions) {

@@ -2,16 +2,16 @@ using Format, Units, SegmentFeatures, Style, LinkTypes;
 //======================================================================
 
 class PartitionClass: FactClass {
-  field string   Name;
-  SegPartClass[] Segments;
-  PointClass     Center;
-  ColorClass     Color,
-                 TextColor;
-  var            Marker,
-                 Index,
-                 Radius,
-                 Angle,
-                 Outer;
+  field string       Name;
+  var SegPartClass[] Segments;
+  var PointClass     Center;
+  var ColorClass     Color,
+                     TextColor;
+  var                Marker,
+                     Index,
+                     Radius,
+                     Angle,
+                     Outer;
 
   Constructor(index, name, SegPartClass[] segments) {
     super.Constructor(guid.FromHash(name));
@@ -68,8 +68,8 @@ class PartitionInfoClass {
 //======================================================================
 
 class FilterClass {
-  field string Name;
-  RuleClass    Rule;
+  field string  Name;
+  var RuleClass Rule;
 
   Constructor(RuleClass rule, name) {
     Rule = rule;
@@ -86,14 +86,14 @@ class FilterClass {
 //======================================================================
 
 abstract class RuleClass {
-  ListClass<FilterClass> FilterList;
-  FilterClass[]          Filters,
-                         FiltersPlus;
-  PartitionClass[]       Partitions;
-  SegPartClass[]         Segments;
-  var                    Name,
-                         Matrix,
-                         Numbers;
+  var ListClass<FilterClass> FilterList;
+  var FilterClass[]          Filters,
+                             FiltersPlus;
+  var PartitionClass[]       Partitions;
+  var SegPartClass[]         Segments;
+  var                        Name,
+                             Matrix,
+                             Numbers;
 
   Constructor(name) {
     Name       = name;
@@ -264,7 +264,7 @@ abstract class RuleClass {
 //======================================================================
 
 class SingleFilterClass: FilterClass {
-  SegmentClass Segment;
+  var SegmentClass Segment;
 
   Constructor(RuleClass rule, SegmentClass segment) {
     super.Constructor(rule, segment.Ipa);
@@ -291,7 +291,7 @@ class FeatureMaskClass: FilterClass {
 //======================================================================
 
 class SegmentListClass: FilterClass {
-  SegmentClass[] List;
+  var SegmentClass[] List;
 
   Constructor(RuleClass rule, name, SegmentClass[] list) {
     super.Constructor(rule, name);
@@ -331,9 +331,9 @@ class NaturalPartitionClass: RuleClass {
 //======================================================================
 
 class PartitionActionClass: ActionClass {
-  StatClass      Rate;
-  PartitionClass P1,
-                 P2;
+  var StatClass      Rate;
+  var PartitionClass P1,
+                     P2;
 
   Constructor(DataSetClass data, RuleClass rule, StatClass rate, PartitionClass p1, PartitionClass p2) {
     super.Constructor(Actions.ToSource, rule);
@@ -373,10 +373,10 @@ class PartitionActionClass: ActionClass {
 //======================================================================
 
 class TransitionClass {
-  var         MaxRate,
-              MaxFrequency;
-  MatrixClass Rates;
-  RuleClass   Rule;
+  var             MaxRate,
+                  MaxFrequency;
+  var MatrixClass Rates;
+  var RuleClass   Rule;
 
   Constructor(ResultsClass results, RuleClass rule) {
     Rule = rule;
@@ -401,8 +401,8 @@ class TransitionClass {
 //======================================================================
 
 class TranActionClass: ActionClass {
-  WordPairClass[] List;
-  var             Percent;
+  var WordPairClass[] List;
+  var                 Percent;
 
   Constructor(WordPairClass[] list, percent) {
     super.Constructor(Actions.TipDocument, list);
@@ -454,8 +454,8 @@ class TranActionClass: ActionClass {
 //======================================================================
 
 class AlignSortClass {
-  AlignDataClass  Data;
-  AlignIndexClass Congate;
+  var AlignDataClass  Data;
+  var AlignIndexClass Congate;
 
   Constructor(AlignDataClass data, AlignIndexClass cognate) {
     Data    = data;
@@ -466,17 +466,17 @@ class AlignSortClass {
 //======================================================================
 
 class RateClass: ActionClass {
-  AlignedCountClass Count;
-  SegPartClass      S0,
-                    S1;
-  SegmentFeatures   F0,
-                    F1;
-  var               Original,
-                    Rate,
-                    Reverse,
-                    Direction;
-  bool              Diagonal,
-                    Symmetric;
+  var AlignedCountClass Count;
+  var SegPartClass      S0,
+                        S1;
+  var SegmentFeatures   F0,
+                        F1;
+  var                   Original,
+                        Rate,
+                        Reverse,
+                        Direction;
+  var bool              Diagonal,
+                        Symmetric;
 
   Constructor(AlignedCountClass count, SegPartClass s0, SegPartClass s1, rate, reverse, bool symmetric, bool diagonal) {
     super.Constructor(Actions.TipDocument, s0);
@@ -647,18 +647,18 @@ class RateClass: ActionClass {
 //======================================================================
 
 class CalcRatesClass {
-  DataSetClass    Data;
-  TransitionClass Transition;
-  RuleClass       Rule;
-  ResultsClass    Results;
-  var             MaxLine,
-                  ArrowGap,
-                  GapAngle,
-                  LoopRadius,
-                  LoopDistance,
-                  MaxExtent,
-                  MaxRadius,
-                  RateScale;
+  var DataSetClass    Data;
+  var TransitionClass Transition;
+  var RuleClass       Rule;
+  var ResultsClass    Results;
+  var                 MaxLine,
+                      ArrowGap,
+                      GapAngle,
+                      LoopRadius,
+                      LoopDistance,
+                      MaxExtent,
+                      MaxRadius,
+                      RateScale;
 
   Constructor(ResultsClass results) {
     Results    = results;
