@@ -99,14 +99,23 @@ class AlignPairClass {
     }
   };
 
-  ShowBlock(prob, cumulative, wordset, boxheight, digits) = VBox(null, null, new EdgeClass(0.125, 0, 50%)) {
+  ShowBlock(prob, cumulative, wordset, boxheight) = VBox(null, null, new EdgeClass(0.125, 0, 50%)) {
     Margin: PadB(10 pts);
     HAlign: HAligns.Center;
 
     HBox(null, boxheight) {
-      TextDigits: digits;
-      prob * 100.0;
-      "%";
+      Span {
+        TextSignificant: true;
+        TextDigits: 3;
+        prob * 100.0;
+        if (prob != cumulative) {
+          Space*3;
+          Span {
+            TextColor: Colors.Gray;
+            cumulative * 100.0;
+          };
+        }
+      }
     };
 
     VBox {
@@ -136,9 +145,9 @@ class AlignPairClass {
     };
   };
 
-  override GetLayoutTip = ShowDetails(9, true, 10 pts, 1);
+  override GetLayoutTip = ShowDetails(9, true, 10 pts);
 
-  override GetDocument = ShowDetails(5000, true, 10 pts, 3);
+  override GetDocument = ShowDetails(5000, true, 10 pts);
 
   GetChart(SizeClass size, max) = Chart(size.Width, size.Height) {
     Type: ChartTypes.Column;
@@ -153,7 +162,7 @@ class AlignPairClass {
     };
   };
 
-  ShowDetails(max, tip, textheight, int digits) = Block {
+  ShowDetails(max, tip, textheight) = Block {
     TextHeight: textheight;
 
     Paragraph(null, [3 inches]) {
@@ -180,18 +189,18 @@ class AlignPairClass {
         langbox;
       }
 
-      ShowBlocks(max, BoxSize.Height, digits);
+      ShowBlocks(max, BoxSize.Height);
     }
   };
 
-  ShowBlocks(max, boxheight, int digits) = Span {
+  ShowBlocks(max, boxheight) = Span {
     var cumulative = 0.0;
     foreach (var a in Cognate.Alignments) {
       var prob = a.Prob;
       cumulative += prob;
       var wordset = a.WordSet;
       if (wordset.Length > 0) {
-        ShowBlock(prob, cumulative, wordset, boxheight, digits);
+        ShowBlock(prob, cumulative, wordset, boxheight);
         "   ";
         if (each1 >= max)
           break;
@@ -207,7 +216,7 @@ class AlignPairClass {
       Span {
         GetChart(new(1 inch, data.Taxa.Length * (9 pts)), max);
         Languages(Data, h);
-        ShowBlocks(max, h, 1);
+        ShowBlocks(max, h);
       }
     };
   };
@@ -225,7 +234,7 @@ class AlignPairClass {
       TextHeight: 7 pts;
       Span {
         Languages(Data, h);
-        ShowBlock(align.Prob, align.Prob, align.WordSet, h, 1);
+        ShowBlock(align.Prob, align.Prob, align.WordSet, h);
       }
     };
   };
@@ -293,7 +302,7 @@ class AlignmentChartClass {
 
   ShowAll = Block {
     foreach (var a in Alignments) {
-      new AlignPairClass(Data, a).ShowDetails(5, false, 10 pts, 3);
+      new AlignPairClass(Data, a).ShowDetails(5, false, 10 pts);
       Paragraph(BorderT(1));
     }
   };
