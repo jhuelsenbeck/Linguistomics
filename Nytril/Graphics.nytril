@@ -340,12 +340,12 @@ readonly namespace Style {
     Initials(person.Last);
   };
 
-  ShowPerson(PersonClass person) = CitationLib.GetFullName(person) {
+  ShowPerson(PersonClass person) = CitationStyleClass.GetFullName(person) {
     TipAction: person;
   };
 
   ShowAuthor(AuthorClass author) = Span {
-    CitationLib.GetFullName(author.Person) {
+    CitationStyleClass.GetFullName(author.Person) {
       Bold;
       TipAction: author.Person.FindFirstFact(WebsiteLink);
     };
@@ -358,6 +358,11 @@ readonly namespace Style {
         EqualContribution;
     };
   };
+
+  GetLocation(value) {
+    var style = new APAStyleClass;
+    return style.GetLocation(value, true);
+  }
 
   ShowAuthorDetails(AuthorClass author) = Block {
     var person     = author.Person;
@@ -380,7 +385,7 @@ readonly namespace Style {
             org.Name;
             CommaSpace;
           }
-          CitationLib.ShowLocation(org, CommaSpace, true);
+          GetLocation(org);
         }
       }
     }
@@ -419,10 +424,10 @@ readonly namespace Style {
     Paragraph {
       DocFields.Anchor(person.GetVariable);
       FirstIndent: -0.25 inches;
-      CitationLib.GetFullName(person);
+      CitationStyleClass.GetFullName(person);
     };
 
-    CitationLib.ShowLocation(person, CommaSpace, true);
+    GetLocation(person);
 
     var email = person.FindFirstFact(WorkEmailLink);
     if (email is valid) {
