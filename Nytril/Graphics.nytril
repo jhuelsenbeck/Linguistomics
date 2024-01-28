@@ -6,13 +6,6 @@ Main.SymbolFamily = TextFamilies.CMUClassicalSerif;
 
 //======================================================================
 
-readonly namespace NumberedGroup {
-  Table  = "Table";
-  Figure = "Figure";
-}
-
-//======================================================================
-
 readonly namespace DocMetrics {
   TableSpace        = 24 pts;
   BoxSize           = new SizeClass(18 pts, 20 pts);
@@ -23,49 +16,6 @@ readonly namespace DocMetrics {
   SegmentTextFactor = 0.55;
 }
 
-CaptionOrTitle(DocumentClass doc, figure) = Span {
-  if (exists figure.?Caption)
-    return figure.Caption(doc);
-  else
-    return figure.?Title;
-};
-
-//======================================================================
-
-class AppendixClass {
-  var Title,
-      Content;
-
-  Constructor(title, content) {
-    Title   =  title;
-    Content = content;
-  }
-
-  virtual GetCaption(DocumentClass doc) = null;
-
-  virtual GetBody(DocumentClass doc) = Content;
-}
-//======================================================================
-
-class AppendixFigureClass: AppendixClass {
-  var Figure;
-
-  Constructor(figure) {
-    super.Constructor(figure.Title, null);
-    Figure = figure;
-  }
-
-  override GetCaption(DocumentClass doc) = Paragraph {
-    CaptionOrTitle(doc, Figure);
-  };
-
-  override GetBody(DocumentClass doc) = Block {
-    if (exists Figure.?Body)
-      return Figure.Body(doc);
-    else
-      return Figure.?Text;
-  };
-}
 //======================================================================
 
 class DefClass: FactClass {
@@ -76,14 +26,14 @@ class DefClass: FactClass {
   Constructor(id, symbol, name, description=null) {
     super.Constructor(id);
 
-    Variable    = Style.Equation {symbol};
+    Variable    = PaperStyle.Equation {symbol};
     Name        = name;
     Description = description;
   }
 
   override IconClass GetIcon = Icons.subscript;
 
-  override Compare(d, CompareOptions options) = Name.Compare(d.Name, options);
+  override int Compare(d, CompareOptions options) = Name.Compare(d.Name, options);
 
   override GetLayoutSpan = Span {
     Variable;
@@ -139,14 +89,14 @@ class EquationClass: FactClass {
     Link to this;
   };
 
-  override GetLayoutBlock = Style.EquationPar {
+  override GetLayoutBlock = PaperStyle.EquationPar {
     Formula;
     Link to this;
   };
 
   override GetLayoutTip = Block {
     Paragraph {
-      Style.SansSerif;
+      PaperStyle.SansSerif;
       SpaceAfter: 10 pts;
       Bold;
       Name;
@@ -160,20 +110,29 @@ class EquationClass: FactClass {
 
   override GetLayoutFact = GetLayoutTip;
 }
+
 //======================================================================
 
-class AuthorClass {
-  var PersonClass Person;
-  var             EqualContribution;
+class TreeContentClass: ContentClass {
+  var NodeClass Root;
+  var           Width,
+                Axis;
 
-  Constructor(PersonClass person, equal) {
-    Person            = person;
-    EqualContribution = equal;
+  Constructor(title, width, NodeClass root, axis=null) {
+    super.Constructor(title);
+    Root  = root;
+    Width = width;
+    Axis  = axis;
   }
+
+  override GetBody(ContentStyleClass style) = Paragraph {
+    PaperStyle.ShowTree(style, Root, Width, null, Axis);
+  };
 }
+
 //======================================================================
 
-readonly namespace Style {
+readonly namespace PaperStyle {
   SansSerif            = TextFamily: TextFamilies.Arial;
   IPAFamily            = TextFamily: TextFamilies.LinuxLibertineO;
   GreekFamily          = IPAFamily;
@@ -187,7 +146,6 @@ readonly namespace Style {
   TitleBackground      = Background: 90%;
   CommentColor         = new ColorClass(0, 0x64, 0);
   StringColor          = new ColorClass(168, 21, 53);
-  NoteIndexIndent      = 6 pts;
   VariableColor        = Colors.DarkBlue;
   AlignBackColor       = 95%;
   TableEdgeSize        = 0.25 pts;
@@ -197,14 +155,6 @@ readonly namespace Style {
   HighlightColor       = Colors.Orange;
   TextColor            = Colors.Black;
   SlideHeader          = Colors.SlateGray;
-
-  eos                  = ". ";
-  EqualContribution    = "†";
-  SQuote               = Span {Begin: "‘"; End: "’"};
-  SQuoteEnd            = Span {Begin: "‘"; End: ".’ "};
-  SQuoteComma          = Span {Begin: "‘"; End: ",’ "};
-  DQuote               = Span {Begin: "“"; End: "”"};
-  DQuoteEnd            = Span {Begin: "“"; End: ".” "};
   textit               = Span {Italic};
   TextIpa              = Span {IPAFamily; Begin:"/"; End:"/"};
 
@@ -229,31 +179,12 @@ readonly namespace Style {
 
   LanguageTitleRow = Row(BorderB(1 pts));
 
-  FigureTable = Table {
-    ParAlignment: ParAlignments.Center;
-    SpaceAfter: 6 pts;
-  };
-
-  FigureReference(figure) = Span {
-    Lang.Figure;
-    Space;
-    DocFields.Reference(NumberedGroup.Figure, figure.GetVariable);
-    TipAction: new FigureActionClass(figure);
-  };
-
-  TableReference(table) = Span {
-    Lang.Table;
-    Space;
-    DocFields.Reference(NumberedGroup.Table, table.GetVariable);
-    TipAction: new TableActionClass(table);
-  };
-
   Keyword(text) = Span {
-    Style.KeywordFormat;
+    KeywordFormat;
     text;
   };
 
-  ReadOnly = Style.Keyword("readonly ");
+  ReadOnly = Keyword("readonly ");
 
   Variable(text) = Span {
     TextColor: new ColorClass(43, 145, 175);
@@ -264,187 +195,6 @@ readonly namespace Style {
     ReadOnly; Keyword("namespace ");
     Variable(text);
     " {"
-  };
-
-  ShowFigureDoc(DocumentClass document, figure) = Block {
-    var title = CaptionOrTitle(document, figure);
-    var th    = GetLayoutSize(title).Height;
-    Paragraph {
-      SpaceBefore: 10 pts;
-      SpaceAfter: 6 pts;
-      KeepWithNext: true;
-
-      Span {
-        Bold;
-        SansSerif;
-        Lang.Figure;
-        Space;
-        DocFields.Sequence(NumberedGroup.Figure, figure.GetVariable);
-        eos;
-      };
-      title;
-    };
-
-    Paragraph {
-      ParAlignment: ParAlignments.Center;
-      SpaceAfter: 6 pts;
-
-      var extent = SetExtentSize(new(ExtentWidth, ExtentHeight - th*2));
-      Frame {
-        figure.Body(document);
-      };
-      SetExtent(extent);
-    };
-  };
-
-  ShowTable(DocumentClass document, table, textheight=null) = Block {
-    Paragraph {
-      KeepWithNext: true;
-      SpaceBefore: 10 pts;
-      SpaceAfter: 10 pts;
-      ParAlignment: ParAlignments.Center;
-
-      Frame {
-        table.Body(document) {
-          TextHeight: textheight;
-        };
-      };
-    };
-
-    Paragraph {
-      ParAlignment: ParAlignments.Center;
-      SpaceAfter: 10 pts;
-      Span {
-        Bold;
-        SansSerif;
-        Lang.Table;
-        Space;
-        DocFields.Sequence(NumberedGroup.Table, table.GetVariable);
-        eos;
-      };
-      CaptionOrTitle(document, table);
-    };
-  };
-
-  Initials(name) {
-    if (name is valid)
-      return Span {name[0]; "."};
-  }
-
-  ShowInitials(PersonClass person) = Span {
-    Link to person;
-    TipAction: person;
-
-    Initials(person.First);
-    Initials(person.Middle);
-    Initials(person.Last);
-  };
-
-  ShowPerson(PersonClass person) = CitationStyleClass.GetFullName(person) {
-    TipAction: person;
-  };
-
-  ShowAuthor(AuthorClass author) = Span {
-    CitationStyleClass.GetFullName(author.Person) {
-      Bold;
-      TipAction: author.Person.FindFirstFact(WebsiteLink);
-    };
-
-    Span {
-      TextAlignment: TextAlignments.Superscript;
-      Separator: Comma;
-      each1;
-      if (author.EqualContribution)
-        EqualContribution;
-    };
-  };
-
-  GetLocation(value) {
-    var style = new APAStyleClass;
-    return style.GetLocation(value, true);
-  }
-
-  ShowAuthorDetails(AuthorClass author) = Block {
-    var person     = author.Person;
-    var department = person.FindFirstFact(DepartmentLink);
-    LeftIndent: NoteIndexIndent;
-    Paragraph {
-      FirstIndent: -NoteIndexIndent;
-      Span {
-        TextAlignment: TextAlignments.Superscript;
-        each1;
-      };
-      Tab;
-      if (department is valid) {
-        department.Name;
-        CommaSpace;
-
-        var org = department.FindFirstFact(DepartmentLink, true) ?? department;
-        if (org is valid) {
-          if (org != department) {
-            org.Name;
-            CommaSpace;
-          }
-          GetLocation(org);
-        }
-      }
-    }
-  };
-
-  ShowAuthorList(AuthorClass[] authors) = Block {
-    Style.SansSerif;
-    Paragraph {
-      TextHeight: 12 pts;
-      SpaceAfter: 10 pts;
-      Separator: CommaSpace;
-      LastSeparator: " and ";
-      ShowAuthor(each authors);
-      Link to (each authors).Person;
-    };
-
-    Block {
-      TextHeight: 10 pts;
-      ShowAuthorDetails(each authors);
-      Paragraph {
-        LeftIndent: NoteIndexIndent;
-        FirstIndent: -NoteIndexIndent;
-        Span {
-          TextAlignment: TextAlignments.Superscript;
-          EqualContribution;
-        };
-        Tab;
-        Lang.EqualContribution;
-      };
-    };
-  };
-
-  ShowAuthorFull(PersonClass person) = Block {
-    LeftIndent: 0.25 inches;
-
-    Paragraph {
-      DocFields.Anchor(person.GetVariable);
-      FirstIndent: -0.25 inches;
-      CitationStyleClass.GetFullName(person);
-    };
-
-    GetLocation(person);
-
-    var email = person.FindFirstFact(WorkEmailLink);
-    if (email is valid) {
-      Paragraph {
-        Lang.EMail;
-        ColonSpace;
-        email;
-      };
-    }
-
-    var site = person.FindFirstFact(WebsiteLink);
-    if (site is valid) {
-      Paragraph {
-        site;
-      };
-    }
-    Empty;
   };
 
   RowBar(i) = Row {
@@ -458,11 +208,6 @@ readonly namespace Style {
       ParAlignment: ParAlignments.Center;
       DocFields.PageNumber;
     };
-  };
-
-  ShowReferences = Section {
-    SectionBreak: SectionBreaks.NextPage;
-    Format.Bibliography(Lang.References);
   };
 
   TableNotes = Paragraph {
@@ -479,40 +224,6 @@ readonly namespace Style {
         a;
       }
       Tex.ldots;
-    }
-  };
-
-  override Header1 = Paragraph {
-    KeepWithNext: true;
-    SpaceBefore: 18 pts;
-    SpaceAfter: 8 pts;
-    SansSerif;
-    TextHeight: 16 pts;
-    Bold;
-  };
-
-  override Header2 = Header1 {
-    SpaceBefore: 12 pts;
-    SpaceAfter: 6 pts;
-    TextHeight: 14 pts;
-  };
-
-  Header3 = Paragraph(0.25 pts) {
-    KeepWithNext: true;
-    ParBackground: 97%;
-    SpaceAfter: 12 pts;
-    TextHeight: 14 pts;
-  };
-
-  SourceFile(source) = Block {
-    Style.Header3 {
-      IO.GetFileName(source.Path)
-    };
-    Paragraph {
-      ParAlignment: ParAlignments.Left;
-      TextFixed: true;
-      TextHeight: 8 pts;
-      SourceSelection(source)
     }
   };
 
@@ -565,41 +276,30 @@ readonly namespace Style {
     Ellipse(new(0, 1 pts))
   };
 
-  TreeOptions(width) = Tree(width, null) {
-    Style.SansSerif;
-    TextHeight: 11 pts;
-    Default: new NodeClass(null) {
-      NodeGap: 5 pts;
-      Curvature: 20%;
-      Bevel: 20%;
-      Marker: BranchMarker;
-    };
-  };
-
-  ShowTree(title, width, subtitle, NodeClass root, axis) = VBox {
-    Margin: PadAll(5 pts);
+  ShowTree(ContentStyleClass style, NodeClass root, width, title=null, axis=null) = VBox {
     if (title is valid) {
-      Style.Header1 {
+      Margin: PadAll(5 pts);
+      style.Heading1 {
         HAlignment: HAligns.Center;
         title;
       };
-      if (subtitle is valid) {
-        Paragraph {
-          TextHeight: 10 pts;
-          HAlignment: HAligns.Center;
-          subtitle;
-        };
-        Paragraph;
-      }
     }
 
-    TreeOptions(width) {
+    Tree(width, null) {
+      PaperStyle.SansSerif;
+      TextHeight: 11 pts;
       Reorder: true;
+      Root: root;
+      Default: new NodeClass(null) {
+        NodeGap: 5 pts;
+        Curvature: 20%;
+        Bevel: 20%;
+        Marker: BranchMarker;
+      };
       if (axis is valid) {
         ValueLabel: axis;
         ValueAxis: ChartAxis;
       }
-      Root: root;
     };
   };
 
@@ -615,7 +315,7 @@ readonly namespace Style {
     };
   };
 
-  ShowAppendix(DocumentClass doc, AppendixClass appendix) = PageSection {
+  ShowAppendix(ContentStyleClass style, ContentClass appendix) = PageSection {
     var th = 14 pts;
     var sa = 8 pts;
 
@@ -630,14 +330,14 @@ readonly namespace Style {
       };
     };
     var caption = Block {
-      appendix.GetCaption(doc);
+      appendix.GetCaption(style);
       Paragraph;
     };
     caption;
     var height = GetLayoutSize(caption).Height;
-    var extent = SetExtentSize(new(ExtentWidth, ExtentHeight - height - th - sa - 8 pts));
-    appendix.GetBody(doc);
-    SetExtent(extent);
+    PushExtentSize(new(ExtentWidth, ExtentHeight - height - th - sa - 8 pts));
+    appendix.GetBody(style);
+    PopExtent();
   };
 
   LanguageRow(lang) = Row {
@@ -680,21 +380,6 @@ readonly namespace Style {
     FirstIndent: -16 pts;
   };
 
-  FirstPar = Paragraph {
-    ParAlignment: ParAlignments.Justify;
-    SpaceBefore: 6 pts;
-  };
-
-  BodyPar = Paragraph {
-    FirstIndent: 0.25 inches;
-    ParAlignment: ParAlignments.Justify;
-    SpaceBefore: 6 pts;
-  };
-
-  BodyContinue = BodyPar {
-    FirstIndent: 0;
-  };
-
   SourcePar(DataSetClass data, concept) = Paragraph {
     ParAlignment: ParAlignments.Left;
     SpaceBefore: 6 pts;
@@ -725,7 +410,7 @@ readonly namespace Style {
                   Space * (data.MaxLanguageName - taxon.Language.Name.Length);
                   " = ";
                   Span {
-                    TextColor: Style.StringColor;
+                    TextColor: PaperStyle.StringColor;
                     Quote;
                     foreach (var i in word) {
                       if (i < 0)
@@ -773,38 +458,6 @@ readonly namespace Style {
     TextStacked: true;
     TextEquation: true;
     TextHeight: 12 pts;
-  };
-}
-//======================================================================
-
-class FigureActionClass: ActionClass {
-  var Figure;
-
-  Constructor(figure) {
-    super.Constructor(Actions.ToAnchor, figure.GetVariable);
-    Figure = figure;
-  }
-
-  override GetLayoutTip = Style.ShowFigureDoc(null, Figure);
-}
-
-//======================================================================
-
-class TableActionClass: ActionClass {
-  var Table;
-
-  Constructor(table) {
-    super.Constructor(Actions.ToAnchor, table.GetVariable);
-    Table = table;
-  }
-
-  override GetLayoutTip = Block {
-    Paragraph {
-      TextHeight: 12 pts;
-      SpaceAfter: 6 pts;
-      CaptionOrTitle(null, Table);
-    };
-    Table.Body(null);
   };
 }
 

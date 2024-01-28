@@ -1,10 +1,10 @@
 using Format, Units, IO;
 
-include "English";
-include "NytrilStyle";
+include "Lang";
+include "Languages";
 include "LanguageTree";
 include "Library";
-include "Citations";
+include "DocumentStyles";
 include "Graphics";
 include "Tables";
 include "IPA";
@@ -13,7 +13,6 @@ include "Rules";
 include "Experiments";
 include "Nexus";
 include "Config";
-include "Languages";
 include "Data Validation";
 
 // Choose between one of these 3 sets
@@ -22,6 +21,8 @@ include "LanguageSet";
 //include "LanguageTest";
 
 //======================================================================
+
+readonly MainStyle = new APAContentClass(new APAStyleClass);
 
 readonly namespace Main.Documents {
   DiagnosticsViewClass   Diagnostic    = new(DataSet);
@@ -97,16 +98,18 @@ class CreateViewClass: DocumentClass {
 }
 //======================================================================
 
-namespace Figures.SegmentTransitionCounts {
-  Title = "Prior Segment Transition Counts";
+class SegmentTransitionClass: ContentClass {
+  Constructor {
+    super.Constructor("Prior Segment Transition Counts");
+  }
 
-  Caption(DocumentClass document) = Span {
+  override GetCaption(ContentStyleClass style) = Span {
     "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled red box. The chart has diagonal symmetry.";
   };
 
   PriorCountClass Display = new(DataSet);
 
-  Body(DocumentClass document) = Display.PartitionBox;
+  override GetBody(ContentStyleClass style) = Display.PartitionBox;
 }
 
 //======================================================================

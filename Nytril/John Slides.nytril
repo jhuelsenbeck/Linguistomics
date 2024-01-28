@@ -2,73 +2,55 @@ using Format, Units;
 
 //======================================================================
 
-class JohnPresentationClass: ShowClass {
+class IntroductionFigure: ContentClass {
   Constructor {
-    super.Constructor(#aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", new FancyDesignClass, [People.JPHuelsenbeck]);
+    super.Constructor(Lang.Introduction);
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+    PaperSections.Introduction.IntroText;
+  };
+}
+
+//======================================================================
+
+class JohnPresentationClass: SlideShowClass {
+  Constructor {
+    super.Constructor(#aaa17f12-4f92-4c7e-a941-017d2015e129#, "John's Presentation", new FancyDesignClass, MainContentStyle, [People.JPHuelsenbeck]);
     Title     = Info.Title;
     NoPublish = true;
   }
 
-  override void CreateSlides {
-    AddSlideGroup(JohnSlides);
-    SlideDeck.Add(new EndSlideClass(Lang.Questions));
-  }
-
-  override GetStyle = {
-    Style.SansSerif;
+  override InitDocument = {
+    PaperStyle.SansSerif;
     TextHeight: 16 pts;
-    RefStyle: new NatureStyleClass;
     LinkTypes.AuthorLink to Authors;
     LinkTypes.Link to References;
   };
-}
-//======================================================================
 
-namespace JohnSlides {
+  override void CreateSlides {
+    AddFigureSlide(new IntroductionFigure);
 
-  namespace Introduction {
-    Title = Lang.Introduction;
-
-    Caption(DocumentClass document) = Block {
-      PaperSections.Introduction.IntroText;
-    };
-
-    Body(DocumentClass document) = Block {
-      Style.ShowTable(document, TableFigures.Cognates, 12 pts);
-    };
+    AddFigureSlide(TableFigures.ManualAlignment);
+    AddFigureSlide(Figures.ExampleTree);
+    AddFigureSlide(Figures.Alignment);
+    AddFigureSlide(Figures.LanguagesUsed);
+    AddFigureSlide(Figures.ExampleConcepts);
+    AddFigureSlide(Figures.UniqueSegments);
+    AddFigureSlide(Figures.AllSegmentFrequencies);
+    AddFigureSlide(Figures.PartitionAssignments);
+    AddFigureSlide(Figures.SegmentOccuranceRates);
+    AddFigureSlide(Figures.SegmentOccuranceGrouped);
+    AddFigureSlide(Figures.ConsensusTree);
+    AddFigureSlide(Figures.PartitionFrequencies);
+    AddFigureSlide(Figures.Alignments);
+    AddFigureSlide(Figures.ExchangeabilityTable);
+    AddFigureSlide(Figures.ExchangeabilityChart);
+    AddFigureSlide(Figures.TransitionRates);
+    AddSlide(new EndSlideClass(Lang.Questions));
+    AddSlide(new ReferenceSlideClass);
   }
-
-  ExampleTree.Figure = Figures.ExampleTree;
-
-  Alignment.Figure = Figures.Alignment;
-
-  LanguagesUsed.Figure = Figures.LanguagesUsed;
-
-  ConceptsUsed.Figure = Figures.ExampleConcepts;
-
-  UniqueSegments.Figure = Figures.UniqueSegments;
-
-  PriorFrequency.Figure = Figures.AllSegmentFrequencies;
-
-  PartitionRules.Figure = Figures.PartitionAssignments;
-
-  SegmentOccurance.Figure = Figures.SegmentOccuranceRates;
-
-  SegmentFrequenciesGrouped.Figure = Figures.SegmentOccuranceGrouped;
-
-  ShowResults.Figure = Figures.ConsensusTree;
-
-  PartitionFrequencies.Figure = Figures.PartitionFrequencies;
-
-  Alignments.Figure = Figures.Alignments;
-
-  TransitionMatrix.Figure = Figures.ExchangeabilityTable;
-
-  TransitionMatrixBall.Figure = Figures.ExchangeabilityChart;
-
-  PartitionExperiment.Figure = Figures.TransitionRates;
 }
-
 //======================================================================
 
 

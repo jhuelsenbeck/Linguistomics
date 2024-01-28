@@ -1,4 +1,6 @@
-using Format, Units, Math, IO, LinkTypes;
+using Format, Units, Math, IO, LinkTypes, WorldLanguages;
+
+readonly ContentStyleClass MainContentStyle = new APAContentClass(new NatureStyleClass);
 
 //======================================================================
 
@@ -266,8 +268,6 @@ class AlignmentChartClass {
   }
 
   ShowChart(SizeClass size) = VBox(size.Width, size.Height, 0.5) {
-    Style.SansSerif;
-
     // Try to make proportional squares
     var xitems = size.Width / 130 as int;
     var yitems = Math.Floor((Alignments.Length + xitems - 1) / xitems);
@@ -339,10 +339,11 @@ class AlignmentChartClass {
 //======================================================================
 
 class LanguageClass: FactClass {
-  field string Name;
-  field int    Cases;
-  var int      LangIndex;
-  var          MapAttribution;
+  field string   Name;
+  field int      Cases;
+  var int        LangIndex;
+  var ImageClass Image;
+  var            ImagePath;
 
   Constructor(id, name, cases=0) {
     super.Constructor(id);
@@ -352,53 +353,34 @@ class LanguageClass: FactClass {
 
   override IconClass GetIcon = Icons.language;
 
-  virtual Description = null;
-  virtual Details = null;
+  virtual Description(ContentStyleClass style) = null;
+  virtual Details(ContentStyleClass style) = null;
 
   override GetLayoutSpan = Span {
     TipAction: this;
     Name;
   };
 
-  virtual MapImage(width, height) = null;
+  ShowMap(width, height) {
+    if (ImagePath is null)
+      return null;
+
+    Image ??= new ImageClass(ImagePath);
+    return FitBox(Image, width, height);
+  }
 
   override GetLayoutTip = Block {
     Paragraph {
       Bold;
       TextHeight: 14 pts;
       Name;
+      var r = FindFacts(ReferenceClass);
+      if (r is valid)
+        Citation {r};
     };
-    Description;
-
-    ShowMap(new(4 inches, 2 inches));
+    Description(MainContentStyle);
+    ShowMap(4 inches, 2 inches);
   };
-
-  static ImageClass LoadImage(name) = new ImageClass(Info.ImageFolder FileName(name));
-
-  ShowMap(SizeClass size) {
-    var h     = 6 pts;
-    var image = MapImage(size.Width, size.Height - h*2);
-    if (image is valid) {
-      return HBox {
-        HAlign: HAligns.Center;
-
-        VBox {
-          image;
-
-          if (MapAttribution is valid) {
-            Frame(size.Width) {
-              TextHeight: h;
-              TextColor: 80%;
-              Lang.Credit;
-              MapAttribution;
-            }
-          }
-        }
-      };
-    }
-    else
-      return null;
-  }
 }
 
 //======================================================================
@@ -559,7 +541,7 @@ class ConceptClass: FactClass {
 
   override GetLayoutTip = Span {Name; "-"; Confidence};
 
-  override Compare(c, CompareOptions options) {
+  override int Compare(c, CompareOptions options) {
     return Name.Compare(c.Name);
   }
 }
@@ -592,7 +574,7 @@ class CognateClass: FactClass {
     Action: new ActionClass(Actions.ToSource, Variable);
   };
 
-  override Compare(c, CompareOptions options) {
+  override int Compare(c, CompareOptions options) {
     var i = Concept.Compare(c.Concept, options);
     if (i == 0)
       return Name.Compare(c.Name, options);
@@ -617,7 +599,7 @@ class TaxonClass {
   }
 
   override GetLayoutTip = Span {
-    Style.TaxonFormat;
+    PaperStyle.TaxonFormat;
     Variable;
     TipAction: Language;
   };
@@ -896,7 +878,7 @@ class DataSetClass {
 
   CognateClass GetCognate(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);
 
-  LangNumber(LanguageClass language) = Languages.FindFirstIndex(language)+1;
+  LangNumber(LanguageClass language) = WorldLanguages.FindFirstIndex(language)+1;
 
   void ComputeRawCognate(SegPartDictionary lookup, CognateClass cognate) {
     WordList.SetAllValues(DefWord);
@@ -1022,38 +1004,38 @@ class DataSetClass {
     };
   };
 
-  virtual NodeClass PortugueseClade    = new Leaf(Languages.Portuguese);
-  virtual NodeClass PortugueseNumbered = new NLeaf(this, Languages.Portuguese, 2);
+  virtual NodeClass PortugueseClade    = new Leaf(Portuguese);
+  virtual NodeClass PortugueseNumbered = new NLeaf(this, Portuguese, 2);
 
   CatalanClade = new Branch {
-    new Leaf(Languages.Catalan);
+    new Leaf(Catalan);
     new Branch {
-      new Leaf(Languages.French);
-      new Leaf(Languages.Walloon);
+      new Leaf(French);
+      new Leaf(Walloon);
     };
   };
 
   NodeClass NumberedTree = new NBranch(19) {
-    new NLeaf(this, Languages.Latin, 7);
+    new NLeaf(this, Latin, 7);
     new NBranch(18) {
-      new NLeaf(this, Languages.Romanian, 6);
+      new NLeaf(this, Romanian, 6);
       new NBranch(17) {
         new NBranch(16) {
           new NBranch(15) {
-            new NLeaf(this, Languages.Walloon, 3);
-            new NLeaf(this, Languages.French, 3);
+            new NLeaf(this, Walloon, 3);
+            new NLeaf(this, French, 3);
           };
           new NBranch(14) {
             new NBranch(13) {
               PortugueseNumbered;
-              new NLeaf(this, Languages.Spanish, 2);
+              new NLeaf(this, Spanish, 2);
             };
-            new NLeaf(this, Languages.Catalan, 3);
+            new NLeaf(this, Catalan, 3);
           }
         };
         new NBranch(11) {
-          new NLeaf(this, Languages.Friulian, 4);
-          new NLeaf(this, Languages.Italian, 4);
+          new NLeaf(this, Friulian, 4);
+          new NLeaf(this, Italian, 4);
         };
       }
     }
@@ -1084,16 +1066,16 @@ class DataSetClass {
   virtual NodeClass[] PriorTrees = [
     // (Latin,(Romanian,(Italian,(Friulian,((Spanish,Portuguese),(Catalan,(French,Walloon)))))));
     new Branch {
-      new Leaf(Languages.Latin);
+      new Leaf(Latin);
       new Branch {
-        new Leaf(Languages.Romanian);
+        new Leaf(Romanian);
         new Branch {
-          new Leaf(Languages.Italian);
+          new Leaf(Italian);
           new Branch {
-            new Leaf(Languages.Friulian);
+            new Leaf(Friulian);
             new Branch {
               new Branch {
-                new Leaf(Languages.Spanish);
+                new Leaf(Spanish);
                 PortugueseClade;
               };
               CatalanClade;
@@ -1105,17 +1087,17 @@ class DataSetClass {
 
     // (Latin,(Romanian,((Italian,Friulian),((Spanish,Portuguese),(Catalan,(French,Walloon))))));
     new Branch {
-      new Leaf(Languages.Latin);
+      new Leaf(Latin);
       new Branch {
-        new Leaf(Languages.Romanian);
+        new Leaf(Romanian);
         new Branch {
           new Branch {
-            new Leaf(Languages.Italian);
-            new Leaf(Languages.Friulian);
+            new Leaf(Italian);
+            new Leaf(Friulian);
           };
           new Branch {
             new Branch {
-              new Leaf(Languages.Spanish);
+              new Leaf(Spanish);
               PortugueseClade;
             };
             CatalanClade;
@@ -1126,19 +1108,19 @@ class DataSetClass {
 
     // (Latin,(Romanian,((Spanish,Portuguese),((Catalan,(French,Walloon)),(Italian,Friulian)))));
     new Branch {
-      new Leaf(Languages.Latin);
+      new Leaf(Latin);
       new Branch {
-        new Leaf(Languages.Romanian);
+        new Leaf(Romanian);
         new Branch {
           new Branch {
-            new Leaf(Languages.Spanish);
+            new Leaf(Spanish);
             PortugueseClade;
           };
           new Branch {
             CatalanClade;
             new Branch {
-              new Leaf(Languages.Italian);
-              new Leaf(Languages.Friulian);
+              new Leaf(Italian);
+              new Leaf(Friulian);
             };
           };
         };
@@ -1146,87 +1128,7 @@ class DataSetClass {
     },
   ];
 
-  ShowTrees(ModelClass model) = Block {
-    var any = false;
-    foreach (var r in model.Run) {
-      if (r.ResultTree is not null) {
-        any = true;
-        break;
-      }
-    }
-
-    if (any) {
-      Style.Header1 {
-        Lang.Model;
-        ColonSpace;
-        model.Name;
-      };
-
-      foreach (var r in model.Run) {
-        if (r.ResultTree is not null)
-          Style.ShowTree("Run {0}"(each1), ExtentWidth, null, r.ResultTree, null);
-      }
-    }
-  };
-
-  ShowExperiment = Block {
-    Style.Header1 {
-      Lang.Experiment;
-      Space;
-      each1;
-      Space;
-      Style.DQuote {Name};
-    };
-
-    Span {
-      foreach (var tree in PriorTrees)
-        Style.ShowTree(Lang.Tree+each1, 30%, null, tree, null);
-    };
-
-    foreach (var treeset in TreeSets) {
-      Style.Header2 {
-        Lang.Tree;
-        each1;
-      };
-      ShowTrees(each treeset.Models);
-    }
-  };
-
   override IconClass GetIcon = Icons.science;
-
-  CalculateLoad(SegPartClass[] segments, sum) {
-    return sum;
-  }
-
-  ShowFunctionalLoad = Block {
-    Style.Header1 {
-      "Functional Load of \"{0}\" model"(Rule.Name);
-    };
-
-    Table(null, null, [1.5 inch, new(1 inch, null, null, HAligns.Right)]) {
-      Row {
-        Lang.Partition;
-        Lang.FrequencyPercent;
-        Lang.FunctionalLoad;
-      };
-
-      foreach (var part in Rule.Partitions) {
-        var sum = 0;//Math.Sum((each part.Segments).UsedFrequency);
-        Row {
-          part.Name;
-          Cell {
-            TextDigits: 2;
-            sum;
-          };
-          Cell {
-            TextDigits: 2;
-            CalculateLoad(part.Segments, sum);
-          }
-        };
-      }
-    }
-  };
-
 }
 
 //======================================================================
@@ -1298,7 +1200,7 @@ abstract class CountBaseClass {
   }
 
   PartitionBox = Paragraph {
-    Style.SansSerif;
+    PaperStyle.SansSerif;
 
     var grid   = 0.125 pts;
     var gcolor = 65%;
@@ -1801,7 +1703,7 @@ class DiagonalClass {
 
   Display = VBox {
     HAlign: HAligns.Center;
-    Style.SansSerif;
+    PaperStyle.SansSerif;
 
     Chart(ExtentWidth, 4 inches) {
       TextHeight: 11 pts;
@@ -2081,7 +1983,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
 
     Row {
       Empty;
-      TextHeight: 1.1 * bw;
+      TextHeight: 0.8 * bw;  // Magic number to fit the segment glyphs underneath the bars
       HBox {
         SegmentLabel(Segments, each SortedIndexes, bw, bh);
       };

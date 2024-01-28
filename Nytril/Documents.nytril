@@ -1,11 +1,15 @@
-using Format, Units, Style, LinkTypes;
+using Format, Units, LinkTypes;
 
 //======================================================================
 
 class PaperBaseClass: DocumentClass {
+  var ContentStyleClass Style;
+
   Constructor(id, title) {
     super.Constructor(id, title);
-    Title = Info.Title;
+    Title          = Info.Title;
+    Style          = MainContentStyle;
+    ReferenceStyle = Style.ReferenceStyle;
   }
 
   BaseDocumentClass = Document(new(new(0.75 inches, 0.9 inches, 0.75 inches, 1 inches))) {
@@ -13,7 +17,6 @@ class PaperBaseClass: DocumentClass {
     TextHeight: 12 pts;
 
     AuthorLink to Authors;
-    RefStyle: new NatureStyleClass;
   };
 }
 //======================================================================
@@ -23,16 +26,16 @@ class PaperDocClass: PaperBaseClass {
     super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
   }
 
-  ShowTitledContent(content) = Block {
-    Style.Header2 {
+  ShowTitledContent(ContentClass content) = Block {
+    Style.Heading2 {
       content.Title;
     };
 
-    content.Body(this);
+    content.GetBody(Style);
   };
 
   override GetDocument = BaseDocumentClass {
-    PageSection {
+    PaperStyle.PageSection {
       Footer: MarginBlock(0.5 inches) {
         Paragraph {
           ParAlignment: ParAlignments.Right;
@@ -42,18 +45,15 @@ class PaperDocClass: PaperBaseClass {
         First: Block;
       };
 
-      MainTitle {
+      PaperStyle.MainTitle {
         Title;
       };
 
-      ShowAuthorList(AuthorList);
+      MainContentStyle.ShowAuthorList(AuthorList);
 
-      Header1 {
-        Abstract.Title
-      };
-      Abstract.Body(this);
+      ShowTitledContent(PaperSections.Abstract);
       ShowTitledContent(PaperSections.Introduction);
-      Header1 {
+      Style.Heading1 {
         Lang.Results
       };
 
@@ -68,7 +68,7 @@ class PaperDocClass: PaperBaseClass {
       ShowTitledContent(PaperSections.Contributions);
     };
 
-    ShowReferences;
+    Style.AddReferenceSection;
   };
 }
 //======================================================================
@@ -80,20 +80,20 @@ class SupplementalViewClass: PaperBaseClass {
   }
 
   ShowTitledContent(content) = Block {
-    Style.Header2 {
+    Style.Heading2 {
       content.Title;
     };
 
-    content.Body(this);
+    content.GetBody(Style);
   };
 
   override GetDocument = BaseDocumentClass {
-    AppendixClass[] appendices = [
-      new AppendixFigureClass(Figures.PartitionAssignments),
-      new AppendixFigureClass(Figures.ExperimentalRuns),
+    ContentClass[] appendices = [
+      Figures.PartitionAssignments,
+      Figures.ExperimentalRuns,
     ];
 
-    PageSection {
+    PaperStyle.PageSection {
       Header: MarginBlock(0.125 inches) {
         Span {
           TextCase: TextCases.AllUpper;
@@ -102,25 +102,25 @@ class SupplementalViewClass: PaperBaseClass {
         First: Block;
       };
 
-      MainTitle {
+      PaperStyle.MainTitle {
         Title;
         SpaceAfter: 0;
       };
       Paragraph {
         LeftIndent: 24 pts;
         TextHeight: 12 pts;
-        "For: "; DQuote {Info.Title};
+        "For: "; Style.DQuote {Info.Title};
         SpaceAfter: 10 pts;
       };
 
-      ShowAuthorList(AuthorList);
+      MainContentStyle.ShowAuthorList(AuthorList);
 
       ShowTitledContent(PaperSections.Methods);
       ShowTitledContent(PaperSections.Conclusion);
     };
 
-    ShowReferences;
-    ShowAppendix(this, each appendices);
+    Style.AddReferenceSection;
+    Style.ShowAppendices(appendices);
   };
 }
 //======================================================================

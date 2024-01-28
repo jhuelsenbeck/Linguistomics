@@ -1,4 +1,4 @@
-using Format, Units, Style, Defs, Equations;
+using Format, Units, Defs, Equations, PaperStyle;
 
 //======================================================================
 
@@ -22,22 +22,21 @@ class DavidDesignClass: TexDesignClass {
 
 //======================================================================
 
-class DavidPresentationClass: ShowClass {
+class DavidPresentationClass: SlideShowClass {
   Constructor(id, name) {
-    super.Constructor(id, name, new DavidDesignClass, Authors);
+    super.Constructor(id, name, new DavidDesignClass, MainContentStyle, Authors);
     Title = "From phonology to phylogeny\nA new framework for phylogenetic inference";
   }
 
   override void CreateSlides {
     AddSlideGroup(DavidSlides);
-    SlideDeck.Add(new EndSlideClass(Lang.Questions));
-    SlideDeck.Add(new ReferenceSlideClass(Lang.References));
+    AddSlide(new EndSlideClass(Lang.Questions));
+    AddSlide(new ReferenceSlideClass);
   }
 
-  override GetStyle = {
+  override InitDocument = {
     TextFamily: TextFamilies.LinuxLibertineO;
     TextHeight: 9 pts;
-    RefStyle: new NatureStyleClass;
     LinkTypes.AuthorLink to Authors;
     LinkTypes.Link to References;
   };
@@ -90,51 +89,9 @@ namespace DavidSlides.Introduction {
     };
   }
 
-  namespace Slide.Slide3 {
-    Title = "Multistate character";
+  Slide.Slide3.Figure = TableFigures.MultiStateCharacter;
 
-    Body(DocumentClass document) = Block {
-      Table(null, null, [2 inches, ColumnClass.Expand]) {
-        Row {
-          Cell {
-            ListBlock {
-              "Point 1";
-              "Point 2";
-            };
-          };
-
-          Cell {
-            TableFigures.MultiStateCharacter.Body(document) {
-              TextHeight: 16 pts;
-            };
-          };
-        }
-      }
-    };
-  }
-
-  namespace Slide.Slide4 {
-    Title = "From multistate to binary representation";
-
-    Body(DocumentClass document) = Block {
-      Table(null, null, [2 inches, ColumnClass.Expand]) {
-        Row {
-          Cell {
-            ListBlock {
-              "Point 1";
-              "Point 2";
-            };
-          };
-
-          Cell {
-            TableFigures.BinaryRepresentation.Body(document) {
-              TextHeight: 16 pts;
-            };
-          };
-        }
-      }
-    };
-  }
+  Slide.Slide4.Figure = TableFigures.BinaryRepresentation;
 
   namespace Slide.Slide5 {
     Title = "The problem";
@@ -167,7 +124,7 @@ namespace DavidSlides.Introduction {
   namespace Slide.Slide7 {
     Title = "My Colaborators";
 
-    Body(DocumentClass document) = Block {
+    Text = Block {
       TextHeight: 18 pts;
       Separator: Paragraph;
       CitationStyleClass.GetFullName(each Authors.FindSlice(p => p != People.DMGoldstein));
@@ -178,7 +135,7 @@ namespace DavidSlides.Introduction {
   namespace Slide.Slide9 {
     Title = "Roadmap";
 
-    GetItems(ShowClass show) {
+    GetItems(SlideShowClass show) {
       var list = new ListClass(32);
       foreach (var slide in DavidSlides[1..]) {
         if (show.CanInclude(slide))
@@ -279,12 +236,12 @@ namespace DavidSlides.PreviousResearch {
       "There’s much more uncertainty after that";
     };
 
-    Items.Item3.Body(DocumentClass document) = ShowTree("Romance phylogeny", ExtentWidth - 30 pts, null, LanguageBranches.Romance, Lang.Years);
+    Items.Item3.GetBody(ContentStyleClass style) = ShowTree(style, LanguageBranches.Romance, ExtentWidth - 30 pts, "Romance phylogeny", Lang.Years);
 
-    Items.Item4.Body(DocumentClass document) = Block {
-      Span {
+    Items.Item4.GetBody(ContentStyleClass style) = Block {
+      Paragraph {
         foreach (var tree in MainResults.Data.PriorTrees)
-          ShowTree(Lang.Tree+each1, 30%, null, tree, null);
+          ShowTree(style, tree, 30%, Lang.Tree+each1);
       };
     };
 
@@ -306,20 +263,17 @@ namespace DavidSlides.TheData {
     Title = "Overview";
     Pause = true;
 
-    Items.Item1.Body(DocumentClass document) = Paragraph {
-      Span {
-        MainResults.Data.Taxa.Length - 1;
-//        Tip:
-      };
+    Items.Item1.Text = Paragraph {
+      MainResults.Data.Taxa.Length - 1;
       " Romance languages plus Latin as an outgroup";
     };
 
-    Items.Item2.Body(DocumentClass document) = Span {
+    Items.Item2.Text = Span {
       MainResults.Data.WordCount;
       " words";
     };
 
-    Items.Item3.Body(DocumentClass document) = Span {
+    Items.Item3.Text = Span {
       MainResults.Data.UniqueSegments.Length;
       " unique segments";
     };
@@ -328,16 +282,7 @@ namespace DavidSlides.TheData {
       "How many word forms from each language";
     };
 
-    Items.Item5.Body(DocumentClass document) = TableFigures.WordCountTable.Body(document) {
-      TextHeight: 14 pts;
-    };
-  }
-
-  namespace Slide.FunctionalLoad {
-    Title = "Percentages";
-    Text = Span {
-      "functional load; locus of sound change/deletion; simple probability of transition between two segments or segmental stability -Comparison of rate matrices -differences in representation e.g. not all phonemic descriptions agree";
-    };
+    Items.Item5.Figure = TableFigures.WordCountTable;
   }
 
   namespace Slide.Slide2 {
@@ -675,10 +620,6 @@ namespace DavidSlides.Methods {
       "Deals with incompletely sampled cognates using subtrees of a canonical tree with all 10 languages";
     };
   }
-
-  namespace Slide.Slide9 {
-    Title = "Nytril/Workflow?";
-  }
 }
 //======================================================================
 
@@ -690,17 +631,8 @@ namespace DavidSlides.Results {
   }
 
   namespace Slide.Slide2 {
-    Title = "Majority-rule consensus tree (Old Method)";
-
-
-    GetOldTree {
-      var treefile = Info.ExperimentRoot IO.Folder("Europe") IO.Folder("Custom") IO.Folder("Posterior") IO.Folder("Run1") Info.TreeFile;
-      return IO.ReadTree(treefile, LangNodeClass);
-    }
-
-    Body(DocumentClass document) = Block {
-      Style.ShowTree(null, 100%, null, GetOldTree, Lang.Branches);
-    };
+    path = Info.ExperimentRoot IO.Folder("Europe") IO.Folder("Custom") IO.Folder("Posterior") IO.Folder("Run1") Info.TreeFile;
+    Figure = new TreeContentClass("Majority-rule consensus tree (Old Method)", 100%, IO.ReadTree(path, LangNodeClass), Lang.Branches);
   }
 
   namespace Slide.Slide3 {
@@ -742,15 +674,6 @@ namespace DavidSlides.Results {
   }
 
   Slide.UniqueCharacters.Figure = Figures.UniqueSegments;
-
-/*
-  Slide.AverageTransitions.Figure = Figures.AverageTransitions;
-
-  Slide.AverageDiagonal.Figure = Figures.AverageDiagonal;
-
-  Slide.AverageMost.Figure = Figures.AverageMost;
-
-*/
 
   Slide.QRatesMatrix.Figure = Figures.QRatesMatrix;
 
@@ -904,6 +827,8 @@ namespace DavidSlides.Conclusion {
 
   namespace Slide.Slide1 {
     Title = "Main takeways";
+
+    Text = null;
   }
 
   namespace Slide.Slide22 {

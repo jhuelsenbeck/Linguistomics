@@ -1,4 +1,4 @@
-using Format, Style, Defs, Equations, Units, Tex;
+using Format, Defs, Equations, Units, PaperStyle, Tex;
 //======================================================================
 
 BranchFormula(n) {
@@ -16,6 +16,73 @@ BranchMinus(n) = Equation {2; NumLanguages; Minus; n};
 
 MaxBranches = BranchMinus(2);
 MaxBranch   = BranchMinus(3);
+
+IntegrateOver(v) = Integral {
+  TextStacked: false;
+  Lower: v;
+};
+
+ParamList(v) = Equation {EllipsisList {v sub 1; v sub BN}};
+
+FD(x) = Span {Space; Italic "d"; x};
+
+Prob(x) = Equation {
+  MarginalLikelihood;
+  InParens {x};
+};
+
+IfValue(a, text) = Span {
+  a;
+  " if ";
+  sym.i;
+  Tex.rightarrow;
+  sym.j;
+  text;
+};
+
+PSM(n) = Prob(Condition {SegmentalInfo; Model sub n});
+
+NewProposal(start, end) = Equation {
+  ProbProposal;
+  InParens {
+    start;
+    Tex.rightarrow;
+    end;
+  }
+};
+
+ProbVar(x, extra=null) = Prob(CommaList {
+  Condition{x; Topology};
+  ExpectedEvents;
+  RateMatrixParams;
+  InsertionRate;
+  DeletionRate;
+  extra;
+});
+
+ProbALL = Prob(CommaList {
+  Topology;
+  ExpectedEvents;
+  RateMatrixParams;
+  InsertionRate;
+  DeletionRate;
+});
+
+ParamRow = Row {
+  Separator: Empty;
+};
+
+PPO = Prob("Parameter(s) | Observations");
+POP = Prob("Observations | Parameter(s)");
+PP  = Prob("Parameter(s)");
+PO  = Prob("Observations");
+
+InsertDelete(by) = Span {
+  InsertionRate;
+  by;
+  DeletionRate;
+};
+
 //======================================================================
 
 readonly namespace sym {
@@ -29,7 +96,7 @@ readonly namespace sym {
   q     = Extra "q";
   ni    = sym.n sub sym.i;
   D(x)  = Span {Classical Italic "d"; x};
-  theta = Span {Style.GreekFamily; "θ"};
+  theta = Span {PaperStyle.GreekFamily; "θ"};
 }
 
 Ith = Span {sym.i; "th"};

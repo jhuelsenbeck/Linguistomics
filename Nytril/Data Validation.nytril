@@ -58,16 +58,109 @@ class DiagnosticsViewClass: DocumentClass {
     MatchingOther.ShowTable(Display.DisplaySegments, set);
   };
 
-  ShowCognateCoverage = Block {
-    Style.Header1 {
+  ShowQuery = Block {
+    TextHeight: 14 pts;
+
+    Paragraph {
+      HBox {
+        TextControl(new(SearchData, propof SearchDataClass.WordsContaining), 1 inches, null, new EdgeClass(1, 2)) {
+          "Find Words Containing";
+          Action: Actions.Refresh;
+        };
+
+        ButtonControl(null, null, PadAll(2)) {
+          BorderRadius: 3;
+          Action: new WordsContainingClass(SearchData);
+          TextColor: Colors.Green;
+          Icons.search;
+        };
+      }
+    };
+  };
+
+  override GetDocument = Document(new(new(0.5 inches, 0.75 inches, 0.5 inches, 0.5 inches))) {
+    ShowQuery;
+
+    TextHeight: 9 pts;
+
+    ContentClass[] appendices = [
+      new CognateCoverageClass(Data),
+      new SegmentAssignmentsClass(Data),
+      new SegmentTransitionClass,
+      new ConceptGroupsClass(Data),
+      new AppendixClass("Words containing each segment", Display.ShowWordsForEachSegment),
+      new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),
+      new AppendixClass("Segment Groups", ShowSegmentTables),
+      new AppendixClass(Lang.IPAFullName, Display.IPASegmentTable),
+      new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
+      new AppendixClass(Lang.Languages, Display.ShowLanguageDetails(MainStyle)),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(10 pts, Data)),
+//      new("Euler Feature Diagram", new EulerDiagramClass().FeatureChart(Data)),
+    ];
+
+    PaperStyle.ShowAppendix(MainStyle, each appendices);
+  };
+}
+
+//======================================================================
+
+class ConceptGroupsClass: DataContentClass {
+  Constructor(DataSetClass data) {
+    super.Constructor(data, "Concept Groups");
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+    WordGroups[] groups = WordGroups.Values[1..];
+    Table(PaperStyle.TableBorder, null, [0.25 inches] + [1 inch] * (2+groups.Length)) {
+      Row {
+        PaperStyle.HeaderCell;
+        PaperStyle.HeaderCell {
+          Lang.Concept;
+        };
+        PaperStyle.HeaderCell {
+          "Type";
+        };
+        foreach (var g in groups) {
+          PaperStyle.HeaderCell {
+            g.Name;
+          };
+        }
+      };
+      foreach (var concept in Data.UsedConcepts) {
+        PaperStyle.RowBar(each0) {
+          each0;
+          concept.Name;
+          concept.WordType.Name;
+          foreach (var g in groups) {
+            Cell {
+              HAlign: HAligns.Center;
+              if (concept.WordGroup.HasFlag(g))
+                Tex.bullet;
+            }
+          }
+        }
+      }
+    }
+  };
+}
+
+//======================================================================
+
+class CognateCoverageClass: DataContentClass {
+  Constructor(DataSetClass data) {
+    super.Constructor(data, "Cognate Coverage");
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+    style.Heading1 {
       Lang.Trees;
     };
     Paragraph {
       foreach (var tree in Data.PriorTrees)
-        Style.ShowTree(Lang.Tree+each1, ExtentWidth * 0.3, null, tree, null);
+        PaperStyle.ShowTree(style, tree, 30%, Lang.Tree+each1);
     };
 
-    Style.Header1 {
+    style.Heading1 {
       "By Language";
     };
 
@@ -88,7 +181,7 @@ class DiagnosticsViewClass: DocumentClass {
       };
     };
     Paragraph;
-    Style.Header1 {
+    style.Heading1 {
       "By Number of Languages";
     };
 
@@ -115,50 +208,21 @@ class DiagnosticsViewClass: DocumentClass {
       };
     };
   };
-
-  ShowQuery = Block {
-    TextHeight: 14 pts;
-
-    Paragraph {
-      HBox {
-        TextControl(new(SearchData, propof SearchDataClass.WordsContaining), 1 inches, null, new EdgeClass(1, 2)) {
-          "Find Words Containing";
-          Action: Actions.Refresh;
-        };
-
-        ButtonControl(null, null, PadAll(2)) {
-          BorderRadius: 3;
-          Action: new WordsContainingClass(SearchData);
-          TextColor: Colors.Green;
-          Icons.search;
-        };
-      }
-    };
-  };
-
-  override GetDocument = Document(new(new(0.5 inches, 0.75 inches, 0.5 inches, 0.5 inches))) {
-    ShowQuery;
-
-    TextHeight: 9 pts;
-
-    AppendixClass[] appendices = [
-      new("Cognate Coverage", ShowCognateCoverage),
-      new(Lang.UniqueSegments, Display.ShowSegmentAssignments),
-      new AppendixFigureClass(Figures.SegmentTransitionCounts),
-      new("Concept Groups", Display.ShowConceptGroups),
-      new("Words containing each segment", Display.ShowWordsForEachSegment),
-      new("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),
-      new("Segment Groups", ShowSegmentTables),
-      new(Lang.IPAFullName, Display.IPASegmentTable),
-      new(Lang.Diacritics, MatchingDiacritics.ShowTable),
-      new(Lang.Languages, Display.ShowLanguageDetails),
-      new(Lang.ConceptsUsed, AllWords.ShowTable(10 pts, Data)),
-//      new("Euler Feature Diagram", new EulerDiagramClass().FeatureChart(Data)),
-    ];
-
-    Style.ShowAppendix(this, each appendices);
-  };
 }
+
+//======================================================================
+
+class AppendixClass: ContentClass {
+  var Body;
+
+  Constructor(title, body) {
+    super.Constructor(title);
+    Body = body;
+  }
+
+  override GetBody(ContentStyleClass style) = Body;
+}
+
 //======================================================================
 
 class ConfigurationViewClass: DocumentClass {
@@ -189,7 +253,7 @@ class WordViewClass: DocumentClass {
   }
 
   ShowUniqueSegments = Span {
-    Style.ReadOnly; Style.Variable("Segments"); " = [";
+    PaperStyle.ReadOnly; PaperStyle.Variable("Segments"); " = [";
     Span {
       Separator: CommaSpace;
       ShowString(each ((each Data.UniqueSegments).Ipa));
@@ -198,15 +262,15 @@ class WordViewClass: DocumentClass {
   };
 
   ShowLanguages = TextBlock {
-    Span {Style.ReadOnly; Style.Variable("LanguageSet"); " = [";};
+    Span {PaperStyle.ReadOnly; PaperStyle.Variable("LanguageSet"); " = [";};
     TextBlock {
       IndentSpace: 2;
 
       foreach (var l in Data.LanguageSet) {
         Span {
-          Style.Variable("Languages");
-          ".";
-          Style.Variable(l.Name);
+          PaperStyle.Variable("Languages");
+          Dot;
+          PaperStyle.Variable(l.Name);
           if (each1 < Data.LanguageSet.Length)
             CommaSpace;
         }
@@ -226,13 +290,13 @@ class WordViewClass: DocumentClass {
 
   ShowPartitions = TextBlock {
     Span {
-      Style.ReadOnly; Style.Variable("PartitionInfoClass"); "[] "; Style.Variable("Partitions"); " = [";
+      PaperStyle.ReadOnly; PaperStyle.Variable("PartitionInfoClass"); "[] "; PaperStyle.Variable("Partitions"); " = [";
     };
 
     foreach (var p in Partitions) {
       TextBlock {
         Span {
-          "  "; Style.Keyword("new"); "(";
+          "  "; PaperStyle.Keyword("new"); "(";
           ShowString(p.Name);
           ", ";
           ShowSegmentIndices(p.Segments);
@@ -244,13 +308,13 @@ class WordViewClass: DocumentClass {
   };
 
   ShowVar(name, value) = Span {
-    Style.Variable(name); " = "; value; ";";
+    PaperStyle.Variable(name); " = "; value; ";";
   };
 
   ShowVariable(value) = ShowVar(value.GetVariableName, value);
 
   ShowVariables = TextBlock {
-    Style.NameSpace("Info");
+    PaperStyle.NameSpace("Info");
     TextBlock {
       IndentSpace: 2;
       ShowVar("WordCutoff", Data.WordCutoff);
@@ -263,7 +327,7 @@ class WordViewClass: DocumentClass {
 
     TextBlock {
       Span {
-        Style.Keyword("using ");
+        PaperStyle.Keyword("using ");
         "Format, WordGroups;";
       };
       Empty;
@@ -277,7 +341,7 @@ class WordViewClass: DocumentClass {
       ShowPartitions;
       Empty;
 
-      Style.NameSpace("Concepts");
+      PaperStyle.NameSpace("Concepts");
       Empty;
 
       foreach (var cognate in Data.UsedCognates) {
@@ -290,9 +354,9 @@ class WordViewClass: DocumentClass {
         }
 
         Span {
-          Style.Variable(concept.Name);
-          ".";
-          Style.Variable(cognate.Name);
+          PaperStyle.Variable(concept.Name);
+          Dot;
+          PaperStyle.Variable(cognate.Name);
           " = [";
         };
 
@@ -303,7 +367,7 @@ class WordViewClass: DocumentClass {
               if (word is valid)
                 ShowSegmentIndices(word.Aligned);
               else
-                Style.Keyword("null");
+                PaperStyle.Keyword("null");
               Comma;
             }
           }

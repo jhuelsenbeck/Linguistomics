@@ -1,12 +1,16 @@
-using Format, Style, Units, References;
+using Format, Units, References, PaperStyle;
 
 //======================================================================
 
-namespace Abstract {
-  Title = Lang.Abstract;
+readonly AbstractClass PaperSections.Abstract = new;
 
-  Body(DocumentClass document) = Block {
-    Style.FirstPar {
+class AbstractClass: ContentClass {
+  Constructor {
+    super.Constructor(Lang.Abstract);
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+    style.FirstPar {
       "Linguistic phylogenies are standardly inferred from abstract cognate relationships among lexical items. ";
       "Despite the prevalence of this practice, it suffers from well-known drawbacks. For one, it relies on arbitrary coding of the data, which limits the modeling possibilities. ";
       "For another, it disregards the phylogenetic signal that exists in the segmental form of words. ";
@@ -18,14 +22,17 @@ namespace Abstract {
 }
 //======================================================================
 
-namespace PaperSections.Introduction {
-  Title = Lang.Introduction;
+readonly IntroductionClass PaperSections.Introduction = new;
 
+class IntroductionClass: ContentClass {
+  Constructor {
+    super.Constructor(Lang.Introduction);
+  }
 
-  IntroText = FirstPar {
+  IntroText = Span {
     "As languages exhibit the crucial property of descent with modification, their histories can be modeled with phylogenetic methods developed originally within evolutionary biology. ";
     "Over the past twenty years, these methods have come to play a prominent role in the investigation of linguistics history. ";
-    "Bayesian methods in particular are increasingly used to infer tree topologies, ancestral states, and divergence times"; Citation {bouckaert2012; bowern2012; chang2015; dunn2017; sagart2019; carling2021; auderset2023}; eos;
+    "Bayesian methods in particular are increasingly used to infer tree topologies, ancestral states, and divergence times"; Citation {bouckaert2012; bowern2012; chang2015; dunn2017; sagart2019; carling2021; auderset2023}; DotSpace;
     "Despite the undeniable advances of these methods, a fundamental problem has remained unaddressed: the nature of the input data. ";
   };
 
@@ -37,43 +44,39 @@ namespace PaperSections.Introduction {
 //    "This relatedness information can be depicted by a tree-like diagram called a "; SQuoteEnd{"phylogeny"};
 //  };
 
-  Body(DocumentClass document) = Block {
-    FirstPar {
+  override GetBody(ContentStyleClass style) = Block {
+    style.FirstPar {
       IntroText;
     };
 
-    BodyPar {
+    style.BodyPar {
       "Linguistic phylogenies are standardly inferred from abstract cognate relationships";
-      Citation {gray2000; holden2002; ringe2002; gray2003; bouckaert2012; bowern2012; chang2015}; eos;
-      "Cognates are words that descend from a common ancestor, such as Spanish "; textit{"mano"}; " "; SQuoteComma{"hand"}; " French "; textit{"main"}; ", and Italian "; textit{"mano"}; ", all of which descend from Latin "; textit{"manum"}; eos;
-      TableReference(TableFigures.Cognates); " presents a selection of cognates from selected Indo-European languages for the concept "; SQuote{"hand"}; eos;
+      Citation {gray2000; holden2002; ringe2002; gray2003; bouckaert2012; bowern2012; chang2015}; DotSpace;
+      "Cognates are words that descend from a common ancestor, such as Spanish "; textit{"mano"}; " "; style.SQuoteComma{"hand"}; " French "; textit{"main"}; ", and Italian "; textit{"mano"}; ", all of which descend from Latin "; textit{"manum"}; DotSpace;
+      style.TableReference(TableFigures.CognateCoding); " presents a selection of cognates from selected Indo-European languages for the concept "; style.SQuote{"hand"}; DotSpace;
       "Shared ancestry is represented by assigning words that descend from the same ancestral form to the same state. ";
        "Multi-state representations such as that in ";
-       TableReference(TableFigures.Cognates);
+       style.TableReference(TableFigures.CognateCoding);
        " are typically transformed so that each character state has its own column, with 0 and 1 values denoting the presence or absence of lexemes belonging to that particular cognate class. ";
        "These values then serve as the input data to phylogenetic inference. ";
-
     };
 
+    style.TableBlock(TableFigures.CognateCoding, 10 pts);
 
-    ShowTable(document, TableFigures.Cognates, 10 pts);
-
-    BodyPar {
+    style.BodyPar {
       "This practice, although prevalent, is problematic. ";
       "At an intuitive level, one would think that we should draw inferences from cognate word-forms themselves and not abstract cognate relationships. ";
       "After all, if genes have a parallel in language, it is word-forms. ";
       "More concretely, in transforming word-forms into abstract cognate relationships, substantial amounts of information are lost. "
-      "Consider again the example of "; SQuote{"hand"}; " in Spanish, French, and Italian. ";
-      "Since these words are all assigned the same value in "; TableReference(TableFigures.Cognates); ", no inferences can be drawn about their histories. ";
+      "Consider again the example of "; style.SQuote{"hand"}; " in Spanish, French, and Italian. ";
+      "Since these words are all assigned the same value in "; style.TableReference(TableFigures.CognateCoding); ", no inferences can be drawn about their histories. ";
       "There is, however, phylogenetic signal in the forms of the words themselves, since these have diverged. ";
       "Current practices of linguistic phylogenetics have no way of taking such divergences into account in their inferences. ";
       "As a consequence, linguists do not consider the full extent of the phylogenetic signal in linguistic data. ";
-
     };
 
-
-    BodyPar {
-      "The coding procedure illustrated in "; TableReference(TableFigures.Cognates); " forces linguists to treat cognate data the same way biologists treat morphological characters in a phylogenetic analysis"; Citation {lewis01}; eos;
+    style.BodyPar {
+      "The coding procedure illustrated in "; style.TableReference(TableFigures.CognateCoding); " forces linguists to treat cognate data the same way biologists treat morphological characters in a phylogenetic analysis"; Citation {lewis01}; DotSpace;
       "Consequently, linguistic phylogenetic analyses share the limitations of morphological phylogenetic analyses in biology. ";
       "Since the state labels (0, 1, 2, "; textit{"etc."};
       ") are arbitrary, studies of linguistic phylogenies are limited to models that have a certain symmetry, ";
@@ -84,12 +87,9 @@ namespace PaperSections.Introduction {
       "The evolutionary dynamics of the sounds of language cannot be investigated. ";
     };
 
-
-
-
-    BodyPar {
+    style.BodyPar {
       "In this study, the individual word-forms are the observations from which inferences are drawn";
-      Citation {BouchardCote2013}; eos;
+      Citation {BouchardCote2013}; DotSpace;
       "Specifically, we use phonemic representations coded with the International Phonetic Alphabet (IPA). ";
       "Phonological history is modeled with a continuous-time Markov model that allows one of three events to occur in an instant of time:";
       Citation {thorne91}; Space;
@@ -102,11 +102,11 @@ namespace PaperSections.Introduction {
       "Moreover, our analysis allows us to use a richer set of models, none of which is limited by considerations of the labeling assigned to the states. ";
     };
 
-    BodyPar {
+    style.BodyPar {
       "Our treatment of cognate words introduces several challenges, the most serious of which is establishing the relationship between homologous segments of cognate word-forms. ";
       "In a molecular phylogenetic analysis, the fine-scale homology of nucleotides sampled from different species is established using sequence alignment programs. ";
       "However, even for molecular data in which long nucleotide sequences are used, there can be substantial uncertainty in the alignment";
-      Citation {wong08}; eos;
+      Citation {wong08}; DotSpace;
       "Alignment uncertainty is exacerbated for the cognate data because words typically have only a handful of word segments. ";
       "We address this problem by marginalizing over word segment alignments. ";
       "(That is, we consider all possible word alignments, weighting each by its probability under the model.) ";
@@ -115,55 +115,60 @@ namespace PaperSections.Introduction {
       " (MCMC) to sample model parameters, including word segment alignments, in proportion to their posterior probabilities.";
     };
 
-    BodyPar {
-
+    style.BodyPar {
       "Our framework enables linguists to infer the phylogenetic relationships of languages, but it also opens up new horizons in the investigation of sound change. ";
       "In particular, the TKF91 model can estimate the stability of segments over time. ";
       "Although segmental stability is of fundamental importance for both linguistic theory and historical linguistics, there is no standard measure for it. ";
     };
 
-   BodyPar {
+   style.BodyPar {
      "Our results are based on a data set of ";
       MainResults.Data.UsedCognates.Length;
       " cognate classes comprising ";
       MainResults.Data.WordCount;
       " individual words from "; MainResults.Data.LanguageSet.Length-1;" Romance languages and Classical Latin, ";
-      "whose geographic distribution is shown in "; FigureReference(Figures.LanguageDistribution); eos;
-     "Transition rates are estimated over a fixed tree topology, which is presented in "; FigureReference(Figures.PriorTree); eos;
+      "whose geographic distribution is shown in "; style.FigureReference(Figures.LanguageDistribution); DotSpace;
+     "Transition rates are estimated over a fixed tree topology, which is presented in "; style.FigureReference(Figures.PriorTree); DotSpace;
      // "Our approach lends itself to the study of large data sets, opens up the study of linguistic history to a wider array of modeling options, and is more faithful to linguistic reality. ";
      };
 
-    ShowFigureDoc(document, Figures.PriorTree);
+    style.FigureBlock(Figures.PriorTree);
 
-    ShowFigureDoc(document, Figures.LanguageDistribution);
+    style.FigureBlock(Figures.LanguageDistribution);
 
   };
 }
 
 //======================================================================
 
-LanguageLine(LanguageClass language, text, binary, code, slash=false) = Row {
-  language;
-  Cell {
-    IPAFamily;
-    if (slash)
-      TextIpa {text};
+readonly CognateCodingClass TableFigures.CognateCoding = new;
+
+class CognateCodingClass: ContentClass {
+  Constructor {
+    super.Constructor("Cognate Coding");
+  }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "Coding of lexical cognates for the concept "; style.SQuote{"hand"}; DotSpace;
+  };
+
+  static LanguageLine(LanguageClass language, text, binary, code, slash=false) = Row {
+    language;
+    Cell {
+      IPAFamily;
+      if (slash)
+        TextIpa {text};
+      else
+        textit {text};
+    };
+
+    if (binary)
+      [0, 0, 0].Substitute(code-1, 1);
     else
-      textit {text};
+      code;
   };
 
-  if (binary)
-    [0, 0, 0].Substitute(code-1, 1);
-  else
-    code;
-};
-
-namespace TableFigures.Cognates {
-  Caption(DocumentClass document) = Span {
-    "Coding of lexical cognates for the concept "; SQuote{"hand"}; eos;
-  };
-
-  Body(DocumentClass document) = LanguageTable([1 inch, 1.75 inch, 1 inches]) {
+  override GetBody(ContentStyleClass style) = LanguageTable([1 inch, 1.75 inch, 1 inches]) {
     LanguageTitleRow {
       Lang.Language;
       "Phonemic Representation";
@@ -183,44 +188,48 @@ namespace TableFigures.Cognates {
 
 //======================================================================
 
-FatherTable(binary) = LanguageTable([2 inches, 1 inch] + (binary ? [new ColumnClass(0.9 inches, null, null, HAligns.Center)] * 3 : [new ColumnClass(1.5 inches, null, null, HAligns.Center)])) {
-  LanguageTitleRow {
-    Lang.Language;
-    SQuote {"father"};
-    if (binary)
-      "Code {0}"(each 1..3);
-    else
-      "Cognate Class";
-  };
-  LanguageLine(Languages.Old_English, "fæder", binary, 1);
-  LanguageLine(Languages.Latin, "pater", binary, 1);
-  LanguageLine(Languages.Greek, "πατήρ", binary, 1);
-  LanguageLine(Languages.Sanskrit, "pitṛ́", binary, 1);
-  LanguageLine(Languages.Old_Irish, "athir", binary, 1);
-  LanguageLine(Languages.Armenian, "hayr", binary, 1);
-  LanguageLine(Languages.Tocharian_A, "pācar", binary, 1);
-  LanguageLine(Languages.Tocharian_B, "pācer", binary, 1);
-  LanguageLine(Languages.Lithuanian, "tėvas", binary, 2);
-  LanguageLine(Languages.Old_Church_Slavic, "отьць", binary, 3);
-  LanguageLine(Languages.Russian, "отец", binary, 3);
-};
+readonly MultiStateCharacterClass TableFigures.MultiStateCharacter = new;
 
-namespace TableFigures.MultiStateCharacter {
-  Caption(DocumentClass document) = Span {
-    "Multistate cognate classes";
+class MultiStateCharacterClass: ContentClass {
+  Constructor {
+    super.Constructor("Multistate cognate classes");
+  }
+
+  static FatherTable(ContentStyleClass style, binary) = LanguageTable([2 inches, 1 inch] + (binary ? [new ColumnClass(0.9 inches, null, null, HAligns.Center)] * 3 : [new ColumnClass(1.5 inches, null, null, HAligns.Center)])) {
+    LanguageTitleRow {
+      Lang.Language;
+      style.SQuote {"father"};
+      if (binary)
+        "Code {0}"(each 1..3);
+      else
+        "Cognate Class";
+    };
+    CognateCodingClass.LanguageLine(WorldLanguages.Old_English, "fæder", binary, 1);
+    CognateCodingClass.LanguageLine(WorldLanguages.Latin, "pater", binary, 1);
+    CognateCodingClass.LanguageLine(WorldLanguages.Greek, "πατήρ", binary, 1);
+    CognateCodingClass.LanguageLine(WorldLanguages.Sanskrit, "pitṛ́", binary, 1);
+    CognateCodingClass.LanguageLine(WorldLanguages.Old_Irish, "athir", binary, 1);
+    CognateCodingClass.LanguageLine(WorldLanguages.Armenian, "hayr", binary, 1);
+    CognateCodingClass.LanguageLine(WorldLanguages.Tocharian_A, "pācar", binary, 1);
+    CognateCodingClass.LanguageLine(WorldLanguages.Tocharian_B, "pācer", binary, 1);
+    CognateCodingClass.LanguageLine(WorldLanguages.Lithuanian, "tėvas", binary, 2);
+    CognateCodingClass.LanguageLine(WorldLanguages.Old_Church_Slavic, "отьць", binary, 3);
+    CognateCodingClass.LanguageLine(WorldLanguages.Russian, "отец", binary, 3);
   };
 
-  Body(DocumentClass document) = FatherTable(false);
+  override GetBody(ContentStyleClass style) = FatherTable(style, false);
 }
 
 //======================================================================
 
-namespace TableFigures.BinaryRepresentation {
-  Caption(DocumentClass document) = Span {
-    "Binary cognate classes";
-  };
+readonly BinaryRepresentationClass TableFigures.BinaryRepresentation = new;
 
-  Body(DocumentClass document) = FatherTable(true);
+class BinaryRepresentationClass: ContentClass {
+  Constructor {
+    super.Constructor("Binary cognate classes");
+  }
+
+  override GetBody(ContentStyleClass style) = MultiStateCharacterClass.FatherTable(style, true);
 }
 
 //======================================================================

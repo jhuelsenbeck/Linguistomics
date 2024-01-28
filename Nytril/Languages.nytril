@@ -1,11 +1,11 @@
-using Format, IO, Units, Style, Languages;
+using Format, IO, Units, Languages, LinkTypes;
 //======================================================================
 
 DefaultCognate = "Primary";
 
 LanguageParent = new LinkTypeClass(LanguageClass, LanguageClass, "Parent", true);
 
-readonly namespace Languages {
+readonly namespace WorldLanguages {
   LanguageClass Old_Irish          = new(#78e0808d-fef7-4220-ab40-31a2fb4caa6d#, "Old Irish", 5);
   LanguageClass Irish              = new(#ecab3be4-8d79-496b-a8ef-8d160d687ad9#, "Irish", 4);
   LanguageClass Scots_Gaelic       = new(#eed7fad0-d873-4869-a8fa-1b15a2b162bd#, "Scots Gaelic", 4);
@@ -110,61 +110,32 @@ readonly namespace Languages {
 class TestLanguageClass: LanguageClass {
   Constructor(id, name) {
     super.Constructor(id, name);
+    ImagePath = res "Images/test.png";
   }
 
-  override MapImage(width, height) = Canvas(width, height) {
-    FitBox(LoadImage("test.png"), width, height);
-    HAlign: HAligns.Center;
-    VAlign: VAligns.Top;
-    HBox {
-      Span {
-        TextHeight: height * 0.1;
-        Name;
-      }
-    };
-  };
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A test language.";
-    };
+    }
   };
 
-  override Details = Block {
-    BodyPar {
+  override Details(ContentStyleClass style) = Block {
+    style.FirstPar {
       "This language is not real";
-    };
+    }
   };
 }
 
-//======================================================================
-
-class AttributionClass {
-  var          Text;
-  var URLClass URL;
-
-  Constructor(text, url) {
-    Text = text;
-    URL  = url is valid ? new URLClass(url) : null;
-  }
-
-  override GetLayoutSpan = Span {
-    Text;
-    Action: URL;
-  };
-}
 //======================================================================
 
 class LatinClass: LanguageClass {
   Constructor {
     super.Constructor(#463a584a-82e2-4588-96af-f2c3758d6989#, "Latin", 6);
-    MapAttribution = new AttributionClass("By Tataryn - Own work, CC BY-SA 3.0", "https://commons.wikimedia.org/w/index.php?curid=19625326");
+    ImagePath = res "Images/latin.png";
   }
 
-  override MapImage(width, height) = FitBox(LoadImage("latin.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A classical language belonging to the Italic branch of the Indo-European languages. ";
       "Latin was originally spoken in the area around Rome, known as Latium. ";
       "Through the power of the Roman Republic, it became the dominant language in Italy, and subsequently throughout the western Roman Empire, before eventually becoming a dead language. ";
@@ -173,8 +144,8 @@ class LatinClass: LanguageClass {
     };
   };
 
-  override Details = Block {
-    BodyPar {
+  override Details(ContentStyleClass style) = Block {
+    style.FirstPar {
       "By the late Roman Republic (75 BC), Old Latin had been standardised into Classical Latin. ";
       "Vulgar Latin was the colloquial form spoken at that time and attested in inscriptions and the works of comic playwrights like Plautus and Terence[3] and author Petronius. ";
       "Late Latin is the written language from the 3rd century; its colloquial form Vulgar Latin developed in the 6th to 9th centuries into the Romance languages, such as Italian, Sardinian, Venetian, Neapolitan, Sicilian, Piedmontese, Lombard, French, Franco-Provençal, Occitan, Corsican, Ladin, Friulan, Romansh, Catalan/Valencian, Aragonese, Spanish, Asturian, Galician, and Portuguese. ";
@@ -193,13 +164,11 @@ class LatinClass: LanguageClass {
 class FrenchClass: LanguageClass {
   Constructor {
     super.Constructor(#1a1694ec-c82a-4238-9488-f9708b2a117d#, "French");
-    MapAttribution = new AttributionClass("By Axtoche - Own work, CC BY-SA 4.0", "https://commons.wikimedia.org/w/index.php?curid=104935085");
+    ImagePath = res "Images/French.png";
   }
 
-  override MapImage(width, height) = FitBox(LoadImage("French.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A Romance language of the Indo-European family. ";
       "It descended from the Vulgar Latin of the Roman Empire, as did all Romance languages. ";
       "French evolved from Gallo-Romance, the Latin spoken in Gaul, and more specifically in Northern Gaul. ";
@@ -207,14 +176,14 @@ class FrenchClass: LanguageClass {
     };
   };
 
-  override Details = Block {
-    BodyPar {
+  override Details(ContentStyleClass style) = Block {
+    style.FirstPar {
       "French was also influenced by native Celtic languages of Northern Roman Gaul like Gallia Belgica and by the (Germanic) Frankish language of the post-Roman Frankish invaders. ";
       "Today, owing to France's past overseas expansion, there are numerous French-based creole languages, most notably Haitian Creole. ";
       "A French-speaking person or nation may be referred to as Francophone in both English and French."
     };
 
-    BodyPar {
+    style.BodyPar {
       "French is an official language in 29 countries across multiple continents, most of which are members of the Organisation internationale de la Francophonie (OIF), the community of 84 countries which share the official use or teaching of French. ";
       "French is also one of six official languages used in the United Nations. ";
       "It is spoken as a first language (in descending order of the number of speakers) in France; ";
@@ -231,31 +200,28 @@ class FrenchClass: LanguageClass {
 class SpanishClass: LanguageClass {
   Constructor {
     super.Constructor(#bacdcef6-de04-4c59-b763-7c12a0e67a27#, "Spanish");
-    MapAttribution = new AttributionClass("By − Allice Hunter - File:Hispanophone global world map language.png, CC BY-SA 4.0", "https://commons.wikimedia.org/w/index.php?curid=69323596");
+    ImagePath = res "Images/Spanish.png";
   }
 
-  override MapImage(width, height) = FitBox(LoadImage("Spanish.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A Romance language that originated in the Iberian Peninsula of Europe. ";
       "Today, it is a global language with nearly 500 million native speakers, mainly in Spain and the Americas. ";
       "It is the world's second-most spoken native language after Mandarin Chinese, and the world's fourth-most spoken language overall after English, Mandarin Chinese, and Hindi. ";
     };
   };
 }
+
 //======================================================================
 
 class ItalianClass: LanguageClass {
   Constructor {
     super.Constructor(#d3164836-aefe-41c2-8c1b-5f8b5934dc99#, "Italian");
-    MapAttribution = new AttributionClass("This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license", null);
+    ImagePath = res "Images/Italian.png";
   }
 
-  override MapImage(width, height) = FitBox(LoadImage("Italian.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A Romance language of the Indo-European language family. ";
       "Italian is the closest national language to Latin, from which it descends via vulgar Latin of the Roman Empire. ";
       "Taking into account both national and regional languages, it is seen that Italian and Sardinian are together the least differentiated from Latin. ";
@@ -264,13 +230,13 @@ class ItalianClass: LanguageClass {
     };
   };
 
-  override Details = Block {
-    BodyPar {
+  override Details(ContentStyleClass style) = Block {
+    style.FirstPar {
       "It formerly had official status in Albania, Malta, Monaco, Montenegro (Kotor), Greece (Ionian Islands and Dodecanese), and is generally understood in Corsica by Corsican speakers (many linguists classify Corsican as an Italian dialect). ";
       "It used to be an official language in the former colonial areas of Italian East Africa and Italian North Africa, where it still has a significant role in various sectors. ";
     };
 
-    BodyPar {
+    style.BodyPar {
       "Italian is also spoken by large immigrant and expatriate communities in the Americas and Australia. "
       "Italian is included under the languages covered by the European Charter for Regional or Minority languages in Bosnia and Herzegovina and in Romania, although Italian is neither a co-official nor a protected language in these countries. ";
       "Many speakers of Italian are native bilinguals of both Italian (either in its standard form or regional varieties) and another regional language of Italy.";
@@ -282,13 +248,11 @@ class ItalianClass: LanguageClass {
 class PortugueseClass: LanguageClass {
   Constructor {
     super.Constructor(#e023e110-c0f6-47f8-a1fc-c9b82df75bb2#, "Portuguese");
-    MapAttribution = new AttributionClass("By Saftorangen - Own work, CC BY-SA 3.0", "https://commons.wikimedia.org/w/index.php?curid=10427939");
+    ImagePath = res "Images/Portuguese.png";
   }
 
-  override MapImage(width, height) = FitBox(LoadImage("Portuguese.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A Romance language originating in the Iberian Peninsula of Europe. ";
       "It is the sole official language of Portugal, Angola, Mozambique, Guinea-Bissau, Cape Verde, São Tomé and Príncipe, and Brazil, while having co-official language status in East Timor, Equatorial Guinea, and Macau. ";
       "A Portuguese-speaking person or nation is referred to as \"Lusophone\" (lusófono). ";
@@ -302,13 +266,11 @@ class PortugueseClass: LanguageClass {
 class PortugueseBrazilClass: LanguageClass {
   Constructor {
     super.Constructor(#6f84a967-a79e-4ada-bb64-e658a521c85b#, "Brazilian Portuguese");
-    MapAttribution = new AttributionClass("Addicted04", null);
+    ImagePath = res "Images/Brazilian Portuguese.png";
   }
 
-  override MapImage(width, height) = FitBox(LoadImage("Brazilian Portuguese.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "The set of dialects of the Portuguese language native to Brazil and the most influential form of Portuguese worldwide. ";
       "It is spoken by almost all of the 200 million inhabitants of Brazil and spoken widely across the Brazilian diaspora, today consisting of about two million Brazilians who have emigrated to other countries. ";
       "With a population of over 205 million, Brazil is by far the world's largest Portuguese-speaking nation and the only one in the Americas."
@@ -320,13 +282,11 @@ class PortugueseBrazilClass: LanguageClass {
 class CatalanClass: LanguageClass {
   Constructor {
     super.Constructor(#bbf6898d-eef2-442a-b4ec-aa15d18a4b55#, "Catalan");
-    MapAttribution = new AttributionClass("By Martí8888 - Own work, CC BY-SA 4.0", "https://commons.wikimedia.org/w/index.php?curid=55002590");
+    ImagePath = res "Images/Catalan.png";
   }
 
-  override MapImage(width, height) = FitBox(LoadImage("Catalan.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A Western Romance language derived from Vulgar Latin. ";
       "It is the official language of Andorra, and a co-official language of three autonomous communities in eastern Spain: Catalonia, the Valencian Community and the Balearic Islands. ";
       "It also has semi-official status in the Italian comune of Alghero. ";
@@ -335,25 +295,24 @@ class CatalanClass: LanguageClass {
      };
   };
 
-  override Details = Block {
-     BodyPar {
+  override Details(ContentStyleClass style) = Block {
+    style.FirstPar {
       "The language evolved from Vulgar Latin in the Middle Ages around the eastern Pyrenees. ";
       "Nineteenth-century Spain saw a Catalan literary revival, culminating in the early 1900s.";
     };
   };
 }
+
 //======================================================================
 
 class WalloonClass: LanguageClass {
   Constructor {
     super.Constructor(#a13142a6-e509-48a2-9d73-b1260049667b#, "Walloon");
-    MapAttribution = new AttributionClass("By Fobos92 - Own work, CC BY-SA 4.0", "https://commons.wikimedia.org/w/index.php?curid=35302145");
+    ImagePath = res "Images/Walloon.png";
   }
 
-  override MapImage(width, height) = FitBox(LoadImage("Walloon.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A Romance language that is spoken in much of Wallonia and (to small extent) in Brussels, Belgium; ";
       "some villages near Givet, northern France; a clutch of communities in northeastern Wisconsin, U.S.; ";
       "and in some parts of Canada.";
@@ -362,8 +321,8 @@ class WalloonClass: LanguageClass {
     };
   };
 
-  override Details = Block {
-    BodyPar {
+  override Details(ContentStyleClass style) = Block {
+    style.FirstPar {
       "Despite its rich literature, beginning anonymously in the 16th century and with well-known authors since 1756, the use of Walloon has decreased markedly since France's annexation of Wallonia in 1795. ";
       "This period definitively established French as the language of social promotion, far more than it was before. ";
       "After World War I, public schools provided French-speaking education to all children, inducing a denigration of Walloon, especially when accompanied by official orders in 1952 to punish its use in schools. ";
@@ -373,51 +332,49 @@ class WalloonClass: LanguageClass {
     };
   };
 }
+
 //======================================================================
 
 class FriulianClass: LanguageClass {
   Constructor {
     super.Constructor(#7a88dee7-b741-4fb1-819d-38fb9ff962ed#, "Friulian");
-    MapAttribution = new AttributionClass("By El Bux Del Cu - Own work, CC BY-SA 4.0", "https://commons.wikimedia.org/w/index.php?curid=100544430");
- }
+    ImagePath = res "Images/Friulian.png";
+  }
 
-  override MapImage(width, height) = FitBox(LoadImage("Friulian.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A Romance language belonging to the Rhaeto-Romance family, spoken in the Friuli region of northeastern Italy. ";
       "Friulian has around 600,000 speakers, the vast majority of whom also speak Italian. ";
     }
   };
 
-  override Details = Block {
-    BodyPar {
+  override Details(ContentStyleClass style) = Block {
+    style.FirstPar {
       "It is sometimes called Eastern Ladin since it shares the same roots as Ladin, but over the centuries, it has diverged under the influence of surrounding languages, including German, Italian, Venetian, and Slovene. ";
       "Documents in Friulian are attested from the 11th century and poetry and literature date as far back as 1300. ";
       "By the 20th century, there was a revival of interest in the language.";
     }
   };
 }
+
 //======================================================================
 
 class RomanianClass: LanguageClass {
   Constructor {
     super.Constructor(#2236f89e-0c59-46ae-88c3-c03d68c0d472#, "Romanian", 3);
-    MapAttribution = new AttributionClass("By Fobos92 - Own work, CC BY-SA 4.0", "https://commons.wikimedia.org/w/index.php?curid=17155403");
+    ImagePath = res "Images/Romanian.png";
   }
 
-  override MapImage(width, height) = FitBox(LoadImage("Romanian.png"), width, height);
-
-  override Description = Block {
-    BodyPar {
+  override Description(ContentStyleClass style) = Block {
+    style.FirstPar {
       "A Balkan Romance language spoken by approximately 24–26 million people as a native language, primarily in Romania and Moldova, and by another 4 million people as a second language. ";
       "According to another estimate, there are about 34 million people worldwide who can speak Romanian, of whom 30 million speak it as a native language. ";
       "It is an official and national language of both Romania and Moldova and is one of the official languages of the European Union.";
     };
   };
 
-  override Details = Block {
-    BodyPar {
+  override Details(ContentStyleClass style) = Block {
+    style.FirstPar {
       "Romanian is a part of the Eastern Romance sub-branch of Romance languages, a linguistic group that evolved from several dialects of Vulgar Latin which separated from the Western Romance languages in the course of the period from the 5th to the 8th centuries. ";
       "To distinguish it within the Eastern Romance languages, in comparative linguistics it is called Daco-Romanian as opposed to its closest relatives, Aromanian, Megleno-Romanian and Istro-Romanian. ";
       "Romanian is also known as Moldovan in Moldova, although the Constitutional Court of Moldova ruled in 2013 that \"the official language of the republic is Romanian\".";
