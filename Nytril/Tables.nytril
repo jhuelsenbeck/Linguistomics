@@ -241,10 +241,10 @@ readonly namespace MatchCell {
     return null;
   }
 
-  SegmentBox(HashSetClass set, SegPartClass segment, color) = Canvas(DocMetrics.BoxSize.Width, DocMetrics.BoxSize.Height) {
+  SegmentBox(HashSetClass set, SegPartClass segment, color) = Canvas(PaperStyle.BoxSize.Width, PaperStyle.BoxSize.Height) {
     HAlign: HAligns.Center;
     if (segment.?Ipa is valid) {
-      TextHeight: DocMetrics.BoxSize.Height - 6 pts;
+      TextHeight: PaperStyle.BoxSize.Height - 6 pts;
       TextColor: color;
       SegmentText(set, segment)
     }
@@ -254,7 +254,7 @@ readonly namespace MatchCell {
 
   ShowBox(HashSetClass set, SegPartClass segment, color) = SegmentBox(set, segment, color) {
     if (segment.Features.HasFlag(Voiced))
-      X: DocMetrics.BoxSize.Width;
+      X: PaperStyle.BoxSize.Width;
   };
 
   ErrorMatches(HashSetClass set, matches) = Span {
@@ -296,7 +296,7 @@ class TabOptionsClass {
           if (MatchError(matches))
             MatchCell.ErrorMatches(set, matches);
           else {
-            Canvas(DocMetrics.CellSize.Width, DocMetrics.CellSize.Height) {
+            Canvas(PaperStyle.CellSize.Width, PaperStyle.CellSize.Height) {
               MatchCell.ShowBox(set, each matches, Colors.Black)
             }
           }
@@ -416,7 +416,7 @@ readonly namespace MatchingVowels {
 
   AddCell(SegPartClass[] segments, SegmentSetClass set, open, backness, features) = Cell(PaperStyle.SegmentBottom) {
     HAlign: HAligns.Center;
-    TextHeight: DocMetrics.BoxSize.Height;
+    TextHeight: PaperStyle.BoxSize.Height;
 
     var filter  = s => s.Segment.Backness == backness and s.Segment.Open == open and s.Features.HasFlagMask(FeatureMask, features);
     var matches = segments.FindSlice(filter);
@@ -458,7 +458,7 @@ readonly namespace MatchingVowels {
     };
 
     var border = BorderR(0.5 pts);
-    Table(PaperStyle.TableBorder, null, [new ColumnClass(1 inch, border)] + [new ColumnClass(DocMetrics.BoxSize.Width*4, border)]) {
+    Table(PaperStyle.TableBorder, null, [new ColumnClass(1 inch, border)] + [new ColumnClass(PaperStyle.BoxSize.Width*4, border)]) {
       HAlign: HAligns.Center;
       Row {
         TextHeight: 10 pts;
@@ -541,7 +541,7 @@ readonly namespace MatchingOther {
 
   ShowTable(SegPartClass[] segments, SegmentSetClass set) = Block {
     PaperStyle.TitleBar {Lang.OtherSegments};
-    Table(PaperStyle.TableBorder, null, [DocMetrics.CellSize.Width, ExtentWidth * 0.5 - DocMetrics.CellSize.Width] * ColumnDiv) {
+    Table(PaperStyle.TableBorder, null, [PaperStyle.CellSize.Width, ExtentWidth * 0.5 - PaperStyle.CellSize.Width] * ColumnDiv) {
       var slice = segments.FindSlice(segment => not set.Contains(segment));
       AddRow(each (slice / ColumnDiv));
     };
@@ -584,7 +584,7 @@ class SegmentDisplayClass {
 
     SegPartClass[] sorted = DisplaySegments.Sort(true, ref CompareSegments);
     XAxis: ChartAxis {
-      TextHeight: DocMetrics.SegmentTextFactor * size.Width / sorted.Length;
+      TextHeight: PaperStyle.SegmentTextFactor * size.Width / sorted.Length;
       (each sorted).ShowSegment;
     };
     ValueAxis: ChartAxis;
@@ -601,7 +601,7 @@ class SegmentDisplayClass {
   };
 
   IPASegmentTable = Block {
-    var c = DocMetrics.SegmentColumns;
+    var c = PaperStyle.SegmentColumns;
 
     Table(null, null, [ExtentWidth / c]) {
       foreach (var s in (SortedSegments / c)) {

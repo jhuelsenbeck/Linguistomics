@@ -549,27 +549,25 @@ class ConsensusTreeClass: ContentClass {
 
 //======================================================================
 
+readonly SegmentOccuranceCaption = Span {
+  var l0 = MainResults.Data.Taxa[0].Language;
+
+  "Comparison of occurance rates of segments in each language. Segments are sorted by the rates in ";
+  l0;
+  ". Bars are normalized to the rate of the most frequently ocurring segment in each language. ";
+  "Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
+};
+
 readonly SegmentOccuranceRatesClass Figures.SegmentOccuranceRates = new;
 
 class SegmentOccuranceRatesClass: ContentClass {
-  var SegmentFrequencyClass Display;
-
   Constructor {
     super.Constructor("Segment Occurance Rates");
-
-    Display = new(MainResults.Data, false);
   }
 
-  override GetCaption(ContentStyleClass style) = Span {
-    var l0 = MainResults.Data.Taxa[0].Language;
+  override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption;
 
-    "Comparison of occurance rates of segments in each language. Segments are sorted by the rates in ";
-    l0;
-    ". Bars are normalized to the rate of the most frequently ocurring segment in each language. ";
-    "Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
-  };
-
-  override GetBody(ContentStyleClass style) = Display.ShowChart;
+  override GetBody(ContentStyleClass style) = new SegmentFrequencyClass(MainResults.Data, false).ShowChart;
 }
 
 //======================================================================
@@ -577,14 +575,11 @@ class SegmentOccuranceRatesClass: ContentClass {
 readonly SegmentOccuranceGroupedClass Figures.SegmentOccuranceGrouped = new;
 
 class SegmentOccuranceGroupedClass: ContentClass {
-  var SegmentFrequencyClass Display;
-
   Constructor {
     super.Constructor("Segment Occurance Rates (by partition)");
-    Display = new(MainResults.Data, true);
   }
 
-  override GetBody(ContentStyleClass style) = Display.ShowChart;
+  override GetBody(ContentStyleClass style) = new SegmentFrequencyClass(MainResults.Data, true).ShowChart;
 }
 
 //======================================================================
@@ -592,21 +587,13 @@ class SegmentOccuranceGroupedClass: ContentClass {
 readonly PartitionFrequenciesClass Figures.PartitionFrequencies = new;
 
 class PartitionFrequenciesClass: ContentClass {
-  var PartitionFrequencyClass Display;
-
   Constructor {
     super.Constructor("Partition Occurance Rates");
-    Display = new(MainResults.Data);
   }
 
-  override GetCaption(ContentStyleClass style) = Span {
-    var l0 = MainResults.Data.Taxa[0].Language;
-    "Comparison of occurance rates of partitions in each language. Partitions are sorted by the rates in ";
-    l0; ". Bars are normalized to the rate of the most frequently ocurring partition in each language. ";
-    "Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
-  };
+  override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption;
 
-  override GetBody(ContentStyleClass style) = Display.ShowChart;
+  override GetBody(ContentStyleClass style) = new PartitionFrequencyClass(MainResults.Data).ShowChart;
 }
 
 //======================================================================
@@ -1625,7 +1612,19 @@ class MethodsClass: ContentClass {
     };
 
     BodyTable([1 inch, 5 inches]) {
-      AnimalRow(each ExampleAnimals);
+      foreach (var a in ExampleAnimals) {
+        Row {
+          TextHeight: 10 pts;
+          a.GetVariable.Name;
+          Cell {
+            Span {
+              TextFixed: true;
+              a;
+              Tex.ldots;
+            };
+          };
+        };
+      }
     };
 
     style.BodyPar {
@@ -1989,7 +1988,7 @@ class MethodsClass: ContentClass {
       "The Metropolis-Hastings algorithm constructs the Markov chain using the following algorithm:";
     };
 
-    NumberedList {
+    style.NumberedList {
       ParAlignment: ParAlignments.Left;
 
       Paragraph {

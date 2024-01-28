@@ -6,133 +6,19 @@ Main.SymbolFamily = TextFamilies.CMUClassicalSerif;
 
 //======================================================================
 
-readonly namespace DocMetrics {
-  TableSpace        = 24 pts;
-  BoxSize           = new SizeClass(18 pts, 20 pts);
-  CellSize          = new SizeClass(BoxSize.Width * 2, BoxSize.Height);
-  SegmentColumns    = 4;
-  SegmentSize       = 40 pts;
-  SegmentWidth      = 2 inches;
-  SegmentTextFactor = 0.55;
-}
-
-//======================================================================
-
-class DefClass: FactClass {
-  field string Name,
-               Description;
-  var          Variable;
-
-  Constructor(id, symbol, name, description=null) {
-    super.Constructor(id);
-
-    Variable    = PaperStyle.Equation {symbol};
-    Name        = name;
-    Description = description;
-  }
-
-  override IconClass GetIcon = Icons.subscript;
-
-  override int Compare(d, CompareOptions options) = Name.Compare(d.Name, options);
-
-  override GetLayoutSpan = Span {
-    Variable;
-    TipAction: this;
-    Link to this;
-  };
-
-  override GetLayoutFact = GetLayoutTip;
-
-  override GetLayoutTip = Block {
-    Paragraph {
-      TextHeight: 20 pts;
-      Variable;
-    };
-    Paragraph {
-      Bold; Name;
-    };
-    Paragraph {
-      Description;
-    };
-  };
-
-  Appendix = Block {
-    Paragraph {
-      TextHeight: 16 pts;
-      Variable;
-      Tab;
-      Name;
-    };
-    if (Description is valid) {
-      Paragraph {
-        LeftIndent: 0.5 inches;
-        SpaceAfter: 6 pts;
-        Description;
-      };
-    }
-  };
-}
-//======================================================================
-
-class EquationClass: FactClass {
-  field string Name;
-  var          Formula;
-
-  Constructor(id, name) {
-    super.Constructor(id);
-    Name = name;
-  }
-
-  override IconClass GetIcon = Icons.functions;
-
-  override GetLayoutSpan = Formula {
-    Link to this;
-  };
-
-  override GetLayoutBlock = PaperStyle.EquationPar {
-    Formula;
-    Link to this;
-  };
-
-  override GetLayoutTip = Block {
-    Paragraph {
-      PaperStyle.SansSerif;
-      SpaceAfter: 10 pts;
-      Bold;
-      Name;
-    };
-    Paragraph {
-      LeftIndent: 24 pts;
-      TextStacked: true;
-      Formula;
-    }
-  };
-
-  override GetLayoutFact = GetLayoutTip;
-}
-
-//======================================================================
-
-class TreeContentClass: ContentClass {
-  var NodeClass Root;
-  var           Width,
-                Axis;
-
-  Constructor(title, width, NodeClass root, axis=null) {
-    super.Constructor(title);
-    Root  = root;
-    Width = width;
-    Axis  = axis;
-  }
-
-  override GetBody(ContentStyleClass style) = Paragraph {
-    PaperStyle.ShowTree(style, Root, Width, null, Axis);
-  };
-}
-
-//======================================================================
-
 readonly namespace PaperStyle {
+  const TableSpace        = 24 pts;
+  const SegmentColumns    = 4;
+  const SegmentSize       = 40 pts;
+  const SegmentWidth      = 2 inches;
+  const SegmentTextFactor = 0.55;
+  const TableEdgeSize     = 0.25 pts;
+  const TableBorder       = TableEdgeSize;
+
+  SizeClass BorderSize    = new(2, 2);
+  SizeClass BoxSize       = new(18 pts, 20 pts);
+  SizeClass CellSize      = new(BoxSize.Width * 2, BoxSize.Height);
+
   SansSerif            = TextFamily: TextFamilies.Arial;
   IPAFamily            = TextFamily: TextFamilies.LinuxLibertineO;
   GreekFamily          = IPAFamily;
@@ -148,8 +34,6 @@ readonly namespace PaperStyle {
   StringColor          = new ColorClass(168, 21, 53);
   VariableColor        = Colors.DarkBlue;
   AlignBackColor       = 95%;
-  TableEdgeSize        = 0.25 pts;
-  TableBorder          = TableEdgeSize;
   ColumnEdge           = BorderR(TableEdgeSize);
   SegmentBottom        = BorderB(new(TableEdgeSize, 0, 80%));
   HighlightColor       = Colors.Orange;
@@ -157,23 +41,6 @@ readonly namespace PaperStyle {
   SlideHeader          = Colors.SlateGray;
   textit               = Span {Italic};
   TextIpa              = Span {IPAFamily; Begin:"/"; End:"/"};
-
-  SizeClass BorderSize = new SizeClass(2, 2);
-
-
-  MainTitle = Paragraph {
-    SansSerif;
-    TextHeight: 12 pts;
-    Bold;
-    SpaceAfter: 10 pts;
-  };
-
-  AppendixTitle = Paragraph {
-    SansSerif;
-    TextHeight: 12 pts;
-    Bold;
-    SpaceAfter: 10 pts;
-  };
 
   LanguageTable(ColumnClass[] columns) = Table(new(new(0, 2), new(2 pts, 2), new(0, 2), new(2 pts, 2)), null, columns);
 
@@ -202,74 +69,14 @@ readonly namespace PaperStyle {
       Background: 95%;
   };
 
-  PageSection = Section {
-    SectionBreak: SectionBreaks.NextPage;
-    Footer: MarginBlock(0.5 inches) {
-      ParAlignment: ParAlignments.Center;
-      DocFields.PageNumber;
-    };
-  };
-
   TableNotes = Paragraph {
     Italic;
-    SpaceAfter: DocMetrics.TableSpace;
-  };
-
-  AnimalRow(a) = Row {
-    TextHeight: 10 pts;
-    a.GetVariable.Name;
-    Cell {
-      Span {
-        TextFixed: true;
-        a;
-      }
-      Tex.ldots;
-    }
-  };
-
-  SourceCodeBlock = TextBlock {
-    TextFixed: true;
-    TextHeight: 10 pts;
-    ParBackground: 97%;
+    SpaceAfter: TableSpace;
   };
 
   Definition(s) = Span {
     Italic;
     s;
-  };
-
-  void Collect(list, node) {
-    if (node.Label)
-      list.Add(node, node.Label);
-    Collect(list, each node);
-  }
-
-  GetTimes(node) {
-    var list = new ListClass(128);
-    Collect(list, node);
-    return list[1..];
-  }
-
-  ByYear(x, y, options) = x.BranchLength.Compare(y.BranchLength);
-
-//  TimelineNodes = GetTimes(Info.LanguageTree).Sort(true, ByYear);
-
-  TimelineRow(options, node) = HBox {
-    X: options.Width - options.Width * node.BranchLength / options.MaxYear;
-    Figure(Colors.Green) {
-      Rectangle(new(0, new(5, options.TextHeight)))
-    };
-    Paragraph {
-      Space;
-      node.Label;
-    }
-  };
-
-  NumberedList = ListBlock {
-    ParAlignment: ParAlignments.Justify;
-    LeftIndent: 0.5 inches;
-    FirstIndent: -0.25 inches;
-    ItemLabel: i => "{0}."(i+1);
   };
 
   BranchMarker = Figure(Colors.Black, new StrokeClass(1 pt, Colors.Gray)) {
@@ -315,7 +122,7 @@ readonly namespace PaperStyle {
     };
   };
 
-  ShowAppendix(ContentStyleClass style, ContentClass appendix) = PageSection {
+  ShowAppendix(ContentStyleClass style, ContentClass appendix) = style.PageSection {
     var th = 14 pts;
     var sa = 8 pts;
 
@@ -458,6 +265,120 @@ readonly namespace PaperStyle {
     TextStacked: true;
     TextEquation: true;
     TextHeight: 12 pts;
+  };
+}
+
+//======================================================================
+
+class DefClass: FactClass {
+  field string Name,
+               Description;
+  var          Variable;
+
+  Constructor(id, symbol, name, description=null) {
+    super.Constructor(id);
+
+    Variable    = PaperStyle.Equation {symbol};
+    Name        = name;
+    Description = description;
+  }
+
+  override IconClass GetIcon = Icons.subscript;
+
+  override int Compare(d, CompareOptions options) = Name.Compare(d.Name, options);
+
+  override GetLayoutSpan = Span {
+    Variable;
+    TipAction: this;
+    Link to this;
+  };
+
+  override GetLayoutFact = GetLayoutTip;
+
+  override GetLayoutTip = Block {
+    Paragraph {
+      TextHeight: 20 pts;
+      Variable;
+    };
+    Paragraph {
+      Bold; Name;
+    };
+    Paragraph {
+      Description;
+    };
+  };
+
+  Appendix = Block {
+    Paragraph {
+      TextHeight: 16 pts;
+      Variable;
+      Tab;
+      Name;
+    };
+    if (Description is valid) {
+      Paragraph {
+        LeftIndent: 0.5 inches;
+        SpaceAfter: 6 pts;
+        Description;
+      };
+    }
+  };
+}
+//======================================================================
+
+class EquationClass: FactClass {
+  field string Name;
+  var          Formula;
+
+  Constructor(id, name) {
+    super.Constructor(id);
+    Name = name;
+  }
+
+  override IconClass GetIcon = Icons.functions;
+
+  override GetLayoutSpan = Formula {
+    Link to this;
+  };
+
+  override GetLayoutBlock = PaperStyle.EquationPar {
+    Formula;
+    Link to this;
+  };
+
+  override GetLayoutTip = Block {
+    Paragraph {
+      PaperStyle.SansSerif;
+      SpaceAfter: 10 pts;
+      Bold;
+      Name;
+    };
+    Paragraph {
+      LeftIndent: 24 pts;
+      TextStacked: true;
+      Formula;
+    }
+  };
+
+  override GetLayoutFact = GetLayoutTip;
+}
+
+//======================================================================
+
+class TreeContentClass: ContentClass {
+  var NodeClass Root;
+  var           Width,
+                Axis;
+
+  Constructor(title, width, NodeClass root, axis=null) {
+    super.Constructor(title);
+    Root  = root;
+    Width = width;
+    Axis  = axis;
+  }
+
+  override GetBody(ContentStyleClass style) = Paragraph {
+    PaperStyle.ShowTree(style, Root, Width, null, Axis);
   };
 }
 
