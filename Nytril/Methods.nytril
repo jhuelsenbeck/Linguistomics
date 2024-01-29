@@ -90,14 +90,13 @@ class TransitionRatesClass: ContentClass {
 
 //======================================================================
 
+readonly AlignmentChartClass AlignmentResults = new(MainResults);
+
 readonly AlignmentsClass Figures.Alignments = new;
 
 class AlignmentsClass: ContentClass {
-  var AlignmentChartClass Display;
-
   Constructor {
     super.Constructor("Alignments");
-    Display = new(MainResults);
   }
 
   override GetCaption(ContentStyleClass style) = Span {
@@ -106,8 +105,23 @@ class AlignmentsClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style) = Block {
-    Display.ShowChart(ExtentSize);
+    AlignmentResults.ShowChart(new(ExtentWidth, ExtentHeight - 1 inch));
   };
+}
+
+//======================================================================
+
+class AllAlignmentsClass: ContentClass {
+  Constructor {
+    super.Constructor("All Alignments");
+  }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    MainResults.AlignmentCutoff * 100.0;
+    "% credible set of alignments";
+  };
+
+  override GetBody(ContentStyleClass style) = AlignmentResults.ShowAll;
 }
 
 //======================================================================
@@ -129,7 +143,7 @@ class AlignmentExamplesClass: ContentClass {
   override GetCaption(ContentStyleClass style) = "Credible sets for cognate alignments";
 
   override GetBody(ContentStyleClass style) = Block {
-    Figures.Alignments.Display.ShowSet(MainResults.Data, Examples);
+    AlignmentResults.ShowSet(MainResults.Data, Examples);
   };
 }
 
@@ -384,7 +398,7 @@ class QRatesMatrixClass: ContentClass {
     super.Constructor("Rate Matrix \"Q\"");
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.PartitionBox;
+  override GetBody(ContentStyleClass style) = MainResults.QRates.PartitionBox(ExtentSize);
 }
 
 //======================================================================

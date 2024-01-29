@@ -122,31 +122,6 @@ readonly namespace PaperStyle {
     };
   };
 
-  ShowAppendix(ContentStyleClass style, ContentClass appendix) = style.PageSection {
-    var th = 14 pts;
-    var sa = 8 pts;
-
-    Header: MarginBlock(0.5 inches) {
-      Paragraph(BorderB(1 pts)) {
-        ParAlignment: ParAlignments.Center;
-        TextHeight: th;
-        SpaceAfter: sa;
-        DocFields.Anchor(Lang.Appendix + each0);
-        "{0} {1} - "(Lang.Appendix, each1);
-        appendix.Title;
-      };
-    };
-    var caption = Block {
-      appendix.GetCaption(style);
-      Paragraph;
-    };
-    caption;
-    var height = GetLayoutSize(caption).Height;
-    PushExtentSize(new(ExtentWidth, ExtentHeight - height - th - sa - 8 pts));
-    appendix.GetBody(style);
-    PopExtent();
-  };
-
   LanguageRow(lang) = Row {
     Background: ((each0 mod 2) == 0 ? Colors.White : 97%);
     lang.GetVariableName;

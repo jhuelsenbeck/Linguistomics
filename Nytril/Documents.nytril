@@ -2,142 +2,63 @@ using Format, Units, LinkTypes;
 
 //======================================================================
 
-class PaperBaseClass: DocumentClass {
-  var ContentStyleClass Style;
-
-  Constructor(id, title) {
-    super.Constructor(id, title);
-    Title          = Info.Title;
-    Style          = MainContentStyle;
-    ReferenceStyle = Style.ReferenceStyle;
+abstract class BasePaperClass: WhitePaperClass {
+  Constructor(guid id, name) {
+    super.Constructor(id, name, MainContentStyle);
+    AddAuthor(People.DMGoldstein, true);
+    AddAuthor(People.SHMcCreight, true);
+    AddAuthor(People.EBuchi, false);
+    AddAuthor(People.JPHuelsenbeck, true);
   }
-
-  BaseDocumentClass = Document(new(new(0.75 inches, 0.9 inches, 0.75 inches, 1 inches))) {
-    TextFamily: TextFamilies.TimesNewRoman;
-    TextHeight: 12 pts;
-
-    AuthorLink to Authors;
-  };
 }
+
 //======================================================================
 
-class PaperDocClass: PaperBaseClass {
+class PaperDocClass: BasePaperClass {
   Constructor {
     super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
+    Title = Info.Title;
   }
 
-  ShowTitledContent(ContentClass content) = Block {
-    Style.Heading2 {
-      content.Title;
+  override AddSections = Block {
+    AddContent(PaperSections.Abstract);
+    AddContent(PaperSections.Introduction);
+    Style.Heading1 {
+      Lang.Results
     };
 
-    content.GetBody(Style);
-  };
-
-  override GetDocument = BaseDocumentClass {
-    Style.PageSection {
-      Footer: MarginBlock(0.5 inches) {
-        Paragraph {
-          ParAlignment: ParAlignments.Right;
-          DocFields.PageNumber; "/"; DocFields.PageCount;
-        };
-
-        First: Block;
-      };
-
-      Style.MainTitleStyle {
-        Title;
-      };
-
-      Style.ShowAuthorList(AuthorList);
-
-      ShowTitledContent(PaperSections.Abstract);
-      ShowTitledContent(PaperSections.Introduction);
-      Style.Heading1 {
-        Lang.Results
-      };
-
-      ShowTitledContent(PaperSections.WordTransformation);
-      ShowTitledContent(PaperSections.WordSegmentRelationships);
-      ShowTitledContent(PaperSections.Discussion);
-      ShowTitledContent(PaperSections.MethodsSummary);
-      ShowTitledContent(PaperSections.DataSummary);
-      ShowTitledContent(PaperSections.ModelInference);
-      ShowTitledContent(PaperSections.DataCuration);
-      ShowTitledContent(PaperSections.Acknowledgements);
-      ShowTitledContent(PaperSections.Contributions);
-    };
-
-    Style.AddReferenceSection;
+    AddContent(PaperSections.WordTransformation);
+    AddContent(PaperSections.WordSegmentRelationships);
+    AddContent(PaperSections.Discussion);
+    AddContent(PaperSections.MethodsSummary);
+    AddContent(PaperSections.DataSummary);
+    AddContent(PaperSections.ModelInference);
+    AddContent(PaperSections.DataCuration);
+    AddContent(PaperSections.Acknowledgements);
+    AddContent(PaperSections.Contributions);
   };
 }
 //======================================================================
 
-class SupplementalViewClass: PaperBaseClass {
+class SupplementalViewClass: BasePaperClass {
   Constructor {
     super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
-    Title = Name;
-  }
+    SubTitle = Span {"For: "; Style.DQuote {Info.Title}};
 
-  ShowTitledContent(content) = Block {
-    Style.Heading2 {
-      content.Title;
-    };
-
-    content.GetBody(Style);
-  };
-
-  override GetDocument = BaseDocumentClass {
-    ContentClass[] appendices = [
+    Appendices = [
       Figures.PartitionAssignments,
       Figures.ExperimentalRuns,
+      Figures.Alignments,
+      new AllAlignmentsClass(),
     ];
-
-    Style.PageSection {
-      Header: MarginBlock(0.125 inches) {
-        Span {
-          TextCase: TextCases.AllUpper;
-          Title;
-        };
-        First: Block;
-      };
-
-      Style.MainTitleStyle {
-        Title;
-        SpaceAfter: 0;
-      };
-      Paragraph {
-        LeftIndent: 24 pts;
-        TextHeight: 12 pts;
-        "For: "; Style.DQuote {Info.Title};
-        SpaceAfter: 10 pts;
-      };
-
-      Style.ShowAuthorList(AuthorList);
-
-      ShowTitledContent(PaperSections.Methods);
-      ShowTitledContent(PaperSections.Conclusion);
-    };
-
-    Style.AddReferenceSection;
-    Style.ShowAppendices(appendices);
-  };
-}
-//======================================================================
-
-class AlignmentViewClass: PaperBaseClass {
-  Constructor {
-    super.Constructor(#a14658e4-26f7-4eab-87b7-4f486035103b#, "Alignments");
-    NoPublish = true;
   }
 
-  override GetDocument = BaseDocumentClass {
-    var chart = new AlignmentChartClass(MainResults);
-    chart.ShowChart(ExtentSize);
-    PageBreak;
-    chart.ShowAll;
+  override AddSections = Block {
+    AddContent(PaperSections.Methods);
+    AddContent(PaperSections.Conclusion);
   };
 }
+
 //======================================================================
 
 

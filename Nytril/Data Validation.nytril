@@ -79,12 +79,15 @@ class DiagnosticsViewClass: DocumentClass {
   };
 
   override GetDocument = Document(new(new(0.5 inches, 0.75 inches, 0.5 inches, 0.5 inches))) {
+    var style = MainContentStyle;
+
     ShowQuery;
 
     TextHeight: 9 pts;
 
-    ContentClass[] appendices = [
+    ContentClass[] content = [
       new CognateCoverageClass(Data),
+      new PriorTreeClass(Data),
       new SegmentAssignmentsClass(Data),
       new SegmentTransitionClass,
       new ConceptGroupsClass(Data),
@@ -93,12 +96,26 @@ class DiagnosticsViewClass: DocumentClass {
       new AppendixClass("Segment Groups", ShowSegmentTables),
       new AppendixClass(Lang.IPAFullName, Display.IPASegmentTable),
       new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
-      new AppendixClass(Lang.Languages, Display.ShowLanguageDetails(MainStyle)),
+      new AppendixClass(Lang.Languages, Display.ShowLanguageDetails(style)),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(10 pts, Data)),
 //      new("Euler Feature Diagram", new EulerDiagramClass().FeatureChart(Data)),
     ];
 
-    PaperStyle.ShowAppendix(MainStyle, each appendices);
+    foreach (var c in content) {
+      style.Heading1 {
+        PageBreakBefore: true;
+        c.Title;
+      };
+
+      var caption = c.GetCaption(style);
+      if (caption is not null) {
+        style.FirstPar {
+          caption;
+        };
+      }
+
+      c.GetBody(style);
+    }
   };
 }
 
@@ -146,20 +163,27 @@ class ConceptGroupsClass: DataContentClass {
 
 //======================================================================
 
+class PriorTreeClass: DataContentClass {
+  Constructor(DataSetClass data) {
+    super.Constructor(data, "Prior Trees");
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+    Paragraph {
+      foreach (var tree in Data.PriorTrees)
+        PaperStyle.ShowTree(style, tree, 30%, Lang.Tree+each1);
+    };
+  };
+}
+
+//======================================================================
+
 class CognateCoverageClass: DataContentClass {
   Constructor(DataSetClass data) {
     super.Constructor(data, "Cognate Coverage");
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    style.Heading1 {
-      Lang.Trees;
-    };
-    Paragraph {
-      foreach (var tree in Data.PriorTrees)
-        PaperStyle.ShowTree(style, tree, 30%, Lang.Tree+each1);
-    };
-
     style.Heading1 {
       "By Language";
     };
