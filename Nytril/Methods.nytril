@@ -2,14 +2,19 @@ using Format, Units, Math, IO, Defs, Equations, WorldLanguages, References, Pape
 
 //======================================================================
 
-readonly PartitionAssignmentsClass Figures.PartitionAssignments = new;
+readonly PartitionAssignmentsClass Figures.PartitionAssignments = new(MainResults.Rule);
 
 class PartitionAssignmentsClass: ContentClass {
-  Constructor {
+  var RuleClass Rule;
+
+  Constructor(RuleClass rule) {
     super.Constructor(Lang.PartitionRules);
+    Rule = rule;
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.Rule.ShowPartitions(style, 14 pts);
+  override GetCaption(ContentStyleClass style) = Rule.GetCaption(style);
+
+  override GetBody(ContentStyleClass style) = Rule.ShowPartitions(style, 14 pts);
 }
 
 //======================================================================
@@ -959,7 +964,7 @@ namespace StateSection {
 
   StateRow(states, state) = Row {
     Cell(PadR(3 pts)) {
-      ParAlignment: ParAlignments.Right;
+      HAlign: HAligns.Right;
       Span {
         each0 == states.Length div 2 ? "From   " : Empty;
         state;
@@ -970,7 +975,7 @@ namespace StateSection {
 
   GetStates(count) = 'A'..('A' + (count - 1)) step 1;
 
-  StateTable(count) = Table(new ThicknessClass(1 pts, 1 pts, 3 pts, null), null, [new ColumnClass(58 pts, BorderR(PaperStyle.TableEdgeSize)), 0.36 inches]) {
+  StateTable(count) = Table(new ThicknessClass(1 pts, 1 pts, 3 pts, null), null, [new ColumnClass(56 pts, BorderR(PaperStyle.TableEdgeSize)), 32 pts]) {
     ParAlignment: ParAlignments.Center;
     VAlign: VAligns.Center;
     HAlign: HAligns.Center;
@@ -1006,7 +1011,7 @@ readonly WordTransformationClass PaperSections.WordTransformation = new;
 
 class WordTransformationClass: ContentClass {
   Constructor {
-    super.Constructor("Segmental Stability", #a4fa0e45-84f9-445d-a849-aa3c4fff8f81#);
+    super.Constructor("Segmental Stability");
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1014,14 +1019,14 @@ class WordTransformationClass: ContentClass {
       style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the Q matrix under the ";
       MainResults.Rule.Name; " model. ";
       "These diagonal elements can be interpreted as a measure of segmental volatility, since it is the sum of the rates at which it transitions to other segments. ";
-      "The distribution of the diagonal elements reveals a number of properties of the segmental changes in our dataset. ";
+      "The distribution of the diagonal elements reveals several properties of the segmental changes in our dataset. ";
       "First and foremost, the stability profile of segments is remarkably consistent within each class. ";
       "For instance, all the long vowels cluster together, as do the affricates, fricatives, short vowels, nasal vowels, fricatives, nasal consonants, and stops. ";
-      "What this clustering reveals is that segmental changes are more likely within classes than between them.  ";
+      "What this clustering reveals is that segmental changes are more likely within classes than between them. ";
       "Looking at the classes themselves, the segments most likely to change (in blue) are all long vowels. ";
       "This is precisely what we expect since one of the signal events that characterized the emergence of the Romance languages was the loss of phonemic vowel length. ";
-      "With the exception of the affricates (in red), the most volatile segmental classes are all vowels. ";
-      "Non-syllabic segmental classes on the whole are decidedly more resistant to change and stop consonants are the most stable class. ";
+      "Except for the affricates (in red), the most volatile segmental classes are all vowels. ";
+      "Non-syllabic segmental classes overall are decidedly more resistant to change and stop consonants are the most stable class. ";
     };
 
     style.FigureBlock(Figures.QRatesDiagonal);
@@ -1045,7 +1050,7 @@ readonly WordSegmentRelationshipsClass PaperSections.WordSegmentRelationships = 
 
 class WordSegmentRelationshipsClass: ContentClass {
   Constructor {
-    super.Constructor("Segmental Alignments", #a4fa0e45-84f9-445d-a849-aa3c4fff8f81#);
+    super.Constructor("Segmental Alignments");
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1073,7 +1078,7 @@ readonly DiscussionClass PaperSections.Discussion = new;
 
 class DiscussionClass: ContentClass {
   Constructor {
-    super.Constructor("Discussion", #e4e69573-2ca5-489f-ad49-26681d5b3c30#);
+    super.Constructor("Discussion");
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1121,7 +1126,7 @@ class DiscussionClass: ContentClass {
      "There is the further question of the frequency distribution of segments in the dataset. ";
      "Some segments will be sampled more often than others simply because they are more frequent in a language. ";
      "The sampling can thus influence estimates of equilibrium frequencies and transition rates. ";
-     "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will in all likelihood have to be modified under our framework to take into account issues of segmental distribution. ";
+     "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will likely have to be modified under our framework to take into account issues of segmental distribution. ";
    };
 
    style.BodyPar {
@@ -1130,7 +1135,7 @@ class DiscussionClass: ContentClass {
      "Does the frequency of a phoneme in the words of a language affect its diachronic stability? ";
      "To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? ";
      "What is the role of "; style.DQuote{"natural classes"}; " in phonological change? ";
-     "This last question can be addressed in particular through comparison of models with different numbers of rate parameters. ";
+     "This last question can be addressed through comparison of models with different numbers of rate parameters. ";
      "The method can also be extended to handle more complex phonological changes (such as those involving context dependency), ";
      "to estimate divergence times and diversification rates in addition to topology, ";
      "or to model the history of words along a phylogenetic tree.";
@@ -1150,7 +1155,7 @@ readonly MethodsSummaryClass PaperSections.MethodsSummary = new;
 
 class MethodsSummaryClass: ContentClass {
   Constructor {
-    super.Constructor(Lang.Methods, #b2475d04-ea87-4e71-afee-c2531edcddae#);
+    super.Constructor(Lang.Methods);
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1167,7 +1172,7 @@ readonly DataSummaryClass PaperSections.DataSummary = new;
 
 class DataSummaryClass: ContentClass {
   Constructor {
-    super.Constructor(Lang.Data, #523cf5f6-33f3-4fb0-989f-f5ce56726010#);
+    super.Constructor(Lang.Data);
   }
 
   readonly W = TextIpa {Span{TextAlignment: TextAlignments.Superscript; "w"}};
@@ -1208,12 +1213,12 @@ class DataSummaryClass: ContentClass {
 
     style.BodyPar {
       "All word-forms were manually aligned, so that historically related segments occur in the same column. ";
-      "The manual alignments serve as the starting point for the MCMC sampling procedure (see below), so our analysis did not condition on any particular alignment of word segments being correct. ";
+      "The manual alignments serve as the starting point for the MCMC sampling procedure (see below), so our analysis did not condition on any alignment of word segments being correct. ";
       style.TableReference(TableFigures.ManualAlignment); " provides an illustrative example of the alignment for the concept ";
-      TableFigures.ManualAlignment.WordDisplay(style); DotSpace;
+      TableFigures.ManualAlignment.WordDisplay(style);
       "The Latin form "; TextIpa{"kʷ-id"}; " begins with a voiceless velar stop with a secondary labial articulation "; W; DotSpace;
       "In most Romance languages, this secondary articulation is lost, ";
-      "but in some, it develops into a consonant in its own right (i.e., the "; TextIpa{"kw"}; " of French and Walloon). ";
+      "but in some, it develops into a consonant (e.g., the "; TextIpa{"kw"}; " of French and Walloon). ";
       "To accommodate this change, the Latin form has two segmental slots before the vowel (i.e., ";
       IPASegments.kw.ShowSegment; "-), the second of which anticipates the development of the secondary articulation " W; "in French and Walloon"; DotSpace;
     };
@@ -1231,7 +1236,7 @@ class ManualAlignmentClass: ContentClass {
     super.Constructor("An example of an aligned cognate set");
   }
 
-  readonly WordDisplay(ContentStyleClass style) = style.SQuote {
+  readonly WordDisplay(ContentStyleClass style) = style.SQuoteEnd {
     TextCase: TextCases.AllLower;
     MainResults.Data.FigureConcept.GetVariable.Name;
   };
@@ -1239,7 +1244,6 @@ class ManualAlignmentClass: ContentClass {
   override GetCaption(ContentStyleClass style) = Span {
     "Manual alignment of the words for the concept ";
     WordDisplay(style);
-    DotSpace;
   };
 
   override GetBody(ContentStyleClass style) = LanguageTable([1.5 inches, 2.1 inches, 2.5 inch]) {
@@ -1303,7 +1307,7 @@ readonly ModelInferenceClass PaperSections.ModelInference = new;
 
 class ModelInferenceClass: ContentClass {
   Constructor {
-    super.Constructor("Model and Statistical Inference", #d6b079f1-2037-4b0f-8ea1-a10392f727a9#);
+    super.Constructor("Model and Statistical Inference");
   }
 
   InsertionLessThanDeletion = Span {InsertionRate; Tex.lt; DeletionRate};
@@ -1333,7 +1337,7 @@ class ModelInferenceClass: ContentClass {
       "where "; SegmentalInfo; " are the observed word segments for the cognate words. ";
       "The likelihood function, "; LiklihoodFunction;
       ", is calculated using the algorithm described by Lunter "; textit{"et al."}; Citation {lunter2003}; DotSpace;
-      "We use priors for the model parameters that are standard in phylogenetics, with the exception of the rate parameters for the insertions and deletions, ";
+      "We use priors for the model parameters that are standard in phylogenetics, except for the rate parameters for the insertions and deletions, ";
       "which are assumed to follow independent and identically distributed exponential distributions with "; InsertionLessThanDeletion; DotSpace;
       "We numerically approximate the posterior distribution of the parameters using MCMC. ";
       "Specifically, we constructed a Markov chain that has as its states the parameters of the model and a stationary distribution that is the posterior distribution of interest. ";
@@ -1346,7 +1350,7 @@ class ModelInferenceClass: ContentClass {
       "The segmental inventory of our dataset was exhaustively partitioned into "; Cardinal(rule.Filters.Length); " classes, which are presented in ";
       style.TableReference(Figures.PartitionAssignments); DotSpace;
       "This "; style.SQuote{rule.Name}; " model allows different rates among the ";
-      Cardinal(rule.Filters.Length); " classes of segments ";
+      Cardinal(rule.Filters.Length); " classes of segments. ";
       //Span {
       //  Separator: CommaSpace;
       //  LastSeparator: " and ";
@@ -1358,7 +1362,6 @@ class ModelInferenceClass: ContentClass {
     };
 
     style.TableBlock(Figures.PartitionAssignments);
-
   };
 }
 
@@ -1368,7 +1371,7 @@ readonly DataCurationClass PaperSections.DataCuration = new;
 
 class DataCurationClass: ContentClass {
   Constructor {
-    super.Constructor("Data Curation and Analysis", #a0607ba1-ae9a-4e99-99ce-a097b6489b06#);
+    super.Constructor("Data Curation and Analysis");
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1381,7 +1384,7 @@ class DataCurationClass: ContentClass {
     };
 
     style.BodyPar {
-      "Word-forms from the "; MainResults.Data.Taxa.Length; " languages in our study, coded in standard unicode IPA, are organized into classes by concept and then by cognate class. ";
+      "Word-forms from the "; MainResults.Data.Taxa.Length; " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
       "For example, the concept "; style.SQuote{TextCase: TextCases.AllLower; example.Name}; " is coded in the following way:";
     };
 
@@ -1389,7 +1392,7 @@ class DataCurationClass: ContentClass {
 
     style.BodyPar {
       "The dashes ("; style.SQuote{"-"}; ") denote the absence of a homologous segment present in other word-forms. ";
-      "A challenge for programming in linguistics is that the IPA representation of words are expressed in Unicode (UCS), not ASCII or ANSI. ";
+      "A challenge for programming in linguistics is that the IPA representation of words is expressed in Unicode (UCS), not ASCII or ANSI. ";
       "This requires care with file formats, text encodings and diacritic compositional form. ";
       "Furthermore, each IPA segment string can comprise several UCS code-points, so that the mapping between string characters and segments is not one-to-one. ";
       "Below is an example of a more complex encoding. The numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
@@ -1401,7 +1404,7 @@ class DataCurationClass: ContentClass {
     };
 
     style.BodyPar {
-      "Since our analysis requires each word to be seperated into segments, a parser converts word strings into arrays of segment objects that facilitate the manipulation of segments at a high level. ";
+      "Since our analysis requires each word to be separated into segments, a parser converts word strings into arrays of segment objects that facilitate the manipulation of segments at a high level. ";
       "A reusable library of such objects endows each segment with linguistic features that can be used for analysis. ";
       "After the input step, all steps are coded using properties such as "; style.SQuote{"vowel"}; " and "; style.SQuote{"nasal"}; ", rather than working with strings of characters directly.";
     };
@@ -1422,7 +1425,7 @@ readonly AcknowledgementsClass PaperSections.Acknowledgements = new;
 
 class AcknowledgementsClass: ContentClass {
   Constructor {
-    super.Constructor("Acknowledgements", #9d42ac04-b028-4b2a-a157-3342de5cb140#);
+    super.Constructor("Acknowledgements");
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1438,7 +1441,7 @@ readonly ContributionsClass PaperSections.Contributions = new;
 
 class ContributionsClass: ContentClass {
   Constructor {
-    super.Constructor("Author contributions statement", #89b939a0-6bdc-466b-960b-1987cd6c3d66#);
+    super.Constructor("Author contributions statement");
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1462,7 +1465,7 @@ class MethodsClass: ContentClass {
   const StateCount = 5;
 
   Constructor {
-    super.Constructor(Lang.Methods, #f9c0c632-3968-4d60-87b6-e172347bd95b#);
+    super.Constructor(Lang.Methods);
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -2036,8 +2039,7 @@ class MethodsClass: ContentClass {
       Paragraph {
         "Calculate the probability of accepting the proposed value:";
         LineBreak;
-        Tab;
-        ProbOfAcceptingProposal;
+        Frame {LeftIndent: 48 pts; ProbOfAcceptingProposal};
         LineBreak;
         "In words, the acceptance probability is the product of the likelihood, prior, and proposal ratios.";
       };
@@ -2206,7 +2208,7 @@ readonly ConclusionClass PaperSections.Conclusion = new;
 
 class ConclusionClass: ContentClass {
   Constructor {
-    super.Constructor("The Rate Matrix in this model of Linguistics", #4ecca923-c1a1-4708-85e9-8b0cd04ada4b#);
+    super.Constructor("The Rate Matrix in this model of Linguistics");
   }
 
   override GetBody(ContentStyleClass style) = Block {

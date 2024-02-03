@@ -2,61 +2,54 @@ using Format, Units, LinkTypes;
 
 //======================================================================
 
-abstract class BasePaperClass: WhitePaperClass {
+abstract class LinguisticsPaperClass: WhitePaperClass {
   Constructor(guid id, name) {
     super.Constructor(id, name, MainContentStyle);
-    AddAuthor(People.DMGoldstein, true);
-    AddAuthor(People.SHMcCreight, true);
-    AddAuthor(People.EBuchi, false);
-    AddAuthor(People.JPHuelsenbeck, true);
+
+    NoteMarkClass[] note = [new("†", "These authors contributed equally to this work")];
+    AddAuthor(People.DMGoldstein, note);
+    AddAuthor(People.SHMcCreight, note);
+    AddAuthor(People.EBuchi);
+    AddAuthor(People.JPHuelsenbeck, note);
   }
 }
 
 //======================================================================
 
-class PaperDocClass: BasePaperClass {
+class PaperDocClass: LinguisticsPaperClass {
   Constructor {
     super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
     Title = Info.Title;
+
+    AddSection(PaperSections.Abstract);
+    AddSection(PaperSections.Introduction);
+    AddSection(new PaperSectionClass(Lang.Results));
+    AddSection(PaperSections.WordTransformation);
+    AddSection(PaperSections.WordSegmentRelationships);
+    AddSection(PaperSections.Discussion);
+    AddSection(PaperSections.MethodsSummary);
+    AddSection(PaperSections.DataSummary);
+    AddSection(PaperSections.ModelInference);
+    AddSection(PaperSections.DataCuration);
+    AddSection(PaperSections.Acknowledgements);
+    AddSection(PaperSections.Contributions);
   }
-
-  override AddSections = Block {
-    AddContent(PaperSections.Abstract);
-    AddContent(PaperSections.Introduction);
-    Style.Heading1 {
-      Lang.Results
-    };
-
-    AddContent(PaperSections.WordTransformation);
-    AddContent(PaperSections.WordSegmentRelationships);
-    AddContent(PaperSections.Discussion);
-    AddContent(PaperSections.MethodsSummary);
-    AddContent(PaperSections.DataSummary);
-    AddContent(PaperSections.ModelInference);
-    AddContent(PaperSections.DataCuration);
-    AddContent(PaperSections.Acknowledgements);
-    AddContent(PaperSections.Contributions);
-  };
 }
 //======================================================================
 
-class SupplementalViewClass: BasePaperClass {
+class SupplementalViewClass: LinguisticsPaperClass {
   Constructor {
     super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
     SubTitle = Span {"For: "; Style.DQuote {Info.Title}};
 
-    Appendices = [
-      Figures.PartitionAssignments,
-      Figures.ExperimentalRuns,
-      Figures.Alignments,
-      new AllAlignmentsClass(),
-    ];
-  }
+    AddSection(PaperSections.Methods);
+    AddSection(PaperSections.Conclusion);
 
-  override AddSections = Block {
-    AddContent(PaperSections.Methods);
-    AddContent(PaperSections.Conclusion);
-  };
+    AddAppendix(Figures.PartitionAssignments);
+    AddAppendix(Figures.ExperimentalRuns);
+    AddAppendix(Figures.Alignments);
+    AddAppendix(new AllAlignmentsClass());
+  }
 }
 
 //======================================================================
