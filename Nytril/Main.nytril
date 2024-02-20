@@ -1,6 +1,7 @@
 using Format, Units, IO, WordGroups;
 
 include "Lang";
+include "Site";
 include "Languages";
 include "Library";
 include "LanguageTree";
@@ -30,10 +31,56 @@ readonly ContentStyleClass MainContentStyle = new APAContentClass(new NatureStyl
 readonly ResultsClass MainResults = new(new DataSetClass(null, "Europe3", "Europe3", Info.RunIndex));
 
 readonly namespace Main.Documents {
+  HomePageClass          HomePage          = new;
   PaperDocClass          Paper             = new;
   SupplementalViewClass  Supplemental      = new;
   DavidPresentationClass DavidPresentation = new;
   JohnPresentationClass  JohnPresentation  = new;
 }
+
+//===============================================================
+
+readonly SiteClass Main.Site = new("Linguistomics");
+
+//===============================================================
+
+class ViewTileClass: DocTileClass {
+  Constructor(DocumentClass document, icon) {
+    super.Constructor(document, icon);
+  }
+
+  override GetTileBox = super.GetTileBox {
+    BorderRadius: 5 pts;
+  };
+}
+
+//===============================================================
+
+class HomePageClass: SitePageClass {
+  Constructor {
+    super.Constructor(Main.Site, #29f0a41f-f0f2-4830-bcaa-70418aa20157#, "Home", "Linguistics Research Project");
+
+    Tiles = [
+      new ViewTileClass(Main.Documents.Paper, Icons.article),
+      new ViewTileClass(Main.Documents.Supplemental, Icons.add_circle),
+      new ViewTileClass(Main.Documents.DavidPresentation, Icons.slideshow),
+      new ViewTileClass(Main.Documents.JohnPresentation, Icons.slideshow),
+    ];
+  }
+
+  override GetHeader = Block {
+    Paragraph {
+      TextHeight: 20 pts;
+      SpaceAfter: 20 pts;
+      Info.Title;
+    };
+
+    MainContentStyle.ShowAuthorList(Main.Documents.Paper.Authors.Values);
+    Paragraph {
+      SpaceAfter: 20 pts;
+    };
+  };
+}
+
 //======================================================================
 

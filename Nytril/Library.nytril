@@ -539,7 +539,7 @@ class ConceptClass: FactClass {
 
   override GetLayoutTip = Span {Name; "-"; Confidence};
 
-  override int Compare(c, CompareOptions options) {
+  override int Compare(c) {
     return Name.Compare(c.Name);
   }
 }
@@ -572,10 +572,10 @@ class CognateClass: FactClass {
     Action: new ActionClass(Actions.ToSource, Variable);
   };
 
-  override int Compare(c, CompareOptions options) {
-    var i = Concept.Compare(c.Concept, options);
+  override int Compare(c) {
+    var i = Concept.Compare(c.Concept);
     if (i == 0)
-      return Name.Compare(c.Name, options);
+      return Name.Compare(c.Name);
     return i;
   }
 }
@@ -1176,7 +1176,7 @@ class ResultsClass {
     Alignments = alist.Values.Sort(false, ref CompareAlignment);
   }
 
-  static CompareAlignment(AlignIndexClass a0, AlignIndexClass a1, options) {
+  static int CompareAlignment(AlignIndexClass a0, AlignIndexClass a1) {
     var c = a0.Alignments.Length.Compare(a1.Alignments.Length);
     if (c == 0)
       return a0.ConceptName.Compare(a1.ConceptName);
@@ -1697,7 +1697,7 @@ class DiagonalClass {
     Diagonal = list.Sort(true, ref CompareData);
   }
 
-  CompareData(SegDataClass d0, SegDataClass d1, options) = d0.Value.Compare(d1.Value);
+  static int CompareData(SegDataClass d0, SegDataClass d1) = d0.Value.Compare(d1.Value);
 
   Display = VBox {
     HAlign: HAligns.Center;
@@ -1829,16 +1829,14 @@ abstract class FrequencyChartClass {
     Rates      = new RateDataClass(count, each Taxa);
   }
 
-  CompareFrequency(i0, i1, options) {
+  int CompareFrequency(i0, i1) {
     var f0 = FirstRate[i0];
     var f1 = FirstRate[i1];
     var d  = f0.Frequency.Compare(f1.Frequency);
-    if (d == 0)
-      return f0.Index - f1.Index;
-    return d;
+    return d == 0 ? f0.Index - f1.Index : d;
   }
 
-  static CompareDistance(RateDataClass r0, RateDataClass r1, options) {
+  static int CompareDistance(RateDataClass r0, RateDataClass r1) {
     return r0.Distance.Compare(r1.Distance);
   }
 
@@ -1923,7 +1921,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     ComputeDistance(group ? ref CompareGroups : ref CompareFrequency);
   }
 
-  CompareGroups(i0, i1, options) {
+  int CompareGroups(i0, i1) {
     var f0 = FirstRate[i0];
     var f1 = FirstRate[i1];
     var d  = PartitionMax[Segments[f0.Index].PartitionIndex] - PartitionMax[Segments[f1.Index].PartitionIndex];
