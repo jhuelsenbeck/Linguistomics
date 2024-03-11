@@ -339,14 +339,16 @@ class AlignmentChartClass {
 class LanguageClass: FactClass {
   field string   Name;
   field int      Cases;
+  var string     ShortName;
   var int        LangIndex;
   var ImageClass Image;
   var            ImagePath;
 
   Constructor(id, name, cases=0) {
     super.Constructor(id);
-    Name  = name;
-    Cases = cases;
+    Name      = name;
+    ShortName = name.Replace(" ", Empty);
+    Cases     = cases;
   }
 
   override IconClass GetIcon = Icons.language;
@@ -513,22 +515,25 @@ class WordClass: FactClass {
 //======================================================================
 
 class ConceptClass: FactClass {
-  field string   Name;
-  field double   Confidence;
-  var            Variable;
-  var WordTypes  WordType;
-  var WordGroups WordGroup;
+  field string       Name;
+  field double       Confidence;
+  var AttributeClass Attribute;
+  var                Variable;
+  var WordTypes      WordType;
+  var WordGroups     WordGroup;
 
-  Constructor(variable) {
-    super.Constructor(guid.FromHash(variable.GetVariable.FullName));
-    Variable = variable;
-    Name     = variable.GetVariable.Name;
+  Constructor(AttributeClass a) {
+    super.Constructor(guid.FromHash(a.FullName));
+    Attribute = a;
+    Variable  = a.Value;
+    Name      = a.Name;
   }
 
   void Check {
-    Confidence = Variable.Confidence;
-    WordType   = Variable.WordType;
-    WordGroup  = Variable.WordGroup;
+    var v = Attribute.Value;
+    Confidence = v.Confidence;
+    WordType   = v.WordType;
+    WordGroup  = v.WordGroup;
 
     System.Assert(Confidence > 0);
     System.Assert(WordType != WordTypes.None);
@@ -546,17 +551,17 @@ class ConceptClass: FactClass {
 //======================================================================
 
 class CognateClass: FactClass {
-  field string     Name;
-  var ConceptClass Concept;
-  var WordClass[]  Words;
-  var              MaxLength,
-                   Variable;
+  field string       Name;
+  var ConceptClass   Concept;
+  var WordClass[]    Words;
+  var                MaxLength;
+  var AttributeClass Attribute;
 
-  Constructor(ConceptClass concept, variable) {
-    super.Constructor(guid.FromHash(variable.GetVariable.FullName));
+  Constructor(ConceptClass concept, AttributeClass a) {
+    super.Constructor(guid.FromHash(a.FullName));
 
-    Name      = variable.GetVariable.Name;
-    Variable  = variable;
+    Name      = a.Name;
+    Attribute = a;
     Concept   = concept;
     MaxLength = 0;
 
@@ -569,7 +574,7 @@ class CognateClass: FactClass {
 
   GetTitle = Span {
     Concept.Name; '-'; Name;
-    Action: new ActionClass(Actions.ToSource, Variable);
+    Action: new ActionClass(Actions.ToSource, Attribute);
   };
 
   override int Compare(c) {
@@ -582,7 +587,7 @@ class CognateClass: FactClass {
 //======================================================================
 
 class TaxonClass {
-  var               Variable,
+  var               ShortName,
                     Index,
                     WordCount,
                     SegmentCount;
@@ -591,14 +596,14 @@ class TaxonClass {
   Constructor(LanguageClass language) {
     Index        = each0;
     Language     = language;
-    Variable     = language.GetVariable.Name;
+    ShortName    = language.ShortName;
     WordCount    = 0;
     SegmentCount = 0
   }
 
   override GetLayoutTip = Span {
     PaperStyle.TaxonFormat;
-    Variable;
+    Language.Name;
     TipAction: Language;
   };
 }
@@ -621,8 +626,8 @@ class WordPairClass {
       ParBackground: 90%;
       Bold;
       Span {
-        Word1.Cognate.Variable.GetVariable.FullName[9..];
-        Action: new ActionClass(Actions.ToSource, Word1.Cognate.Variable);
+        Word1.Cognate.Attribute.FullName[9..];
+        Action: new ActionClass(Actions.ToSource, Word1.Cognate.Attribute);
       }
     };
 
@@ -651,16 +656,16 @@ class DataSetClass {
                                   TextBuffer;
   var ListClass<SegPartClass>     SegmentBuffer;
   var RunExperimentClass          MainRun;
+  var AttributeClass              ExampleConcept,
+                                  FigureConcept,
+                                  DataConcept;
   var                             WordCutoff,
                                   RootFolder,
                                   Name,
                                   MaxLanguageName,
                                   WordCount,
                                   SegmentCount,
-                                  ExampleConcept,
-                                  FigureConcept,
-                                  WordFile,
-                                  DataConcept;
+                                  WordFile;
 
   Constructor(config, name, rootfolder, runindex) {
     Name            = name;
@@ -682,7 +687,7 @@ class DataSetClass {
 
   TreeSetClass AddTree(config, NodeClass root) = new(config, "Tree"+each1, RootFolder, root, Rule);
 
-  void ReadRawWords(concepts, includewords, LanguageClass[] languageset, cutoff=-1) {
+  void ReadRawWords(AttributeClass concepts, includewords, LanguageClass[] languageset, cutoff=-1) {
     if (cutoff < 0)
       cutoff = languageset.Length;
     WordCutoff = cutoff;
@@ -692,40 +697,32 @@ class DataSetClass {
     var cognatelist = new ListClass<CognateClass>(1024);
     var conceptlist = new ListClass<ConceptClass>(256);
 
-    foreach (var conceptvar in concepts) {
-      var good = exists conceptvar.?Confidence and
-                 exists conceptvar.?WordType and
-                 exists conceptvar.?WordGroup;
+    foreach (var cvar in concepts.Children) {
+      var conceptvar = cvar.Value;
+      var good       = exists conceptvar.?Confidence and
+                       exists conceptvar.?WordType and
+                       exists conceptvar.?WordGroup;
       System.Assert(good, "Improper concept", conceptvar);
 
       if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(includewords)) {
-        foreach (var cognate in conceptvar) {
-          var vname = cognate.GetVariable.Name;
-          var inc   = true;
-
-          switch (vname) {
-            case "Confidence":
-            case "WordType":
-            case "WordGroup":
-              inc = false;
-              break;
-          }
-
-          if (inc) {
+        foreach (var cc in cvar.Children) {
+          var vname = cc.Name;
+          if (vname != "Confidence" && vname != "WordType" && vname != "WordGroup") {
             var count = 0;
-            foreach (var word in cognate) {
+            foreach (var wc in cc.Children) {
+              var word = wc.Value;
               if (word is valid) {
-                var taxon = TaxonSet.FindKey(word.GetVariable.Name);
+                var taxon = TaxonSet.FindKey(wc.Name);
                 if (taxon is valid)
                   ++count;
               }
             }
 
             if (count >= cutoff) {
-              var concept = new ConceptClass(conceptvar);
+              var concept = new ConceptClass(cvar);
               concept.Check;
               conceptlist.Add(concept);
-              cognatelist.Add(new(concept, cognate));
+              cognatelist.Add(new(concept, cvar));
             }
           }
         }
@@ -783,15 +780,15 @@ class DataSetClass {
 
     UniqueSegments = slist.Values;
 
-    var concepts    = run.Concepts;
+    var concepts    = attribute(run.Concepts);
     var conceptlist = new ListClass<ConceptClass>(concepts.Length);
     var cognatelist = new ListClass<CognateClass>(concepts.Length * 2);
 
-    foreach (var conceptvar in concepts) {
-      var concept = new ConceptClass(conceptvar);
+    foreach (var cvar in concepts.Children) {
+      var concept = new ConceptClass(cvar);
       conceptlist.Add(concept);
 
-      foreach (var cognatevar in conceptvar) {
+      foreach (var cognatevar in cvar.Children) {
         var cognate = new CognateClass(concept, cognatevar);
         cognatelist.Add(cognate);
         ComputeExperimentCognate(concept, cognate, cognatevar);
@@ -805,7 +802,7 @@ class DataSetClass {
     CompletedRead;
   }
 
-  void AddLanguageSet(languageset) {
+  void AddLanguageSet(LanguageClass[] languageset) {
     LanguageSet = languageset;
     TaxonSet    = new(LanguageSet.Length);
 
@@ -815,10 +812,11 @@ class DataSetClass {
       l.LangIndex = each0;
 
       var taxon = new TaxonClass(l);
+      var name  = l.ShortName;
       tlist.Add(taxon);
-      TaxonSet.Add(taxon, taxon.Variable);
-      if (taxon.Variable.Length > MaxLanguageName)
-        MaxLanguageName = taxon.Variable.Length;
+      TaxonSet.Add(taxon, name);
+      if (name.Length > MaxLanguageName)
+        MaxLanguageName = name.Length;
     }
     Taxa     = tlist.Values;
     WordList = new(Taxa.Length, null);
@@ -826,10 +824,10 @@ class DataSetClass {
     DefWord.Init;
   }
 
-  virtual void GetConceptExamples(concepts) {
-    ExampleConcept = concepts.Stone;
-    FigureConcept  = concepts.What;
-    DataConcept    = concepts.Mountain;
+  virtual void GetConceptExamples(AttributeClass concepts) {
+    ExampleConcept = concepts.FindChild("Stone");
+    FigureConcept  = concepts.FindChild("What");
+    DataConcept    = concepts.FindChild("Mountain");
   }
 
   void CompletedRead {
@@ -874,29 +872,32 @@ class DataSetClass {
     return SortedCognates;
   }
 
-  CognateClass GetCognate(concept) = UsedCognates.FindFirst(c => c.Concept.Variable == concept);
+  CognateClass GetCognate(AttributeClass concept) = UsedCognates.FindFirst(c => c.Concept.Name == concept.Name);
 
   LangNumber(LanguageClass language) = WorldLanguages.FindFirstIndex(language)+1;
 
   void ComputeRawCognate(SegPartDictionary lookup, CognateClass cognate) {
     WordList.SetAllValues(DefWord);
     var maxlength = 0;
-    foreach (var text in cognate.Variable) {
-      var taxon = TaxonSet.FindKey(text.GetVariable.Name);
-      if (taxon is valid) {
-        var word = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.Variable, text, taxon, cognate);
-        word.InitRaw(text, lookup);
-        maxlength = Math.Max(maxlength, word.Aligned.Length);
+    foreach (var cvar in cognate.Attribute.Children) {
+      foreach (var tvar in cvar.Children) {
+        var text  = tvar.Value;
+        var taxon = TaxonSet.FindKey(tvar.Name);
+        if (taxon is valid) {
+          var word = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.ShortName, text, taxon, cognate);
+          word.InitRaw(text, lookup);
+          maxlength = Math.Max(maxlength, word.Aligned.Length);
 
-        int count = 0;
-        foreach (var s in word.Segments) {
-          if (s.Index >= 0)
-            ++count;
+          int count = 0;
+          foreach (var s in word.Segments) {
+            if (s.Index >= 0)
+              ++count;
+          }
+
+          SegmentCount       += count;
+          taxon.SegmentCount += count;
+          WordList.SetValue(taxon.Index, word);
         }
-
-        SegmentCount       += count;
-        taxon.SegmentCount += count;
-        WordList.SetValue(taxon.Index, word);
       }
     }
 
@@ -926,17 +927,15 @@ class DataSetClass {
             ++gapcount;
         }
       }
-      System.Assert(gapcount < count, "Column with all gaps", cognate.Variable);
+      System.Assert(gapcount < count, "Column with all gaps", cognate.Attribute);
     }
   }
 
-  void ComputeExperimentCognate(ConceptClass concept, CognateClass cognate, cognatevar) {
+  void ComputeExperimentCognate(ConceptClass concept, CognateClass cognate, AttributeClass cognatevar) {
     WordList.SetAllValues(DefWord);
 
     var maxlength = 0;
-
-
-    foreach (var word in cognatevar) {
+    foreach (var word in cognatevar.Value) {
       if (word is valid) {
         var taxon = Taxa[each0];
         if (taxon is valid) {
@@ -972,7 +971,7 @@ class DataSetClass {
 
 
           var text = TextBuffer.Values;
-          var w    = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.Variable, text, taxon, cognate);
+          var w    = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.ShortName, text, taxon, cognate);
           w.InitExperiment(word, PlainBuffer.Values, SegmentBuffer.Values);
           if (w.Aligned.Length > maxlength)
             maxlength = w.Aligned.Length;
@@ -1323,8 +1322,8 @@ class PriorCountClass: CountBaseClass {
       Y: y;
       HAlign: HAligns.Center;
       VAlign: VAligns.Center;
-      if (not System.IsPublishing)
-        TipAction: new TranActionClass(value.Values, value.Length*Factor);
+      TipNoPublish: true;
+      TipAction: new TranActionClass(value.Values, value.Length*Factor);
 
       var count = 0;
       foreach (var e in value) {
@@ -1418,8 +1417,8 @@ class AlignedCountClass: CountBaseClass {
         Y: y;
         HAlign: HAligns.Center;
         VAlign: VAligns.Center;
-        if (not System.IsPublishing)
-          TipAction: rate;
+        TipNoPublish: true;
+        TipAction: rate;
         var c = rate.RateColor;
         Span {
           TextDigits: 0;
@@ -1486,6 +1485,7 @@ class AlignedCountClass: CountBaseClass {
     Chart(100%, ExtentHeight - 48 pts) {
       Type: ChartTypes.Scatter;
       TextHeight: 12 pts;
+      TipNoPublish: true;
 
       ValueLabel: HBox {
         Transform: TransformClass.Rotate(90 degrees);
@@ -1539,6 +1539,7 @@ class AlignedCountClass: CountBaseClass {
 
   ShowRateDirected = VBox {
     Chart(100%, ExtentHeight - 48 pts) {
+      TipNoPublish: true;
       Type: ChartTypes.Scatter;
       TextHeight: 12 pts;
 
@@ -1585,6 +1586,7 @@ class AlignedCountClass: CountBaseClass {
 
   ShowDirection = VBox {
     Chart(100%, ExtentHeight - 48 pts) {
+      TipNoPublish: true;
       Type: ChartTypes.Scatter;
       TextHeight: 12 pts;
 
