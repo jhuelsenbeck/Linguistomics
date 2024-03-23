@@ -2,9 +2,22 @@ using DB, Format, Units, Math, IO;
 
 //======================================================================
 
-Main.Documents = [
-  new DocumentVarClass(#90cf49d6bdc4c94aa0ea64db780293a8#, "Histogram", ref Watch)
-];
+Main.Documents = new HistogramDocClass;
+
+//======================================================================
+
+class HistogramDocClass: DocumentClass {
+  Constructor {
+    super.Constructor(#90cf49d6bdc4c94aa0ea64db780293a8#, "Histogram"); 
+  }
+
+  override GetDocument = Document {
+    var schema = new LogSchemaClass();
+    var view  = schema.Read(Folders.Source Folder("output") FileName("gamma.log"), FileFormats.Text);
+    schema.GetAlphaTable(view);
+    schema.GetAlphaChart(view);
+  };
+}
 
 //======================================================================
 
@@ -61,11 +74,5 @@ class LogSchemaClass: SchemaClass {
   };
 }
 
-Watch = Document {
-  var schema = new LogSchemaClass();
-  var view  = schema.Read(Folders.Source Folder("output") FileName("gamma.log"), FileFormats.Text);
-  schema.GetAlphaTable(view);
-  schema.GetAlphaChart(view);
-};
-
+//======================================================================
 

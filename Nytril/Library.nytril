@@ -1172,7 +1172,7 @@ class ResultsClass {
         }
       }
     }
-    Alignments = alist.Values.Sort(false, ref CompareAlignment);
+    Alignments = alist.Values.Sort(false, @CompareAlignment);
   }
 
   static int CompareAlignment(AlignIndexClass a0, AlignIndexClass a1) {
@@ -1402,8 +1402,8 @@ class AlignedCountClass: CountBaseClass {
     DiagFactor      = 1.0 / Math.Abs(Math.Max(dmin, dmax));
     RateFactor      = 1.0 / Math.Abs(Math.Max(min, max));
     DirFactor       = 1.0 / Math.Abs(max - min);
-    SortedRates     = RateList.Sort(RateClass.SortDescending, ref RateClass.CompareRate);
-    SortByDirection = RateList.Sort(RateClass.SortDescending, ref RateClass.CompareDirection);
+    SortedRates     = RateList.Sort(RateClass.SortDescending, @RateClass.CompareRate);
+    SortByDirection = RateList.Sort(RateClass.SortDescending, @RateClass.CompareDirection);
   }
 
   override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
@@ -1696,7 +1696,7 @@ class DiagonalClass {
       if (r is not null)
         list.Add(new(r));
     }
-    Diagonal = list.Sort(true, ref CompareData);
+    Diagonal = list.Sort(true, @CompareData);
   }
 
   static int CompareData(SegDataClass d0, SegDataClass d1) = d0.Value.Compare(d1.Value);
@@ -1878,7 +1878,7 @@ abstract class FrequencyChartClass {
     FirstRate   = r0.Frequency;
     var a = 0 ..< RateCount step 1;
     SortedIndexes = a.Sort(true, sortfunction);
-    SortedRates   = Rates.Sort(false, ref CompareDistance);
+    SortedRates   = Rates.Sort(false, @CompareDistance);
   }
 
   abstract SegmentBar(RateDataClass rate, index, width, height);
@@ -1920,7 +1920,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
       }
     }
 
-    ComputeDistance(group ? ref CompareGroups : ref CompareFrequency);
+    ComputeDistance(group ? @CompareGroups : @CompareFrequency);
   }
 
   int CompareGroups(i0, i1) {
@@ -2046,7 +2046,7 @@ class PartitionFrequencyClass: FrequencyChartClass {
       }
     }
 
-    ComputeDistance(ref CompareFrequency);
+    ComputeDistance(@CompareFrequency);
   }
 
   override SegmentBar(RateDataClass rate, index, width, height) {
