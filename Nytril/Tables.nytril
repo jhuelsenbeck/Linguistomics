@@ -162,7 +162,7 @@ readonly namespace DisplayWords {
 
   ShowLanguage(DataSetClass data, TaxonClass taxon) = Block {
     PaperStyle.TitleBar {taxon.Language};
-    Table(0.5, null, [new(ColumnClass.Fit(2.1 inches), null, PadLR(5)), new(ColumnClass.Fit(1 inches), null, PadR(5)), ColumnClass.Expand]) {
+    Table(0.5, null, [new(ColumnClass.Fit(2.1 inches), null, PadLR(10)), new(ColumnClass.Fit(1.5 inches), null, PadR(10)), ColumnClass.Expand]) {
       Row {
         HeaderCell(Lang.Cognate);
         HeaderCell(Lang.IPA);
@@ -323,15 +323,15 @@ class TabOptionsClass {
       SegmentBlock(set, all.FindSlice(s => s.Segment.?Place == place and CheckFlags(s.Features, features)));
   };
 
-  MatchInclude(SegPartClass segment, Places place) {
+  bool MatchInclude(SegPartClass segment, Places place) {
     return segment.Segment.?Place == place and
            segment.Features.NotFlag(Exclude) and
            segment.Features.HasFlag(Include) and
-           Manners.FindAny(manner => CheckFlags(segment.Features, manner | All));
+           Manners.FindFirstIndex(manner => CheckFlags(segment.Features, manner | All)) >= 0;
   }
 
   MatchPlace(DataSetClass data, place) {
-    return data.UniqueSegments.FindAny(segment => MatchInclude(segment, place));
+    return data.UniqueSegments.FindFirstIndex(segment => MatchInclude(segment, place));
   }
 
   ShowTable(DataSetClass data, SegmentSetClass set) = Block {
@@ -647,7 +647,7 @@ class SegmentDisplayClass {
           Separator: Space*2;
           foreach (var cognate in Data.GetSortedCognates) {
             foreach (var word in cognate.Words) {
-              if (word.Segments.FindAny(segment)) {
+              if (word.Segments.FindElementIndex(segment) >= 0) {
                 Span {
                   TipAction: word;
                   word.ShowPlain;
@@ -676,7 +676,7 @@ abstract class DataContentClass: ContentClass {
 
 class SegmentAssignmentsClass: DataContentClass {
   Constructor(DataSetClass data) {
-    super.Constructor(data, Lang.UniqueSegments);
+    super.Constructor(data, "Segment Assignments");
   }
 
   override GetBody(ContentStyleClass style) = Block {

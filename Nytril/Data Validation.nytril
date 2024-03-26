@@ -43,9 +43,10 @@ class DiagnosticsViewClass: DocumentClass {
 
   Constructor(DataSetClass data) {
     super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
-    Data       = data;
-    Display    = new(data);
-    SearchData = new;
+    Description = "Summary of the data used in the experiment with diagnostic views";
+    Data        = data;
+    Display     = new(data);
+    SearchData  = new;
   }
 
   ShowSegmentTables = Block {
@@ -81,25 +82,30 @@ class DiagnosticsViewClass: DocumentClass {
   override GetDocument = Document(new(new(0.5 inches, 0.75 inches, 0.5 inches, 0.5 inches))) {
     var style = MainContentStyle;
 
-    ShowQuery;
+//    ShowQuery;
 
     TextHeight: 9 pts;
 
     ContentClass[] content = [
-      new CognateCoverageClass(Data),
       new PriorTreeClass(Data),
+      new AppendixClass(Lang.UniqueSegments, Display.IPASegmentTable),
       new SegmentAssignmentsClass(Data),
-      new SegmentTransitionClass,
-      new ConceptGroupsClass(Data),
+      new SegmentTransitionClass(Data),
       new AppendixClass("Words containing each segment", Display.ShowWordsForEachSegment),
       new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),
       new AppendixClass("Segment Groups", ShowSegmentTables),
-      new AppendixClass(Lang.IPAFullName, Display.IPASegmentTable),
-      new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
-      new AppendixClass(Lang.Languages, Display.ShowLanguageDetails(style)),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(10 pts, Data)),
+      new AppendixClass(Lang.Languages, Display.ShowLanguageDetails(style)),
 //      new("Euler Feature Diagram", new EulerDiagramClass().FeatureChart(Data)),
     ];
+
+    if (Data.RawData) {
+      content += [
+        new AppendixClass(Lang.Diacritics, MatchingDiacritics.ShowTable),
+        new CognateCoverageClass(Data),
+        new ConceptGroupsClass(Data)
+      ];
+    }
 
     foreach (var c in content) {
       style.Heading1 {
@@ -402,6 +408,23 @@ class WordViewClass: DocumentClass {
       "}";
     };
   };
+}
+
+//======================================================================
+
+class SegmentTransitionClass: ContentClass {
+  var DataSetClass Data;
+
+  Constructor(DataSetClass data) {
+    super.Constructor("Prior Segment Transition Counts");
+    Data = data;
+  }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled red box. The chart has diagonal symmetry.";
+  };
+
+  override GetBody(ContentStyleClass style) = new PriorCountClass(Data).PartitionBox(new (ExtentWidth, ExtentHeight - 1.6 inch));
 }
 
 //======================================================================

@@ -529,7 +529,7 @@ class ConceptClass: FactClass {
     Name      = a.Name;
   }
 
-  void Check {
+  void CheckRaw {
     var v = Attribute.Value;
     Confidence = v.Confidence;
     WordType   = v.WordType;
@@ -666,6 +666,7 @@ class DataSetClass {
                                   WordCount,
                                   SegmentCount,
                                   WordFile;
+  var bool                        RawData;
 
   Constructor(config, name, rootfolder, runindex) {
     Name            = name;
@@ -688,6 +689,8 @@ class DataSetClass {
   TreeSetClass AddTree(config, NodeClass root) = new(config, "Tree"+each1, RootFolder, root, Rule);
 
   void ReadRawWords(AttributeClass concepts, includewords, LanguageClass[] languageset, cutoff=-1) {
+    RawData = true;
+
     if (cutoff < 0)
       cutoff = languageset.Length;
     WordCutoff = cutoff;
@@ -720,7 +723,7 @@ class DataSetClass {
 
             if (count >= cutoff) {
               var concept = new ConceptClass(cvar);
-              concept.Check;
+              concept.CheckRaw;
               conceptlist.Add(concept);
               cognatelist.Add(new(concept, cvar));
             }
@@ -874,8 +877,6 @@ class DataSetClass {
 
   CognateClass GetCognate(AttributeClass concept) = UsedCognates.FindFirst(c => c.Concept.Name == concept.Name);
 
-  LangNumber(LanguageClass language) = WorldLanguages.FindFirstIndex(language)+1;
-
   void ComputeRawCognate(SegPartDictionary lookup, CognateClass cognate) {
     WordList.SetAllValues(DefWord);
     var maxlength = 0;
@@ -970,7 +971,7 @@ class DataSetClass {
           taxon.SegmentCount += count;
 
 
-          var text = TextBuffer.Values;
+          var text = Span {TextBuffer.Values} as string;
           var w    = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.ShortName, text, taxon, cognate);
           w.InitExperiment(word, PlainBuffer.Values, SegmentBuffer.Values);
           if (w.Aligned.Length > maxlength)
@@ -994,7 +995,7 @@ class DataSetClass {
       Separator: Space;
       foreach (var cognate in UsedCognates) {
         foreach (var word in cognate.Words) {
-          if (word.Segments.FindAny(segment))
+          if (word.Segments.FindElementIndex(segment) >= 0)
             word.ShowPlain;
         }
       }

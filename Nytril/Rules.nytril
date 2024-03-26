@@ -76,7 +76,7 @@ class FilterClass {
     Name = name;
   }
 
-  virtual Matches(SegmentClass segment) = true;
+  virtual bool Matches(SegmentClass segment) = true;
 
   override GetLayoutSpan = Span {
     TipAction: this;
@@ -120,7 +120,7 @@ abstract class RuleClass {
     Segments   = segments.Sort(true, @ComparePartSegments);
   }
 
-  MatchesRule(FilterClass filter, SegmentClass segment) {
+  bool MatchesRule(FilterClass filter, SegmentClass segment) {
     foreach (var f in FiltersPlus) {
       if (f == filter)
         return f.Matches(segment);
@@ -130,7 +130,7 @@ abstract class RuleClass {
     return false;
   }
 
-  virtual GetFilterIndex(SegmentClass segment) {
+  virtual int GetFilterIndex(SegmentClass segment) {
     var c = 0;
     foreach (var filter in FiltersPlus) {
       if (MatchesRule(filter, segment))
@@ -271,7 +271,7 @@ class SingleFilterClass: FilterClass {
     Segment = segment;
   }
 
-  override Matches(SegmentClass segment) = segment == Segment;
+  override bool Matches(SegmentClass segment) = segment == Segment;
 }
 //======================================================================
 
@@ -286,7 +286,7 @@ class FeatureMaskClass: FilterClass {
     rule.FilterList.Add(this);
   }
 
-  override Matches(SegmentClass segment) = segment.Features.HasFlagMask(Mask, Flags);
+  override bool Matches(SegmentClass segment) = segment.Features.HasFlagMask(Mask, Flags);
 }
 //======================================================================
 
@@ -298,7 +298,7 @@ class SegmentListClass: FilterClass {
     List = list;
   }
 
-  override Matches(SegmentClass segment) = List.FindAny(segment);
+  override bool Matches(SegmentClass segment) = List.FindElementIndex(segment) >= 0;
 }
 //======================================================================
 
@@ -307,7 +307,7 @@ class VowelListClass: SegmentListClass {
     super.Constructor(rule, list.FirstElement.Ipa, list);
   }
 
-  override Matches(SegmentClass segment) = List.FindAny(segment);
+  override bool Matches(SegmentClass segment) = List.FindElementIndex(segment) >= 0;
 }
 //======================================================================
 
