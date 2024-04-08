@@ -1295,7 +1295,7 @@ class PriorCountClass: CountBaseClass {
               var si = pi[index];
               var sj = pj[index];
               if (si != sj and not si.Punctuation and not sj.Punctuation) {
-                var list = TMatrix.GetValue(si.Index, sj.Index);
+                var list = TMatrix[si.Index, sj.Index];
                 var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
                 if (list is null) {
                   list = new ListClass<WordPairClass>(128);
@@ -1314,7 +1314,7 @@ class PriorCountClass: CountBaseClass {
   }
 
   override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
-    var value = TMatrix.GetValue(si.Index, sj.Index);
+    var value = TMatrix[si.Index, sj.Index];
     if (value is null)
       return null;
 
@@ -1385,7 +1385,7 @@ class AlignedCountClass: CountBaseClass {
     for (var i = 0; i < length; ++i) {
 //      var jmax = symmetric ? i : length;
       for (var j = 0; j < length; ++j) {
-        var r = new RateClass(this, ordered[i], ordered[j], matrix.GetValue(i, j), matrix.GetValue(j, i), symmetric, i == j);
+        var r = new RateClass(this, ordered[i], ordered[j], matrix[i, j], matrix[j, i], symmetric, i == j);
         Matrix.SetValue(i, j, r);
         if (i == j) {
           dmax = Math.Max(dmax, r.Rate);
@@ -1411,7 +1411,7 @@ class AlignedCountClass: CountBaseClass {
     if (si.Index == sj.Index)
       return null;
 
-    var rate = Matrix.GetValue(si.Index, sj.Index);
+    var rate = Matrix[si.Index, sj.Index];
     if (rate is not null) {
       return Canvas(size.Width, size.Height) {
         X: x;
@@ -1518,7 +1518,7 @@ class AlignedCountClass: CountBaseClass {
 
           foreach (var sj in LegendSegments) {
             if (si.Index != sj.Index) {
-              var a = Matrix.GetValue(si.Index, sj.Index);
+              var a = Matrix[si.Index, sj.Index];
               if (a is not null) {
                 new DataPointClass(i, a.Rate) {
                   Reference: a;
@@ -1561,7 +1561,7 @@ class AlignedCountClass: CountBaseClass {
         foreach (var si in LegendSegments) {
           foreach (var sj in LegendSegments) {
             if (si.Index < sj.Index) {
-              var a = Matrix.GetValue(si.Index, sj.Index);
+              var a = Matrix[si.Index, sj.Index];
               new DataPointClass(a.Rate, a.Direction) {
                 Reference: a;
                 Marker: Canvas(4 pts, 4 pts) {
@@ -1693,7 +1693,7 @@ class DiagonalClass {
     var length = m.Cols;
     var list   = new ListClass<SegDataClass>(length);
     for (int i = 0; i < length; ++i) {
-      var r = m.GetValue(i, i);
+      var r = m[i, i];
       if (r is not null)
         list.Add(new(r));
     }

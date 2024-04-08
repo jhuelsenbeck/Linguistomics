@@ -171,9 +171,9 @@ class ExchangeabilityTableClass: ContentClass {
     var partitions = MainResults.Rule.Partitions;
     var dy         = 2 pts;
     var left       = 1 inch;
-    var w          = (ExtentWidth - 1 inch) / stats.Length;
+    var w          = (ExtentWidth - 1 inch) / stats.Rows;
 
-    Table(PadR(4 pts), null, [left] + [w] * stats.Length) {
+    Table(PadR(4 pts), null, [left] + [w] * stats.Rows) {
       HAlign: HAligns.Center;
       TextDigits: 3;
 
@@ -234,6 +234,7 @@ class ExchangeabilityChartClass: ContentClass {
 
     var partitions = MainResults.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
+    var size       = stats.Rows;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
     var dy         = ExtentHeight / (partitions.Length + 1);
@@ -254,7 +255,7 @@ class ExchangeabilityChartClass: ContentClass {
       VBox {
         Canvas(bx, bx);
 
-        foreach (var r in stats) {
+        for (int i = 0; i < size; ++i) {
           var p = partitions[each0];
           HBox(null, dy) {
             Separation: 10 pts;
@@ -274,7 +275,7 @@ class ExchangeabilityChartClass: ContentClass {
         HAlign: HAligns.Left;
 
         HBox {
-          foreach (var r in stats) {
+          for (int i = 0; i < size; ++i) {
             var p = partitions[each0];
             Canvas(d, bx) {
               Background: p.Color;
@@ -360,7 +361,7 @@ class PartitionVolatilityChartClass: ContentClass {
 
       ChartSeries {
         foreach (var i in 0..<stats.Length) {
-          var s = stats[i][i];
+          var s = stats[i, i];
           var p = partitions[i];
           var m = s.Mean * 100.0;
           new DataPointClass(i, m) {
