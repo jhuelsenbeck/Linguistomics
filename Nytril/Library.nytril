@@ -1272,15 +1272,18 @@ abstract class CountBaseClass {
 //======================================================================
 
 class PriorCountClass: CountBaseClass {
-  var MatrixClass TMatrix;
-  var             Factor;
+  typedef WordPairList ListClass<WordPairClass>;
+
+  var MatrixClass<WordPairList> TMatrix;
+  var                           Factor;
 
   Constructor(DataSetClass data) {
     super.Constructor(data);
-    MaxDigits = 4;
 
     var count = data.UniqueSegments.Length;
-    TMatrix = new MatrixClass(count, count, null);
+    TMatrix   = new(count, count, null);
+    MaxDigits = 4;
+
     var tmax = 1;
 
     foreach (var cognate in data.UsedCognates) {
@@ -1298,7 +1301,7 @@ class PriorCountClass: CountBaseClass {
                 var list = TMatrix[si.Index, sj.Index];
                 var p    = new WordPairClass(index, cognate.Words[i], cognate.Words[j]);
                 if (list is null) {
-                  list = new ListClass<WordPairClass>(128);
+                  list = new WordPairList(128);
                   TMatrix.SetValue(si.Index, sj.Index, list);
                 }
                 list.Add(p);
@@ -1862,7 +1865,7 @@ abstract class FrequencyChartClass {
     var r0  = Rates[0];
     foreach (var rate in Rates) {
       if (each0 > 0) {
-        var sum = 0;
+        var sum = 0.0;
         for (var i = 0; i < RateCount; ++i) {
           var delta = rate.Frequency[i].Frequency - r0.Frequency[i].Frequency;
           sum += delta * delta;

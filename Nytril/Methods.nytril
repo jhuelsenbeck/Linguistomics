@@ -27,15 +27,15 @@ class ExperimentalRunsClass: ContentClass {
   }
 
   ShowTrees(ContentStyleClass style, ModelClass model) = Block {
-    var any = false;
+    var anytree = false;
     foreach (var r in model.Run) {
       if (r.ResultTree is not null) {
-        any = true;
+        anytree = true;
         break;
       }
     }
 
-    if (any) {
+    if (anytree) {
       style.FirstPar {
         Lang.Model;
         ColonSpace;
@@ -168,39 +168,41 @@ class ExchangeabilityTableClass: ContentClass {
     TextHeight: th;
 
     var stats      = MainResults.TransitionStats;
+    var count      = stats.Rows;
     var partitions = MainResults.Rule.Partitions;
     var dy         = 2 pts;
     var left       = 1 inch;
-    var w          = (ExtentWidth - 1 inch) / stats.Rows;
+    var w          = (ExtentWidth - 1 inch) / count;
 
-    Table(PadR(4 pts), null, [left] + [w] * stats.Rows) {
+    Table(PadR(4 pts), null, [left] + [w] * count) {
       HAlign: HAligns.Center;
       TextDigits: 3;
 
       Row {
         Empty;
-        foreach (var r in stats) {
+
+        foreach (var p in partitions) {
           Frame(w) {
             ParAlignment: ParAlignments.Center;
             TextHeight: th*0.8;
-            var p = partitions[each0];
             TextColor: p.Color;
             p.Name.Split(Space);
           };
         }
       };
 
-      foreach (var r in stats) {
+      for (int i = 0; i < count; ++i) {
         Row {
           VAlign: VAligns.Center;
           Frame(w) {
             ParAlignment: ParAlignments.Right;
-            var p = partitions[each0];
+            var p = partitions[i];
             TextColor: p.Color;
             p;
           };
 
-          foreach (var c in r) {
+          for (int j = 0; j < count; ++j) {
+            var c = stats[i, j];
             if (c is valid)
               c.ShowBox {Margin: PadT(dy)};
             else
@@ -234,15 +236,16 @@ class ExchangeabilityChartClass: ContentClass {
 
     var partitions = MainResults.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
-    var size       = stats.Rows;
+    var count      = stats.Rows;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
     var dy         = ExtentHeight / (partitions.Length + 1);
     var d          = Math.Min(dy, (ExtentWidth  - tx) / partitions.Length);
 
     var max = 0.0;
-    foreach (var r in stats) {
-      foreach (var c in r) {
+    for (int i = 0; i < count; ++i) {
+      for (int j = 0; j < count; ++j) {
+        var c = stats[i, j];
         if (c is valid and c.Upper > max)
           max = c.Upper;
       }
@@ -255,8 +258,7 @@ class ExchangeabilityChartClass: ContentClass {
       VBox {
         Canvas(bx, bx);
 
-        for (int i = 0; i < size; ++i) {
-          var p = partitions[each0];
+        foreach (var p in partitions) {
           HBox(null, dy) {
             Separation: 10 pts;
             VAlign: VAligns.Center;
@@ -275,8 +277,7 @@ class ExchangeabilityChartClass: ContentClass {
         HAlign: HAligns.Left;
 
         HBox {
-          for (int i = 0; i < size; ++i) {
-            var p = partitions[each0];
+          foreach (var p in partitions) {
             Canvas(d, bx) {
               Background: p.Color;
               VAlign: VAligns.Center;
@@ -292,13 +293,11 @@ class ExchangeabilityChartClass: ContentClass {
         };
 
         VBox {
-          foreach (var r in stats) {
-            var i = each0;
+          for (int i = 0; i < count; ++i) {
             HBox {
-              foreach (var c in r) {
+              for (int j = 0; j < count; ++j) {
+                var c = stats[i, j];
                 if (c is valid) {
-                  var p = partitions[each0];
-
                   Canvas(d, d) {
                     Tip: c;
                     var center = new PointClass(d * 0.5);
@@ -360,11 +359,10 @@ class PartitionVolatilityChartClass: ContentClass {
       ValueAxis: ChartAxis;
 
       ChartSeries {
-        foreach (var i in 0..<stats.Length) {
-          var s = stats[i, i];
-          var p = partitions[i];
+        foreach (var p in partitions) {
+          var s = stats[each0, each0];
           var m = s.Mean * 100.0;
-          new DataPointClass(i, m) {
+          new DataPointClass(each0, m) {
             Fill: p.Color;
             Reference: p;
             ErrorHi: s.Upper*100.0 - m;
