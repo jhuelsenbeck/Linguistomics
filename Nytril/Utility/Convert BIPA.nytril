@@ -77,13 +77,15 @@ class SegmentClass {
 
 //================================================================
 
+typedef FeatureSetClass StringDictionaryClass<FeatureClass>;
+
 class LogSchemaClass: DbSchemaClass {
   var DB.DbFieldClass Description,
                       Text,
                       Code;
   var SegmentClass[]  Segments;
-  var                 Features,
-                      From,
+  var FeatureSetClass Features;
+  var                 From,
                       Via,
                       To;
 
@@ -100,9 +102,9 @@ class LogSchemaClass: DbSchemaClass {
     var view = ReadTextFile(res "BIPA.txt", true);
     foreach (var row in view)
       list.Add(new SegmentClass(row.FindValue(Description), row.FindValue(Text), row.FindValue(Code)));
-    Segments  = list.Values;
+    Segments  = list.ToArray;
 
-    var fset = new DictionaryClass<FeatureClass>(128);
+    Features = new FeatureSetClass(128);
     foreach (var s in Segments) {
       From = MouthPlacements.None;
       Via  = MouthPlacements.None;
@@ -112,21 +114,19 @@ class LogSchemaClass: DbSchemaClass {
       foreach (var p in props) {
         var i = p.IndexOf("_and_");
         if (i > 0) {
-          AddFeature(p[0..<i], fset, s);
-          AddFeature(p[(i+5)..], fset, s);
+          AddFeature(p[0..<i], s);
+          AddFeature(p[(i+5)..], s);
         }
         else
-          AddFeature(p, fset, s);
+          AddFeature(p, s);
       }
       s.From = From;
       s.Via  = Via;
       s.To   = To;
     }
-
-    Features = fset;
   }
 
-  void AddFeature(string name, DictionaryClass fset, SegmentClass s) {
+  void AddFeature(string name, SegmentClass s) {
     name = name[0].ToUpper + name[1..];
 
     switch (name) {
@@ -191,48 +191,48 @@ class LogSchemaClass: DbSchemaClass {
         return;
 
       case "Alveolo_palatal":
-        AddFeature("Alveolo", fset, s);
-        AddFeature("Palatal", fset, s);
+        AddFeature("Alveolo", s);
+        AddFeature("Palatal", s);
         return;
 
       case "Palatal_velar":
-        AddFeature("Palatal", fset, s);
-        AddFeature("Velar", fset, s);
+        AddFeature("Palatal", s);
+        AddFeature("Velar", s);
         return;
 
       case "Labio_dental":
-        AddFeature("Labial", fset, s);
-        AddFeature("Dental", fset, s);
+        AddFeature("Labial", s);
+        AddFeature("Dental", s);
         return;
 
       case "Labio_palatal":
-        AddFeature("Labial", fset, s);
-        AddFeature("Palatal", fset, s);
+        AddFeature("Labial", s);
+        AddFeature("Palatal", s);
         return;
 
       case "Labio_velar":
-        AddFeature("Labial", fset, s);
-        AddFeature("Velar", fset, s);
+        AddFeature("Labial", s);
+        AddFeature("Velar", s);
         return;
 
       case "Close_mid":
-        AddFeature("Close", fset, s);
-        AddFeature("Mid", fset, s);
+        AddFeature("Close", s);
+        AddFeature("Mid", s);
         return;
 
       case "Open_mid":
-        AddFeature("Open", fset, s);
-        AddFeature("Mid", fset, s);
+        AddFeature("Open", s);
+        AddFeature("Mid", s);
         return;
 
       case "Mid_long":
-        AddFeature("Long", fset, s);
-        AddFeature("Mid", fset, s);
+        AddFeature("Long", s);
+        AddFeature("Mid", s);
         return;
 
       case "Nasal_click":
-        AddFeature("Nasal", fset, s);
-        AddFeature("Click", fset, s);
+        AddFeature("Nasal", s);
+        AddFeature("Click", s);
         return;
 
       case "Non_syllabic":
@@ -242,10 +242,10 @@ class LogSchemaClass: DbSchemaClass {
         return;
     }
 
-    var fp = fset.FindKey(name);
+    var fp = Features.GetValue(name);
     if (fp is null) {
-      fp = new FeatureClass(name, fset.Length);
-      fset.Add(fp, name);
+      fp = new FeatureClass(name, Features.Length);
+      Features.Add(fp, name);
     }
     s.Props |= fp.Flag;
   }
@@ -253,8 +253,8 @@ class LogSchemaClass: DbSchemaClass {
   AddProps(props) = Span {
     Separator: Space;
     foreach (var f in Features) {
-      if ((props & f.Flag) != 0)
-        f.Name;
+      if ((props & f.Value.Flag) != 0)
+        f.Value.Name;
     }
   };
 
@@ -266,7 +266,7 @@ class LogSchemaClass: DbSchemaClass {
     Empty;
     "flags Features {";
     "  None,";
-    foreach (var f in Features.Values.Sort(false)) {
+    foreach (var f in Features.ToArray.ToSortedArray(false)) {
       Span {
         "  ";
         f.Name;
@@ -276,7 +276,7 @@ class LogSchemaClass: DbSchemaClass {
     "}";
     Empty;
 
-    var vowel = Features.FindKey("Vowel").Flag;
+    var vowel = Features.GetValue("Vowel").Flag;
 
     foreach (var segment in Segments) {
       Span {

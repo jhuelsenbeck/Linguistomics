@@ -262,7 +262,7 @@ class AlignmentChartClass {
 
  Constructor(ResultsClass results) {
     Data       = results.Data;
-    Alignments = results.Alignments
+    Alignments = results.Alignments;
   }
 
   ShowChart(SizeClass size) = VBox(size.Width, size.Height, 0.5) {
@@ -643,11 +643,11 @@ class WordPairClass {
 class DataSetClass {
   var LanguageClass[]             LanguageSet;
   var SegPartClass[]              UniqueSegments;
-  var CognateClass[]              UsedCognates,
-                                  SortedCognates;
-  var ConceptClass[]              UsedConcepts;
+  var CognateClass[]              SortedCognates;
+  var ListClass<ConceptClass>     UsedConcepts;
+  var ListClass<CognateClass>     UsedCognates;
   var TaxonClass[]                Taxa;
-  var DictionaryClass<TaxonClass> TaxonSet;
+  var StringDictionaryClass<TaxonClass> TaxonSet;
   var VectorClass                 WordList;
   var RuleClass                   Rule;
   var WordClass                   DefWord;
@@ -696,9 +696,8 @@ class DataSetClass {
     WordCutoff = cutoff;
 
     AddLanguageSet(languageset);
-
-    var cognatelist = new ListClass<CognateClass>(1024);
-    var conceptlist = new ListClass<ConceptClass>(256);
+    UsedCognates = new(1024);
+    UsedConcepts = new(256);
 
     foreach (var cvar in concepts.Children) {
       var conceptvar = cvar.Value;
@@ -715,7 +714,7 @@ class DataSetClass {
             foreach (var wc in cc.Children) {
               var word = wc.Value;
               if (word is valid) {
-                var taxon = TaxonSet.FindKey(wc.Name);
+                var taxon = TaxonSet.GetValue(wc.Name);
                 if (taxon is valid)
                   ++count;
               }
@@ -724,17 +723,15 @@ class DataSetClass {
             if (count >= cutoff) {
               var concept = new ConceptClass(cvar);
               concept.CheckRaw;
-              conceptlist.Add(concept);
-              cognatelist.Add(new(concept, cvar));
+              UsedConcepts.Add(concept);
+              UsedCognates.Add(new(concept, cvar));
             }
           }
         }
       }
     }
 
-
-    UsedConcepts = conceptlist.Values.Sort(false);
-    UsedCognates = cognatelist.Values;
+    UsedConcepts.Sort(false);
 
     var lookup = new SegPartDictionary(IPASegments.Length);
     foreach (var segment in IPASegments) {
@@ -754,7 +751,7 @@ class DataSetClass {
         }
       }
     }
-    UniqueSegments = set.Values;
+    UniqueSegments = set.ToArray;
 
     GetConceptExamples(concepts);
     CompletedRead;
@@ -767,39 +764,36 @@ class DataSetClass {
     AddLanguageSet(run.LanguageSet);
 
     var slist  = new ListClass<SegPartClass>(run.Segments.Length);
-    var lookup = new SegmentDictionary(IPASegments.Length);
+    var lookup = new StringDictionaryClass<SegmentClass>(IPASegments.Length);
     foreach (var segment in IPASegments) {
       if (segment.Ipa is valid)
         lookup.Add(segment, segment.Ipa);
     }
 
     foreach (var text in run.Segments) {
-      var s = lookup.FindKey(text);
+      var s = lookup.GetValue(text);
       if (s is valid)
         slist.Add(new SegPartClass(s));
       else
         System.Assert(false, "Missing Segment " + text);
     }
 
-    UniqueSegments = slist.Values;
+    UniqueSegments = slist.ToArray;
 
-    var concepts    = attribute(run.Concepts);
-    var conceptlist = new ListClass<ConceptClass>(concepts.Length);
-    var cognatelist = new ListClass<CognateClass>(concepts.Length * 2);
+    var concepts = attribute(run.Concepts);
+    UsedConcepts = new(concepts.Length);
+    UsedCognates = new(concepts.Length * 2);
 
     foreach (var cvar in concepts.Children) {
       var concept = new ConceptClass(cvar);
-      conceptlist.Add(concept);
+      UsedConcepts.Add(concept);
 
       foreach (var cognatevar in cvar.Children) {
         var cognate = new CognateClass(concept, cognatevar);
-        cognatelist.Add(cognate);
+        UsedCognates.Add(cognate);
         ComputeExperimentCognate(concept, cognate, cognatevar);
       }
     }
-
-    UsedConcepts = conceptlist.Values;
-    UsedCognates = cognatelist.Values;
 
     GetConceptExamples(concepts);
     CompletedRead;
@@ -821,7 +815,7 @@ class DataSetClass {
       if (name.Length > MaxLanguageName)
         MaxLanguageName = name.Length;
     }
-    Taxa     = tlist.Values;
+    Taxa     = tlist.ToArray;
     WordList = new(Taxa.Length, null);
     DefWord  = new WordClass(#71f32657-a37c-4f1d-abba-87b928e9d80b#, Empty, Taxa[0], null);
     DefWord.Init;
@@ -871,7 +865,9 @@ class DataSetClass {
   }
 
   CognateClass[] GetSortedCognates {
-    SortedCognates ??= UsedCognates.Sort(false);
+//    SortedCognates ??= UsedCognates.ToSortedArray(false);
+
+    SortedCognates ??= UsedCognates.ToArray;
     return SortedCognates;
   }
 
@@ -883,7 +879,7 @@ class DataSetClass {
     foreach (var cvar in cognate.Attribute.Children) {
       foreach (var tvar in cvar.Children) {
         var text  = tvar.Value;
-        var taxon = TaxonSet.FindKey(tvar.Name);
+        var taxon = TaxonSet.GetValue(tvar.Name);
         if (taxon is valid) {
           var word = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.ShortName, text, taxon, cognate);
           word.InitRaw(text, lookup);
@@ -902,7 +898,7 @@ class DataSetClass {
       }
     }
 
-    cognate.Words     = WordList.Values;
+    cognate.Words     = WordList.ToArray;
     cognate.MaxLength = maxlength;
 
     foreach (var word in cognate.Words) {
@@ -971,9 +967,9 @@ class DataSetClass {
           taxon.SegmentCount += count;
 
 
-          var text = Span {TextBuffer.Values} as string;
+          var text = Span {TextBuffer.ToArray} as string;
           var w    = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.ShortName, text, taxon, cognate);
-          w.InitExperiment(word, PlainBuffer.Values, SegmentBuffer.Values);
+          w.InitExperiment(word, PlainBuffer.ToArray, SegmentBuffer.ToArray);
           if (w.Aligned.Length > maxlength)
             maxlength = w.Aligned.Length;
           WordList.SetValue(taxon.Index, w);
@@ -981,7 +977,7 @@ class DataSetClass {
       }
     }
 
-    cognate.Words     = WordList.Values;
+    cognate.Words     = WordList.ToArray;
     cognate.MaxLength = maxlength;
   }
 
@@ -1163,17 +1159,17 @@ class ResultsClass {
       TransitionStats = new(length, length, bs, bs);
     }
 
-    var alist = new ListClass<AlignIndexClass>(1024);
+    var alignments = new ListClass<AlignIndexClass>(1024);
     foreach (var a in align.Alignments) {
       foreach (var c in Data.UsedCognates) {
         if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
           a.Cognate = c;
-          alist.Add(a);
+          alignments.Add(a);
           break;
         }
       }
     }
-    Alignments = alist.Values.Sort(false, @CompareAlignment);
+    Alignments = alignments.ToSortedArray(false, @CompareAlignment);
   }
 
   static int CompareAlignment(AlignIndexClass a0, AlignIndexClass a1) {
@@ -1327,7 +1323,7 @@ class PriorCountClass: CountBaseClass {
       HAlign: HAligns.Center;
       VAlign: VAligns.Center;
       TipNoPublish: true;
-      TipAction: new TranActionClass(value.Values, value.Length*Factor);
+      TipAction: new TranActionClass(value.ToArray, value.Length*Factor);
 
       var count = 0;
       foreach (var e in value) {
@@ -1406,8 +1402,9 @@ class AlignedCountClass: CountBaseClass {
     DiagFactor      = 1.0 / Math.Abs(Math.Max(dmin, dmax));
     RateFactor      = 1.0 / Math.Abs(Math.Max(min, max));
     DirFactor       = 1.0 / Math.Abs(max - min);
-    SortedRates     = RateList.Sort(RateClass.SortDescending, @RateClass.CompareRate);
-    SortByDirection = RateList.Sort(RateClass.SortDescending, @RateClass.CompareDirection);
+    var rl = RateList.ToArray;
+    SortedRates     = rl.ToSortedArray(RateClass.SortDescending, @RateClass.CompareRate);
+    SortByDirection = rl.ToSortedArray(RateClass.SortDescending, @RateClass.CompareDirection);
   }
 
   override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
@@ -1452,7 +1449,7 @@ class AlignedCountClass: CountBaseClass {
 
     Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
-      Rule.ShowBlockLegend(list.Values, 11 pts);
+      Rule.ShowBlockLegend(list.ToArray, 11 pts);
     }
   };
 
@@ -1687,20 +1684,21 @@ class SegDataClass {
 //======================================================================
 
 class DiagonalClass {
-  var SegDataClass[] Diagonal;
-  var ResultsClass   Results;
+  var ListClass<SegDataClass> Diagonal;
+  var ResultsClass            Results;
 
   Constructor(ResultsClass results, AlignedCountClass rates) {
     Results = results;
     var m      = rates.Matrix;
     var length = m.Cols;
-    var list   = new ListClass<SegDataClass>(length);
+
+    Diagonal = new(length);
     for (int i = 0; i < length; ++i) {
       var r = m[i, i];
       if (r is not null)
-        list.Add(new(r));
+        Diagonal.Add(new(r));
     }
-    Diagonal = list.Sort(true, @CompareData);
+    Diagonal.Sort(true, @CompareData);
   }
 
   static int CompareData(SegDataClass d0, SegDataClass d1) = d0.Value.Compare(d1.Value);
@@ -1787,11 +1785,11 @@ class SegmentActionClass: ActionClass {
     Percent = percent;
   }
 
-  override GetQuery = MatchAll WordClass {
-    MatchAny LanguageClass {
+  override GetQuery = MatchAll(WordClass) {
+    MatchAny(LanguageClass) {
       Taxon.Language;
     };
-    MatchAny SegmentClass {
+    MatchAny(SegPartClass) {
       Segment;
     };
   };
@@ -1881,8 +1879,8 @@ abstract class FrequencyChartClass {
     MaxDistance = max;
     FirstRate   = r0.Frequency;
     var a = 0 ..< RateCount step 1;
-    SortedIndexes = a.Sort(true, sortfunction);
-    SortedRates   = Rates.Sort(false, @CompareDistance);
+    SortedIndexes = a.ToSortedArray(true, sortfunction);
+    SortedRates   = Rates.ToSortedArray(false, @CompareDistance);
   }
 
   abstract SegmentBar(RateDataClass rate, index, width, height);
@@ -2010,11 +2008,11 @@ class PartitionRateActionClass: ActionClass {
     Percent   = percent;
   }
 
-  override GetQuery = MatchAll WordClass {
-    MatchAny LanguageClass {
+  override GetQuery = MatchAll(WordClass) {
+    MatchAny(LanguageClass) {
       Taxon.Language;
     };
-    MatchAny SegmentClass {
+    MatchAny(SegPartClass) {
       Partition.Segments;
     };
   };

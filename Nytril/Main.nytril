@@ -39,11 +39,38 @@ readonly namespace Main.Documents {
   DiagnosticsViewClass   Diagnostic        = new(MainResults.Data);
 }
 
-readonly Main.Facts = [
-  WorldLanguages
-];
+readonly Main.Facts = WorldLanguageList;
 
 readonly SiteClass Main.Site = new LinguistomicsSiteClass;
+
+//===============================================================
+
+class HomePageClass: SitePageClass {
+  Constructor {
+    super.Constructor(Main.Site, #29f0a41f-f0f2-4830-bcaa-70418aa20157#, "Home", "Linguistics Research Project");
+
+    Tiles = [
+      new DocTileClass(Main.Documents.Paper, Icons.article),
+      new DocTileClass(Main.Documents.Supplemental, Icons.add_circle),
+      new DocTileClass(Main.Documents.DavidPresentation, Icons.slideshow),
+      new DocTileClass(Main.Documents.JohnPresentation, Icons.slideshow),
+      new DocTileClass(Main.Documents.Diagnostic, Icons.settings),
+    ];
+  }
+
+  override GetHeader = Block {
+    Paragraph {
+      TextHeight: 20 pts;
+      SpaceAfter: 20 pts;
+      Info.Title;
+    };
+
+    MainContentStyle.ShowAuthorList(Main.Documents.Paper.Authors.ToArray);
+    Paragraph {
+      SpaceAfter: 20 pts;
+    };
+  };
+}
 
 //===============================================================
 
@@ -83,35 +110,6 @@ class LinguistomicsSiteClass: SiteClass {
   };
 
   override GetLayoutSiteLogo = GetLayoutLogo;
-}
-
-//===============================================================
-
-class HomePageClass: SitePageClass {
-  Constructor {
-    super.Constructor(Main.Site, #29f0a41f-f0f2-4830-bcaa-70418aa20157#, "Home", "Linguistics Research Project");
-
-    Tiles = [
-      new DocTileClass(Main.Documents.Paper, Icons.article),
-      new DocTileClass(Main.Documents.Supplemental, Icons.add_circle),
-      new DocTileClass(Main.Documents.DavidPresentation, Icons.slideshow),
-      new DocTileClass(Main.Documents.JohnPresentation, Icons.slideshow),
-      new DocTileClass(Main.Documents.Diagnostic, Icons.settings),
-    ];
-  }
-
-  override GetHeader = Block {
-    Paragraph {
-      TextHeight: 20 pts;
-      SpaceAfter: 20 pts;
-      Info.Title;
-    };
-
-    MainContentStyle.ShowAuthorList(Main.Documents.Paper.Authors.Values);
-    Paragraph {
-      SpaceAfter: 20 pts;
-    };
-  };
 }
 
 //======================================================================

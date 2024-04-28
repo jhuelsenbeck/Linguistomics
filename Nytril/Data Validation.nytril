@@ -82,7 +82,8 @@ class DiagnosticsViewClass: DocumentClass {
   override GetDocument = Document(new(new(0.5 inches, 0.75 inches, 0.5 inches, 0.5 inches))) {
     var style = MainContentStyle;
 
-//    ShowQuery;
+    if (not System.IsPublishing)
+      ShowQuery;
 
     TextHeight: 9 pts;
 
@@ -133,7 +134,7 @@ class ConceptGroupsClass: DataContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    WordGroups[] groups = WordGroups.Values[1..];
+    WordGroups[] groups = WordGroups.ToArray[1..];
     Table(PaperStyle.TableBorder, null, [0.25 inches] + [1 inch] * (2+groups.Length)) {
       Row {
         PaperStyle.HeaderCell;

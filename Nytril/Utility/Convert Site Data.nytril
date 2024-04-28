@@ -43,12 +43,12 @@ class WordClass {
 //================================================================
 
 class ConceptClass {
-  var Name,
-      Words;
+  var                            Name;
+  var StringDictionaryClass<WordClass> Words;
 
   Constructor(name) {
     Name  = name;
-    Words = new DictionaryClass<WordClass>(16);
+    Words = new StringDictionaryClass<WordClass>(16);
   }
 }
 
@@ -59,7 +59,7 @@ class LogSchemaClass: DbSchemaClass {
                                     Concept,
                                     Text,
                                     Spelling;
-  var DictionaryClass<ConceptClass> Concepts;
+  var StringDictionaryClass<ConceptClass> Concepts;
 
   Constructor {
     super.Constructor("log");
@@ -77,7 +77,7 @@ class LogSchemaClass: DbSchemaClass {
   void GetData(view) {
     foreach (var row in view) {
       var cname = row.FindValue(Concept);
-      var concept = Concepts.FindKey(cname);
+      var concept = Concepts.GetValue(cname);
       if (concept is null) {
         concept = new ConceptClass(cname);
         Concepts.Add(concept, cname);
@@ -93,13 +93,14 @@ class LogSchemaClass: DbSchemaClass {
     "namespace Concepts;";
 
     foreach (var concept in Concepts) {
+      ConceptClass c = concept.Value;
       "//==================================================";
       Empty;
 
       Span {
         "namespace ";
         TextCase: TextCases.FirstUpper;
-        concept.Name;
+        c.Name;
         " {";
       };
       "  Confidence = 10;";
@@ -109,11 +110,12 @@ class LogSchemaClass: DbSchemaClass {
       "  namespace Primary {";
 
       var max = 0;
-      foreach (var word in concept.Words)
-        max = Math.Max(max, word.Text.Length);
+      foreach (var word in c.Words)
+        max = Math.Max(max, word.Value.Text.Length);
 
-      foreach (var word in concept.Words) {
-        var l = word.Language;
+      foreach (var word in c.Words) {
+        var w = word.Value;
+        var l = w.Language;
         Span {
           Space*4;
           l;
@@ -121,15 +123,15 @@ class LogSchemaClass: DbSchemaClass {
           "= \"";
           Span {
             TextFamily: TextFamilies.CambriaMath;
-            word.Text;
+            w.Text;
             "\";";
 
-            Space * Math.Max(0, (max - word.Text.Length + 2));
+            Space * Math.Max(0, (max - w.Text.Length + 2));
 
 
-            if (word.Spelling is valid) {
+            if (w.Spelling is valid) {
               "  // ";
-              word.Spelling;
+              w.Spelling;
             }
           }
         }

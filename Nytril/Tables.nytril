@@ -339,7 +339,7 @@ class TabOptionsClass {
       Title
     };
 
-    var places = Places.Values.FindSlice(place => MatchPlace(data, place));
+    var places = Places.ToArray.FindSlice(place => MatchPlace(data, place));
     if (places.Length == 0)
       Lang.None;
     else {
@@ -512,7 +512,7 @@ readonly namespace MatchingDiacritics {
   ShowTable = Block {
     PaperStyle.TitleBar {Lang.Diacritics};
     Table(PaperStyle.TableBorder, null, [ExtentWidth / ColumnDiv] * ColumnDiv) {
-      AddRow(each (DiacriticModifiers / ColumnDiv));
+      AddRow(each (DiacriticModifiers.ToArray / ColumnDiv));
     };
     PaperStyle.TableNotes;
   };
@@ -559,7 +559,7 @@ class SegmentDisplayClass {
   Constructor(DataSetClass data) {
     Data            = data;
     DisplaySegments = data.UniqueSegments;  // Could be IPA.Segments if you want to see all possible segments in the debug tables
-    SortedSegments  = data.UniqueSegments.Sort(true, @CompareAlpha);
+    SortedSegments  = data.UniqueSegments.ToSortedArray(true, @CompareAlpha);
   }
 
   static int CompareSegments(SegPartClass s0, SegPartClass s1) = s0.UsedCount - s1.UsedCount;
@@ -582,7 +582,7 @@ class SegmentDisplayClass {
       TransformFit: true;
     };
 
-    SegPartClass[] sorted = DisplaySegments.Sort(true, @CompareSegments);
+    SegPartClass[] sorted = DisplaySegments.ToSortedArray(true, @CompareSegments);
     XAxis: ChartAxis {
       TextHeight: PaperStyle.SegmentTextFactor * size.Width / sorted.Length;
       (each sorted).ShowSegment;

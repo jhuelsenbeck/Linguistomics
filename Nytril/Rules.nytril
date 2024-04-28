@@ -102,9 +102,9 @@ abstract class RuleClass {
   }
 
   void Init(SegPartClass[] segments) {
-    Filters = FilterList.Values;
+    Filters = FilterList.ToArray;
     FilterList.Add(new FilterClass(this, "Residue"));
-    FiltersPlus = FilterList.Values;
+    FiltersPlus = FilterList.ToArray;
 
     var list = new ListClass<PartitionClass>(segments.Length);
     var i    = 0;
@@ -116,8 +116,8 @@ abstract class RuleClass {
         ++i;
       }
     }
-    Partitions = list.Values;
-    Segments   = segments.Sort(true, @ComparePartSegments);
+    Partitions = list.ToArray;
+    Segments   = segments.ToSortedArray(true, @ComparePartSegments);
   }
 
   bool MatchesRule(FilterClass filter, SegmentClass segment) {
@@ -410,7 +410,7 @@ class TranActionClass: ActionClass {
     Percent = percent;
   }
 
-  override GetQuery = MatchAny WordClass {
+  override GetQuery = MatchAny(WordClass) {
     (each List).Word1 + (each List).Word2;
   };
 
@@ -563,7 +563,7 @@ class RateClass: ActionClass {
     };
   };
 
-  GetExamples(range) = Block {
+  GetExamples(int max) = Block {
     TextHeight: 14 pts;
     GetLayoutSpan;
     Paragraph {
@@ -584,7 +584,8 @@ class RateClass: ActionClass {
       }
     }
 
-    var sorted = GetList().Slice(range);
+    var sorted = GetList;
+    max = Math.Min(sorted.Length, max);
     if (sorted is valid) {
       Paragraph {
         SpaceBefore: 6 pts;
@@ -593,19 +594,21 @@ class RateClass: ActionClass {
 
       Paragraph {
         Separator: Space;
-        foreach (var s in sorted)
+        for (var i = 0; i < max; ++i) {
+          var s = sorted[i];
           new AlignPairClass(Count.Results.Data, s.Congate).ShowFigureData(s.Congate, s.Data);
+        }
       };
     }
   };
 
-  override GetLayoutTip = GetExamples(0..<10);
+  override GetLayoutTip = GetExamples(10);
 
-  override GetDocument = GetExamples(0..);
+  override GetDocument = GetExamples(100);
 
   static int CompareProb(AlignSortClass s1, AlignSortClass s2) = s1.Data.Prob.Compare(s2.Data.Prob);
 
-  AlignSortClass[] GetList {
+  ListClass<AlignSortClass> GetList {
     // Find cognate sets that have the first segment in one language and the second in another language
 
     var i0   = S0.Index;
@@ -640,7 +643,8 @@ class RateClass: ActionClass {
       if (found is valid)
         list.Add(new(found, cognate));
     }
-    return list.Sort(true, @CompareProb);
+    list.Sort(true, @CompareProb);
+    return list;
   }
 }
 
