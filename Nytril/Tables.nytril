@@ -339,7 +339,7 @@ class TabOptionsClass {
       Title
     };
 
-    var places = Places.ToArray.FindSlice(place => MatchPlace(data, place));
+    var places = Places.ValueArray.FindSlice(place => MatchPlace(data, place));
     if (places.Length == 0)
       Lang.None;
     else {
@@ -448,13 +448,13 @@ readonly namespace MatchingVowels {
       PaperStyle.TitleBackground;
       open.Name;
     };
-    AddCell(segments, set, open, each Backnesses, features)
+    AddCell(segments, set, open, each Backnesses.ValueArray, features)
   };
 
-  ShowVowelTable(SegPartClass[] segments, SegmentSetClass set, features) = Block {
+  ShowVowelTable(SegPartClass[] segments, SegmentSetClass set, SegmentFeatures features) = Block {
     PaperStyle.TitleBar {
       Separator: "-";
-      each features
+      each features;
     };
 
     var border = BorderR(0.5 pts);
@@ -463,13 +463,13 @@ readonly namespace MatchingVowels {
       Row {
         TextHeight: 10 pts;
         PaperStyle.HeaderCell;
-        foreach (var b in Backnesses) {
+        foreach (var b in Backnesses.ValueArray) {
           PaperStyle.HeaderCell {
             b;
           };
         }
       };
-      AddRow(segments, set, each Opens, features);
+      AddRow(segments, set, each Opens.ValueArray, features);
     };
   };
 
