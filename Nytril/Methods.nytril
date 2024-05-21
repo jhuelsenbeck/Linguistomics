@@ -745,7 +745,6 @@ readonly AlignmentClass Figures.Alignment = new;
 
 class AlignmentClass: ContentClass {
   const ArrowWidth  = 40;
-  const ArrowMargin = 10 pts;
   const Arrowhead   = 8 pts;
   const ArrowColor  = 80%;
 
@@ -911,14 +910,14 @@ class AlignmentClass: ContentClass {
 
   override GetBody(ContentStyleClass style)= VBox {
     TextHeight: 12 pts;
+    Separation: 4 pts;
+    Margin: 5 pts;
+    HAlign: HAligns.Center;
 
     var data    = MainResults.Data;
     var example = new ExampleConceptClass(data, data.ExampleConcept);
 
-    Margin: 5 pts;
-    HAlign: HAligns.Center;
     HBox {
-      Margin: PadB(4 pts);
       VAlign: VAligns.Bottom;
       var fsize = new SizeClass(ArrowWidth, data.Taxa.Length * 8 pts);
 
@@ -929,7 +928,7 @@ class AlignmentClass: ContentClass {
         VAlign: VAligns.Top;
         LabelBox(SegmentalInfo);
         ContentBox(SegmentTable(example, data, false)) {
-          Margin: new ThicknessClass(null, null, ArrowMargin, ArrowMargin);
+          Margin: PadRB(10 pts);
         };
       };
       ArrowFigure(fsize);
@@ -1932,7 +1931,7 @@ class MethodsClass: ContentClass {
       "In this study, parameters include:";
     };
 
-    BodyTable([new ColumnClass(1 inches, null, null, HAligns.Right), 20 pts, 4 inches]) {
+    BodyTable([new ColumnClass(1 inch, null, null, HAligns.Right), 20 pts, 4 inches]) {
       ParamRow {
         ParamList(Topology);
         "Tree Topologies";
@@ -2028,11 +2027,10 @@ class MethodsClass: ContentClass {
         NewProposal(NewValueProposal, RateMatrixParams);
       };
 
-      Paragraph {
+      ListItem {
+        FirstIndent: 0;
         "Calculate the probability of accepting the proposed value:";
-        LineBreak;
-        Frame {LeftIndent: 48 pts; ProbOfAcceptingProposal};
-        LineBreak;
+        ProbOfAcceptingProposal;
         "In words, the acceptance probability is the product of the likelihood, prior, and proposal ratios.";
       };
 
