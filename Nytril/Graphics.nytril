@@ -81,8 +81,8 @@ readonly namespace PaperStyle {
 
   BranchMarker = HBox {
     Margin: PadR(2 pts);
-    Figure(Colors.Black, new StrokeClass(1 pt, Colors.Gray)) {
-      Ellipse(new(0, 1 pts))
+    Shape(Colors.Black, new StrokeClass(1 pt, Colors.Gray)) {
+      EllipsePath(new(0, 1 pts))
     };
   };
 
@@ -389,14 +389,13 @@ readonly namespace Graphics {
     return ArcTan2(p2.Y - p1.Y, p2.X - p1.X);
   }
 
-  Line(LineStyleClass line, PointClass p1, PointClass p2) = Figure(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
-    FigurePath {
-      p1;
+  Line(LineStyleClass line, PointClass p1, PointClass p2) = Shape(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
+    ShapePath(p1.X, p1.Y, false) {
       LineTo(p2);
     };
   };
 
-  TwoArrowLine(LineStyleClass line, PointClass p1, PointClass p2) = Figure(line.LineColor) {
+  TwoArrowLine(LineStyleClass line, PointClass p1, PointClass p2) = Shape(line.LineColor) {
     var angle = GetAngle(p1, p2);
     var opp   = angle - Ninety;
     var a1    = ExtendPoint(p1, line.Edge, angle + OneEighty - line.Angle);
@@ -406,8 +405,7 @@ readonly namespace Graphics {
     var b2    = ExtendPoint(b1, line.Flat, opp);
     var b3    = ExtendPoint(b2, line.LineSize, opp);
 
-    FigurePath(true) {
-      p1;
+    ShapePath(p1.X, p1.Y, true) {
       LineTo(a1);
       LineTo(a2);
       LineTo(b2);
@@ -420,7 +418,7 @@ readonly namespace Graphics {
     }
   };
 
-  CircleLine(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
+  CircleLine(LineStyleClass line, PointClass center, radius, angle, anglegap) = Shape(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
     var angle1 = angle + anglegap;
     var angle2 = angle - anglegap;
     var an1    = angle1 - Ninety;
@@ -428,13 +426,12 @@ readonly namespace Graphics {
     var p1     = ExtendPoint(center, radius, angle1);
     var p2     = ExtendPoint(center, radius, angle2);
 
-    FigurePath {
-      p1;
+    ShapePath(p1.X, p1.Y, false) {
       ArcTo(p2, new(radius), angle, true, true);
     }
   };
 
-  CircleArrow(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure(line.LineColor) {
+  CircleArrow(LineStyleClass line, PointClass center, radius, angle, anglegap) = Shape(line.LineColor) {
     var angle1 = angle + anglegap;
     var angle2 = angle - anglegap;
     var an1    = angle1 - Ninety;
@@ -448,8 +445,7 @@ readonly namespace Graphics {
     var b2     = ExtendPoint(b1, line.Flat, an2 - Ninety);
     var b3     = ExtendPoint(b2, line.LineSize, an2 - Ninety);
 
-    FigurePath(true) {
-      p1;
+    ShapePath(p1.X, p1.Y, true) {
       LineTo(a1);
       LineTo(a2);
       ArcTo(b2, new(radius + line.LineSize), angle, true, true);
