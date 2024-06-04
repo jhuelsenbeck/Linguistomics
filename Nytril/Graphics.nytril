@@ -390,7 +390,7 @@ readonly namespace Graphics {
   }
 
   Line(LineStyleClass line, PointClass p1, PointClass p2) = Shape(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
-    ShapePath(p1.X, p1.Y, false) {
+    OpenPath(p1) {
       LineTo(p2);
     };
   };
@@ -405,7 +405,7 @@ readonly namespace Graphics {
     var b2    = ExtendPoint(b1, line.Flat, opp);
     var b3    = ExtendPoint(b2, line.LineSize, opp);
 
-    ShapePath(p1.X, p1.Y, true) {
+    ClosedPath(p1.X, p1.Y) {
       LineTo(a1);
       LineTo(a2);
       LineTo(b2);
@@ -426,7 +426,7 @@ readonly namespace Graphics {
     var p1     = ExtendPoint(center, radius, angle1);
     var p2     = ExtendPoint(center, radius, angle2);
 
-    ShapePath(p1.X, p1.Y, false) {
+    OpenPath(p1) {
       ArcTo(p2, new(radius), angle, true, true);
     }
   };
@@ -445,7 +445,7 @@ readonly namespace Graphics {
     var b2     = ExtendPoint(b1, line.Flat, an2 - Ninety);
     var b3     = ExtendPoint(b2, line.LineSize, an2 - Ninety);
 
-    ShapePath(p1.X, p1.Y, true) {
+    ClosedPath(p1.X, p1.Y) {
       LineTo(a1);
       LineTo(a2);
       ArcTo(b2, new(radius + line.LineSize), angle, true, true);
