@@ -14,60 +14,6 @@ readonly PersonClass[] Authors = [
 
 //=========================================================================
 
-readonly namespace Countries {
-  CountryClass Uruguay = new(#86ffeed3-4332-4b30-8494-7b55637caaaf#, "Uruguay", "UY", "Oriental Republic of Uruguay");
-}
-
-//=========================================================================
-
-readonly namespace Cities {
-  CityClass Berkeley = new(#5d11612c-ce2e-45cd-bd20-dd4194904797#, "Berkeley") {
-    Link to USStates.California;
-  };
-
-  CityClass PaloAlto = new(#d71fb515-53e1-44c9-a239-24b9e73cf6b9#, "Palo Alto") {
-    Link to USStates.California;
-  };
-
-  CityClass Pasadena = new(#07563967-4173-4020-8242-90b995a0d5a9#, "Pasadena") {
-    Link to USStates.California;
-  };
-
-  CityClass GigHarbor = new(#05484dff-bfba-4bea-89f1-ddfe0eaa8e9e#, "Gig Harbor") {
-    Link to USStates.Washington;
-  };
-
-  CityClass Amsterdam = new(#72a144fe-5281-4775-b1dc-7b769703249b#, "Amsterdam") {
-    Link to Countries.Netherlands;
-  };
-
-  CityClass Malden = new(#060a39c9-bae2-4ed1-9fe2-0261b33c182f#, "Malden") {
-    Link to USStates.Massachusetts;
-  };
-
-  CityClass Prague = new(#382cf1da-d990-4bb3-99a7-d616ed90f061#, "Prague") {
-    Link to Countries.CzechRepublic;
-  };
-
-  CityClass Stroudsburg = new(#a4335259-e592-4f3c-96ba-5571d05a3646#, "Stroudsburg") {
-    Link to USStates.Pennsylvania;
-  };
-
-  CityClass Montevideo = new(#0a88e55e-624f-421a-a7d6-c381bce836e3#, "Montevideo") {
-    Link to Countries.Uruguay;
-  };
-
-  CityClass Nancy = new(#e689ac60-62d7-4594-ba4b-b18404f13260#, "Nancy") {
-    Link to Countries.France;
-  };
-
-  CityClass Paris = new(#bb7307c9-0329-47dc-a976-07d5e9beb55b#, "Paris") {
-    Link to Countries.France;
-  };
-}
-
-//=========================================================================
-
 readonly namespace People {
   PersonClass DMGoldstein = new(#a3f46f7d-97db-4ca7-bdca-3846f26c33cf#, "David", "M.", "Goldstein") {
     StreetAddress(null, Cities.LosAngeles, "90095-1543");
@@ -167,7 +113,7 @@ readonly namespace Organizations {
   };
 
   OrganizationClass CNRS = new(#25dd2aeb-f627-48e0-9c7d-10c3e8decea1#, "Centre national de la recherche scientifique") {
-    Link to Cities.Nancy;
+    Link to new CityClass(#e689ac60-62d7-4594-ba4b-b18404f13260#, "Nancy") {Link to Countries.France};
   };
 
   OrganizationClass UniversityOfLorraine = new(#704910ed-65ef-4453-bad3-72e00f7bfa1f#, "Université de Lorraine") {
@@ -187,7 +133,7 @@ readonly namespace Organizations {
   };
 
   OrganizationClass NytrilLLC =  new(#d61d8a42-0321-444c-bbf7-5d8363ff0269#, "Nytril LLC") {
-    StreetAddress("2904 Horsehead Bay Dr. NW", Cities.GigHarbor, "98335");
+    StreetAddress("2904 Horsehead Bay Dr. NW", new CityClass(#05484dff-bfba-4bea-89f1-ddfe0eaa8e9e#, "Gig Harbor") {Link to USStates.Washington}, "98335");
   };
 
   OrganizationClass PlanckInstitute = new(#61c1f544-7067-42d5-aeb4-d6c3474c6bd3#, "Max Planck Institute for the Science of Human History");
@@ -265,7 +211,7 @@ readonly namespace Organizations {
   };
 
   OrganizationClass ACL = new(#96c184a3-9799-452d-9d15-e9d2855de310#, "Association for Computational Linguistics") {
-    Link to Cities.Stroudsburg;
+    Link to new CityClass(#a4335259-e592-4f3c-96ba-5571d05a3646#, "Stroudsburg") {Link to USStates.Pennsylvania};
   };
 
   OrganizationClass LanguageDND = new(#ea59bac9-f392-48b9-b819-39f7d060d65b#, "Language Documentation and Description");
@@ -279,7 +225,8 @@ readonly namespace Organizations {
 
 //======================================================================
 
-WikipediaLink(name) = new URLClass("en.wikipedia.org/wiki/"+name);
+WikipediaLink(name) = Link to new URLClass("en.wikipedia.org/wiki/"+name);
+WikiCommons(int id) = Link to new URLClass("commons.wikimedia.org/w/index.php?curid={0}"(id));
 
 readonly namespace References {
   ReferenceClass BouchardCote2013 = new(#b43f83cc-0faa-4808-b71c-68d831ec6b71#, ReferenceTypes.Article) {
@@ -1030,7 +977,7 @@ readonly namespace References {
     Title: "International Phonetic Alphabet";
     Date : #2019#;
 
-    Link to WikipediaLink("International_Phonetic_Alphabet");
+    WikipediaLink("International_Phonetic_Alphabet");
     PublisherLink to Organizations.Wikipedia;
   };
 
@@ -1038,7 +985,7 @@ readonly namespace References {
     Title: "Extended Speech Assessment Methods Phonetic Alphabet";
     Date : #2019#;
 
-    Link to WikipediaLink("X-SAMPA");
+    WikipediaLink("X-SAMPA");
     PublisherLink to Organizations.Wikipedia;
   };
 
@@ -1046,7 +993,7 @@ readonly namespace References {
     Title: "Distinctive Feature";
     Date : #2020#;
 
-    Link to WikipediaLink("Distinctive_feature");
+    WikipediaLink("Distinctive_feature");
     PublisherLink to Organizations.Wikipedia;
   };
 
@@ -1062,7 +1009,7 @@ readonly namespace References {
     Date : #1954#;
     AuthorLink to People.EugenioCoseriu;
     PublisherLink to Organizations.Udlr;
-    Link to Cities.Montevideo;
+    Link to new CityClass(#0a88e55e-624f-421a-a7d6-c381bce836e3#, "Montevideo") {Link to Countries.Uruguay};
   };
 
   ReferenceClass SoundComparisons = new(#187b7119-5e3e-42e7-a7a4-d05113d27c43#, ReferenceTypes.Misc) {
@@ -1080,21 +1027,21 @@ readonly namespace References {
   ReferenceClass LatinMap = new(#888cd3c8-d775-43e2-9feb-01b6df00ad95#, ReferenceTypes.Art) {
     ArtistLink to new PersonClass(#6b6059c2-53ed-413e-a314-56a61888ddc9#, null, null, "Tataryn");
     Note: "Own work, CC BY-SA 3.0";
-    Link to new URLClass("commons.wikimedia.org/w/index.php?curid=19625326");
+    WikiCommons(19625326);
     Link to WorldLanguages.Latin;
   };
 
   ReferenceClass SpanishMap = new(#7f13abe8-4c71-4d5a-a46e-440a183cb879#, ReferenceTypes.Art) {
     ArtistLink to new PersonClass(#d63e7e3a-f5d9-4eb4-b1f7-6af045d99c34#, "Allice", null, "Hunter");
     Note: "Hispanophone global world map language.png, CC BY-SA 4.0";
-    Link to new URLClass("commons.wikimedia.org/w/index.php?curid=69323596");
+    WikiCommons(69323596);
     Link to WorldLanguages.Spanish;
   };
 
   ReferenceClass FrenchMap = new(#c4b35639-1367-486b-a7f2-feaddc0dd2f6#, ReferenceTypes.Art) {
     ArtistLink to new PersonClass(#fd11dfcc-7459-43d1-a9d1-a43f14e06a80#, null, null, "Axtoche");
     Note: "Own work, CC BY-SA 4.0";
-    Link to new URLClass("commons.wikimedia.org/w/index.php?curid=104935085");
+    WikiCommons(104935085);
     Link to WorldLanguages.French;
   };
 
@@ -1106,7 +1053,7 @@ readonly namespace References {
   ReferenceClass PortugueseMap = new ReferenceClass(#09f9af61-47d7-40cc-81fc-f15c9a649e62#, ReferenceTypes.Art) {
     ArtistLink to new PersonClass(#4bf41485-5272-48be-b93e-3203660f9e39#, "Saftorangen", null, null);
     Note: "Own work, CC BY-SA 3.0";
-    Link to new URLClass("commons.wikimedia.org/w/index.php?curid=10427939");
+    WikiCommons(10427939);
     Link to WorldLanguages.Portuguese;
   };
 
@@ -1118,28 +1065,28 @@ readonly namespace References {
   ReferenceClass CatalanMap = new ReferenceClass(#b5024258-670f-422a-9072-61fd891a1525#, ReferenceTypes.Art) {
     ArtistLink to new PersonClass(#ada55b9b-3668-4c2c-8957-f165b7c61ed1#, "Martí8888", null, null);
     Note: "Own work, CC BY-SA 4.0";
-    Link to new URLClass("commons.wikimedia.org/w/index.php?curid=55002590");
+    WikiCommons(55002590);
     Link to WorldLanguages.Catalan;
   };
 
   ReferenceClass Walloon = new ReferenceClass(#f520c1c4-7676-49a1-8d6d-c6545c746690#, ReferenceTypes.Art) {
     ArtistLink to new PersonClass(#72a5e5ed-00e2-4f0a-8e32-dc2ba0e2d46e#, "Fobos92", null, null);
     Note: "Own work, CC BY-SA 4.0";
-    Link to new URLClass("commons.wikimedia.org/w/index.php?curid=35302145");
+    WikiCommons(35302145);
     Link to WorldLanguages.Walloon;
   };
 
   ReferenceClass FriulianMap = new ReferenceClass(#bb4e3b70-ad61-44cc-9acb-262115ac9385#, ReferenceTypes.Art) {
     ArtistLink to new PersonClass(#8b7d0579-6afb-4b86-a84d-e3350f65e639#, "El Bux", null, "Del Cu");
     Note: "CC BY-SA 4.0";
-    Link to new URLClass("commons.wikimedia.org/w/index.php?curid=100544430");
+    WikiCommons(100544430);
     Link to WorldLanguages.Friulian;
   };
 
   ReferenceClass RomanianMap = new ReferenceClass(#3c22d917-a089-4aff-b550-d0a41d54fe53#, ReferenceTypes.Art) {
     ArtistLink to new PersonClass(#72a5e5ed-00e2-4f0a-8e32-dc2ba0e2d46e#, "Fobos92", null, null);
     Note: "Own work, CC BY-SA 4.0";
-    Link to new URLClass("commons.wikimedia.org/w/index.php?curid=17155403");
+    WikiCommons(17155403);
     Link to WorldLanguages.Romanian;
   };
 

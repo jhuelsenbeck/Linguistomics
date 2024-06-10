@@ -195,7 +195,7 @@ abstract class RuleClass {
     style.DQuote {Name};
   };
 
-  ShowPartitions(ContentStyleClass style, textheight) = Block {
+  ShowPartitions(textheight) = Block {
     Table(BorderB(1), null, [textheight * 3, textheight * 10, textheight * 15]) {
       TextHeight: textheight;
 
@@ -335,7 +335,7 @@ class PartitionActionClass: ActionClass {
   var PartitionClass P1,
                      P2;
 
-  Constructor(DataSetClass data, RuleClass rule, StatClass rate, PartitionClass p1, PartitionClass p2) {
+  Constructor(RuleClass rule, StatClass rate, PartitionClass p1, PartitionClass p2) {
     super.Constructor(Actions.ToSource, rule);
     Rate = rate;
     P1   = p1;
@@ -716,7 +716,7 @@ class CalcRatesClass {
       foreach (var p2 in Rule.Partitions) {
         var rate = Transition.Rates[each0, i];
         if (rate is valid) {
-          var  hover = new PartitionActionClass(Data, Rule, rate, p1, p2);
+          var  hover = new PartitionActionClass(Rule, rate, p1, p2);
 
           if (p1 == p2) {
             var line2 = new LineStyleClass(rate.Mean * RateScale, 0.25, 1);
@@ -726,8 +726,6 @@ class CalcRatesClass {
             };
           }
           else if (each0 < i) {
-            var  r    = rate.Mean * RateScale / MaxLine;
-            var frac  = Math.Round(Math.Max(1.0, r) * 255.0);
             var angle = Graphics.GetAngle(p1.Center, p2.Center);
             var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle + Graphics.OneEighty);
             var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle);
@@ -774,8 +772,6 @@ class CalcRatesClass {
   };
 
   TranLink(i0, i1) = "Tran{0}:{1}"(i0, i1);
-
-  static CompareLength(l1, l2, options) = l2.Length - l1.Length;
 }
 //======================================================================
 
