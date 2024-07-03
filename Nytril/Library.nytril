@@ -1126,15 +1126,17 @@ class DataSetClass {
 
 //======================================================================
 
+typedef StatMatrix MatrixClass<StatClass>;
+
 class ResultsClass {
-  var DataSetClass           Data;
-  var RuleClass              Rule;
-  var AlignIndexClass[]      Alignments;
-  var MatrixClass<StatClass> TransitionStats;
-  var AlignedCountClass      QRates /*,
-                             AverageRates */;
-  var                        AlignmentCutoff,
-                             EquilibriumFrequencies;
+  var DataSetClass      Data;
+  var RuleClass         Rule;
+  var AlignIndexClass[] Alignments;
+  var StatMatrix        TransitionStats;
+  var AlignedCountClass QRates /*,
+                        AverageRates */;
+  var                   AlignmentCutoff,
+                        EquilibriumFrequencies;
 
   Constructor(DataSetClass data) {
     Data = data;
@@ -1151,10 +1153,10 @@ class ResultsClass {
 
     var ts = align?.TransitionStats;
     if (ts is not null)
-      TransitionStats = MatrixClass.Convert(ts);
+      TransitionStats = StatMatrix.Convert(ts);
     else {
       var length = QRates.Length;
-      var bs = new StatClass(0, 0.5, 1);
+      var bs     = new StatClass(0, 0.5, 1);
       TransitionStats = new(length, length, bs, bs);
     }
 

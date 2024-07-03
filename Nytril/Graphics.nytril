@@ -1,8 +1,9 @@
 using Format, Math, Units, LinkTypes;
 //======================================================================
 
-Main.MathFamily   = TextFamilies.LinuxLibertineO;
-Main.SymbolFamily = TextFamilies.CMUClassicalSerif;
+//Main.MathFamily   = TextFamilies.LinuxLibertineO;
+//Main.SymbolFamily = TextFamilies.CMUSerif;
+//Main.GreekFamily  = TextFamilies.CMUSerifExtra;
 
 //======================================================================
 
@@ -21,10 +22,8 @@ readonly namespace PaperStyle {
 
   SansSerif            = TextFamily: TextFamilies.Arial;
   IPAFamily            = TextFamily: TextFamilies.LinuxLibertineO;
-  GreekFamily          = IPAFamily;
-  Classical            = {TextFamily: TextFamilies.CMUClassicalSerif};
-  ClassicItalic        = {Classical; Italic};
-  ClassicBold          = {Classical; Bold};
+  Fancy                = {TextFamily: TextFamilies.CMUSerif; Italic};
+  FancyBold            = {TextFamily: TextFamilies.CMUSerif; Bold; Italic};
   TaxonFormat          = TextColor: Colors.DarkBlue;
   CommentFormat        = TextColor: Colors.Green;
   KeywordFormat        = TextColor: Colors.Blue;
@@ -214,22 +213,21 @@ readonly namespace PaperStyle {
     Bold;
   };
 
-  NeedsReview(text) = InParens {
+  NeedsReview(text) = SpanParens {
     TextColor: Colors.Red;
     text;
   };
 
   Equation = Span {
-    TextFamily: Main.MathFamily;
     TextEquation: true;
   };
 
   EquationPar = Paragraph {
+    TextEquation: true;
+    TextStacked: true;
     SpaceBefore: 10 pts;
     SpaceAfter: 8 pts;
     ParAlignment: ParAlignments.Center;
-    TextStacked: true;
-    TextEquation: true;
     TextHeight: 12 pts;
   };
 }
@@ -244,7 +242,7 @@ class DefClass: FactClass {
   Constructor(id, symbol, name, description=null) {
     super.Constructor(id);
 
-    Variable    = PaperStyle.Equation {symbol};
+    Variable    = symbol;
     Name        = name;
     Description = description;
   }
@@ -263,13 +261,17 @@ class DefClass: FactClass {
 
   override GetLayoutTip = Block {
     Paragraph {
+      TextFamily: TextFamilies.TimesNewRoman;
+      TextEquation: true;
       TextHeight: 20 pts;
       Variable;
     };
     Paragraph {
+      TextHeight: 16 pts;
       Bold; Name;
     };
     Paragraph {
+      TextHeight: 14 pts;
       Description;
     };
   };
