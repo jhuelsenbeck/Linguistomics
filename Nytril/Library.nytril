@@ -72,17 +72,17 @@ RateDescriptor(text) = Span {
 
 //======================================================================
 
-class AlignPairClass {
+class AlignPairClass: DocumentClass {
   var DataSetClass    Data;
   var AlignIndexClass Cognate;
   var SizeClass       BoxSize;
-  var                 Name;
 
   Constructor(DataSetClass data, AlignIndexClass cognate) {
+    super.Constructor(#79b7f114-6a21-4391-a404-6b8cbacd5a77#, cognate.ConceptName);
+
     Data    = data;
     Cognate = cognate;
     BoxSize = new SizeClass(14 pts, 14 pts);
-    Name    = cognate.ConceptName;
     if (cognate.CognateName != DefaultCognate)
       Name += "-" + cognate.CognateName;
   }
@@ -284,7 +284,7 @@ class AlignmentChartClass {
             Paragraph {
               Span {
                 ap.Name;
-                TipAction: new ActionClass(Actions.TipDocument, ap);
+                TipAction: ap;
               };
             };
             Paragraph {
@@ -1324,7 +1324,7 @@ class PriorCountClass: CountBaseClass {
       HAlign: HAligns.Center;
       VAlign: VAligns.Center;
       TipNoPublish: true;
-      TipAction: new TranActionClass(value.ToArray, value.Length*Factor);
+      TipAction: new TranActionClass(si, sj, value.ToArray, value.Length*Factor);
 
       var count = 0;
       foreach (var e in value) {

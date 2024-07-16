@@ -400,19 +400,15 @@ class TransitionClass {
 }
 //======================================================================
 
-class TranActionClass: ActionClass {
+class TranActionClass: DocumentClass {
   var WordPairClass[] List;
   var                 Percent;
 
-  Constructor(WordPairClass[] list, percent) {
-    super.Constructor(Actions.TipDocument, list);
+  Constructor(SegPartClass s1, SegPartClass s2, WordPairClass[] list, percent) {
+    super.Constructor(guid.FromHash(s1.Ipa + s2.Ipa), Actions.ToDocument);
     List    = list;
     Percent = percent;
   }
-
-  override GetQuery = MatchAny(WordClass) {
-    (each List).Word1 + (each List).Word2;
-  };
 
   ShowSegments(count) = Block {
     var first = List.FirstElement;
@@ -451,6 +447,7 @@ class TranActionClass: ActionClass {
     };
   }
 }
+
 //======================================================================
 
 class AlignSortClass {
@@ -479,7 +476,7 @@ class RateClass: ActionClass {
                         Symmetric;
 
   Constructor(AlignedCountClass count, SegPartClass s0, SegPartClass s1, rate, reverse, bool symmetric, bool diagonal) {
-    super.Constructor(Actions.TipDocument, s0);
+    super.Constructor(Actions.ToDocument, null, guid.FromHash("Rate"+s0.Ipa + s1.Ipa));
 
     Count     = count;
     S0        = s0;
