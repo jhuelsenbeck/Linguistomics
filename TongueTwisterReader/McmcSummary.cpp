@@ -1239,7 +1239,7 @@ int McmcSummary::readNumStates(std::string fn) {
     auto it = j.find("NumberOfStates");
     if (it == j.end())
         {
-        Msg::warning("Could not find partition set in the JSON configuration file");
+        Msg::warning("Could not find partition set in the JSON configuration file, \"" + fn + "\"");
         return 0;
         }
     else

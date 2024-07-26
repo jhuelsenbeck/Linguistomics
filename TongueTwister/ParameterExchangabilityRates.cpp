@@ -182,8 +182,24 @@ void ParameterExchangabilityRates::reject(void) {
     modelPtr->flipActiveLikelihood();
 }
 
+void ParameterExchangabilityRates::setEqual(void) {
+
+    double val = (double)1.0 / numRates;
+    double sum = 0.0;
+    for (int i=0; i<numRates; i++)
+        {
+        rates[0][i] = val;
+        sum += rates[0][i];
+        }
+    for (int i=0; i<numRates; i++)
+        rates[0][i] /= sum;
+    rates[1] = rates[0];
+}
+
 double ParameterExchangabilityRates::update(int) {
 
+    double bounce = 1.0;
+    
     // choose the number of rates to update
     int k = 1;
     double u = rv->uniformRv();
@@ -214,8 +230,8 @@ double ParameterExchangabilityRates::update(int) {
         int indexToUpdate = rv->uniformRvInt(numRates);
         oldValues[0] = rates[0][indexToUpdate];
         oldValues[1] = 1.0 - oldValues[0];
-        alphaForward[0] = oldValues[0] * alpha0;
-        alphaForward[1] = oldValues[1] * alpha0;
+        alphaForward[0] = oldValues[0] * alpha0 + bounce;
+        alphaForward[1] = oldValues[1] * alpha0 + bounce;
         if (alphaForward[0] < 0.0)
             Msg::error("Negative alpha[0] in k=1 proposal for exchangability rates");
         if (alphaForward[1] < 0.0)
@@ -232,8 +248,8 @@ double ParameterExchangabilityRates::update(int) {
         Probability::Helper::normalize(rates[0], minVal);
 
         // parameterize dirichlet for reverse move
-        alphaReverse[0] = newValues[0] * alpha0;
-        alphaReverse[1] = newValues[1] * alpha0;
+        alphaReverse[0] = newValues[0] * alpha0 + bounce;
+        alphaReverse[1] = newValues[1] * alpha0 + bounce;
 
         // calculate proposal probability
         lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
@@ -266,7 +282,7 @@ double ParameterExchangabilityRates::update(int) {
             }
         for (size_t i=0; i<k+1; i++)
             {
-            alphaForward[i] = oldValues[i] * alpha0;
+            alphaForward[i] = oldValues[i] * alpha0 + bounce;
             if (alphaForward[i] < 0.0)
                 Msg::error("Negative alpha[" + std::to_string(i)  + ")] in k=" + std::to_string(k) + " proposal for exchangability rates");
             }
@@ -288,7 +304,7 @@ double ParameterExchangabilityRates::update(int) {
 
         // parameterize dirichlet for reverse move
         for (size_t i=0; i<k+1; i++)
-            alphaReverse[i] = newValues[i] * alpha0;
+            alphaReverse[i] = newValues[i] * alpha0 + bounce;
 
         // calculate proposal probability
         lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
@@ -310,7 +326,7 @@ double ParameterExchangabilityRates::update(int) {
         for (int i=0; i<numRates; i++)
             {
             oldValues[i] = rates[0][i];
-            alphaForward[i] = oldValues[i] * alpha0;
+            alphaForward[i] = oldValues[i] * alpha0 + bounce;
             if (alphaForward[i] < 0.0)
                 Msg::error("Negative alpha[" + std::to_string(i)  + ")] in k=" + std::to_string(numRates) + " proposal for exchangability rates");
             }
@@ -325,7 +341,7 @@ double ParameterExchangabilityRates::update(int) {
         for (int i=0; i<numRates; i++)
             {
             rates[0][i] = newValues[i];
-            alphaReverse[i] = newValues[i] * alpha0;
+            alphaReverse[i] = newValues[i] * alpha0 + bounce;
             }
 
         // calculate proposal probability

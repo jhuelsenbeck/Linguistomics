@@ -5,7 +5,7 @@
 #include "json.hpp"
 
 
-enum SubstitutionModel { jc69, gtr, custom };
+enum SubstitutionModel { jc69, f81, gtr, custom };
 
 class UserSettings {
 

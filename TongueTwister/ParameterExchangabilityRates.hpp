@@ -27,6 +27,7 @@ class ParameterExchangabilityRates : public Parameter {
         double                          lnPriorProbability(void);
         void                            print(void);
         void                            reject(void);
+        void                            setEqual(void);
         double                          update(int iter);
         
     private:

@@ -12,7 +12,7 @@
    ------------------------------------------------------------------------------------------------------------------------
    -d         N/A                  Name of the file with the initial alignments of words (and model settings)
    -o         FileOutput           File name for output
-   -m         Model                Substitution model (jc69 or gtr or custom, making certain the model name is lower case)
+   -m         Model                Substitution model (jc69, f81, gtr or custom, making certain the model name is lower case)
    -l         BrlenPriorVal        Parameter of exponential branch length prior
    -lc        Clock                Clock constrained (yes or no, all lower case)
    -c         OnlyCompleteWords    Use only completely sampled words (yes or no, lower case)
@@ -110,6 +110,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 {
                 if (cmd == "jc69")
                     substitutionModel = jc69;
+                else if (cmd == "f81")
+                    substitutionModel = f81;
                 else if (cmd == "gtr")
                     substitutionModel = gtr;
                 else if (cmd == "custom")
@@ -229,6 +231,8 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
             std::string res = getVariable(jsonSettings, "Model");
             if (res == "jc69")
                 substitutionModel = jc69;
+            else if (res == "f81")
+                substitutionModel = f81;
             else if (res == "gtr")
                 substitutionModel = gtr;
             else if (res == "custom")
@@ -327,6 +331,8 @@ void UserSettings::print(void) {
         std::cout << "   * Only analyzing completely sampled words = no" << std::endl;
     if (substitutionModel == jc69)
         std::cout << "   * Substitution model                      = JC69" << std::endl;
+    else if (substitutionModel == f81)
+        std::cout << "   * Substitution model                      = F81" << std::endl;
     else if (substitutionModel == gtr)
         std::cout << "   * Substitution model                      = GTR" << std::endl;
     else
@@ -366,7 +372,7 @@ void UserSettings::usage(void) {
     std::cout << "   Usage" << std::endl;
     std::cout << "   * -d                      -- File with initial alignments of words" << std::endl;
     std::cout << "   * -o / FileOutput         -- File name for output" << std::endl;
-    std::cout << "   * -m / Model              -- Substitution model (jc69/gtr/custom)" << std::endl;
+    std::cout << "   * -m / Model              -- Substitution model (jc69/f81/gtr/custom)" << std::endl;
     std::cout << "   * -l / BrlenPriorVal      -- Parameter of exponential branch length prior" << std::endl;
     std::cout << "   * -lc / Clock             -- Clock constrained (yes) or unconstrained (no) branch lengths" << std::endl;
     std::cout << "   * -c / OnlyCompleteWords  -- Use only completely sampled words (no/yes)" << std::endl;
