@@ -16,7 +16,7 @@ class PartitionClass: FactClass {
   Constructor(index, name, SegPartClass[] segments) {
     super.Constructor(guid.FromHash(name));
     Name      = name;
-    Color     = ChartColor(index);
+    Color     = ColorClass.ChartColor(index);
     Marker    = Markers.Dot(Color);
     TextColor = Color.TextCompliment;
     Index     = index;
@@ -509,22 +509,14 @@ class RateClass: ActionClass {
     return S0.Segment.Ipa == ipa0 and S1.Segment.Ipa == ipa1;
   }
 
-  static ColorClass Greenish(frac) {
-    return ColorClass.FromHSLA(124, 0.8, frac);
-  }
-
-  static ColorClass Redish(frac) {
-    return ColorClass.FromHSLA(9, 0.8, frac);
-  }
-
   ColorClass RateColor {
-    var r = 1.0 - Rate * (Diagonal ? Count.DiagFactor : Count.RateFactor);
-    return r < 0 ? Redish(-r) : Greenish(r);
+    var r = Rate * (Diagonal ? Count.DiagFactor : Count.RateFactor);
+    return ColorClass.HeatMap(r);
   }
 
   ColorClass DirectionColor {
-    var r = 1.0 - Direction * Count.DirFactor;
-    return r < 0 ? Redish(-r) : Greenish(r);
+    var r = 1.0 - 0.5 * Direction * Count.DirFactor;
+    return ColorClass.HeatMap(r);
   }
 
   ShowPartition(SegPartClass s, textheight) = Canvas(textheight * 2.5) {
@@ -537,16 +529,16 @@ class RateClass: ActionClass {
 
   ShowBox(textheight) = HBox {
     TextHeight: textheight;
+    Separation: textheight * 0.25;
     VAlign: VAligns.Center;
+    Tip: this;
+
     ShowPartition(S0, textheight);
-    Space;
     Span {
       TipAction: this;
       Symmetric ? Tex.leftrightarrow : Tex.rightarrow;
     };
-    Space;
     ShowPartition(S1, textheight);
-    Tip: this;
   };
 
   override GetLayoutSpan = ShowBox(11 pts);

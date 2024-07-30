@@ -337,17 +337,18 @@ class AlignmentChartClass {
 
 class LanguageClass: FactClass {
   field string   Name;
-  field int      Cases;
+  var ImageClass Image;
+  var int        Cases;
   var string     ShortName;
   var int        LangIndex;
-  var ImageClass Image;
   var            ImagePath;
 
-  Constructor(id, name, cases=0) {
+  Constructor(id, name, cases=0, imagepath=null) {
     super.Constructor(id);
     Name      = name;
     ShortName = name.Replace(" ", Empty);
     Cases     = cases;
+    ImagePath = imagepath;
   }
 
   override IconClass GetIcon = Icons.language;
@@ -1334,7 +1335,8 @@ class PriorCountClass: CountBaseClass {
           ++count;
       }
 
-      var bc = count > 0 ? RateClass.Greenish(count / value.Length) : RateClass.Redish(value.Length * Factor);
+      var bf = count > 0 ? 0.5 * count / value.Length : 0.5 + 0.5 * value.Length * Factor;
+      var bc = ColorClass.HeatMap(bf);
 
       Background: bc;
       TextColor: bc.TextCompliment;
