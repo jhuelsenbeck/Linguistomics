@@ -40,7 +40,7 @@ IfValue(a, text) = Span {
   text;
 };
 
-PSM(n) = Prob(Condition {SegmentalInfo; Model sub n});
+PSM(n) = Prob(Condition(SegmentalInfo, Model sub n));
 
 NewProposal(start, end) = Equation {
   ProbProposal;
@@ -51,8 +51,8 @@ NewProposal(start, end) = Equation {
   }
 };
 
-ProbVar(x, extra=null) = Prob(CommaList {
-  Condition{x; Topology};
+ProbVar(DefClass x, extra=null) = Prob(CommaList {
+  Condition(x, Topology);
   ExpectedEvents;
   RateMatrixParams;
   InsertionRate;
@@ -123,8 +123,8 @@ EllipsisList = CommaList {
 };
 
 ProductList = Span {
-  Separator: Times;
-  LastSeparator: Times Tex.ldots Times;
+  Separator: times;
+  LastSeparator: times Tex.ldots times;
 };
 
 SampledLanguages(n) = Equation {
@@ -164,8 +164,11 @@ AncestorNode(i) = Equation {
 
 //======================================================================
 
-Condition = Span {
-  Separator: Tex.vert;
+Condition(DefClass x, y) = Span {
+  Tip: Span {TextHeight: 16 pts; "Conditional observation of {0} ({1}) given the parameter {2}"(x.Name, x, y)};
+  x;
+  Tex.vert;
+  y;
 };
 
 //======================================================================
@@ -229,7 +232,7 @@ readonly EquationClass Equations.LiklihoodFunction = new(#4a58876a-8295-4ea2-830
   Formula: Equation {
     FunctionF;
     Arguments {
-      Condition {SegmentalInfo; Phylogeny};
+      Condition(SegmentalInfo, Phylogeny);
       InsertionRate;
       DeletionRate;
       RateMatrixParams;
@@ -253,7 +256,7 @@ readonly EquationClass Equations.BayesianEstimation = new(#a6660b63-6222-4967-93
       Phylogeny;
       InsertionRate;
       DeletionRate;
-      Condition{RateMatrixParams; SegmentalInfo};
+      Condition(RateMatrixParams, SegmentalInfo);
     };
     Equals;
     Fraction {
@@ -362,20 +365,20 @@ readonly EquationClass Equations.ProbOfAcceptingProposal = new(#f85ca0eb-aa0b-49
       Fraction {
         Span {
           FunctionF;
-          Arguments {Condition{Unknown; NewValueProposal}};
+          Arguments {Condition(NewValueProposal, Unknown)};
         };
 
         Span {
           FunctionF;
-          Arguments {Condition {Unknown; RateMatrixParams}};
+          Arguments {Condition(RateMatrixParams, Unknown)};
         };
       };
-      Times;
+      times;
       Fraction {
         Span {FunctionF; Arguments {NewValueProposal}};
         Span {FunctionF; Arguments {RateMatrixParams}};
       };
-      Times;
+      times;
       Fraction {
         NewProposal(NewValueProposal, RateMatrixParams);
         NewProposal(RateMatrixParams, NewValueProposal);
@@ -434,7 +437,7 @@ readonly EquationClass Equations.PosteriorProbabilityDistribution = new(#5294924
       ExpectedEvents;
       RateMatrixParams;
       InsertionRate;
-      Condition{DeletionRate; SegmentalInfo};
+      Condition(DeletionRate, SegmentalInfo);
     });
     Equals;
     Fraction {
