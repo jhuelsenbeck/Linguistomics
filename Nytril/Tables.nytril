@@ -233,7 +233,7 @@ readonly namespace AllWords {
 }
 
 readonly namespace MatchCell {
-  SegmentText(HashSetClass set, SegPartClass segment) {
+  SegmentText(SegmentSetClass set, SegPartClass segment) {
     if (not segment.Segment.Impossible) {
       set.Add(segment);
       return segment.ShowSegment;
@@ -241,7 +241,7 @@ readonly namespace MatchCell {
     return null;
   }
 
-  SegmentBox(HashSetClass set, SegPartClass segment, color) = Canvas(PaperStyle.BoxSize.Width, PaperStyle.BoxSize.Height) {
+  SegmentBox(SegmentSetClass set, SegPartClass segment, color) = Canvas(PaperStyle.BoxSize.Width, PaperStyle.BoxSize.Height) {
     HAlign: HAligns.Center;
     if (segment.?Ipa is valid) {
       TextHeight: PaperStyle.BoxSize.Height - 6 pts;
@@ -252,12 +252,12 @@ readonly namespace MatchCell {
       PaperStyle.ImpossibleBackground;
   };
 
-  ShowBox(HashSetClass set, SegPartClass segment, color) = SegmentBox(set, segment, color) {
+  ShowBox(SegmentSetClass set, SegPartClass segment, color) = SegmentBox(set, segment, color) {
     if (segment.Features.HasFlag(Voiced))
       X: PaperStyle.BoxSize.Width;
   };
 
-  ErrorMatches(HashSetClass set, SegPartClass[] matches) = Span {
+  ErrorMatches(SegmentSetClass set, SegPartClass[] matches) = Span {
     Separator: CommaSpace;
     TextColor: Colors.Red;
     MatchCell.SegmentText(set, each matches);
@@ -339,7 +339,7 @@ class TabOptionsClass {
       Title
     };
 
-    var places = Places.ToArray.FindSlice(place => MatchPlace(data, place));
+    var places = Places.ValueArray.FindSlice(place => MatchPlace(data, place));
     if (places.Length == 0)
       Lang.None;
     else {
@@ -448,13 +448,13 @@ readonly namespace MatchingVowels {
       PaperStyle.TitleBackground;
       open.Name;
     };
-    AddCell(segments, set, open, each Backnesses, features)
+    AddCell(segments, set, open, each Backnesses.ValueArray, features)
   };
 
-  ShowVowelTable(SegPartClass[] segments, SegmentSetClass set, features) = Block {
+  ShowVowelTable(SegPartClass[] segments, SegmentSetClass set, SegmentFeatures features) = Block {
     PaperStyle.TitleBar {
       Separator: "-";
-      each features
+      each features;
     };
 
     var border = BorderR(0.5 pts);
@@ -463,13 +463,13 @@ readonly namespace MatchingVowels {
       Row {
         TextHeight: 10 pts;
         PaperStyle.HeaderCell;
-        foreach (var b in Backnesses) {
+        foreach (var b in Backnesses.ValueArray) {
           PaperStyle.HeaderCell {
             b;
           };
         }
       };
-      AddRow(segments, set, each Opens, features);
+      AddRow(segments, set, each Opens.ValueArray, features);
     };
   };
 

@@ -17,7 +17,7 @@ class WordsContainingClass: ActionClass {
   var SearchDataClass Data;
 
   Constructor(SearchDataClass data) {
-    super.Constructor(Actions.RunQuery, null, "Words Containing");
+    super.Constructor(Actions.RunQuery);
     Data = data;
   }
 
@@ -64,7 +64,7 @@ class DiagnosticsViewClass: DocumentClass {
 
     Paragraph {
       HBox {
-        TextControl(new(SearchData, attribute SearchDataClass.WordsContaining), 1 inches, null, new EdgeClass(1, 2)) {
+        TextControl(new(ref SearchData.WordsContaining), 1 inches, null, new EdgeClass(1, 2)) {
           "Find Words Containing";
           Action: Actions.Refresh;
         };
@@ -134,7 +134,7 @@ class ConceptGroupsClass: DataContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    WordGroups[] groups = WordGroups.ToArray[1..];
+    WordGroups[] groups = WordGroups.ValueArray[1..];
     Table(PaperStyle.TableBorder, null, [0.25 inches] + [1 inch] * (2+groups.Length)) {
       Row {
         PaperStyle.HeaderCell;
@@ -422,7 +422,7 @@ class SegmentTransitionClass: ContentClass {
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled red box. The chart has diagonal symmetry.";
+    "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled color box. The chart has diagonal symmetry.";
   };
 
   override GetBody(ContentStyleClass style) = new PriorCountClass(Data).PartitionBox(new (ExtentWidth, ExtentHeight - 1.6 inch));

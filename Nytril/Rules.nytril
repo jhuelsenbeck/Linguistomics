@@ -16,7 +16,7 @@ class PartitionClass: FactClass {
   Constructor(index, name, SegPartClass[] segments) {
     super.Constructor(guid.FromHash(name));
     Name      = name;
-    Color     = ChartColor(index);
+    Color     = ColorClass.ChartColor(index);
     Marker    = Markers.Dot(Color);
     TextColor = Color.TextCompliment;
     Index     = index;
@@ -195,7 +195,7 @@ abstract class RuleClass {
     style.DQuote {Name};
   };
 
-  ShowPartitions(ContentStyleClass style, textheight) = Block {
+  ShowPartitions(textheight) = Block {
     Table(BorderB(1), null, [textheight * 3, textheight * 10, textheight * 15]) {
       TextHeight: textheight;
 
@@ -335,7 +335,7 @@ class PartitionActionClass: ActionClass {
   var PartitionClass P1,
                      P2;
 
-  Constructor(DataSetClass data, RuleClass rule, StatClass rate, PartitionClass p1, PartitionClass p2) {
+  Constructor(RuleClass rule, StatClass rate, PartitionClass p1, PartitionClass p2) {
     super.Constructor(Actions.ToSource, rule);
     Rate = rate;
     P1   = p1;
@@ -400,19 +400,15 @@ class TransitionClass {
 }
 //======================================================================
 
-class TranActionClass: ActionClass {
+class TranActionClass: DocumentClass {
   var WordPairClass[] List;
   var                 Percent;
 
-  Constructor(WordPairClass[] list, percent) {
-    super.Constructor(Actions.TipDocument, list);
+  Constructor(SegPartClass s1, SegPartClass s2, WordPairClass[] list, percent) {
+    super.Constructor(guid.FromHash(s1.Ipa + s2.Ipa), Actions.ToDocument);
     List    = list;
     Percent = percent;
   }
-
-  override GetQuery = MatchAny(WordClass) {
-    (each List).Word1 + (each List).Word2;
-  };
 
   ShowSegments(count) = Block {
     var first = List.FirstElement;
@@ -451,6 +447,7 @@ class TranActionClass: ActionClass {
     };
   }
 }
+
 //======================================================================
 
 class AlignSortClass {
@@ -479,7 +476,7 @@ class RateClass: ActionClass {
                         Symmetric;
 
   Constructor(AlignedCountClass count, SegPartClass s0, SegPartClass s1, rate, reverse, bool symmetric, bool diagonal) {
-    super.Constructor(Actions.TipDocument, s0);
+    super.Constructor(Actions.ToDocument, null, guid.FromHash("Rate"+s0.Ipa + s1.Ipa));
 
     Count     = count;
     S0        = s0;
@@ -512,22 +509,14 @@ class RateClass: ActionClass {
     return S0.Segment.Ipa == ipa0 and S1.Segment.Ipa == ipa1;
   }
 
-  static ColorClass Greenish(frac) {
-    return ColorClass.FromHSLA(124, 0.8, frac);
-  }
-
-  static ColorClass Redish(frac) {
-    return ColorClass.FromHSLA(9, 0.8, frac);
-  }
-
   ColorClass RateColor {
-    var r = 1.0 - Rate * (Diagonal ? Count.DiagFactor : Count.RateFactor);
-    return r < 0 ? Redish(-r) : Greenish(r);
+    var r = Rate * (Diagonal ? Count.DiagFactor : Count.RateFactor);
+    return ColorClass.HeatMap(r);
   }
 
   ColorClass DirectionColor {
-    var r = 1.0 - Direction * Count.DirFactor;
-    return r < 0 ? Redish(-r) : Greenish(r);
+    var r = 1.0 - 0.5 * Direction * Count.DirFactor;
+    return ColorClass.HeatMap(r);
   }
 
   ShowPartition(SegPartClass s, textheight) = Canvas(textheight * 2.5) {
@@ -540,16 +529,16 @@ class RateClass: ActionClass {
 
   ShowBox(textheight) = HBox {
     TextHeight: textheight;
+    Separation: textheight * 0.25;
     VAlign: VAligns.Center;
+    Tip: this;
+
     ShowPartition(S0, textheight);
-    Space;
     Span {
       TipAction: this;
       Symmetric ? Tex.leftrightarrow : Tex.rightarrow;
     };
-    Space;
     ShowPartition(S1, textheight);
-    Tip: this;
   };
 
   override GetLayoutSpan = ShowBox(11 pts);
@@ -716,7 +705,7 @@ class CalcRatesClass {
       foreach (var p2 in Rule.Partitions) {
         var rate = Transition.Rates[each0, i];
         if (rate is valid) {
-          var  hover = new PartitionActionClass(Data, Rule, rate, p1, p2);
+          var  hover = new PartitionActionClass(Rule, rate, p1, p2);
 
           if (p1 == p2) {
             var line2 = new LineStyleClass(rate.Mean * RateScale, 0.25, 1);
@@ -726,8 +715,6 @@ class CalcRatesClass {
             };
           }
           else if (each0 < i) {
-            var  r    = rate.Mean * RateScale / MaxLine;
-            var frac  = Math.Round(Math.Max(1.0, r) * 255.0);
             var angle = Graphics.GetAngle(p1.Center, p2.Center);
             var c1    = Graphics.Adjust(p1.Center, p1.Radius + ArrowGap, angle + Graphics.OneEighty);
             var c2    = Graphics.Adjust(p2.Center, p2.Radius + ArrowGap, angle);
@@ -745,8 +732,8 @@ class CalcRatesClass {
       var fsize      = p1.Radius*2;
       var textheight = Math.Min(14 pts, fsize * 0.5);
 
-      Figure(p1.Color, 0.5 pt) {
-        Ellipse(new(pos, new(fsize)));
+      Shape(p1.Color, 0.5 pt) {
+        EllipsePath(new(pos, new(fsize)));
         TipAction: p1;
       };
 
@@ -774,8 +761,6 @@ class CalcRatesClass {
   };
 
   TranLink(i0, i1) = "Tran{0}:{1}"(i0, i1);
-
-  static CompareLength(l1, l2, options) = l2.Length - l1.Length;
 }
 //======================================================================
 

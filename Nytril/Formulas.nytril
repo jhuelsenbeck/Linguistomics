@@ -28,7 +28,7 @@ FD(x) = Span {Space; Italic "d"; x};
 
 Prob(x) = Equation {
   MarginalLikelihood;
-  InParens {x};
+  SpanParens {x};
 };
 
 IfValue(a, text) = Span {
@@ -40,19 +40,19 @@ IfValue(a, text) = Span {
   text;
 };
 
-PSM(n) = Prob(Condition {SegmentalInfo; Model sub n});
+PSM(n) = Prob(Condition(SegmentalInfo, Model sub n));
 
 NewProposal(start, end) = Equation {
   ProbProposal;
-  InParens {
+  SpanParens {
     start;
     Tex.rightarrow;
     end;
   }
 };
 
-ProbVar(x, extra=null) = Prob(CommaList {
-  Condition{x; Topology};
+ProbVar(DefClass x, extra=null) = Prob(CommaList {
+  Condition(x, Topology);
   ExpectedEvents;
   RateMatrixParams;
   InsertionRate;
@@ -77,7 +77,7 @@ POP = Prob("Observations | Parameter(s)");
 PP  = Prob("Parameter(s)");
 PO  = Prob("Observations");
 
-InsertDelete(by) = Span {
+InsertDelete(by) = Equation {
   InsertionRate;
   by;
   DeletionRate;
@@ -86,17 +86,14 @@ InsertDelete(by) = Span {
 //======================================================================
 
 readonly namespace sym {
-  i     = Classical "i";
-  ii    = Classical "ii";
-  ij    = Classical "ij";
-  j     = Classical "j";
-  r     = Classical "r";
-  n     = Classical "n";
-  m     = Extra "m";
-  q     = Extra "q";
-  ni    = sym.n sub sym.i;
-  D(x)  = Span {Classical Italic "d"; x};
-  theta = Span {PaperStyle.GreekFamily; "θ"};
+  i     = Symbol("i");
+  ii    = Symbol("ii");
+  ij    = Symbol("ij");
+  j     = Symbol("j");
+  r     = Symbol("r");
+  m     = Symbol("m");
+  q     = Symbol("q");
+  theta = Span {TextFamily: TextFamilies.LinuxLibertineO; Italic; "θ"};
 }
 
 Ith = Span {sym.i; "th"};
@@ -113,7 +110,7 @@ CommaList = Span {
   Separator: CommaSpace;
 };
 
-Arguments = InParens {
+Arguments = SpanParens {
   Separator: CommaSpace;
 };
 
@@ -126,8 +123,8 @@ EllipsisList = CommaList {
 };
 
 ProductList = Span {
-  Separator: Times;
-  LastSeparator: Times Tex.ldots Times;
+  Separator: times;
+  LastSeparator: times Tex.ldots times;
 };
 
 SampledLanguages(n) = Equation {
@@ -159,7 +156,7 @@ NodeIndex = Equation {
 };
 
 AncestorNode(i) = Equation {
-  Classical Tex.sigma;
+  Tex.sigma;
   InParens {
     i;
   };
@@ -167,47 +164,51 @@ AncestorNode(i) = Equation {
 
 //======================================================================
 
-Condition = Span {
-  Separator: Tex.vert;
+Condition(DefClass x, y) = Span {
+  Tip: Span {TextHeight: 16 pts; "Conditional observation of {0} ({1}) given the parameter {2}"(x.Name, x, y)};
+  x;
+  Tex.vert;
+  y;
 };
 
 //======================================================================
 
 readonly namespace Defs {
-  DefClass Phylogeny               = new(#307ce909-f048-4a73-bc64-45f876fc661a#, Tex.Psi GreekFamily , "Phylogeny", "The (possibly unknown) relationship between entities resulting from an evolutionary tree");
-  DefClass Topology                = new(#8e8c02ac-3f24-4ae2-837d-7c807b313956#, Tex.tau GreekFamily, "Tree topology", "Information on the relationships of the languages");
-  DefClass SubstitutionRate        = new(#04322008-770d-4b3f-8241-88e38317047c#, Tex.mu GreekFamily, "Substitution rate", "The rate at which the language changes");
+  DefClass Phylogeny               = new(#307ce909-f048-4a73-bc64-45f876fc661a#, Tex.Psi , "Phylogeny", "The (possibly unknown) relationship between entities resulting from an evolutionary tree");
+  DefClass Topology                = new(#8e8c02ac-3f24-4ae2-837d-7c807b313956#, Tex.tau, "Tree topology", "Information on the relationships of the languages");
+  DefClass SubstitutionRate        = new(#04322008-770d-4b3f-8241-88e38317047c#, Italic Tex.mu, "Substitution rate", "The rate at which the language changes");
   DefClass NumLanguages            = new(#a0899195-acf6-40a0-8578-9ea88cc81044#, Italic "N", "Sampled languages", "The number of languages in a sample");
-  DefClass ExpectedEvents          = new(#7095d7ae-44a8-4b30-bd2c-cefa28c48ea9#, Tex.nu GreekFamily, "Expected events", "The expected number of evolutionary events that occurred between two languages");
+  DefClass ExpectedEvents          = new(#7095d7ae-44a8-4b30-bd2c-cefa28c48ea9#, Tex.nu, "Expected events", "The expected number of evolutionary events that occurred between two languages");
   DefClass Time                    = new(#c32a5efb-f18a-4b9f-9308-b378e9a652bd#, Italic "t", "Past times", "Times of branch events");
   DefClass SegmentalAlignment      = new(#f9325799-863b-459b-94c0-d119367ab196#, Bold "A", "Segmental alignment", "Constructed by combining the word segment information for the languages of interest with information on the homology of the segments");
   DefClass SegmentalInfo           = new(#3bd5d33a-9ea7-4f50-9e4a-ac030af87091#, Bold "S", "Segmental information", "Information on the homology of the segments");
   DefClass Segment                 = new(#2e02739b-37ba-4e12-b1a1-9741d9dc3a12#, Bold "s", "Segment", "Linguistic segment");
   DefClass ISegment                = new(#0e1f8bcd-f299-4852-a98c-5031c53e1b72#, Segment sub sym.i, "ith segment", "");
   DefClass HomologyMap             = new(#8b2c537a-0161-47ab-8376-aa2cfd3e5377#, Bold "H", "Homology map", "The map describing the alignment of the segments");
-  DefClass RateMatrix              = new(#a8a039e6-63af-4496-bb50-22e5bdf5d312#, Bold Classical "Q", "Rate Matrix", "");
-  DefClass AverageMatrix           = new(#f66d7a9a-af00-4278-9d48-cb2697f1aae8#, Bold Classical "M", "Average Matrix", "");
-  DefClass RateMatrixScale         = new(#c19ebb53-371c-460e-adf0-86e960231174#, Extra Italic Tex.beta, "Rate matrix scaling factor", "Scales the rate matrix such that the average rate of segmental substitution is one");
-  DefClass StateProbability        = new(#4d420b31-d22f-4915-8ae8-15f2f4bbb87d#, Classical Bold "P", "Probability", "The probability the process ends in certain state");
-  DefClass MarginalLikelihood      = new(#c2f230d4-4050-4ee3-98b6-ec1c52405ce5#, "P", "Marginal Likelihood", "The average probability of the observations");
-  DefClass EquilibriumDistribution = new(#37149ed6-e98a-431c-b40d-7069c0a8c7ca#, Tex.pi GreekFamily , "Equilibrium distribution", "");
-  DefClass Probability             = new(#6083d6c3-2d27-4780-96bc-2de6c966774f#, Tex.pi GreekFamily , "Probability", "");
-  DefClass InsertionRate           = new(#1a94ba3d-d7da-4634-bbf6-88b03d84cffc#, Tex.lambda GreekFamily , "Segment insertion rate", "Rate of segment insertion");
-  DefClass DeletionRate            = new(#0c0d91ab-e586-451e-8519-74bead5be54d#, Tex.mu GreekFamily , "Rate of segment deletion", "");
-  DefClass WordLength              = new(#5018b4ef-62b3-47fe-8086-64802e6f5a63#, Classical "n", "Word length", "Number of segments in a word");
-  DefClass RateParameter           = new(#909d6802-f159-4c23-9467-fd848d6e3e3c#, Classical "r", "Rate parameter", "");
+  DefClass RateMatrix              = new(#a8a039e6-63af-4496-bb50-22e5bdf5d312#, BoldSymbol "Q", "Rate Matrix", "");
+  DefClass AverageMatrix           = new(#f66d7a9a-af00-4278-9d48-cb2697f1aae8#, BoldSymbol "M", "Average Matrix", "");
+  DefClass RateMatrixScale         = new(#c19ebb53-371c-460e-adf0-86e960231174#, Italic Tex.beta, "Rate matrix scaling factor", "Scales the rate matrix such that the average rate of segmental substitution is one");
+  DefClass StateProbability        = new(#4d420b31-d22f-4915-8ae8-15f2f4bbb87d#, BoldSymbol "P", "Probability", "The probability the process ends in certain state");
+  DefClass MarginalLikelihood      = new(#c2f230d4-4050-4ee3-98b6-ec1c52405ce5#, Italic "P", "Marginal Likelihood", "The average probability of the observations");
+  DefClass EquilibriumDistribution = new(#37149ed6-e98a-431c-b40d-7069c0a8c7ca#, Tex.pi, "Equilibrium distribution", "");
+  DefClass Probability             = new(#6083d6c3-2d27-4780-96bc-2de6c966774f#, Tex.pi, "Probability", "");
+  DefClass InsertionRate           = new(#1a94ba3d-d7da-4634-bbf6-88b03d84cffc#, Tex.lambda, "Segment insertion rate", "Rate of segment insertion");
+  DefClass DeletionRate            = new(#0c0d91ab-e586-451e-8519-74bead5be54d#, Italic Tex.mu, "Rate of segment deletion", "");
+  DefClass WordLength              = new(#5018b4ef-62b3-47fe-8086-64802e6f5a63#, Symbol("n"), "Word length", "Number of segments in a word");
+  DefClass WordLengthi             = new(#e52b4cb8-63cb-4305-8d3f-7abca7f90d4b#, WordLength sub sym.i, "Word Length(i)", ("i" sup "th") " word length");
+  DefClass RateParameter           = new(#909d6802-f159-4c23-9467-fd848d6e3e3c#, Symbol("r"), "Rate parameter", "");
   DefClass RateMatrixParams        = new(#d5d8bf9d-088e-420c-8c2f-56fd1fb73071#, sym.theta, "Rate parameters", "Parameters associated with the rate matrix");
-  DefClass NewValueProposal        = new(#ba307fd0-0546-459c-9f34-7e624f72015c#, Span {sym.theta; Tex.prime}, "Proposal", "New value proposal");
+  DefClass NewValueProposal        = new(#ba307fd0-0546-459c-9f34-7e624f72015c#, sym.theta + Tex.prime, "Proposal", "New value proposal");
   DefClass ProbProposal            = new(#cdd0c1f4-55fe-4c2d-9852-9a1d8387e821#, sym.q, "Proposal probability", "Probability of new proposal");
-  DefClass RandomNumber            = new(#daf62f51-5846-41dd-b56a-768d4c7d0bd5#, Classical "u", "Random number", "");
-  DefClass ProbOfAccepting         = new(#031c7f83-937c-4208-88d2-a843019be1c5#, Classical "R", "Acceptance probability", "Probability of accepting a proposed value");
+  DefClass RandomNumber            = new(#daf62f51-5846-41dd-b56a-768d4c7d0bd5#, Symbol("u"), "Random number", "");
+  DefClass ProbOfAccepting         = new(#031c7f83-937c-4208-88d2-a843019be1c5#, Symbol("R"), "Acceptance probability", "Probability of accepting a proposed value");
   DefClass Model                   = new(#424c092b-4204-4be4-a54b-153d609d39a7#, "M", "Model", "Mathematical model for linguistic parameters");
   DefClass BayesFactor             = new(#81d76a56-bdff-4876-8794-62d3dcff6346#, "BF", "Bayes Factor", "A numerical factor related to the quality of the model fit");
-  DefClass Unknown                 = new(#b201f529-2e31-4ccd-927c-3bcd5dbef524#, Classical "X", "Unknown", "");
-  DefClass PossibleRootedTrees     = new(#7a776122-8f31-49ff-94e0-e8124fa9b5b5#, Bold Extra "B", "Possible rooted trees", "");
+  DefClass Unknown                 = new(#b201f529-2e31-4ccd-927c-3bcd5dbef524#, BoldSymbol "X", "Unknown", "");
+  DefClass PossibleRootedTrees     = new(#7a776122-8f31-49ff-94e0-e8124fa9b5b5#, BoldSymbol "B", "Possible rooted trees", "");
   DefClass BN                      = new(#c7fecde1-fcb0-4b68-9bc2-69622b63a7f6#, Span {PossibleRootedTrees; InParens {NumLanguages}}, "Possible rooted trees as a function of the number of languages", "");
-  DefClass FunctionF               = new(#431c5ec9-7a2b-433d-8bff-b4d9bfa37704#, Classical "f", "Function");
-  DefClass EulerNumber             = new(#431c5ec9-7a2b-433d-8bff-b4d9bfa37704#, Classical "e", "Root of the natural log or Euler number");
+  DefClass FunctionF               = new(#431c5ec9-7a2b-433d-8bff-b4d9bfa37704#, Symbol("f"), "Function");
+  DefClass EulerNumber             = new(#431c5ec9-7a2b-433d-8bff-b4d9bfa37704#, Symbol("e"), "Root of the natural log or Euler number");
   DefClass DirichletRate           = new(#aba00649-6075-4f81-860d-8d92dede6ca8#, "r", "Dirichlet Rate", "");
   DefClass mij                     = new(#c8dbe5ac-e663-4e68-b6b4-e518fe1735e7#, sym.m sub sym.ij, ("i,j" sup "th") " element of the average rate matrix " AverageMatrix, "");
   DefClass qij                     = new(#2679fc01-b547-4c0e-b497-ade507e3c701#, sym.q sub sym.ij, ("i,j" sup "th") " element of the rate matrix " RateMatrix, "");
@@ -231,7 +232,7 @@ readonly EquationClass Equations.LiklihoodFunction = new(#4a58876a-8295-4ea2-830
   Formula: Equation {
     FunctionF;
     Arguments {
-      Condition {SegmentalInfo; Phylogeny};
+      Condition(SegmentalInfo, Phylogeny);
       InsertionRate;
       DeletionRate;
       RateMatrixParams;
@@ -255,7 +256,7 @@ readonly EquationClass Equations.BayesianEstimation = new(#a6660b63-6222-4967-93
       Phylogeny;
       InsertionRate;
       DeletionRate;
-      Condition{RateMatrixParams; SegmentalInfo};
+      Condition(RateMatrixParams, SegmentalInfo);
     };
     Equals;
     Fraction {
@@ -279,7 +280,7 @@ readonly EquationClass Equations.ExpectedEventsPerBranch = new(#64e8f644-cd4b-45
   Formula: Equation {
     ExpectedEvents;
     Equals;
-    InParens {
+    SpanParens {
       Time sub (Tex.sigma sub sym.i);
       Minus;
       Time sub sym.i;
@@ -293,7 +294,7 @@ readonly EquationClass Equations.PossibleTrees = new(#38134545-1719-4b8b-9af4-cb
   Formula: Equation {
     BN;
     Equals;
-    InParens {MaxBranch};
+    SpanParens {MaxBranch};
     "!!";
     Equals;
     ProductList {
@@ -331,14 +332,14 @@ readonly EquationClass Equations.InDelDistribution = new(#db4b99ec-6725-4b11-b87
     Negative;
     Summation {
       Lower: sym.i;
-      InParens {sym.ni; qii};
-      Plus;
-      WordLength;
-      InsertionRate;
-      Plus;
-      InParens {WordLength; Minus; 1};
-      SubstitutionRate;
+      SpanParens {Defs.WordLengthi; qii}
     };
+    Plus;
+    WordLength;
+    InsertionRate;
+    Plus;
+    SpanParens {WordLength; Minus; 1};
+    SubstitutionRate;
   };
 };
 
@@ -347,7 +348,7 @@ readonly EquationClass Equations.InDelProbability = new(#01728f12-67b4-4bd0-ab13
     Negative;
     Summation {
       Lower: sym.i;
-      InParens {sym.ni; qii};
+      SpanParens {Defs.WordLengthi; qii};
     };
     Divide;
     RateParameter;
@@ -364,20 +365,20 @@ readonly EquationClass Equations.ProbOfAcceptingProposal = new(#f85ca0eb-aa0b-49
       Fraction {
         Span {
           FunctionF;
-          Arguments {Condition{Unknown; NewValueProposal}};
+          Arguments {Condition(NewValueProposal, Unknown)};
         };
 
         Span {
           FunctionF;
-          Arguments {Condition {Unknown; RateMatrixParams}};
+          Arguments {Condition(RateMatrixParams, Unknown)};
         };
       };
-      Times;
+      times;
       Fraction {
         Span {FunctionF; Arguments {NewValueProposal}};
         Span {FunctionF; Arguments {RateMatrixParams}};
       };
-      Times;
+      times;
       Fraction {
         NewProposal(NewValueProposal, RateMatrixParams);
         NewProposal(RateMatrixParams, NewValueProposal);
@@ -436,7 +437,7 @@ readonly EquationClass Equations.PosteriorProbabilityDistribution = new(#5294924
       ExpectedEvents;
       RateMatrixParams;
       InsertionRate;
-      Condition{DeletionRate; SegmentalInfo};
+      Condition(DeletionRate, SegmentalInfo);
     });
     Equals;
     Fraction {
@@ -498,7 +499,7 @@ readonly EquationClass Equations.RateChange = new(#f7a964f6-414b-4e40-9d31-e63ea
     Tex.geq;
     0;
     Space;
-    InParens {
+    SpanParens {
       sym.i;
       Tex.neq;
       sym.j;
@@ -533,7 +534,7 @@ readonly EquationClass Equations.DiagonalElements = new(#49b4a095-118d-4bbe-9fe3
 readonly EquationClass Equations.ExponentiationOfRateMatrix = new(#05e99790-f121-4640-86a9-3a818e4a6b6e#, "Exponentiation of the rate matrix") {
   Formula: Equation {
     StateProbability;
-    InParens {ExpectedEvents};
+    SpanParens {ExpectedEvents};
     Equals;
     EulerNumber sup (Span {RateMatrix; ExpectedEvents});
   }
@@ -559,7 +560,7 @@ readonly EquationClass Equations.EventInsertionProbability = new(#d2cd0ffe-34e5-
 
 readonly EquationClass Equations.EventDeletionProbability = new(#6b805317-a4b0-4f59-919c-0c2e21cc6bcd#, "Event deletion probability") {
   Formula: Equation {
-    InParens {
+    SpanParens {
       WordLength;
       Minus;
       1;

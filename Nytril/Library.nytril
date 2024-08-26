@@ -72,17 +72,17 @@ RateDescriptor(text) = Span {
 
 //======================================================================
 
-class AlignPairClass {
+class AlignPairClass: DocumentClass {
   var DataSetClass    Data;
   var AlignIndexClass Cognate;
   var SizeClass       BoxSize;
-  var                 Name;
 
   Constructor(DataSetClass data, AlignIndexClass cognate) {
+    super.Constructor(guid.FromHash("Align" + cognate.CognateName), cognate.ConceptName);
+
     Data    = data;
     Cognate = cognate;
     BoxSize = new SizeClass(14 pts, 14 pts);
-    Name    = cognate.ConceptName;
     if (cognate.CognateName != DefaultCognate)
       Name += "-" + cognate.CognateName;
   }
@@ -136,7 +136,7 @@ class AlignPairClass {
                 }
                 else
                   part = IPAParts.Missing;
-                part.ShowSegment;
+                part.ShowSegment(false);
               };
             }
           }
@@ -270,10 +270,9 @@ class AlignmentChartClass {
     var xitems = size.Width / 130 as int;
     var yitems = Math.Floor((Alignments.Length + xitems - 1) / xitems);
     var bsize  = new SizeClass(size.Width / xitems, size.Height / yitems);
-    var x      = bsize.Width * 0.5;
     AlignIndexClass[][] rows = Alignments / xitems;
 
-    TextHeight: Math.Min(9 pts, bsize.Height - 3.2 pt);
+    TextHeight: Math.Min(8 pts, bsize.Height - 3.2 pt);
 
     foreach (var row in rows) {
       HBox {
@@ -285,7 +284,7 @@ class AlignmentChartClass {
             Paragraph {
               Span {
                 ap.Name;
-                TipAction: new ActionClass(Actions.TipDocument, ap);
+                TipAction: ap;
               };
             };
             Paragraph {
@@ -338,17 +337,18 @@ class AlignmentChartClass {
 
 class LanguageClass: FactClass {
   field string   Name;
-  field int      Cases;
+  var ImageClass Image;
+  var int        Cases;
   var string     ShortName;
   var int        LangIndex;
-  var ImageClass Image;
   var            ImagePath;
 
-  Constructor(id, name, cases=0) {
+  Constructor(id, name, cases=0, imagepath=null) {
     super.Constructor(id);
     Name      = name;
     ShortName = name.Replace(" ", Empty);
     Cases     = cases;
+    ImagePath = imagepath;
   }
 
   override IconClass GetIcon = Icons.language;
@@ -439,7 +439,7 @@ class WordClass: FactClass {
       Init;
   }
 
-  void InitExperiment(variable, plain, SegPartClass[] segments) {
+  void InitExperiment(variable, SegPartClass[] segments) {
     Variable  = variable;
     Aligned   = segments;
     Padded    = segments;
@@ -686,7 +686,7 @@ class DataSetClass {
       ReadExperiment;
   }
 
-  TreeSetClass AddTree(config, NodeClass root) = new(config, "Tree"+each1, RootFolder, root, Rule);
+  TreeSetClass AddTree(config, NodeClass root) = new(config, "Tree"+each1, RootFolder, root);
 
   void ReadRawWords(AttributeClass concepts, includewords, LanguageClass[] languageset, cutoff=-1) {
     RawData = true;
@@ -791,7 +791,7 @@ class DataSetClass {
       foreach (var cognatevar in cvar.Children) {
         var cognate = new CognateClass(concept, cognatevar);
         UsedCognates.Add(cognate);
-        ComputeExperimentCognate(concept, cognate, cognatevar);
+        ComputeExperimentCognate(cognate, cognatevar);
       }
     }
 
@@ -928,7 +928,7 @@ class DataSetClass {
     }
   }
 
-  void ComputeExperimentCognate(ConceptClass concept, CognateClass cognate, AttributeClass cognatevar) {
+  void ComputeExperimentCognate(CognateClass cognate, AttributeClass cognatevar) {
     WordList.SetAllValues(DefWord);
 
     var maxlength = 0;
@@ -969,7 +969,7 @@ class DataSetClass {
 
           var text = Span {TextBuffer.ToArray} as string;
           var w    = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.ShortName, text, taxon, cognate);
-          w.InitExperiment(word, PlainBuffer.ToArray, SegmentBuffer.ToArray);
+          w.InitExperiment(word, SegmentBuffer.ToArray);
           if (w.Aligned.Length > maxlength)
             maxlength = w.Aligned.Length;
           WordList.SetValue(taxon.Index, w);
@@ -999,7 +999,7 @@ class DataSetClass {
   };
 
   virtual NodeClass PortugueseClade    = new Leaf(Portuguese);
-  virtual NodeClass PortugueseNumbered = new NLeaf(this, Portuguese, 2);
+  virtual NodeClass PortugueseNumbered = new NLeaf(Portuguese, 2);
 
   CatalanClade = new Branch {
     new Leaf(Catalan);
@@ -1010,26 +1010,26 @@ class DataSetClass {
   };
 
   NodeClass NumberedTree = new NBranch(19) {
-    new NLeaf(this, Latin, 7);
+    new NLeaf(Latin, 7);
     new NBranch(18) {
-      new NLeaf(this, Romanian, 6);
+      new NLeaf(Romanian, 6);
       new NBranch(17) {
         new NBranch(16) {
           new NBranch(15) {
-            new NLeaf(this, Walloon, 3);
-            new NLeaf(this, French, 3);
+            new NLeaf(Walloon, 3);
+            new NLeaf(French, 3);
           };
           new NBranch(14) {
             new NBranch(13) {
               PortugueseNumbered;
-              new NLeaf(this, Spanish, 2);
+              new NLeaf(Spanish, 2);
             };
-            new NLeaf(this, Catalan, 3);
+            new NLeaf(Catalan, 3);
           }
         };
         new NBranch(11) {
-          new NLeaf(this, Friulian, 4);
-          new NLeaf(this, Italian, 4);
+          new NLeaf(Friulian, 4);
+          new NLeaf(Italian, 4);
         };
       }
     }
@@ -1127,15 +1127,17 @@ class DataSetClass {
 
 //======================================================================
 
+typedef StatMatrix MatrixClass<StatClass>;
+
 class ResultsClass {
-  var DataSetClass           Data;
-  var RuleClass              Rule;
-  var AlignIndexClass[]      Alignments;
-  var MatrixClass<StatClass> TransitionStats;
-  var AlignedCountClass      QRates /*,
-                             AverageRates */;
-  var                        AlignmentCutoff,
-                             EquilibriumFrequencies;
+  var DataSetClass      Data;
+  var RuleClass         Rule;
+  var AlignIndexClass[] Alignments;
+  var StatMatrix        TransitionStats;
+  var AlignedCountClass QRates /*,
+                        AverageRates */;
+  var                   AlignmentCutoff,
+                        EquilibriumFrequencies;
 
   Constructor(DataSetClass data) {
     Data = data;
@@ -1152,10 +1154,10 @@ class ResultsClass {
 
     var ts = align?.TransitionStats;
     if (ts is not null)
-      TransitionStats = MatrixClass.Convert(ts);
+      TransitionStats = StatMatrix.Convert(ts);
     else {
       var length = QRates.Length;
-      var bs = new StatClass(0, 0.5, 1);
+      var bs     = new StatClass(0, 0.5, 1);
       TransitionStats = new(length, length, bs, bs);
     }
 
@@ -1323,7 +1325,7 @@ class PriorCountClass: CountBaseClass {
       HAlign: HAligns.Center;
       VAlign: VAligns.Center;
       TipNoPublish: true;
-      TipAction: new TranActionClass(value.ToArray, value.Length*Factor);
+      TipAction: new TranActionClass(si, sj, value.ToArray, value.Length*Factor);
 
       var count = 0;
       foreach (var e in value) {
@@ -1333,7 +1335,8 @@ class PriorCountClass: CountBaseClass {
           ++count;
       }
 
-      var bc = count > 0 ? RateClass.Greenish(count / value.Length) : RateClass.Redish(value.Length * Factor);
+      var bf = count > 0 ? 0.5 * count / value.Length : 0.5 + 0.5 * value.Length * Factor;
+      var bc = ColorClass.HeatMap(bf);
 
       Background: bc;
       TextColor: bc.TextCompliment;
@@ -1346,6 +1349,8 @@ class PriorCountClass: CountBaseClass {
 //======================================================================
 
 class AlignedCountClass: CountBaseClass {
+  delegate bool FindRateDelegate(RateClass r);
+
   var ListClass<RateClass>   RateList;
   var MatrixClass<RateClass> Matrix;
   var ResultsClass           Results;
@@ -1508,8 +1513,6 @@ class AlignedCountClass: CountBaseClass {
         }
       };
 
-      var special = Markers.Circle(Colors.Red);
-
       ChartSeries {
         Marker: Markers.Dot;
 
@@ -1551,9 +1554,6 @@ class AlignedCountClass: CountBaseClass {
         TransformFit: true;
         RateDescriptor("Direction");
       };
-
-      var group   = Markers.TriangleUp(Colors.Green) {TextHeight: 12 pts};
-      var special = Markers.Square(Colors.Red) {TextHeight: 15 pts};
 
       ChartSeries {
         TextHeight: 6 pts;
@@ -1643,7 +1643,7 @@ class AlignedCountClass: CountBaseClass {
     ShowLegend(subset);
   };
 
-  Pairs(top, predicate) = ShowChartPairs(top, SortedRates.FindSlice(predicate));
+  Pairs(top, FindRateDelegate predicate) = ShowChartPairs(top, SortedRates.FindSlice(predicate));
 }
 
 //======================================================================

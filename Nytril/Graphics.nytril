@@ -1,8 +1,9 @@
 using Format, Math, Units, LinkTypes;
 //======================================================================
 
-Main.MathFamily   = TextFamilies.LinuxLibertineO;
-Main.SymbolFamily = TextFamilies.CMUClassicalSerif;
+//Main.MathFamily   = TextFamilies.LinuxLibertineO;
+//Main.SymbolFamily = TextFamilies.CMUSerif;
+//Main.GreekFamily  = TextFamilies.CMUSerifExtra;
 
 //======================================================================
 
@@ -21,9 +22,7 @@ readonly namespace PaperStyle {
 
   SansSerif            = TextFamily: TextFamilies.Arial;
   IPAFamily            = TextFamily: TextFamilies.LinuxLibertineO;
-  GreekFamily          = IPAFamily;
-  Classical            = TextFamily: TextFamilies.CMUClassicalSerif;
-  Extra                = TextFamily: TextFamilies.CMUSerifExtra;
+  BoldSymbol           = {TextFamily: TextFamilies.CMUSerif; Bold};
   TaxonFormat          = TextColor: Colors.DarkBlue;
   CommentFormat        = TextColor: Colors.Green;
   KeywordFormat        = TextColor: Colors.Blue;
@@ -81,8 +80,8 @@ readonly namespace PaperStyle {
 
   BranchMarker = HBox {
     Margin: PadR(2 pts);
-    Figure(Colors.Black, new StrokeClass(1 pt, Colors.Gray)) {
-      Ellipse(new(0, 1 pts))
+    Shape(Colors.Black, new StrokeClass(1 pt, Colors.Gray)) {
+      EllipsePath(new(0, 1 pts))
     };
   };
 
@@ -140,13 +139,11 @@ readonly namespace PaperStyle {
   };
 
   BulletList = ListBlock {
-    ItemLabel: Tex.bullet;
     LeftIndent: 24 pts;
     FirstIndent: -16 pts;
   };
 
-  NumberList = ListBlock {
-    ItemLabel: i => (i+1) ".";
+  NumberList = ListBlock(i => i + ".") {
     LeftIndent: 24 pts;
     FirstIndent: -16 pts;
   };
@@ -207,6 +204,7 @@ readonly namespace PaperStyle {
 
   BodyTable(ColumnClass[] columns) = Table(null, null, columns) {
     SpaceBefore: 10 pts;
+    SpaceAfter: 10 pts;
     LeftIndent: 0.5 inches;
   };
 
@@ -214,22 +212,22 @@ readonly namespace PaperStyle {
     Bold;
   };
 
-  NeedsReview(text) = InParens {
+  NeedsReview(text) = SpanParens {
     TextColor: Colors.Red;
     text;
   };
 
   Equation = Span {
-    TextFamily: Main.MathFamily;
     TextEquation: true;
   };
 
   EquationPar = Paragraph {
-    SpaceBefore: 10 pts;
-    ParAlignment: ParAlignments.Center;
-    TextStacked: true;
     TextEquation: true;
-    TextHeight: 12 pts;
+    TextStacked: true;
+    SpaceBefore: 10 pts;
+    SpaceAfter: 8 pts;
+    ParAlignment: ParAlignments.Center;
+ //   TextHeight: 12 pts;
   };
 }
 
@@ -243,7 +241,7 @@ class DefClass: FactClass {
   Constructor(id, symbol, name, description=null) {
     super.Constructor(id);
 
-    Variable    = PaperStyle.Equation {symbol};
+    Variable    = symbol;
     Name        = name;
     Description = description;
   }
@@ -262,13 +260,17 @@ class DefClass: FactClass {
 
   override GetLayoutTip = Block {
     Paragraph {
+      TextFamily: TextFamilies.TimesNewRoman;
+      TextEquation: true;
       TextHeight: 20 pts;
       Variable;
     };
     Paragraph {
+      TextHeight: 16 pts;
       Bold; Name;
     };
     Paragraph {
+      TextHeight: 14 pts;
       Description;
     };
   };
@@ -389,14 +391,13 @@ readonly namespace Graphics {
     return ArcTan2(p2.Y - p1.Y, p2.X - p1.X);
   }
 
-  Line(LineStyleClass line, PointClass p1, PointClass p2) = Figure(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
-    FigurePath {
-      p1;
+  Line(LineStyleClass line, PointClass p1, PointClass p2) = Shape(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
+    OpenPath(p1) {
       LineTo(p2);
     };
   };
 
-  TwoArrowLine(LineStyleClass line, PointClass p1, PointClass p2) = Figure(line.LineColor) {
+  TwoArrowLine(LineStyleClass line, PointClass p1, PointClass p2) = Shape(line.LineColor) {
     var angle = GetAngle(p1, p2);
     var opp   = angle - Ninety;
     var a1    = ExtendPoint(p1, line.Edge, angle + OneEighty - line.Angle);
@@ -406,8 +407,7 @@ readonly namespace Graphics {
     var b2    = ExtendPoint(b1, line.Flat, opp);
     var b3    = ExtendPoint(b2, line.LineSize, opp);
 
-    FigurePath(true) {
-      p1;
+    ClosedPath(p1.X, p1.Y) {
       LineTo(a1);
       LineTo(a2);
       LineTo(b2);
@@ -420,21 +420,18 @@ readonly namespace Graphics {
     }
   };
 
-  CircleLine(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
+  CircleLine(LineStyleClass line, PointClass center, radius, angle, anglegap) = Shape(null, new(line.LineSize, line.LineColor, LineStyles.Solid, LineCaps.Round)) {
     var angle1 = angle + anglegap;
     var angle2 = angle - anglegap;
-    var an1    = angle1 - Ninety;
-    var an2    = angle2 - Ninety;
     var p1     = ExtendPoint(center, radius, angle1);
     var p2     = ExtendPoint(center, radius, angle2);
 
-    FigurePath {
-      p1;
+    OpenPath(p1) {
       ArcTo(p2, new(radius), angle, true, true);
     }
   };
 
-  CircleArrow(LineStyleClass line, PointClass center, radius, angle, anglegap) = Figure(line.LineColor) {
+  CircleArrow(LineStyleClass line, PointClass center, radius, angle, anglegap) = Shape(line.LineColor) {
     var angle1 = angle + anglegap;
     var angle2 = angle - anglegap;
     var an1    = angle1 - Ninety;
@@ -448,8 +445,7 @@ readonly namespace Graphics {
     var b2     = ExtendPoint(b1, line.Flat, an2 - Ninety);
     var b3     = ExtendPoint(b2, line.LineSize, an2 - Ninety);
 
-    FigurePath(true) {
-      p1;
+    ClosedPath(p1.X, p1.Y) {
       LineTo(a1);
       LineTo(a2);
       ArcTo(b2, new(radius + line.LineSize), angle, true, true);

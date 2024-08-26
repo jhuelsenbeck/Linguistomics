@@ -14,7 +14,7 @@ class PartitionAssignmentsClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = Rule.GetCaption(style);
 
-  override GetBody(ContentStyleClass style) = Rule.ShowPartitions(style, 14 pts);
+  override GetBody(ContentStyleClass style) = Rule.ShowPartitions(14 pts);
 }
 
 //======================================================================
@@ -252,7 +252,6 @@ class ExchangeabilityChartClass: ContentClass {
     }
 
     var fc = d / max;
-    var fp = 50.0 / max;
 
     HBox {
       VBox {
@@ -302,15 +301,15 @@ class ExchangeabilityChartClass: ContentClass {
                     Tip: c;
                     var center = new PointClass(d * 0.5);
                     var x      = fc * c.Upper;
-                    Figure(80%) {
-                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
+                    Shape(80%) {
+                      EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                       x = fc * c.Lower;
-                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
+                      EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
 
-                    Figure(null, 1) {
+                    Shape(null, 1) {
                       x = fc * c.Mean;
-                      Ellipse(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
+                      EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
                   };
                 }
@@ -391,7 +390,7 @@ class FractionGapsChartClass: ContentClass {
 
 //======================================================================
 
-const TopCount = 15;
+const int TopCount = 15;
 
 //======================================================================
 
@@ -480,11 +479,7 @@ class SpecificRatesClass: ContentClass {
     super.Constructor("Specific Rates");
   }
 
-  Predicate(RateClass a) {
-    return a.IsPair("p", "f") or
-           a.IsPair("s", "h") or
-           a.IsPair("k", "ʧ");
-  }
+  static bool Predicate(RateClass a) = a.IsPair("p", "f") or a.IsPair("s", "h") or a.IsPair("k", "ʧ");
 
   override GetBody(ContentStyleClass style) = MainResults.QRates.Pairs(-1, @Predicate);
 }
@@ -512,8 +507,8 @@ class QRatesConsonantConsonantClass: ContentClass {
     super.Constructor(TransitionTitle("Consonant-Consonant"));
   }
 
-  Predicate(RateClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
-                           a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
+  static bool Predicate(RateClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
+                                       a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
 
   override GetBody(ContentStyleClass style) = MainResults.QRates.Pairs(TopCount, @Predicate);
 }
@@ -525,10 +520,6 @@ readonly QRatesOneWayClass Figures.QRatesOneWay = new;
 class QRatesOneWayClass: ContentClass {
   Constructor {
     super.Constructor(TransitionTitle("highly directed"));
-  }
-
-  int ByDirection(RateClass a1, RateClass a2) {
-    return a1.Direction.Compare(a2.Direction);
   }
 
   override GetBody(ContentStyleClass style) = MainResults.QRates.ShowChartPairs(TopCount, MainResults.QRates.SortByDirection);
@@ -753,7 +744,6 @@ readonly AlignmentClass Figures.Alignment = new;
 
 class AlignmentClass: ContentClass {
   const ArrowWidth  = 40;
-  const ArrowMargin = 10 pts;
   const Arrowhead   = 8 pts;
   const ArrowColor  = 80%;
 
@@ -853,15 +843,13 @@ class AlignmentClass: ContentClass {
   };
 
   ArrowFigure(SizeClass size) = Canvas(size.Width, size.Height) {
-    Figure(null, new(1.5, ArrowColor)) {
-      FigurePath {
-        MoveTo(0, 0);
+    Shape(null, new(1.5, ArrowColor)) {
+      OpenPath(0) {
         QuadTo(new(size.Width*0.92, size.Height*0.4), new(size.Width - Arrowhead*0.5, size.Height - Arrowhead));
       };
     };
-    Figure(ArrowColor) {
-      FigurePath(true) {
-        MoveTo(size.Width - Arrowhead, size.Height - Arrowhead);
+    Shape(ArrowColor) {
+      ClosedPath(size.Width - Arrowhead, size.Height - Arrowhead) {
         LineTo(size.Width, size.Height - Arrowhead);
         LineTo(size.Width - Arrowhead * 0.5, size.Height);
       };
@@ -919,14 +907,14 @@ class AlignmentClass: ContentClass {
 
   override GetBody(ContentStyleClass style)= VBox {
     TextHeight: 12 pts;
+    Separation: 4 pts;
+    Margin: 5 pts;
+    HAlign: HAligns.Center;
 
     var data    = MainResults.Data;
     var example = new ExampleConceptClass(data, data.ExampleConcept);
 
-    Margin: 5 pts;
-    HAlign: HAligns.Center;
     HBox {
-      Margin: PadB(4 pts);
       VAlign: VAligns.Bottom;
       var fsize = new SizeClass(ArrowWidth, data.Taxa.Length * 8 pts);
 
@@ -937,7 +925,7 @@ class AlignmentClass: ContentClass {
         VAlign: VAligns.Top;
         LabelBox(SegmentalInfo);
         ContentBox(SegmentTable(example, data, false)) {
-          Margin: new ThicknessClass(null, null, ArrowMargin, ArrowMargin);
+          Margin: PadRB(10 pts);
         };
       };
       ArrowFigure(fsize);
@@ -1004,6 +992,7 @@ namespace StateSection {
     }
   };
 }
+
 //======================================================================
 
 readonly WordTransformationClass PaperSections.WordTransformation = new;
@@ -1031,7 +1020,7 @@ class WordTransformationClass: ContentClass {
     style.FigureBlock(Figures.QRatesDiagonal);
 
     style.BodyPar {
-      style.FigureReference(Figures.QRatesTop); " presents the "; Cardinal(TopCount); " transitions with the highest instantaneous rates of change. ";
+      style.FigureReference(Figures.QRatesTop); " presents the "; Enumerators.Cardinal(TopCount); " transitions with the highest instantaneous rates of change. ";
       "In contrast to "; style.FigureReference(Figures.QRatesDiagonal); " above, the focus here is on individual sound changes. ";
       "The results paint a similar picture, however. The input segments in ";
       style.FigureReference(Figures.QRatesTop); " are either long vowels or diphthongs. ";
@@ -1056,7 +1045,7 @@ class WordSegmentRelationshipsClass: ContentClass {
     style.FirstPar {
       "Our method treats the relationships of word segments from one language to another as a random variable. ";
       style.FigureReference(Figures.AlignmentExamples); " shows alignments for ";
-      Cardinal(Figures.AlignmentExamples.Examples.Length);
+      Enumerators.Cardinal(Figures.AlignmentExamples.Examples.Length);
       " of the words we analyzed. ";
       "For each word, the alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
       "This sample of alignments illustrates three key properties. ";
@@ -1346,10 +1335,10 @@ class ModelInferenceClass: ContentClass {
 
     style.BodyPar {
       "Our model of segmental transitions is based on phonological natural classes, which are groups of segments that share articulatory properties. ";
-      "The segmental inventory of our dataset was exhaustively partitioned into "; Cardinal(rule.Filters.Length); " classes, which are presented in ";
+      "The segmental inventory of our dataset was exhaustively partitioned into "; Enumerators.Cardinal(rule.Filters.Length); " classes, which are presented in ";
       style.TableReference(Figures.PartitionAssignments); DotSpace;
       "This "; style.SQuote{rule.Name}; " model allows different rates among the ";
-      Cardinal(rule.Filters.Length); " classes of segments. ";
+      Enumerators.Cardinal(rule.Filters.Length); " classes of segments. ";
       //Span {
       //  Separator: CommaSpace;
       //  LastSeparator: " and ";
@@ -1554,12 +1543,14 @@ class MethodsClass: ContentClass {
       }; DotSpace;
       "The number of possible tree topologies becomes quite large very quickly — it is a factorial, after all. ";
       "A linguist interested in the relationships among ";
-      SampledLanguages(60);
+      var langnumber = 60;
+      SampledLanguages(langnumber);
       " languages, for example, would contend with ";
       Span {
+        TextEquation: true;
         TextScientific: true;
         TextDigits: 2;
-        BranchFormula(60);
+        BranchFormula(langnumber);
       };
       " possible topologies, each depicting a unique and different way the languages can be related. ";
       "For comparison, the number of atoms in the known universe is on the order of "; 10 sup 80; DotSpace;
@@ -1726,7 +1717,7 @@ class MethodsClass: ContentClass {
       Equation {
         SegmentalInfo;
         Tex.Equals;
-        InParens {
+        SpanParens {
           EllipsisList {
             Segment sub 1;
             Segment sub 2;
@@ -1752,7 +1743,7 @@ class MethodsClass: ContentClass {
       Equation {
         Segment sub 1;
         Tex.Equals;
-        InParens {
+        SpanParens {
           ec.LangWord
         }; DotSpace;
       };
@@ -1804,7 +1795,7 @@ class MethodsClass: ContentClass {
     style.BodyPar {
       "Substitution of one segment for another is modeled using a continuous-time Markov model in which the possible states are the set of segments in the phonemic representations. ";
       "At the heart of a continuous-time Markov chain is a rate matrix describing the rate of change between all pairs of states. ";
-      "As an example, consider a simplified Markov process with only "; Cardinal(StateCount); " segments as states. ";
+      "As an example, consider a simplified Markov process with only "; Enumerators.Cardinal(StateCount); " segments as states. ";
       "The rates of change between the pairs of states can be represented in table form as";
     };
 
@@ -1884,7 +1875,7 @@ class MethodsClass: ContentClass {
       "So, in the event that "; InsertDelete(Tex.lt); ", the process does not actually go extinct. ";
       "Rather, a nucleotide (and its link) can be inserted to to the right of the immortal link. ";
       "In the model described by TKF91 they constrain the insertion rate to be less than the deletion rate ";
-      InsertDelete(Tex.lt); DotSpace;
+      SpanParens {InsertDelete(Tex.lt)}; DotSpace;
       "The equilibrium distribution of a sequence length is then geometrically-distributed with parameter ";
       InsertDelete(Tex.Divide); DotSpace;
       "We follow the convention of TKF91 in this study. ";
@@ -1913,7 +1904,7 @@ class MethodsClass: ContentClass {
       EventDeletionProbability;
       DotSpace;
       "Importantly, the process allows the alignment map ";
-      InParens {HomologyMap};
+      SpanParens {HomologyMap};
       " to be treated as a parameter of the model. ";
     };
 
@@ -1939,7 +1930,7 @@ class MethodsClass: ContentClass {
       "In this study, parameters include:";
     };
 
-    BodyTable([new ColumnClass(1 inches, null, null, HAligns.Right), 20 pts, 4 inches]) {
+    BodyTable([new ColumnClass(1 inch, null, null, HAligns.Right), 20 pts, 4 inches]) {
       ParamRow {
         ParamList(Topology);
         "Tree Topologies";
@@ -2031,15 +2022,14 @@ class MethodsClass: ContentClass {
 
         "The probability of proposing the new value is ";
         NewProposal(RateMatrixParams, RateMatrixParams);
-        "whereas the probability of the imagined reverse move, not actually made in computer memory, is ";
+        " whereas the probability of the imagined reverse move, not actually made in computer memory, is ";
         NewProposal(NewValueProposal, RateMatrixParams);
       };
 
-      Paragraph {
+      ListItem {
+        FirstIndent: 0;
         "Calculate the probability of accepting the proposed value:";
-        LineBreak;
-        Frame {LeftIndent: 48 pts; ProbOfAcceptingProposal};
-        LineBreak;
+        ProbOfAcceptingProposal;
         "In words, the acceptance probability is the product of the likelihood, prior, and proposal ratios.";
       };
 

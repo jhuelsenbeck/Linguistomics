@@ -150,7 +150,7 @@ class SegmentClass: FactClass {
       if (Diacritic)
         Description;
       else
-        ShowFeature(each Features);
+        ShowFeature(each Features.ToArray);
     }
   };
 
@@ -158,7 +158,7 @@ class SegmentClass: FactClass {
     ShowSegment;
   };
 
-  ShowSegment = Span {
+  ShowSegment(bool link=true) = Span {
     PaperStyle.IPAFamily;
     TextLiteral: true;
     if (Impossible) {
@@ -171,7 +171,8 @@ class SegmentClass: FactClass {
     if (Diacritic)
       Space*2;
     Ipa;
-    TipAction: this;
+    if (link)
+      TipAction: this;
   };
 
   ShowDoc = PaperStyle.TextIpa {
@@ -260,7 +261,7 @@ class SegPartClass {
     PartitionIndex = index;
   }
 
-  ShowSegment = Segment.ShowSegment;
+  ShowSegment(bool link=true) = Segment.ShowSegment(link);
 
   ShowBlock = Segment.ShowBlock;
 
