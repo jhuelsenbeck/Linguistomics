@@ -995,6 +995,101 @@ namespace StateSection {
 
 //======================================================================
 
+readonly PhylogenyResultsClass PaperSections.PhylogenyResults = new;
+
+class PhylogenyResultsClass: ContentClass {
+  Constructor {
+    super.Constructor("Phylogeny");
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+
+      style.FirstPar {
+          "Our statistical analysis treats all model parameters as random variables with prior probability distributions. ";
+          "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
+          "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
+          "Our analyses consistently found a handful of topologies that best explained the data. Unfortunately, the MCMC poorly explored the tree space: ";
+              "the MCMC algorithm would find a good tree then become stuck on it. In our MCMC implementation, parameters are updated in blocks. ";
+          "A parameter is randomly selected and then updated. In a single MCMC cycle, either the tree topology or the alignment is updated, but not both simultaneously. ";
+          "The tree topology and alignments are confounded. As the MCMC procedure found better trees, the alignments that were accepted by the MCMC procedure tended to fit the current tree in computer memory. ";
+          "As the alignment becomes better adapted to the current tree in memory, it becomes more difficult for the MCMC procedure to accept alternative topologies, even if they would be sensible ones on a different alignment.";
+    };
+
+    style.BodyPar {
+        "This problem was likely not encountered in the other implementations of the TKF91 model ";
+        Citation {lunter04};
+           //\citep{lunter04}
+           ", which analyzed an alignment of amino acid sequences. ";
+        "In our analysis of cognate data, the insertion and deletion rates were estimated to be quite high relative to the substitution rate: lambda = 0.25 (0.21, 0.27) and mu} = 0.30 (0.27, 0.34) ";
+           "for the insertion and deletion rates, respectively. ";
+        "(The credible intervals in the parentheses contain the true value of the parameter with probability 0.95.) ";
+        "Roughly speaking, this means that for every two segmental transitions there was one insertion or deletion event. ";
+        "Just like substitution events, insertion and deletion events can be informative about phylogeny. ";
+        "Unlike the earlier analysis of amino acid sequence data, the insertion and deletion events were strongly informative about ";
+           "specific tree topologies, and this tree support could change depending on the homology assignments for the alignment.";
+    };
+
+    style.BodyPar {
+    "In all subsequent analyses, we examine the pattern of language change using three topologies "
+       style.FigureReference(Figures.PriorTree); DotSpace;
+    "Although there is considerable debate about the phylogeny of the Romance languages, in recent decades most specialists have converged on the view that the first two clades to ";
+       "form included Sardinian followed by Romanian ";
+        //\citep{hall50,hall76,dardel85,swiggers01,vallejo12,buchi15,dworkin16}. ";
+        "(Citations)"; DotSpace;
+    "Since Sardinian is not in our study group, the clade containing Romanian is then the first to form in each of the trees in ";
+       style.FigureReference(Figures.PriorTree); DotSpace;
+    "The sub-trees containing the remaining dialects differ in their topologies, but they all contain Spanish and Portuguese as a clade, as well as Catalan, French, and Walloon. ";
+    "The question of the exact relationship between Latin and Romance continues to be debated ";
+        // \citep{goldstein24}.";
+        "(Citations)"; DotSpace;
+    };
+
+    // TODO: We need three trees here and they should have the same topology as in the Overleaf document
+     style.FigureBlock(Figures.PriorTree);
+
+  };
+ }
+
+//======================================================================
+
+readonly SegmentModelsClass PaperSections.SegmentModels = new;
+
+class SegmentModelsClass: ContentClass {
+  Constructor {
+    super.Constructor("Models of segmental change");
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+
+    style.FirstPar {
+      // TODO: Should use subscripts and italics case for M_i
+        "We considered three models of segmental change in this study: ";
+            "M_1, a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor ";
+            Citation {jukes69};
+            " with equal rates between all pair of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
+            "M_2, a model isomorphic to the model of DNA sequence evolution first described by Felsenstein ";
+                //\citep{felsenstein81},
+            "(Citations)";
+            " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
+            "and M_3, a natural-class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
+
+    };
+
+    style.BodyPar {
+
+
+    };
+
+    style.BodyPar {
+
+
+    };
+
+  };
+ }
+
+//======================================================================
+
 readonly WordTransformationClass PaperSections.WordTransformation = new;
 
 class WordTransformationClass: ContentClass {
