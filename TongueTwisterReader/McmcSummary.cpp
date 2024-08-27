@@ -962,6 +962,22 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
         jStats.push_back(cogStats);
         }
     json["stats"] = jStats;
+    
+    nlohmann::json j = json["stats"];
+    for (int i=0; i<j.size(); i++)
+        {
+        std::string name = j[i]["cognate"];
+        //std::cout << "Name = " << name << std::endl;
+        if (name == "Insertion" || name == "Deletion")
+            {
+            double mv = j[i]["mean"];
+            double lv = j[i]["lower"];
+            double uv = j[i]["upper"];
+            findex << name << "RateMean = " << mv << ";" << std::endl;
+            findex << name << "RateLow = " << lv << ";" << std::endl;
+            findex << name << "RateHigh = " << uv << ";" << std::endl << std::endl;
+            }
+        }
 
     int numRateClasses = inferNumberOfRates();
     std::cout << "numRateClasses = " << numRateClasses << std::endl;
