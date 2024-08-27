@@ -1060,7 +1060,12 @@ class SegmentModelsClass: ContentClass {
     super.Constructor("Models of segmental change");
   }
 
+
+
   override GetBody(ContentStyleClass style) = Block {
+
+    var rule = MainResults.Rule;
+    //var data = MainResults.Data;
 
     style.FirstPar {
       // TODO: Should use subscripts and italics case for M_i
@@ -1079,8 +1084,9 @@ class SegmentModelsClass: ContentClass {
     style.BodyPar {
         "The models differ in the number of parameters to estimate. ";
         "The first model (M_1) has no free parameters. ";
-        "The second model (M_2) has 78 free parameters parameters (one less than the number of segments). ";
-        "The natural-class model (M_3) has 55 additional segmental class rate parameters: 78 + 55 = 133 free parameters.";
+        "The second model (M_2) has "; MainResults.Data.UniqueSegments.Length - 1; " free parameters parameters (one less than the number of segments). ";
+        "The natural-class model (M_3) has "; (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " additional segmental class rate parameters: ";
+        MainResults.Data.UniqueSegments.Length - 1; " + "; ((rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length) " = "; (MainResults.Data.UniqueSegments.Length - 1) + (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " free parameters.";
     };
 
     style.BodyPar {
