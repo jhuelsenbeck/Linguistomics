@@ -77,17 +77,15 @@ class SegmentClass {
 
 //================================================================
 
-typedef FeatureSetClass StringDictionaryClass<FeatureClass>;
-
 class LogSchemaClass: DbSchemaClass {
-  var DB.DbFieldClass Description,
-                      Text,
-                      Code;
-  var SegmentClass[]  Segments;
-  var FeatureSetClass Features;
-  var                 From,
-                      Via,
-                      To;
+  var DB.DbFieldClass                     Description,
+                                          Text,
+                                          Code;
+  var SegmentClass[]                      Segments;
+  var StringDictionaryClass<FeatureClass> Features;
+  var                                     From,
+                                          Via,
+                                          To;
 
   Constructor {
     super.Constructor("log");
@@ -104,7 +102,7 @@ class LogSchemaClass: DbSchemaClass {
       list.Add(new SegmentClass(row.FindValue(Description), row.FindValue(Text), row.FindValue(Code)));
     Segments  = list.ToArray;
 
-    Features = new FeatureSetClass(128);
+    Features = new(128);
     foreach (var s in Segments) {
       From = MouthPlacements.None;
       Via  = MouthPlacements.None;
