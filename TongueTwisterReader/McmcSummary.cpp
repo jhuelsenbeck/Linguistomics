@@ -277,6 +277,42 @@ void McmcSummary::calculateRates(DoubleMatrix& m) {
 
 }
 
+void McmcSummary::calculateFrequencies(std::vector<double>& f) {
+
+    std::set<int> observedStates;
+    for (int i=0; i<stats.size(); i++)
+        {
+        ParameterStatistics* s = stats[i];
+        if (s->getName()[0] == 'F')
+            {
+            int st = getFreqElement(s->getName());
+            observedStates.insert(st);
+            }
+        }
+    for (int i=0; i<observedStates.size(); i++) // make certain all of the states from 0 to (numStates-1) are found
+        {
+        std::set<int>::iterator it = observedStates.find(i);
+        if (it == observedStates.end())
+            Msg::error("Could not find state " + std::to_string(i) + " in frequencies summary");
+        }
+    int ns = (int)observedStates.size();
+    if (ns != 0 && ns != numStates)
+        Msg::error("Inconsistency in the number of states (2)");
+    f.resize(numStates);
+    for (int i=0, n=(int)f.size(); i<n; i++)
+        f[i] = 1.0 / numStates;
+    for (int i=0; i<stats.size(); i++)
+        {
+        ParameterStatistics* s = stats[i];
+        if (s->getName()[0] == 'F')
+            {
+            int st = getFreqElement(s->getName());
+            f[st] = s->getMean();
+            }
+        }
+
+}
+
 void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
 
     int ns = 0;
@@ -445,7 +481,7 @@ void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
             }
         std::cout << std::endl;
         }
-    std::cout << "Average rates  um = " << sum << std::endl;
+    std::cout << "Average rates sum = " << sum << std::endl;
 #   endif
 }
 
@@ -1015,7 +1051,56 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     DoubleMatrix q(numStates,numStates);
     calculateRates(q);
     writeMatrix(findex, q, "QRates");
+    
+    // print out the information for the subsets
+    int numSubsets = statePartitions->numSubsets();
+    DoubleMatrix sq(numSubsets,numSubsets);
+    double maxValue = 0.0;
+    for (int i=0; i<numStates; i++)
+        {
+        int iss = statePartitions->indexOfSubsetWithValue(i) - 1;
+        for (int j=0; j<numStates; j++)
+            {
+            if (i != j)
+                {
+                int jss = statePartitions->indexOfSubsetWithValue(j) - 1;
+                std::cout << iss << " -> " << jss << std::endl;
+                //double rate = q(i,j);
+                double rate = aveRates(i,j);
+                sq(iss,jss) += rate;
+                if (sq(iss,iss) > maxValue)
+                    maxValue = sq(iss,iss);
+                }
+            }
+        }
+    // temp, for printing circles
+    for (int i=0; i<numSubsets; i++)
+        {
+        for (int j=0; j<numSubsets; j++)
+            {
+            double r = sq(i,j)/maxValue;
+            double d = sqrt(5184.0 * r);
+            std::cout << std::fixed << std::setprecision(0) << d << " ";
+            }
+        std::cout << std::endl;
+        }
+    std::cout << std::setprecision(6);
 
+    sq.print();
+    
+    std::vector<double> f;
+    calculateFrequencies(f);
+    std::vector<double> catFreqs(numSubsets);
+    for (int i=0; i<numStates; i++)
+        {
+        int iss = statePartitions->indexOfSubsetWithValue(i) - 1;
+        catFreqs[iss] += f[i];
+        }
+    for (int i=0; i<numSubsets; i++)
+        std::cout << i << " -- " << catFreqs[i] << std::endl;
+    
+    
+    
 
 
     findex << "AlignIndexClass[] Alignments = [\n";
@@ -1081,7 +1166,7 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     // output json representation to a file
     auto file = new std::ofstream(pathName + "/summary.json", std::ios::out);
     *file << json;
-    std::cout << "JSON file written to: " << pathName << "summary.json" << std::endl;
+    std::cout << "JSON file written to: " << pathName << "/summary.json" << std::endl;
     file->close();
     delete file;
 }

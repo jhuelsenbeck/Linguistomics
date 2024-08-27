@@ -25,6 +25,7 @@ class McmcSummary {
         McmcSummary&                            operator+=(const McmcSummary& rhs);
         void                                    calculateRates(DoubleMatrix& m);
         void                                    calculateAverageRates(DoubleMatrix& m);
+        void                                    calculateFrequencies(std::vector<double>& f);
         std::vector<CredibleInterval>           getCredibleIntervals(void);
         std::vector<double>                     getMeans(void);
         AlignmentDistribution*                  getAlignmentNamed(std::string str) const;
