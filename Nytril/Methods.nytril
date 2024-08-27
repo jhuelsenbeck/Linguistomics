@@ -78,6 +78,57 @@ class ExperimentalRunsClass: ContentClass {
 
 //======================================================================
 
+readonly ModelTrees Figures.ModelTreesUsed = new;
+
+class ModelTrees: ContentClass {
+  Constructor {
+    super.Constructor("Model trees used in all analyses");
+  }
+
+  ShowTrees(ContentStyleClass style, ModelClass model) = Block {
+    var anytree = false;
+    foreach (var r in model.Run) {
+      if (r.ResultTree is not null) {
+        anytree = true;
+        break;
+      }
+    }
+
+    if (anytree) {
+      style.FirstPar {
+        Lang.Model;
+        ColonSpace;
+        model.Name;
+      };
+
+      foreach (var r in model.Run) {
+        if (r.ResultTree is not null)
+          PaperStyle.ShowTree(style, r.ResultTree, 100%, "Run {0}"(each1));
+      }
+    }
+  };
+
+  override GetCaption(ContentStyleClass style) = Span {
+    //Lang.Experiment;
+    //Space;
+    //each1;
+    //Space;
+    //style.DQuote {MainResults.Data.Name};
+  };
+
+  override GetBody(ContentStyleClass style) = Block {
+    var data = MainResults.Data;
+
+    Span {
+      foreach (var tree in data.PriorTrees)
+        PaperStyle.ShowTree(style, tree, 30%, Lang.Tree+each1);
+    };
+  };
+
+}
+
+//======================================================================
+
 readonly TransitionRatesClass Figures.TransitionRates = new;
 
 class TransitionRatesClass: ContentClass {
@@ -426,11 +477,11 @@ readonly LanguageDistributionClass  Figures.LanguageDistribution = new;
 
 class LanguageDistributionClass: ContentClass {
   Constructor {
-    super.Constructor("Language Distribution");
+    super.Constructor("The geographic distribution of the Romance languages examined in this study.");
   }
 
   override GetBody(ContentStyleClass style) = Paragraph {
-    FitBox(IO.Read(Info.ImageFolder FileName("Language Distribution.png")), ExtentWidth, 3 inches);
+    FitBox(IO.Read(Info.ImageFolder FileName("areas.png")), ExtentWidth, 4 inches);
   };
 }
 
@@ -1046,7 +1097,8 @@ class PhylogenyResultsClass: ContentClass {
     };
 
     // TODO: We need three trees here and they should have the same topology as in the Overleaf document
-     style.FigureBlock(Figures.PriorTree);
+     //style.FigureBlock(Figures.PriorTree);
+     style.FigureBlock( Figures.ModelTreesUsed);
 
   };
  }
