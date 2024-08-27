@@ -152,6 +152,7 @@ double ParameterEquilibirumFrequencies::update(int) {
     lastUpdateType.second = 0;
 
     int k = 1;
+    double bounce = 1.0;
     
     double lnP = 0.0;
     if (k == 1)
@@ -167,8 +168,8 @@ double ParameterEquilibirumFrequencies::update(int) {
         int indexToUpdate = rv->uniformRvInt(numStates);
         oldValues[0] = freqs[0][indexToUpdate];
         oldValues[1] = 1.0 - oldValues[0];
-        alphaForward[0] = oldValues[0] * alpha0;
-        alphaForward[1] = oldValues[1] * alpha0;
+        alphaForward[0] = oldValues[0] * alpha0 + bounce;
+        alphaForward[1] = oldValues[1] * alpha0 + bounce;
         if (alphaForward[0] < 0.0)
             Msg::error("Negative alpha[0] in k=1 proposal for exchangability rates");
         if (alphaForward[1] < 0.0)
@@ -185,8 +186,8 @@ double ParameterEquilibirumFrequencies::update(int) {
         Probability::Helper::normalize(newValues, minVal);
 
         // parameterize dirichlet for reverse move
-        alphaReverse[0] = newValues[0] * alpha0;
-        alphaReverse[1] = newValues[1] * alpha0;
+        alphaReverse[0] = newValues[0] * alpha0 + bounce;
+        alphaReverse[1] = newValues[1] * alpha0 + bounce;
 
         // calculate proposal probability
         lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
@@ -215,7 +216,7 @@ double ParameterEquilibirumFrequencies::update(int) {
             }
         
         for (size_t i=0; i<k+1; i++)
-            alphaForward[i] = oldValues[i] * alpha0;;
+            alphaForward[i] = oldValues[i] * alpha0 + bounce;
         
         // draw a new value for the reduced vector
         bool err = false;
@@ -229,7 +230,7 @@ double ParameterEquilibirumFrequencies::update(int) {
         
         // fill in the Dirichlet parameters for the reverse probability calculations
         for (int i=0; i<k+1; i++)
-            alphaReverse[i] = newValues[i] * alpha0;
+            alphaReverse[i] = newValues[i] * alpha0 + bounce;
         
         // fill in the full vector
         double factor = newValues[k] / oldValues[k];
@@ -258,7 +259,7 @@ double ParameterEquilibirumFrequencies::update(int) {
         for (int i=0; i<numStates; i++)
             {
             oldValues[i] = freqs[0][i];
-            alphaForward[i] = oldValues[i] * alpha0;
+            alphaForward[i] = oldValues[i] * alpha0 + bounce;
             }
         
         bool err = false;
@@ -271,7 +272,7 @@ double ParameterEquilibirumFrequencies::update(int) {
         Probability::Helper::normalize(newValues, minVal);
         
         for (int i=0; i<numStates; i++)
-            alphaReverse[i] = newValues[i] * alpha0;
+            alphaReverse[i] = newValues[i] * alpha0 + bounce;
 
         lnP = Probability::Dirichlet::lnPdf(alphaReverse, oldValues) - Probability::Dirichlet::lnPdf(alphaForward, newValues);
         

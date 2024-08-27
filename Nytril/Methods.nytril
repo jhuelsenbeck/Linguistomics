@@ -78,6 +78,57 @@ class ExperimentalRunsClass: ContentClass {
 
 //======================================================================
 
+readonly ModelTrees Figures.ModelTreesUsed = new;
+
+class ModelTrees: ContentClass {
+  Constructor {
+    super.Constructor("Model trees used in all analyses");
+  }
+
+  ShowTrees(ContentStyleClass style, ModelClass model) = Block {
+    var anytree = false;
+    foreach (var r in model.Run) {
+      if (r.ResultTree is not null) {
+        anytree = true;
+        break;
+      }
+    }
+
+    if (anytree) {
+      style.FirstPar {
+        Lang.Model;
+        ColonSpace;
+        model.Name;
+      };
+
+      foreach (var r in model.Run) {
+        if (r.ResultTree is not null)
+          PaperStyle.ShowTree(style, r.ResultTree, 100%, "Run {0}"(each1));
+      }
+    }
+  };
+
+  override GetCaption(ContentStyleClass style) = Span {
+    //Lang.Experiment;
+    //Space;
+    //each1;
+    //Space;
+    //style.DQuote {MainResults.Data.Name};
+  };
+
+  override GetBody(ContentStyleClass style) = Block {
+    var data = MainResults.Data;
+
+    Span {
+      foreach (var tree in data.PriorTrees)
+        PaperStyle.ShowTree(style, tree, 30%, Lang.Tree+each1);
+    };
+  };
+
+}
+
+//======================================================================
+
 readonly TransitionRatesClass Figures.TransitionRates = new;
 
 class TransitionRatesClass: ContentClass {
@@ -410,7 +461,7 @@ readonly QRatesDiagonalClass Figures.QRatesDiagonal = new;
 
 class QRatesDiagonalClass: ContentClass {
   Constructor {
-    super.Constructor("Q Matrix Diagonal (sorted in descending order)");
+    super.Constructor("The rate of change when in a particular segmental state (or $-q_{ii}$).");
   }
 
   override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults, MainResults.QRates).Display;
@@ -418,7 +469,7 @@ class QRatesDiagonalClass: ContentClass {
 
 //======================================================================
 
-readonly TreeContentClass Figures.PriorTree = new("Tree topology", 50%, MainResults.Data.PriorTrees.FirstElement);
+readonly TreeContentClass Figures.PriorTree = new("Tree topology", 33%, MainResults.Data.PriorTrees.FirstElement);
 
 //======================================================================
 
@@ -426,11 +477,11 @@ readonly LanguageDistributionClass  Figures.LanguageDistribution = new;
 
 class LanguageDistributionClass: ContentClass {
   Constructor {
-    super.Constructor("Language Distribution");
+    super.Constructor("The geographic distribution of the Romance languages examined in this study.");
   }
 
   override GetBody(ContentStyleClass style) = Paragraph {
-    FitBox(IO.Read(Info.ImageFolder FileName("Language Distribution.png")), ExtentWidth, 3 inches);
+    FitBox(IO.Read(Info.ImageFolder FileName("areas.png")), ExtentWidth, 4 inches);
   };
 }
 
@@ -995,6 +1046,152 @@ namespace StateSection {
 
 //======================================================================
 
+readonly PhylogenyResultsClass PaperSections.PhylogenyResults = new;
+
+class PhylogenyResultsClass: ContentClass {
+  Constructor {
+    super.Constructor("Phylogeny");
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+
+      style.FirstPar {
+          "Our statistical analysis treats all model parameters as random variables with prior probability distributions. ";
+          "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
+          "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
+          "Our analyses consistently found a handful of topologies that best explained the data. Unfortunately, the MCMC poorly explored the tree space: ";
+              "the MCMC algorithm would find a good tree then become stuck on it. In our MCMC implementation, parameters are updated in blocks. ";
+          "A parameter is randomly selected and then updated. In a single MCMC cycle, either the tree topology or the alignment is updated, but not both simultaneously. ";
+          "The tree topology and alignments are confounded. As the MCMC procedure found better trees, the alignments that were accepted by the MCMC procedure tended to fit the current tree in computer memory. ";
+          "As the alignment becomes better adapted to the current tree in memory, it becomes more difficult for the MCMC procedure to accept alternative topologies, even if they would be sensible ones on a different alignment.";
+    };
+
+    style.BodyPar {
+      // The spacing between lines changes when greek letters are inserted
+        "This problem was likely not encountered in the other implementations of the TKF91 model ";
+        Citation {lunter04};
+           //\citep{lunter04}
+           ", which analyzed an alignment of amino acid sequences. ";
+        // TODO: Ideally, the information on insertion/deletion rates would be read from the file and populated functionally here. However, I don't think that information is output to the alginments.nytril file (which
+        //       has information on the rate matrix and not just alignments)
+        "In our analysis of cognate data, the insertion and deletion rates were estimated to be quite high relative to the substitution rate: ";
+        InsertionRate; " = "; MainResults.InsertionRate; " ("; MainResults.InsertionRateLow; ", "; MainResults.InsertionRateHigh; ") and ";
+        DeletionRate; " = "; MainResults.DeletionRate; " ("; MainResults.DeletionRateLow; ", "; MainResults.DeletionRateHigh; ") ";
+           "for the insertion and deletion rates, respectively. ";
+        "(The credible intervals in the parentheses contain the true value of the parameter with probability 0.95.) ";
+        "Roughly speaking, this means that for every two segmental transitions there was one insertion or deletion event. ";
+        "Just like substitution events, insertion and deletion events can be informative about phylogeny. ";
+        "Unlike the earlier analysis of amino acid sequence data, the insertion and deletion events were strongly informative about ";
+           "specific tree topologies, and this tree support could change depending on the homology assignments for the alignment.";
+    };
+
+    style.BodyPar {
+    "In all subsequent analyses, we examine the pattern of language change using three topologies "
+       style.FigureReference(Figures.PriorTree); DotSpace;
+    "Although there is considerable debate about the phylogeny of the Romance languages, in recent decades most specialists have converged on the view that the first two clades to ";
+       "form included Sardinian followed by Romanian ";
+        //\citep{hall50,hall76,dardel85,swiggers01,vallejo12,buchi15,dworkin16}. ";
+        "(Citations)"; DotSpace;
+    "Since Sardinian is not in our study group, the clade containing Romanian is then the first to form in each of the trees in ";
+       style.FigureReference(Figures.PriorTree); DotSpace;
+    "The sub-trees containing the remaining dialects differ in their topologies, but they all contain Spanish and Portuguese as a clade, as well as Catalan, French, and Walloon. ";
+    "The question of the exact relationship between Latin and Romance continues to be debated ";
+        // \citep{goldstein24}.";
+        "(Citations)"; DotSpace;
+    };
+
+    // TODO: We need three trees here and they should have the same topology as in the Overleaf document
+     //style.FigureBlock(Figures.PriorTree);
+     style.FigureBlock( Figures.ModelTreesUsed);
+
+  };
+ }
+
+//======================================================================
+
+readonly SegmentModelsClass PaperSections.SegmentModels = new;
+
+class SegmentModelsClass: ContentClass {
+  Constructor {
+    super.Constructor("Models of segmental change");
+  }
+
+
+
+  override GetBody(ContentStyleClass style) = Block {
+
+    var rule = MainResults.Rule;
+    //var data = MainResults.Data;
+
+    style.FirstPar {
+      // TODO: Should use subscripts and italics case for M_i
+        "We considered three models of segmental change in this study: ";
+            Model1; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor ";
+            Citation {jukes69};
+            " with equal rates between all pair of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
+            Model2; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein ";
+                //\citep{felsenstein81},
+            "(Citations)";
+            " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
+            "and "; Model3; ", a "; MainResults.Rule.Name; " model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
+
+    };
+
+    style.BodyPar {
+        "The models differ in the number of parameters to estimate. ";
+        "The first model, "; Model1; ", has no free parameters. ";
+        "The second model, "; Model2; ", has "; MainResults.Data.UniqueSegments.Length - 1; " free parameters parameters (one less than the number of segments). ";
+        "The "; MainResults.Rule.Name; " model, "; Model3; ", has "; (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " additional segmental class rate parameters: ";
+        MainResults.Data.UniqueSegments.Length - 1; " + "; ((rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length) " = "; (MainResults.Data.UniqueSegments.Length - 1) + (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " free parameters.";
+    };
+
+    style.BodyPar {
+        "We compared the fit of the models to the data using the Bayes factor. ";
+        "The Bayes factor is the ratio of the marginal likelihoods, ";
+        };
+
+    Equations.BayesFactorEq;
+
+    style.ResumePar {
+        "with ratios greater than one favoring model "; ModelI; ". ";
+        "As the models examined are nested, we could calculate the Bayes factor using the Savage-Dickey ratio ";
+            //\citep{dickey71}. ";
+            "(Citations)"; DotSpace;
+        "The "; MainResults.Rule.Name; " model explains the data substantially better than the two simpler models, with log Bayes ";
+        // TODO: Maybe update the log bayes factor numbers dynamically, though this will be more tricky. Need en-dashes instead of dashes for the negative signs
+            "factors of ln"; BayesFactor12; " = -1074.2 and ln"; BayesFactor12; " = -117.3, respectively, for a comparison of "; Model1; " to "; Model2; " and "; Model2; " to "; Model3; ". ";
+        "This indicates overwhelming support for the more parameter-rich "; MainResults.Rule.Name; " model ";
+            //\cite{jeffreys39}.";
+            "(Citations)"; DotSpace;
+    };
+
+    style.BodyPar {
+       "Figure [rate figure] shows the equilibrium frequencies of the "; rule.Filters.Length; " "; MainResults.Rule.Name; " groups ([rate figure]a) and the estimated average rates of change between the groups of the "; MainResults.Rule.Name;
+          " model ([rate figure]b). ";
+       "Several patterns stand out. ";
+       "First, rates of change are generally highest among segments in the same class. ";
+       "The estimated rates of change from one word segment to another under the "; MainResults.Rule.Name; " model were ";
+       // TODO: These numbers should be dynamically updated
+       "1.51, 7.96, 5.86, 0.06, 1.79, 2.32, 1.19, 0.65, 0.43, and 14.0 ";
+       "times higher than expected under ";
+          "an equal rates Poisson model for stops, short vowels, nasal consonants, diphthongs, nasal vowels, fricatives, approximants, affricates, long vowels, ";
+          "and liquids, respectively. ";
+       // TODO: Need arrow signs here
+       "(In other words, the diphthong -> diphthong, affricate -> affricate, and long vowel -> long vowel rates were lower than would be expected if all rates of change were the same.) ";
+       "Long vowels and diphthongs counter the general pattern as they transition more often to short vowels than to other long vowels or diphthongs, which ";
+          "reflects the well-known loss of phonemic vowel length in Latin and Romance ";
+          //\citep{janson79,loporcaro15}.
+          "(Citations)"; DotSpace;
+       "Second, short vowels exhibit the highest rates along the diagonal and diphthongs the lowest. ";
+       "Both characteristics are due to frequency, as short vowels are the most frequent class and diphthongs the least. ";
+       "Finally, the rate of change from nasal consonants to nasal vowels is a pathological trait of the model: it infers transitions from nasal consonants to nasal vowels (and vice versa) as opposed to oral vowels.";
+    };
+
+  };
+ }
+
+//======================================================================
+
 readonly WordTransformationClass PaperSections.WordTransformation = new;
 
 class WordTransformationClass: ContentClass {
@@ -1004,31 +1201,38 @@ class WordTransformationClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
     style.FirstPar {
-      style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the Q matrix under the ";
-      MainResults.Rule.Name; " model. ";
-      "These diagonal elements can be interpreted as a measure of segmental volatility, since it is the sum of the rates at which it transitions to other segments. ";
-      "The distribution of the diagonal elements reveals several properties of the segmental changes in our dataset. ";
-      "First and foremost, the stability profile of segments is remarkably consistent within each class. ";
-      "For instance, all the long vowels cluster together, as do the affricates, fricatives, short vowels, nasal vowels, fricatives, nasal consonants, and stops. ";
-      "What this clustering reveals is that segmental changes are more likely within classes than between them. ";
-      "Looking at the classes themselves, the segments most likely to change (in blue) are all long vowels. ";
-      "This is precisely what we expect since one of the signal events that characterized the emergence of the Romance languages was the loss of phonemic vowel length. ";
-      "Except for the affricates (in red), the most volatile segmental classes are all vowels. ";
-      "Non-syllabic segmental classes overall are decidedly more resistant to change and stop consonants are the most stable class. ";
+      style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the rate matrix of the continuous-time Markov model describing phonemic ";
+          "change estimated under the "; MainResults.Rule.Name; " model. ";
+      "These diagonal elements can be interpreted as a measure of segmental volatility, since they are the sum of the rates at which they transition to other segments. ";
+      "When the process is in segment "; textit{"i"}; ", the rate -q_ii is the rate at which the segment changes to another segment. ";
+      "The higher the rate, the more rapidly a change to another state will occur, on average. ";
+      "In contrast to the rates in Figure [rate figure], those in "; style.FigureReference(Figures.QRatesDiagonal); " assume the process is in segment "; textit{"i"}; " and measures the rate of flow away from it (to any other segment). ";
     };
 
     style.FigureBlock(Figures.QRatesDiagonal);
 
     style.BodyPar {
-      style.FigureReference(Figures.QRatesTop); " presents the "; Enumerators.Cardinal(TopCount); " transitions with the highest instantaneous rates of change. ";
-      "In contrast to "; style.FigureReference(Figures.QRatesDiagonal); " above, the focus here is on individual sound changes. ";
-      "The results paint a similar picture, however. The input segments in ";
-      style.FigureReference(Figures.QRatesTop); " are either long vowels or diphthongs. ";
-      "The output segments are similarly restricted. ";
-      "Although there are eight transitions in the graph, there are only two output segments, the mid-high front vowel /e/ and the high back vowel /u/. ";
+      "The most striking aspect of "; style.FigureReference(Figures.QRatesDiagonal); " is the robust distinction between the stability of vowels and consonants. ";
+      "With the exception of the affricates, the most volatile segments are all vowels. ";
+      "Among the vowels, the diphthongs and long vowels are the most susceptible to change. ";
+      "On the whole, the most stable segments are all consonants, with the stops the most stable of all. ";
+      "These results are in part consistent with the recent study of Bybee and Easterday ";
+          //\citep{bybee22}
+          "(Citations)"; DotSpace;
+          ", who identify /p t k b d g m n ŋ s l/ as primal consonants. ";
+      "The rates of change in "; style.FigureReference(Figures.QRatesDiagonal); " are also remarkably similar within each class. ";
+      "For instance, all the long vowels cluster together, as do the affricates, fricatives, short vowels, nasal vowels, fricatives, nasal consonants, and stops. ";
+      "The only exceptions to the clustering are the liquid /r/ (which appears with the fricatives) and mid front vowel /e/ (which appears among the nasal vowels).";
+
+      //style.FigureReference(Figures.QRatesTop); " presents the "; Enumerators.Cardinal(TopCount); " transitions with the highest instantaneous rates of change. ";
+      //"In contrast to "; style.FigureReference(Figures.QRatesDiagonal); " above, the focus here is on individual sound changes. ";
+      //"The results paint a similar picture, however. The input segments in ";
+      //style.FigureReference(Figures.QRatesTop); " are either long vowels or diphthongs. ";
+      //"The output segments are similarly restricted. ";
+      //"Although there are eight transitions in the graph, there are only two output segments, the mid-high front vowel /e/ and the high back vowel /u/. ";
     };
 
-    style.FigureBlock(Figures.QRatesTop);
+    //style.FigureBlock(Figures.QRatesTop);
   };
 }
 
@@ -1043,17 +1247,38 @@ class WordSegmentRelationshipsClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
     style.FirstPar {
-      "Our method treats the relationships of word segments from one language to another as a random variable. ";
-      style.FigureReference(Figures.AlignmentExamples); " shows alignments for ";
-      Enumerators.Cardinal(Figures.AlignmentExamples.Examples.Length);
-      " of the words we analyzed. ";
-      "For each word, the alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
-      "This sample of alignments illustrates three key properties. ";
-      "First, the distributions of credible sets exhibit extreme skew. ";
-      "There is always a decisively optimal alignment. ";
-      "Second, deletions occur predominantly at the end of the words. ";
-      "Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment. ";
-      "The alignment of the nasalized vowels is surprising, since they are aligned with nasal consonants, when in fact they are homologous with the preceding vowels.";
+      "Our method treats the homology relationships of segments from one language to another as a random variable. ";
+      "Our Bayesian analysis numerically approximates the posterior probability of alignments. ";
+      "We summarize the posterior distribution by constructing a credible set of alignments. ";
+      "A credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
+      "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is 0.95. ";
+      "Figure [flower alignment] shows alignments for the concept `flower', which  illustrates three key properties we observed for all of the alignments. ";
+      "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
+      "In this case, one alignment had a posterior probability of 0.79. ";
+      "Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (see Figure [Frequency of INDELS in words]). ";
+      "Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment.";
+
+      //"Our method treats the relationships of word segments from one language to another as a random variable. ";
+      //style.FigureReference(Figures.AlignmentExamples); " shows alignments for ";
+      //Enumerators.Cardinal(Figures.AlignmentExamples.Examples.Length);
+      //" of the words we analyzed. ";
+      //"For each word, the alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
+      //"This sample of alignments illustrates three key properties. ";
+      //"First, the distributions of credible sets exhibit extreme skew. ";
+      //"There is always a decisively optimal alignment. ";
+      //"Second, deletions occur predominantly at the end of the words. ";
+      //"Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment. ";
+      //"The alignment of the nasalized vowels is surprising, since they are aligned with nasal consonants, when in fact they are homologous with the preceding vowels.";
+    };
+
+    style.BodyPar {
+        "Interestingly, the distribution of alignments depends on the model of segmental change. ";
+        "Figure \ref[sky alignments] shows the 95% credible set of alignments for the concept `sky' under the Poisson and "; MainResults.Rule.Name; " models. ";
+        "The credible set contains over 1500 alignments under the Poisson model, but only 250 under the natural-class model. ";
+        "This difference makes sense given the rates estimated under the natural-class model (Figure [rate figure]). ";
+        "For example, the rate of change between /u/ and /o/ are estimated to be high, whereas the rate between consonants and /o/ is low. ";
+        "The distribution of alignments under the Poisson model often makes consonant and /o/ segments homologous. ";
+        "Under the natural-class model, however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
 
     style.FigureBlock(Figures.AlignmentExamples);

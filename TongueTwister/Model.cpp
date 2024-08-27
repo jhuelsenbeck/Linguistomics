@@ -633,7 +633,7 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
     if (getTree()->isBinary() == false)
         Msg::error("The initial tree is not binary");
     
-    if (substitutionModel == gtr)
+    if (substitutionModel == gtr || substitutionModel == f81)
         {
         // set up exchangability parameters
         Parameter* pExchange = new ParameterExchangabilityRates(rv, this, "exchangability", numStates);
@@ -641,6 +641,11 @@ void Model::initializeParameters(std::vector<Alignment*>& wordAlignments, nlohma
         parameters.push_back(pExchange);
         pExchange->setParameterId(parmId++);
         exchangeabilityParameter = dynamic_cast<ParameterExchangabilityRates*>(pExchange);
+        if (substitutionModel == f81)
+            {
+            pExchange->setProposalProbability(0.0);
+            exchangeabilityParameter->setEqual();
+            }
         
         // set up equilibrium frequencies
         Parameter* pEquil = new ParameterEquilibirumFrequencies(rv, this, "stationary", numStates);

@@ -141,7 +141,10 @@ int readNumStates(std::string pathName, McmcSummary& summary) {
         #endif
 
         if (fileExtension == ".config")
+            {
+            std::cout << "Reading number of states from " << filePath << std::endl;
             ns = summary.readNumStates(filePath);
+            }
         }
     return ns;
 }
