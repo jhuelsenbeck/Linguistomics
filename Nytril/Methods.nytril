@@ -1067,6 +1067,7 @@ class PhylogenyResultsClass: ContentClass {
     };
 
     style.BodyPar {
+      TextDigits: 3;
       // The spacing between lines changes when greek letters are inserted
         "This problem was likely not encountered in the other implementations of the TKF91 model ";
         Citation {lunter04};
@@ -1086,14 +1087,14 @@ class PhylogenyResultsClass: ContentClass {
     };
 
     style.BodyPar {
-    "In all subsequent analyses, we examine the pattern of language change using three topologies "
-       style.FigureReference(Figures.PriorTree); DotSpace;
+    "In all subsequent analyses, we examine the pattern of language change using three topologies ("
+       style.FigureReference(Figures.ModelTreesUsed); "). ";
     "Although there is considerable debate about the phylogeny of the Romance languages, in recent decades most specialists have converged on the view that the first two clades to ";
        "form included Sardinian followed by Romanian ";
         //\citep{hall50,hall76,dardel85,swiggers01,vallejo12,buchi15,dworkin16}. ";
         "(Citations)"; DotSpace;
     "Since Sardinian is not in our study group, the clade containing Romanian is then the first to form in each of the trees in ";
-       style.FigureReference(Figures.PriorTree); DotSpace;
+       style.FigureReference(Figures.ModelTreesUsed); DotSpace;
     "The sub-trees containing the remaining dialects differ in their topologies, but they all contain Spanish and Portuguese as a clade, as well as Catalan, French, and Walloon. ";
     "The question of the exact relationship between Latin and Romance continues to be debated ";
         // \citep{goldstein24}.";
@@ -1133,7 +1134,7 @@ class SegmentModelsClass: ContentClass {
                 //\citep{felsenstein81},
             "(Citations)";
             " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
-            "and "; Model3; ", a "; MainResults.Rule.Name; " model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
+            "and "; Model3; ", a natural class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
 
     };
 
@@ -1141,7 +1142,7 @@ class SegmentModelsClass: ContentClass {
         "The models differ in the number of parameters to estimate. ";
         "The first model, "; Model1; ", has no free parameters. ";
         "The second model, "; Model2; ", has "; MainResults.Data.UniqueSegments.Length - 1; " free parameters parameters (one less than the number of segments). ";
-        "The "; MainResults.Rule.Name; " model, "; Model3; ", has "; (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " additional segmental class rate parameters: ";
+        "The natural class model, "; Model3; ", has "; (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " additional segmental class rate parameters: ";
         MainResults.Data.UniqueSegments.Length - 1; " + "; ((rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length) " = "; (MainResults.Data.UniqueSegments.Length - 1) + (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " free parameters.";
     };
 
@@ -1156,21 +1157,21 @@ class SegmentModelsClass: ContentClass {
         "with ratios greater than one favoring model "; ModelI; ". ";
         "As the models examined are nested, we could calculate the Bayes factor using the Savage-Dickey ratio ";
             //\citep{dickey71}. ";
-            "(Citations)"; DotSpace;
-        "The "; MainResults.Rule.Name; " model explains the data substantially better than the two simpler models, with log Bayes ";
+            "(Citations)"; ", which is the ratio of the posterior to prior densities evaluated at the restriction that makes the parameter rich model equivalent to the simpler model. "
+        "The natural class model explains the data substantially better than the two simpler models, with log Bayes ";
         // TODO: Maybe update the log bayes factor numbers dynamically, though this will be more tricky. Need en-dashes instead of dashes for the negative signs
             "factors of ln"; BayesFactor12; " = -1074.2 and ln"; BayesFactor12; " = -117.3, respectively, for a comparison of "; Model1; " to "; Model2; " and "; Model2; " to "; Model3; ". ";
-        "This indicates overwhelming support for the more parameter-rich "; MainResults.Rule.Name; " model ";
+        "This indicates overwhelming support for the more parameter-rich natural class model ";
             //\cite{jeffreys39}.";
             "(Citations)"; DotSpace;
     };
 
     style.BodyPar {
-       "Figure [rate figure] shows the equilibrium frequencies of the "; rule.Filters.Length; " "; MainResults.Rule.Name; " groups ([rate figure]a) and the estimated average rates of change between the groups of the "; MainResults.Rule.Name;
+       "Figure [rate figure] shows the equilibrium frequencies of the "; rule.Filters.Length; " natural class groups ([rate figure]a) and the estimated average rates of change between the groups of the natural class";
           " model ([rate figure]b). ";
        "Several patterns stand out. ";
        "First, rates of change are generally highest among segments in the same class. ";
-       "The estimated rates of change from one word segment to another under the "; MainResults.Rule.Name; " model were ";
+       "The estimated rates of change from one word segment to another under the natural class model were ";
        // TODO: These numbers should be dynamically updated
        "1.51, 7.96, 5.86, 0.06, 1.79, 2.32, 1.19, 0.65, 0.43, and 14.0 ";
        "times higher than expected under ";
@@ -1202,7 +1203,7 @@ class WordTransformationClass: ContentClass {
   override GetBody(ContentStyleClass style) = Block {
     style.FirstPar {
       style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the rate matrix of the continuous-time Markov model describing phonemic ";
-          "change estimated under the "; MainResults.Rule.Name; " model. ";
+          "change estimated under the natural class model. ";
       "These diagonal elements can be interpreted as a measure of segmental volatility, since they are the sum of the rates at which they transition to other segments. ";
       "When the process is in segment "; textit{"i"}; ", the rate -q_ii is the rate at which the segment changes to another segment. ";
       "The higher the rate, the more rapidly a change to another state will occur, on average. ";
@@ -1273,7 +1274,7 @@ class WordSegmentRelationshipsClass: ContentClass {
 
     style.BodyPar {
         "Interestingly, the distribution of alignments depends on the model of segmental change. ";
-        "Figure \ref[sky alignments] shows the 95% credible set of alignments for the concept `sky' under the Poisson and "; MainResults.Rule.Name; " models. ";
+        "Figure \ref[sky alignments] shows the 95% credible set of alignments for the concept `sky' under the Poisson and natural class models. ";
         "The credible set contains over 1500 alignments under the Poisson model, but only 250 under the natural-class model. ";
         "This difference makes sense given the rates estimated under the natural-class model (Figure [rate figure]). ";
         "For example, the rate of change between /u/ and /o/ are estimated to be high, whereas the rate between consonants and /o/ is low. ";
