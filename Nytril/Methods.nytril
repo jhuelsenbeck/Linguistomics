@@ -1070,46 +1070,57 @@ class SegmentModelsClass: ContentClass {
     style.FirstPar {
       // TODO: Should use subscripts and italics case for M_i
         "We considered three models of segmental change in this study: ";
-            "M_1, a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor ";
+            Model1; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor ";
             Citation {jukes69};
             " with equal rates between all pair of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
-            "M_2, a model isomorphic to the model of DNA sequence evolution first described by Felsenstein ";
+            Model2; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein ";
                 //\citep{felsenstein81},
             "(Citations)";
             " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
-            "and M_3, a natural-class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
+            "and "; Model3; ", a "; MainResults.Rule.Name; " model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
 
     };
 
     style.BodyPar {
         "The models differ in the number of parameters to estimate. ";
-        "The first model (M_1) has no free parameters. ";
-        "The second model (M_2) has "; MainResults.Data.UniqueSegments.Length - 1; " free parameters parameters (one less than the number of segments). ";
-        "The natural-class model (M_3) has "; (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " additional segmental class rate parameters: ";
+        "The first model, "; Model1; ", has no free parameters. ";
+        "The second model, "; Model2; ", has "; MainResults.Data.UniqueSegments.Length - 1; " free parameters parameters (one less than the number of segments). ";
+        "The "; MainResults.Rule.Name; " model, "; Model3; ", has "; (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " additional segmental class rate parameters: ";
         MainResults.Data.UniqueSegments.Length - 1; " + "; ((rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length) " = "; (MainResults.Data.UniqueSegments.Length - 1) + (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " free parameters.";
     };
 
     style.BodyPar {
         "We compared the fit of the models to the data using the Bayes factor. ";
-        "The Bayes factor is the ratio of the marginal likelihoods, BF_ij = f(X|M_i)/f(X|M_j), with ratios greater than one favoring model M_i. ";
+        "The Bayes factor is the ratio of the marginal likelihoods, ";
+        };
+
+    Equations.BayesFactorEq;
+
+    style.ResumePar {
+        "with ratios greater than one favoring model "; ModelI; ". ";
         "As the models examined are nested, we could calculate the Bayes factor using the Savage-Dickey ratio ";
             //\citep{dickey71}. ";
             "(Citations)"; DotSpace;
-        "The natural-class model explains the data substantially better than the two simpler models, with log Bayes ";
-            "factors of ln BF_12 = -1074.2 and ln BF_23 = -117.3, respectively, for a comparison of M_1 to M_2 and M_2 to M_3. ";
-        "This indicates overwhelming support for the more parameter-rich natural-class model ";
+        "The "; MainResults.Rule.Name; " model explains the data substantially better than the two simpler models, with log Bayes ";
+        // TODO: Maybe update the log bayes factor numbers dynamically, though this will be more tricky. Need en-dashes instead of dashes for the negative signs
+            "factors of ln"; BayesFactor12; " = -1074.2 and ln"; BayesFactor12; " = -117.3, respectively, for a comparison of "; Model1; " to "; Model2; " and "; Model2; " to "; Model3; ". ";
+        "This indicates overwhelming support for the more parameter-rich "; MainResults.Rule.Name; " model ";
             //\cite{jeffreys39}.";
             "(Citations)"; DotSpace;
     };
 
     style.BodyPar {
-       "Figure [rate figure] shows the equilibrium frequencies of the ten natural class groups ([rate figure]a) and the estimated average rates of change between the groups of the ";
-          "natural-class model ([rate figure]b). ";
+       "Figure [rate figure] shows the equilibrium frequencies of the "; rule.Filters.Length; " "; MainResults.Rule.Name; " groups ([rate figure]a) and the estimated average rates of change between the groups of the "; MainResults.Rule.Name;
+          " model ([rate figure]b). ";
        "Several patterns stand out. ";
        "First, rates of change are generally highest among segments in the same class. ";
-       "The estimated rates of change from one word segment to another under the "; MainResults.Rule.Name; " model were 1.51, 7.96, 5.86, 0.06, 1.79, 2.32, 1.19, 0.65, 0.43, and 14.0 times higher than expected under ";
+       "The estimated rates of change from one word segment to another under the "; MainResults.Rule.Name; " model were ";
+       // TODO: These numbers should be dynamically updated
+       "1.51, 7.96, 5.86, 0.06, 1.79, 2.32, 1.19, 0.65, 0.43, and 14.0 ";
+       "times higher than expected under ";
           "an equal rates Poisson model for stops, short vowels, nasal consonants, diphthongs, nasal vowels, fricatives, approximants, affricates, long vowels, ";
           "and liquids, respectively. ";
+       // TODO: Need arrow signs here
        "(In other words, the diphthong -> diphthong, affricate -> affricate, and long vowel -> long vowel rates were lower than would be expected if all rates of change were the same.) ";
        "Long vowels and diphthongs counter the general pattern as they transition more often to short vowels than to other long vowels or diphthongs, which ";
           "reflects the well-known loss of phonemic vowel length in Latin and Romance ";
