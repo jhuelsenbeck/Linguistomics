@@ -212,7 +212,7 @@ class AlignPairClass: DocumentClass {
     var h = 8 pts;
     BoxSize = new(BoxSize.Width, h);
     TextHeight: 7 pts;
-    Frame(ExtentWidth - 1 inches) {
+    Frame(ExtentWidth) {
       Span {
         GetChart(new(1 inch, data.Taxa.Length * (9 pts)), max);
         Languages(Data, h);
@@ -304,7 +304,7 @@ class AlignmentChartClass {
     }
   };
 
-  ShowSet(DataSetClass data, CognateIdClass[] examples) = MatrixBlock {
+  ShowSet(DataSetClass data, CognateIdClass[] examples) = Table(null, null, [0.75 inches, ColumnClass.Expand]) {
     var alignments = Alignments;
 
     foreach (var e in examples) {
@@ -319,13 +319,13 @@ class AlignmentChartClass {
       if (found is valid) {
         var ap = new AlignPairClass(data, found);
         Row {
-          VAlign: VAligns.Top;
-          Frame(0.75 inch, null, PadR(10 pts)) {
+          Cell(PadR(10 pts)) {
+            VAlign: VAligns.Center;
             e.Concept;
             e.Cognate Italic;
           };
           Frame(ExtentWidth) {
-            ap.ShowFigureDetails(data, e.Count);
+            ap.ShowFigureDetails(data, Math.Min(3, e.Count));
           }
         }
       }
