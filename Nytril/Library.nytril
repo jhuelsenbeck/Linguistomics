@@ -136,7 +136,7 @@ class AlignPairClass: DocumentClass {
                 }
                 else
                   part = IPAParts.Missing;
-                part.ShowSegment(false);
+                part.ShowSegment(System.IsDesktop);
               };
             }
           }
@@ -1134,12 +1134,12 @@ class ResultsClass {
   var RuleClass         Rule;
   var AlignIndexClass[] Alignments;
   var StatMatrix        TransitionStats;
-  var AlignedCountClass QRates /*,
-                        AverageRates */;
-  var                   AlignmentCutoff,
-                        EquilibriumFrequencies;
-  var                   InsertionRate, InsertionRateLow, InsertionRateHigh;
-  var                   DeletionRate, DeletionRateLow, DeletionRateHigh;
+  var AlignedCountClass QRates,
+                        AverageRates;
+  var                   AlignmentCutoff;
+  var                   EquilibriumFrequencies;
+  var double            InsertionRate, InsertionRateLow, InsertionRateHigh,
+                        DeletionRate, DeletionRateLow, DeletionRateHigh;
 
   Constructor(DataSetClass data) {
     Data = data;
@@ -1149,7 +1149,7 @@ class ResultsClass {
     var align = IO.ReadScript(data.MainRun.AlignmentFile).Root;
 
     QRates                 = new(this, align.QRates, false);
-//    AverageRates           = new(this, align.AverageRates, true);
+    AverageRates           = new(this, align.AverageRates, true);
     EquilibriumFrequencies = align.EquilibriumFrequencies;
     AlignmentCutoff        = align.AlignmentCutoff;
     InsertionRate          = align.InsertionRateMean;

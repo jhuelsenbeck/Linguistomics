@@ -14,7 +14,7 @@ class PartitionAssignmentsClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = Rule.GetCaption(style);
 
-  override GetBody(ContentStyleClass style) = Rule.ShowPartitions(14 pts);
+  override GetBody(ContentStyleClass style) = Rule.ShowPartitions;
 }
 
 //======================================================================
@@ -290,8 +290,9 @@ class ExchangeabilityChartClass: ContentClass {
     var count      = stats.Rows;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
-    var dy         = ExtentHeight / (partitions.Length + 1);
-    var d          = Math.Min(dy, (ExtentWidth  - tx) / partitions.Length);
+    var size       = Math.Min(ExtentWidth, ExtentHeight);
+    var dy         = size / (partitions.Length + 1);
+    var d          = Math.Min(dy, (size  - tx) / partitions.Length);
 
     var max = 0.0;
     for (int i = 0; i < count; ++i) {
@@ -305,18 +306,19 @@ class ExchangeabilityChartClass: ContentClass {
     var fc = d / max;
 
     HBox {
+      VAlign: VAligns.Top;
       VBox {
         Canvas(bx, bx);
 
         foreach (var p in partitions) {
-          HBox(null, dy) {
+          HBox(null, d) {
             Separation: 10 pts;
             VAlign: VAligns.Center;
             HAlignment: HAligns.Right;
             Frame {
               p;
             };
-            Canvas(bx, dy) {
+            Canvas(bx, d) {
               Background: p.Color;
             };
           }
@@ -325,7 +327,6 @@ class ExchangeabilityChartClass: ContentClass {
 
       VBox {
         HAlign: HAligns.Left;
-
         HBox {
           foreach (var p in partitions) {
             Canvas(d, bx) {
@@ -347,8 +348,8 @@ class ExchangeabilityChartClass: ContentClass {
             HBox {
               for (int j = 0; j < count; ++j) {
                 var c = stats[i, j];
-                if (c is valid) {
-                  Canvas(d, d) {
+                Canvas(d, d) {
+                  if (c is valid) {
                     Tip: c;
                     var center = new PointClass(d * 0.5);
                     var x      = fc * c.Upper;
@@ -362,15 +363,93 @@ class ExchangeabilityChartClass: ContentClass {
                       x = fc * c.Mean;
                       EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
-                  };
-                }
-                else
-                  Canvas(d, d);
+                  }
+                };
               }
             };
           }
         }
       };
+    };
+  };
+}
+
+//======================================================================
+
+readonly EquilibriumChartClass Figures.EquilibriumCharts = new;
+
+class EquilibriumChartClass: ContentClass {
+  Constructor {
+    super.Constructor("Equlibrium frequencies");
+  }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "The equilibrium frequencies (π) of the segment groups (a) and average rates of change between and within the ten segment groups of the natural class model (b). ";
+    "Circle area is proportional to the rate of change between natural class groups ("; Defs.qij; "). ";
+  };
+
+  ShowLabel(label) = Span {
+    SansSerif;
+    Bold;
+    TextHeight: 20 pts;
+    "("; label; ")";
+  };
+
+  override GetBody(ContentStyleClass style) = Block {
+    Paragraph {
+      HBox {
+        VAlign: VAligns.Top;
+        HBox(30%) {
+          VBox {
+            HAlign: HAligns.Center;
+            ShowLabel("a");
+            Separation: 20 pts;
+            Figures.EquilibriumFrequencyChart.GetBody(style);
+          };
+        };
+        HBox(70%) {
+          VBox {
+            HAlign: HAligns.Center;
+            ShowLabel("b");
+            Figures.ExchangeabilityChart.GetBody(style);
+          };
+        };
+      }
+    }
+  };
+}
+
+//======================================================================
+
+readonly EquilibriumFrequencyChartClass Figures.EquilibriumFrequencyChart = new;
+
+class EquilibriumFrequencyChartClass: ContentClass {
+  Constructor {
+    super.Constructor("The equilibrium frequencies (π) of the segment groups");
+  }
+
+  override GetBody(ContentStyleClass style) = Chart(100%, 4.2 inches) {
+    Type: ChartTypes.Bar;
+    TextHeight: 10 pts;
+    ValueLabel: Span {
+      TextHeight: 20 pts;
+      Defs.EquilibriumDistribution;
+    };
+
+    var partitions = MainResults.Data.Rule.Partitions.Reverse;
+    var average    = MainResults.AverageRates.RateList.ToArray.Reverse;
+
+    XAxis: ChartAxis {
+      foreach (var f in partitions)
+        f.Name;
+    };
+
+    ChartSeries {
+      foreach (var f in partitions) {
+        new DataPointClass(each0, average[each0].Rate) {
+          Fill: f.Color;
+        }
+      }
     };
   };
 }
@@ -385,7 +464,7 @@ class PartitionVolatilityChartClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    PaperStyle.SansSerif;
+    SansSerif;
 
     var partitions = MainResults.Rule.Partitions;
     var stats      = MainResults.TransitionStats;
@@ -461,7 +540,7 @@ readonly QRatesDiagonalClass Figures.QRatesDiagonal = new;
 
 class QRatesDiagonalClass: ContentClass {
   Constructor {
-    super.Constructor("The rate of change when in a particular segmental state (or $-q_{ii}$).");
+    super.Constructor("The rate of change when in a particular segmental state (or  " Defs.neg_qii ").");
   }
 
   override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults, MainResults.QRates).Display;
@@ -481,7 +560,7 @@ class LanguageDistributionClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Paragraph {
-    FitBox(IO.Read(Info.ImageFolder FileName("areas.png")), ExtentWidth, 4 inches);
+    FitBox(IO.Read(Info.ImageFolder FileName("areas.png")), 75%);
   };
 }
 
@@ -1056,7 +1135,8 @@ class PhylogenyResultsClass: ContentClass {
   override GetBody(ContentStyleClass style) = Block {
 
       style.FirstPar {
-          textit{Bold;"Phylogeny: "}; "Our statistical analysis treats all model parameters as random variables with prior probability distributions. ";
+          SubSection {"Phylogeny"};
+          "Our statistical analysis treats all model parameters as random variables with prior probability distributions. ";
           "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
           "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
           "Our analyses consistently found a handful of topologies that best explained the data. Unfortunately, the MCMC poorly explored the tree space: ";
@@ -1071,8 +1151,8 @@ class PhylogenyResultsClass: ContentClass {
       //                 command is making the reference number also have three decimal digits! It should definitely be an integer.
       TextDigits: 3;
       // The spacing between lines changes when greek letters are inserted
-        "This problem was likely not encountered in the other implementations of the TKF91 model (";
-        Citation {Lunter2004}; "), which analyzed an alignment of amino acid sequences. ";
+        "This problem was likely not encountered in the other implementations of the TKF91 model";
+        Citation {Lunter2004}; ", which analyzed an alignment of amino acid sequences. ";
         "In our analysis of cognate data, the insertion and deletion rates were estimated to be quite high relative to the substitution rate: ";
         InsertionRate; " = "; MainResults.InsertionRate; " ("; MainResults.InsertionRateLow; ", "; MainResults.InsertionRateHigh; ") and ";
         DeletionRate; " = "; MainResults.DeletionRate; " ("; MainResults.DeletionRateLow; ", "; MainResults.DeletionRateHigh; ") ";
@@ -1088,8 +1168,8 @@ class PhylogenyResultsClass: ContentClass {
     "In all subsequent analyses, we examine the pattern of language change using three topologies ("
        style.FigureReference(Figures.ModelTreesUsed); "). ";
     "Although there is considerable debate about the phylogeny of the Romance languages, in recent decades most specialists have converged on the view that the first two clades to ";
-       "form included Sardinian followed by Romanian (";
-        Citation {Hall1950; Hall1976; Dardel1985; Swiggers2001; Vallejo2012; Buchi2015; Dworkin2016}; "). ";
+       "form included Sardinian followed by Romanian";
+        Citation {Hall1950; Hall1976; Dardel1985; Swiggers2001; Vallejo2012; Buchi2015; Dworkin2016}; DotSpace;
     "Since Sardinian is not in our study group, the clade containing Romanian is then the first to form in each of the trees in ";
        style.FigureReference(Figures.ModelTreesUsed); DotSpace;
     "The sub-trees containing the remaining dialects differ in their topologies, but they all contain Spanish and Portuguese as a clade, as well as Catalan, French, and Walloon. ";
@@ -1120,64 +1200,68 @@ class SegmentModelsClass: ContentClass {
     //var data = MainResults.Data;
 
     style.FirstPar {
-      // TODO: Should use subscripts and italics case for M_i
-        textit{Bold;"Models of segmental change: "}; "We considered three models of segmental change in this study: ";
-            Model1; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor (";
-            Citation {Jukes1969};
-            ") with equal rates between all pair of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
-            Model2; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein (";
-            Citation {Felsenstein1981};
-            ") in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
-            "and "; Model3; ", a natural class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
-
+        SubSection {"Models of segmental change"};
+        "We considered three models of segmental change in this study: ";
+        Model1; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor";
+        Citation {Jukes1969};
+        " with equal rates between all pair of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
+        Model2; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein";
+        Citation {Felsenstein1981};
+        " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
+        "and "; Model3; ", a natural class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
     };
+
+    var segments = MainResults.Data.UniqueSegments.Length - 1;
+    var rp       = rule.Filters.Length;
 
     style.BodyPar {
         "The models differ in the number of parameters to estimate. ";
         "The first model, "; Model1; ", has no free parameters. ";
-        "The second model, "; Model2; ", has "; MainResults.Data.UniqueSegments.Length - 1; " free parameters parameters (one less than the number of segments). ";
-        "The natural class model, "; Model3; ", has "; (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " additional segmental class rate parameters: ";
-        MainResults.Data.UniqueSegments.Length - 1; " + "; ((rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length) " = "; (MainResults.Data.UniqueSegments.Length - 1) + (rule.Filters.Length)*(rule.Filters.Length-1)/2 + rule.Filters.Length; " free parameters.";
+        "The second model, "; Model2; ", has "; segments; " free parameters parameters (one less than the number of segments). ";
+
+        "The natural class model, "; Model3; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
+        Equation {segments; " + "; (rp*(rp-1)/2 + rp); Tex.Equals; segments + rp*(rp-1)/2 + rp}; " free parameters.";
     };
 
     style.BodyPar {
         "We compared the fit of the models to the data using the Bayes factor. ";
         "The Bayes factor is the ratio of the marginal likelihoods, ";
-        };
+    };
 
     Equations.BayesFactorEq;
 
     style.ResumePar {
         "with ratios greater than one favoring model "; ModelI; ". ";
-        "As the models examined are nested, we could calculate the Bayes factor using the Savage-Dickey ratio ";
-          "("; Citation {Dickey1971}; "), ";
+        "As the models examined are nested, we could calculate the Bayes factor using the Savage-Dickey ratio";
+          Citation {Dickey1971}; ", ";
           "which is the ratio of the posterior to prior densities evaluated at the restriction that makes the parameter rich model equivalent to the simpler model. "
         "The natural class model explains the data substantially better than the two simpler models, with log Bayes ";
         // TODO: Maybe update the log bayes factor numbers dynamically, though this will be more tricky.
         //       Need en-dashes instead of dashes for the negative signs
             "factors of ln"; BayesFactor12; " = -1074.2 and ln"; BayesFactor12; " = -117.3, respectively, for a comparison of "; Model1; " to "; Model2; " and "; Model2; " to "; Model3; ". ";
-        "This indicates overwhelming support for the more parameter-rich natural class model (";
-        Citation {Jeffreys1939}; ").";
-
+        "This indicates overwhelming support for the more parameter-rich natural class model";
+        Citation {Jeffreys1939}; DotSpace;
     };
 
     style.BodyPar {
-       "Figure [rate figure] shows the equilibrium frequencies of the "; rule.Filters.Length;
+       "Figure [rate figure] shows the equilibrium frequencies of the "; rp;
        " natural class groups ([rate figure]a) and the estimated average rates of change between the groups of the natural class";
           " model ([rate figure]b). ";
        "Several patterns stand out. ";
        "First, rates of change are generally highest among segments in the same class. ";
        "The estimated rates of change from one word segment to another under the natural class model were ";
        // TODO: These numbers should be dynamically updated
-       "1.51, 7.96, 5.86, 0.06, 1.79, 2.32, 1.19, 0.65, 0.43, and 14.0 ";
-       "times higher than expected under ";
+       TextList {
+         [1.51, 7.96, 5.86, 0.06, 1.79, 2.32, 1.19, 0.65, 0.43, 14.0];
+       };
+       " times higher than expected under ";
           "an equal rates Poisson model for stops, short vowels, nasal consonants, diphthongs, nasal vowels, fricatives, approximants, affricates, long vowels, ";
           "and liquids, respectively. ";
        // TODO: Need arrow signs here
        "(In other words, the diphthong -> diphthong, affricate -> affricate, and long vowel -> long vowel rates were lower than would be expected if all rates of change were the same.) ";
        "Long vowels and diphthongs counter the general pattern as they transition more often to short vowels than to other long vowels or diphthongs, which ";
-          "reflects the well-known loss of phonemic vowel length in Latin and Romance ";
-          "("; Citation {Janson1979; Loporcaro2015}; "). ";
+          "reflects the well-known loss of phonemic vowel length in Latin and Romance";
+          Citation {Janson1979; Loporcaro2015}; DotSpace;
        "Second, short vowels exhibit the highest rates along the diagonal and diphthongs the lowest. ";
        "Both characteristics are due to frequency, as short vowels are the most frequent class and diphthongs the least. ";
        "Finally, the rate of change from nasal consonants to nasal vowels is a pathological trait of the model: ";
@@ -1201,9 +1285,11 @@ class WordTransformationClass: ContentClass {
       style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the rate matrix of the continuous-time Markov model describing phonemic ";
           "change estimated under the natural class model. ";
       "These diagonal elements can be interpreted as a measure of segmental volatility, since they are the sum of the rates at which they transition to other segments. ";
-      "When the process is in segment "; textit{"i"}; ", the rate -q_ii is the rate at which the segment changes to another segment. ";
+      "When the process is in segment "; sym.i; ", the rate "; neg_qii; " is the rate at which the segment changes to another segment. ";
       "The higher the rate, the more rapidly a change to another state will occur, on average. ";
-      "In contrast to the rates in Figure [rate figure], those in "; style.FigureReference(Figures.QRatesDiagonal); " assume the process is in segment "; textit{"i"}; " and measures the rate of flow away from it (to any other segment). ";
+      "In contrast to the rates in Figure [rate figure], those in ";
+      style.FigureReference(Figures.QRatesDiagonal); " assume the process is in segment "; sym.i;
+       " and measures the rate of flow away from it (to any other segment). ";
     };
 
     style.FigureBlock(Figures.QRatesDiagonal);
@@ -1216,10 +1302,13 @@ class WordTransformationClass: ContentClass {
       "These results are in part consistent with the recent study of Bybee and Easterday ";
           //\citep{bybee22}
           "(Citations)"; DotSpace;
-          ", who identify /p t k b d g m n ŋ s l/ as primal consonants. ";
+          ", who identify ";
+          TextIpa {"p t k b d g m n ŋ s l"};
+          " as primal consonants. ";
       "The rates of change in "; style.FigureReference(Figures.QRatesDiagonal); " are also remarkably similar within each class. ";
       "For instance, all the long vowels cluster together, as do the affricates, fricatives, short vowels, nasal vowels, fricatives, nasal consonants, and stops. ";
-      "The only exceptions to the clustering are the liquid /r/ (which appears with the fricatives) and mid front vowel /e/ (which appears among the nasal vowels).";
+      "The only exceptions to the clustering are the liquid "; IPASegments.r;
+      " (which appears with the fricatives) and mid front vowel "; IPASegments.ay; " (which appears among the nasal vowels).";
 
       //style.FigureReference(Figures.QRatesTop); " presents the "; Enumerators.Cardinal(TopCount); " transitions with the highest instantaneous rates of change. ";
       //"In contrast to "; style.FigureReference(Figures.QRatesDiagonal); " above, the focus here is on individual sound changes. ";
@@ -1254,6 +1343,10 @@ class WordSegmentRelationshipsClass: ContentClass {
       "In this case, one alignment had a posterior probability of 0.79. ";
       "Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (see Figure [Frequency of INDELS in words]). ";
       "Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment.";
+    };
+
+    style.FigureBlock(Figures.EquilibriumCharts);
+
 
       //"Our method treats the relationships of word segments from one language to another as a random variable. ";
       //style.FigureReference(Figures.AlignmentExamples); " shows alignments for ";
@@ -1266,15 +1359,14 @@ class WordSegmentRelationshipsClass: ContentClass {
       //"Second, deletions occur predominantly at the end of the words. ";
       //"Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment. ";
       //"The alignment of the nasalized vowels is surprising, since they are aligned with nasal consonants, when in fact they are homologous with the preceding vowels.";
-    };
 
     style.BodyPar {
         "Interestingly, the distribution of alignments depends on the model of segmental change. ";
         "Figure \ref[sky alignments] shows the 95% credible set of alignments for the concept `sky' under the Poisson and natural class models. ";
         "The credible set contains over 1500 alignments under the Poisson model, but only 250 under the natural-class model. ";
         "This difference makes sense given the rates estimated under the natural-class model (Figure [rate figure]). ";
-        "For example, the rate of change between /u/ and /o/ are estimated to be high, whereas the rate between consonants and /o/ is low. ";
-        "The distribution of alignments under the Poisson model often makes consonant and /o/ segments homologous. ";
+        "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
+        "The distribution of alignments under the Poisson model often makes consonant and "; IPASegments.oh; " segments homologous. ";
         "Under the natural-class model, however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
 
@@ -1391,8 +1483,8 @@ class DataSummaryClass: ContentClass {
     var data = MainResults.Data;
 
     style.FirstPar {
-      "The initial set of data was downloaded from "; Wiktionary.Title; Citation{Wiktionary}; ", which was then manually checked for accuracy and augmented. ";
-      "Words were double-checked against data from "; SoundComparisons.Title; Citation{SoundComparisons}; DotSpace;
+      "The initial set of data was downloaded from"; CitationName(Wiktionary); ", which was then manually checked for accuracy and augmented. ";
+      "Words were double-checked against data from"; CitationName(SoundComparisons); DotSpace;
       "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
       "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
       "For instance, the Latin adjective "; textit{"gravis"}; " means "; style.SQuoteComma{"heavy"}; "but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"};
@@ -1456,7 +1548,7 @@ class ManualAlignmentClass: ContentClass {
     WordDisplay(style);
   };
 
-  override GetBody(ContentStyleClass style) = LanguageTable([1.5 inches, 2.1 inches, 2.5 inch]) {
+  override GetBody(ContentStyleClass style) = LanguageTable([ColumnClass.Expand]*3) {
     var th = ExtentWidth * 0.02;
     TextHeight: th;
 
@@ -2049,7 +2141,7 @@ class MethodsClass: ContentClass {
     style.BodyPar {
       "A continuous-time Markov model has a simple physical interpretation. ";
       "Specifically, when the process is in state "; sym.i; ", one waits an exponentially-distributed time with parameter ";
-      Tex.Negative qii; " until the next  segmental substitution occurs. ";
+      neg_qii; " until the next  segmental substitution occurs. ";
       "The change, when it occurs, is to state ";
       sym.j;
       " with probability ";
