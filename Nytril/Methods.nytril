@@ -267,6 +267,125 @@ class ExchangeabilityTableClass: ContentClass {
 
 //======================================================================
 
+readonly RateChartClass Figures.RateChart = new;
+
+class RateChartClass: ContentClass {
+  Constructor {
+    super.Constructor(Lang.Exchangeability);
+  }
+
+  private ShowRight(number) = HBox {
+    Space*2;
+    TextHeight: 80%;
+    TextColor: Colors.Gray;
+    number;
+  };
+
+  override GetBody(ContentStyleClass style) = Block {
+    PaperStyle.SansSerif;
+    TextHeight: ExtentWidth * 0.015;
+
+    var partitions = MainResults.Rule.Partitions;
+    var stats      = MainResults.TransitionStats;
+    var count      = stats.Rows;
+    var bx         = 20 pts;
+    var tx         = 60 pts + bx;
+    var size       = Math.Min(ExtentWidth, ExtentHeight);
+    var dy         = size / (partitions.Length + 1);
+    var d          = Math.Min(dy, (size  - tx) / partitions.Length);
+    var q          = MainResults.QRates;
+
+    var m[partitions.Length][partitions.Length];
+
+    for (int i=0; i<count; ++i) {
+      var ii = partitions.GetPartition(i);
+      for (int j=0; j<count; ++j) {
+
+      }
+    }
+
+    var max = 0.0;
+    for (int i = 0; i < count; ++i) {
+      for (int j = 0; j < count; ++j) {
+        var c = stats[i, j];
+        if (c is valid and c.Upper > max)
+          max = c.Upper;
+      }
+    }
+
+    var fc = d / max;
+
+    HBox {
+      VAlign: VAligns.Top;
+      VBox {
+        Canvas(bx, bx);
+
+        foreach (var p in partitions) {
+          HBox(null, d) {
+            Separation: 10 pts;
+            VAlign: VAligns.Center;
+            HAlignment: HAligns.Right;
+            Frame {
+              p;
+            };
+            Canvas(bx, d) {
+              Background: p.Color;
+            };
+          }
+        }
+      };
+
+      VBox {
+        HAlign: HAligns.Left;
+        HBox {
+          foreach (var p in partitions) {
+            Canvas(d, bx) {
+              Background: p.Color;
+              VAlign: VAligns.Center;
+              HAlign: HAligns.Center;
+              Frame(d) {
+                TextColor: p.Color.TextCompliment;
+                ParAlignment: ParAlignments.Center;
+                TextHeight: 70%;
+                p.Name;
+              };
+            };
+          }
+        };
+
+        VBox {
+          for (int i = 0; i < count; ++i) {
+            HBox {
+              for (int j = 0; j < count; ++j) {
+                var c = stats[i, j];
+                Canvas(d, d) {
+                  if (c is valid) {
+                    Tip: c;
+                    var center = new PointClass(d * 0.5);
+                    var x      = fc * c.Upper;
+                    Shape(80%) {
+                      EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
+                      x = fc * c.Lower;
+                      EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
+                    };
+
+                    Shape(null, 1) {
+                      x = fc * c.Mean;
+                      EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
+                    };
+                  }
+                };
+              }
+            };
+          }
+        }
+      };
+    };
+  };
+}
+
+//======================================================================
+
 readonly ExchangeabilityChartClass Figures.ExchangeabilityChart = new;
 
 class ExchangeabilityChartClass: ContentClass {
@@ -413,7 +532,8 @@ class EquilibriumChartClass: ContentClass {
           VBox {
             HAlign: HAligns.Center;
             ShowLabel("b");
-            Figures.ExchangeabilityChart.GetBody(style);
+            //Figures.ExchangeabilityChart.GetBody(style);
+            Figures.RateChart.GetBody(style);
           };
         };
       }
@@ -1195,7 +1315,7 @@ readonly SegmentModelsClass PaperSections.SegmentModels = new;
 
 class SegmentModelsClass: ContentClass {
   Constructor {
-    super.Constructor("Models of segmental change");
+    super.Constructor("");
   }
 
   override GetBody(ContentStyleClass style) = Block {
