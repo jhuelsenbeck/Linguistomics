@@ -151,9 +151,9 @@ abstract class RuleClass {
     return segments.FindSlice(part => MatchesRule(filter, part.Segment));
   }
 
-  ShowLegend(textheight, width, padding) = VBox(width, null, padding) {
+  ShowLegend(ContentStyleClass style, textheight, width, padding) = VBox(width, null, padding) {
     Table(null, null, [textheight*1.7, textheight, width - textheight*2.7]) {
-      PaperStyle.SansSerif;
+      style.SansSerif;
       TextHeight: textheight;
 
       foreach (var partition in Partitions) {
@@ -171,7 +171,7 @@ abstract class RuleClass {
     };
   };
 
-  ShowBlockLegend(PartitionClass[] partitions, textheight) = Frame {
+  ShowBlockLegend( PartitionClass[] partitions, textheight) = Frame {
     Paragraph {
       ParAlignment: ParAlignments.Center;
       Separator: Space*4;
@@ -752,11 +752,11 @@ class CalcRatesClass {
   };
 
 
-  PartitionDiagram = HBox {
+  PartitionDiagram(ContentStyleClass style) = HBox {
     VAlign: VAligns.Center;
 
     var legend = 1.5 inches;
-    Rule.ShowLegend(10 pts, legend, 0);
+    Rule.ShowLegend(style, 10 pts, legend, 0);
     MainDiagram(Math.Min(ExtentWidth - legend, ExtentHeight));
   };
 

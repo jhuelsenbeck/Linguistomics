@@ -141,7 +141,7 @@ class TransitionRatesClass: ContentClass {
     "The width of the lines is proportional to the estimated rates. ";
   };
 
-  override GetBody(ContentStyleClass style) = new CalcRatesClass(MainResults).PartitionDiagram;
+  override GetBody(ContentStyleClass style) = new CalcRatesClass(MainResults).PartitionDiagram(style);
 }
 
 //======================================================================
@@ -282,7 +282,7 @@ class ExchangeabilityChartClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style) = Block {
-    PaperStyle.SansSerif;
+    style.SansSerif;
     TextHeight: ExtentWidth * 0.015;
 
     var partitions = MainResults.Rule.Partitions;
@@ -303,7 +303,8 @@ class ExchangeabilityChartClass: ContentClass {
       }
     }
 
-    var fc = d / max;
+    var fm = 1.0 / max;
+    var fc = d * fm;
 
     HBox {
       VAlign: VAligns.Top;
@@ -353,7 +354,7 @@ class ExchangeabilityChartClass: ContentClass {
                     Tip: c;
                     var center = new PointClass(d * 0.5);
                     var x      = fc * c.Upper;
-                    Shape(80%) {
+                    Shape(95%) {
                       EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                       x = fc * c.Lower;
                       EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
@@ -385,7 +386,8 @@ class EquilibriumChartClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = Span {
     "The equilibrium frequencies (π) of the segment groups (a) and average rates of change between and within the ten segment groups of the natural class model (b). ";
-    "Circle area is proportional to the rate of change between natural class groups ("; Defs.qij; "). ";
+    "Circle radius is proportional to the rate of change between natural class groups ("; Defs.qij; "). ";
+    "Shaded area represents the variance. ";
   };
 
   ShowLabel(label) = Span {
@@ -430,7 +432,8 @@ class EquilibriumFrequencyChartClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Chart(100%, 4.2 inches) {
     Type: ChartTypes.Bar;
-    TextHeight: 10 pts;
+    style.SansSerif;
+    TextHeight: 8 pts;
     ValueLabel: Span {
       TextHeight: 20 pts;
       Defs.EquilibriumDistribution;
@@ -446,7 +449,8 @@ class EquilibriumFrequencyChartClass: ContentClass {
 
     ChartSeries {
       foreach (var f in partitions) {
-        new DataPointClass(each0, average[each0].Rate) {
+        var a = average[each0];
+        new DataPointClass(each0, a.Original * 100) {
           Fill: f.Color;
         }
       }
@@ -531,7 +535,7 @@ class QRatesMatrixClass: ContentClass {
     super.Constructor("Rate Matrix \"Q\"");
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.PartitionBox(ExtentSize);
+  override GetBody(ContentStyleClass style) = MainResults.QRates.PartitionBox(style, ExtentSize);
 }
 
 //======================================================================
@@ -543,7 +547,7 @@ class QRatesDiagonalClass: ContentClass {
     super.Constructor("The rate of change when in a particular segmental state (or  " Defs.neg_qii ").");
   }
 
-  override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults, MainResults.QRates).Display;
+  override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults, MainResults.QRates).Display(style);
 }
 
 //======================================================================
@@ -706,7 +710,7 @@ class SegmentOccuranceRatesClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption;
 
-  override GetBody(ContentStyleClass style) = new SegmentFrequencyClass(MainResults.Data, false).ShowChart;
+  override GetBody(ContentStyleClass style) = new SegmentFrequencyClass(MainResults.Data, false).ShowChart(style);
 }
 
 //======================================================================
@@ -718,7 +722,7 @@ class SegmentOccuranceGroupedClass: ContentClass {
     super.Constructor("Segment Occurance Rates (by partition)");
   }
 
-  override GetBody(ContentStyleClass style) = new SegmentFrequencyClass(MainResults.Data, true).ShowChart;
+  override GetBody(ContentStyleClass style) = new SegmentFrequencyClass(MainResults.Data, true).ShowChart(style);
 }
 
 //======================================================================
@@ -732,7 +736,7 @@ class PartitionFrequenciesClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption;
 
-  override GetBody(ContentStyleClass style) = new PartitionFrequencyClass(MainResults.Data).ShowChart;
+  override GetBody(ContentStyleClass style) = new PartitionFrequencyClass(MainResults.Data).ShowChart(style);
 }
 
 //======================================================================
@@ -1338,7 +1342,7 @@ class WordSegmentRelationshipsClass: ContentClass {
       "We summarize the posterior distribution by constructing a credible set of alignments. ";
       "A credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
       "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is 0.95. ";
-      "Figure [flower alignment] shows alignments for the concept `flower', which  illustrates three key properties we observed for all of the alignments. ";
+      "Figure [flower alignment] shows alignments for the concept "; style.SQuote{"flower"}; ", which  illustrates three key properties we observed for all of the alignments. ";
       "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
       "In this case, one alignment had a posterior probability of 0.79. ";
       "Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (see Figure [Frequency of INDELS in words]). ";
@@ -1362,7 +1366,7 @@ class WordSegmentRelationshipsClass: ContentClass {
 
     style.BodyPar {
         "Interestingly, the distribution of alignments depends on the model of segmental change. ";
-        "Figure \ref[sky alignments] shows the 95% credible set of alignments for the concept `sky' under the Poisson and natural class models. ";
+        "Figure \ref[sky alignments] shows the 95% credible set of alignments for the concept "; style.SQuote {"sky"}; " under the Poisson and natural class models. ";
         "The credible set contains over 1500 alignments under the Poisson model, but only 250 under the natural-class model. ";
         "This difference makes sense given the rates estimated under the natural-class model (Figure [rate figure]). ";
         "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
@@ -1414,7 +1418,7 @@ class DiscussionClass: ContentClass {
      "Our results are based on a unigram model of segmental transition, in which the three possible events described above are applicable only to individual segments. ";
      "Certain patterns of sound change cannot be adequately captured under such a model. ";
      "For instance, metathesis, a change in which two segments exchange positions, is modeled as two separate transitions. ";
-     "The Latin verb "; textit{"exprimere"}; " "; style.SQuote{"press out"}; " begins with "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; DotSpace;
+     "The Latin verb "; textit{"exprimere"}; Space; style.SQuote{"press out"}; " begins with "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; DotSpace;
      "The initial vowel has been lost and "; IPASegments.k; " and "; IPASegments.s; " have undergone metathesis. ";
      "Under our model, this single event is treated as two, one from "; IPASegments.k; " to "; IPASegments.s; " and another from "; IPASegments.s; " to "; IPASegments.k; DotSpace;
      "A second limitation is that the context in which a segmental transition takes place plays no role in the estimation of transition rates. ";

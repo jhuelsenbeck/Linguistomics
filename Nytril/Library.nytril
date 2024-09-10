@@ -1202,8 +1202,8 @@ abstract class CountBaseClass {
     MaxDigits      = 3;
   }
 
-  PartitionBox(SizeClass extentsize) = Paragraph {
-    PaperStyle.SansSerif;
+  PartitionBox(ContentStyleClass style, SizeClass extentsize) = Paragraph {
+    style.SansSerif;
 
     var grid   = 0.125 pts;
     var gcolor = 65%;
@@ -1448,20 +1448,15 @@ class AlignedCountClass: CountBaseClass {
   ShowLegend(RateClass[] rates) = {
     // Show only partitions that are present in the chart
     var pmax = Partitions.Length;
-    var set  = new HashSetClass(pmax);
-    var list = new ListClass<PartitionClass>(pmax);
+    var set  = new HashSetClass<PartitionClass>(pmax);
     foreach (var s in rates) {
-      var i = s.S0.Partition;
-      if (set.Add(i))
-        list.Add(i);
-      i = s.S1.Partition;
-      if (set.Add(i))
-        list.Add(i);
+      set.Add(s.S0.Partition);
+      set.Add(s.S1.Partition);
     }
 
     Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
-      Rule.ShowBlockLegend(list.ToArray, 11 pts);
+      Rule.ShowBlockLegend(set.ToArray, 11 pts);
     }
   };
 
@@ -1710,9 +1705,9 @@ class DiagonalClass {
 
   static int CompareData(SegDataClass d0, SegDataClass d1) = d0.Value.Compare(d1.Value);
 
-  Display = VBox {
+  Display(ContentStyleClass style) = VBox {
     HAlign: HAligns.Center;
-    PaperStyle.SansSerif;
+    style.SansSerif;
 
     Chart(ExtentWidth, 4 inches) {
       TextHeight: 11 pts;
@@ -1898,14 +1893,15 @@ abstract class FrequencyChartClass {
     SegmentBar(rate, each SortedIndexes, width, ExtentHeight);
   };
 
-  ShowChart = HBox {
+  ShowChart(ContentStyleClass style) = HBox {
     VAlign: VAligns.Center;
-    Rule.ShowLegend(10 pts, 1.4 inch, new EdgeClass(0.25 pts, 5, 80%)) {
+    Rule.ShowLegend(style, 10 pts, 1.4 inch, new EdgeClass(0.25 pts, 5, 80%)) {
       Margin: PadR(12 pts);
     };
     OccurranceChart(new(ExtentWidth - 2 inches, ExtentHeight));
   };
 }
+
 //======================================================================
 
 class SegmentFrequencyClass: FrequencyChartClass {
