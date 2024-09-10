@@ -10,7 +10,12 @@ struct CredibleInterval {
     double upper;
     double median;
 
-    CredibleInterval(double low, double up, double med) {
+     CredibleInterval(void) {
+        lower = 0.0;
+        upper = 0.0;
+        median = 0.0;
+    }
+   CredibleInterval(double low, double up, double med) {
         lower = low;
         upper = up;
         median = med;

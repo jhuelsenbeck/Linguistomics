@@ -313,6 +313,15 @@ void McmcSummary::calculateFrequencies(std::vector<double>& f) {
 
 }
 
+double McmcSummary::average(std::vector<double>& x) {
+
+    double sum = 0.0;
+    int n = (int)x.size();
+    for (int i=0; i<n; i++)
+        sum += x[i];
+    return sum / n;
+}
+
 void McmcSummary::calculateAverageRates(DoubleMatrix& m) {
 
     int ns = 0;
@@ -1052,6 +1061,26 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
             findex << "]";
             }
         findex << "\n];\n\n";
+        
+        
+        // print out the information for the subsets
+        std::vector<CredibleInterval> ncq = partitionRates();
+        findex << "StatClass[][] NCQRates = [\n";
+        for (int i = 0; i < numSubsets; ++i)
+            {
+            if (i)
+                findex << ",\n";
+            findex << "  [";
+            for (int j = 0; j < numSubsets; ++j)
+                {
+                if (j)
+                    findex << ",";
+                CredibleInterval& ci = ncq[i * numSubsets + j];
+                findex << "new(" << ci.lower << "," << ci.median << "," << ci.upper << ")";
+                }
+            findex << "]";
+            }
+        findex << "\n];\n\n";
         }
     
     // output average rates of change
@@ -1067,8 +1096,7 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     DoubleMatrix q(numStates,numStates);
     calculateRates(q);
     writeMatrix(findex, q, "QRates");
-    
-    // print out the information for the subsets
+        
     int numSubsets = statePartitions->numSubsets();
     DoubleMatrix sq(numSubsets,numSubsets);
     double maxValue = 0.0;
@@ -1203,6 +1231,91 @@ int McmcSummary::parseNumberFromFreqHeader(std::string str) {
         }
     int num = atoi(numStr.c_str());
     return num;
+}
+
+std::vector<CredibleInterval> McmcSummary::partitionRates(void) {
+
+    // make certain that we have a partition
+    std::vector<CredibleInterval> ncq;
+    if (statePartitions == nullptr)
+        return ncq;
+
+    int numSubsets = statePartitions->numSubsets();
+    ncq.resize(numSubsets*numSubsets);
+    
+    // set up vectors of vectors that will hold the rates
+    std::vector<std::vector<std::vector<double>>> aves;
+    aves.resize(numSubsets);
+    for (int i=0; i<numSubsets; i++)
+        aves[i].resize(numSubsets);
+    std::vector<std::vector<int>> nums;
+    nums.resize(numSubsets);
+    for (int i=0; i<numSubsets; i++)
+        {
+        nums[i].resize(numSubsets);
+        for (int j=0; j<numSubsets; j++)
+            nums[i][j] = 0;
+        }
+
+    // fill in the rates for the natural class categories
+    for (int i=0; i<numStates; i++)
+        {
+        int iss = statePartitions->indexOfSubsetWithValue(i) - 1;
+        for (int j=0; j<numStates; j++)
+            {
+            if (i != j)
+                {
+                int jss = statePartitions->indexOfSubsetWithValue(j) - 1;
+                int ir = iss;
+                int jr = jss;
+                if (iss > jss)
+                    {
+                    ir = jss;
+                    jr = iss;
+                    }
+                std::string rStr = "R[" + std::to_string(ir+1) + "-" + std::to_string(jr+1) + "]";
+                std::string fStr = "F[" + std::to_string(j) + "]";
+                ParameterStatistics* r = getParameterNamed(rStr);
+                ParameterStatistics* f = getParameterNamed(fStr);
+                if (r == NULL || f == NULL)
+                    Msg::error("Could not find parameter for partition rates: " + rStr + " " + fStr);
+                    
+                int nR = r->size();
+                int nF = f->size();
+                if (nR != nF)
+                    Msg::error("Unequal length r and f vectors");
+                    
+                std::vector<double>& a = aves[iss][jss];
+                if (a.size() == 0)
+                    {
+                    a.resize(nR);
+                    for (int n=0; n<nR; n++)
+                        a[n] = 0.0;
+                    }
+                for (int n=0; n<nR; n++)
+                    a[n] += (*r)[n] * (*f)[n];
+                nums[iss][jss]++;
+                }
+            }
+        }
+        
+    // average
+    for (int i=0; i<numSubsets; i++)
+        {
+        for (int j=0; j<numSubsets; j++)
+            {
+            std::vector<double>& a = aves[i][j];
+            int num = nums[i][j];
+            for (int n=0; n<a.size(); n++)
+                a[n] /= num;
+            sort(a.begin(), a.end());
+            ncq[i * numSubsets + j].lower  = a[0.025*a.size()];
+            ncq[i * numSubsets + j].upper  = a[0.975*a.size()];
+            ncq[i * numSubsets + j].median = average(a); // yeah, it's not the median
+            }
+        }    
+    
+    return ncq;
 }
 
 void McmcSummary::readAlnFile(std::string fn, int bi, Partition* prt) {
