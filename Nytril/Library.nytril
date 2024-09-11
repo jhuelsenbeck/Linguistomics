@@ -304,7 +304,7 @@ class AlignmentChartClass {
     }
   };
 
-  ShowSet(DataSetClass data, CognateIdClass[] examples) = Table(null, null, [0.75 inches, ColumnClass.Expand]) {
+  ShowSet(DataSetClass data, CognateIdClass[] examples, bool label) = Table(null, null, label ? [0.75 inches, ColumnClass.Expand] : [ColumnClass.Expand]) {
     var alignments = Alignments;
 
     foreach (var e in examples) {
@@ -319,15 +319,15 @@ class AlignmentChartClass {
       if (found is valid) {
         var ap = new AlignPairClass(data, found);
         Row {
-          Cell(PadR(10 pts)) {
-            VAlign: VAligns.Center;
-            e.Concept;
-            e.Cognate Italic;
-          };
-          Frame(ExtentWidth) {
-            ap.ShowFigureDetails(data, Math.Min(3, e.Count));
+          if (label) {
+            Cell(PadR(10 pts)) {
+              VAlign: VAligns.Center;
+              e.Concept;
+              e.Cognate Italic;
+            };
           }
-        }
+          ap.ShowFigureDetails(data, e.Count);
+        };
       }
     }
   };

@@ -2,6 +2,15 @@ using Format, Units, Math, IO, Defs, Equations, WorldLanguages, References, Pape
 
 //======================================================================
 
+SubLabel(label) = Span {
+  SansSerif;
+  TextHeight: 20 pts;
+  "("; label; ")";
+};
+
+//======================================================================
+
+
 readonly PartitionAssignmentsClass Figures.PartitionAssignments = new(MainResults.Rule);
 
 class PartitionAssignmentsClass: ContentClass {
@@ -182,26 +191,72 @@ class AllAlignmentsClass: ContentClass {
 
 //======================================================================
 
-Figures.AlignmentExamples = new AlignmentExamplesClass;
-
 class AlignmentExamplesClass: ContentClass {
   var CognateIdClass[] Examples;
 
-  Constructor {
-    super.Constructor("Alignment Examples");
-    Examples = [
-      new("Moon", null, 5),
-      new("One", null, 8),
-      new("Tooth", null, 3),
-    ];
+  Constructor(name, CognateIdClass[] examples) {
+    super.Constructor(name);
+    Examples = examples;
   }
 
   override GetCaption(ContentStyleClass style) = "Credible sets for cognate alignments";
 
   override GetBody(ContentStyleClass style) = Block {
-    AlignmentResults.ShowSet(MainResults.Data, Examples);
+    AlignmentResults.ShowSet(MainResults.Data, Examples, true);
   };
 }
+
+readonly AlignmentExamplesClass Figures.AlignmentExamples = new(
+  "Alignment Examples",
+  [new("Moon", null, 5), new("One", null, 8), new("Tooth", null, 3)]
+);
+
+//======================================================================
+
+class SingleAlignmentClass: AlignmentExamplesClass {
+  Constructor(count, name) {
+    super.Constructor("Credible sets for alignments of the cognate '{0}'"(name), [new(name, null, count)]);
+  }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "Segments are colored according to natural class. Dashes denote gaps where there is no homologous segment for the alignment position. ";
+    "The alignments are ordered from highest posterior probability (top-left alignment) to lowest posterior probability (bottom-right alignment) in row order. ";
+  };
+
+  override GetBody(ContentStyleClass style) = Block {
+    AlignmentResults.ShowSet(MainResults.Data, Examples, false);
+  };
+}
+
+readonly SingleAlignmentClass Figures.AlignmentExample1 = new(17, "Flower");
+
+//======================================================================
+
+class AlignmentCompareClass: ContentClass {
+  var Cognate;
+
+  Constructor() {
+    super.Constructor("Alignment comparison");
+    Cognate = "Sky";
+  }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "Ten alignments of highest posterior probability of the cognate for the concept ‘sky’ under the natural-class model (b) and under the simple model isomorphic to the Jukes-Cantor model (a, the ‘Poisson’ model, 39). ";
+    "The ten alignments under the Poisson model account for 0.098 ";
+    "posterior probability whereas the ten alignments under the natural-class model account for a cumulative posterior probability of 0.56.";
+  };
+
+  override GetBody(ContentStyleClass style) = Block {
+    VBox {
+      SubLabel("a");
+      new SingleAlignmentClass(7, Cognate).GetBody(style);
+      SubLabel("b");
+      new SingleAlignmentClass(7, Cognate).GetBody(style);
+    };
+  };
+}
+
+readonly AlignmentCompareClass Figures.AlignmentExample2 = new;
 
 //======================================================================
 
@@ -489,7 +544,7 @@ readonly EquilibriumChartClass Figures.EquilibriumCharts = new;
 
 class EquilibriumChartClass: ContentClass {
   Constructor {
-    super.Constructor("Equlibrium frequencies");
+    super.Constructor("Equilibrium frequencies");
   }
 
   override GetCaption(ContentStyleClass style) = Span {
@@ -498,26 +553,20 @@ class EquilibriumChartClass: ContentClass {
     "Shaded area represents the variance. ";
   };
 
-  ShowLabel(label) = Span {
-    SansSerif;
-    TextHeight: 20 pts;
-    "("; label; ")";
-  };
-
   override GetBody(ContentStyleClass style) = Block {
     Paragraph {
       HBox {
         VAlign: VAligns.Top;
         HBox(30%) {
           VBox {
-            ShowLabel("a");
+            SubLabel("a");
             Separation: 20 pts;
             Figures.EquilibriumFrequencyChart.GetBody(style);
           };
         };
         HBox(70%) {
           VBox {
-            ShowLabel("b");
+            SubLabel("b");
             //Figures.ExchangeabilityChart.GetBody(style);
             Figures.RateChart.GetBody(style);
           };
@@ -638,7 +687,7 @@ readonly QRatesMatrixClass Figures.QRatesMatrix = new;
 
 class QRatesMatrixClass: ContentClass {
   Constructor {
-    super.Constructor("Rate Matrix \"Q\"");
+    super.Constructor("Rate Matrix " Defs.RateMatrix);
   }
 
   override GetBody(ContentStyleClass style) = MainResults.QRates.PartitionBox(style, ExtentSize);
@@ -650,7 +699,7 @@ readonly QRatesDiagonalClass Figures.QRatesDiagonal = new;
 
 class QRatesDiagonalClass: ContentClass {
   Constructor {
-    super.Constructor("The rate of change when in a particular segmental state (or  " Defs.neg_qii ").");
+    super.Constructor("The rate of change when in a particular segmental state (or " Defs.neg_qii ")");
   }
 
   override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults, MainResults.QRates).Display(style);
@@ -666,7 +715,7 @@ readonly LanguageDistributionClass  Figures.LanguageDistribution = new;
 
 class LanguageDistributionClass: ContentClass {
   Constructor {
-    super.Constructor("The geographic distribution of the Romance languages examined in this study.");
+    super.Constructor("The geographic distribution of the Romance languages examined in this study");
   }
 
   override GetBody(ContentStyleClass style) = Paragraph {
@@ -1257,10 +1306,7 @@ class PhylogenyResultsClass: ContentClass {
     };
 
     style.BodyPar {
-      // TODO for Shawn: Two problems here. First, the spacing between lines changes when the greek letters are used. Second, the TextDigits
-      //                 command is making the reference number also have three decimal digits! It should definitely be an integer.
       TextDigits: 3;
-      // The spacing between lines changes when greek letters are inserted
         "This problem was likely not encountered in the other implementations of the TKF91 model";
         Citation {Lunter2004}; ", which analyzed an alignment of amino acid sequences. ";
         "In our analysis of cognate data, the insertion and deletion rates were estimated to be quite high relative to the substitution rate: ";
@@ -1288,8 +1334,6 @@ class PhylogenyResultsClass: ContentClass {
         "(Citations)"; DotSpace;
     };
 
-    // TODO: We need three trees here and they should have the same topology as in the Overleaf document
-     //style.FigureBlock(Figures.PriorTree);
      style.FigureBlock( Figures.ModelTreesUsed);
 
   };
@@ -1314,7 +1358,7 @@ class SegmentModelsClass: ContentClass {
         "We considered three models of segmental change in this study: ";
         Model1; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor";
         Citation {Jukes1969};
-        " with equal rates between all pair of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
+        " with equal rates between all pairs of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
         Model2; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein";
         Citation {Felsenstein1981};
         " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
@@ -1327,7 +1371,7 @@ class SegmentModelsClass: ContentClass {
     style.BodyPar {
         "The models differ in the number of parameters to estimate. ";
         "The first model, "; Model1; ", has no free parameters. ";
-        "The second model, "; Model2; ", has "; segments; " free parameters parameters (one less than the number of segments). ";
+        "The second model, "; Model2; ", has "; segments; " free parameters (one less than the number of segments). ";
 
         "The natural class model, "; Model3; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
         Equation {segments; " + "; (rp*(rp-1)/2 + rp); Tex.Equals; segments + rp*(rp-1)/2 + rp}; " free parameters.";
@@ -1347,8 +1391,10 @@ class SegmentModelsClass: ContentClass {
           "which is the ratio of the posterior to prior densities evaluated at the restriction that makes the parameter rich model equivalent to the simpler model. "
         "The natural class model explains the data substantially better than the two simpler models, with log Bayes ";
         // TODO: Maybe update the log bayes factor numbers dynamically, though this will be more tricky.
-        //       Need en-dashes instead of dashes for the negative signs
-            "factors of ln"; BayesFactor12; " = -1074.2 and ln"; BayesFactor12; " = -117.3, respectively, for a comparison of "; Model1; " to "; Model2; " and "; Model2; " to "; Model3; ". ";
+        "factors of ";
+        Equation {Tex.ln; BayesFactor12; Tex.Equals; -1074.2}; " and ";
+        Equation {Tex.ln; BayesFactor12; Tex.Equals; -117.3};
+        ", respectively, for a comparison of "; Model1; " to "; Model2; " and "; Model2; " to "; Model3; ". ";
         "This indicates overwhelming support for the more parameter-rich natural class model";
         Citation {Jeffreys1939}; DotSpace;
     };
@@ -1364,11 +1410,12 @@ class SegmentModelsClass: ContentClass {
        TextList {
          [1.51, 7.96, 5.86, 0.06, 1.79, 2.32, 1.19, 0.65, 0.43, 14.0];
        };
-       " times higher than expected under ";
-          "an equal rates Poisson model for stops, short vowels, nasal consonants, diphthongs, nasal vowels, fricatives, approximants, affricates, long vowels, ";
+       " times higher than expected under an equal rates Poisson model for stops, short vowels, ";
+       "nasal consonants, diphthongs, nasal vowels, fricatives, approximants, affricates, long vowels, ";
           "and liquids, respectively. ";
-       // TODO: Need arrow signs here
-       "(In other words, the diphthong -> diphthong, affricate -> affricate, and long vowel -> long vowel rates were lower than would be expected if all rates of change were the same.) ";
+       "(In other words, the ";
+       TextList {SelfArrow("diphthong"); SelfArrow("affricate"); SelfArrow("long vowel")};
+       " rates were lower than would be expected if all rates of change were the same.) ";
        "Long vowels and diphthongs counter the general pattern as they transition more often to short vowels than to other long vowels or diphthongs, which ";
           "reflects the well-known loss of phonemic vowel length in Latin and Romance";
           Citation {Janson1979; Loporcaro2015}; DotSpace;
@@ -1377,8 +1424,9 @@ class SegmentModelsClass: ContentClass {
        "Finally, the rate of change from nasal consonants to nasal vowels is a pathological trait of the model: ";
          "it infers transitions from nasal consonants to nasal vowels (and vice versa) as opposed to oral vowels.";
     };
-
   };
+
+  SelfArrow(text) = Span {text; Tex.rightarrow; text};
  }
 
 //======================================================================
@@ -1406,13 +1454,12 @@ class WordTransformationClass: ContentClass {
 
     style.BodyPar {
       "The most striking aspect of "; style.FigureReference(Figures.QRatesDiagonal); " is the robust distinction between the stability of vowels and consonants. ";
-      "With the exception of the affricates, the most volatile segments are all vowels. ";
+      "Except for the affricates, the most volatile segments are all vowels. ";
       "Among the vowels, the diphthongs and long vowels are the most susceptible to change. ";
-      "On the whole, the most stable segments are all consonants, with the stops the most stable of all. ";
+      "Overall, the most stable segments are all consonants, with the stops the most stable of all. ";
       "These results are in part consistent with the recent study of Bybee and Easterday ";
           //\citep{bybee22}
-          "(Citations)"; DotSpace;
-          ", who identify ";
+          "(Citations)"; ", who identify ";
           TextIpa {"p t k b d g m n ŋ s l"};
           " as primal consonants. ";
       "The rates of change in "; style.FigureReference(Figures.QRatesDiagonal); " are also remarkably similar within each class. ";
@@ -1442,13 +1489,23 @@ class WordSegmentRelationshipsClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
+    var align1 = Figures.AlignmentExample1;
+
     style.FirstPar {
       "Our method treats the homology relationships of segments from one language to another as a random variable. ";
       "Our Bayesian analysis numerically approximates the posterior probability of alignments. ";
       "We summarize the posterior distribution by constructing a credible set of alignments. ";
       "A credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
-      "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is 0.95. ";
-      "Figure [flower alignment] shows alignments for the concept "; style.SQuote{"flower"}; ", which  illustrates three key properties we observed for all of the alignments. ";
+      "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is ";
+      // TODO: Update this number
+      0.95; DotSpace;
+      style.FigureReference(align1); " shows alignments for the concept "; style.SQuote {align1.Examples[0].Cognate};
+      ", which illustrates three key properties we observed for all alignments. ";
+    };
+
+    style.FigureBlock(align1);
+
+    style.BodyPar {
       "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
       "In this case, one alignment had a posterior probability of 0.79. ";
       "Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (see Figure [Frequency of INDELS in words]). ";
@@ -1470,9 +1527,11 @@ class WordSegmentRelationshipsClass: ContentClass {
       //"Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment. ";
       //"The alignment of the nasalized vowels is surprising, since they are aligned with nasal consonants, when in fact they are homologous with the preceding vowels.";
 
+    var align2 = Figures.AlignmentExample2;
     style.BodyPar {
         "Interestingly, the distribution of alignments depends on the model of segmental change. ";
-        "Figure \ref[sky alignments] shows the 95% credible set of alignments for the concept "; style.SQuote {"sky"}; " under the Poisson and natural class models. ";
+        style.FigureReference(align2); " shows the 95% credible set of alignments for the concept ";
+        style.SQuote {align2.Cognate}; " under the Poisson and natural class models. ";
         "The credible set contains over 1500 alignments under the Poisson model, but only 250 under the natural-class model. ";
         "This difference makes sense given the rates estimated under the natural-class model (Figure [rate figure]). ";
         "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
@@ -1480,7 +1539,7 @@ class WordSegmentRelationshipsClass: ContentClass {
         "Under the natural-class model, however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
 
-    style.FigureBlock(Figures.AlignmentExamples);
+    style.FigureBlock(align2);
   };
 }
 
@@ -1807,15 +1866,18 @@ class DataCurationClass: ContentClass {
       "A challenge for programming in linguistics is that the IPA representation of words is expressed in Unicode (UCS), not ASCII or ANSI. ";
       "This requires care with file formats, text encodings and diacritic compositional form. ";
       "Furthermore, each IPA segment string can comprise several UCS code-points, so that the mapping between string characters and segments is not one-to-one. ";
-      "Below is an example of a more complex encoding. The numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
+      "Below is an example of a more complex encoding, ";
     };
 
     style.BodyPar {
       ParAlignment: ParAlignments.Center;
-      IPASegments.VlAlveolarNSAffricate.ShowFrame(3 inches, 20 pts);
+      Frame(2 inches, 60 pts) {
+        IPASegments.VlAlveolarNSAffricate.Display(null, 20 pts);
+      };
     };
 
-    style.BodyPar {
+    style.ResumePar {
+      "where the numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
       "Since our analysis requires each word to be separated into segments, a parser converts word strings into arrays of segment objects that facilitate the manipulation of segments at a high level. ";
       "A reusable library of such objects endows each segment with linguistic features that can be used for analysis. ";
       "After the input step, all steps are coded using properties such as "; style.SQuote{"vowel"}; " and "; style.SQuote{"nasal"}; ", rather than working with strings of characters directly.";
@@ -2065,7 +2127,7 @@ class MethodsClass: ContentClass {
       " primate species and the sequences were each 898 nucleotides in length. ";
       "In a phylogenetic analysis of DNA sequenes, homology is assumed at two levels. ";
       "First, one assumes that the sequences that are compared are homologous. ";
-      "Typically, homology at this level is established by sequence similarity and synteny of the gene (e.g., the gene that is compared across species is in the same, or at least similar, position along the chromosome when compared across species, which is another way of saying the gene that is compared has the same neighboring genes in all of the species in the analysis). "
+      "Typically, homology at this level is established by sequence similarity and synteny of the gene (e.g., the gene that is compared across species is in the same, or at least similar, position along the chromosome when compared across species, which is another way of saying the gene that is compared has the same neighboring genes in all the species in the analysis). "
     };
 
     style.BodyPar {
