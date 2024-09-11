@@ -44,7 +44,6 @@ class McmcSummary {
     
     private:
         double                                  average(std::vector<double>& x);
-        void                                    writeMatrix(std::ofstream& file, DoubleMatrix& m, std::string name);
         void                                    addPartion(std::map<RbBitSet,double>& parts);
         std::vector<std::string>                breakString(std::string str);
         std::string                             getCognateName(std::string str);
@@ -57,6 +56,7 @@ class McmcSummary {
         std::string                             interpretTreeString(std::string str);
         int                                     parseNumberFromFreqHeader(std::string str);
         std::vector<CredibleInterval>           partitionRates(void);
+        void                                    writeMatrix(std::ofstream& file, DoubleMatrix& m, std::string name);
 
         void                                    printPartitionFreqs(void);
         RandomVariable*                         rv;

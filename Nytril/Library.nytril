@@ -1134,6 +1134,7 @@ class ResultsClass {
   var RuleClass         Rule;
   var AlignIndexClass[] Alignments;
   var StatMatrix        TransitionStats;
+  var StatMatrix        NCQRates;
   var AlignedCountClass QRates,
                         AverageRates;
   var                   AlignmentCutoff;
@@ -1166,6 +1167,15 @@ class ResultsClass {
       var length = QRates.Length;
       var bs     = new StatClass(0, 0.5, 1);
       TransitionStats = new(length, length, bs, bs);
+    }
+
+    ts = align?.NCQRates;
+    if (ts is not null)
+      NCQRates = StatMatrix.Convert(ts);
+    else {
+      var length = QRates.Length;
+      var bs     = new StatClass(0, 0.5, 1);
+      NCQRates = new(length, length, bs, bs);
     }
 
     var alignments = new ListClass<AlignIndexClass>(1024);
