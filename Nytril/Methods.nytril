@@ -287,7 +287,6 @@ class RateChartClass: ContentClass {
 
     var partitions = MainResults.Rule.Partitions;
     var stats      = MainResults.NCQRates;
-    var count      = stats.Rows;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
     var size       = Math.Min(ExtentWidth, ExtentHeight);
@@ -295,15 +294,13 @@ class RateChartClass: ContentClass {
     var d          = Math.Min(dy, (size  - tx) / partitions.Length);
 
     var max = 0.0;
-    for (int i = 0; i < count; ++i) {
-      for (int j = 0; j < count; ++j) {
-        var c = stats[i, j];
+    foreach (var pi in partitions) {
+      foreach (var pj in partitions) {
+        var c = stats[pi.Index, pj.Index];
         if (c is valid and c.Upper > max)
           max = c.Upper;
       }
     }
-
-    //var fc = d / max;
 
     HBox {
       VAlign: VAligns.Top;
@@ -344,26 +341,25 @@ class RateChartClass: ContentClass {
         };
 
         VBox {
-          for (int i = 0; i < count; ++i) {
+          var factor = 1.0 / max;
+
+          foreach (var pi in partitions) {
             HBox {
-              for (int j = 0; j < count; ++j) {
-                var c = stats[i, j];
+              foreach (var pj in partitions) {
+                var c = stats[pi.Index, pj.Index];
                 Canvas(d, d) {
                   if (c is valid) {
                     Tip: c;
                     var center = new PointClass(d * 0.5);
-                    //var x = fc * c.Upper;
-                    var x =d  * Symbolic.Sqrt(c.Upper/max);
-                    Shape(80%) {
+                    var x      = d  * Math.Sqrt(c.Upper * factor);
+                    Shape(90%) {
                       EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
-                      //x = fc * c.Lower;
-                      x = d * Symbolic.Sqrt(c.Lower/max);
+                      x = d * Math.Sqrt(c.Lower * factor);
                       EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
 
                     Shape(null, 1) {
-                      //x = fc * c.Mean;
-                      x = d * Symbolic.Sqrt(c.Mean/max);
+                      x = d * Math.Sqrt(c.Mean * factor);
                       EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
                   }
@@ -498,13 +494,12 @@ class EquilibriumChartClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = Span {
     "The equilibrium frequencies (π) of the segment groups (a) and average rates of change between and within the ten segment groups of the natural class model (b). ";
-    "Circle radius is proportional to the rate of change between natural class groups ("; Defs.qij; "). ";
+    "Circle area is proportional to the rate of change between natural class groups ("; Defs.qij; "). ";
     "Shaded area represents the variance. ";
   };
 
   ShowLabel(label) = Span {
     SansSerif;
-    Bold;
     TextHeight: 20 pts;
     "("; label; ")";
   };
@@ -515,7 +510,6 @@ class EquilibriumChartClass: ContentClass {
         VAlign: VAligns.Top;
         HBox(30%) {
           VBox {
-            HAlign: HAligns.Center;
             ShowLabel("a");
             Separation: 20 pts;
             Figures.EquilibriumFrequencyChart.GetBody(style);
@@ -523,7 +517,6 @@ class EquilibriumChartClass: ContentClass {
         };
         HBox(70%) {
           VBox {
-            HAlign: HAligns.Center;
             ShowLabel("b");
             //Figures.ExchangeabilityChart.GetBody(style);
             Figures.RateChart.GetBody(style);
@@ -543,7 +536,7 @@ class EquilibriumFrequencyChartClass: ContentClass {
     super.Constructor("The equilibrium frequencies (π) of the segment groups");
   }
 
-  override GetBody(ContentStyleClass style) = Chart(100%, 4.2 inches) {
+  override GetBody(ContentStyleClass style) = Chart(100%, 4.3 inches) {
     Type: ChartTypes.Bar;
     style.SansSerif;
     TextHeight: 8 pts;
@@ -553,18 +546,18 @@ class EquilibriumFrequencyChartClass: ContentClass {
     };
 
     var partitions = MainResults.Data.Rule.Partitions.Reverse;
-    var average    = MainResults.AverageRates.RateList.ToArray.Reverse;
+    var average    = MainResults.NCQRates;
 
     XAxis: ChartAxis {
-      foreach (var f in partitions)
-        f.Name;
+      foreach (var p in partitions)
+        p.Name;
     };
 
     ChartSeries {
-      foreach (var f in partitions) {
-        var a = average[each0];
-        new DataPointClass(each0, a.Original * 100) {
-          Fill: f.Color;
+      foreach (var p in partitions) {
+        var a = average[p.Index, p.Index].Mean;
+        new DataPointClass(each0, a * 1000) {
+          Fill: p.Color;
         }
       }
     };
