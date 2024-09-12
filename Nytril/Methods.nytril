@@ -347,6 +347,7 @@ class RateChartClass: ContentClass {
     var size       = Math.Min(ExtentWidth, ExtentHeight);
     var dy         = size / (partitions.Length + 1);
     var d          = Math.Min(dy, (size  - tx) / partitions.Length);
+    var hlabel     = 65 pts;
 
     var max = 0.0;
     foreach (var pi in partitions) {
@@ -358,42 +359,34 @@ class RateChartClass: ContentClass {
     }
 
     HBox {
-      VAlign: VAligns.Top;
       VBox {
-        Canvas(2, 2);
+        HAlign: HAligns.Right;
+        VAlignment: VAligns.Bottom;
 
         foreach (var p in partitions) {
-          HBox(null, d) {
-            Separation: 10 pts;
+          HBox(null, d, PadR(2)) {
             VAlign: VAligns.Center;
-            HAlignment: HAligns.Right;
-            Frame {
-              TextHeight: 10 pts;
-              TextColor: p.Color;
-              p.Name;
-            };
-            Canvas(2, d) {
-              Background: Colors.White;
-            };
+            TextColor: p.Color;
+            p.Name;
           }
         }
       };
 
       VBox {
         HAlign: HAligns.Left;
-        HBox {
+        Canvas {
           foreach (var p in partitions) {
-            Canvas(d, 2) {
-              Background: Colors.White;
+            HBox(hlabel, d, PadR(3 pts)) {
+              X: d * each0 - d * 0.6;
               VAlign: VAligns.Center;
-              HAlign: HAligns.Center;
-              Frame(d) {
-                TextColor: p.Color;
-                ParAlignment: ParAlignments.Center;
-                TextHeight: 10 pts;
-                Transform: TransformClass.Rotate(45 degrees) TransformClass.Translate(0,0);
+              TextColor: p.Color;
+              TextHeight: 10 pts;
+              Transform: TransformClass.Rotate(70 degrees);
+              TransformFit: true;
+              Paragraph {
+                ParAlignment: ParAlignments.Right;
                 p.Name;
-              };
+              }
             };
           }
         };
@@ -415,7 +408,6 @@ class RateChartClass: ContentClass {
                       ClosedPath(0) {
                         LineTo(d,0);
                         LineTo(d,d);
-                        //LineTo(0,0);
                       }
                     };
 
@@ -423,7 +415,6 @@ class RateChartClass: ContentClass {
                       ClosedPath(0) {
                         LineTo(d,d);
                         LineTo(0,d);
-                        //LineTo(0,0);
                       }
                     };
 
