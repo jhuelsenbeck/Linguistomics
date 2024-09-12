@@ -347,7 +347,6 @@ class RateChartClass: ContentClass {
     var size       = Math.Min(ExtentWidth, ExtentHeight);
     var dy         = size / (partitions.Length + 1);
     var d          = Math.Min(dy, (size  - tx) / partitions.Length);
-    var hlabel     = 65 pts;
 
     var max = 0.0;
     foreach (var pi in partitions) {
@@ -359,6 +358,7 @@ class RateChartClass: ContentClass {
     }
 
     HBox {
+     TextHeight: 10 pts;
       VBox {
         HAlign: HAligns.Right;
         VAlignment: VAligns.Bottom;
@@ -366,7 +366,6 @@ class RateChartClass: ContentClass {
         foreach (var p in partitions) {
           HBox(null, d, PadR(2)) {
             VAlign: VAligns.Center;
-            TextHeight: 10 pts;
             TextColor: p.Color;
             p.Name;
           }
@@ -376,19 +375,15 @@ class RateChartClass: ContentClass {
       VBox {
         HAlign: HAligns.Left;
         Canvas {
+          HAlignment: HAligns.Right;
+          VAlign: VAligns.Bottom;
           foreach (var p in partitions) {
-            HBox(hlabel, d, PadR(0 pts)) {
-              X: d * each0 - d * 0.6;
-              VAlign: VAligns.Bottom;
-              HAlign: HAligns.Left;
+            HBox(null, d, PadR(0 pts)) {
+              X: d * (each0 + 0.3);
               TextColor: p.Color;
-              TextHeight: 10 pts;
-              Transform: TransformClass.Rotate(270 degrees);
+              Transform: TransformClass.Rotate(-90 degrees);
               TransformFit: true;
-              Paragraph {
-                ParAlignment: ParAlignments.Right;
-                p.Name;
-              }
+              p.Name;
             };
           }
         };
