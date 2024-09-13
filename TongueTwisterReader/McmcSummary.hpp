@@ -66,6 +66,7 @@ class McmcSummary {
         Tree*                                   conTree;
         bool                                    hasPartitions;
         Partition*                              statePartitions;
+        std::vector<std::string>                partitionOrder;
         std::vector<std::string>                taxa;
         int                                     numStates;
 };

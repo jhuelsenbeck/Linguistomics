@@ -1256,16 +1256,20 @@ std::vector<CredibleInterval> McmcSummary::partitionRates(void) {
         for (int j=0; j<numSubsets; j++)
             nums[i][j] = 0;
         }
+        
+    
 
     // fill in the rates for the natural class categories
     for (int i=0; i<numStates; i++)
         {
         int iss = statePartitions->indexOfSubsetWithValue(i) - 1;
+
         for (int j=0; j<numStates; j++)
             {
             if (i != j)
                 {
                 int jss = statePartitions->indexOfSubsetWithValue(j) - 1;
+
                 int ir = iss;
                 int jr = jss;
                 if (iss > jss)
@@ -1302,10 +1306,18 @@ std::vector<CredibleInterval> McmcSummary::partitionRates(void) {
     // average
     for (int i=0; i<numSubsets; i++)
         {
+        std::string iLabel = partitionOrder[i];
+        Subset* ssi = statePartitions->findSubsetLabeled(iLabel);
+        int idxI = ssi->getIndex() - 1;
+        
         for (int j=0; j<numSubsets; j++)
             {
-            std::vector<double>& a = aves[i][j];
-            int num = nums[i][j];
+            std::string jLabel = partitionOrder[j];
+            Subset* ssj = statePartitions->findSubsetLabeled(jLabel);
+            int idxJ = ssj->getIndex() - 1;
+            
+            std::vector<double>& a = aves[idxI][idxJ];
+            int num = nums[idxI][idxJ];
             for (int n=0; n<a.size(); n++)
                 a[n] /= num;
             sort(a.begin(), a.end());
@@ -1389,8 +1401,6 @@ void McmcSummary::readConfigFile(std::string fn) {
     for (int i = 0; i < jtaxa.size(); i++)
         taxa.push_back(jtaxa[i].get<std::string>());
 
-
-
     auto it = j.find("PartitionSets");
     if (it == j.end())
         {
@@ -1401,6 +1411,17 @@ void McmcSummary::readConfigFile(std::string fn) {
         {
         nlohmann::json jsPart = j["PartitionSets"];
         statePartitions = new Partition(jsPart);
+        
+        partitionOrder.push_back("Long Vowel");
+        partitionOrder.push_back("Nasal Vowel");
+        partitionOrder.push_back("Diphthong");
+        partitionOrder.push_back("Short Vowel");
+        partitionOrder.push_back("Nasal Consonant");
+        partitionOrder.push_back("Liquid");
+        partitionOrder.push_back("Approximant");
+        partitionOrder.push_back("Affricate");
+        partitionOrder.push_back("Fricatives");
+        partitionOrder.push_back("Stops");
         }
     
     if (statePartitions != NULL)

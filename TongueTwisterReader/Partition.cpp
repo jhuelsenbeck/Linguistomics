@@ -99,6 +99,16 @@ Subset* Partition::findSubsetIndexed(int x) const {
     return NULL;
 }
 
+Subset* Partition::findSubsetLabeled(std::string sName) {
+
+    for (Subset* s : subsets)
+        {
+        if (s->getLabel() == sName)
+            return s;
+        }
+    return NULL;
+}
+
 Subset* Partition::findSubsetWithValue(int x) {
 
     for (Subset* s : subsets)

@@ -19,6 +19,7 @@ class Partition {
         std::set<Subset*>&  getSubsets(void) { return subsets; }
         Subset*             findSubsetIndexed(int x);
         Subset*             findSubsetIndexed(int x) const;
+        Subset*             findSubsetLabeled(std::string sName);
         Subset*             findSubsetWithValue(int x);
         int                 indexOfSubsetWithValue(int x);
         bool                isEqualTo(const Partition& rhs) const;
