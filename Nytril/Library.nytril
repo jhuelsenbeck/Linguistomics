@@ -1129,6 +1129,7 @@ class DataSetClass {
 
 typedef StatMatrix MatrixClass<StatClass>;
 typedef StatVector VectorClass<StatClass>;
+typedef StatArray  StatClass[];
 
 class ResultsClass {
   var DataSetClass      Data;
@@ -1136,7 +1137,7 @@ class ResultsClass {
   var AlignIndexClass[] Alignments;
   var StatMatrix        TransitionStats;
   var StatMatrix        NCQRates;
-  var StatVector        NCQFreqs;
+  var StatArray         NCQFreqs;
   var AlignedCountClass QRates,
                         AverageRates;
   var                   AlignmentCutoff;
@@ -1151,11 +1152,11 @@ class ResultsClass {
 
     var align = IO.ReadScript(data.MainRun.AlignmentFile).Root;
 
+    AlignmentCutoff        = 0.95;
     QRates                 = new(this, align.QRates, false);
     AverageRates           = new(this, align.AverageRates, true);
-    NCQFreqs               = align.NCQFreqs as StatVector;
+    NCQFreqs               = align.NCQFreqs as StatArray;
     EquilibriumFrequencies = align.EquilibriumFrequencies;
-    AlignmentCutoff        = align.AlignmentCutoff;
     InsertionRate          = align.InsertionRateMean;
     InsertionRateLow       = align.InsertionRateLow;
     InsertionRateHigh      = align.InsertionRateHigh;
