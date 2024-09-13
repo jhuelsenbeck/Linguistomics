@@ -336,6 +336,12 @@ class NaturalClassRateChartClass: ContentClass {
     number;
   };
 
+  override GetCaption(ContentStyleClass style) = Span {
+    "The average rates of change between and within the ten segment groups of the natural class model. ";
+    "Circle area is proportional to the rate of change between natural class groups ("; Defs.qij; "). ";
+    "Shaded area represent the 95% credible interval. ";
+  };
+
   override GetBody(ContentStyleClass style) = Block {
     PaperStyle.SansSerif;
     TextHeight: ExtentWidth * 0.015;
@@ -560,62 +566,10 @@ class EquilibriumChartClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style) = Block {
-
-
-    Paragraph {
-      HBox {
-        VAlign: VAligns.Top;
-         HBox(90%) {
-           VBox {
-             SubLabel("a");
-             Separation: 20 pts;
-             Figures.EquilibriumFrequencyChart.GetBody(style);
-           };
-         };
-      }
-    }
+    Figures.EquilibriumFrequencyChart.GetBody(style);
   };
 }
 
-//======================================================================
-
-readonly RateChartClass Figures.RateCharts = new;
-
-class RateChartClass: ContentClass {
-  Constructor {
-    super.Constructor("Natural class rates");
-  }
-
-  override GetCaption(ContentStyleClass style) = Span {
-    "The average rates of change between and within the ten segment groups of the natural class model. ";
-    "Circle area is proportional to the rate of change between natural class groups ("; Defs.qij; "). ";
-    "Shaded area represent the 95% credible interval. ";
-  };
-
-  override GetBody(ContentStyleClass style) = Block {
-
-
-    Paragraph {
-      HBox {
-        VAlign: VAligns.Top;
-          //HBox(30%) {
-          //  VBox {
-          //    SubLabel("a");
-          //    Separation: 20 pts;
-          //    Figures.EquilibriumFrequencyChart.GetBody(style);
-          //  };
-          //};
-        HBox(90%) {
-          VBox {
-            //SubLabel("b");
-            //Figures.ExchangeabilityChart.GetBody(style);
-            Figures.RateChart.GetBody(style);
-          };
-        };
-      }
-    }
-  };
-}
 //======================================================================
 
 readonly EquilibriumFrequencyChartClass Figures.EquilibriumFrequencyChart = new;
@@ -635,24 +589,24 @@ class EquilibriumFrequencyChartClass: ContentClass {
     };
 
     var partitions = MainResults.Data.Rule.Partitions.Reverse;
-    //var stats      = MainResults.NCQFreqs;
+    var stats      = MainResults.NCQFreqs;
 
     XAxis: ChartAxis {
       foreach (var p in partitions) {
-        TextColor: p.Color;
-        p.Name;
+        Span {
+          TextColor: p.Color;
+          Tip: p;
+          p.Name;
         }
+      }
     };
 
     ChartSeries {
-
       foreach (var p in partitions) {
-      //var c = stats[p.Index];
-      //Tip: c;
-      //var a = c.Mean;
-      //new DataPointClass(each0, a * 1000) {
-      //  Fill: p.Color;
-      //}
+        var c = stats[p.Index];
+        new DataPointClass(each0, c.Mean) {
+          Fill: p.Color;
+        }
       }
     };
   };
@@ -1444,7 +1398,7 @@ class SegmentModelsClass: ContentClass {
         Citation {Jeffreys1939}; DotSpace;
     };
 
-    style.FigureBlock(Figures.RateCharts);
+    style.FigureBlock(Figures.RateChart);
 
     style.BodyPar {
        "Figure [rate figure] shows the equilibrium frequencies of the "; rp;
