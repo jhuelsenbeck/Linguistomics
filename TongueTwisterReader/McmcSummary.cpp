@@ -1081,6 +1081,17 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
             findex << "]";
             }
         findex << "\n];\n\n";
+        
+        std::vector<CredibleInterval> ncf = partitionFrequencies();
+        findex << "StatClass[] NCQFreqs = [";
+        for (int i = 0; i < numSubsets; ++i)
+            {
+            if (i)
+                findex << ",\n";
+            CredibleInterval& ci = ncf[i];
+            findex << "new(" << ci.lower << "," << ci.median << "," << ci.upper << ")";
+            }
+        findex << "];\n\n";
         }
     
     // output average rates of change
@@ -1231,6 +1242,68 @@ int McmcSummary::parseNumberFromFreqHeader(std::string str) {
         }
     int num = atoi(numStr.c_str());
     return num;
+}
+
+std::vector<CredibleInterval> McmcSummary::partitionFrequencies() {
+
+    // make certain that we have a partition
+    std::vector<CredibleInterval> ncf;
+    if (statePartitions == nullptr)
+        return ncf;
+
+    int numSubsets = statePartitions->numSubsets();
+    ncf.resize(numSubsets);
+
+    // set up vectors of vectors that will hold the frequencies
+    std::vector<std::vector<double>> aves;
+    aves.resize(numSubsets);
+    std::vector<int> nums;
+    nums.resize(numSubsets);
+    for (int i=0; i<numSubsets; i++)
+        nums[i] = 0;
+
+    // fill in the frequencies for the natural class categories
+    for (int i=0; i<numStates; i++)
+        {
+        int iss = statePartitions->indexOfSubsetWithValue(i) - 1;
+
+        std::string fStr = "F[" + std::to_string(i) + "]";
+        ParameterStatistics* f = getParameterNamed(fStr);
+        if (f == NULL)
+            Msg::error("Could not find parameter for partition frequencies: " + fStr);
+                    
+        int nF = f->size();
+                    
+        std::vector<double>& a = aves[iss];
+        if (a.size() == 0)
+            {
+            a.resize(nF);
+            for (int n=0; n<nF; n++)
+                a[n] = 0.0;
+            }
+        for (int n=0; n<nF; n++)
+            a[n] += (*f)[n];
+        nums[iss]++;
+        }
+
+    // average
+    for (int i=0; i<numSubsets; i++)
+        {
+        std::string iLabel = partitionOrder[i];
+        Subset* ssi = statePartitions->findSubsetLabeled(iLabel);
+        int idxI = ssi->getIndex() - 1;
+        
+        std::vector<double>& a = aves[idxI];
+        int num = nums[idxI];
+        for (int n=0; n<a.size(); n++)
+            a[n] /= num;
+        sort(a.begin(), a.end());
+        ncf[i].lower  = a[0.025*a.size()];
+        ncf[i].upper  = a[0.975*a.size()];
+        ncf[i].median = average(a); // yeah, it's not the median
+        }
+
+    return ncf;
 }
 
 std::vector<CredibleInterval> McmcSummary::partitionRates(void) {

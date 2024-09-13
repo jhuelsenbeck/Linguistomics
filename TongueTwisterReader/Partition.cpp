@@ -203,6 +203,7 @@ nlohmann::json Partition::toJson(void) {
 }
 
 nlohmann::json Partition::toJson(std::map<int,double>& partFreqs, std::ostream& findex) {
+
     findex << "\nEquilibriumFrequencies = [\n  ";
     nlohmann::json j = nlohmann::json::object();
     

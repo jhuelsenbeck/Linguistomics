@@ -55,6 +55,7 @@ class McmcSummary {
         std::map<int,std::string>               interpretTranslateString(std::vector<std::string> translateTokens);
         std::string                             interpretTreeString(std::string str);
         int                                     parseNumberFromFreqHeader(std::string str);
+        std::vector<CredibleInterval>           partitionFrequencies(void);
         std::vector<CredibleInterval>           partitionRates(void);
         void                                    writeMatrix(std::ofstream& file, DoubleMatrix& m, std::string name);
 
