@@ -554,35 +554,22 @@ class ExchangeabilityChartClass: ContentClass {
 
 //======================================================================
 
-readonly EquilibriumChartClass Figures.EquilibriumCharts = new;
-
-class EquilibriumChartClass: ContentClass {
-  Constructor {
-    super.Constructor("Natural class equilibrium frequencies");
-  }
-
-  override GetCaption(ContentStyleClass style) = Span {
-    "The equilibrium frequencies (π) of the segment groups.";
-  };
-
-  override GetBody(ContentStyleClass style) = Block {
-    Figures.EquilibriumFrequencyChart.GetBody(style);
-  };
-}
-
-//======================================================================
-
-readonly EquilibriumFrequencyChartClass Figures.EquilibriumFrequencyChart = new;
+readonly EquilibriumFrequencyChartClass Figures.EquilibriumCharts = new;
 
 class EquilibriumFrequencyChartClass: ContentClass {
   Constructor {
     super.Constructor("The equilibrium frequencies (π) of the segment groups");
   }
 
-  override GetBody(ContentStyleClass style) = Chart(100%, 4.3 inches) {
+  override GetCaption(ContentStyleClass style) = Span {
+    "The equilibrium frequencies (π) of the segment groups.";
+  };
+
+  override GetBody(ContentStyleClass style) = Chart(50%, 3.5 inches) {
     Type: ChartTypes.Bar;
     style.SansSerif;
-    TextHeight: 8 pts;
+    TextHeight: 12 pts;
+
     ValueLabel: Span {
       TextHeight: 20 pts;
       Defs.EquilibriumDistribution;
@@ -591,13 +578,11 @@ class EquilibriumFrequencyChartClass: ContentClass {
     var partitions = MainResults.Data.Rule.Partitions.Reverse;
     var stats      = MainResults.NCQFreqs;
 
-    XAxis: ChartAxis {
+    XAxis: ChartAxis(null, null, PadR(8)) {
       foreach (var p in partitions) {
-        var c = stats[p.Index];
         Span {
+          Tip: p;
           TextColor: p.Color;
-          TextHeight: 10 pts;
-          Tip: c;
           p.Name;
         }
       }
@@ -607,6 +592,7 @@ class EquilibriumFrequencyChartClass: ContentClass {
       foreach (var p in partitions) {
         var c = stats[p.Index];
         new DataPointClass(each0, c.Mean) {
+          Reference: c;
           Fill: p.Color;
         }
       }
