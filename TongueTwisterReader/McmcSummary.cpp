@@ -1316,6 +1316,93 @@ std::vector<CredibleInterval> McmcSummary::partitionRates(void) {
     int numSubsets = statePartitions->numSubsets();
     ncq.resize(numSubsets*numSubsets);
     
+    // figure out the number of samples and check for consistence
+    int numSamples = -1;
+    for (int i=0; i<stats.size(); i++)
+        {
+        if (numSamples == -1)
+            numSamples = stats[i]->size();
+        if (stats[i]->size() != numSamples)
+            Msg::error("Inconsistent number of samples taken");
+        }
+    std::vector<DoubleMatrix*> Q;
+    Q.resize(numSamples);
+    for (int i=0; i<numSamples; i++)
+        Q[i] = new DoubleMatrix(numStates,numStates);
+    double** pi = new double*[numSamples];
+    for (int i=0; i<numSamples; i++)
+        {
+        pi[i] = new double[numStates];
+        for (int j=0; j<numStates; j++)
+            pi[i][j] = 0.0;
+        }
+    
+    // set up the rate matrix and stationary frequencies
+    //    get stationary frequencies
+    for (int i=0; i<numStates; i++)
+        {
+        int iss = statePartitions->indexOfSubsetWithValue(i) - 1;
+        std::string fStr = "F[" + std::to_string(i) + "]";
+        ParameterStatistics* f = getParameterNamed(fStr);
+        for (int n=0; n<numSamples; n++)
+            pi[n][i] = (*f)[n];
+        }
+        
+    //    fill in off diagonals
+    for (int i=0; i<numStates; i++)
+        {
+        int iss = statePartitions->indexOfSubsetWithValue(i) - 1;
+        
+        for (int j=0; j<numStates; j++)
+            {
+            if (i != j)
+                {
+                int jss = statePartitions->indexOfSubsetWithValue(j) - 1;
+                int ir = iss;
+                int jr = jss;
+                if (iss > jss)
+                    {
+                    ir = jss;
+                    jr = iss;
+                    }
+
+                std::string rStr = "R[" + std::to_string(ir+1) + "-" + std::to_string(jr+1) + "]";
+                ParameterStatistics* r = getParameterNamed(rStr);
+
+                if (r == NULL)
+                    Msg::error("Could not find parameter for partition rates: " + rStr);
+                    
+                int nR = r->size();
+                if (nR != numSamples)
+                    Msg::error("Unequal length r and f vectors");
+                    
+                for (int n=0; n<nR; n++)
+                    (*Q[n])(i,j) = (*r)[n] * pi[n][j];
+                }
+            }
+        }
+        
+    //    fill in diagonal elements and rescale
+    for (int n=0; n<numSamples; n++)
+        {
+        double averageRate = 0.0;
+        for (int i=0; i<numStates; i++)
+            {
+            double sum = 0.0;
+            for (int j=0; j<numStates; j++)
+                {
+                if (i != j)
+                    sum += (*Q[n])(i,j);
+                }
+            (*Q[n])(i,i) = -sum;
+            averageRate += pi[n][i] * sum;
+            }
+        double factor = 1.0 / averageRate;
+        for (int i=0; i<numStates; i++)
+            for (int j=0; j<numStates; j++)
+                (*Q[n])(i,j) *= factor;
+        }
+    
     // set up vectors of vectors that will hold the rates
     std::vector<std::vector<std::vector<double>>> aves;
     aves.resize(numSubsets);
@@ -1330,9 +1417,32 @@ std::vector<CredibleInterval> McmcSummary::partitionRates(void) {
             nums[i][j] = 0;
         }
         
-    
-
     // fill in the rates for the natural class categories
+#   if 1
+    for (int i=0; i<numStates; i++)
+        {
+        int iss = statePartitions->indexOfSubsetWithValue(i) - 1;
+
+        for (int j=0; j<numStates; j++)
+            {
+            if (i != j)
+                {
+                int jss = statePartitions->indexOfSubsetWithValue(j) - 1;
+                    
+                std::vector<double>& a = aves[iss][jss];
+                if (a.size() == 0)
+                    {
+                    a.resize(numSamples);
+                    for (int n=0; n<numSamples; n++)
+                        a[n] = 0.0;
+                    }
+                for (int n=0; n<numSamples; n++)
+                    a[n] += (*Q[n])(i,j);
+                nums[iss][jss]++;
+                }
+            }
+        }
+#   else
     for (int i=0; i<numStates; i++)
         {
         int iss = statePartitions->indexOfSubsetWithValue(i) - 1;
@@ -1375,6 +1485,7 @@ std::vector<CredibleInterval> McmcSummary::partitionRates(void) {
                 }
             }
         }
+#   endif
         
     // average
     for (int i=0; i<numSubsets; i++)
