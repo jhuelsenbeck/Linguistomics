@@ -1294,9 +1294,9 @@ std::vector<CredibleInterval> McmcSummary::partitionFrequencies() {
         int idxI = ssi->getIndex() - 1;
         
         std::vector<double>& a = aves[idxI];
-        int num = nums[idxI];
-        for (int n=0; n<a.size(); n++)
-            a[n] /= num;
+//        int num = nums[idxI];
+//        for (int n=0; n<a.size(); n++)
+//            a[n] /= num;
         sort(a.begin(), a.end());
         ncf[i].lower  = a[0.025*a.size()];
         ncf[i].upper  = a[0.975*a.size()];
