@@ -1391,6 +1391,7 @@ class SegmentModelsClass: ContentClass {
     style.FigureBlock(Figures.RateChart);
 
     style.BodyPar {
+      TextDigits: 2;
        "Figure [rate figure] shows the equilibrium frequencies of the "; rp;
        " natural class groups ([rate figure]a) and the estimated average rates of change between the groups of the natural class";
           " model ([rate figure]b). ";
@@ -1400,20 +1401,44 @@ class SegmentModelsClass: ContentClass {
        // TODO: These numbers should be dynamically updated
 
       var partitions = MainResults.Rule.Partitions;
+      var numSubsets = partitions.Length;
       var stats      = MainResults.NCQRates;
-      var numSegments = MainResults.Data.UniqueSegments.Length - 1;
+      var numSegments = MainResults.Data.UniqueSegments.Length;
+      //var smallOnes = [];
+
+      var cnt = 0;
       foreach (var p in partitions) {
+        cnt++;
         var c = stats[p.Index,p.Index];
         var val = c.Mean * (numSegments-1);
-        val; " ";
+
+        //if (va  if (val < 1.0)
+        //  smallOnes.add(new p.Name);
+
+        if (cnt == numSubsets)
+          ", and ";
+        else if (cnt != 1)
+           ", ";
+         val;
       }
 
-       TextList {
-         [1.51, 7.96, 5.86, 0.06, 1.79, 2.32, 1.19, 0.65, 0.43, 14.0];
-       };
-       " times higher than expected under an equal rates Poisson model for stops, short vowels, ";
-       "nasal consonants, diphthongs, nasal vowels, fricatives, approximants, affricates, long vowels, ";
-          "and liquids, respectively. ";
+       " times higher than expected under an equal rates Poisson model for ";
+
+       cnt = 0;
+       foreach (var p in partitions) {
+         cnt++;
+         if (cnt == numSubsets)
+          ", and ";
+        else if (cnt != 1)
+           ", ";
+         var nme = p.Name;
+         var ch = nme[nme.Length-1];
+         nme.ToLower;
+         if (ch != 's')
+           "s";
+       }
+       ", respectively. ";
+
        "(In other words, the ";
        TextList {SelfArrow("diphthong"); SelfArrow("affricate"); SelfArrow("long vowel")};
        " rates were lower than would be expected if all rates of change were the same.) ";
