@@ -1337,6 +1337,17 @@ class SegmentModelsClass: ContentClass {
     super.Constructor("");
   }
 
+
+  PartitionClass[] GetSmallOnes(StatMatrix stats, PartitionClass[] partitions) {
+    var list = ListClass<PartitionClass>(partitions.Length);
+    foreach (var p in partitions) {
+      // Smallness condition
+      if (stats[p.Index, p.Index] < 0.01)
+        list.Add(p);
+    }
+    return list.ToArray;
+  }
+
   override GetBody(ContentStyleClass style) = Block {
 
     var rule = MainResults.Rule;
@@ -1400,16 +1411,16 @@ class SegmentModelsClass: ContentClass {
        "The estimated rates of change from one word segment to another under the natural class model were ";
        // TODO: These numbers should be dynamically updated
 
-      var partitions = MainResults.Rule.Partitions;
-      var numSubsets = partitions.Length;
-      var stats      = MainResults.NCQRates;
+      var partitions  = MainResults.Rule.Partitions;
+      var numSubsets  = partitions.Length;
+      var stats       = MainResults.NCQRates;
       var numSegments = MainResults.Data.UniqueSegments.Length;
-      //var smallOnes = [];
+//      var smallones   = GetSmallOnes(stats, partitions);
 
       var cnt = 0;
       foreach (var p in partitions) {
         cnt++;
-        var c = stats[p.Index,p.Index];
+        var c = stats[p.Index, p.Index];
         var val = c.Mean * (numSegments-1);
 
         //if (va  if (val < 1.0)
