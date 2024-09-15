@@ -1416,6 +1416,7 @@ class SegmentModelsClass: ContentClass {
       var stats       = MainResults.NCQRates;
       var numSegments = MainResults.Data.UniqueSegments.Length;
 //      var smallones   = GetSmallOnes(stats, partitions);
+      ListClass smallOnes;
 
       var cnt = 0;
       foreach (var p in partitions) {
@@ -1423,8 +1424,8 @@ class SegmentModelsClass: ContentClass {
         var c = stats[p.Index, p.Index];
         var val = c.Mean * (numSegments-1);
 
-        //if (va  if (val < 1.0)
-        //  smallOnes.add(new p.Name);
+        if (val < 1.0)
+            smallOnes.Add(new p.Name);
 
         if (cnt == numSubsets)
           ", and ";
@@ -1451,6 +1452,9 @@ class SegmentModelsClass: ContentClass {
        ", respectively. ";
 
        "(In other words, the ";
+       foreach (var p in smallOnes) {
+         SelfArrow(p.ToLower);
+       }
        TextList {SelfArrow("diphthong"); SelfArrow("affricate"); SelfArrow("long vowel")};
        " rates were lower than would be expected if all rates of change were the same.) ";
        "Long vowels and diphthongs counter the general pattern as they transition more often to short vowels than to other long vowels or diphthongs, which ";
