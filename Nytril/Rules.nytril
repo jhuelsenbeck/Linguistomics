@@ -3,6 +3,7 @@ using Format, Units, SegmentFeatures, LinkTypes;
 
 class PartitionClass: FactClass {
   field string       Name;
+  var string         PluralName;
   var SegPartClass[] Segments;
   var PointClass     Center;
   var ColorClass     Color,
@@ -13,14 +14,15 @@ class PartitionClass: FactClass {
                      Angle,
                      Outer;
 
-  Constructor(index, name, SegPartClass[] segments) {
+  Constructor(index, name, plural, SegPartClass[] segments) {
     super.Constructor(guid.FromHash(name));
-    Name      = name;
-    Color     = ColorClass.ChartColor(index);
-    Marker    = Markers.Dot(Color);
-    TextColor = Color.TextCompliment;
-    Index     = index;
-    Segments  = segments;
+    Name       = name;
+    PluralName = plural;
+    Color      = ColorClass.ChartColor(index);
+    Marker     = Markers.Dot(Color);
+    TextColor  = Color.TextCompliment;
+    Index      = index;
+    Segments   = segments;
 
     foreach (var s in segments)  {
       s.SetPartition(this, index);
@@ -43,7 +45,7 @@ class PartitionClass: FactClass {
     Paragraph(BorderB(1)) {
       ParAlignment: ParAlignments.Center;
       TextHeight: 16 pts;
-      Name;
+      PluralName;
     };
     ShowFilterSegments(ParAlignments.Left);
   };
@@ -69,11 +71,13 @@ class PartitionInfoClass {
 
 class FilterClass {
   field string  Name;
+  var string    PluralName;
   var RuleClass Rule;
 
-  Constructor(RuleClass rule, name) {
-    Rule = rule;
-    Name = name;
+  Constructor(RuleClass rule, name, plural) {
+    Rule       = rule;
+    Name       = name;
+    PluralName = plural ?? name;
   }
 
   virtual bool Matches(SegmentClass segment) = true;
@@ -83,6 +87,7 @@ class FilterClass {
     Name;
   };
 }
+
 //======================================================================
 
 abstract class RuleClass {
@@ -103,7 +108,7 @@ abstract class RuleClass {
 
   void Init(SegPartClass[] segments) {
     Filters = FilterList.ToArray;
-    FilterList.Add(new FilterClass(this, "Residue"));
+    FilterList.Add(new FilterClass(this, "Residue", "Residues"));
     FiltersPlus = FilterList.ToArray;
 
     var list = new ListClass<PartitionClass>(segments.Length);
@@ -111,7 +116,7 @@ abstract class RuleClass {
     foreach (var filter in FiltersPlus) {
       var find = GetMatching(segments, filter);
       if (find is valid) {
-        var part = new PartitionClass(i, filter.Name, find);
+        var part = new PartitionClass(i, filter.Name, filter.PluralName, find);
         list.Add(part);
         ++i;
       }
@@ -261,26 +266,28 @@ abstract class RuleClass {
     }
   };
 }
+
 //======================================================================
 
 class SingleFilterClass: FilterClass {
   var SegmentClass Segment;
 
   Constructor(RuleClass rule, SegmentClass segment) {
-    super.Constructor(rule, segment.Ipa);
+    super.Constructor(rule, segment.Ipa, null);
     Segment = segment;
   }
 
   override bool Matches(SegmentClass segment) = segment == Segment;
 }
+
 //======================================================================
 
 class FeatureMaskClass: FilterClass {
   var Mask,
       Flags;
 
-  Constructor(RuleClass rule, name, mask, flag) {
-    super.Constructor(rule, name);
+  Constructor(RuleClass rule, name, plural, mask, flag) {
+    super.Constructor(rule, name, plural);
     Mask  = mask;
     Flags = flag;
     rule.FilterList.Add(this);
@@ -288,27 +295,30 @@ class FeatureMaskClass: FilterClass {
 
   override bool Matches(SegmentClass segment) = segment.Features.HasFlagMask(Mask, Flags);
 }
+
 //======================================================================
 
 class SegmentListClass: FilterClass {
   var SegmentClass[] List;
 
-  Constructor(RuleClass rule, name, SegmentClass[] list) {
-    super.Constructor(rule, name);
+  Constructor(RuleClass rule, name, plural, SegmentClass[] list) {
+    super.Constructor(rule, name, plural);
     List = list;
   }
 
   override bool Matches(SegmentClass segment) = List.FindElementIndex(segment) >= 0;
 }
+
 //======================================================================
 
 class VowelListClass: SegmentListClass {
   Constructor(RuleClass rule, SegmentClass[] list) {
-    super.Constructor(rule, list.FirstElement.Ipa, list);
+    super.Constructor(rule, list.FirstElement.Ipa, null, list);
   }
 
   override bool Matches(SegmentClass segment) = List.FindElementIndex(segment) >= 0;
 }
+
 //======================================================================
 
 class NaturalPartitionClass: RuleClass {
@@ -316,18 +326,19 @@ class NaturalPartitionClass: RuleClass {
     super.Constructor("Natural Class");
     Numbers = true;
 
-    new FeatureMaskClass(this, "Long Vowel", Vowel LongVowel, Vowel LongVowel);
-    new FeatureMaskClass(this, "Nasal Vowel", Vowel Nasal, Vowel Nasal);
-    new FeatureMaskClass(this, "Diphthong", Diphthong, Diphthong);
-    new FeatureMaskClass(this, "Short Vowel", Vowel, Vowel);
-    new FeatureMaskClass(this, "Nasal Consonant", Nasal, Nasal);
-    new FeatureMaskClass(this, "Liquid", Vowel Liquid, Liquid);
-    new FeatureMaskClass(this, "Approximant", Vowel Approximant, Approximant);
-    new FeatureMaskClass(this, "Affricate", Vowel Affricate, Affricate);
-    new FeatureMaskClass(this, "Fricatives", Vowel Fricative, Fricative);
-    new FeatureMaskClass(this, "Stops", Vowel, NoFeature);
+    new FeatureMaskClass(this, "Long Vowel", "Long Vowels", Vowel LongVowel, Vowel LongVowel);
+    new FeatureMaskClass(this, "Nasal Vowel", "Nasal Vowels", Vowel Nasal, Vowel Nasal);
+    new FeatureMaskClass(this, "Diphthong", "Diphthongs", Diphthong, Diphthong);
+    new FeatureMaskClass(this, "Short Vowel", "Short Vowels", Vowel, Vowel);
+    new FeatureMaskClass(this, "Nasal Consonant", "Nasal Consonants", Nasal, Nasal);
+    new FeatureMaskClass(this, "Liquid", "Liquids", Vowel Liquid, Liquid);
+    new FeatureMaskClass(this, "Approximant", "Approximants", Vowel Approximant, Approximant);
+    new FeatureMaskClass(this, "Affricate", "Affricates", Vowel Affricate, Affricate);
+    new FeatureMaskClass(this, "Fricative", "Fricatives", Vowel Fricative, Fricative);
+    new FeatureMaskClass(this, "Stop", "Stops", Vowel, NoFeature);
   }
 }
+
 //======================================================================
 
 class PartitionActionClass: ActionClass {
@@ -370,6 +381,7 @@ class PartitionActionClass: ActionClass {
     AddGroup(P2);
   };
 }
+
 //======================================================================
 
 class TransitionClass {
@@ -398,6 +410,7 @@ class TransitionClass {
     MaxFrequency = 1.0;
   }
 }
+
 //======================================================================
 
 class TranActionClass: DocumentClass {

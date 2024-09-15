@@ -1337,17 +1337,6 @@ class SegmentModelsClass: ContentClass {
     super.Constructor("");
   }
 
-
-  PartitionClass[] GetSmallOnes(StatMatrix stats, PartitionClass[] partitions) {
-    var list = ListClass<PartitionClass>(partitions.Length);
-    foreach (var p in partitions) {
-      // Smallness condition
-      if (stats[p.Index, p.Index] < 0.01)
-        list.Add(p);
-    }
-    return list.ToArray;
-  }
-
   override GetBody(ContentStyleClass style) = Block {
 
     var rule = MainResults.Rule;
@@ -1402,68 +1391,48 @@ class SegmentModelsClass: ContentClass {
     style.FigureBlock(Figures.RateChart);
 
     style.BodyPar {
-      TextDigits: 2;
-       "Figure [rate figure] shows the equilibrium frequencies of the "; rp;
-       " natural class groups ([rate figure]a) and the estimated average rates of change between the groups of the natural class";
-          " model ([rate figure]b). ";
-       "Several patterns stand out. ";
-       "First, rates of change are generally highest among segments in the same class. ";
-       "The estimated rates of change from one word segment to another under the natural class model were ";
-       // TODO: These numbers should be dynamically updated
+      "Figure [rate figure] shows the equilibrium frequencies of the "; rp;
+      " natural class groups ([rate figure]a) and the estimated average rates of change between the groups of the natural class";
+      " model ([rate figure]b). ";
+      "Several patterns stand out. ";
+      "First, rates of change are generally highest among segments in the same class. ";
+      "The estimated rates of change from one word segment to another under the natural class model were ";
 
       var partitions  = MainResults.Rule.Partitions;
-      var numSubsets  = partitions.Length;
       var stats       = MainResults.NCQRates;
-      var numSegments = MainResults.Data.UniqueSegments.Length;
-//      var smallones   = GetSmallOnes(stats, partitions);
-      ListClass smallOnes;
+      var numSegments = MainResults.Data.UniqueSegments.Length - 1;
+      var smallOnes   = new ListClass<PartitionClass>(partitions.Length);
 
-      var cnt = 0;
-      foreach (var p in partitions) {
-        cnt++;
-        var c = stats[p.Index, p.Index];
-        var val = c.Mean * (numSegments-1);
+      TextList {
+        TextDigits: 2;
+        foreach (var p in partitions) {
+          var val = stats[p.Index, p.Index].Mean * numSegments;
+          if (val < 1.0)
+            smallOnes.Add(p);
+          val;
+        }
+      };
 
-        if (val < 1.0)
-            smallOnes.Add(new p.Name);
+      " times higher than expected under an equal rates Poisson model for ";
+      TextList {
+        TextCase: TextCases.AllLower;
+        (each partitions).PluralName;
+      };
+      ", respectively. ";
 
-        if (cnt == numSubsets)
-          ", and ";
-        else if (cnt != 1)
-           ", ";
-         val;
-      }
-
-       " times higher than expected under an equal rates Poisson model for ";
-
-       cnt = 0;
-       foreach (var p in partitions) {
-         cnt++;
-         if (cnt == numSubsets)
-          ", and ";
-        else if (cnt != 1)
-           ", ";
-         var nme = p.Name;
-         var ch = nme[nme.Length-1];
-         nme.ToLower;
-         if (ch != 's')
-           "s";
-       }
-       ", respectively. ";
-
-       "(In other words, the ";
-       foreach (var p in smallOnes) {
-         SelfArrow(p.ToLower);
-       }
-       TextList {SelfArrow("diphthong"); SelfArrow("affricate"); SelfArrow("long vowel")};
-       " rates were lower than would be expected if all rates of change were the same.) ";
-       "Long vowels and diphthongs counter the general pattern as they transition more often to short vowels than to other long vowels or diphthongs, which ";
-          "reflects the well-known loss of phonemic vowel length in Latin and Romance";
-          Citation {Janson1979; Loporcaro2015}; DotSpace;
-       "Second, short vowels exhibit the highest rates along the diagonal and diphthongs the lowest. ";
-       "Both characteristics are due to frequency, as short vowels are the most frequent class and diphthongs the least. ";
-       "Finally, the rate of change from nasal consonants to nasal vowels is a pathological trait of the model: ";
-         "it infers transitions from nasal consonants to nasal vowels (and vice versa) as opposed to oral vowels.";
+      "(In other words, the ";
+      TextList {
+        TextCase: TextCases.AllLower;
+        SelfArrow(each ((each smallOnes).Name));
+      };
+      " rates were lower than would be expected if all rates of change were the same.) ";
+      "Long vowels and diphthongs counter the general pattern as they transition more often to short vowels than to other long vowels or diphthongs, which ";
+        "reflects the well-known loss of phonemic vowel length in Latin and Romance";
+        Citation {Janson1979; Loporcaro2015}; DotSpace;
+      "Second, short vowels exhibit the highest rates along the diagonal and diphthongs the lowest. ";
+      "Both characteristics are due to frequency, as short vowels are the most frequent class and diphthongs the least. ";
+      "Finally, the rate of change from nasal consonants to nasal vowels is a pathological trait of the model: ";
+      "it infers transitions from nasal consonants to nasal vowels (and vice versa) as opposed to oral vowels.";
     };
 
     style.FigureBlock(Figures.EquilibriumCharts);
