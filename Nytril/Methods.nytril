@@ -1356,6 +1356,31 @@ class RatioClass {
 
 //======================================================================
 
+class PartitionValueClass {
+  var double         Value;
+  var PartitionClass Partition;
+
+  Constructor(PartitionClass p, double value) {
+    Partition = p;
+    Value     = value;
+  }
+
+  static int CompareFunction(PartitionValueClass v1, PartitionValueClass v2) = v1.Value.Compare(v2.Value);
+
+  override GetLayoutSpan = Span {
+    Partition.ShowPlural;
+    " (";
+    Span {
+      TextDigits: 3;
+      TextSignificant: true;
+      Value;
+    };
+    ")";
+  };
+}
+
+//======================================================================
+
 readonly SegmentModelsClass PaperSections.SegmentModels = new;
 
 class SegmentModelsClass: ContentClass {
@@ -1415,6 +1440,9 @@ class SegmentModelsClass: ContentClass {
 
     style.FigureBlock(Figures.RateChart);
 
+    var partitions = MainResults.Rule.Partitions;
+    var diagonal   = new ListClass<PartitionValueClass>(partitions.Length);
+
     style.BodyPar {
       style.FigureReference(Figures.RateChart);
       " shows the estimated rates of change between the "; rp; " groups of the natural class";
@@ -1423,7 +1451,6 @@ class SegmentModelsClass: ContentClass {
       "For one, rates of change are generally highest among segments in the same class. ";
       "The estimated rates of change from one word segment to another under the natural class model were ";
 
-      var partitions  = MainResults.Rule.Partitions;
       var stats       = MainResults.NCQRates;
       var numSegments = MainResults.Data.UniqueSegments.Length - 1;
       var smallOnes   = new ListClass<PartitionClass>(partitions.Length);
@@ -1431,6 +1458,7 @@ class SegmentModelsClass: ContentClass {
       var cntSame     = 0;
       var cntDiff     = 0;
       foreach (var pi in partitions) {
+        diagonal.Add(new(pi, stats[pi.Index, pi.Index].Mean));
         foreach (var pj in partitions) {
           var val = stats[pi.Index, pj.Index].Mean * numSegments;
           if (val >= 1.0) {
@@ -1477,12 +1505,8 @@ class SegmentModelsClass: ContentClass {
         diff; " of the changes between different natural class groups are higher than expected under an equal rates model, ";
         "supporting the pattern of a generally higher rate of change between word segmetns assigned to the same natural class group. ";
       }
-      else {
-        Span {
-          TextColor: Colors.Red;
-          "NOTE: INCONSISTENCY BETWEEN TEXT AND DATA!";
-        };
-      }
+      else
+        System.Assert(false, "Inconsistency between text and data!");
 
       //"Second, short vowels exhibit the highest rates along the diagonal and diphthongs the lowest. ";
       //"Both characteristics are due to frequency, as short vowels are the most frequent class and diphthongs the least. ";
@@ -1495,11 +1519,11 @@ class SegmentModelsClass: ContentClass {
       " shows the estimated equilibirum frequencies of the natural classes under model "; Model3; ". ";
       "The equilibirum frequenices are used in two ways when calculating the probability of the observed data. ";
       "First, they are used at the root of the tree as the probability of the word segment state at the root. ";
-      "Second, they modify the rate of change between word segments for models "; Model2; " and "; Model3; ", with the rate of change being proportional to the frequency of the destination word segment. ";
+      "Second, they modify the rate of change between word segments for models "; Model2; " and "; Model3;
+      ", with the rate of change being proportional to the frequency of the destination word segment. ";
       "Indeed, the rates of change to ";
-      // NOTE: It might be better to dynamically take the top three classes here in rates and frequencies and make certain that they match
-      "short vowels, nasal consonants, and liquids ";
-      "are the highest as are the estimated equilibirum frequencies for those classes. ";
+      TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
+      " are the highest as are the estimated equilibirum frequencies for those classes. ";
       "Generally speaking, the estimated equilibrium frequency tracks the frequency of the word segments in the data. ";
       };
 
