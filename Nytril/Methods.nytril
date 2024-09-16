@@ -1330,6 +1330,32 @@ class PhylogenyResultsClass: ContentClass {
 
 //======================================================================
 
+class RatioClass {
+  var int    Numerator,
+             Denominator;
+  var double Ratio;
+
+  Constructor(int numerator, int denominator) {
+    Numerator   = numerator;
+    Denominator = denominator;
+    Ratio       = Numerator / Denominator;
+  }
+
+  override GetLayoutSpan = Span {
+    Span {
+      TextDigits: 1;
+      100.0 * Ratio;
+    };
+    "% (";
+    Numerator;
+    " out of ";
+    Denominator;
+    ")";
+  };
+}
+
+//======================================================================
+
 readonly SegmentModelsClass PaperSections.SegmentModels = new;
 
 class SegmentModelsClass: ContentClass {
@@ -1402,28 +1428,26 @@ class SegmentModelsClass: ContentClass {
       var numSegments = MainResults.Data.UniqueSegments.Length - 1;
       var smallOnes   = new ListClass<PartitionClass>(partitions.Length);
       var numClasses  = partitions.Length;
-
-      var cntSame = 0;
-      var cntDiff = 0;
+      var cntSame     = 0;
+      var cntDiff     = 0;
       foreach (var pi in partitions) {
-         foreach (var pj in partitions) {
-           var val = stats[pi.Index, pj.Index].Mean * numSegments;
-           if (val >= 1.0) {
-             if (pi.Name == pj.Name)
-               cntSame++;
-             else
-               cntDiff++;
-             }
-         }
+        foreach (var pj in partitions) {
+          var val = stats[pi.Index, pj.Index].Mean * numSegments;
+          if (val >= 1.0) {
+            if (pi == pj)
+              cntSame++;
+            else
+              cntDiff++;
+          }
+        }
       }
 
       TextList {
         TextDigits: 2;
         foreach (var p in partitions) {
           var val = stats[p.Index, p.Index].Mean * numSegments;
-          if (val < 1.0) {
+          if (val < 1.0)
             smallOnes.Add(p);
-          }
           val;
         }
       };
@@ -1444,26 +1468,21 @@ class SegmentModelsClass: ContentClass {
       "Long vowels and diphthongs counter the general pattern as they transition more often to short vowels than to other long vowels or diphthongs, which ";
         "reflects the well-known loss of phonemic vowel length in Latin and Romance";
         Citation {Janson1979; Loporcaro2015}; DotSpace;
-      if (((cntSame/numClasses)*100) > ((cntDiff/(numClasses*(numClasses-1)))*100)) {
-        "Note that ";
-        Span{
-          TextDigits: 1;
-          ((cntSame/numClasses)*100);
-        }
-         "% ("; cntSame; " out of "; numClasses; ") of the changes within a group are higher than expected under an equal rates model, whereas ";
-         Span {
-           TextDigits: 1;
-           ((cntDiff/(numClasses*(numClasses-1)))*100);
-         }
-        "% ("; cntDiff; " out of "; (numClasses *(numClasses-1)); ") of the changes between different natural class groups are higher than expected under an equal rates model, ";
+
+      var same = new RatioClass(cntSame, numClasses);
+      var diff = new RatioClass(cntDiff, numClasses*(numClasses-1));
+
+      if (same.Ratio > diff.Ratio) {
+        "Note that "; same; " of the changes within a group are higher than expected under an equal rates model, whereas ";
+        diff; " of the changes between different natural class groups are higher than expected under an equal rates model, ";
         "supporting the pattern of a generally higher rate of change between word segmetns assigned to the same natural class group. ";
-        }
+      }
       else {
         Span {
           TextColor: Colors.Red;
           "NOTE: INCONSISTENCY BETWEEN TEXT AND DATA!";
-          }
-        }
+        };
+      }
 
       //"Second, short vowels exhibit the highest rates along the diagonal and diphthongs the lowest. ";
       //"Both characteristics are due to frequency, as short vowels are the most frequent class and diphthongs the least. ";
