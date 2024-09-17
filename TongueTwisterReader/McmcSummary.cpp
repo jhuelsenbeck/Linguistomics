@@ -1509,8 +1509,14 @@ std::vector<CredibleInterval> McmcSummary::partitionRates(void) {
             ncq[i * numSubsets + j].upper  = a[0.975*a.size()];
             ncq[i * numSubsets + j].median = average(a); // yeah, it's not the median
             }
-        }    
-    
+        }
+        
+    for (int i=0; i<Q.size(); i++)
+        delete Q[i];
+    for (int i=0; i<numSamples; i++)
+        delete [] pi[i];
+    delete [] pi;
+
     return ncq;
 }
 
