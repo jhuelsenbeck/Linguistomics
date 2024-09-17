@@ -22,6 +22,7 @@ class Alignment {
         int                     getCharCode(int tIdx, int cIdx) { return matrix[tIdx][cIdx]; }
         int                     getNumChar(void) { return numChar; }
         int                     getNumTaxa(void) { return numTaxa; }
+        std::vector<double>     getGapSpectrum(void);
         int                     lengthOfLongestName(void);
         std::map<double,double> gapInfo(void);
         void                    print(void);

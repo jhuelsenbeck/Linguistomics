@@ -72,6 +72,60 @@ std::map<double,double> Alignment::gapInfo(void) {
     return info;
 }
 
+std::vector<double> Alignment::getGapSpectrum(void) {
+
+    std::vector<double> spectrum;
+    if (numChar == 1)
+        {
+        spectrum.resize(1);
+        int n = 0;
+        for (int i=0; i<numTaxa; i++)
+            {
+            if (matrix[i][0] == -1)
+                n++;
+            }
+        spectrum[0] = n;
+        }
+    else if (numChar == 2)
+        {
+        spectrum.resize(2);
+        for (int j=0; j<2; j++)
+            {
+            int n = 0;
+            for (int i=0; i<numTaxa; i++)
+                {
+                if (matrix[i][j] == -1)
+                    n++;
+                }
+            spectrum[j] = n;
+            }
+        }
+    else
+        {
+        spectrum.resize(3);
+        for (int i=0; i<3; i++)
+            spectrum[i] = 0.0;
+        for (int j=0; j<numChar; j++)
+            {
+            int n = 0;
+            for (int i=0; i<numTaxa; i++)
+                {
+                if (matrix[i][j] == -1)
+                    n++;
+                }
+            if (j == 0)
+                spectrum[0] = n;
+            else if (j == numChar-1)
+                spectrum[2] = n;
+            else
+                spectrum[1] += n;
+            }
+        spectrum[1] /= (numChar-2);
+        }
+    
+    return spectrum;
+}
+
 int Alignment::lengthOfLongestName(void) {
 
     int maxLen = 0;
