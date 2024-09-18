@@ -642,32 +642,33 @@ class WordPairClass {
 //======================================================================
 
 class DataSetClass {
-  var LanguageClass[]             LanguageSet;
-  var SegPartClass[]              UniqueSegments;
-  var CognateClass[]              SortedCognates;
-  var ListClass<ConceptClass>     UsedConcepts;
-  var ListClass<CognateClass>     UsedCognates;
-  var TaxonClass[]                Taxa;
+  var LanguageClass[]                   LanguageSet;
+  var SegPartClass[]                    UniqueSegments;
+  var CognateClass[]                    SortedCognates;
+  var ListClass<ConceptClass>           UsedConcepts;
+  var ListClass<CognateClass>           UsedCognates;
+  var TaxonClass[]                      Taxa;
   var StringDictionaryClass<TaxonClass> TaxonSet;
-  var VectorClass                 WordList;
-  var RuleClass                   Rule;
-  var WordClass                   DefWord;
-  var TreeSetClass[]              TreeSets;
-  var ListClass                   PlainBuffer,
-                                  TextBuffer;
-  var ListClass<SegPartClass>     SegmentBuffer;
-  var RunExperimentClass          MainRun;
-  var AttributeClass              ExampleConcept,
-                                  FigureConcept,
-                                  DataConcept;
-  var                             WordCutoff,
-                                  RootFolder,
-                                  Name,
-                                  MaxLanguageName,
-                                  WordCount,
-                                  SegmentCount,
-                                  WordFile;
-  var bool                        RawData;
+  var VectorClass                       WordList;
+  var RuleClass                         Rule;
+  var WordClass                         DefWord;
+  var TreeSetClass[]                    TreeSets;
+  var ListClass                         PlainBuffer,
+                                        TextBuffer;
+  var ListClass<SegPartClass>           SegmentBuffer;
+  var RunExperimentClass                MainRun,
+                                        JCRun;
+  var AttributeClass                    ExampleConcept,
+                                        FigureConcept,
+                                        DataConcept;
+  var                                   WordCutoff,
+                                        RootFolder,
+                                        Name,
+                                        MaxLanguageName,
+                                        WordCount,
+                                        SegmentCount,
+                                        WordFile;
+  var bool                              RawData;
 
   Constructor(config, name, rootfolder, runindex) {
     Name            = name;
@@ -681,7 +682,10 @@ class DataSetClass {
     SegmentBuffer   = new(64);
     Rule            = new NaturalPartitionClass;
     TreeSets        = AddTree(config, each PriorTrees);
-    MainRun         = TreeSets[0].Custom.Run[runindex];
+
+    var set = TreeSets[0];
+    MainRun         = set.Custom.Run[runindex];
+    JCRun           = set.JC69.Run[runindex];
 
     if (config is null)
       ReadExperiment;
