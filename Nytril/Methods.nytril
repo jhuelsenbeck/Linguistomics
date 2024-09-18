@@ -600,49 +600,101 @@ class EquilibriumFrequencyChartClass: ContentClass {
 
 //======================================================================
 
-readonly PartitionVolatilityChartClass Figures.PartitionVolatilityChart = new;
+//adonly EquilibriumFrequencyChartClass Figures.EquilibriumCharts = new;
+//
+//ass EquilibriumFrequencyChartClass: ContentClass {
+//Constructor {
+//  super.Constructor("The equilibrium frequencies (π) of the segment groups.");
+//}
+//
+//override GetBody(ContentStyleClass style) = Chart(50%, 3.5 inches) {
+//  Type: ChartTypes.Bar;
+//  style.SansSerif;
+//  TextHeight: 12 pts;
+//
+//  ValueLabel: Span {
+//    TextHeight: 20 pts;
+//    Defs.EquilibriumDistribution;
+//  };
+//
+//  var partitions = MainResults.Data.Rule.Partitions.Reverse;
+//  var stats      = MainResults.NCQFreqs;
+//
+//  XAxis: ChartAxis(null, null, PadR(8)) {
+//    foreach (var p in partitions) {
+//      Span {
+//        Tip: p;
+//        TextColor: p.Color;
+//        p.Name;
+//      }
+//    }
+//  };
+//
+//  ChartSeries {
+//    foreach (var p in partitions) {
+//      var c = stats[p.Index];
+//      new DataPointClass(each0, c.Mean) {
+//        ErrorLo: c.Mean - c.Lower;
+//        ErrorHi: c.Upper - c.Mean;
+//        Reference: c;
+//        Fill: p.Color;
+//      }
+//    }
+//  };
+//};
+//
+//======================================================================
 
-class PartitionVolatilityChartClass: ContentClass {
+readonly GappinessChartClass Figures.GappinessChart = new;
+
+class GappinessChartClass: ContentClass {
   Constructor {
-    super.Constructor("Partition Volatility");
+    super.Constructor("Gap Frequency Spectrum");
   }
 
   override GetBody(ContentStyleClass style) = Block {
     SansSerif;
 
-    var partitions = MainResults.Rule.Partitions;
-    var stats      = MainResults.TransitionStats;
-    Chart(ExtentWidth, 4 inches) {
-      Type: ChartTypes.Scatter;
-      ValueLabel: "Probability %" {
-        TextHeight: 14 pts;
-        Transform: TransformClass.Rotate(90 degrees);
-        TransformFit: true;
-      };
-
-      XAxis: ChartAxis {
-        foreach (var p in partitions) {
-          Span {
-            p.Name;
-            Tip: p;
-          }
-        }
-      };
-
-      ValueAxis: ChartAxis;
-
-      ChartSeries {
-        foreach (var p in partitions) {
-          var s = stats[each0, each0];
-          var m = s.Mean * 100.0;
-          new DataPointClass(each0, m) {
-            Fill: p.Color;
-            Reference: p;
-            ErrorHi: s.Upper*100.0 - m;
-            ErrorLo: m- s.Lower*100.0;
-          };
-        }
-      };
+//var vals = MainResults.AlnGaps;
+//var vals0 = vals[0];
+//
+//artSeries {
+//
+//for (int i=0; i<vals0.size(); i++) {
+//  new DataPointClass(i, vals0[i]);
+//}
+//
+      Chart(ExtentWidth, 4 inches) {
+   //Type: ChartTypes.Scatter;
+   //ValueLabel: "Probability %" {
+   //  TextHeight: 14 pts;
+   //  Transform: TransformClass.Rotate(90 degrees);
+   //  TransformFit: true;
+   //};
+   //
+   //XAxis: ChartAxis {
+   //  foreach (var p in partitions) {
+   //    Span {
+   //      p.Name;
+   //      Tip: p;
+   //    }
+   //  }
+   //};
+   //
+   //ValueAxis: ChartAxis;
+   //
+   //ChartSeries {
+   //  foreach (var p in partitions) {
+   //    var s = stats[each0, each0];
+   //    var m = s.Mean * 100.0;
+   //    new DataPointClass(each0, m) {
+   //      Fill: p.Color;
+   //      Reference: p;
+   //      ErrorHi: s.Upper*100.0 - m;
+   //      ErrorLo: m- s.Lower*100.0;
+   //    };
+   //  }
+   //};
     };
   };
 }
@@ -1284,7 +1336,7 @@ class PhylogenyResultsClass: ContentClass {
           "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
           "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
           "Our analyses consistently found a handful of topologies that best explained the data. Unfortunately, the MCMC poorly explored the tree space: ";
-              "the MCMC algorithm would find a good tree then become stuck on it. In our MCMC implementation, parameters are updated in blocks. ";
+              "the MCMC algorithm would find a good tree then become stuck on it. Why is this the case? In our MCMC implementation, parameters are updated in blocks. ";
           "A parameter is randomly selected and then updated. In a single MCMC cycle, either the tree topology or the alignment is updated, but not both simultaneously. ";
           "The tree topology and alignments are confounded. As the MCMC procedure found better trees, the alignments that were accepted by the MCMC procedure tended to fit the current tree in computer memory. ";
           "As the alignment becomes better adapted to the current tree in memory, it becomes more difficult for the MCMC procedure to accept alternative topologies, even if they would be sensible ones on a different alignment.";
@@ -1597,7 +1649,7 @@ class WordSegmentRelationshipsClass: ContentClass {
       "Our method treats the homology relationships of segments from one language to another as a random variable. ";
       "Our Bayesian analysis numerically approximates the posterior probability of alignments. ";
       "We summarize the posterior distribution by constructing a credible set of alignments. ";
-      "A credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
+      "A 95% credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
       "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is ";
       0.95; DotSpace;
     };
