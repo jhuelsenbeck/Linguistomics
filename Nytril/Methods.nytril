@@ -654,47 +654,42 @@ class GappinessChartClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
     SansSerif;
+    Chart(3.5 inches, 3 inches) {
+      Type: ChartTypes.Column;
+      ValueLabel: HBox(null, null, PadB(8)) {
+        "Proportion Gaps";
+        TextHeight: 14 pts;
+        Transform: TransformClass.Rotate(-90 degrees);
+        TransformFit: true;
+      };
+      XLabel: Frame(100%) {
+        Paragraph(null, [new TabStopClass(55%, TabTypes.Center), new TabStopClass(90%, TabTypes.Right)]) {
+          LeftIndent: 30;
+          "(begining)";
+          Tab;
+          Span {
+            TextHeight: 14 pts;
+            "Position";
+          };
+          Tab;
+          "(end)";
+        };
+      };
 
-//var vals = MainResults.AlnGaps;
-//var vals0 = vals[0];
-//
-//artSeries {
-//
-//for (int i=0; i<vals0.size(); i++) {
-//  new DataPointClass(i, vals0[i]);
-//}
-//
-      Chart(ExtentWidth, 4 inches) {
-   //Type: ChartTypes.Scatter;
-   //ValueLabel: "Probability %" {
-   //  TextHeight: 14 pts;
-   //  Transform: TransformClass.Rotate(90 degrees);
-   //  TransformFit: true;
-   //};
-   //
-   //XAxis: ChartAxis {
-   //  foreach (var p in partitions) {
-   //    Span {
-   //      p.Name;
-   //      Tip: p;
-   //    }
-   //  }
-   //};
-   //
-   //ValueAxis: ChartAxis;
-   //
-   //ChartSeries {
-   //  foreach (var p in partitions) {
-   //    var s = stats[each0, each0];
-   //    var m = s.Mean * 100.0;
-   //    new DataPointClass(each0, m) {
-   //      Fill: p.Color;
-   //      Reference: p;
-   //      ErrorHi: s.Upper*100.0 - m;
-   //      ErrorLo: m- s.Lower*100.0;
-   //    };
-   //  }
-   //};
+      ValueAxis: ChartAxis;
+
+      var gaps = MainResults.GapSpectrum;
+
+      XAxis: ChartAxis {
+        each (1..gaps[0].Length step 1) as string;
+      };
+
+      foreach (var slice in gaps) {
+        ChartSeries {
+          foreach (var value in slice)
+            new DataPointClass(each0, value * 0.01);
+        };
+      }
     };
   };
 }
@@ -1742,6 +1737,8 @@ class DiscussionClass: ContentClass {
      "A second limitation is that the context in which a segmental transition takes place plays no role in the estimation of transition rates. ";
      "It is well known that the evolution of phonemes can be sensitive to neighboring sound changes (a phenomenon known as "; textit{"conditioned"}; " "; textit{"sound"}; " "; textit{"change"};"). ";
    };
+
+   style.FigureBlock(Figures.GappinessChart);
 
    style.BodyPar {
      "Under our framework a new issue in linguistic phylogenetics emerges, that of segmental sampling"; Citation {References.Dockum2019}; DotSpace;
