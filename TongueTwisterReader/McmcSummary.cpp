@@ -1154,9 +1154,49 @@ void McmcSummary::output(std::string pathName, std::ofstream& findex) {
     for (int i=0; i<numSubsets; i++)
         std::cout << i << " -- " << catFreqs[i] << std::endl;
     
-    
-    
-
+    // output information on the gappiness of the alignment
+    int nt = alignments[0]->getMapAlignment()->getNumTaxa();
+    std::vector<std::vector<double>> gapSpectrumCnt;
+    gapSpectrumCnt.resize(3);
+    for (int i=0; i<3; i++)
+        {
+        gapSpectrumCnt[i].resize(nt+1);
+        for (int j=0; j<nt+1; j++)
+            gapSpectrumCnt[i][j] = 0.0;
+        }
+    for (int n=0; n<alignments.size(); n++)
+        {
+        AlignmentDistribution* cogAlignments = alignments[n];
+        Alignment* aln = cogAlignments->getMapAlignment();
+        std::vector<double> spectrum = aln->getGapSpectrum();
+        if (spectrum.size() == 2)
+            {
+            gapSpectrumCnt[0][(int)spectrum[0]]++;
+            gapSpectrumCnt[2][(int)spectrum[2]]++;
+            }
+        else if (spectrum.size() == 3)
+            {
+            gapSpectrumCnt[0][(int)spectrum[0]]++;
+            gapSpectrumCnt[1][(int)(round(spectrum[1]))]++;
+            gapSpectrumCnt[2][(int)spectrum[2]]++;
+            }
+        }
+    findex << "GapSpectrum = [\n";
+    for (int i=0; i<3; i++)
+        {
+        findex << "[";
+        for (int j=0; j<nt+1; j++)
+            {
+            if (j != 0)
+                findex << ",";
+            findex << gapSpectrumCnt[i][j];
+            }
+        findex << "]";
+        if (i != 2)
+            findex << ",";
+        findex << "\n";
+        }
+    findex << "];\n\n";
 
     findex << "AlignIndexClass[] Alignments = [\n";
 
@@ -1509,8 +1549,14 @@ std::vector<CredibleInterval> McmcSummary::partitionRates(void) {
             ncq[i * numSubsets + j].upper  = a[0.975*a.size()];
             ncq[i * numSubsets + j].median = average(a); // yeah, it's not the median
             }
-        }    
-    
+        }
+        
+    for (int i=0; i<Q.size(); i++)
+        delete Q[i];
+    for (int i=0; i<numSamples; i++)
+        delete [] pi[i];
+    delete [] pi;
+
     return ncq;
 }
 

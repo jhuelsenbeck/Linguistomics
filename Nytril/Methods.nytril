@@ -1273,7 +1273,7 @@ readonly PhylogenyResultsClass PaperSections.PhylogenyResults = new;
 
 class PhylogenyResultsClass: ContentClass {
   Constructor {
-    super.Constructor(""); // TODO: This should be different as it introduces an abnormally large space between the "Results" header and the first paragraph.
+    super.Constructor("Results");
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1535,11 +1535,12 @@ readonly WordTransformationClass PaperSections.WordTransformation = new;
 
 class WordTransformationClass: ContentClass {
   Constructor {
-    super.Constructor("Segmental Stability");
+    super.Constructor("");
   }
 
   override GetBody(ContentStyleClass style) = Block {
     style.FirstPar {
+      SubSection {"Segmental Stability"};
       style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the rate matrix of the continuous-time Markov model describing phonemic ";
           "change estimated under the natural class model. ";
       "These diagonal elements can be interpreted as a measure of segmental volatility, since they are the sum of the rates at which they transition to other segments. ";
@@ -1585,27 +1586,27 @@ readonly WordSegmentRelationshipsClass PaperSections.WordSegmentRelationships = 
 
 class WordSegmentRelationshipsClass: ContentClass {
   Constructor {
-    super.Constructor("Segmental Alignments");
+    super.Constructor("");
   }
 
   override GetBody(ContentStyleClass style) = Block {
     var align1 = Figures.AlignmentExample1;
 
     style.FirstPar {
+      SubSection {"Segmental Alignments"};
       "Our method treats the homology relationships of segments from one language to another as a random variable. ";
       "Our Bayesian analysis numerically approximates the posterior probability of alignments. ";
       "We summarize the posterior distribution by constructing a credible set of alignments. ";
       "A credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
       "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is ";
-      // TODO: Update this number
       0.95; DotSpace;
-      style.FigureReference(align1); " shows alignments for the concept "; style.SQuote {align1.Examples[0].Cognate};
-      ", which illustrates three key properties we observed for all alignments. ";
     };
 
     style.FigureBlock(align1);
 
     style.BodyPar {
+      style.FigureReference(align1); " shows alignments for the concept "; style.SQuote {align1.Examples[0].Cognate};
+      ", which illustrates three key properties we observed for all alignments. "
       "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
       "In this case, one alignment had a posterior probability of 0.79. ";
       "Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (see Figure [Frequency of INDELS in words]). ";
@@ -1633,7 +1634,7 @@ class WordSegmentRelationshipsClass: ContentClass {
         style.FigureReference(align2); " shows the 95% credible set of alignments for the concept ";
         style.SQuote {align2.Cognate}; " under the Poisson and natural class models. ";
         "The credible set contains over 1500 alignments under the Poisson model, but only 250 under the natural-class model. ";
-        "This difference makes sense given the rates estimated under the natural-class model (Figure [rate figure]). ";
+        "This difference makes sense given the rates estimated under the natural-class model ("; style.FigureReference(Figures.RateChart); "). ";
         "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
         "The distribution of alignments under the Poisson model often makes consonant and "; IPASegments.oh; " segments homologous. ";
         "Under the natural-class model, however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
