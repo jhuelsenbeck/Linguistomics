@@ -647,6 +647,13 @@ class EquilibriumFrequencyChartClass: ContentClass {
 
 readonly GappinessChartClass Figures.GappinessChart = new;
 
+
+//GapSpectrum = [
+//[82,4,3,2,1,1,3,2,4,0],
+//[6,7,27,35,20,3,0,0,0,0],
+//[4,0,1,1,4,5,6,14,67,0]
+//];
+
 class GappinessChartClass: ContentClass {
   Constructor {
     super.Constructor("Gap Frequency Spectrum");
@@ -663,26 +670,27 @@ class GappinessChartClass: ContentClass {
         Chart(3.5 inches, 1.5 inches) {
           Type: ChartTypes.Column;
           ValueLabel: HBox(null, null, PadB(8)) {
-            "{0} ({1} times)"(names[each0], gap[0]);
+            names[each0];
             Transform: TransformClass.Rotate(-90 degrees);
             TransformFit: true;
           };
-          if (each1 == 3) {
-            XLabel: HBox (100%) {
-              Justify: Justifiers.SpaceAround;
-              "(beginning)"; "Position"; "(end)";
-            };
-          }
+          if (each1 == 3)
+            XLabel: "Frequency of alignments with x gaps";
 
-          ValueAxis: ChartAxis;
+          ValueAxis: ChartAxis {
+            TextHeight: 7 pts;
+            Start: 0;
+            Stop: 1.0;
+          };
 
           XAxis: ChartAxis {
             each (1..<gap.Length step 1) as string;
           };
 
           ChartSeries {
-            foreach (var value in gap[1..])
-              new DataPointClass(each0, value * 0.01);
+            var factor = 1.0 / Math.Sum(gap);
+            foreach (var value in gap)
+              new DataPointClass(each0, value * factor);
           };
         }
       }
