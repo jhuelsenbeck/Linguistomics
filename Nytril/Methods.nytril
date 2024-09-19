@@ -653,42 +653,38 @@ class GappinessChartClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
+    string[] names = ["first", "middle", "last"];
+
     SansSerif;
-    Chart(3.5 inches, 3 inches) {
-      Type: ChartTypes.Column;
-      ValueLabel: HBox(null, null, PadB(8)) {
-        "Proportion Gaps";
-        TextHeight: 14 pts;
-        Transform: TransformClass.Rotate(-90 degrees);
-        TransformFit: true;
-      };
-      XLabel: Frame(100%) {
-        Paragraph(null, [new TabStopClass(55%, TabTypes.Center), new TabStopClass(90%, TabTypes.Right)]) {
-          LeftIndent: 30;
-          "(begining)";
-          Tab;
-          Span {
-            TextHeight: 14 pts;
-            "Position";
+    var gaps = MainResults.GapSpectrum;
+
+    VBox {
+      foreach (var gap in gaps) {
+        Chart(3.5 inches, 1.5 inches) {
+          Type: ChartTypes.Column;
+          ValueLabel: HBox(null, null, PadB(8)) {
+            names[each0];
+            Transform: TransformClass.Rotate(-90 degrees);
+            TransformFit: true;
           };
-          Tab;
-          "(end)";
-        };
-      };
+          if (each1 == 3) {
+            XLabel: HBox (100%) {
+              Justify: Justifiers.SpaceAround;
+              "(beginning)"; "Position"; "(end)";
+            };
+          }
 
-      ValueAxis: ChartAxis;
+          ValueAxis: ChartAxis;
 
-      var gaps = MainResults.GapSpectrum;
+          XAxis: ChartAxis {
+            each (1..<gap.Length step 1) as string;
+          };
 
-      XAxis: ChartAxis {
-        each (1..gaps[0].Length step 1) as string;
-      };
-
-      foreach (var slice in gaps) {
-        ChartSeries {
-          foreach (var value in slice)
-            new DataPointClass(each0, value * 0.01);
-        };
+          ChartSeries {
+            foreach (var value in gap[1..])
+              new DataPointClass(each0, value * 0.01);
+          };
+        }
       }
     };
   };
