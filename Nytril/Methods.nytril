@@ -659,41 +659,47 @@ class GappinessChartClass: ContentClass {
     super.Constructor("Gap Frequency Spectrum");
   }
 
+  NameBox(text) = HBox(null, null, PadB(8)) {
+    text;
+    Transform: TransformClass.Rotate(-90 degrees);
+    TransformFit: true;
+  };
+
   override GetBody(ContentStyleClass style) = Block {
-    string[] names = ["Proportion of Alignments (Beginning)", "Proportion of Alignments (Middle)", "Proportion of Alignments (End)"];
+    string[] names = ["Beginning", "Middle", "End"];
 
     SansSerif;
     var gaps = MainResults.GapSpectrum;
 
-    VBox {
-      foreach (var gap in gaps) {
-        Chart(3.5 inches, 1.5 inches) {
-          Type: ChartTypes.Column;
-          ValueLabel: HBox(null, null, PadB(8)) {
-            names[each0];
-            Transform: TransformClass.Rotate(-90 degrees);
-            TransformFit: true;
-          };
-          if (each1 == 3)
-            XLabel: "Number of Gaps";
+    HBox {
+      VAlign: VAligns.Center;
+      NameBox("Proportion of Alignments");
+      VBox {
+        foreach (var gap in gaps) {
+          Chart(3.5 inches, 1.5 inches) {
+            Type: ChartTypes.Column;
+            ValueLabel: NameBox(names[each0]);
+            if (each1 == 3)
+              XLabel: "Number of Gaps";
 
-          ValueAxis: ChartAxis {
-            TextHeight: 7 pts;
-            Start: 0;
-            Stop: 1.0;
-          };
+            ValueAxis: ChartAxis {
+              TextHeight: 7 pts;
+              Start: 0;
+              Stop: 1.0;
+            };
 
-          XAxis: ChartAxis {
-            each (0..(gap.Length-1) step 1) as string;
-          };
+            XAxis: ChartAxis {
+              each (0..(gap.Length-1) step 1) as string;
+            };
 
-          ChartSeries {
-            var factor = 1.0 / Math.Sum(gap);
-            foreach (var value in gap)
-              new DataPointClass(each0, value * factor);
-          };
+            ChartSeries {
+              var factor = 1.0 / Math.Sum(gap);
+              foreach (var value in gap)
+                new DataPointClass(each0, value * factor);
+            };
+          }
         }
-      }
+      };
     };
   };
 }
