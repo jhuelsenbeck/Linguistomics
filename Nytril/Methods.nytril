@@ -657,40 +657,37 @@ class GappinessChartClass: ContentClass {
     TransformFit: true;
   };
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style) = HBox {
     SansSerif;
-    HBox {
-      VAlign: VAligns.Center;
-      NameBox {TextHeight: 120%; "Proportion of Alignments"};
-      VBox {
-        HAlign: HAligns.Center;
-        foreach (var gap in MainResults.GapSpectrum) {
-          Chart(3.5 inches, 1.5 inches) {
-            Type: ChartTypes.Column;
-            ValueLabel: NameBox {
-              ["Beginning", "Middle", "End"][each0]
-            };
+    VAlign: VAligns.Center;
+    NameBox {TextHeight: 130%; "Proportion of Alignments"};
+    VBox {
+      HAlign: HAligns.Center;
+      foreach (var gap in MainResults.GapSpectrum) {
+        Chart(4 inches, 1.5 inches) {
+          Type: ChartTypes.Column;
+          ValueLabel: NameBox {
+            ["Beginning", "Middle", "End"][each0]
+          };
 
-            ValueAxis: ChartAxis {
-              TextHeight: 7 pts;
-              Start: 0;
-              Stop: 1.0;
-            };
+          ValueAxis: ChartAxis {
+            TextHeight: 7 pts;
+            Start: 0;
+            Stop: 1.0;
+          };
 
-            XAxis: ChartAxis {
-              each (0..<gap.Length step 1) as string;
-            };
+          XAxis: ChartAxis {
+            each (0..<gap.Length step 1) as string;
+          };
 
-            ChartSeries {
-              var factor = 1.0 / Math.Sum(gap);
-              foreach (var value in gap)
-                new DataPointClass(each0, value * factor);
-            };
-          }
+          ChartSeries {
+            var factor = 1.0 / Math.Sum(gap);
+            foreach (var value in gap)
+              new DataPointClass(each0, value * factor);
+          };
         }
-
-        Span {TextHeight: 120%; "Number of Gaps"};
-      };
+      }
+      Span {TextHeight: 130%; "Number of Gaps"};
     };
   };
 }
