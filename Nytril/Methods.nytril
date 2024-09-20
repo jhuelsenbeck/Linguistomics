@@ -1639,39 +1639,11 @@ class WordSegmentRelationshipsClass: ContentClass {
 
     style.FirstPar {
       SubSection {"Segmental Alignments"};
-      "Our method treats the homology relationships of segments from one language to another as a random variable. ";
-      "Our Bayesian analysis numerically approximates the posterior probability of alignments. ";
-      "We summarize the posterior distribution by constructing a credible set of alignments. ";
-      "A 95% credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
-      "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is ";
-      0.95; DotSpace;
+
+      "Our method treats the homology relationships of segments from one language to another as a random variable. We summarize the posterior distribution by constructing a credible set of alignments, where a credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is 0.95. Figure [REF] shows alignments for the concept `flower', which  illustrates three key properties we observed for all of the alignments. First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. In this case, one alignment had a posterior probability of 0.79. Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (see Figure [REF]). Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment. ";
     };
 
     style.FigureBlock(align1);
-
-    style.BodyPar {
-      style.FigureReference(align1); " shows alignments for the concept "; style.SQuote {align1.Examples[0].Cognate};
-      ", which illustrates three key properties we observed for all alignments. "
-      "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
-      "In this case, one alignment had a posterior probability of 0.79. ";
-      "Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (see Figure [Frequency of INDELS in words]). ";
-      "Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment.";
-    };
-
-
-
-
-      //"Our method treats the relationships of word segments from one language to another as a random variable. ";
-      //style.FigureReference(Figures.AlignmentExamples); " shows alignments for ";
-      //Enumerators.Cardinal(Figures.AlignmentExamples.Examples.Length);
-      //" of the words we analyzed. ";
-      //"For each word, the alignments form a 95% credible set, with alignments ordered from highest to lowest posterior probability. ";
-      //"This sample of alignments illustrates three key properties. ";
-      //"First, the distributions of credible sets exhibit extreme skew. ";
-      //"There is always a decisively optimal alignment. ";
-      //"Second, deletions occur predominantly at the end of the words. ";
-      //"Finally, the alignments tend to assign word segments from the same segment group to the same column in the alignment. ";
-      //"The alignment of the nasalized vowels is surprising, since they are aligned with nasal consonants, when in fact they are homologous with the preceding vowels.";
 
     var align2 = Figures.AlignmentExample2;
     style.BodyPar {
@@ -1700,7 +1672,8 @@ class DiscussionClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
    style.FirstPar {
-     "There is a long-standing debate—known as the "; style.DQuote{"Neogrammarian controversy"}; "—about the units involved in sound change. ";
+     SubSection {"Relationship to other approaches"};
+     "There is a long-standing debate — known as the "; style.DQuote{"Neogrammarian controversy"}; " — about the units involved in sound change. ";
      "Leonard Bloomfield famously declared "; style.DQuote{"phonemes change"}; Citation {Bloomfield1933}; DotSpace;
      "According to this view, sound change is not only abrupt but also non-independent. ";
      "It is abrupt in that there are no intermediary stages in a transition from "; IPASegments.ah; " to "; IPASegments.oh; ", for instance. ";
@@ -1722,7 +1695,8 @@ class DiscussionClass: ContentClass {
    };
 
    style.BodyPar {
-     "MORE DISCUSSION OF STABILITY/RESULTS. ALSO MENTION TIME REVERSIBILITY AND HOW THIS AFFECTS THE INTERPRETATION OF THE RESULTS?";
+
+     "The application of the TKF91 model to linguistic data is most similar to the analysis of Bouchard-C\\^{o}t\\'{e} et al.\\ \\citep{bouchard13}, who also took the observations to be segments, but instead applied a string transducer model \\citep{holmes01} to characterize segmental transitions. The transducer model has the advantage that it can account for many of the processes that are known to influence segmental change, such as context dependence. Our method, as currently implemented, does not take into account the context of word-segment change. However, unlike the transducer model, the TKF91 model is a historical model with well-defined events that can transform a word. In fact, the likelihood accounts for all of the histories of insertion, deletion, and segmental substitution that could have led to the observed words sampled from the nine languages. These events occur at rates that can be estimated. Since the TKF91 model is event-based, it is a natural starting point for modeling sound change even if that starting point does not account for processes that are accommodated for in other models, such as the string transducer model. ";
    };
 
    style.BodyPar {
@@ -1734,6 +1708,10 @@ class DiscussionClass: ContentClass {
      "Under our model, this single event is treated as two, one from "; IPASegments.k; " to "; IPASegments.s; " and another from "; IPASegments.s; " to "; IPASegments.k; DotSpace;
      "A second limitation is that the context in which a segmental transition takes place plays no role in the estimation of transition rates. ";
      "It is well known that the evolution of phonemes can be sensitive to neighboring sound changes (a phenomenon known as "; textit{"conditioned"}; " "; textit{"sound"}; " "; textit{"change"};"). ";
+   };
+
+   style.BodyPar {
+     "The complexity of the likelihood calculations under the TKF91 model is exponential in the number of taxa and word length; specifically, the complexity is of order ${\\cal O}(2^k L^k)$ where $k$ is the number of leaves on the tree and $L$ is the geometric mean of the word lengths \\citep{lunter03}. The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with $1 \\leq L \\leq 10$. That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length \\citep[][instead of the overall insertion rate being $\\lambda \\times (L+1)$ as it is under the TKF91 model]{bouchard13b}. This model --- the Poisson Indel Process (PIP) --- could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
    };
 
    style.FigureBlock(Figures.GappinessChart);
