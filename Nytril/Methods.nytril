@@ -1637,6 +1637,8 @@ class WordSegmentRelationshipsClass: ContentClass {
   override GetBody(ContentStyleClass style) = Block {
     var align1 = Figures.AlignmentExample1;
 
+   style.FigureBlock(Figures.GappinessChart);
+
     style.FirstPar {
       SubSection {"Segmental Alignments"};
 
@@ -1685,21 +1687,32 @@ class DiscussionClass: ContentClass {
    };
 
    style.BodyPar {
-     "Our method is not located within any one of these traditions, but rather has affinities with the phonemic approach and lexical diffusion. ";
-     "Since our analysis is based on phonemic representations, it is phonemes that undergo insertions, deletions, and transitions. ";
-     "These events are treated as independent, however. ";
-     "Consider again the change from "; IPASegments.ah; " to "; IPASegments.oh; DotSpace;
-     "This is not modeled as a single transition in our framework. ";
-     "Instead, a rate of change is inferred based on the homologies of ";
-     IPASegments.ah; " and "; IPASegments.oh; " in the data and how often the former transitions to the latter.";
+     "Our framework cannot be situated within any one of these traditions, but rather shares affinities with the phonemic approach and lexical diffusion. Since our analysis is based on phonemic representations, it is phonemes that undergo insertions, deletions, and transitions. In contrast to the standard assumption of historical linguistics, however, these changes are treated as independent. For instance, a change from "; IPASegments.ah; " to "; IPASegments.oh; " is not modeled as a single transition across all word-forms in our study. Instead, a rate of change is inferred based on the homologies of "; IPASegments.ah; " and "; IPASegments.oh; " in the data and how often the former transitions to the latter. ";
    };
 
    style.BodyPar {
 
-     "The application of the TKF91 model to linguistic data is most similar to the analysis of Bouchard-C\\^{o}t\\'{e} et al.\\ \\citep{bouchard13}, who also took the observations to be segments, but instead applied a string transducer model \\citep{holmes01} to characterize segmental transitions. The transducer model has the advantage that it can account for many of the processes that are known to influence segmental change, such as context dependence. Our method, as currently implemented, does not take into account the context of word-segment change. However, unlike the transducer model, the TKF91 model is a historical model with well-defined events that can transform a word. In fact, the likelihood accounts for all of the histories of insertion, deletion, and segmental substitution that could have led to the observed words sampled from the nine languages. These events occur at rates that can be estimated. Since the TKF91 model is event-based, it is a natural starting point for modeling sound change even if that starting point does not account for processes that are accommodated for in other models, such as the string transducer model. ";
+     "The application of the TKF91 model to linguistic data is most similar to the analysis of Bouchard-Côté et al. ";
+     Citation{BouchardCote2013};
+     " who also took the observations to be segments, but instead applied a string transducer model ";
+     Citation{Holmes2001};
+     " to characterize segmental transitions. The transducer model has the advantage that it can account for many of the processes that are known to influence segmental change, such as context dependence. Our method, as currently implemented, does not take into account the context of word-segment change. However, unlike the transducer model, the TKF91 model is a historical model with well-defined events that can transform a word. In fact, the likelihood accounts for all of the histories of insertion, deletion, and segmental substitution that could have led to the observed words sampled from the nine languages. These events occur at rates that can be estimated. Since the TKF91 model is event-based, it is a natural starting point for modeling sound change even if that starting point does not account for processes that are accommodated for in other models, such as the string transducer model. ";
    };
 
    style.BodyPar {
+     "The complexity of the likelihood calculations under the TKF91 model is exponential in the number of taxa and word length; specifically, the complexity is of order ";
+     Equations.LikelihoodComplexity;
+     //${\\cal O}(2^k L^k)$
+     " where $k$ is the number of leaves on the tree and $L$ is the geometric mean of the word lengths ";
+     Citation{Lunter2003}; DotSpace;
+      "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with $1 \\leq L \\leq 10$. That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length (instead of the overall insertion rate being $\\lambda \\times (L+1)$ as it is under the TKF91 model] ";
+      Citation{BouchardCote2013b}; DotSpace;
+      "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
+   };
+
+   style.FirstPar {
+
+      SubSection {"Limitations of the  event-based model"};
      "Our results are based on a unigram model of segmental transition, in which the three possible events described above are applicable only to individual segments. ";
      "Certain patterns of sound change cannot be adequately captured under such a model. ";
      "For instance, metathesis, a change in which two segments exchange positions, is modeled as two separate transitions. ";
@@ -1713,8 +1726,6 @@ class DiscussionClass: ContentClass {
    style.BodyPar {
      "The complexity of the likelihood calculations under the TKF91 model is exponential in the number of taxa and word length; specifically, the complexity is of order ${\\cal O}(2^k L^k)$ where $k$ is the number of leaves on the tree and $L$ is the geometric mean of the word lengths \\citep{lunter03}. The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with $1 \\leq L \\leq 10$. That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length \\citep[][instead of the overall insertion rate being $\\lambda \\times (L+1)$ as it is under the TKF91 model]{bouchard13b}. This model --- the Poisson Indel Process (PIP) --- could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
    };
-
-   style.FigureBlock(Figures.GappinessChart);
 
    style.BodyPar {
      "Under our framework a new issue in linguistic phylogenetics emerges, that of segmental sampling"; Citation {References.Dockum2019}; DotSpace;
