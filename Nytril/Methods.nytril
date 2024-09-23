@@ -646,15 +646,27 @@ class EquilibriumFrequencyChartClass: ContentClass {
 //======================================================================
 
 readonly GappinessChartClass Figures.GappinessChart = new;
+readonly GappinessSignificanceClass gapInfo = new GappinessSignificanceClass(MainResults.GapSpectrum);
 
 class GappinessChartClass: ContentClass {
   Constructor {
-    super.Constructor("Gap Frequency Spectrum");
+    super.Constructor("");
   }
 
   NameBox = HBox(null, null, PadB(8)) {
     Transform: TransformClass.Rotate(-90 degrees);
     TransformFit: true;
+  };
+
+  override GetCaption(ContentStyleClass style) = Span {
+
+
+
+    "The number of gaps observed across the "; 102; " cognates analyzed in this study at the first segment (top), middle segment(s) (middle), and last segment (bottom). ";
+    "Nine languages were analyzed in this study, so it is not possible for there to be nine gaps; deletion events that led to a gap for all the languages would not be included in an alignment, and is explicitly conditioned on in Lunter et al."; Citation{Lunter2003}; DotSpace;
+    "There is a clear, and statistically significant (";
+    gapInfo.TestStatistic;
+    "), pattern of an increaasing number of gaps as one moves from the beginning to the end of the word.";
   };
 
   override GetBody(ContentStyleClass style) = HBox {
@@ -667,7 +679,7 @@ class GappinessChartClass: ContentClass {
         Chart(4 inches, 1.5 inches) {
           Type: ChartTypes.Column;
           ValueLabel: NameBox {
-            ["Beginning", "Middle", "End"][each0]
+            ["First Segment", "Middle Segment(s)", "Last Segment"][each0]
           };
 
           ValueAxis: ChartAxis {
@@ -1642,7 +1654,15 @@ class WordSegmentRelationshipsClass: ContentClass {
     style.FirstPar {
       SubSection {"Segmental Alignments"};
 
-      "Our method treats the homology relationships of segments from one language to another as a random variable. We summarize the posterior distribution by constructing a credible set of alignments, where a credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is 0.95. Figure [REF] shows alignments for the concept `flower', which  illustrates three key properties we observed for all of the alignments. First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. In this case, one alignment had a posterior probability of 0.79. Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (see Figure [REF]). Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment. ";
+      "Our method treats the homology relationships of segments from one language to another as a random variable. ";
+      "We summarize the posterior distribution by constructing a credible set of alignments, where a credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
+      "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is 0.95. ";
+      "Figure [REF] shows alignments for the concept `flower', which  illustrates three key properties we observed for all of the alignments. ";
+      "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
+      "In this case, one alignment had a posterior probability of 0.79. ";
+      "Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (";
+         style.FigureReference(Figures.GappinessChart); "). ";
+      "Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment. ";
     };
 
     style.FigureBlock(align1);

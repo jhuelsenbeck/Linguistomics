@@ -241,6 +241,41 @@ class AlignPairClass: DocumentClass {
   };
 }
 
+
+//======================================================================
+
+class GappinessSignificanceClass {
+  var gapSpectrum;
+
+  Constructor(d) {
+    gapSpectrum = d;
+  }
+
+  double TestStatistic {
+
+    var n = 0;
+    double lnL1 = 0.0;
+    var vec = new VectorClass(gapSpectrum.Length, 0.0);
+    foreach (var gap in MainResults.GapSpectrum) {
+      var ni = 0;
+      foreach (var value in gap) {
+        ni += value;
+      }
+     n += ni;
+     foreach (int value in gap) {
+       if (value != 0) {
+        var p_i += value / ni;
+        lnL1 += (value * Math.Log(p_i));
+        }
+      }
+      vec[0] += n;
+    }
+
+
+    return gapSpectrum.Length;
+  }
+}
+
 //======================================================================
 
 class CognateIdClass {
