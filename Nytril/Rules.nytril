@@ -397,7 +397,7 @@ class TransitionClass {
 
   Constructor(ResultsClass results, RuleClass rule) {
     Rule = rule;
-    var stats = results.TransitionStats;
+    var stats = results.MainRun.TransitionStats;
     var count = stats.Rows;
     Rates = new(count, count, null);
 
@@ -603,7 +603,7 @@ class RateClass: ActionClass {
         Separator: Space;
         for (var i = 0; i < max; ++i) {
           var s = sorted[i];
-          new AlignPairClass(Count.Results.Data, s.Congate).ShowFigureData(s.Congate, s.Data);
+          new AlignPairClass(Count.Data, s.Congate).ShowFigureData(s.Congate, s.Data);
         }
       };
     }
@@ -622,7 +622,7 @@ class RateClass: ActionClass {
     var i1   = S1.Index;
     var list = new ListClass<AlignSortClass>(1024);
 
-    foreach (var cognate in Count.Results.Alignments) {
+    foreach (var cognate in Count.Data.MainRun.Alignments) {
       AlignDataClass found = null;
 
       foreach (var alignment in cognate.Alignments) {
@@ -695,7 +695,7 @@ class CalcRatesClass {
     RateScale = MaxLine / Transition.MaxRate;
 
     var mult = Math.PI2 / Rule.Partitions.Length;
-    var eq   = Results.EquilibriumFrequencies;
+    var eq   = Results.MainRun.EquilibriumFrequencies;
 
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;

@@ -157,7 +157,7 @@ class AlignmentsClass: ContentClass {
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    MainResults.AlignmentCutoff * 100.0;
+    ResultsClass.AlignmentCutoff * 100.0;
     "% credible set of alignments";
   };
 
@@ -174,7 +174,7 @@ class AllAlignmentsClass: ContentClass {
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    MainResults.AlignmentCutoff * 100.0;
+    ResultsClass.AlignmentCutoff * 100.0;
     "% credible set of alignments";
   };
 
@@ -221,16 +221,18 @@ readonly SingleAlignmentClass Figures.AlignmentExample1 = new(17, "Flower");
 //======================================================================
 
 class ModelCompareClass {
-  var DefClass Symbol;
-  var double   Posterior;
-  var int      Alignments;
-  var          Name;
+  var DefClass           Symbol;
+  var double             Posterior;
+  var int                Alignments;
+  var RunExperimentClass Run;
+  var                    Name;
 
-  Constructor(DefClass d, double posterior, int alignments) {
+  Constructor(int index, DefClass d, double posterior, int alignments) {
     Symbol     = d;
     Name       = d.Name;
     Posterior  = posterior;
     Alignments = alignments;
+    Run        = MainResults.Data.ModelRuns[index];
   }
 
   SymbolName = Span {
@@ -252,7 +254,11 @@ class AlignmentCompareClass: ContentClass {
 
   Constructor() {
     super.Constructor("Alignment comparison");
-    Models = [new(PoissonModel, 0.095, 1500), new(NaturalClassModel, 0.56, 250)];
+    Models = [
+                           // Where do these numbers come from?
+      new(2, PoissonModel, 0.095, 1500),     // JC69
+      new(0, NaturalClassModel, 0.56, 250)   // Custom
+    ];
   }
 
   override GetCaption(ContentStyleClass style) = Span {
@@ -307,7 +313,7 @@ class ExchangeabilityTableClass: ContentClass {
     PaperStyle.SansSerif;
     TextHeight: th;
 
-    var stats      = MainResults.TransitionStats;
+    var stats      = MainResults.MainRun.TransitionStats;
     var count      = stats.Rows;
     var partitions = MainResults.Rule.Partitions;
     var dy         = 2 pts;
@@ -381,7 +387,7 @@ class NaturalClassRateChartClass: ContentClass {
     TextHeight: ExtentWidth * 0.015;
 
     var partitions = MainResults.Rule.Partitions;
-    var stats      = MainResults.NCQRates;
+    var stats      = MainResults.MainRun.NCQRates;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
     var size       = Math.Min(ExtentWidth, ExtentHeight);
@@ -497,7 +503,7 @@ class ExchangeabilityChartClass: ContentClass {
     TextHeight: ExtentWidth * 0.015;
 
     var partitions = MainResults.Rule.Partitions;
-    var stats      = MainResults.TransitionStats;
+    var stats      = MainResults.MainRun.TransitionStats;
     var count      = stats.Rows;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
@@ -606,7 +612,7 @@ class EquilibriumFrequencyChartClass: ContentClass {
     };
 
     var partitions = MainResults.Data.Rule.Partitions.Reverse;
-    var stats      = MainResults.NCQFreqs;
+    var stats      = MainResults.MainRun.NCQFreqs;
 
     XAxis: ChartAxis(null, null, PadR(8)) {
       foreach (var p in partitions) {
@@ -680,7 +686,7 @@ class EquilibriumFrequencyChartClass: ContentClass {
 //======================================================================
 
 readonly GappinessChartClass Figures.GappinessChart = new;
-readonly GappinessSignificanceClass gapInfo = new GappinessSignificanceClass(MainResults.GapSpectrum);
+readonly GappinessSignificanceClass gapInfo = new GappinessSignificanceClass(MainResults.MainRun.GapSpectrum);
 
 class GappinessChartClass: ContentClass {
   Constructor {
@@ -709,7 +715,7 @@ class GappinessChartClass: ContentClass {
     NameBox {TextHeight: 130%; "Proportion of Alignments"};
     VBox {
       HAlign: HAligns.Center;
-      foreach (var gap in MainResults.GapSpectrum) {
+      foreach (var gap in MainResults.MainRun.GapSpectrum) {
         Chart(4 inches, 1.5 inches) {
           Type: ChartTypes.Column;
 
@@ -772,7 +778,7 @@ class QRatesMatrixClass: ContentClass {
     super.Constructor("Rate Matrix " Defs.RateMatrix);
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.PartitionBox(style, ExtentSize);
+  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.PartitionBox(style, ExtentSize);
 }
 
 //======================================================================
@@ -784,7 +790,7 @@ class QRatesDiagonalClass: ContentClass {
     super.Constructor("The rate of change when in a particular segmental state (or " Defs.neg_qii ")");
   }
 
-  override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults, MainResults.QRates).Display(style);
+  override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults, MainResults.MainRun.QRates).Display(style);
 }
 
 //======================================================================
@@ -814,7 +820,7 @@ class AverageAllClass: ContentClass {
     super.Constructor("All Rates");
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.ShowAllRates;
+  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.ShowAllRates;
 }
 
 //======================================================================
@@ -826,7 +832,7 @@ class AverageSortedClass: ContentClass {
     super.Constructor("Rate vs. Direction");
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.ShowRateDirected;
+  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.ShowRateDirected;
 }
 
 //======================================================================
@@ -838,7 +844,7 @@ class RateDirectionClass: ContentClass {
     super.Constructor("Directionality");
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.ShowDirection;
+  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.ShowDirection;
 }
 
 //======================================================================
@@ -852,7 +858,7 @@ class SpecificRatesClass: ContentClass {
 
   static bool Predicate(RateClass a) = a.IsPair("p", "f") or a.IsPair("s", "h") or a.IsPair("k", "ʧ");
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.Pairs(-1, @Predicate);
+  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.Pairs(-1, @Predicate);
 }
 
 TransitionTitle(type) = "The top {0} {1} transitions"(TopCount, type);
@@ -866,7 +872,7 @@ class QRatesTopClass: ContentClass {
     super.Constructor(TransitionTitle("segmental"));
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.Extrema(TopCount, true);
+  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.Extrema(TopCount, true);
 }
 
 //======================================================================
@@ -881,7 +887,7 @@ class QRatesConsonantConsonantClass: ContentClass {
   static bool Predicate(RateClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
                                        a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.Pairs(TopCount, @Predicate);
+  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.Pairs(TopCount, @Predicate);
 }
 
 //======================================================================
@@ -893,7 +899,7 @@ class QRatesOneWayClass: ContentClass {
     super.Constructor(TransitionTitle("highly directed"));
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.QRates.ShowChartPairs(TopCount, MainResults.QRates.SortByDirection);
+  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.ShowChartPairs(TopCount, MainResults.MainRun.QRates.SortByDirection);
 }
 
 //======================================================================
@@ -1388,12 +1394,13 @@ class PhylogenyResultsClass: ContentClass {
     };
 
     style.BodyPar {
+      var run = MainResults.MainRun;
       TextDigits: 3;
         "This problem was likely not encountered in the other implementations of the TKF91 model";
         Citation {Lunter2004}; ", which analyzed an alignment of amino acid sequences. ";
         "In our analysis of cognate data, the insertion and deletion rates were estimated to be quite high relative to the substitution rate: ";
-        InsertionRate; " = "; MainResults.InsertionRate; " ("; MainResults.InsertionRateLow; ", "; MainResults.InsertionRateHigh; ") and ";
-        DeletionRate; " = "; MainResults.DeletionRate; " ("; MainResults.DeletionRateLow; ", "; MainResults.DeletionRateHigh; ") ";
+        InsertionRate; " = "; run.InsertionRate; " ("; run.InsertionRateLow; ", "; run.InsertionRateHigh; ") and ";
+        DeletionRate; " = "; run.DeletionRate; " ("; run.DeletionRateLow; ", "; run.DeletionRateHigh; ") ";
            "for the insertion and deletion rates, respectively. ";
         "(The credible intervals in the parentheses contain the true value of the parameter with probability 0.95.) ";
         "Roughly speaking, this means that for every two segmental transitions there was one insertion or deletion event. ";
@@ -1544,7 +1551,7 @@ class SegmentModelsClass: ContentClass {
       "For one, rates of change are generally highest among segments in the same class. ";
       "The estimated rates of change from one word segment to another under the natural class model were ";
 
-      var stats       = MainResults.NCQRates;
+      var stats       = MainResults.MainRun.NCQRates;
       var numSegments = MainResults.Data.UniqueSegments.Length - 1;
       var smallOnes   = new ListClass<PartitionClass>(partitions.Length);
       var numClasses  = partitions.Length;
@@ -1688,18 +1695,22 @@ class WordSegmentRelationshipsClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
     var align1 = Figures.AlignmentExample1;
+    var align2 = Figures.AlignmentExample2;
 
    style.FigureBlock(Figures.GappinessChart);
 
     style.FirstPar {
+//      var run = MainResults.MainRun;
       SubSection {"Segmental Alignments"};
 
       "Our method treats the homology relationships of segments from one language to another as a random variable. ";
       "We summarize the posterior distribution by constructing a credible set of alignments, where a credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
-      "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is 0.95. ";
-      "Figure [REF] shows alignments for the concept `flower', which  illustrates three key properties we observed for all of the alignments. ";
+      "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is {0}. "(ResultsClass.AlignmentCutoff);
+      style.FigureReference(align1); " shows alignments for the concept ";
+      style.SQuote {align1.Examples[0].Concept};
+      ", which  illustrates three key properties we observed for all of the alignments. ";
       "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
-      "In this case, one alignment had a posterior probability of 0.79. ";
+      "In this case, one alignment had a posterior probability of {0}. "(/*run.PosteriorProbability */ 0.79);
       "Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (";
          style.FigureReference(Figures.GappinessChart); "). ";
       "Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment. ";
@@ -1707,7 +1718,6 @@ class WordSegmentRelationshipsClass: ContentClass {
 
     style.FigureBlock(align1);
 
-    var align2 = Figures.AlignmentExample2;
     style.BodyPar {
         var models = align2.Models;
 

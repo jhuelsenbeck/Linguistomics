@@ -29,16 +29,31 @@ class LangNodeClass: NodeClass {
 //======================================================================
 
 class RunExperimentClass {
-  var             Name,
-                  RootFolder,
-                  Config,
-                  Print,
-                  Seed,
-                  ResultTree,
-                  Complete,
-                  Marginal,
-                  AlignmentFile;
-   var ModelClass Model;
+  var ModelClass         Model;
+  var AlignIndexClass[]  Alignments;
+  var StatMatrix         TransitionStats;
+  var StatMatrix         NCQRates;
+  var StatArray          NCQFreqs;
+  var AlignedCountClass  QRates,
+                         AverageRates;
+  var double             InsertionRate,
+                         InsertionRateLow,
+                         InsertionRateHigh,
+                         DeletionRate,
+                         DeletionRateLow,
+                         DeletionRateHigh;
+  var                    Name,
+                         RootFolder,
+                         Config,
+                         Print,
+                         Seed,
+                         ResultTree,
+                         Complete,
+                         Marginal,
+                         AlignmentFile,
+                         GapSpectrum,
+                         EquilibriumFrequencies;
+
 
   Constructor(config, ModelClass model, index, print, marginal) {
     Name        = "Run" + index;
@@ -55,6 +70,59 @@ class RunExperimentClass {
 
     AlignmentFile = Info.ExperimentRoot RootFolder Info.AlignmentFile;
     Config        = config ?? IO.ReadScript(Info.ExperimentRoot RootFolder Info.ParametersFile).Root;
+  }
+
+  static int CompareAlignment(AlignIndexClass a0, AlignIndexClass a1) {
+    var c = a0.Alignments.Length.Compare(a1.Alignments.Length);
+    if (c == 0)
+      return a0.ConceptName.Compare(a1.ConceptName);
+    return c;
+  }
+
+  void ReadAlignments(DataSetClass data) {
+    var align = IO.ReadScript(AlignmentFile).Root;
+
+    QRates                 = new(data, align.QRates, false);
+    AverageRates           = new(data, align.AverageRates, true);
+    NCQFreqs               = align.NCQFreqs as StatArray;
+    EquilibriumFrequencies = align.EquilibriumFrequencies;
+    InsertionRate          = align.InsertionRateMean;
+    InsertionRateLow       = align.InsertionRateLow;
+    InsertionRateHigh      = align.InsertionRateHigh;
+    DeletionRate           = align.DeletionRateMean;
+    DeletionRateLow        = align.DeletionRateLow;
+    DeletionRateHigh       = align.DeletionRateHigh;
+    GapSpectrum            = align.GapSpectrum;
+
+    var ts = align?.TransitionStats;
+    if (ts is not null)
+      TransitionStats = StatMatrix.Convert(ts);
+    else {
+      var length = QRates.Length;
+      var bs     = new StatClass(0, 0.5, 1);
+      TransitionStats = new(length, length, bs, bs);
+    }
+
+    ts = align?.NCQRates;
+    if (ts is not null)
+      NCQRates = StatMatrix.Convert(ts);
+    else {
+      var length = QRates.Length;
+      var bs     = new StatClass(0, 0.5, 1);
+      NCQRates = new(length, length, bs, bs);
+    }
+
+    var alignments = new ListClass<AlignIndexClass>(1024);
+    foreach (var a in align.Alignments) {
+      foreach (var c in data.UsedCognates) {
+        if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
+          a.Cognate = c;
+          alignments.Add(a);
+          break;
+        }
+      }
+    }
+    Alignments = alignments.ToSortedArray(false, @CompareAlignment);
   }
 
   ArgString(arg, string path) = Span {
@@ -145,9 +213,6 @@ class ModelClass {
 
 class TreeSetClass {
   var NodeClass    Tree;
-  var ModelClass   Custom,
-                   GTR,
-                   JC69;
   var ModelClass[] Models;
   var              Name,
                    RootFolder;
@@ -156,10 +221,12 @@ class TreeSetClass {
     Name       = name;
     Tree       = tree;
     RootFolder = Folder(root) Folder(name);
-    Custom     = new(config, this, "Custom");
-    JC69       = new(config, this, "JC69");
-    GTR        = new(config, this, "GTR");
-    Models     = [Custom, JC69, GTR];
+
+    Models = [
+      new(config, this, "Custom"),
+      new(config, this, "JC69"),
+      new(config, this, "GTR")
+   ];
   }
 
   void InitFolders(DataSetClass data) {

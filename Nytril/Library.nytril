@@ -150,7 +150,7 @@ class AlignPairClass: DocumentClass {
 
   override GetDocument = ShowDetails(5000, true, 10 pts);
 
-  GetChart(SizeClass size, max) = Chart(size.Width, size.Height) {
+  GetChart(SizeClass size, int max) = Chart(size.Width, size.Height) {
     Type: ChartTypes.Column;
     TextHeight: 6 pts;
     ValueLabel: "%";
@@ -209,7 +209,7 @@ class AlignPairClass: DocumentClass {
     }
   };
 
-  ShowFigureDetails(DataSetClass data, max) = Block {
+  ShowFigureDetails(DataSetClass data, int max) = Block {
     var h = 8 pts;
     BoxSize = new(BoxSize.Width, h);
     TextHeight: 7 pts;
@@ -256,7 +256,7 @@ class GappinessSignificanceClass {
     var n = 0;
     double lnL1 = 0.0;
     var vec = new VectorClass(gapSpectrum.Length, 0.0);
-    foreach (var gap in MainResults.GapSpectrum) {
+    foreach (var gap in MainResults.MainRun.GapSpectrum) {
       var ni = 0;
       foreach (var value in gap) {
         ni += value;
@@ -296,7 +296,7 @@ class AlignmentChartClass {
 
  Constructor(ResultsClass results) {
     Data       = results.Data;
-    Alignments = results.Alignments;
+    Alignments = Data.MainRun.Alignments;
   }
 
   ShowChart(SizeClass size) = VBox(size.Width, size.Height, 0.5) {
@@ -691,8 +691,8 @@ class DataSetClass {
   var ListClass                         PlainBuffer,
                                         TextBuffer;
   var ListClass<SegPartClass>           SegmentBuffer;
-  var RunExperimentClass                MainRun,
-                                        JCRun;
+  var RunExperimentClass[]              ModelRuns;
+  var RunExperimentClass                MainRun;
   var AttributeClass                    ExampleConcept,
                                         FigureConcept,
                                         DataConcept;
@@ -719,11 +719,17 @@ class DataSetClass {
     TreeSets        = AddTree(config, each PriorTrees);
 
     var set = TreeSets[0];
-    MainRun         = set.Custom.Run[runindex];
-    JCRun           = set.JC69.Run[runindex];
+    var runs = new ListClass<RunExperimentClass>(set.Models.Length);
+    foreach (var m in set.Models)
+      runs.Add(m.Run[runindex]);
+    ModelRuns = runs.ToArray();
+    MainRun   = ModelRuns[0];
 
     if (config is null)
       ReadExperiment;
+
+    MainRun.ReadAlignments(this);
+//    ModelRuns[1].ReadAlignments(this);
   }
 
   TreeSetClass AddTree(config, NodeClass root) = new(config, "Tree"+each1, RootFolder, root);
@@ -1167,81 +1173,21 @@ class DataSetClass {
 
 //======================================================================
 
-typedef StatMatrix   MatrixClass<StatClass>;
-typedef StatVector   VectorClass<StatClass>;
-typedef StatArray    StatClass[];
+typedef StatMatrix MatrixClass<StatClass>;
+typedef StatVector VectorClass<StatClass>;
+typedef StatArray  StatClass[];
 
 class ResultsClass {
-  var DataSetClass      Data;
-  var RuleClass         Rule;
-  var AlignIndexClass[] Alignments;
-  var StatMatrix        TransitionStats;
-  var StatMatrix        NCQRates;
-  var StatArray         NCQFreqs;
-  var                   GapSpectrum;
-  var AlignedCountClass QRates,
-                        AverageRates;
-  var                   AlignmentCutoff;
-  var                   EquilibriumFrequencies;
-  var double            InsertionRate, InsertionRateLow, InsertionRateHigh,
-                        DeletionRate, DeletionRateLow, DeletionRateHigh;
+  const double AlignmentCutoff = 0.95;
+
+  var DataSetClass       Data;
+  var RuleClass          Rule;
+  var RunExperimentClass MainRun;
 
   Constructor(DataSetClass data) {
-    Data = data;
-    Rule = data.Rule;
-
-
-    var align = IO.ReadScript(data.MainRun.AlignmentFile).Root;
-
-    AlignmentCutoff        = 0.95;
-    QRates                 = new(this, align.QRates, false);
-    AverageRates           = new(this, align.AverageRates, true);
-    NCQFreqs               = align.NCQFreqs as StatArray;
-    EquilibriumFrequencies = align.EquilibriumFrequencies;
-    InsertionRate          = align.InsertionRateMean;
-    InsertionRateLow       = align.InsertionRateLow;
-    InsertionRateHigh      = align.InsertionRateHigh;
-    DeletionRate           = align.DeletionRateMean;
-    DeletionRateLow        = align.DeletionRateLow;
-    DeletionRateHigh       = align.DeletionRateHigh;
-    GapSpectrum            = align.GapSpectrum;
-
-    var ts = align?.TransitionStats;
-    if (ts is not null)
-      TransitionStats = StatMatrix.Convert(ts);
-    else {
-      var length = QRates.Length;
-      var bs     = new StatClass(0, 0.5, 1);
-      TransitionStats = new(length, length, bs, bs);
-    }
-
-    ts = align?.NCQRates;
-    if (ts is not null)
-      NCQRates = StatMatrix.Convert(ts);
-    else {
-      var length = QRates.Length;
-      var bs     = new StatClass(0, 0.5, 1);
-      NCQRates = new(length, length, bs, bs);
-    }
-
-    var alignments = new ListClass<AlignIndexClass>(1024);
-    foreach (var a in align.Alignments) {
-      foreach (var c in Data.UsedCognates) {
-        if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
-          a.Cognate = c;
-          alignments.Add(a);
-          break;
-        }
-      }
-    }
-    Alignments = alignments.ToSortedArray(false, @CompareAlignment);
-  }
-
-  static int CompareAlignment(AlignIndexClass a0, AlignIndexClass a1) {
-    var c = a0.Alignments.Length.Compare(a1.Alignments.Length);
-    if (c == 0)
-      return a0.ConceptName.Compare(a1.ConceptName);
-    return c;
+    Data    = data;
+    Rule    = data.Rule;
+    MainRun = data.MainRun;
   }
 }
 
@@ -1416,7 +1362,7 @@ class AlignedCountClass: CountBaseClass {
 
   var ListClass<RateClass>   RateList;
   var MatrixClass<RateClass> Matrix;
-  var ResultsClass           Results;
+  var DataSetClass           Data;
   var RuleClass              Rule;
   var PartitionClass[]       Partitions;
   var RateClass[]            SortedRates,
@@ -1426,15 +1372,15 @@ class AlignedCountClass: CountBaseClass {
                              DirFactor;
   var bool                   Symmetric;
 
-  Constructor(ResultsClass results, rates, bool symmetric) {
-    super.Constructor(results.Data);
-    Results    = results;
+  Constructor(DataSetClass data, rates, bool symmetric) {
+    super.Constructor(data);
+    Data       = data;
     Symmetric  = symmetric;
-    Rule       = results.Rule;
+    Rule       = data.Rule;
     Partitions = Rule.Partitions;
 
     var matrix  = MatrixClass.Convert(rates);
-    var ordered = results.Data.UniqueSegments;
+    var ordered = data.UniqueSegments;
     var length  = LegendSegments.Length;
 
     System.Assert(length == matrix.Rows);
