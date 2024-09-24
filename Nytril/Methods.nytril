@@ -2,14 +2,6 @@ using Format, Units, Math, IO, Defs, Equations, WorldLanguages, References, Pape
 
 //======================================================================
 
-SubLabel(label) = Span {
-  SansSerif;
-  TextHeight: 20 pts;
-  "("; label; ")";
-};
-
-//======================================================================
-
 
 readonly PartitionAssignmentsClass Figures.PartitionAssignments = new(MainResults.Rule);
 
@@ -201,9 +193,7 @@ class AlignmentExamplesClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = "Credible sets for cognate alignments";
 
-  override GetBody(ContentStyleClass style) = Block {
-    AlignmentResults.ShowSet(MainResults.Data, Examples, true);
-  };
+  override GetBody(ContentStyleClass style) = AlignmentResults.ShowSet(MainResults.Data, Examples, true);
 }
 
 readonly AlignmentExamplesClass Figures.AlignmentExamples = new(
@@ -223,36 +213,80 @@ class SingleAlignmentClass: AlignmentExamplesClass {
     "The alignments are ordered from highest posterior probability (top-left alignment) to lowest posterior probability (bottom-right alignment) in row order. ";
   };
 
-  override GetBody(ContentStyleClass style) = Block {
-    AlignmentResults.ShowSet(MainResults.Data, Examples, false);
-  };
+  override GetBody(ContentStyleClass style) = AlignmentResults.ShowSet(MainResults.Data, Examples, false);
 }
 
 readonly SingleAlignmentClass Figures.AlignmentExample1 = new(17, "Flower");
 
 //======================================================================
 
+class ModelCompareClass {
+  var DefClass Symbol;
+  var double   Posterior;
+  var int      Alignments;
+  var          Name;
+
+  Constructor(DefClass d, double posterior, int alignments) {
+    Symbol     = d;
+    Name       = d.Name;
+    Posterior  = posterior;
+    Alignments = alignments;
+  }
+
+  SymbolName = Span {
+    Symbol; " ("; Name; ")";
+  };
+
+  ShowAlignmentNumber = Span {
+    Alignments; " alignments under the "; Name;
+  };
+}
+
+//======================================================================
+
 class AlignmentCompareClass: ContentClass {
-  var Cognate;
+  const int    Alignments = 7;
+  const string Concept    = "Sky";
+
+  var ModelCompareClass[] Models;
 
   Constructor() {
     super.Constructor("Alignment comparison");
-    Cognate = "Sky";
+    Models = [new(PoissonModel, 0.095, 1500), new(NaturalClassModel, 0.56, 250)];
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    "Ten alignments of highest posterior probability of the cognate for the concept ‘sky’ under the natural-class model (b) and under the simple model isomorphic to the Jukes-Cantor model (a, the ‘Poisson’ model, 39). ";
-    "The ten alignments under the Poisson model account for 0.098 ";
-    "posterior probability whereas the ten alignments under the natural-class model account for a cumulative posterior probability of 0.56.";
+    Span {
+      TextCase: TextCases.FirstUpper;
+      Enumerators.Cardinal(Alignments);
+    };
+    " alignments of highest posterior probability of the cognate for the concept ";
+    style.SQuote{Concept};
+    " under ";
+    TextList {(each Models).Symbol};
+    DotSpace;
+
+    foreach (var m in Models) {
+      Span {
+        "The alignments under "; m.SymbolName; " account for ";
+        Span {
+          TextDigits: 3;
+          TextSignificant: true;
+          m.Posterior;
+        };
+        " posterior probability. ";
+      };
+    }
   };
 
-  override GetBody(ContentStyleClass style) = Block {
-    VBox {
-      SubLabel("a");
-      new SingleAlignmentClass(7, Cognate).GetBody(style);
-      SubLabel("b");
-      new SingleAlignmentClass(7, Cognate).GetBody(style);
-    };
+  override GetBody(ContentStyleClass style) = VBox {
+    foreach (var m in Models) {
+      Paragraph {
+        TextHeight: 20 pts;
+        m.SymbolName;
+      };
+      AlignmentResults.ShowSet(MainResults.Data, [new(Concept, null, Alignments)], false);
+    }
   };
 }
 
@@ -678,6 +712,12 @@ class GappinessChartClass: ContentClass {
       foreach (var gap in MainResults.GapSpectrum) {
         Chart(4 inches, 1.5 inches) {
           Type: ChartTypes.Column;
+
+// Possible alternate look
+//          Type: ChartTypes.Area;
+//          Smoothing: 70%;
+//          Marker: Markers.Circle;
+
           ValueLabel: NameBox {
             ["First Segment", "Middle Segment(s)", "Last Segment"][each0]
           };
@@ -1448,13 +1488,13 @@ class SegmentModelsClass: ContentClass {
     style.FirstPar {
         SubSection {"Models of segmental change"};
         "We considered three models of segmental change in this study: ";
-        Model1; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor";
+        PoissonModel; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor";
         Citation {Jukes1969};
         " with equal rates between all pairs of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
-        Model2; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein";
+        UnequalModel; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein";
         Citation {Felsenstein1981};
         " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
-        "and "; Model3; ", a natural class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
+        "and "; NaturalClassModel; ", a natural class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
     };
 
     var segments = MainResults.Data.UniqueSegments.Length - 1;
@@ -1462,10 +1502,10 @@ class SegmentModelsClass: ContentClass {
 
     style.BodyPar {
         "The models differ in the number of parameters to estimate. ";
-        "The first model, "; Model1; ", has no free parameters. ";
-        "The second model, "; Model2; ", has "; segments; " free parameters (one less than the number of segments). ";
+        "The first model, "; PoissonModel; ", has no free parameters. ";
+        "The second model, "; UnequalModel; ", has "; segments; " free parameters (one less than the number of segments). ";
 
-        "The natural class model, "; Model3; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
+        "The natural class model, "; NaturalClassModel; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
         Equation {segments; " + "; (rp*(rp-1)/2 + rp); Tex.Equals; segments + rp*(rp-1)/2 + rp}; " free parameters.";
     };
 
@@ -1486,7 +1526,7 @@ class SegmentModelsClass: ContentClass {
         "factors of ";
         Equation {Tex.ln; BayesFactor12; Tex.Equals; -1074.2}; " and ";
         Equation {Tex.ln; BayesFactor12; Tex.Equals; -117.3};
-        ", respectively, for a comparison of "; Model1; " to "; Model2; " and "; Model2; " to "; Model3; ". ";
+        ", respectively, for a comparison of "; PoissonModel; " to "; UnequalModel; " and "; UnequalModel; " to "; NaturalClassModel; ". ";
         "This indicates overwhelming support for the more parameter-rich natural class model";
         Citation {Jeffreys1939}; DotSpace;
     };
@@ -1569,10 +1609,10 @@ class SegmentModelsClass: ContentClass {
 
     style.BodyPar {
       style.FigureReference(Figures.EquilibriumCharts);
-      " shows the estimated equilibirum frequencies of the natural classes under model "; Model3; ". ";
+      " shows the estimated equilibirum frequencies of the natural classes under model "; NaturalClassModel; ". ";
       "The equilibirum frequenices are used in two ways when calculating the probability of the observed data. ";
       "First, they are used at the root of the tree as the probability of the word segment state at the root. ";
-      "Second, they modify the rate of change between word segments for models "; Model2; " and "; Model3;
+      "Second, they modify the rate of change between word segments for models "; UnequalModel; " and "; NaturalClassModel;
       ", with the rate of change being proportional to the frequency of the destination word segment. ";
       "Indeed, the rates of change to ";
       TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
@@ -1669,14 +1709,24 @@ class WordSegmentRelationshipsClass: ContentClass {
 
     var align2 = Figures.AlignmentExample2;
     style.BodyPar {
+        var models = align2.Models;
+
         "Interestingly, the distribution of alignments depends on the model of segmental change. ";
         style.FigureReference(align2); " shows the 95% credible set of alignments for the concept ";
-        style.SQuote {align2.Cognate}; " under the Poisson and natural class models. ";
-        "The credible set contains over 1500 alignments under the Poisson model, but only 250 under the natural-class model. ";
-        "This difference makes sense given the rates estimated under the natural-class model ("; style.FigureReference(Figures.RateChart); "). ";
+        style.SQuote {align2.Concept}; " under the ";
+        TextList {(each models).Name}; DotSpace;
+        "The credible set contains ";
+        models[0].ShowAlignmentNumber;
+        ", but only ";
+        models[1].ShowAlignmentNumber;
+        DotSpace;
+        "This difference makes sense given the rates estimated under the "
+        models[1].Name; " ("; style.FigureReference(Figures.RateChart); "). ";
         "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
-        "The distribution of alignments under the Poisson model often makes consonant and "; IPASegments.oh; " segments homologous. ";
-        "Under the natural-class model, however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
+        "The distribution of alignments under the ";
+        models[0].Name; " often makes consonant and "; IPASegments.oh; " segments homologous. ";
+        "Under the "; models[1].Name;
+        ", however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
 
     style.FigureBlock(align2);
