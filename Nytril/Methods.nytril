@@ -216,23 +216,28 @@ class SingleAlignmentClass: AlignmentExamplesClass {
   override GetBody(ContentStyleClass style) = AlignmentResults.ShowSet(Examples, false);
 }
 
-readonly SingleAlignmentClass Figures.AlignmentExample1 = new(17, "Flower");
+readonly SingleAlignmentClass Figures.AlignmentExample1 = new(16, "Flower");
 
 //======================================================================
 
 class ModelCompareClass {
   var DefClass           Symbol;
   var double             Posterior;
-  var int                Alignments;
+  var int                TotalCount;
   var RunExperimentClass Run;
   var                    Name;
 
-  Constructor(int index, DefClass d, double posterior, int alignments) {
-    Symbol     = d;
-    Name       = d.Name;
-    Posterior  = posterior;
-    Alignments = alignments;
-    Run        = MainResults.Data.ModelRuns[index];
+  Constructor(int index, DefClass d, CognateIdClass e, int maxcount) {
+    Symbol   = d;
+    Name     = d.Name;
+    Run      = MainResults.Data.ModelRuns[index];
+
+    var    a   = e.FindAlignment(Run).Alignments;
+    double sum = 0;
+    for (int i = 0; i < maxcount; ++i)
+      sum += a[i].Prob;
+    Posterior  = sum;
+    TotalCount = a.Length;
   }
 
   SymbolName = Span {
@@ -240,7 +245,7 @@ class ModelCompareClass {
   };
 
   ShowAlignmentNumber = Span {
-    Alignments; " alignments under the "; Name;
+    TotalCount; " alignments under the "; Name;
   };
 }
 
@@ -279,34 +284,30 @@ class GappinessSignificanceClass {
 //======================================================================
 
 class AlignmentCompareClass: ContentClass {
-  const int    Alignments = 8;
-  const string Concept    = "Sky";
+  const int    MaxCount = 8;
+  const string Concept  = "Sky";
 
   var ModelCompareClass[] Models;
+  var CognateIdClass      Example;
 
   Constructor() {
     super.Constructor("Alignment comparison");
+
+    Example = new(Concept, null, MaxCount);
     Models = [
-                           // Where do these numbers come from?
-      new(1, PoissonModel, 0.095, 1500),     // JC69
-      new(0, NaturalClassModel, 0.56, 250)   // Custom
+      new(1, PoissonModel, Example, MaxCount),       // JC69
+      new(0, NaturalClassModel, Example, MaxCount)   // Custom
     ];
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    Span {
-      TextCase: TextCases.FirstUpper;
-      Enumerators.Cardinal(Alignments);
-    };
-    " alignments of highest posterior probability of the cognate for the concept ";
+    "Alignments of highest posterior probability of the cognate for the concept ";
     style.SQuote{Concept};
-    " under ";
-    TextList {(each Models).Symbol};
     DotSpace;
 
     foreach (var m in Models) {
       Span {
-        "The alignments under "; m.SymbolName; " account for ";
+        "These "; Enumerators.Cardinal(MaxCount); " alignments under "; m.SymbolName; " account for ";
         Span {
           TextDigits: 3;
           TextSignificant: true;
@@ -325,7 +326,7 @@ class AlignmentCompareClass: ContentClass {
         m.SymbolName;
       };
       var chart = new AlignmentChartClass(results, m.Run);
-      chart.ShowSet([new(Concept, null, Alignments)], false);
+      chart.ShowSet([Example], false);
     }
   };
 }
@@ -728,15 +729,7 @@ class GappinessChartClass: ContentClass {
     super.Constructor("");
   }
 
-  NameBox = HBox(null, null, PadB(8)) {
-    Transform: TransformClass.Rotate(-90 degrees);
-    TransformFit: true;
-  };
-
   override GetCaption(ContentStyleClass style) = Span {
-
-
-
     "The number of gaps observed across the "; 102; " cognates analyzed in this study at the first segment (top), middle segment(s) (middle), and last segment (bottom). ";
     "Nine languages were analyzed in this study, so it is not possible for there to be nine gaps; deletion events that led to a gap for all the languages would not be included in an alignment, and is explicitly conditioned on in Lunter et al."; Citation{Lunter2003}; DotSpace;
     "There is a clear, and statistically significant (";
@@ -747,7 +740,7 @@ class GappinessChartClass: ContentClass {
   override GetBody(ContentStyleClass style) = HBox {
     SansSerif;
     VAlign: VAligns.Center;
-    NameBox {TextHeight: 130%; "Proportion of Alignments"};
+    PaperStyle.ValueLabel {TextHeight: 130%; "Proportion of Alignments"};
     VBox {
       HAlign: HAligns.Center;
       foreach (var gap in MainResults.MainRun.GapSpectrum) {
@@ -759,7 +752,7 @@ class GappinessChartClass: ContentClass {
 //          Smoothing: 70%;
 //          Marker: Markers.Circle;
 
-          ValueLabel: NameBox {
+          ValueLabel: PaperStyle.ValueLabel {
             ["First Segment", "Middle Segment(s)", "Last Segment"][each0]
           };
 

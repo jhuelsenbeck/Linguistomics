@@ -146,15 +146,23 @@ class AlignPairClass: DocumentClass {
 
   override GetLayoutTip = ShowDetails(9, true, 10 pts);
 
-  override GetDocument = ShowDetails(5000, true, 10 pts);
+  override GetDocument = ShowDetails(50, true, 10 pts);
 
   GetChart(SizeClass size, int max) = Chart(size.Width, size.Height) {
-    Type: ChartTypes.Column;
     TextHeight: 6 pts;
-    ValueLabel: "%";
+    ValueLabel: PaperStyle.ValueLabel {
+      "Probability";
+    };
+    ValueAxis: ChartAxis {
+      TextSignificant: false;
+      TextDigits: 1;
+//      Start: 0.0;
+//      Stop: 1.0;
+    };
     ChartSeries {
+      Type: ChartTypes.Column;
       foreach (var a in Alignments) {
-        new DataPointClass(each0, a.Prob * 100.0) {Reference: a.Prob};
+        new DataPointClass(each0, a.Prob) {Reference: a.Prob};
         if (each1 >= max)
           break;
       }
@@ -200,7 +208,7 @@ class AlignPairClass: DocumentClass {
       var wordset = a.WordSet;
       if (wordset.Length > 0) {
         ShowBlock(prob, cumulative, wordset, boxheight);
-        "   ";
+        " ";
         if (each1 >= max)
           break;
       }
@@ -208,13 +216,12 @@ class AlignPairClass: DocumentClass {
   };
 
   ShowFigureDetails(DataSetClass data, int max) = Block {
-    var chart = 1 inch;
-
-    var h = 8 pts;
+    var chart = 1.25 inch;
+    var h     = 7 pts;
     BoxSize = new(BoxSize.Width, h);
-    TextHeight: 7 pts;
+    TextHeight: h;
     HBox(ExtentWidth) {
-      GetChart(new(chart, data.Taxa.Length * (9 pts)), max);
+      GetChart(new(chart, data.Taxa.Length * (h + 1)), max);
       Frame(ExtentWidth - chart) {
         ParAlignment: ParAlignments.Right;
         Paragraph {
@@ -256,25 +263,33 @@ class CognateIdClass {
     Cognate = cognate ?? DefaultCognate;
     Count   = count;
   }
+
+  AlignIndexClass FindAlignment(RunExperimentClass run) {
+    foreach (var a in run.Alignments) {
+      if (a.ConceptName == Concept and a.CognateName == Cognate)
+        return a;
+    }
+    return null;
+  }
 }
 
 //======================================================================
 
 class AlignmentChartClass {
-  var DataSetClass      Data;
-  var AlignIndexClass[] Alignments;
+  var DataSetClass       Data;
+  var RunExperimentClass Run;
 
  Constructor(ResultsClass results, RunExperimentClass run) {
-    Data       = results.Data;
-    Alignments = run.Alignments;
+    Data = results.Data;
+    Run  = run;
   }
 
   ShowChart(SizeClass size) = VBox(size.Width, size.Height, 0.5) {
     // Try to make proportional squares
     var xitems = size.Width / 130 as int;
-    var yitems = Math.Floor((Alignments.Length + xitems - 1) / xitems);
+    var yitems = Math.Floor((Run.Alignments.Length + xitems - 1) / xitems);
     var bsize  = new SizeClass(size.Width / xitems, size.Height / yitems);
-    AlignIndexClass[][] rows = Alignments / xitems;
+    AlignIndexClass[][] rows = Run.Alignments / xitems;
 
     TextHeight: Math.Min(8 pts, bsize.Height - 3.2 pt);
 
@@ -302,7 +317,7 @@ class AlignmentChartClass {
   };
 
   ShowAll = Block {
-    foreach (var a in Alignments) {
+    foreach (var a in Run.Alignments) {
       new AlignPairClass(Data, a).ShowDetails(5, false, 10 pts);
       Paragraph(BorderT(1));
     }
@@ -310,14 +325,7 @@ class AlignmentChartClass {
 
   ShowSet(CognateIdClass[] examples, bool label) = Table(null, null, label ? [0.75 inches, ColumnClass.Expand] : [ColumnClass.Expand]) {
     foreach (var e in examples) {
-      AlignIndexClass found = null;
-      foreach (var a in Alignments) {
-        if (a.ConceptName == e.Concept && a.CognateName == e.Cognate) {
-          found = a;
-          break;
-        }
-      }
-
+      var found = e.FindAlignment(Run);
       if (found is valid) {
         var ap = new AlignPairClass(Data, found);
         Row {
@@ -1437,9 +1445,7 @@ class AlignedCountClass: CountBaseClass {
   ShowChart(RateClass[] rates) = Chart(100%, 4 inches) {
     Type: ChartTypes.Column;
     TextHeight: 12 pts;
-    ValueLabel: HBox {
-      Transform: TransformClass.Rotate(90 degrees);
-      TransformFit: true;
+    ValueLabel: PaperStyle.ValueLabel {
       Lang.RateFactor;
     };
 
@@ -1469,9 +1475,7 @@ class AlignedCountClass: CountBaseClass {
       TextHeight: 12 pts;
       TipNoPublish: true;
 
-      ValueLabel: HBox {
-        Transform: TransformClass.Rotate(90 degrees);
-        TransformFit: true;
+      ValueLabel: PaperStyle.ValueLabel {
         RateDescriptor(Lang.RateFactor);
       };
 
@@ -1525,9 +1529,7 @@ class AlignedCountClass: CountBaseClass {
 
       XLabel: RateDescriptor(Lang.RateFactor);
 
-      ValueLabel: HBox {
-        Transform: TransformClass.Rotate(90 degrees);
-        TransformFit: true;
+      ValueLabel: PaperStyle.ValueLabel {
         RateDescriptor("Direction");
       };
 
@@ -1569,9 +1571,7 @@ class AlignedCountClass: CountBaseClass {
 
       XLabel: "Transitions";
 
-      ValueLabel: HBox {
-        Transform: TransformClass.Rotate(90 degrees);
-        TransformFit: true;
+      ValueLabel: PaperStyle.ValueLabel {
         RateDescriptor("Direction");
       };
 
@@ -1686,10 +1686,8 @@ class DiagonalClass {
       TextHeight: 11 pts;
       Type: ChartTypes.Column;
 
-      ValueLabel: HBox {
+      ValueLabel: PaperStyle.ValueLabel {
         Span {Tex.Minus; Lang.Rate};
-        Transform: TransformClass.Rotate(90 degrees);
-        TransformFit: true;
       };
 
       XAxis: ChartAxis {
