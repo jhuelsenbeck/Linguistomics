@@ -147,7 +147,7 @@ class TransitionRatesClass: ContentClass {
 
 //======================================================================
 
-readonly AlignmentChartClass AlignmentResults = new(MainResults);
+readonly AlignmentChartClass AlignmentResults = new(MainResults, MainResults.Data.MainRun);
 
 readonly AlignmentsClass Figures.Alignments = new;
 
@@ -193,7 +193,7 @@ class AlignmentExamplesClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = "Credible sets for cognate alignments";
 
-  override GetBody(ContentStyleClass style) = AlignmentResults.ShowSet(MainResults.Data, Examples, true);
+  override GetBody(ContentStyleClass style) = AlignmentResults.ShowSet(Examples, true);
 }
 
 readonly AlignmentExamplesClass Figures.AlignmentExamples = new(
@@ -213,7 +213,7 @@ class SingleAlignmentClass: AlignmentExamplesClass {
     "The alignments are ordered from highest posterior probability (top-left alignment) to lowest posterior probability (bottom-right alignment) in row order. ";
   };
 
-  override GetBody(ContentStyleClass style) = AlignmentResults.ShowSet(MainResults.Data, Examples, false);
+  override GetBody(ContentStyleClass style) = AlignmentResults.ShowSet(Examples, false);
 }
 
 readonly SingleAlignmentClass Figures.AlignmentExample1 = new(17, "Flower");
@@ -256,7 +256,7 @@ class AlignmentCompareClass: ContentClass {
     super.Constructor("Alignment comparison");
     Models = [
                            // Where do these numbers come from?
-      new(2, PoissonModel, 0.095, 1500),     // JC69
+      new(1, PoissonModel, 0.095, 1500),     // JC69
       new(0, NaturalClassModel, 0.56, 250)   // Custom
     ];
   }
@@ -286,12 +286,14 @@ class AlignmentCompareClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style) = VBox {
+    var results = MainResults;
     foreach (var m in Models) {
       Paragraph {
         TextHeight: 20 pts;
         m.SymbolName;
       };
-      AlignmentResults.ShowSet(MainResults.Data, [new(Concept, null, Alignments)], false);
+      var chart = new AlignmentChartClass(results, m.Run);
+      chart.ShowSet([new(Concept, null, Alignments)], false);
     }
   };
 }
@@ -313,9 +315,10 @@ class ExchangeabilityTableClass: ContentClass {
     PaperStyle.SansSerif;
     TextHeight: th;
 
-    var stats      = MainResults.MainRun.TransitionStats;
+    var results    = MainResults;
+    var stats      = results.MainRun.TransitionStats;
     var count      = stats.Rows;
-    var partitions = MainResults.Rule.Partitions;
+    var partitions = results.Rule.Partitions;
     var dy         = 2 pts;
     var left       = 1 inch;
     var w          = (ExtentWidth - 1 inch) / count;
@@ -1767,11 +1770,13 @@ class DiscussionClass: ContentClass {
    };
 
    style.BodyPar {
-     "Our framework cannot be situated within any one of these traditions, but rather shares affinities with the phonemic approach and lexical diffusion. Since our analysis is based on phonemic representations, it is phonemes that undergo insertions, deletions, and transitions. In contrast to the standard assumption of historical linguistics, however, these changes are treated as independent. For instance, a change from "; IPASegments.ah; " to "; IPASegments.oh; " is not modeled as a single transition across all word-forms in our study. Instead, a rate of change is inferred based on the homologies of "; IPASegments.ah; " and "; IPASegments.oh; " in the data and how often the former transitions to the latter. ";
+     "Our framework cannot be situated within any one of these traditions, but rather shares affinities with the phonemic approach and lexical diffusion. Since our analysis is based on phonemic representations, it is phonemes that undergo insertions, deletions, and transitions. ";
+     "In contrast to the standard assumption of historical linguistics, however, these changes are treated as independent. ";
+     "For instance, a change from "; IPASegments.ah; " to "; IPASegments.oh; " is not modeled as a single transition across all word-forms in our study. ";
+     "Instead, a rate of change is inferred based on the homologies of "; IPASegments.ah; " and "; IPASegments.oh; " in the data and how often the former transitions to the latter. ";
    };
 
    style.BodyPar {
-
      "The application of the TKF91 model to linguistic data is most similar to the analysis of Bouchard-Côté et al. ";
      Citation{BouchardCote2013};
      " who also took the observations to be segments, but instead applied a string transducer model ";
@@ -1782,7 +1787,6 @@ class DiscussionClass: ContentClass {
    style.BodyPar {
      "The complexity of the likelihood calculations under the TKF91 model is exponential in the number of taxa and word length; specifically, the complexity is of order ";
      Equations.LikelihoodComplexity;
-     //${\\cal O}(2^k L^k)$
      " where "; NumLanguages; " is the number of leaves on the tree and "; GMLength; " is the geometric mean of the word lengths ";
      Citation{Lunter2003}; DotSpace;
       "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with "; "1 < "; WordLength; " < 10. That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length, instead of the overall insertion rate being "; InsertionRate; "("; WordLength-1; ") as it is under the TKF91 model ";
@@ -1791,8 +1795,7 @@ class DiscussionClass: ContentClass {
    };
 
    style.FirstPar {
-
-      SubSection {"Limitations of the  event-based model"};
+     SubSection {"Limitations of the  event-based model"};
      "Our results are based on a unigram model of segmental transition, in which the three possible events described above are applicable only to individual segments. ";
      "Certain patterns of sound change cannot be adequately captured under such a model. ";
      "For instance, metathesis, a change in which two segments exchange positions, is modeled as two separate transitions. ";
@@ -1804,13 +1807,12 @@ class DiscussionClass: ContentClass {
    };
 
    style.BodyPar {
-     "The complexity of the likelihood calculations under the TKF91 model is exponential in the number of taxa and word length; ";
-     "specifically, the complexity is of order "; Equations.TKF91Complexity; " where "; Defs.k; " is the number of leaves on the tree and "; Defs.GMLength; " is the geometric mean of the word lengths "; Citation {Lunter2003} DotSpace;
      "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with "; Equation {1; Tex.leq; Defs.GMLength; Tex.leq; 10}; DotSpace;
-     "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length \\citep[][instead of the overall insertion rate being ";
+     "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length ";
+     Citation{BouchardCote2013b; ", instead of the overall insertion rate being ";
      Equation {Tex.lambda; Tex.times; InParens {Defs.GMLength + 1}};
-     " as it is under the TKF91 model]"; Citation{BouchardCote2013b}; DotSpace;
-     "This model --- the Poisson Indel Process (PIP) --- could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
+     " as it is under the TKF91 model"}; DotSpace;
+     "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
    };
 
    style.BodyPar {

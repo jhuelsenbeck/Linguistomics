@@ -226,7 +226,6 @@ readonly namespace Defs {
   DefClass qij                     = new(#2679fc01-b547-4c0e-b497-ade507e3c701#, sym.q sub sym.ij, ("i,j" sup "th") " element of the rate matrix " RateMatrix, Empty);
   DefClass qii                     = new(#cb0fbe81-c587-43d8-a4fb-f355d5a5d9b5#, sym.q sub sym.ii, ("i,i" sup "th") " element of the rate matrix " RateMatrix, Empty);
   DefClass neg_qii                 = new(#cb0fbe81-c587-43d8-a4fb-f355d5a5d9b5#, Span {Tex.Negative; sym.q sub sym.ii}, ("Minus i,i" sup "th") " element of the rate matrix " RateMatrix, Empty);
-  DefClass k                       = new(#57f5d57c-46e8-42d6-9041-a00f8ab10bd2#, "k", "The number of leaves on the tree", Empty);
 }
 
 //======================================================================
@@ -235,10 +234,11 @@ readonly EquationClass Equations.LikelihoodComplexity = new(#0eef75c7-cb5a-4fd9-
   Formula: Equation {
     FunctionO;
     Arguments {
-      {2 sup NumLanguages GMLength sup NumLanguages};
+      2 ^ NumLanguages * GMLength ^ NumLanguages;
     };
   };
 };
+
 
 readonly EquationClass Equations.UnknownTree = new(#c070ccfe-ee29-41be-9064-6dc6ccaa5995#, "Unknown Tree") {
   Formula: Equation {
@@ -620,12 +620,6 @@ readonly EquationClass Equations.EventDeletionProbability = new(#6b805317-a4b0-4
     DeletionRate;
     Divide;
     RateParameter;
-  };
-};
-
-readonly EquationClass Equations.TKF91Complexity = new(#b810bbd9-d186-4855-8231-a8af2d1d0f28#, "TKF91 model complexity") {
-  Formula: Equation {
-    Symbol("O") ^ (2 ^ Defs.k * Defs.GMLength ^ Defs.k);
   };
 };
 //======================================================================

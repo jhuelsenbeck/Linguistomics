@@ -81,20 +81,20 @@ class RunExperimentClass {
 
   void ReadAlignments(DataSetClass data) {
     var align = IO.ReadScript(AlignmentFile).Root;
-
     QRates                 = new(data, align.QRates, false);
     AverageRates           = new(data, align.AverageRates, true);
-    NCQFreqs               = align.NCQFreqs as StatArray;
-    EquilibriumFrequencies = align.EquilibriumFrequencies;
-    InsertionRate          = align.InsertionRateMean;
-    InsertionRateLow       = align.InsertionRateLow;
-    InsertionRateHigh      = align.InsertionRateHigh;
-    DeletionRate           = align.DeletionRateMean;
-    DeletionRateLow        = align.DeletionRateLow;
-    DeletionRateHigh       = align.DeletionRateHigh;
-    GapSpectrum            = align.GapSpectrum;
 
-    var ts = align?.TransitionStats;
+    NCQFreqs               = align.?NCQFreqs as StatArray;
+    EquilibriumFrequencies = align.?EquilibriumFrequencies;
+    InsertionRate          = align.?InsertionRateMean;
+    InsertionRateLow       = align.?InsertionRateLow;
+    InsertionRateHigh      = align.?InsertionRateHigh;
+    DeletionRate           = align.?DeletionRateMean;
+    DeletionRateLow        = align.?DeletionRateLow;
+    DeletionRateHigh       = align.?DeletionRateHigh;
+    GapSpectrum            = align.?GapSpectrum;
+
+    var ts = align.?TransitionStats;
     if (ts is not null)
       TransitionStats = StatMatrix.Convert(ts);
     else {
@@ -103,7 +103,7 @@ class RunExperimentClass {
       TransitionStats = new(length, length, bs, bs);
     }
 
-    ts = align?.NCQRates;
+    ts = align.?NCQRates;
     if (ts is not null)
       NCQRates = StatMatrix.Convert(ts);
     else {

@@ -74,15 +74,15 @@ RateDescriptor(text) = Span {
 //======================================================================
 
 class AlignPairClass: DocumentClass {
-  var DataSetClass    Data;
-  var AlignIndexClass Cognate;
-  var SizeClass       BoxSize;
+  var DataSetClass     Data;
+  var AlignDataClass[] Alignments;
+  var SizeClass        BoxSize;
 
   Constructor(DataSetClass data, AlignIndexClass cognate) {
     super.Constructor(guid.FromHash("Align" + cognate.CognateName), cognate.ConceptName);
 
-    Data    = data;
-    Cognate = cognate;
+    Data       = data;
+    Alignments = cognate.Alignments;
     BoxSize = new SizeClass(14 pts, 14 pts);
     if (cognate.CognateName != DefaultCognate)
       Name += "-" + cognate.CognateName;
@@ -155,7 +155,7 @@ class AlignPairClass: DocumentClass {
     TextHeight: 6 pts;
     ValueLabel: "%";
     ChartSeries {
-      foreach (var a in Cognate.Alignments) {
+      foreach (var a in Alignments) {
         new DataPointClass(each0, a.Prob * 100.0) {Reference: a.Prob};
         if (each1 >= max)
           break;
@@ -173,7 +173,7 @@ class AlignPairClass: DocumentClass {
       Name;
     };
 
-    if (Cognate.Alignments.Length > 1)
+    if (Alignments.Length > 1)
       GetChart(new(3 inch, 0.75 inch), max);
 
     var langbox = Languages(Data, BoxSize.Height);
@@ -196,7 +196,7 @@ class AlignPairClass: DocumentClass {
 
   ShowBlocks(max, boxheight) = Span {
     var cumulative = 0.0;
-    foreach (var a in Cognate.Alignments) {
+    foreach (var a in Alignments) {
       var prob = a.Prob;
       cumulative += prob;
       var wordset = a.WordSet;
@@ -240,7 +240,6 @@ class AlignPairClass: DocumentClass {
     };
   };
 }
-
 
 //======================================================================
 
@@ -294,9 +293,9 @@ class AlignmentChartClass {
   var DataSetClass      Data;
   var AlignIndexClass[] Alignments;
 
- Constructor(ResultsClass results) {
+ Constructor(ResultsClass results, RunExperimentClass run) {
     Data       = results.Data;
-    Alignments = Data.MainRun.Alignments;
+    Alignments = run.Alignments;
   }
 
   ShowChart(SizeClass size) = VBox(size.Width, size.Height, 0.5) {
@@ -338,12 +337,10 @@ class AlignmentChartClass {
     }
   };
 
-  ShowSet(DataSetClass data, CognateIdClass[] examples, bool label) = Table(null, null, label ? [0.75 inches, ColumnClass.Expand] : [ColumnClass.Expand]) {
-    var alignments = Alignments;
-
+  ShowSet(CognateIdClass[] examples, bool label) = Table(null, null, label ? [0.75 inches, ColumnClass.Expand] : [ColumnClass.Expand]) {
     foreach (var e in examples) {
-      var found = null;
-      foreach (var a in alignments) {
+      AlignIndexClass found = null;
+      foreach (var a in Alignments) {
         if (a.ConceptName == e.Concept && a.CognateName == e.Cognate) {
           found = a;
           break;
@@ -351,7 +348,7 @@ class AlignmentChartClass {
       }
 
       if (found is valid) {
-        var ap = new AlignPairClass(data, found);
+        var ap = new AlignPairClass(Data, found);
         Row {
           if (label) {
             Cell(PadR(10 pts)) {
@@ -360,7 +357,7 @@ class AlignmentChartClass {
               e.Cognate Italic;
             };
           }
-          ap.ShowFigureDetails(data, e.Count);
+          ap.ShowFigureDetails(Data, e.Count);
         };
       }
       else
@@ -705,7 +702,7 @@ class DataSetClass {
                                         WordFile;
   var bool                              RawData;
 
-  Constructor(config, name, rootfolder, runindex) {
+  Constructor(config, name, rootfolder) {
     Name            = name;
     RootFolder      = Folder(rootfolder);
     WordFile        = RootFolder Info.WordFileName;
@@ -720,8 +717,11 @@ class DataSetClass {
 
     var set = TreeSets[0];
     var runs = new ListClass<RunExperimentClass>(set.Models.Length);
-    foreach (var m in set.Models)
-      runs.Add(m.Run[runindex]);
+    runs.Add(set.Models[0].Run[0]);
+    runs.Add(set.Models[1].Run[1]);  // For some reaon, this run succeeded
+    runs.Add(set.Models[2].Run[0]);
+
+
     ModelRuns = runs.ToArray();
     MainRun   = ModelRuns[0];
 
@@ -729,7 +729,7 @@ class DataSetClass {
       ReadExperiment;
 
     MainRun.ReadAlignments(this);
-//    ModelRuns[1].ReadAlignments(this);
+    ModelRuns[1].ReadAlignments(this);
   }
 
   TreeSetClass AddTree(config, NodeClass root) = new(config, "Tree"+each1, RootFolder, root);
@@ -1412,10 +1412,9 @@ class AlignedCountClass: CountBaseClass {
       }
     }
 
-
     DiagFactor      = 1.0 / Math.Abs(Math.Max(dmin, dmax));
     RateFactor      = 1.0 / Math.Abs(Math.Max(min, max));
-    DirFactor       = 1.0 / Math.Abs(max - min);
+    DirFactor       = max == min ? 1.0 : 1.0 / Math.Abs(max - min);
     var rl = RateList.ToArray;
     SortedRates     = rl.ToSortedArray(RateClass.SortDescending, @RateClass.CompareRate);
     SortByDirection = rl.ToSortedArray(RateClass.SortDescending, @RateClass.CompareDirection);
