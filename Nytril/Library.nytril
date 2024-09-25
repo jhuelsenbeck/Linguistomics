@@ -108,13 +108,11 @@ class AlignPairClass: DocumentClass {
       Span {
         TextSignificant: true;
         TextDigits: 3;
-        prob * 100.0;
+        prob;
         if (prob != cumulative) {
-          Tex.rightarrow;
-          Span {
-            TextColor: Colors.Gray;
-            cumulative * 100.0;
-          };
+          " (";
+          cumulative;
+          ")";
         }
       }
     };
@@ -210,16 +208,21 @@ class AlignPairClass: DocumentClass {
   };
 
   ShowFigureDetails(DataSetClass data, int max) = Block {
+    var chart = 1 inch;
+
     var h = 8 pts;
     BoxSize = new(BoxSize.Width, h);
     TextHeight: 7 pts;
-    Frame(ExtentWidth) {
-      Span {
-        GetChart(new(1 inch, data.Taxa.Length * (9 pts)), max);
-        Languages(Data, h);
-        ShowBlocks(max, h);
-      }
-    };
+    HBox(ExtentWidth) {
+      GetChart(new(chart, data.Taxa.Length * (9 pts)), max);
+      Frame(ExtentWidth - chart) {
+        ParAlignment: ParAlignments.Right;
+        Paragraph {
+          Languages(Data, h);
+          ShowBlocks(max, h);
+        }
+      };
+    }
   };
 
   ShowFigureData(AlignIndexClass index, AlignDataClass align) = Frame {
