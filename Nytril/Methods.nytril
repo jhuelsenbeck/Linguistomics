@@ -246,8 +246,40 @@ class ModelCompareClass {
 
 //======================================================================
 
+class GappinessSignificanceClass {
+  var gapSpectrum;
+
+  Constructor(d) {
+    gapSpectrum = d;
+  }
+
+  double TestStatistic {
+
+    var n = 0;
+    double lnL1 = 0.0;
+    var vec = new VectorClass(gapSpectrum.Length, 0.0);
+    foreach (var gap in MainResults.MainRun.GapSpectrum) {
+      var ni = 0;
+      foreach (var value in gap) {
+        ni += value;
+      }
+      n += ni;
+      foreach (var value in gap) {
+        if (value != 0) {
+          lnL1 += (value * Math.Log(value / ni));
+        }
+      }
+      vec.AddValue(0, n);
+    }
+
+    return gapSpectrum.Length;
+  }
+}
+
+//======================================================================
+
 class AlignmentCompareClass: ContentClass {
-  const int    Alignments = 7;
+  const int    Alignments = 9;
   const string Concept    = "Sky";
 
   var ModelCompareClass[] Models;

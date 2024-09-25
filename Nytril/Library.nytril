@@ -243,38 +243,6 @@ class AlignPairClass: DocumentClass {
 
 //======================================================================
 
-class GappinessSignificanceClass {
-  var gapSpectrum;
-
-  Constructor(d) {
-    gapSpectrum = d;
-  }
-
-  double TestStatistic {
-
-    var n = 0;
-    double lnL1 = 0.0;
-    var vec = new VectorClass(gapSpectrum.Length, 0.0);
-    foreach (var gap in MainResults.MainRun.GapSpectrum) {
-      var ni = 0;
-      foreach (var value in gap) {
-        ni += value;
-      }
-      n += ni;
-      foreach (var value in gap) {
-        if (value != 0) {
-          lnL1 += (value * Math.Log(value / ni));
-        }
-      }
-      vec.AddValue(0, n);
-    }
-
-    return gapSpectrum.Length;
-  }
-}
-
-//======================================================================
-
 class CognateIdClass {
   var Concept,
       Cognate,
@@ -702,7 +670,7 @@ class DataSetClass {
                                         WordFile;
   var bool                              RawData;
 
-  Constructor(config, name, rootfolder) {
+  Constructor(config, name, rootfolder, bool all=false) {
     Name            = name;
     RootFolder      = Folder(rootfolder);
     WordFile        = RootFolder Info.WordFileName;
@@ -728,8 +696,10 @@ class DataSetClass {
     if (config is null)
       ReadExperiment;
 
-    MainRun.ReadAlignments(this);
-    ModelRuns[1].ReadAlignments(this);
+    if (all) {
+      MainRun.ReadAlignments(this);
+      ModelRuns[1].ReadAlignments(this);
+    }
   }
 
   TreeSetClass AddTree(config, NodeClass root) = new(config, "Tree"+each1, RootFolder, root);
@@ -1681,7 +1651,6 @@ class SegDataClass {
 
     Rate.S0.GetLayoutTip;
   };
-
 }
 
 //======================================================================
