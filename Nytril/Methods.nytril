@@ -221,11 +221,11 @@ readonly SingleAlignmentClass Figures.AlignmentExample1 = new(16, "Flower");
 //======================================================================
 
 class ModelCompareClass {
-  var DefClass           Symbol;
-  var double             Posterior;
-  var int                TotalCount;
-  var RunExperimentClass Run;
-  var                    Name;
+  var DefClass        Symbol;
+  var double          Posterior;
+  var int             TotalCount;
+  var RunResultsClass Run;
+  var                 Name;
 
   Constructor(int index, DefClass d, CognateIdClass e, int maxcount) {
     Symbol = d;
@@ -820,7 +820,7 @@ class QRatesDiagonalClass: ContentClass {
     super.Constructor("The rate of change when in a particular segmental state (or " Defs.neg_qii ")");
   }
 
-  override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults, MainResults.MainRun.QRates).Display(style);
+  override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults.Rule, MainResults.MainRun.QRates).Display(style);
 }
 
 //======================================================================
@@ -960,7 +960,7 @@ class ConsensusTreeClass: ContentClass {
     super.Constructor(Lang.ConsensusTree);
   }
 
-  override GetBody(ContentStyleClass style) = PaperStyle.ShowTree(style, MainResults.Data.MainRun.ResultTree, ExtentWidth);
+  override GetBody(ContentStyleClass style) = PaperStyle.ShowTree(style, MainResults.Data.MainRun.Run.ResultTree, ExtentWidth);
 }
 
 //======================================================================
@@ -2098,7 +2098,8 @@ class DataCurationClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    var example = new ExampleConceptClass(MainResults.Data, MainResults.Data.DataConcept);
+    var data    = MainResults.Data;
+    var example = new ExampleConceptClass(data, MainResults.Data.DataConcept);
 
     style.FirstPar {
       "Our analysis is coordinated using a program written in the Nytril programming language"; Citation {nytrilprogram}; DotSpace;
@@ -2107,11 +2108,11 @@ class DataCurationClass: ContentClass {
     };
 
     style.BodyPar {
-      "Word-forms from the "; MainResults.Data.Taxa.Length; " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
+      "Word-forms from the "; data.Taxa.Length; " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
       "For example, the concept "; style.SQuote{TextCase: TextCases.AllLower; example.Name}; " is coded in the following way:";
     };
 
-    SourcePar(MainResults.Data, example.Concept);
+    SourcePar(data, example.Concept);
 
     style.BodyPar {
       "The dashes ("; style.SQuote{"-"}; ") denote the absence of a homologous segment present in other word-forms. ";
@@ -2136,9 +2137,10 @@ class DataCurationClass: ContentClass {
     };
 
     style.BodyPar {
+      var config = data.MainRun.Run.Config;
       "After the raw input is parsed, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
-      "The MCMC analysis runs for "; Span {MainResults.Data.MainRun.Config.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
-      "Samples taken during the first "; Span {MainResults.Data.MainRun.Config.PreBurn; TextGroup: true}; " cycles of the chain are discarded as burn-in. ";
+      "The MCMC analysis runs for "; Span {config.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
+      "Samples taken during the first "; Span {config.PreBurn; TextGroup: true}; " cycles of the chain are discarded as burn-in. ";
       "When the analysis is complete, the results are read back into the control program. ";
       "The resulting tables, trees and graphical figures are automatically generated from the MCMC output and combined with narrative elements created by the authors to make the final paper and supplemental materials. ";
     }

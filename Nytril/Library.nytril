@@ -34,38 +34,6 @@ class AlignIndexClass {
 
 //======================================================================
 
-class StatClass {
-  var Lower,
-      Mean,
-      Upper;
-
-  Constructor(lower, mean, upper) {
-    Lower = lower;
-    Mean  = mean;
-    Upper = upper;
-  }
-
-  ShowRight(number) = HBox {
-    Space*2;
-    TextHeight: 80%;
-    TextColor: Colors.Gray;
-    number;
-  };
-
-  ShowBox = VBox {
-    Bracket: Brackets.Curly;
-    TextDigits: 3;
-    TextSignificant: true;
-    ShowRight(Upper);
-    Mean;
-    ShowRight(Lower);
-  };
-
-  override GetLayoutTip = ShowBox;
-}
-
-//======================================================================
-
 RateDescriptor(text) = Span {
   text;
 //  Tex.Minus; "Log" sub 10; "("; text; ")";
@@ -248,100 +216,6 @@ class AlignPairClass: DocumentClass {
         ShowBlock(align.Prob, align.Prob, align.WordSet, h);
       }
     };
-  };
-}
-
-//======================================================================
-
-class CognateIdClass {
-  var Concept,
-      Cognate,
-      Count;
-
-  Constructor(concept, cognate, count) {
-    Concept = concept;
-    Cognate = cognate ?? DefaultCognate;
-    Count   = count;
-  }
-
-  AlignIndexClass FindAlignment(RunExperimentClass run) {
-    foreach (var a in run.Alignments) {
-      if (a.ConceptName == Concept and a.CognateName == Cognate)
-        return a;
-    }
-    return null;
-  }
-}
-
-//======================================================================
-
-class AlignmentChartClass {
-  var DataSetClass       Data;
-  var RunExperimentClass Run;
-
- Constructor(ResultsClass results, RunExperimentClass run) {
-    Data = results.Data;
-    Run  = run;
-  }
-
-  ShowChart(SizeClass size) = VBox(size.Width, size.Height, 0.5) {
-    // Try to make proportional squares
-    var xitems = size.Width / 130 as int;
-    var yitems = Math.Floor((Run.Alignments.Length + xitems - 1) / xitems);
-    var bsize  = new SizeClass(size.Width / xitems, size.Height / yitems);
-    AlignIndexClass[][] rows = Run.Alignments / xitems;
-
-    TextHeight: Math.Min(8 pts, bsize.Height - 3.2 pt);
-
-    foreach (var row in rows) {
-      HBox {
-        foreach (var a in row) {
-          VBox(bsize.Width, bsize.Height, new EdgeClass(0.25 pts, 1, 90%)) {
-            HAlign: HAligns.Center;
-
-            var ap = new AlignPairClass(Data, a);
-            Paragraph {
-              Span {
-                ap.Name;
-                TipAction: ap;
-              };
-            };
-            Paragraph {
-              TextColor: Colors.LightGray;
-              a.Alignments.Length;
-            };
-          }
-        }
-      }
-    }
-  };
-
-  ShowAll = Block {
-    foreach (var a in Run.Alignments) {
-      new AlignPairClass(Data, a).ShowDetails(5, false, 10 pts);
-      Paragraph(BorderT(1));
-    }
-  };
-
-  ShowSet(CognateIdClass[] examples, bool label) = Table(null, null, label ? [0.75 inches, ColumnClass.Expand] : [ColumnClass.Expand]) {
-    foreach (var e in examples) {
-      var found = e.FindAlignment(Run);
-      if (found is valid) {
-        var ap = new AlignPairClass(Data, found);
-        Row {
-          if (label) {
-            Cell(PadR(10 pts)) {
-              VAlign: VAligns.Center;
-              e.Concept;
-              e.Cognate Italic;
-            };
-          }
-          ap.ShowFigureDetails(Data, e.Count);
-        };
-      }
-      else
-        System.Assert(false, "Concept {0} not found"(e.Concept));
-    }
   };
 }
 
@@ -667,8 +541,6 @@ class DataSetClass {
   var ListClass                         PlainBuffer,
                                         TextBuffer;
   var ListClass<SegPartClass>           SegmentBuffer;
-  var RunExperimentClass[]              ModelRuns;
-  var RunExperimentClass                MainRun;
   var AttributeClass                    ExampleConcept,
                                         FigureConcept,
                                         DataConcept;
@@ -681,7 +553,7 @@ class DataSetClass {
                                         WordFile;
   var bool                              RawData;
 
-  Constructor(config, name, rootfolder, bool all=false) {
+  Constructor(config, name, rootfolder) {
     Name            = name;
     RootFolder      = Folder(rootfolder);
     WordFile        = RootFolder Info.WordFileName;
@@ -693,24 +565,8 @@ class DataSetClass {
     SegmentBuffer   = new(64);
     Rule            = new NaturalPartitionClass;
     TreeSets        = AddTree(config, each PriorTrees);
-
-    var set = TreeSets[0];
-    var runs = new ListClass<RunExperimentClass>(set.Models.Length);
-    runs.Add(set.Models[0].Run[0]);
-    runs.Add(set.Models[1].Run[1]);  // For some reaon, this run succeeded
-    runs.Add(set.Models[2].Run[0]);
-
-
-    ModelRuns = runs.ToArray();
-    MainRun   = ModelRuns[0];
-
     if (config is null)
       ReadExperiment;
-
-    if (all) {
-      MainRun.ReadAlignments(this);
-      ModelRuns[1].ReadAlignments(this);
-    }
   }
 
   TreeSetClass AddTree(config, NodeClass root) = new(config, "Tree"+each1, RootFolder, root);
@@ -1154,26 +1010,6 @@ class DataSetClass {
 
 //======================================================================
 
-typedef StatMatrix MatrixClass<StatClass>;
-typedef StatVector VectorClass<StatClass>;
-typedef StatArray  StatClass[];
-
-class ResultsClass {
-  const double AlignmentCutoff = 0.95;
-
-  var DataSetClass       Data;
-  var RuleClass          Rule;
-  var RunExperimentClass MainRun;
-
-  Constructor(DataSetClass data) {
-    Data    = data;
-    Rule    = data.Rule;
-    MainRun = data.MainRun;
-  }
-}
-
-//======================================================================
-
 abstract class CountBaseClass {
   var                VFlags,
                      MaxDigits;
@@ -1259,6 +1095,56 @@ abstract class CountBaseClass {
 
 //======================================================================
 
+class TranActionClass: DocumentClass {
+  var WordPairClass[] List;
+  var                 Percent;
+
+  Constructor(SegPartClass s1, SegPartClass s2, WordPairClass[] list, percent) {
+    super.Constructor(guid.FromHash(s1.Ipa + s2.Ipa), Actions.ToDocument);
+    List    = list;
+    Percent = percent;
+  }
+
+  ShowSegments(count) = Block {
+    var first = List.FirstElement;
+    Paragraph {
+      first.Word1.Padded[first.Index].ShowSegment;
+      Tex.To;
+      first.Word2.Padded[first.Index].ShowSegment;
+    };
+    Paragraph {
+      List.Length; " transitions";
+    };
+    Paragraph {
+      TextDigits: 1;
+      Percent * 100.0;
+      Lang.PercentOfMax;
+    };
+
+    Paragraph {
+      Separator: Space;
+      foreach (var p in List[0..count])
+        p.ShowDescription(10 pts);
+    };
+
+    if (count < List.Length)
+      "More...";
+  };
+
+  override GetDocument = Block {
+    ShowSegments(List.Length);
+  };
+
+  override GetLayoutTip {
+    var count = Math.Min(List.Length, 30);
+    return Frame(Math.Min(count*3, 6) inches) {
+      ShowSegments(count);
+    };
+  }
+}
+
+//======================================================================
+
 class PriorCountClass: CountBaseClass {
   typedef WordPairList ListClass<WordPairClass>;
 
@@ -1334,381 +1220,6 @@ class PriorCountClass: CountBaseClass {
         value.Length;
     };
   }
-}
-
-//======================================================================
-
-class AlignedCountClass: CountBaseClass {
-  delegate bool FindRateDelegate(RateClass r);
-
-  var ListClass<RateClass>   RateList;
-  var MatrixClass<RateClass> Matrix;
-  var DataSetClass           Data;
-  var RuleClass              Rule;
-  var PartitionClass[]       Partitions;
-  var RateClass[]            SortedRates,
-                             SortByDirection;
-  var double                 DiagFactor,
-                             RateFactor,
-                             DirFactor;
-  var bool                   Symmetric;
-
-  Constructor(DataSetClass data, rates, bool symmetric) {
-    super.Constructor(data);
-    Data       = data;
-    Symmetric  = symmetric;
-    Rule       = data.Rule;
-    Partitions = Rule.Partitions;
-
-    var matrix  = MatrixClass.Convert(rates);
-    var ordered = data.UniqueSegments;
-    var length  = LegendSegments.Length;
-
-    System.Assert(length == matrix.Rows);
-    System.Assert(length == matrix.Cols);
-    System.Assert(length == ordered.Length);
-
-    Matrix   = new(length, length, null);
-    RateList = new(length * length);
-
-    double min  = 100.0;
-    double max  = -100.0;
-    double dmin = 100.0;
-    double dmax = -100.0;
-
-    for (var i = 0; i < length; ++i) {
-//      var jmax = symmetric ? i : length;
-      for (var j = 0; j < length; ++j) {
-        var r = new RateClass(this, ordered[i], ordered[j], matrix[i, j], matrix[j, i], symmetric, i == j);
-        Matrix.SetValue(i, j, r);
-        if (i == j) {
-          dmax = Math.Max(dmax, r.Rate);
-          dmin = Math.Min(dmin, r.Rate);
-        }
-        else {
-          RateList.Add(r);
-          max = Math.Max(max, r.Rate);
-          min = Math.Min(min, r.Rate);
-        }
-      }
-    }
-
-    DiagFactor      = 1.0 / Math.Abs(Math.Max(dmin, dmax));
-    RateFactor      = 1.0 / Math.Abs(Math.Max(min, max));
-    DirFactor       = max == min ? 1.0 : 1.0 / Math.Abs(max - min);
-    var rl = RateList.ToArray;
-    SortedRates     = rl.ToSortedArray(RateClass.SortDescending, @RateClass.CompareRate);
-    SortByDirection = rl.ToSortedArray(RateClass.SortDescending, @RateClass.CompareDirection);
-  }
-
-  override AddEntry(SegPartClass si, SegPartClass sj, x, y, SizeClass size) {
-    if (si.Index == sj.Index)
-      return null;
-
-    var rate = Matrix[si.Index, sj.Index];
-    if (rate is not null) {
-      return Canvas(size.Width, size.Height) {
-        X: x;
-        Y: y;
-        HAlign: HAligns.Center;
-        VAlign: VAligns.Center;
-        TipNoPublish: true;
-        TipAction: rate;
-        var c = rate.RateColor;
-        Span {
-          TextDigits: 0;
-          TextHeight: 5 pts;
-          TextColor: c.TextCompliment;
-          rate.Rate;
-        };
-        Background: c;
-      };
-    }
-    return null;
-  }
-
-  ShowLegend(RateClass[] rates) = {
-    // Show only partitions that are present in the chart
-    var pmax = Partitions.Length;
-    var set  = new HashSetClass<PartitionClass>(pmax);
-    foreach (var s in rates) {
-      set.Add(s.S0.Partition);
-      set.Add(s.S1.Partition);
-    }
-
-    Canvas(ExtentWidth) {
-      HAlign: HAligns.Center;
-      Rule.ShowBlockLegend(set.ToArray, 11 pts);
-    }
-  };
-
-  ShowChart(RateClass[] rates) = Chart(100%, 4 inches) {
-    Type: ChartTypes.Column;
-    TextHeight: 12 pts;
-    ValueLabel: PaperStyle.ValueLabel {
-      Lang.RateFactor;
-    };
-
-    var fs = Math.Min(160.0 / rates.Length, 10 pts);
-    XAxis: ChartAxis {
-      Rotation: 30 degrees;
-      (each rates).ShowBox(fs);
-    };
-
-    ChartSeries(Colors.Green) {
-      Label: Tex.rightarrow;
-      foreach (var a in rates)
-        new DataPointClass(each0, a.Rate) {Reference: a};
-    };
-  };
-
-  Extrema(number, top) = VBox {
-    var actions = SortedRates.Slice(top ? 0..<number : (SortedRates.Length - number)..<SortedRates.Length);
-    ShowChart(actions);
-    Separation: 20 pts;
-    ShowLegend(actions);
-  };
-
-  ShowAllRates = VBox {
-    Chart(100%, ExtentHeight - 48 pts) {
-      Type: ChartTypes.Scatter;
-      TextHeight: 12 pts;
-      TipNoPublish: true;
-
-      ValueLabel: PaperStyle.ValueLabel {
-        RateDescriptor(Lang.RateFactor);
-      };
-
-      XAxis: ChartAxis {
-        Rotation: 90 degrees;
-        TextHeight: 7 pts;
-        foreach (var sa in LegendSegments) {
-          var p = Partitions[sa.PartitionIndex];
-          HBox(15 pts) {
-            HAlign: HAligns.Center;
-            Background: p.Color;
-            TextColor: p.TextColor;
-            sa.Segment.Ipa;
-          }
-        }
-      };
-
-      ChartSeries {
-        Marker: Markers.Dot;
-
-        foreach (var si in LegendSegments) {
-          var i = each0;
-
-          foreach (var sj in LegendSegments) {
-            if (si.Index != sj.Index) {
-              var a = Matrix[si.Index, sj.Index];
-              if (a is not null) {
-                new DataPointClass(i, a.Rate) {
-                  Reference: a;
-                  Fill: a.S1.Partition.Color;
-                };
-              }
-            }
-          }
-        }
-      };
-    };
-
-    Separation: 20 pts;
-    Canvas(ExtentWidth) {
-      HAlign: HAligns.Center;
-      Rule.ShowBlockLegend(Partitions, 10 pts);
-    }
-  };
-
-  ShowRateDirected = VBox {
-    Chart(100%, ExtentHeight - 48 pts) {
-      TipNoPublish: true;
-      Type: ChartTypes.Scatter;
-      TextHeight: 12 pts;
-
-      XLabel: RateDescriptor(Lang.RateFactor);
-
-      ValueLabel: PaperStyle.ValueLabel {
-        RateDescriptor("Direction");
-      };
-
-      ChartSeries {
-        TextHeight: 6 pts;
-        Marker: Markers.Dot;
-        foreach (var si in LegendSegments) {
-          foreach (var sj in LegendSegments) {
-            if (si.Index < sj.Index) {
-              var a = Matrix[si.Index, sj.Index];
-              new DataPointClass(a.Rate, a.Direction) {
-                Reference: a;
-                Marker: Canvas(4 pts, 4 pts) {
-                  HAlign: HAligns.Center;
-                  VAlign: VAligns.Center;
-                  Background: a.S0.Partition.Color;
-                  BorderRadius: 2 pts;
-                  a.S1.Partition.Marker;
-                };
-              };
-            }
-          }
-        }
-      };
-    };
-
-    Separation: 20 pts;
-    Canvas(ExtentWidth) {
-      HAlign: HAligns.Center;
-      Rule.ShowBlockLegend(Partitions, 10 pts);
-    }
-  };
-
-  ShowDirection = VBox {
-    Chart(100%, ExtentHeight - 48 pts) {
-      TipNoPublish: true;
-      Type: ChartTypes.Scatter;
-      TextHeight: 12 pts;
-
-      XLabel: "Transitions";
-
-      ValueLabel: PaperStyle.ValueLabel {
-        RateDescriptor("Direction");
-      };
-
-      var group   = Markers.TriangleUp(Colors.Green) {TextHeight: 8 pts};
-      var special = Markers.Square(Colors.Red) {TextHeight: 10 pts};
-      ChartSeries {
-        TextHeight: 6 pts;
-        Marker: Markers.Dot;
-        foreach (var a in SortByDirection) {
-          new DataPointClass(each0, a.Direction) {
-            Reference: a;
-            if (a.S0.Segment.Ipa == "p")
-              Marker: a.S1.Segment.Ipa == "b" or a.S1.Segment.Ipa == "f" ? special : group;
-            else
-              Marker: a.S0.Partition.Marker;
-          }
-        }
-      };
-    };
-
-    Separation: 20 pts;
-    Canvas(ExtentWidth) {
-      HAlign: HAligns.Center;
-      Rule.ShowBlockLegend(Partitions, 10 pts);
-    }
-  };
-
-  ShowChartPairs(top, RateClass[] rates) = VBox {
-    var subset = top < 0 ? rates : rates.Slice(0..<top);
-
-    ShowChart(subset) {
-      Type: ChartTypes.StackedColumn;
-
-      Legend: ChartLegend {
-        Direction: Directions.Vertical;
-        Placement: Placements.Right;
-      };
-      ChartSeries(Colors.Red) {
-        Label: Tex.leftarrow;
-        foreach (var a in subset)
-          new DataPointClass(each0, a.Reverse);
-      };
-    };
-    Separation: 20 pts;
-    ShowLegend(subset);
-  };
-
-  Pairs(top, FindRateDelegate predicate) = ShowChartPairs(top, SortedRates.FindSlice(predicate));
-}
-
-//======================================================================
-
-class SegDataClass {
-  var RateClass Rate;
-  var double    Value;
-
-  Constructor(RateClass rate) {
-    Rate  = rate;
-    Value = -rate.Original;
-  }
-
-  override GetLayoutTip = VBox(PaperStyle.SegmentWidth) {
-    HAlign: HAligns.Center;
-
-    Span {
-      TextBackground: Rate.S0.Partition.Color;
-      Rate.S0.Partition.Name;
-    };
-    Span {
-      "Value"; ColonSpace;
-      Value;
-    };
-    if (not Rate.Diagonal) {
-      Span {
-        Lang.RateFactor; ColonSpace;
-        TextDigits: 2;
-        Rate.Rate;
-      };
-    }
-
-    Rate.S0.GetLayoutTip;
-  };
-}
-
-//======================================================================
-
-class DiagonalClass {
-  var ListClass<SegDataClass> Diagonal;
-  var ResultsClass            Results;
-
-  Constructor(ResultsClass results, AlignedCountClass rates) {
-    Results = results;
-    var m      = rates.Matrix;
-    var length = m.Cols;
-
-    Diagonal = new(length);
-    for (int i = 0; i < length; ++i) {
-      var r = m[i, i];
-      if (r is not null)
-        Diagonal.Add(new(r));
-    }
-    Diagonal.Sort(true, @CompareData);
-  }
-
-  static int CompareData(SegDataClass d0, SegDataClass d1) = d0.Value.Compare(d1.Value);
-
-  Display(ContentStyleClass style) = VBox {
-    HAlign: HAligns.Center;
-    style.SansSerif;
-
-    Chart(ExtentWidth, 4 inches) {
-      TextHeight: 11 pts;
-      Type: ChartTypes.Column;
-
-      ValueLabel: PaperStyle.ValueLabel {
-        Span {Tex.Minus; Lang.Rate};
-      };
-
-      XAxis: ChartAxis {
-        TextHeight: PaperStyle.SegmentTextFactor * ExtentWidth / Diagonal.Length;
-        foreach (var d in Diagonal)
-          d.Rate.S0.ShowSegment;
-      };
-
-      ValueAxis: ChartAxis;
-      ChartSeries {
-        foreach (var d in Diagonal) {
-          new DataPointClass(each0, d.Value) {
-            Reference: d;
-            Fill: d.Rate.S0.Partition.Color;
-          };
-        }
-      };
-    };
-
-    Results.Data.Rule.ShowBlockLegend(Results.Rule.Partitions, 9 pts);
-  };
 }
 
 //======================================================================

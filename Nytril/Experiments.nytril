@@ -29,100 +29,25 @@ class LangNodeClass: NodeClass {
 //======================================================================
 
 class RunExperimentClass {
-  var ModelClass         Model;
-  var AlignIndexClass[]  Alignments;
-  var StatMatrix         TransitionStats;
-  var StatMatrix         NCQRates;
-  var StatArray          NCQFreqs;
-  var AlignedCountClass  QRates,
-                         AverageRates;
-  var double             InsertionRate,
-                         InsertionRateLow,
-                         InsertionRateHigh,
-                         DeletionRate,
-                         DeletionRateLow,
-                         DeletionRateHigh;
-  var                    Name,
-                         RootFolder,
-                         Config,
-                         Print,
-                         Seed,
-                         ResultTree,
-                         Complete,
-                         Marginal,
-                         AlignmentFile,
-                         GapSpectrum,
-                         EquilibriumFrequencies;
-
+  var ModelClass Model;
+  var            Name,
+                 RootFolder,
+                 Config,
+                 Print,
+                 Seed,
+                 Marginal,
+                 AlignmentFile,
+                 ResultTree;
 
   Constructor(config, ModelClass model, index, print, marginal) {
-    Name        = "Run" + index;
-    Model       = model;
-    Print       = print;
-    Marginal    = marginal;
-    RootFolder  = model.RootFolder Folder(Name);
-    Seed        = Math.Random(0..0xFFFFFFFF);
-
-    var treefile = Info.ExperimentRoot RootFolder Info.TreeFile;
-    Complete = FileExists(treefile);
-    if (Complete)
-      ResultTree = IO.ReadTree(treefile, attribute LangNodeClass);
-
+    Name          = "Run" + index;
+    Model         = model;
+    Print         = print;
+    Marginal      = marginal;
+    RootFolder    = model.RootFolder Folder(Name);
+    Seed          = Math.Random(0..0xFFFFFFFF);
     AlignmentFile = Info.ExperimentRoot RootFolder Info.AlignmentFile;
     Config        = config ?? IO.ReadScript(Info.ExperimentRoot RootFolder Info.ParametersFile).Root;
-  }
-
-  static int CompareAlignment(AlignIndexClass a0, AlignIndexClass a1) {
-    var c = a0.Alignments.Length.Compare(a1.Alignments.Length);
-    if (c == 0)
-      return a0.ConceptName.Compare(a1.ConceptName);
-    return c;
-  }
-
-  void ReadAlignments(DataSetClass data) {
-    var align = IO.ReadScript(AlignmentFile).Root;
-    QRates                 = new(data, align.QRates, false);
-    AverageRates           = new(data, align.AverageRates, true);
-
-    NCQFreqs               = align.?NCQFreqs as StatArray;
-    EquilibriumFrequencies = align.?EquilibriumFrequencies;
-    InsertionRate          = align.?InsertionRateMean;
-    InsertionRateLow       = align.?InsertionRateLow;
-    InsertionRateHigh      = align.?InsertionRateHigh;
-    DeletionRate           = align.?DeletionRateMean;
-    DeletionRateLow        = align.?DeletionRateLow;
-    DeletionRateHigh       = align.?DeletionRateHigh;
-    GapSpectrum            = align.?GapSpectrum;
-
-    var ts = align.?TransitionStats;
-    if (ts is not null)
-      TransitionStats = StatMatrix.Convert(ts);
-    else {
-      var length = QRates.Length;
-      var bs     = new StatClass(0, 0.5, 1);
-      TransitionStats = new(length, length, bs, bs);
-    }
-
-    ts = align.?NCQRates;
-    if (ts is not null)
-      NCQRates = StatMatrix.Convert(ts);
-    else {
-      var length = QRates.Length;
-      var bs     = new StatClass(0, 0.5, 1);
-      NCQRates = new(length, length, bs, bs);
-    }
-
-    var alignments = new ListClass<AlignIndexClass>(1024);
-    foreach (var a in align.Alignments) {
-      foreach (var c in data.UsedCognates) {
-        if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
-          a.Cognate = c;
-          alignments.Add(a);
-          break;
-        }
-      }
-    }
-    Alignments = alignments.ToSortedArray(false, @CompareAlignment);
   }
 
   ArgString(arg, string path) = Span {
