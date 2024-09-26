@@ -2,8 +2,7 @@ using Format, Units, Math, IO, Defs, Equations, WorldLanguages, References, Pape
 
 //======================================================================
 
-
-readonly PartitionAssignmentsClass Figures.PartitionAssignments = new(MainResults.Rule);
+readonly PartitionAssignmentsClass Figures.PartitionAssignments = new(MainResults.Data.Rule);
 
 class PartitionAssignmentsClass: ContentClass {
   var RuleClass Rule;
@@ -118,10 +117,8 @@ class ModelTrees: ContentClass {
   };
 
   override GetBody(ContentStyleClass style) = Block {
-    var data = MainResults.Data;
-
     Span {
-      foreach (var tree in data.PriorTrees)
+      foreach (var tree in MainResults.Data.PriorTrees)
         PaperStyle.ShowTree(style, tree, 30%, Lang.Tree+each1);
     };
   };
@@ -142,12 +139,12 @@ class TransitionRatesClass: ContentClass {
     "The width of the lines is proportional to the estimated rates. ";
   };
 
-  override GetBody(ContentStyleClass style) = new CalcRatesClass(MainResults).PartitionDiagram(style);
+  override GetBody(ContentStyleClass style) = new CalcRatesClass(MainResults.Data, MainResults.MainRun).PartitionDiagram(style);
 }
 
 //======================================================================
 
-readonly AlignmentChartClass AlignmentResults = new(MainResults, MainResults.Data.MainRun);
+readonly AlignmentChartClass AlignmentResults = new(MainResults.Data, MainResults.MainRun);
 
 readonly AlignmentsClass Figures.Alignments = new;
 
@@ -230,7 +227,7 @@ class ModelCompareClass {
   Constructor(int index, DefClass d, CognateIdClass e, int maxcount) {
     Symbol = d;
     Name   = d.Name;
-    Run    = MainResults.Data.ModelRuns[index];
+    Run    = MainResults.ModelRuns[index];
 
     var    a   = e.FindAlignment(Run).Alignments;
     double sum = 0;
@@ -252,32 +249,25 @@ class ModelCompareClass {
 //======================================================================
 
 class GappinessSignificanceClass {
-  var gapSpectrum;
+  var VectorClass<double> Statistic;
 
-  Constructor(d) {
-    gapSpectrum = d;
-  }
+  Constructor(RunResultsClass run) {
+    var   spectrum = run.GapSpectrum;
+    var    n       = 0;
+    double lnL1    = 0.0;
 
-  double TestStatistic {
-
-    var n = 0;
-    double lnL1 = 0.0;
-    var vec = new VectorClass(gapSpectrum.Length, 0.0);
-    foreach (var gap in MainResults.MainRun.GapSpectrum) {
+    Statistic = new(spectrum.Length, 0.0);
+    foreach (var gap in spectrum) {
       var ni = 0;
-      foreach (var value in gap) {
+      foreach (var value in gap)
         ni += value;
-      }
       n += ni;
       foreach (var value in gap) {
-        if (value != 0) {
-          lnL1 += (value * Math.Log(value / ni));
-        }
+        if (value != 0)
+          lnL1 += value * Math.Log(value / ni);
       }
-      vec.AddValue(0, n);
+      Statistic.SetValue(each0, n);
     }
-
-    return gapSpectrum.Length;
   }
 }
 
@@ -290,7 +280,7 @@ class AlignmentCompareClass: ContentClass {
   var ModelCompareClass[] Models;
   var CognateIdClass      Example;
 
-  Constructor() {
+  Constructor {
     super.Constructor("Alignment comparison");
 
     Example = new(Concept, null, MaxCount);
@@ -319,7 +309,7 @@ class AlignmentCompareClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style) = VBox {
-    var results = MainResults;
+    var data = MainResults.Data;
     foreach (var m in Models) {
       Paragraph {
         TextHeight: 20 pts;
@@ -327,7 +317,7 @@ class AlignmentCompareClass: ContentClass {
         " — ";
         m.Name;
       };
-      var chart = new AlignmentChartClass(results, m.Run);
+      var chart = new AlignmentChartClass(data, m.Run);
       chart.ShowSet([Example], false);
     }
   };
@@ -338,7 +328,6 @@ readonly AlignmentCompareClass Figures.AlignmentExample2 = new;
 //======================================================================
 
 readonly ExchangeabilityTableClass Figures.ExchangeabilityTable = new;
-
 
 class ExchangeabilityTableClass: ContentClass {
   Constructor {
@@ -353,7 +342,7 @@ class ExchangeabilityTableClass: ContentClass {
     var results    = MainResults;
     var stats      = results.MainRun.TransitionStats;
     var count      = stats.Rows;
-    var partitions = results.Rule.Partitions;
+    var partitions = results.Data.Rule.Partitions;
     var dy         = 2 pts;
     var left       = 1 inch;
     var w          = (ExtentWidth - 1 inch) / count;
@@ -424,7 +413,7 @@ class NaturalClassRateChartClass: ContentClass {
     PaperStyle.SansSerif;
     TextHeight: ExtentWidth * 0.015;
 
-    var partitions = MainResults.Rule.Partitions;
+    var partitions = MainResults.Data.Rule.Partitions;
     var stats      = MainResults.MainRun.NCQRates;
     var bx         = 20 pts;
     var tx         = 60 pts + bx;
@@ -485,20 +474,6 @@ class NaturalClassRateChartClass: ContentClass {
                     Tip: c;
                     var center = new PointClass(d * 0.5);
                     var x      = d  * Math.Sqrt(c.Upper * factor);
-                    //Shape(pj.Color, null) {
-                    //  ClosedPath(0) {
-                    //    LineTo(d,0);
-                    //    LineTo(d,d);
-                    //  }
-                    //};
-                    //
-                    //Shape(pi.Color, null) {
-                    //  ClosedPath(0) {
-                    //    LineTo(d,d);
-                    //    LineTo(0,d);
-                    //  }
-                    //};
-
                     Shape(90%) {
                       EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                       x = d * Math.Sqrt(c.Lower * factor);
@@ -507,116 +482,6 @@ class NaturalClassRateChartClass: ContentClass {
 
                     Shape(null, 1) {
                       x = d * Math.Sqrt(c.Mean * factor);
-                      EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
-                    };
-                  }
-                };
-              }
-            };
-          }
-        }
-      };
-    };
-  };
-}
-
-//======================================================================
-
-readonly ExchangeabilityChartClass Figures.ExchangeabilityChart = new;
-
-class ExchangeabilityChartClass: ContentClass {
-  Constructor {
-    super.Constructor(Lang.Exchangeability);
-  }
-
-  private ShowRight(number) = HBox {
-    Space*2;
-    TextHeight: 80%;
-    TextColor: Colors.Gray;
-    number;
-  };
-
-  override GetBody(ContentStyleClass style) = Block {
-    style.SansSerif;
-    TextHeight: ExtentWidth * 0.015;
-
-    var partitions = MainResults.Rule.Partitions;
-    var stats      = MainResults.MainRun.TransitionStats;
-    var count      = stats.Rows;
-    var bx         = 20 pts;
-    var tx         = 60 pts + bx;
-    var size       = Math.Min(ExtentWidth, ExtentHeight);
-    var dy         = size / (partitions.Length + 1);
-    var d          = Math.Min(dy, (size  - tx) / partitions.Length);
-
-    var max = 0.0;
-    for (int i = 0; i < count; ++i) {
-      for (int j = 0; j < count; ++j) {
-        var c = stats[i, j];
-        if (c is valid and c.Upper > max)
-          max = c.Upper;
-      }
-    }
-
-    var fm = 1.0 / max;
-    var fc = d * fm;
-
-    HBox {
-      VAlign: VAligns.Top;
-      VBox {
-        Canvas(bx, bx);
-
-        foreach (var p in partitions) {
-          HBox(null, d) {
-            Separation: 10 pts;
-            VAlign: VAligns.Center;
-            HAlignment: HAligns.Right;
-            Frame {
-              p;
-            };
-            Canvas(bx, d) {
-              Background: p.Color;
-            };
-          }
-        }
-      };
-
-      VBox {
-        HAlign: HAligns.Left;
-        HBox {
-          foreach (var p in partitions) {
-            Canvas(d, bx) {
-              Background: p.Color;
-              VAlign: VAligns.Center;
-              HAlign: HAligns.Center;
-              Frame(d) {
-                TextColor: p.Color.TextCompliment;
-                ParAlignment: ParAlignments.Center;
-                TextHeight: 70%;
-                p.Name;
-              };
-            };
-          }
-        };
-
-        VBox {
-          for (int i = 0; i < count; ++i) {
-            HBox {
-              for (int j = 0; j < count; ++j) {
-                var c = stats[i, j];
-                Canvas(d, d) {
-                  if (c is valid) {
-                    Tip: c;
-                    var center = new PointClass(d * 0.5);
-                    var x      = fc * c.Upper;
-                    Shape(95%) {
-                      EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
-                      x = fc * c.Lower;
-                      EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
-                    };
-
-                    Shape(null, 1) {
-                      x = fc * c.Mean;
                       EllipsePath(new(new(center.X - x*0.5 , center.Y - x*0.5), x));
                     };
                   }
@@ -724,7 +589,8 @@ class EquilibriumFrequencyChartClass: ContentClass {
 //======================================================================
 
 readonly GappinessChartClass Figures.GappinessChart = new;
-readonly GappinessSignificanceClass gapInfo = new GappinessSignificanceClass(MainResults.MainRun.GapSpectrum);
+
+readonly GappinessSignificanceClass GapInfo = new(MainResults.MainRun);
 
 class GappinessChartClass: ContentClass {
   Constructor {
@@ -732,11 +598,11 @@ class GappinessChartClass: ContentClass {
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    "The number of gaps observed across the "; 102; " cognates analyzed in this study at the first segment (top), middle segment(s) (middle), and last segment (bottom). ";
+    "The number of gaps observed across the "; MainResults.Data.UsedCognates.Length; " cognates analyzed in this study at the first segment (top), middle segment(s) (middle), and last segment (bottom). ";
     "Nine languages were analyzed in this study, so it is not possible for there to be nine gaps; deletion events that led to a gap for all the languages would not be included in an alignment, and is explicitly conditioned on in Lunter et al."; Citation{Lunter2003}; DotSpace;
-    "There is a clear, and statistically significant (";
-    gapInfo.TestStatistic;
-    "), pattern of an increaasing number of gaps as one moves from the beginning to the end of the word.";
+    "There is a clear, and statistically significant ";
+    GapInfo.Statistic;
+    ", pattern of an increaasing number of gaps as one moves from the beginning to the end of the word.";
   };
 
   override GetBody(ContentStyleClass style) = HBox {
@@ -820,7 +686,7 @@ class QRatesDiagonalClass: ContentClass {
     super.Constructor("The rate of change when in a particular segmental state (or " Defs.neg_qii ")");
   }
 
-  override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults.Rule, MainResults.MainRun.QRates).Display(style);
+  override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults.Data.Rule, MainResults.MainRun.QRates).Display(style);
 }
 
 //======================================================================
@@ -960,7 +826,7 @@ class ConsensusTreeClass: ContentClass {
     super.Constructor(Lang.ConsensusTree);
   }
 
-  override GetBody(ContentStyleClass style) = PaperStyle.ShowTree(style, MainResults.Data.MainRun.Run.ResultTree, ExtentWidth);
+  override GetBody(ContentStyleClass style) = PaperStyle.ShowTree(style, MainResults.MainRun.Run.ResultTree, ExtentWidth);
 }
 
 //======================================================================
@@ -1410,53 +1276,51 @@ class PhylogenyResultsClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
-
-      style.FirstPar {
-          SubSection {"Phylogeny"};
-          "Our statistical analysis treats all model parameters as random variables with prior probability distributions. ";
-          "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
-          "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
-          "Our analyses consistently found a handful of topologies that best explained the data. Unfortunately, the MCMC poorly explored the tree space: ";
-              "the MCMC algorithm would find a good tree then become stuck on it. Why is this the case? In our MCMC implementation, parameters are updated in blocks. ";
-          "A parameter is randomly selected and then updated. In a single MCMC cycle, either the tree topology or the alignment is updated, but not both simultaneously. ";
-          "The tree topology and alignments are confounded. As the MCMC procedure found better trees, the alignments that were accepted by the MCMC procedure tended to fit the current tree in computer memory. ";
-          "As the alignment becomes better adapted to the current tree in memory, it becomes more difficult for the MCMC procedure to accept alternative topologies, even if they would be sensible ones on a different alignment.";
+    style.FirstPar {
+      SubSection {"Phylogeny"};
+      "Our statistical analysis treats all model parameters as random variables with prior probability distributions. ";
+      "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
+      "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
+      "Our analyses consistently found a handful of topologies that best explained the data. Unfortunately, the MCMC poorly explored the tree space: ";
+          "the MCMC algorithm would find a good tree then become stuck on it. Why is this the case? In our MCMC implementation, parameters are updated in blocks. ";
+      "A parameter is randomly selected and then updated. In a single MCMC cycle, either the tree topology or the alignment is updated, but not both simultaneously. ";
+      "The tree topology and alignments are confounded. As the MCMC procedure found better trees, the alignments that were accepted by the MCMC procedure tended to fit the current tree in computer memory. ";
+      "As the alignment becomes better adapted to the current tree in memory, it becomes more difficult for the MCMC procedure to accept alternative topologies, even if they would be sensible ones on a different alignment.";
     };
 
     style.BodyPar {
       var run = MainResults.MainRun;
       TextDigits: 3;
-        "This problem was likely not encountered in the other implementations of the TKF91 model";
-        Citation {Lunter2004}; ", which analyzed an alignment of amino acid sequences. ";
-        "In our analysis of cognate data, the insertion and deletion rates were estimated to be quite high relative to the substitution rate: ";
-        InsertionRate; " = "; run.InsertionRate; " ("; run.InsertionRateLow; ", "; run.InsertionRateHigh; ") and ";
-        DeletionRate; " = "; run.DeletionRate; " ("; run.DeletionRateLow; ", "; run.DeletionRateHigh; ") ";
-           "for the insertion and deletion rates, respectively. ";
-        "(The credible intervals in the parentheses contain the true value of the parameter with probability 0.95.) ";
-        "Roughly speaking, this means that for every two segmental transitions there was one insertion or deletion event. ";
-        "Just like substitution events, insertion and deletion events can be informative about phylogeny. ";
-        "Unlike the earlier analysis of amino acid sequence data, the insertion and deletion events were strongly informative about ";
-           "specific tree topologies, and this tree support could change depending on the homology assignments for the alignment.";
+      "This problem was likely not encountered in the other implementations of the TKF91 model";
+      Citation {Lunter2004}; ", which analyzed an alignment of amino acid sequences. ";
+      "In our analysis of cognate data, the insertion and deletion rates were estimated to be quite high relative to the substitution rate: ";
+      InsertionRate; " = "; run.InsertionRate; " ("; run.InsertionRateLow; ", "; run.InsertionRateHigh; ") and ";
+      DeletionRate; " = "; run.DeletionRate; " ("; run.DeletionRateLow; ", "; run.DeletionRateHigh; ") ";
+         "for the insertion and deletion rates, respectively. ";
+      "(The credible intervals in the parentheses contain the true value of the parameter with probability {0}.) "(ResultsClass.AlignmentCutoff);
+      "Roughly speaking, this means that for every two segmental transitions there was one insertion or deletion event. ";
+      "Just like substitution events, insertion and deletion events can be informative about phylogeny. ";
+      "Unlike the earlier analysis of amino acid sequence data, the insertion and deletion events were strongly informative about ";
+         "specific tree topologies, and this tree support could change depending on the homology assignments for the alignment.";
     };
 
     style.BodyPar {
-    "In all subsequent analyses, we examine the pattern of language change using three topologies ("
-       style.FigureReference(Figures.ModelTreesUsed); "). ";
-    "Although there is considerable debate about the phylogeny of the Romance languages, in recent decades most specialists have converged on the view that the first two clades to ";
-       "form included Sardinian followed by Romanian";
-        Citation {Hall1950; Hall1976; Dardel1985; Swiggers2001; Vallejo2012; Buchi2015; Dworkin2016}; DotSpace;
-    "Since Sardinian is not in our study group, the clade containing Romanian is then the first to form in each of the trees in ";
-       style.FigureReference(Figures.ModelTreesUsed); DotSpace;
-    "The sub-trees containing the remaining dialects differ in their topologies, but they all contain Spanish and Portuguese as a clade, as well as Catalan, French, and Walloon. ";
-    "The question of the exact relationship between Latin and Romance continues to be debated ";
-        // \citep{goldstein24}.";
-        "(Citations)"; DotSpace;
+      "In all subsequent analyses, we examine the pattern of language change using three topologies ("
+         style.FigureReference(Figures.ModelTreesUsed); "). ";
+      "Although there is considerable debate about the phylogeny of the Romance languages, in recent decades most specialists have converged on the view that the first two clades to ";
+         "form included Sardinian followed by Romanian";
+          Citation {Hall1950; Hall1976; Dardel1985; Swiggers2001; Vallejo2012; Buchi2015; Dworkin2016}; DotSpace;
+      "Since Sardinian is not in our study group, the clade containing Romanian is then the first to form in each of the trees in ";
+         style.FigureReference(Figures.ModelTreesUsed); DotSpace;
+      "The sub-trees containing the remaining dialects differ in their topologies, but they all contain Spanish and Portuguese as a clade, as well as Catalan, French, and Walloon. ";
+      "The question of the exact relationship between Latin and Romance continues to be debated ";
+          // \citep{goldstein24}.";
+          "(Citations)"; DotSpace;
     };
 
      style.FigureBlock( Figures.ModelTreesUsed);
-
   };
- }
+}
 
 //======================================================================
 
@@ -1519,58 +1383,59 @@ class SegmentModelsClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
+    var data = MainResults.Data;
 
-    var rule = MainResults.Rule;
+    var rule = data.Rule;
 
     style.FirstPar {
-        SubSection {"Models of segmental change"};
-        "We considered three models of segmental change in this study: ";
-        PoissonModel; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor";
-        Citation {Jukes1969};
-        " with equal rates between all pairs of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
-        UnequalModel; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein";
-        Citation {Felsenstein1981};
-        " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
-        "and "; NaturalClassModel; ", a natural class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
+      SubSection {"Models of segmental change"};
+      "We considered three models of segmental change in this study: ";
+      PoissonModel; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor";
+      Citation {Jukes1969};
+      " with equal rates between all pairs of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
+      UnequalModel; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein";
+      Citation {Felsenstein1981};
+      " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
+      "and "; NaturalClassModel; ", a natural class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
     };
 
-    var segments = MainResults.Data.UniqueSegments.Length - 1;
+    var segments = data.UniqueSegments.Length - 1;
     var rp       = rule.Filters.Length;
 
     style.BodyPar {
-        "The models differ in the number of parameters to estimate. ";
-        "The first model, "; PoissonModel; ", has no free parameters. ";
-        "The second model, "; UnequalModel; ", has "; segments; " free parameters (one less than the number of segments). ";
+      "The models differ in the number of parameters to estimate. ";
+      "The first model, "; PoissonModel; ", has no free parameters. ";
+      "The second model, "; UnequalModel; ", has "; segments; " free parameters (one less than the number of segments). ";
 
-        "The natural class model, "; NaturalClassModel; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
-        Equation {segments; " + "; (rp*(rp-1)/2 + rp); Tex.Equals; segments + rp*(rp-1)/2 + rp}; " free parameters.";
+      "The natural class model, "; NaturalClassModel; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
+      Equation {segments; " + "; (rp*(rp-1)/2 + rp); Tex.Equals; segments + rp*(rp-1)/2 + rp}; " free parameters.";
     };
 
     style.BodyPar {
-        "We compared the fit of the models to the data using the Bayes factor. ";
-        "The Bayes factor is the ratio of the marginal likelihoods, ";
+      "We compared the fit of the models to the data using the Bayes factor. ";
+      "The Bayes factor is the ratio of the marginal likelihoods, ";
     };
 
     Equations.BayesFactorEq;
 
     style.ResumePar {
-        "with ratios greater than one favoring model "; ModelI; ". ";
-        "As the models examined are nested, we could calculate the Bayes factor using the Savage-Dickey ratio";
-          Citation {Dickey1971}; ", ";
-          "which is the ratio of the posterior to prior densities evaluated at the restriction that makes the parameter rich model equivalent to the simpler model. "
-        "The natural class model explains the data substantially better than the two simpler models, with log Bayes ";
-        // TODO: Maybe update the log bayes factor numbers dynamically, though this will be more tricky.
-        "factors of ";
-        Equation {Tex.ln; BayesFactor12; Tex.Equals; -1074.2}; " and ";
-        Equation {Tex.ln; BayesFactor12; Tex.Equals; -117.3};
-        ", respectively, for a comparison of "; PoissonModel; " to "; UnequalModel; " and "; UnequalModel; " to "; NaturalClassModel; ". ";
-        "This indicates overwhelming support for the more parameter-rich natural class model";
-        Citation {Jeffreys1939}; DotSpace;
+      "with ratios greater than one favoring model "; ModelI; ". ";
+      "As the models examined are nested, we could calculate the Bayes factor using the Savage-Dickey ratio";
+        Citation {Dickey1971}; ", ";
+        "which is the ratio of the posterior to prior densities evaluated at the restriction that makes the parameter rich model equivalent to the simpler model. "
+      "The natural class model explains the data substantially better than the two simpler models, with log Bayes ";
+      // TODO: Maybe update the log bayes factor numbers dynamically, though this will be more tricky.
+      "factors of ";
+      Equation {Tex.ln; BayesFactor12; Tex.Equals; -1074.2}; " and ";
+      Equation {Tex.ln; BayesFactor12; Tex.Equals; -117.3};
+      ", respectively, for a comparison of "; PoissonModel; " to "; UnequalModel; " and "; UnequalModel; " to "; NaturalClassModel; ". ";
+      "This indicates overwhelming support for the more parameter-rich natural class model";
+      Citation {Jeffreys1939}; DotSpace;
     };
 
     style.FigureBlock(Figures.RateChart);
 
-    var partitions = MainResults.Rule.Partitions;
+    var partitions = data.Rule.Partitions;
     var diagonal   = new ListClass<PartitionValueClass>(partitions.Length);
 
     style.BodyPar {
@@ -1582,7 +1447,7 @@ class SegmentModelsClass: ContentClass {
       "The estimated rates of change from one word segment to another under the natural class model were ";
 
       var stats       = MainResults.MainRun.NCQRates;
-      var numSegments = MainResults.Data.UniqueSegments.Length - 1;
+      var numSegments = data.UniqueSegments.Length - 1;
       var smallOnes   = new ListClass<PartitionClass>(partitions.Length);
       var numClasses  = partitions.Length;
       var cntSame     = 0;
@@ -1730,7 +1595,6 @@ class WordSegmentRelationshipsClass: ContentClass {
    style.FigureBlock(Figures.GappinessChart);
 
     style.FirstPar {
-//      var run = MainResults.MainRun;
       SubSection {"Segmental Alignments"};
 
       "Our method treats the homology relationships of segments from one language to another as a random variable. ";
@@ -1749,24 +1613,24 @@ class WordSegmentRelationshipsClass: ContentClass {
     style.FigureBlock(align1);
 
     style.BodyPar {
-        var models = align2.Models;
+      var models = align2.Models;
 
-        "Interestingly, the distribution of alignments depends on the model of segmental change. ";
-        style.FigureReference(align2); " shows the 95% credible set of alignments for the concept ";
-        style.SQuote {align2.Concept}; " under the ";
-        TextList {(each models).Name}; DotSpace;
-        "The credible set contains ";
-        models[0].ShowAlignmentNumber;
-        "model, but only ";
-        models[1].ShowAlignmentNumber;
-        " model. ";
-        "This difference makes sense given the rates estimated under the "
-        models[1].Name; " ("; style.FigureReference(Figures.RateChart); "). ";
-        "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
-        "The distribution of alignments under the ";
-        models[0].Name; " often makes consonant and "; IPASegments.oh; " segments homologous. ";
-        "Under the "; models[1].Name;
-        ", however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
+      "Interestingly, the distribution of alignments depends on the model of segmental change. ";
+      style.FigureReference(align2); " shows the 95% credible set of alignments for the concept ";
+      style.SQuote {align2.Concept}; " under the ";
+      TextList {(each models).Name}; DotSpace;
+      "The credible set contains ";
+      models[0].ShowAlignmentNumber;
+      "model, but only ";
+      models[1].ShowAlignmentNumber;
+      " model. ";
+      "This difference makes sense given the rates estimated under the "
+      models[1].Name; " ("; style.FigureReference(Figures.RateChart); "). ";
+      "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
+      "The distribution of alignments under the ";
+      models[0].Name; " often makes consonant and "; IPASegments.oh; " segments homologous. ";
+      "Under the "; models[1].Name;
+      ", however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
 
     style.FigureBlock(align2);
@@ -2036,7 +1900,7 @@ class ModelInferenceClass: ContentClass {
   InsertionLessThanDeletion = Span {InsertionRate; Tex.lt; DeletionRate};
 
   override GetBody(ContentStyleClass style) = Block {
-    var rule = MainResults.Rule;
+    var rule = MainResults.Data.Rule;
 
     style.FirstPar {
       "We assume that modern languages are related to one another through an unknown phylogenetic tree, ";
@@ -2074,11 +1938,6 @@ class ModelInferenceClass: ContentClass {
       style.TableReference(Figures.PartitionAssignments); DotSpace;
       "This "; style.SQuote{rule.Name}; " model allows different rates among the ";
       Enumerators.Cardinal(rule.Filters.Length); " classes of segments. ";
-      //Span {
-      //  Separator: CommaSpace;
-      //  LastSeparator: " and ";
-      //  rule.Filters;
-      //};
       " It has "; MainResults.Data.UniqueSegments.Length; " parameters for the equilibrium distribution and ";
       (rule.Filters.Length-1)^2-1; " parameters describing rates among natural classes. ";
       "The equilibrium frequencies are modeled as random variables drawn from a flat Dirichlet prior distribution. ";
@@ -2099,7 +1958,7 @@ class DataCurationClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
     var data    = MainResults.Data;
-    var example = new ExampleConceptClass(data, MainResults.Data.DataConcept);
+    var example = new ExampleConceptClass(data, data.DataConcept);
 
     style.FirstPar {
       "Our analysis is coordinated using a program written in the Nytril programming language"; Citation {nytrilprogram}; DotSpace;
@@ -2137,7 +1996,7 @@ class DataCurationClass: ContentClass {
     };
 
     style.BodyPar {
-      var config = data.MainRun.Run.Config;
+      var config = MainResults.MainRun.Run.Config;
       "After the raw input is parsed, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
       "The MCMC analysis runs for "; Span {config.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
       "Samples taken during the first "; Span {config.PreBurn; TextGroup: true}; " cycles of the chain are discarded as burn-in. ";
@@ -2945,7 +2804,6 @@ class ConclusionClass: ContentClass {
       "Our model describes how the segments evolve along the branches of the tree. We have three events that can occur to change a word: an insertion of a single segment, a deletion of a single segment, and a substitution of a segment.";
     };
 
-
     style.BodyPar {
       "A substitution is the replacement of a word segment by another segment. We model substitutions as occurring according to a continuous-time Markov model. Such a model can be understood if you know two things: the possible states and the rate of change between all pairs of states. For our work, the states are the "; MainResults.Data.UniqueSegments.Length; " possible segments. The rates of change between all pairs of states are contained in a rate matrix, which we denote "; RateMatrix; DotSpace;
     };
@@ -2964,7 +2822,6 @@ class ConclusionClass: ContentClass {
     };
 
     Equations.OffDiagonalComponents;
-
 
     style.BodyPar {
       "where "; sym.j; " is iterated over all states (for "; sym.i; Tex.neq; sym.j; "). What does this mean? Let’s consider two segments one of which has a diagonal value of –1.0 and the other that has a value of –2.0. The rate of change for the first, then, is 1.0 and the second is 2.0. This means that the second segment is in a sense more volatile than the first. When we are in the second segment, we move to another state at a rate 2.0 which is twice the rate of the first segment."

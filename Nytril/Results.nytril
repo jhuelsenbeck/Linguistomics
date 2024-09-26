@@ -1,6 +1,6 @@
 using Format, Units;
 
-readonly ResultsClass MainResults = new(new ModelDataClass);
+readonly ResultsClass MainResults = new;
 
 //======================================================================
 
@@ -10,14 +10,17 @@ typedef StatArray  StatClass[];
 
 //======================================================================
 
-class ModelDataClass: DataSetClass {
+class ResultsClass {
+  const double AlignmentCutoff = 0.95;
+
+  var DataSetClass      Data;
   var RunResultsClass[] ModelRuns;
   var RunResultsClass   MainRun;
 
   Constructor {
-    super.Constructor(null, "Europe3", "Europe3");
+    Data = new(null, "Europe3", "Europe3");
 
-    var set = TreeSets[0];
+    var set  = Data.TreeSets[0];
     var runs = new ListClass<RunResultsClass>(set.Models.Length);
     runs.Add(new(set.Models[0].Run[0]));
     runs.Add(new(set.Models[1].Run[1]));  // For some reason, this run succeeded
@@ -26,8 +29,12 @@ class ModelDataClass: DataSetClass {
 
     ModelRuns = runs.ToArray();
     MainRun   = ModelRuns[0];
-    MainRun.ReadAlignments(this);
-    ModelRuns[1].ReadAlignments(this);
+
+    var align0 = IO.ReadScript(ModelRuns[0].Run.AlignmentFile).Root;
+    var align1 = IO.ReadScript(ModelRuns[1].Run.AlignmentFile).Root;
+
+    ModelRuns[0].ReadAlignments(Data, align0);
+    ModelRuns[1].ReadAlignments(Data, align1);
   }
 }
 
@@ -106,7 +113,7 @@ class RunResultsClass {
                          EquilibriumFrequencies;
 
   Constructor(RunExperimentClass run) {
-    Run =run;
+    Run = run;
   }
 
   static int CompareAlignment(AlignIndexClass a0, AlignIndexClass a1) {
@@ -116,14 +123,13 @@ class RunResultsClass {
     return c;
   }
 
-  void ReadAlignments(DataSetClass data) {
+  void ReadAlignments(DataSetClass data, align) {
     var treefile = Info.ExperimentRoot Run.RootFolder Info.TreeFile;
     Complete = IO.FileExists(treefile);
     if (Complete)
       Run.ResultTree = IO.ReadTree(treefile, attribute LangNodeClass);
 
 
-    var align = IO.ReadScript(Run.AlignmentFile).Root;
     QRates                 = new(data, align.QRates, false);
     AverageRates           = new(data, align.AverageRates, true);
 
@@ -171,28 +177,12 @@ class RunResultsClass {
 
 //======================================================================
 
-class ResultsClass {
-  const double AlignmentCutoff = 0.95;
-
-  var ModelDataClass  Data;
-  var RuleClass       Rule;
-  var RunResultsClass MainRun;
-
-  Constructor(ModelDataClass data) {
-    Data    = data;
-    Rule    = data.Rule;
-    MainRun = data.MainRun;
-  }
-}
-
-//======================================================================
-
 class AlignmentChartClass {
   var DataSetClass    Data;
   var RunResultsClass Run;
 
- Constructor(ResultsClass results, RunResultsClass run) {
-    Data = results.Data;
+ Constructor(DataSetClass data, RunResultsClass run) {
+    Data = data;
     Run  = run;
   }
 
@@ -265,9 +255,9 @@ class TransitionClass {
   var MatrixClass Rates;
   var RuleClass   Rule;
 
-  Constructor(ResultsClass results, RuleClass rule) {
+  Constructor(RunResultsClass run, RuleClass rule) {
     Rule = rule;
-    var stats = results.MainRun.TransitionStats;
+    var stats = run.TransitionStats;
     var count = stats.Rows;
     Rates = new(count, count, null);
 
@@ -789,7 +779,7 @@ class CalcRatesClass {
   var DataSetClass    Data;
   var TransitionClass Transition;
   var RuleClass       Rule;
-  var ResultsClass    Results;
+  var RunResultsClass Run;
   var                 MaxLine,
                       ArrowGap,
                       GapAngle,
@@ -799,13 +789,13 @@ class CalcRatesClass {
                       MaxRadius,
                       RateScale;
 
-  Constructor(ResultsClass results) {
-    Results    = results;
-    Data       = results.Data;
-    Rule       = results.Rule;
+  Constructor(DataSetClass data, RunResultsClass run) {
+    Run        = run;
+    Data       = data;
+    Rule       = Data.Rule;
     ArrowGap   = 8 pts;
     GapAngle   = 80.0 degrees;
-    Transition = new TransitionClass(results, Rule);
+    Transition = new TransitionClass(run, Rule);
   }
 
   void Calibrate(SizeClass size) {
@@ -823,7 +813,7 @@ class CalcRatesClass {
     RateScale = MaxLine / Transition.MaxRate;
 
     var mult = Math.PI2 / Rule.Partitions.Length;
-    var eq   = Results.MainRun.EquilibriumFrequencies;
+    var eq   = Run.EquilibriumFrequencies;
 
     foreach (var partition in Rule.Partitions) {
       partition.Angle  = mult * each0 - Graphics.Ninety;
