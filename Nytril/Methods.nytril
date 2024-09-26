@@ -228,9 +228,9 @@ class ModelCompareClass {
   var                    Name;
 
   Constructor(int index, DefClass d, CognateIdClass e, int maxcount) {
-    Symbol   = d;
-    Name     = d.Name;
-    Run      = MainResults.Data.ModelRuns[index];
+    Symbol = d;
+    Name   = d.Name;
+    Run    = MainResults.Data.ModelRuns[index];
 
     var    a   = e.FindAlignment(Run).Alignments;
     double sum = 0;
@@ -240,8 +240,8 @@ class ModelCompareClass {
     TotalCount = a.Length;
   }
 
-  SymbolName = Span {
-    Symbol; " ("; Name; ")";
+  ModelName = Span {
+    Symbol; " ("; Name; " model)";
   };
 
   ShowAlignmentNumber = Span {
@@ -307,7 +307,7 @@ class AlignmentCompareClass: ContentClass {
 
     foreach (var m in Models) {
       Span {
-        "These "; Enumerators.Cardinal(MaxCount); " alignments under "; m.SymbolName; " account for ";
+        "These "; Enumerators.Cardinal(MaxCount); " alignments under the "; m.ModelName; " account for ";
         Span {
           TextDigits: 3;
           TextSignificant: true;
@@ -323,7 +323,9 @@ class AlignmentCompareClass: ContentClass {
     foreach (var m in Models) {
       Paragraph {
         TextHeight: 20 pts;
-        m.SymbolName;
+        m.Symbol;
+        " — ";
+        m.Name;
       };
       var chart = new AlignmentChartClass(results, m.Run);
       chart.ShowSet([Example], false);
@@ -1755,9 +1757,9 @@ class WordSegmentRelationshipsClass: ContentClass {
         TextList {(each models).Name}; DotSpace;
         "The credible set contains ";
         models[0].ShowAlignmentNumber;
-        ", but only ";
+        "model, but only ";
         models[1].ShowAlignmentNumber;
-        DotSpace;
+        " model. ";
         "This difference makes sense given the rates estimated under the "
         models[1].Name; " ("; style.FigureReference(Figures.RateChart); "). ";
         "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
