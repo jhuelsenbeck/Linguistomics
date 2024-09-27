@@ -11,30 +11,32 @@ typedef StatArray  StatClass[];
 //======================================================================
 
 class ResultsClass {
-  const double AlignmentCutoff = 0.95;
+  const double CutoffPercent = 95;
 
   var DataSetClass      Data;
+  var RunResultsClass   Poisson,
+                        NaturalClass,
+                        MainRun;
   var RunResultsClass[] ModelRuns;
-  var RunResultsClass   MainRun;
 
   Constructor {
     Data = new(null, "Europe3", "Europe3");
 
     var set  = Data.TreeSets[0];
-    var runs = new ListClass<RunResultsClass>(set.Models.Length);
-    runs.Add(new(set.Models[0].Run[0]));
-    runs.Add(new(set.Models[1].Run[1]));  // For some reason, this run succeeded
-    runs.Add(new(set.Models[2].Run[0]));
 
+    Poisson      = new(set.Models[0].Run[0]);
+    NaturalClass = new(set.Models[1].Run[1]); // For some reason, this run succeeded but not Run[0]
+    ModelRuns    = [Poisson, NaturalClass];
+    MainRun      = Poisson;
 
-    ModelRuns = runs.ToArray();
-    MainRun   = ModelRuns[0];
+    // Old and busted
+    foreach (var m in ModelRuns)
+      m.ReadAlignments(Data, IO.ReadScript(m.AlignmentFile).Root);
 
-    var align0 = IO.ReadScript(ModelRuns[0].Run.AlignmentFile).Root;
-    var align1 = IO.ReadScript(ModelRuns[1].Run.AlignmentFile).Root;
-
-    ModelRuns[0].ReadAlignments(Data, align0);
-    ModelRuns[1].ReadAlignments(Data, align1);
+    // New hotness (after update)
+//    var paths = IO.ReadScripts((each ModelRuns).AlignmentFile);
+//    foreach (var a in paths)
+//      ModelRuns[each0].ReadAlignments(Data, a.Root);
   }
 }
 
@@ -110,10 +112,12 @@ class RunResultsClass {
                          DeletionRateHigh;
   var bool               Complete;
   var                    GapSpectrum,
-                         EquilibriumFrequencies;
+                         EquilibriumFrequencies,
+                         AlignmentFile;
 
   Constructor(RunExperimentClass run) {
-    Run = run;
+    Run           = run;
+    AlignmentFile = Info.ExperimentRoot run.RootFolder Info.AlignmentFile;
   }
 
   static int CompareAlignment(AlignIndexClass a0, AlignIndexClass a1) {

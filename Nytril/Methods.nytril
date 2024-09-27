@@ -154,7 +154,7 @@ class AlignmentsClass: ContentClass {
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    ResultsClass.AlignmentCutoff * 100.0;
+    ResultsClass.CutoffPercent;
     "% credible set of alignments";
   };
 
@@ -171,7 +171,7 @@ class AllAlignmentsClass: ContentClass {
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    ResultsClass.AlignmentCutoff * 100.0;
+    ResultsClass.CutoffPercent;
     "% credible set of alignments";
   };
 
@@ -224,10 +224,10 @@ class ModelCompareClass {
   var RunResultsClass Run;
   var                 Name;
 
-  Constructor(int index, DefClass d, CognateIdClass e, int maxcount) {
+  Constructor(RunResultsClass run, DefClass d, CognateIdClass e, int maxcount) {
     Symbol = d;
     Name   = d.Name;
-    Run    = MainResults.ModelRuns[index];
+    Run    = run;
 
     var    a   = e.FindAlignment(Run).Alignments;
     double sum = 0;
@@ -277,17 +277,17 @@ class AlignmentCompareClass: ContentClass {
   const int    MaxCount = 8;
   const string Concept  = "Sky";
 
+  var ModelCompareClass   Poisson,
+                          NaturalClass;
   var ModelCompareClass[] Models;
   var CognateIdClass      Example;
 
   Constructor {
     super.Constructor("Alignment comparison");
-
-    Example = new(Concept, null, MaxCount);
-    Models = [
-      new(1, PoissonModel, Example, MaxCount),       // JC69
-      new(0, NaturalClassModel, Example, MaxCount)   // Custom
-    ];
+    Example      = new(Concept, null, MaxCount);
+    Poisson      = new(MainResults.Poisson, PoissonModel, Example, MaxCount);
+    NaturalClass = new(MainResults.NaturalClass, NaturalClassModel, Example, MaxCount);
+    Models       = [Poisson, NaturalClass];
   }
 
   override GetCaption(ContentStyleClass style) = Span {
@@ -543,51 +543,6 @@ class EquilibriumFrequencyChartClass: ContentClass {
 
 //======================================================================
 
-//adonly EquilibriumFrequencyChartClass Figures.EquilibriumCharts = new;
-//
-//ass EquilibriumFrequencyChartClass: ContentClass {
-//Constructor {
-//  super.Constructor("The equilibrium frequencies (π) of the segment groups.");
-//}
-//
-//override GetBody(ContentStyleClass style) = Chart(50%, 3.5 inches) {
-//  Type: ChartTypes.Bar;
-//  style.SansSerif;
-//  TextHeight: 12 pts;
-//
-//  ValueLabel: Span {
-//    TextHeight: 20 pts;
-//    Defs.EquilibriumDistribution;
-//  };
-//
-//  var partitions = MainResults.Data.Rule.Partitions.Reverse;
-//  var stats      = MainResults.NCQFreqs;
-//
-//  XAxis: ChartAxis(null, null, PadR(8)) {
-//    foreach (var p in partitions) {
-//      Span {
-//        Tip: p;
-//        TextColor: p.Color;
-//        p.Name;
-//      }
-//    }
-//  };
-//
-//  ChartSeries {
-//    foreach (var p in partitions) {
-//      var c = stats[p.Index];
-//      new DataPointClass(each0, c.Mean) {
-//        ErrorLo: c.Mean - c.Lower;
-//        ErrorHi: c.Upper - c.Mean;
-//        Reference: c;
-//        Fill: p.Color;
-//      }
-//    }
-//  };
-//};
-//
-//======================================================================
-
 readonly GappinessChartClass Figures.GappinessChart = new;
 
 readonly GappinessSignificanceClass GapInfo = new(MainResults.MainRun);
@@ -600,9 +555,12 @@ class GappinessChartClass: ContentClass {
   override GetCaption(ContentStyleClass style) = Span {
     "The number of gaps observed across the "; MainResults.Data.UsedCognates.Length; " cognates analyzed in this study at the first segment (top), middle segment(s) (middle), and last segment (bottom). ";
     "Nine languages were analyzed in this study, so it is not possible for there to be nine gaps; deletion events that led to a gap for all the languages would not be included in an alignment, and is explicitly conditioned on in Lunter et al."; Citation{Lunter2003}; DotSpace;
-    "There is a clear, and statistically significant ";
-    GapInfo.Statistic;
-    ", pattern of an increaasing number of gaps as one moves from the beginning to the end of the word.";
+    "There is a clear, and statistically significant (";
+    TextList {
+      TextDigits: 0;
+      GapInfo.Statistic.ToArray;
+    }
+    "), pattern of an increaasing number of gaps as one moves from the beginning to the end of the word.";
   };
 
   override GetBody(ContentStyleClass style) = HBox {
@@ -1297,7 +1255,7 @@ class PhylogenyResultsClass: ContentClass {
       InsertionRate; " = "; run.InsertionRate; " ("; run.InsertionRateLow; ", "; run.InsertionRateHigh; ") and ";
       DeletionRate; " = "; run.DeletionRate; " ("; run.DeletionRateLow; ", "; run.DeletionRateHigh; ") ";
          "for the insertion and deletion rates, respectively. ";
-      "(The credible intervals in the parentheses contain the true value of the parameter with probability {0}.) "(ResultsClass.AlignmentCutoff);
+      "(The credible intervals in the parentheses contain the true value of the parameter with probability {0}.) "(ResultsClass.CutoffPercent * 0.01);
       "Roughly speaking, this means that for every two segmental transitions there was one insertion or deletion event. ";
       "Just like substitution events, insertion and deletion events can be informative about phylogeny. ";
       "Unlike the earlier analysis of amino acid sequence data, the insertion and deletion events were strongly informative about ";
@@ -1599,12 +1557,12 @@ class WordSegmentRelationshipsClass: ContentClass {
 
       "Our method treats the homology relationships of segments from one language to another as a random variable. ";
       "We summarize the posterior distribution by constructing a credible set of alignments, where a credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
-      "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is {0}. "(ResultsClass.AlignmentCutoff);
+      "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is {0}. "(ResultsClass.CutoffPercent * 0.01);
       style.FigureReference(align1); " shows alignments for the concept ";
       style.SQuote {align1.Examples[0].Concept};
       ", which  illustrates three key properties we observed for all of the alignments. ";
       "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
-      "In this case, one alignment had a posterior probability of {0}. "(/*run.PosteriorProbability */ 0.79);
+      Span {TextColor: Colors.Red; "In this case, one alignment had a posterior probability of {0} (fix me). "(/*run.PosteriorProbability */ 0.79);};
       "Second, insertions and deletions occur predominantly at word-end, where gaps are more frequent on average compared to other positions (";
          style.FigureReference(Figures.GappinessChart); "). ";
       "Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment. ";
@@ -1613,23 +1571,23 @@ class WordSegmentRelationshipsClass: ContentClass {
     style.FigureBlock(align1);
 
     style.BodyPar {
-      var models = align2.Models;
-
       "Interestingly, the distribution of alignments depends on the model of segmental change. ";
-      style.FigureReference(align2); " shows the 95% credible set of alignments for the concept ";
+      style.FigureReference(align2); " shows the {0}% credible set of alignments for the concept "(ResultsClass.CutoffPercent);
       style.SQuote {align2.Concept}; " under the ";
-      TextList {(each models).Name}; DotSpace;
+      TextList {
+        (each align2.Models).Name;
+      }; DotSpace;
       "The credible set contains ";
-      models[0].ShowAlignmentNumber;
+      align2.Poisson.ShowAlignmentNumber;
       "model, but only ";
-      models[1].ShowAlignmentNumber;
+      align2.NaturalClass.ShowAlignmentNumber;
       " model. ";
       "This difference makes sense given the rates estimated under the "
-      models[1].Name; " ("; style.FigureReference(Figures.RateChart); "). ";
+      align2.NaturalClass.Name; " ("; style.FigureReference(Figures.RateChart); "). ";
       "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
       "The distribution of alignments under the ";
-      models[0].Name; " often makes consonant and "; IPASegments.oh; " segments homologous. ";
-      "Under the "; models[1].Name;
+      align2.Poisson.Name; " often makes consonant and "; IPASegments.oh; " segments homologous. ";
+      "Under the "; align2.NaturalClass.Name;
       ", however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
 
