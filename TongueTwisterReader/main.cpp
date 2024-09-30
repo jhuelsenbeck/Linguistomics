@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     // output only the alignments in selectedAlignments
     selectedAlignments.insert("Flower-Primary");
     selectedAlignments.insert("Sky-Primary");
-    findex = new std::ofstream(pathName + "/alignments_small.nytril", std::ios::out);
+    findex = new std::ofstream(pathName + "/alignments.nytril", std::ios::out);
     summary1.output(pathName, *findex, selectedAlignments);
     findex->close();
     delete findex;
