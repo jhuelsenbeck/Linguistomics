@@ -13,6 +13,7 @@ class UserSettings {
                                     static UserSettings us;
                                     return us;
                                 }
+        bool                    getFullOutput(void) { return fullOutput; }
         std::string             getInputFile(void) { return inFile; }
         std::string             getInputFile2(void) { return inFile2; }
         std::string             getInputFile3(void) { return inFile3; }
@@ -31,6 +32,7 @@ class UserSettings {
         std::string             inFile3;
         std::string             outFile;
         int                     burnIn;
+        bool                    fullOutput;
 };
 
 #endif

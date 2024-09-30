@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <iostream>
+#include <set>
 #include <string>
 #include <fstream>
 #include "McmcSummary.hpp"
@@ -48,12 +49,22 @@ int main(int argc, char* argv[]) {
         summary1 += summary3;
         }
 
+    // output the full set of alignments (and analyses) to the nytril file
+    std::set<std::string> selectedAlignments;
     auto pathName = settings.getPath();
-    auto findex = new std::ofstream(pathName + "/alignments.nytril", std::ios::out);
-    summary1.output(pathName, *findex);
+    auto findex = new std::ofstream(pathName + "/alignments_full.nytril", std::ios::out);
+    summary1.output(pathName, *findex, selectedAlignments);
     findex->close();
     delete findex;
-  
+ 
+    // output only the alignments in selectedAlignments
+    selectedAlignments.insert("Flower-Primary");
+    selectedAlignments.insert("Sky-Primary");
+    findex = new std::ofstream(pathName + "/alignments_small.nytril", std::ios::out);
+    summary1.output(pathName, *findex, selectedAlignments);
+    findex->close();
+    delete findex;
+
     return 0;
 }
 

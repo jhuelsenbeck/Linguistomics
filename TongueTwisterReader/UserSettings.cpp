@@ -10,11 +10,12 @@
 UserSettings::UserSettings(void) {
 
     // dafault values
-    inFile  = "";
-    inFile2 = "";
-    inFile3 = "";
-    outFile = "";
-    burnIn  = 5000;
+    inFile     = "";
+    inFile2    = "";
+    inFile3    = "";
+    outFile    = "";
+    burnIn     = 5000;
+    fullOutput = true;
 }
 
 void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
@@ -52,6 +53,17 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
                 outFile = cmd;
             else if (arg == "-b")
                 burnIn = atoi(cmd.c_str());
+            else if (arg == "-f")
+                {
+                std::transform(cmd.begin(), cmd.end(), cmd.begin(), [](unsigned char c) { return std::tolower(c);});
+                if (cmd == "true")
+                    fullOutput = true;
+                else if (cmd == "false")
+                    fullOutput = false;
+                else
+                    Msg::error("Unknown option for full output command");
+                }
+
             else
                 {
                 usage();
@@ -67,10 +79,14 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
 void UserSettings::print(void) {
 
     std::cout << "   Settings" << std::endl;
-    std::cout << "   * Input path name   = \"" << inFile << "\"" << std::endl;
-    std::cout << "   * Input 2 path name = \"" << inFile2 << "\"" << std::endl;
-    std::cout << "   * Output file name  = \"" << outFile << "\"" << std::endl;
-    std::cout << "   * Burn in number    = " << burnIn << std::endl;
+    if (fullOutput == true)
+        std::cout << "   * Full output to file = True" << std::endl;
+    else
+        std::cout << "   * Full output to file = False" << std::endl;
+    std::cout << "   * Input path name     = \"" << inFile << "\"" << std::endl;
+    std::cout << "   * Input 2 path name   = \"" << inFile2 << "\"" << std::endl;
+    std::cout << "   * Output file name    = \"" << outFile << "\"" << std::endl;
+    std::cout << "   * Burn in number      = " << burnIn << std::endl;
     std::cout << std::endl;
 }
 
