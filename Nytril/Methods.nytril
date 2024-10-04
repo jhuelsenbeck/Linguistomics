@@ -250,8 +250,8 @@ class ModelCompareClass {
 
 class GappinessSignificanceClass {
   var VectorClass<double> Statistic;
-  var VectorClass<double> countVals;
-  var testStatistic;
+  var VectorClass<double> CountVals;
+  var                     TestStatistic;
 
   Constructor(RunResultsClass run) {
     var   spectrum = run.GapSpectrum;
@@ -260,7 +260,7 @@ class GappinessSignificanceClass {
     double lnL0    = 0.0;
 
     Statistic = new(spectrum.Length, 0.0);
-    countVals = new(spectrum[0].Length, 0.0);
+    CountVals = new(spectrum[0].Length, 0.0);
     foreach (var gap in spectrum) {
       var ni = 0;
       foreach (var value in gap)
@@ -271,17 +271,15 @@ class GappinessSignificanceClass {
           lnL1 += value * Math.Log(value / ni);
       }
       Statistic.SetValue(each0, n);
-      foreach (var value in gap) {
-        double x = countVals[each0];
-        x += value;
-        countVals.SetValue(each0, x);
-      }
+      foreach (var value in gap)
+        CountVals.SetValue(each0, CountVals[each0] + value);
 
-     foreach (var value in countVals) {
+     foreach (var value in CountVals) {
        if (value != 0)
          lnL0 += value * Math.Log(value/n);
-       }
-      testStatistic = -2.0 * (lnL0 - lnL1);
+     }
+
+     TestStatistic = -2.0 * (lnL0 - lnL1);
     }
   }
 }
@@ -573,10 +571,14 @@ class GappinessChartClass: ContentClass {
     "There is a clear, and statistically significant (";
     TextList {
       TextDigits: 0;
-      GapInfo.countVals.ToArray;
-    }
-    GapInfo.testStatistic;
-    "), pattern of an increaasing number of gaps as one moves from the beginning to the end of the word.";
+      GapInfo.CountVals.ToArray;
+    };
+    "), (Stat: ";
+    Span {
+      TextDigits: 0;
+      GapInfo.TestStatistic;
+    };
+    ") pattern of an increaasing number of gaps as one moves from the beginning to the end of the word.";
   };
 
   override GetBody(ContentStyleClass style) = HBox {
