@@ -52,18 +52,23 @@ int main(int argc, char* argv[]) {
     // output the full set of alignments (and analyses) to the nytril file
     std::set<std::string> selectedAlignments;
     auto pathName = settings.getPath();
-    auto findex = new std::ofstream(pathName + "/alignments_full.nytril", std::ios::out);
-    summary1.output(pathName, *findex, selectedAlignments);
-    findex->close();
-    delete findex;
+    auto file     = new std::ofstream(pathName + "/consensus.tre", std::ios::out);
+    summary1.writeConsensusTree(*file);
+    file->close();
+    delete file;
+
+    file = new std::ofstream(pathName + "/alignments_full.nytril", std::ios::out);
+    summary1.output(*file, selectedAlignments);
+    file->close();
+    delete file;
  
     // output only the alignments in selectedAlignments
     selectedAlignments.insert("Flower-Primary");
     selectedAlignments.insert("Sky-Primary");
-    findex = new std::ofstream(pathName + "/alignments.nytril", std::ios::out);
-    summary1.output(pathName, *findex, selectedAlignments);
-    findex->close();
-    delete findex;
+    file = new std::ofstream(pathName + "/alignments.nytril", std::ios::out);
+    summary1.output(*file, selectedAlignments);
+    file->close();
+    delete file;
 
     return 0;
 }
