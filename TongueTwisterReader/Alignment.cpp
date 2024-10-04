@@ -165,7 +165,7 @@ void Alignment::print(void) {
         }
 }
 
-nlohmann::json Alignment::toJson(std::ostream& nytril) {
+nlohmann::json Alignment::toFile(std::ostream& file) {
 
     nlohmann::json j = nlohmann::json::array();
 
@@ -187,26 +187,29 @@ nlohmann::json Alignment::toJson(std::ostream& nytril) {
 
 
     bool com = false;
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) 
+        {
         auto m = sorted[i];
         if (com)
-            nytril << ",";
-        if (m) {
-            nytril << "[";
+            file << ",";
+        if (m) 
+            {
+            file << "[";
             bool comma = false;
             for (auto si : m->getSequence())
-            {
+                {
                 if (comma)
-                    nytril << ",";
-                nytril << si;
+                    file << ",";
+                file << si;
                 comma = true;
+                }
+            file << "]";
             }
-            nytril << "]";
-        }
         else
-            nytril << "null";
+            file << "null";
+
         com = true;
-    }
+        }
 
     return j;
 }

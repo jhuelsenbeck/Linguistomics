@@ -35,7 +35,7 @@ class McmcSummary {
         void                                    printPartitionSet(void);
 
         void                                    writeConsensusTree(std::ofstream& file);
-        void                                    output(std::ofstream& file, std::set<std::string> selectedAlignments);
+        void                                    output(std::ofstream& file, int maxAlignment);
         void                                    readAlnFile(std::string fn, int bi, Partition* prt);
         void                                    readTreFile(std::string fn, int bi);
         void                                    readTsvFile(std::string fn, int bi);

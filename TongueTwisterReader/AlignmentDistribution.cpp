@@ -196,29 +196,29 @@ void AlignmentDistribution::print(Alignment* aln) {
         }
 }
 
-nlohmann::json AlignmentDistribution::toJson(double credibleSetSize, std::ostream& findex) {
+nlohmann::json AlignmentDistribution::toJson(double credibleSetSize, int maxAlignment, std::ostream& file) {
     
     // sort the alignments from highest to lowest posterior probability
     std::vector<std::pair<Alignment*, int> > v(1024);
     for (auto& it : samples) 
         {
         if (it.first->valid())
-          v.push_back(it);
+            v.push_back(it);
         }
     sort(v.begin(), v.end(), cmp);
 
 
-    findex << "new(\"";
+    file << "new(\"";
     for (auto& c : name)
         {
         if (c == '-')
-          findex << "\", \"";
+            file << "\", \"";
         else
-          findex << c;
+            file << c;
         }
 
 
-    findex << "\", [\n";
+    file << "\", [\n";
 
     auto j = nlohmann::json::object();
     j["cognate"] = name;
@@ -226,41 +226,34 @@ nlohmann::json AlignmentDistribution::toJson(double credibleSetSize, std::ostrea
     int n = numSamples();
     double cumulativeProb = 0.0;
     int i = 0;
-    int count = 0;
     for (auto& it : v)
         {
         ++i;
         double prob = (double)it.second / n;
         cumulativeProb += prob;
-        
-        findex << "new(" << prob << ",[";
-
-
-        auto jaln = nlohmann::json::object();
-        jaln["index"] = i;
-        jaln["prob"] = prob;
-        jaln["cumprob"] = cumulativeProb;
-
         bool done = false;
         bool add  = true;
-                
-        if (cumulativeProb >= credibleSetSize) 
+
+        if (cumulativeProb >= credibleSetSize)
             {
             double lowerVal = cumulativeProb - prob;
-            double u = rv->uniformRv();
-            add  = u < (credibleSetSize-lowerVal)/(cumulativeProb-lowerVal);
+            add  = rv->uniformRv() < (credibleSetSize - lowerVal) / (cumulativeProb - lowerVal);
             done = true;
             }
 
-        if (add) 
+        if (add && i <= maxAlignment)
             {
-            jaln["aln"] = it.first->toJson(findex);
+            auto jaln = nlohmann::json::object();
+            jaln["index"]   = i;
+            jaln["prob"]    = prob;
+            jaln["cumprob"] = cumulativeProb;
+
+            file << "new(" << prob << ",[";
+            jaln["aln"] = it.first->toFile(file);
+            file << "]),\n";
             alnVec.push_back(jaln);
             }
 
-        ++count;
-        findex << "]),\n";
-        
         if (done)
             break;
         }
@@ -268,7 +261,7 @@ nlohmann::json AlignmentDistribution::toJson(double credibleSetSize, std::ostrea
 
     j["aln_set"] = alnVec;
 
-    findex << "]),\n";
+    file << "], " << i << "),\n";
     return j;
 }
 

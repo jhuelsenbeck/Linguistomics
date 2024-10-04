@@ -172,6 +172,7 @@ class AlignmentChartClass {
   }
 
   ShowChart(SizeClass size) = VBox(size.Width, size.Height, 0.5) {
+    PaperStyle.SansSerif;
     // Try to make proportional squares
     var xitems = size.Width / 130 as int;
     var yitems = Math.Floor((Run.Alignments.Length + xitems - 1) / xitems);
@@ -181,9 +182,10 @@ class AlignmentChartClass {
     TextHeight: Math.Min(8 pts, bsize.Height - 3.2 pt);
 
     foreach (var row in rows) {
-      HBox {
+      HBox(null, bsize.Height, BorderB(new EdgeClass(0.25 pts, 1, 90%))) {
+        VAlign: VAligns.Center;
         foreach (var a in row) {
-          VBox(bsize.Width, bsize.Height, new EdgeClass(0.25 pts, 1, 90%)) {
+          VBox(bsize.Width, null) {
             HAlign: HAligns.Center;
 
             var ap = new AlignPairClass(Data, a);
@@ -194,8 +196,9 @@ class AlignmentChartClass {
               };
             };
             Paragraph {
+              TextHeight: 10 pts;
               TextColor: Colors.LightGray;
-              a.Alignments.Length;
+              a.TotalCount;
             };
           }
         }

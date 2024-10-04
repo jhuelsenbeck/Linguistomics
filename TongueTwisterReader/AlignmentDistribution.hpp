@@ -26,7 +26,7 @@ class AlignmentDistribution {
         void                                    print(void);
         void                                    setName(std::string s) { name = s; }
         size_t                                  size(void) { return samples.size(); }
-        nlohmann::json                          toJson(double credibleSetSize, std::ostream& findex);
+        nlohmann::json                          toJson(double credibleSetSize, int maxAlignment, std::ostream& file);
 
     private:
         void                                    print(Alignment* aln);

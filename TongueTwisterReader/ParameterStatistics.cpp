@@ -112,9 +112,9 @@ nlohmann::json ParameterStatistics::toJson() {
     return j;
 }
 
-void ParameterStatistics::toFile(std::ostream& findex) {
+void ParameterStatistics::toFile(std::ostream& file) {
 
     double m = getMean();
     CredibleInterval i = getCredibleInterval();
-    findex << "new(" << i.lower << "," << m << "," << i.upper << ")";
+    file << "new(" << i.lower << "," << m << "," << i.upper << ")";
 }

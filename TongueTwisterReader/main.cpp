@@ -50,7 +50,6 @@ int main(int argc, char* argv[]) {
         }
 
     // output the full set of alignments (and analyses) to the nytril file
-    std::set<std::string> selectedAlignments;
     auto pathName = settings.getPath();
     auto file     = new std::ofstream(pathName + "/consensus.tre", std::ios::out);
     summary1.writeConsensusTree(*file);
@@ -58,15 +57,12 @@ int main(int argc, char* argv[]) {
     delete file;
 
     file = new std::ofstream(pathName + "/alignments_full.nytril", std::ios::out);
-    summary1.output(*file, selectedAlignments);
+    summary1.output(*file, 1000); // Sanity limit
     file->close();
     delete file;
  
-    // output only the alignments in selectedAlignments
-    selectedAlignments.insert("Flower-Primary");
-    selectedAlignments.insert("Sky-Primary");
     file = new std::ofstream(pathName + "/alignments.nytril", std::ios::out);
-    summary1.output(*file, selectedAlignments);
+    summary1.output(*file, 20);   // Display limit for papers and presentations
     file->close();
     delete file;
 

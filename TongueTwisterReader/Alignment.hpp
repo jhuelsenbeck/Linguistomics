@@ -30,7 +30,7 @@ class Alignment {
         size_t                  size(void) { return matrix.size(); }
         size_t                  size(void) const { return matrix.size(); }
         bool                    valid(void) const {return sorted.size() > 0 && matrix.size() > 0;}
-        nlohmann::json          toJson(std::ostream& nytril);
+        nlohmann::json          toFile(std::ostream& file);
     
     private:
         int                     numTaxa;
