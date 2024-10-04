@@ -7,6 +7,7 @@ readonly ResultsClass MainResults = new;
 typedef StatMatrix MatrixClass<StatClass>;
 typedef StatVector VectorClass<StatClass>;
 typedef StatArray  StatClass[];
+typedef StatMat    StatClass[][];
 
 //======================================================================
 
@@ -30,14 +31,9 @@ class ResultsClass {
     ModelRuns    = [Poisson, NaturalClass];
     MainRun      = NaturalClass;
 
-    // Old and busted
-    foreach (var m in ModelRuns)
-      m.ReadAlignments(Data, IO.ReadScript(m.AlignmentFile).Root);
-
-    // New hotness (after update)
-//    var paths = IO.ReadScripts((each ModelRuns).AlignmentFile);
-//    foreach (var a in paths)
-//      ModelRuns[each0].ReadAlignments(Data, a.Root);
+    var paths = IO.ReadScripts((each ModelRuns).AlignmentFile);
+    foreach (var a in paths)
+      ModelRuns[each0].ReadAlignments(Data, a.Root);
   }
 }
 
@@ -99,9 +95,9 @@ class StatClass {
 
 class RunResultsClass {
   var RunExperimentClass Run;
-  var StatMatrix         NCQRates;
+  var StatMat            NCQRates,
+                         TransitionStats;
   var StatArray          NCQFreqs;
-  var StatMatrix         TransitionStats;
   var AlignedCountClass  QRates,
                          AverageRates;
   var AlignIndexClass[]  Alignments;
@@ -139,6 +135,8 @@ class RunResultsClass {
     AverageRates           = new(data, align.AverageRates, true);
 
     NCQFreqs               = align.?NCQFreqs as StatArray;
+    TransitionStats        = align.?TransitionStats as StatMat;
+    NCQRates               = align.?NCQRates as StatMat;
     EquilibriumFrequencies = align.?EquilibriumFrequencies;
     InsertionRate          = align.?InsertionRateMean;
     InsertionRateLow       = align.?InsertionRateLow;
@@ -147,24 +145,6 @@ class RunResultsClass {
     DeletionRateLow        = align.?DeletionRateLow;
     DeletionRateHigh       = align.?DeletionRateHigh;
     GapSpectrum            = align.?GapSpectrum;
-
-    var ts = align.?TransitionStats;
-    if (ts is not null)
-      TransitionStats = StatMatrix.Convert(ts);
-    else {
-      var length = QRates.Length;
-      var bs     = new StatClass(0, 0.5, 1);
-      TransitionStats = new(length, length, bs, bs);
-    }
-
-    ts = align.?NCQRates;
-    if (ts is not null)
-      NCQRates = StatMatrix.Convert(ts);
-    else {
-      var length = QRates.Length;
-      var bs     = new StatClass(0, 0.5, 1);
-      NCQRates = new(length, length, bs, bs);
-    }
 
     var alignments = new ListClass<AlignIndexClass>(1024);
     foreach (var a in align.Alignments) {
@@ -263,7 +243,7 @@ class TransitionClass {
   Constructor(RunResultsClass run, RuleClass rule) {
     Rule = rule;
     var stats = run.TransitionStats;
-    var count = stats.Rows;
+    var count = stats.Length;
     Rates = new(count, count, null);
 
     var max = 0.0;
