@@ -57,9 +57,9 @@ enum MouthPlacements {
 
 class SegmentClass {
   var string Description;
-  var        Text,
-             Code,
-             Props,
+  var int    Props;
+  var        Code,
+             Text,
              From,
              Via,
              To;
@@ -77,10 +77,15 @@ class SegmentClass {
 
 //================================================================
 
-class LogSchemaClass: DbSchemaClass {
-  var DB.DbFieldClass                     Description,
-                                          Text,
-                                          Code;
+class LogRecordClass {
+  var string Description,
+             Text,
+             Code;
+}
+
+//================================================================
+
+class LogSchemaClass {
   var SegmentClass[]                      Segments;
   var StringDictionaryClass<FeatureClass> Features;
   var                                     From,
@@ -88,18 +93,11 @@ class LogSchemaClass: DbSchemaClass {
                                           To;
 
   Constructor {
-    super.Constructor("log");
-    Description = new("description", ValueTypes.String);
-    Text        = new("text", ValueTypes.String);
-    Code        = new("code", ValueTypes.Int32);
-    AddField(Description);
-    AddField(Text);
-    AddField(Code);
-
     var list = new ListClass<SegmentClass>(2048);
-    var view = ReadTextFile(res "BIPA.txt", true);
+    var view = new ListClass<LogRecordClass>(2048);
+    view.ReadTextFile(res "BIPA.txt", true);
     foreach (var row in view)
-      list.Add(new SegmentClass(row.FindValue(Description), row.FindValue(Text), row.FindValue(Code)));
+      list.Add(new SegmentClass(row.Description, row.Text, row.Code));
     Segments  = list.ToArray;
 
     Features = new(128);

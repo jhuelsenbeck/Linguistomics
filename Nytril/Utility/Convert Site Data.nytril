@@ -2,19 +2,13 @@ using Format, Units, IO, DB;
 
 //================================================================
 
-
-readonly Schema = new LogSchemaClass;
-
 class MyDocClass: DocumentClass {
   Constructor {
     super.Constructor(#2f91b3da-1566-4591-bcc7-1ec7b798a87f#, "Convert Site Data");
-
-    var view = Schema.ReadTextFile(res "SoundComparisons Export.txt", true);
-    Schema.GetData(view);
   }
 
   override GetDocument = Document {
-    Schema.ShowDoc;
+    new Convertlass().ShowDoc;
   };
 
 //void Out {
@@ -54,35 +48,31 @@ class ConceptClass {
 
 //================================================================
 
-class LogSchemaClass: DbSchemaClass {
-  var DB.DbFieldClass               Language,
-                                    Concept,
-                                    Text,
-                                    Spelling;
+class LogRecordClass {
+  var Language,
+      Concept,
+      Text,
+      Spelling;
+}
+
+//================================================================
+
+class Convertlass {
   var StringDictionaryClass<ConceptClass> Concepts;
 
   Constructor {
-    super.Constructor("log");
     Concepts = new(1024);
-    Language = new("Language", ValueTypes.String);
-    Concept  = new("Concept", ValueTypes.String);
-    Text     = new("Text", ValueTypes.String);
-    Spelling = new("Spelling", ValueTypes.String);
-    AddField(Language);
-    AddField(Concept);
-    AddField(Text);
-    AddField(Spelling);
-  }
+    var view = new ListClass<LogRecordClass>(1024);
+    view.ReadTextFile(res "SoundComparisons Export.txt", true);
 
-  void GetData(view) {
     foreach (var row in view) {
-      var cname = row.FindValue(Concept);
+      var cname   = row.Concept;
       var concept = Concepts.GetValue(cname);
       if (concept is null) {
         concept = new ConceptClass(cname);
         Concepts.Add(concept, cname);
       }
-      var word = new WordClass(row.FindValue(Language), row.FindValue(Text), row.FindValue(Spelling));
+      var word = new WordClass(row.Language, row.Text, row.Spelling);
       concept.Words.Add(word, word.Language);
     }
   }
