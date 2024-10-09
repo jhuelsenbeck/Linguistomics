@@ -1256,7 +1256,7 @@ class PhylogenyResultsClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
     style.FirstPar {
-      SubSection {"Phylogeny"};
+      style.SubSection {"Phylogeny"};
       "Our statistical analysis treats all model parameters as random variables with prior probability distributions. ";
       "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
       "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
@@ -1367,7 +1367,7 @@ class SegmentModelsClass: ContentClass {
     var rule = data.Rule;
 
     style.FirstPar {
-      SubSection {"Models of segmental change"};
+      style.SubSection {"Models of segmental change"};
       "We considered three models of segmental change in this study: ";
       PoissonModel; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor";
       Citation {Jukes1969};
@@ -1518,7 +1518,7 @@ class WordTransformationClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
     style.FirstPar {
-      SubSection {"Segmental Stability"};
+      style.SubSection {"Segmental Stability"};
       style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the rate matrix of the continuous-time Markov model describing phonemic ";
           "change estimated under the natural class model. ";
       "These diagonal elements can be interpreted as a measure of segmental volatility, since they are the sum of the rates at which they transition to other segments. ";
@@ -1571,10 +1571,10 @@ class WordSegmentRelationshipsClass: ContentClass {
     var align1 = Figures.AlignmentExample1;
     var align2 = Figures.AlignmentExample2;
 
-   style.FigureBlock(Figures.GappinessChart);
+    style.FigureBlock(Figures.GappinessChart);
 
     style.FirstPar {
-      SubSection {"Segmental Alignments"};
+      style.SubSection {"Segmental Alignments"};
 
       "Our method treats the homology relationships of segments from one language to another as a random variable. ";
       "We summarize the posterior distribution by constructing a credible set of alignments, where a credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
@@ -1618,110 +1618,155 @@ class WordSegmentRelationshipsClass: ContentClass {
 
 //======================================================================
 
-readonly DiscussionClass PaperSections.Discussion = new;
+readonly DiscussionSectionClass PaperSections.DiscussionSection = new;
 
-class DiscussionClass: ContentClass {
+class DiscussionSectionClass: ContentClass {
   Constructor {
     super.Constructor("Discussion");
+    AddContent(PaperSections.OtherApproaches);
+    AddContent(PaperSections.Limitations);
+    AddContent(PaperSections.Advantages);
   }
 
   override GetBody(ContentStyleClass style) = Block {
-   style.FirstPar {
-     SubSection {"Relationship to other approaches"};
-     "There is a long-standing debate — known as the "; style.DQuote{"Neogrammarian controversy"}; " — about the units involved in sound change. ";
-     "Leonard Bloomfield famously declared "; style.DQuote{"phonemes change"}; Citation {Bloomfield1933}; DotSpace;
-     "According to this view, sound change is not only abrupt but also non-independent. ";
-     "It is abrupt in that there are no intermediary stages in a transition from "; IPASegments.ah; " to "; IPASegments.oh; ", for instance. ";
-     "It is non-independent because the transitions from one phoneme to another in each individual word are regarded as a single event, regardless of how many words are affected. ";
-     "One consequence of this view is that the changes in each individual word-form are not independent and there is therefore just one change event from "; IPASegments.ah; " to "; IPASegments.oh; DotSpace;
-     "Other scholars have emphasized the role of acoustic and auditory phonetics in sound change";
-     Citation {Blevins2004a; Ohala2003; Ohala2012};
-     ", while yet another view contends that sound change occurs by gradually making its way through the lexicon in a process known as lexical diffusion"; Citation {Chen1975a; Phillips2015}; DotSpace;
-   };
-
-   style.BodyPar {
-     "Our framework cannot be situated within any one of these traditions, but rather shares affinities with the phonemic approach and lexical diffusion. Since our analysis is based on phonemic representations, it is phonemes that undergo insertions, deletions, and transitions. ";
-     "In contrast to the standard assumption of historical linguistics, however, these changes are treated as independent. ";
-     "For instance, a change from "; IPASegments.ah; " to "; IPASegments.oh; " is not modeled as a single transition across all word-forms in our study. ";
-     "Instead, a rate of change is inferred based on the homologies of "; IPASegments.ah; " and "; IPASegments.oh; " in the data and how often the former transitions to the latter. ";
-   };
-
-   style.BodyPar {
-     "The application of the TKF91 model to linguistic data is most similar to the analysis of Bouchard-Côté et al. ";
-     Citation{BouchardCote2013};
-     " who also took the observations to be segments, but instead applied a string transducer model ";
-     Citation{Holmes2001};
-     " to characterize segmental transitions. The transducer model has the advantage that it can account for many of the processes that are known to influence segmental change, such as context dependence. Our method, as currently implemented, does not take into account the context of word-segment change. However, unlike the transducer model, the TKF91 model is a historical model with well-defined events that can transform a word. In fact, the likelihood accounts for all of the histories of insertion, deletion, and segmental substitution that could have led to the observed words sampled from the nine languages. These events occur at rates that can be estimated. Since the TKF91 model is event-based, it is a natural starting point for modeling sound change even if that starting point does not account for processes that are accommodated for in other models, such as the string transducer model. ";
-   };
-
-   style.BodyPar {
-     "The complexity of the likelihood calculations under the TKF91 model is exponential in the number of taxa and word length; specifically, the complexity is of order ";
-     Equations.LikelihoodComplexity;
-     " where "; NumLanguages; " is the number of leaves on the tree and "; GMLength; " is the geometric mean of the word lengths ";
-     Citation{Lunter2003}; DotSpace;
-      "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with "; "1 < "; WordLength; " < 10. That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length, instead of the overall insertion rate being "; InsertionRate; "("; WordLength-1; ") as it is under the TKF91 model ";
-      Citation{BouchardCote2013b}; DotSpace;
-      "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
-   };
-
-   style.FirstPar {
-     SubSection {"Limitations of the  event-based model"};
-     "Our results are based on a unigram model of segmental transition, in which the three possible events described above are applicable only to individual segments. ";
-     "Certain patterns of sound change cannot be adequately captured under such a model. ";
-     "For instance, metathesis, a change in which two segments exchange positions, is modeled as two separate transitions. ";
-     "The Latin verb "; textit{"exprimere"}; Space; style.SQuote{"press out"}; " begins with "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; DotSpace;
-     "The initial vowel has been lost and "; IPASegments.k; " and "; IPASegments.s; " have undergone metathesis. ";
-     "Under our model, this single event is treated as two, one from "; IPASegments.k; " to "; IPASegments.s; " and another from "; IPASegments.s; " to "; IPASegments.k; DotSpace;
-     "A second limitation is that the context in which a segmental transition takes place plays no role in the estimation of transition rates. ";
-     "It is well known that the evolution of phonemes can be sensitive to neighboring sound changes (a phenomenon known as "; textit{"conditioned"}; " "; textit{"sound"}; " "; textit{"change"};"). ";
-   };
-
-   style.BodyPar {
-     "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with "; Equation {1; Tex.leq; Defs.GMLength; Tex.leq; 10}; DotSpace;
-     "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length ";
-     Citation{BouchardCote2013b; ", instead of the overall insertion rate being ";
-     Equation {Tex.lambda; Tex.times; InParens {Defs.GMLength + 1}};
-     " as it is under the TKF91 model"}; DotSpace;
-     "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
-   };
-
-   style.BodyPar {
-     "Under our framework a new issue in linguistic phylogenetics emerges, that of segmental sampling"; Citation {References.Dockum2019}; DotSpace;
-     "Certain segmental transitions can play a crucial role in topological inference, but under a sampling scheme such as ours, in which selection of concepts is guided by a Swadesh list, ";
-     "there is no guarantee that the necessary segmental correspondences will be sampled. ";
-     "There is the further question of the frequency distribution of segments in the dataset. ";
-     "Some segments will be sampled more often than others simply because they are more frequent in a language. ";
-     "The sampling can thus influence estimates of equilibrium frequencies and transition rates. ";
-     "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will likely have to be modified under our framework to consider issues of segmental distribution. ";
-   };
-
-   style.BodyPar {
-     "Our event-based approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. ";
-     "For instance, questions pertaining to the relationship between phonological change and the phonemic inventory of a language can now be addressed. ";
-     "Does the frequency of a phoneme in the words of a language affect its diachronic stability? ";
-     "To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? ";
-     "What is the role of "; style.DQuote{"natural classes"}; " in phonological change? ";
-     "This last question can be addressed through comparison of models with different numbers of rate parameters. ";
-     "The method can also be extended to handle more complex phonological changes (such as those involving context dependency), ";
-     "to estimate divergence times and diversification rates in addition to topology, ";
-     "or to model the history of words along a phylogenetic tree.";
-   };
-
-   style.BodyPar {
-     "In sum, our approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general, ";
-     "which can be expanded and refined in various ways. For instance, it can be combined with methods of automatic cognate detection. ";
-     "It can also address more complicated questions, such as context-dependent changes and changes involving multiple segments (such as metathesis). ";
-   };
+    (each Children).GetBody(style);
   };
 }
 
 //======================================================================
 
-readonly MethodsSummaryClass PaperSections.MethodsSummary = new;
+readonly OtherApproachesClass PaperSections.OtherApproaches = new;
+
+class OtherApproachesClass: ContentClass {
+  Constructor {
+    super.Constructor("Relationship to other approaches");
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+    style.FirstPar {
+      style.SubSection {Title};
+      "There is a long-standing debate — known as the "; style.DQuote{"Neogrammarian controversy"}; " — about the units involved in sound change. ";
+      "Leonard Bloomfield famously declared "; style.DQuote{"phonemes change"}; Citation {Bloomfield1933}; DotSpace;
+      "According to this view, sound change is not only abrupt but also non-independent. ";
+      "It is abrupt in that there are no intermediary stages in a transition from "; IPASegments.ah; " to "; IPASegments.oh; ", for instance. ";
+      "It is non-independent because the transitions from one phoneme to another in each individual word are regarded as a single event, regardless of how many words are affected. ";
+      "One consequence of this view is that the changes in each individual word-form are not independent and there is therefore just one change event from "; IPASegments.ah; " to "; IPASegments.oh; DotSpace;
+      "Other scholars have emphasized the role of acoustic and auditory phonetics in sound change";
+      Citation {Blevins2004a; Ohala2003; Ohala2012};
+      ", while yet another view contends that sound change occurs by gradually making its way through the lexicon in a process known as lexical diffusion"; Citation {Chen1975a; Phillips2015}; DotSpace;
+    };
+
+    style.BodyPar {
+      "Our framework cannot be situated within any one of these traditions, but rather shares affinities with the phonemic approach and lexical diffusion. Since our analysis is based on phonemic representations, it is phonemes that undergo insertions, deletions, and transitions. ";
+      "In contrast to the standard assumption of historical linguistics, however, these changes are treated as independent. ";
+      "For instance, a change from "; IPASegments.ah; " to "; IPASegments.oh; " is not modeled as a single transition across all word-forms in our study. ";
+      "Instead, a rate of change is inferred based on the homologies of "; IPASegments.ah; " and "; IPASegments.oh; " in the data and how often the former transitions to the latter. ";
+    };
+
+    style.BodyPar {
+      "The application of the TKF91 model to linguistic data is most similar to the analysis of Bouchard-Côté et al. ";
+      Citation{BouchardCote2013};
+      " who also took the observations to be segments, but instead applied a string transducer model ";
+      Citation{Holmes2001};
+      " to characterize segmental transitions. The transducer model has the advantage that it can account for many of the processes that are known to influence segmental change, such as context dependence. Our method, as currently implemented, does not take into account the context of word-segment change. However, unlike the transducer model, the TKF91 model is a historical model with well-defined events that can transform a word. In fact, the likelihood accounts for all of the histories of insertion, deletion, and segmental substitution that could have led to the observed words sampled from the nine languages. These events occur at rates that can be estimated. Since the TKF91 model is event-based, it is a natural starting point for modeling sound change even if that starting point does not account for processes that are accommodated for in other models, such as the string transducer model. ";
+    };
+
+    style.BodyPar {
+      "The complexity of the likelihood calculations under the TKF91 model is exponential in the number of taxa and word length; specifically, the complexity is of order ";
+      Equations.LikelihoodComplexity;
+      " where "; NumLanguages; " is the number of leaves on the tree and "; GMLength; " is the geometric mean of the word lengths ";
+      Citation{Lunter2003}; DotSpace;
+       "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with "; "1 < "; WordLength; " < 10. That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length, instead of the overall insertion rate being "; InsertionRate; "("; WordLength-1; ") as it is under the TKF91 model ";
+       Citation{BouchardCote2013b}; DotSpace;
+       "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
+    };
+  };
+}
+
+//======================================================================
+
+readonly LimitationsClass PaperSections.Limitations = new;
+
+class LimitationsClass: ContentClass {
+  Constructor {
+    super.Constructor("Limitations of the event-based model");
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+    style.FirstPar {
+      style.SubSection {Title};
+      "Our results are based on a unigram model of segmental transition, in which the three possible events described above are applicable only to individual segments. ";
+      "Certain patterns of sound change cannot be adequately captured under such a model. ";
+      "For instance, metathesis, a change in which two segments exchange positions, is modeled as two separate transitions. ";
+      "The Latin verb "; textit{"exprimere"}; Space; style.SQuote{"press out"}; " begins with "; TextIpa{"eks"}; ", which in Romanian has become "; TextIpa{"sk"}; DotSpace;
+      "The initial vowel has been lost and "; IPASegments.k; " and "; IPASegments.s; " have undergone metathesis. ";
+      "Under our model, this single event is treated as two, one from "; IPASegments.k; " to "; IPASegments.s; " and another from "; IPASegments.s; " to "; IPASegments.k; DotSpace;
+      "A second limitation is that the context in which a segmental transition takes place plays no role in the estimation of transition rates. ";
+      "It is well known that the evolution of phonemes can be sensitive to neighboring sound changes (a phenomenon known as "; textit{"conditioned"}; " "; textit{"sound"}; " "; textit{"change"};"). ";
+    };
+
+    style.BodyPar {
+      "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with "; Equation {1; Tex.leq; Defs.GMLength; Tex.leq; 10}; DotSpace;
+      "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length ";
+      Citation{BouchardCote2013b; ", instead of the overall insertion rate being ";
+      Equation {Tex.lambda; Tex.times; InParens {Defs.GMLength + 1}};
+      " as it is under the TKF91 model"}; DotSpace;
+      "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
+    };
+
+    style.BodyPar {
+      "Under our framework a new issue in linguistic phylogenetics emerges, that of segmental sampling"; Citation {References.Dockum2019}; DotSpace;
+      "Certain segmental transitions can play a crucial role in topological inference, but under a sampling scheme such as ours, in which selection of concepts is guided by a Swadesh list, ";
+      "there is no guarantee that the necessary segmental correspondences will be sampled. ";
+      "There is the further question of the frequency distribution of segments in the dataset. ";
+      "Some segments will be sampled more often than others simply because they are more frequent in a language. ";
+      "The sampling can thus influence estimates of equilibrium frequencies and transition rates. ";
+      "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will likely have to be modified under our framework to consider issues of segmental distribution. ";
+    };
+  };
+}
+
+//======================================================================
+
+readonly AdvantagesClass PaperSections.Advantages = new;
+
+class AdvantagesClass: ContentClass {
+  Constructor {
+    super.Constructor("Advantages of the event-based approach");
+  }
+
+  override GetBody(ContentStyleClass style) = Block {
+    style.BodyPar {
+      style.SubSection {Title};
+      "Our event-based approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. ";
+      "For instance, questions pertaining to the relationship between phonological change and the phonemic inventory of a language can now be addressed. ";
+      "Does the frequency of a phoneme in the words of a language affect its diachronic stability? ";
+      "To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? ";
+      "What is the role of "; style.DQuote{"natural classes"}; " in phonological change? ";
+      "This last question can be addressed through comparison of models with different numbers of rate parameters. ";
+      "The method can also be extended to handle more complex phonological changes (such as those involving context dependency), ";
+      "to estimate divergence times and diversification rates in addition to topology, ";
+      "or to model the history of words along a phylogenetic tree.";
+    };
+
+    style.BodyPar {
+      "In sum, our approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general, ";
+      "which can be expanded and refined in various ways. For instance, it can be combined with methods of automatic cognate detection. ";
+      "It can also address more complicated questions, such as context-dependent changes and changes involving multiple segments (such as metathesis). ";
+    };
+  };
+}
+
+//======================================================================
+
+readonly MethodsSummaryClass PaperSections.MethodsSection = new;
 
 class MethodsSummaryClass: ContentClass {
   Constructor {
     super.Constructor(Lang.Methods);
+    AddContent(PaperSections.DataSummary);
+    AddContent(PaperSections.ModelInference);
+    AddContent(PaperSections.DataCuration);
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1729,6 +1774,7 @@ class MethodsSummaryClass: ContentClass {
       "A detailed description of the model and analysis can be found in the supplemental material, [reference]. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
     };
+    (each Children).GetBody(style);
   };
 }
 
@@ -1747,7 +1793,7 @@ class DataSummaryClass: ContentClass {
     var data = MainResults.Data;
 
     style.FirstPar {
-      SubSection {"Data"};
+      style.SubSection {Title};
       "The initial set of data was downloaded from"; CitationName(Wiktionary); ", which was then manually checked for accuracy and augmented. ";
       "Words were double-checked against data from"; CitationName(SoundComparisons); DotSpace;
       "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
@@ -1883,7 +1929,7 @@ class ModelInferenceClass: ContentClass {
     var rule = MainResults.Data.Rule;
 
     style.FirstPar {
-      SubSection {"Model and Statistical Inference"};
+      style.SubSection {Title};
       "We assume that modern languages are related to one another through an unknown phylogenetic tree, ";
       UnknownTree;
       ", that contains information on the relatedness of the languages ";
@@ -1942,7 +1988,7 @@ class DataCurationClass: ContentClass {
     var example = new ExampleConceptClass(data, data.DataConcept);
 
     style.FirstPar {
-      SubSection {"Data Curation and Analysis"};
+      style.SubSection {Title};
       "Our analysis is coordinated using a program written in the Nytril programming language"; Citation {nytrilprogram}; DotSpace;
       "We created an automated framework for the experiment that comprises a reusable IPA library, word data, ";
       "data quality checks, typeset output and input files for the MCMC software (written in C++). ";
