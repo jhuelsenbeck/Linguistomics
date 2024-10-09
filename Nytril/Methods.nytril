@@ -314,8 +314,7 @@ class AlignmentCompareClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = Span {
     "Alignments of highest posterior probability of the cognate for the concept ";
-    style.SQuote{Concept};
-    DotSpace;
+    style.SQuoteEnd{Concept};
 
     foreach (var m in Models) {
       Span {
@@ -428,7 +427,7 @@ class NaturalClassRateChartClass: ContentClass {
   override GetCaption(ContentStyleClass style) = Span {
     "The average rates of change between and within the ten segment groups of the natural class model. ";
     "Circle area is proportional to the rate of change between natural class groups ("; Defs.qij; "). ";
-    "Shaded area represent the 95% credible interval. ";
+    "Shaded area represents the 95% credible interval. ";
   };
 
   override GetBody(ContentStyleClass style) = Block {
@@ -523,7 +522,7 @@ readonly EquilibriumFrequencyChartClass Figures.EquilibriumCharts = new;
 
 class EquilibriumFrequencyChartClass: ContentClass {
   Constructor {
-    super.Constructor("The equilibrium frequencies (π) of the segment groups.");
+    super.Constructor("The equilibrium frequencies (π) of the segment groups");
   }
 
   override GetBody(ContentStyleClass style) = Chart(50%, 3.5 inches) {
@@ -577,7 +576,7 @@ class GappinessChartClass: ContentClass {
   override GetCaption(ContentStyleClass style) = Span {
     "The number of gaps observed across the "; MainResults.Data.UsedCognates.Length; " cognates analyzed in this study at the first segment (top), middle segment(s) (middle), and last segment (bottom). ";
     "Nine languages were analyzed in this study, so it is not possible for there to be nine gaps; deletion events that led to a gap for all the languages would not be included in an alignment, and is explicitly conditioned on in Lunter et al."; Citation{Lunter2003}; DotSpace;
-    "There is a clear, and statistically significant, pattern of an increaasing number of gaps as one moves from the beginning to the end of the word.";
+    "There is a clear, and statistically significant, pattern of an increasing number of gaps as one moves from the beginning to the end of the word. ";
     "(A likelihood ratio test of the null hypothesis that the distributions are the same at the first, middle, and last segments is highly significant, with a test statistic of ";
       TextDigits: 2;
      GapInfo.testStatistic;
@@ -1489,7 +1488,7 @@ class SegmentModelsClass: ContentClass {
       if (same.Ratio > diff.Ratio) {
         "Note that "; same; " of the changes within a group are higher than expected under an equal rates model, whereas ";
         diff; " of the changes between different natural class groups are higher than expected under an equal rates model, ";
-        "supporting the pattern of a generally higher rate of change between word segmetns assigned to the same natural class group. ";
+        "supporting the pattern of a generally higher rate of change between word segments assigned to the same natural class group. ";
       }
       else
         System.Assert(false, "Inconsistency between text and data!");
@@ -1502,15 +1501,15 @@ class SegmentModelsClass: ContentClass {
 
     style.BodyPar {
       style.FigureReference(Figures.EquilibriumCharts);
-      " shows the estimated equilibirum frequencies of the natural classes under model "; NaturalClassModel; ". ";
-      "The equilibirum frequenices are used in two ways when calculating the probability of the observed data. ";
+      " shows the estimated equilibrium frequencies of the natural classes under model "; NaturalClassModel; ". ";
+      "The equilibrium frequencies are used in two ways when calculating the probability of the observed data. ";
       "First, they are used at the root of the tree as the probability of the word segment state at the root. ";
       "Second, they modify the rate of change between word segments for models "; UnequalModel; " and "; NaturalClassModel;
       ", with the rate of change being proportional to the frequency of the destination word segment. ";
       "Indeed, the rates of change to ";
       TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
-      " are the highest as are the estimated equilibirum frequencies for those classes. ";
-      "Generally speaking, the estimated equilibrium frequency tracks the frequency of the word segments in the data. ";
+      " are the highest as are the estimated equilibrium frequencies for those classes. ";
+      "The estimated equilibrium frequency generally tracks the frequency of the word segments in the data. ";
     };
   };
 
@@ -1582,7 +1581,7 @@ class WordSegmentRelationshipsClass: ContentClass {
       "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is {0}. "(ResultsClass.CutoffProbability);
       style.FigureReference(align1); " shows alignments for the concept ";
       style.SQuote {align1.Examples[0].Concept};
-      ", which  illustrates three key properties we observed for all of the alignments. ";
+      ", which illustrates three key properties we observed for all the alignments. ";
       "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
       "In this case, one alignment had a posterior probability of ";
       Span {
@@ -1670,7 +1669,7 @@ class OtherApproachesClass: ContentClass {
       Citation{BouchardCote2013};
       " who also took the observations to be segments, but instead applied a string transducer model ";
       Citation{Holmes2001};
-      " to characterize segmental transitions. The transducer model has the advantage that it can account for many of the processes that are known to influence segmental change, such as context dependence. Our method, as currently implemented, does not take into account the context of word-segment change. However, unlike the transducer model, the TKF91 model is a historical model with well-defined events that can transform a word. In fact, the likelihood accounts for all of the histories of insertion, deletion, and segmental substitution that could have led to the observed words sampled from the nine languages. These events occur at rates that can be estimated. Since the TKF91 model is event-based, it is a natural starting point for modeling sound change even if that starting point does not account for processes that are accommodated for in other models, such as the string transducer model. ";
+      " to characterize segmental transitions. The transducer model has the advantage that it can account for many of the processes that are known to influence segmental change, such as context dependence. Our method, as currently implemented, does not consider the context of word-segment change. However, unlike the transducer model, the TKF91 model is a historical model with well-defined events that can transform a word. In fact, the likelihood accounts for all the histories of insertion, deletion, and segmental substitution that could have led to the observed words sampled from the nine languages. These events occur at rates that can be estimated. Since the TKF91 model is event-based, it is a natural starting point for modeling sound change even if that starting point does not account for processes that are accommodated for in other models, such as the string transducer model. ";
     };
 
     style.BodyPar {
@@ -2856,7 +2855,7 @@ class ConclusionClass: ContentClass {
     };
 
     style.BodyPar {
-      "What do the average rates tell us? I think the interpretation is a little more confusing, but still well defined. We are looking at averages now, over all of the characters and taking into account their frequencies. A segment that is frequent in the data set will have a boost, here, because "; Probability sub sym.i; " will be higher."
+      "What do the average rates tell us? I think the interpretation is a little more confusing, but still well defined. We are looking at averages now, over all the characters and taking into account their frequencies. A segment that is frequent in the data set will have a boost, here, because "; Probability sub sym.i; " will be higher."
     };
 
     style.BodyPar {
