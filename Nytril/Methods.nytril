@@ -1247,21 +1247,38 @@ namespace StateSection {
 
 //======================================================================
 
+readonly ResultsSectionClass PaperSections.Results = new;
+
+class ResultsSectionClass: ContentClass {
+  Constructor {
+    super.Constructor("Results");
+    AddContent(PaperSections.PhylogenyResults, PlacementTypes.SubSection);
+    AddContent(PaperSections.SegmentModels, PlacementTypes.SubSection);
+    AddContent(Figures.ModelTreesUsed, PlacementTypes.FigureFull);
+    AddContent(PaperSections.WordTransformation, PlacementTypes.SubSection);
+    AddContent(PaperSections.WordSegmentRelationships, PlacementTypes.SubSection);
+    AddContent(Figures.EquilibriumCharts, PlacementTypes.FigureFull);
+    AddContent(Figures.RateChart, PlacementTypes.FigureFull);
+    AddContent(Figures.QRatesDiagonal, PlacementTypes.FigureHalf);
+ }
+}
+
+//======================================================================
+
 readonly PhylogenyResultsClass PaperSections.PhylogenyResults = new;
 
 class PhylogenyResultsClass: ContentClass {
   Constructor {
-    super.Constructor("Results");
+    super.Constructor("Phylogeny");
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
-      style.SubSection {"Phylogeny"};
+    style.FirstPar(Title) {
       "Our statistical analysis treats all model parameters as random variables with prior probability distributions. ";
       "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
       "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
       "Our analyses consistently found a handful of topologies that best explained the data. Unfortunately, the MCMC poorly explored the tree space: ";
-          "the MCMC algorithm would find a good tree then become stuck on it. Why is this the case? In our MCMC implementation, parameters are updated in blocks. ";
+        "the MCMC algorithm would find a good tree then become stuck on it. Why is this the case? In our MCMC implementation, parameters are updated in blocks. ";
       "A parameter is randomly selected and then updated. In a single MCMC cycle, either the tree topology or the alignment is updated, but not both simultaneously. ";
       "The tree topology and alignments are confounded. As the MCMC procedure found better trees, the alignments that were accepted by the MCMC procedure tended to fit the current tree in computer memory. ";
       "As the alignment becomes better adapted to the current tree in memory, it becomes more difficult for the MCMC procedure to accept alternative topologies, even if they would be sensible ones on a different alignment.";
@@ -1275,7 +1292,7 @@ class PhylogenyResultsClass: ContentClass {
       "In our analysis of cognate data, the insertion and deletion rates were estimated to be quite high relative to the substitution rate: ";
       InsertionRate; " = "; run.InsertionRate; " ("; run.InsertionRateLow; ", "; run.InsertionRateHigh; ") and ";
       DeletionRate; " = "; run.DeletionRate; " ("; run.DeletionRateLow; ", "; run.DeletionRateHigh; ") ";
-         "for the insertion and deletion rates, respectively. ";
+        "for the insertion and deletion rates, respectively. ";
       "(The credible intervals in the parentheses contain the true value of the parameter with probability {0}.) "(ResultsClass.CutoffProbability);
       "Roughly speaking, this means that for every two segmental transitions there was one insertion or deletion event. ";
       "Just like substitution events, insertion and deletion events can be informative about phylogeny. ";
@@ -1285,19 +1302,17 @@ class PhylogenyResultsClass: ContentClass {
 
     style.BodyPar {
       "In all subsequent analyses, we examine the pattern of language change using three topologies ("
-         style.FigureReference(Figures.ModelTreesUsed); "). ";
+       style.FigureReference(Figures.ModelTreesUsed); "). ";
       "Although there is considerable debate about the phylogeny of the Romance languages, in recent decades most specialists have converged on the view that the first two clades to ";
-         "form included Sardinian followed by Romanian";
-          Citation {Hall1950; Hall1976; Dardel1985; Swiggers2001; Vallejo2012; Buchi2015; Dworkin2016}; DotSpace;
+       "form included Sardinian followed by Romanian";
+       Citation {Hall1950; Hall1976; Dardel1985; Swiggers2001; Vallejo2012; Buchi2015; Dworkin2016}; DotSpace;
       "Since Sardinian is not in our study group, the clade containing Romanian is then the first to form in each of the trees in ";
-         style.FigureReference(Figures.ModelTreesUsed); DotSpace;
+       style.FigureReference(Figures.ModelTreesUsed); DotSpace;
       "The sub-trees containing the remaining dialects differ in their topologies, but they all contain Spanish and Portuguese as a clade, as well as Catalan, French, and Walloon. ";
       "The question of the exact relationship between Latin and Romance continues to be debated ";
-          // \citep{goldstein24}.";
-          "(Citations)"; DotSpace;
+        // \citep{goldstein24}.";
+        "(Citations)"; DotSpace;
     };
-
-     style.FigureBlock( Figures.ModelTreesUsed);
   };
 }
 
@@ -1358,7 +1373,7 @@ readonly SegmentModelsClass PaperSections.SegmentModels = new;
 
 class SegmentModelsClass: ContentClass {
   Constructor {
-    super.Constructor("");
+    super.Constructor("Models of segmental change");
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1366,8 +1381,7 @@ class SegmentModelsClass: ContentClass {
 
     var rule = data.Rule;
 
-    style.FirstPar {
-      style.SubSection {"Models of segmental change"};
+    style.FirstPar(Title) {
       "We considered three models of segmental change in this study: ";
       PoissonModel; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor";
       Citation {Jukes1969};
@@ -1411,8 +1425,6 @@ class SegmentModelsClass: ContentClass {
       "This indicates overwhelming support for the more parameter-rich natural class model";
       Citation {Jeffreys1939}; DotSpace;
     };
-
-    style.FigureBlock(Figures.RateChart);
 
     var partitions = data.Rule.Partitions;
     var diagonal   = new ListClass<PartitionValueClass>(partitions.Length);
@@ -1499,9 +1511,7 @@ class SegmentModelsClass: ContentClass {
       TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
       " are the highest as are the estimated equilibirum frequencies for those classes. ";
       "Generally speaking, the estimated equilibrium frequency tracks the frequency of the word segments in the data. ";
-      };
-
-    style.FigureBlock(Figures.EquilibriumCharts);
+    };
   };
 
   SelfArrow(text) = Span {text; Tex.rightarrow; text};
@@ -1513,12 +1523,11 @@ readonly WordTransformationClass PaperSections.WordTransformation = new;
 
 class WordTransformationClass: ContentClass {
   Constructor {
-    super.Constructor("");
+    super.Constructor("Segmental Stability");
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
-      style.SubSection {"Segmental Stability"};
+    style.FirstPar(Title) {
       style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the rate matrix of the continuous-time Markov model describing phonemic ";
           "change estimated under the natural class model. ";
       "These diagonal elements can be interpreted as a measure of segmental volatility, since they are the sum of the rates at which they transition to other segments. ";
@@ -1528,8 +1537,6 @@ class WordTransformationClass: ContentClass {
       //style.FigureReference(Figures.QRatesDiagonal); " assume the process is in segment "; sym.i;
       // " and measures the rate of flow away from it (to any other segment). ";
     };
-
-    style.FigureBlock(Figures.QRatesDiagonal);
 
     style.BodyPar {
       "The most striking aspect of "; style.FigureReference(Figures.QRatesDiagonal); " is the robust distinction between the stability of vowels and consonants. ";
@@ -1553,8 +1560,6 @@ class WordTransformationClass: ContentClass {
       //"The output segments are similarly restricted. ";
       //"Although there are eight transitions in the graph, there are only two output segments, the mid-high front vowel /e/ and the high back vowel /u/. ";
     };
-
-    //style.FigureBlock(Figures.QRatesTop);
   };
 }
 
@@ -1564,23 +1569,16 @@ readonly WordSegmentRelationshipsClass PaperSections.WordSegmentRelationships = 
 
 class WordSegmentRelationshipsClass: ContentClass {
   Constructor {
-    super.Constructor("");
+    super.Constructor("Segmental Alignments");
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    var align1 = Figures.AlignmentExample1;
-    var align2 = Figures.AlignmentExample2;
-
-    style.FigureBlock(Figures.GappinessChart);
-
-    style.FirstPar {
-      style.SubSection {"Segmental Alignments"};
-
+    style.FirstPar(Title) {
       "Our method treats the homology relationships of segments from one language to another as a random variable. ";
       "We summarize the posterior distribution by constructing a credible set of alignments, where a credible set of alignments is constructed by ordering the alignments for a cognate from highest to lowest posterior probability. ";
       "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is {0}. "(ResultsClass.CutoffProbability);
-      style.FigureReference(align1); " shows alignments for the concept ";
-      style.SQuote {align1.Examples[0].Concept};
+      style.FigureReference(Figures.AlignmentExample1); " shows alignments for the concept ";
+      style.SQuote {Figures.AlignmentExample1.Examples[0].Concept};
       ", which  illustrates three key properties we observed for all of the alignments. ";
       "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
       Span {TextColor: Colors.Red; "In this case, one alignment had a posterior probability of {0} (fix me). "(/*run.PosteriorProbability */ 0.79);};
@@ -1589,9 +1587,9 @@ class WordSegmentRelationshipsClass: ContentClass {
       "Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment. ";
     };
 
-    style.FigureBlock(align1);
-
     style.BodyPar {
+      var align2 = Figures.AlignmentExample2;
+
       "Interestingly, the distribution of alignments depends on the model of segmental change. ";
       style.FigureReference(align2); " shows the {0} credible set of alignments for the concept "(ResultsClass.CutoffPercent);
       style.SQuote {align2.Concept}; " under the ";
@@ -1611,8 +1609,6 @@ class WordSegmentRelationshipsClass: ContentClass {
       "Under the "; align2.NaturalClass.Name;
       ", however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
-
-    style.FigureBlock(align2);
   };
 }
 
@@ -1623,14 +1619,13 @@ readonly DiscussionSectionClass PaperSections.DiscussionSection = new;
 class DiscussionSectionClass: ContentClass {
   Constructor {
     super.Constructor("Discussion");
-    AddContent(PaperSections.OtherApproaches);
-    AddContent(PaperSections.Limitations);
-    AddContent(PaperSections.Advantages);
+    AddContent(PaperSections.OtherApproaches, PlacementTypes.SubSection);
+    AddContent(PaperSections.Limitations, PlacementTypes.SubSection);
+    AddContent(PaperSections.Advantages, PlacementTypes.SubSection);
+    AddContent(Figures.GappinessChart, PlacementTypes.FigureFull);
+    AddContent(Figures.AlignmentExample1, PlacementTypes.FigureFull);
+    AddContent(Figures.AlignmentExample2, PlacementTypes.FigureFull);
   }
-
-  override GetBody(ContentStyleClass style) = Block {
-    (each Children).GetBody(style);
-  };
 }
 
 //======================================================================
@@ -1643,8 +1638,7 @@ class OtherApproachesClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
-      style.SubSection {Title};
+    style.FirstPar(Title) {
       "There is a long-standing debate — known as the "; style.DQuote{"Neogrammarian controversy"}; " — about the units involved in sound change. ";
       "Leonard Bloomfield famously declared "; style.DQuote{"phonemes change"}; Citation {Bloomfield1933}; DotSpace;
       "According to this view, sound change is not only abrupt but also non-independent. ";
@@ -1693,8 +1687,7 @@ class LimitationsClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
-      style.SubSection {Title};
+    style.FirstPar(Title) {
       "Our results are based on a unigram model of segmental transition, in which the three possible events described above are applicable only to individual segments. ";
       "Certain patterns of sound change cannot be adequately captured under such a model. ";
       "For instance, metathesis, a change in which two segments exchange positions, is modeled as two separate transitions. ";
@@ -1736,8 +1729,7 @@ class AdvantagesClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Block {
-    style.BodyPar {
-      style.SubSection {Title};
+    style.FirstPar(Title) {
       "Our event-based approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. ";
       "For instance, questions pertaining to the relationship between phonological change and the phonemic inventory of a language can now be addressed. ";
       "Does the frequency of a phoneme in the words of a language affect its diachronic stability? ";
@@ -1764,9 +1756,9 @@ readonly MethodsSummaryClass PaperSections.MethodsSection = new;
 class MethodsSummaryClass: ContentClass {
   Constructor {
     super.Constructor(Lang.Methods);
-    AddContent(PaperSections.DataSummary);
-    AddContent(PaperSections.ModelInference);
-    AddContent(PaperSections.DataCuration);
+    AddContent(PaperSections.DataSummary, PlacementTypes.SubSection);
+    AddContent(PaperSections.ModelInference, PlacementTypes.SubSection);
+    AddContent(PaperSections.DataCuration, PlacementTypes.SubSection);
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1774,7 +1766,6 @@ class MethodsSummaryClass: ContentClass {
       "A detailed description of the model and analysis can be found in the supplemental material, [reference]. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
     };
-    (each Children).GetBody(style);
   };
 }
 
@@ -1792,8 +1783,7 @@ class DataSummaryClass: ContentClass {
   override GetBody(ContentStyleClass style) = Block {
     var data = MainResults.Data;
 
-    style.FirstPar {
-      style.SubSection {Title};
+    style.FirstPar(Title) {
       "The initial set of data was downloaded from"; CitationName(Wiktionary); ", which was then manually checked for accuracy and augmented. ";
       "Words were double-checked against data from"; CitationName(SoundComparisons); DotSpace;
       "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
@@ -1928,8 +1918,7 @@ class ModelInferenceClass: ContentClass {
   override GetBody(ContentStyleClass style) = Block {
     var rule = MainResults.Data.Rule;
 
-    style.FirstPar {
-      style.SubSection {Title};
+    style.FirstPar(Title) {
       "We assume that modern languages are related to one another through an unknown phylogenetic tree, ";
       UnknownTree;
       ", that contains information on the relatedness of the languages ";
@@ -1987,8 +1976,7 @@ class DataCurationClass: ContentClass {
     var data    = MainResults.Data;
     var example = new ExampleConceptClass(data, data.DataConcept);
 
-    style.FirstPar {
-      style.SubSection {Title};
+    style.FirstPar(Title) {
       "Our analysis is coordinated using a program written in the Nytril programming language"; Citation {nytrilprogram}; DotSpace;
       "We created an automated framework for the experiment that comprises a reusable IPA library, word data, ";
       "data quality checks, typeset output and input files for the MCMC software (written in C++). ";
@@ -2133,8 +2121,6 @@ class MethodsClass: ContentClass {
       style.FigureReference(Figures.ExampleTree);
       ", the branch connecting nodes 14 and 15 is assigned the label 16. ";
     };
-
-    style.FigureBlock(Figures.ExampleTree);
 
     style.BodyPar {
       "A phylogeny is an information-rich graph. ";
@@ -2391,8 +2377,6 @@ class MethodsClass: ContentClass {
       ec.Name;
       " that can be formed using two different homology maps. ";
     };
-
-    style.FigureBlock(Figures.Alignment);
 
     style.BodyPar {
       "Ultimately, the linguist observes the phonetic (in the case of contemporary languages) or graphemic (in the case of corpus languages) forms of words, on the basis of which phonemic representations are posited. ";
