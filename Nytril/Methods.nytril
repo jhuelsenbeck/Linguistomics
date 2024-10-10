@@ -44,7 +44,7 @@ class ExperimentalRunsClass: ContentClass {
 
       foreach (var r in model.Run) {
         if (r.ResultTree is not null)
-          PaperStyle.ShowTree(style, r.ResultTree, 100%, "Run {0}"(each1));
+          ShowTree(style, r.ResultTree, 100%, "Run {0}"(each1));
       }
     }
   };
@@ -62,7 +62,7 @@ class ExperimentalRunsClass: ContentClass {
 
     Span {
       foreach (var tree in data.PriorTrees)
-        PaperStyle.ShowTree(style, tree, 30%, Lang.Tree+each1);
+        ShowTree(style, tree, 30%, Lang.Tree+each1);
     };
 
     foreach (var treeset in data.TreeSets) {
@@ -103,7 +103,7 @@ class ModelTrees: ContentClass {
 
       foreach (var r in model.Run) {
         if (r.ResultTree is not null)
-          PaperStyle.ShowTree(style, r.ResultTree, 100%, "Run {0}"(each1));
+          ShowTree(style, r.ResultTree, 100%, "Run {0}"(each1));
       }
     }
   };
@@ -119,7 +119,7 @@ class ModelTrees: ContentClass {
   override GetBody(ContentStyleClass style) = Block {
     Span {
       foreach (var tree in MainResults.Data.PriorTrees)
-        PaperStyle.ShowTree(style, tree, 30%, Lang.Tree+each1);
+        ShowTree(style, tree, 30%, Lang.Tree+each1);
     };
   };
 
@@ -349,7 +349,7 @@ class ExchangeabilityTableClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
     var th = ExtentWidth * 0.015;
-    PaperStyle.SansSerif;
+    style.SansSerif;
     TextHeight: th;
 
     var results    = MainResults;
@@ -423,7 +423,7 @@ class NaturalClassRateChartClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style) = Block {
-    PaperStyle.SansSerif;
+    style.SansSerif;
     TextHeight: ExtentWidth * 0.015;
 
     var partitions = MainResults.Data.Rule.Partitions;
@@ -1258,6 +1258,19 @@ class ResultsSectionClass: ContentClass {
     AddContent(Figures.RateChart, PlacementTypes.FigureFull);
     AddContent(Figures.QRatesDiagonal, PlacementTypes.FigureHalf);
  }
+
+  override GetBody(ContentStyleClass style) = Block {
+    style.FirstPar {
+      "Our results are based on a data set of ";
+      MainResults.Data.UsedCognates.Length;
+      " cognate classes comprising ";
+      MainResults.Data.WordCount;
+      " individual words from "; Enumerators.Cardinal(MainResults.Data.LanguageSet.Length-1);
+      " Romance languages, whose geographic distribution is shown in ";
+      style.FigureReference(Figures.LanguageDistribution);
+      ", and Classical Latin. ";
+    };
+  };
 }
 
 //======================================================================
