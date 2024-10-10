@@ -261,20 +261,15 @@ class GappinessSignificanceClass {
     VectorClass<double> statistic = new(spectrum.Length, 0.0);
     VectorClass<double> countVals = new(spectrum[0].Length, 0.0);
     foreach (var gap in spectrum) {
-      var ni = 0;
-      foreach (var value in gap)
-        ni += value;
+      var ni = Math.Sum(gap);
       n += ni;
       foreach (var value in gap) {
         if (value != 0)
           lnL1 += value * Math.Log(value / ni);
       }
       statistic.SetValue(each0, n);
-      foreach (var value in gap) {
-        double x = countVals[each0];
-        x += value;
-        countVals.SetValue(each0, x);
-      }
+      foreach (var value in gap)
+        countVals.AddValue(each0, value);
     }
 
     foreach (var value in countVals) {
