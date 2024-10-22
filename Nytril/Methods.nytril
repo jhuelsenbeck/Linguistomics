@@ -85,13 +85,44 @@ class ModelTrees: ContentClass {
     super.Constructor("Model trees used in all analyses");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    VBox {
-      Separation: 5 pts;
-      foreach (var tree in MainResults.Data.PriorTrees)
-        ShowTreeHorizontal(style, tree, 50%, Lang.Tree + Space + each1);
+  ShowTrees(ContentStyleClass style, ModelClass model) = Block {
+    var anytree = false;
+    foreach (var r in model.Run) {
+      if (r.ResultTree is not null) {
+        anytree = true;
+        break;
+      }
+    }
+
+    if (anytree) {
+      style.FirstPar {
+        Lang.Model;
+        ColonSpace;
+        model.Name;
+      };
+
+      foreach (var r in model.Run) {
+        if (r.ResultTree is not null)
+          ShowTree(style, r.ResultTree, 100%, "Run {0}"(each1));
+      }
     }
   };
+
+  override GetCaption(ContentStyleClass style) = Span {
+    //Lang.Experiment;
+    //Space;
+    //each1;
+    //Space;
+    //style.DQuote {MainResults.Data.Name};
+  };
+
+  override GetBody(ContentStyleClass style) = Block {
+    Span {
+      foreach (var tree in MainResults.Data.PriorTrees)
+        ShowTree(style, tree, 30%, Lang.Tree+each1);
+    };
+  };
+
 }
 
 //======================================================================
@@ -481,7 +512,7 @@ class EquilibriumFrequencyChartClass: ContentClass {
     super.Constructor("The equilibrium frequencies (π) of the segment groups");
   }
 
-  override GetBody(ContentStyleClass style) = Chart(100%, 3.5 inches) {
+  override GetBody(ContentStyleClass style) = Chart(50%, 3.5 inches) {
     Type: ChartTypes.Bar;
     style.SansSerif;
     TextHeight: 12 pts;
@@ -526,7 +557,7 @@ readonly GappinessSignificanceClass GapInfo = new(MainResults.MainRun);
 
 class GappinessChartClass: ContentClass {
   Constructor {
-    super.Constructor("Gap analysis");
+    super.Constructor("");
   }
 
   override GetCaption(ContentStyleClass style) = Span {
@@ -552,7 +583,7 @@ class GappinessChartClass: ContentClass {
     VBox {
       HAlign: HAligns.Center;
       foreach (var gap in MainResults.MainRun.GapSpectrum) {
-        Chart(ExtentWidth - 0.25 inches, 1.5 inches) {
+        Chart(4 inches, 1.5 inches) {
           Type: ChartTypes.Column;
 
 // Possible alternate look
@@ -635,7 +666,7 @@ readonly TreeContentClass Figures.PriorTree = new("Tree topology", 33%, MainResu
 
 //======================================================================
 
-readonly LanguageDistributionClass Figures.LanguageDistribution = new;
+readonly LanguageDistributionClass  Figures.LanguageDistribution = new;
 
 class LanguageDistributionClass: ContentClass {
   Constructor {
@@ -847,7 +878,7 @@ class ExampleConceptClass {
     TaxonIndex     = 0;
     Taxon          = data.Taxa[TaxonIndex];
     Callout        = data.Taxa[3];
-    Name           = string.ToLower(Cognate.Concept.Name);
+    Name           = Cognate.Concept.Name.ToLower;
     ExLanguages    = [Languages.French, WorldLanguages.Portuguese, WorldLanguages.Catalan, WorldLanguages.Friulian, WorldLanguages.Romanian];
     TaxonList      = data.Taxa.FindSlice(t => ExLanguages.Contains(t.Language));
     LangNames      = (each TaxonList).Language;
@@ -1213,14 +1244,14 @@ readonly ResultsSectionClass PaperSections.Results = new;
 class ResultsSectionClass: ContentClass {
   Constructor {
     super.Constructor("Results");
-    AddContent(PaperSections.PhylogenyResults);
-    AddContent(PaperSections.SegmentModels);
-    AddFigure(Figures.ModelTreesUsed);
-    AddContent(PaperSections.WordTransformation);
-    AddContent(PaperSections.WordSegmentRelationships);
-    AddFigure(Figures.EquilibriumCharts);
-    AddFigure(Figures.RateChart, true);
-    AddFigure(Figures.QRatesDiagonal);
+    AddContent(PaperSections.PhylogenyResults, PlacementTypes.SubSection);
+    AddContent(PaperSections.SegmentModels, PlacementTypes.SubSection);
+    AddContent(Figures.ModelTreesUsed, PlacementTypes.FigureFull);
+    AddContent(PaperSections.WordTransformation, PlacementTypes.SubSection);
+    AddContent(PaperSections.WordSegmentRelationships, PlacementTypes.SubSection);
+    AddContent(Figures.RateChart, PlacementTypes.FigureFull);
+    AddContent(Figures.EquilibriumCharts, PlacementTypes.FigureFull);
+    AddContent(Figures.QRatesDiagonal, PlacementTypes.FigureHalf);
  }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1429,7 +1460,7 @@ class SegmentModelsClass: ContentClass {
         }
       }
 
-      style.TextList {
+      TextList {
         TextDigits: 2;
         foreach (var p in partitions) {
           var val = stats[p.Index, p.Index].Mean * numSegments;
@@ -1440,14 +1471,14 @@ class SegmentModelsClass: ContentClass {
       };
 
       " times higher than expected under an equal rates Poisson model for ";
-      style.TextList {
+      TextList {
         TextCase: TextCases.AllLower;
         (each partitions).ShowPlural;
       };
       ", respectively. ";
 
       "(In other words, the ";
-      style.TextList {
+      TextList {
         TextCase: TextCases.AllLower;
         SelfArrow(each smallOnes);
       };
@@ -1481,7 +1512,7 @@ class SegmentModelsClass: ContentClass {
       "Second, they modify the rate of change between word segments for models "; UnequalModel; " and "; NaturalClassModel;
       ", with the rate of change being proportional to the frequency of the destination word segment. ";
       "Indeed, the rates of change to ";
-      style.TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
+      TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
       " are the highest as are the estimated equilibrium frequencies for those classes. ";
       "The estimated equilibrium frequency generally tracks the frequency of the word segments in the data. ";
     };
@@ -1574,7 +1605,7 @@ class WordSegmentRelationshipsClass: ContentClass {
       "Interestingly, the distribution of alignments depends on the model of segmental change. ";
       style.FigureReference(align2); " shows the {0} credible set of alignments for the concept "(ResultsClass.CutoffPercent);
       style.SQuote {align2.Concept}; " under the ";
-      style.TextList {
+      TextList {
         (each align2.Models).Name;
       }; DotSpace;
       "The credible set contains ";
@@ -1600,12 +1631,12 @@ readonly DiscussionSectionClass PaperSections.DiscussionSection = new;
 class DiscussionSectionClass: ContentClass {
   Constructor {
     super.Constructor("Discussion");
-    AddContent(PaperSections.OtherApproaches);
-    AddContent(PaperSections.Limitations);
-    AddContent(PaperSections.Advantages);
-    AddFigure(Figures.GappinessChart);
-    AddFigure(Figures.AlignmentExample1, true);
-    AddFigure(Figures.AlignmentExample2, true);
+    AddContent(PaperSections.OtherApproaches, PlacementTypes.SubSection);
+    AddContent(PaperSections.Limitations, PlacementTypes.SubSection);
+    AddContent(PaperSections.Advantages, PlacementTypes.SubSection);
+    AddContent(Figures.GappinessChart, PlacementTypes.FigureFull);
+    AddContent(Figures.AlignmentExample1, PlacementTypes.FigureFull);
+    AddContent(Figures.AlignmentExample2, PlacementTypes.FigureFull);
   }
 }
 
@@ -1653,7 +1684,7 @@ class OtherApproachesClass: ContentClass {
       Citation{Lunter2003}; DotSpace;
       "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with ";
       1; Tex.lt; WordLength; Tex.lt; 10; DotSpace;
-      "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length, instead of the overall insertion rate being "; InsertionRate; "("; WordLength-1; ") as it is under the TKF91 model ";
+      "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length, instead of the overall insertion rate being "; InsertionRate; "("; WordLength+1; ") as it is under the TKF91 model ";
       Citation{BouchardCote2013b}; DotSpace;
       "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
     };
@@ -1713,22 +1744,23 @@ class AdvantagesClass: ContentClass {
 
   override GetBody(ContentStyleClass style) = Block {
     style.FirstPar(Title) {
-      "Our event-based approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. ";
-      "For instance, questions pertaining to the relationship between phonological change and the phonemic inventory of a language can now be addressed. ";
-      "Does the frequency of a phoneme in the words of a language affect its diachronic stability? ";
-      "To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? ";
-      "What is the role of "; style.DQuote{"natural classes"}; " in phonological change? ";
-      "This last question can be addressed through comparison of models with different numbers of rate parameters. ";
-      "The method can also be extended to handle more complex phonological changes (such as those involving context dependency), ";
-      "to estimate divergence times and diversification rates in addition to topology, ";
-      "or to model the history of words along a phylogenetic tree.";
-    };
+      "Our event-based approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. For example, questions related to the relationship between phonological change and the phonemic inventory of a language can now be addressed. Does the frequency of a phoneme in the words of a language affect its diachronic stability? To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? What is the role of natural classes in sound change? This last question can be addressed in particular through the comparison of models with different numbers of rate parameters.";
+      };
 
     style.BodyPar {
-      "In sum, our approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general, ";
-      "which can be expanded and refined in various ways. For instance, it can be combined with methods of automatic cognate detection. ";
-      "It can also address more complicated questions, such as context-dependent changes and changes involving multiple segments (such as metathesis). ";
+      "By casting the problem of language change in a statistical framework, we inherit the benefits of the statistical approach to estimate model parameters and, perhaps more importantly, to compare alternative models of language change to find the model that best explains the data. In this way,  linguists can learn about language evolution by devising models that account for potential linguistic phenomena, then testing the model against models that do not account for the linguistic feature. This approach has proven successful in molecular evolution where models have been described and tested that account for many evolutionary processes of molecular change.";
+      };
+
+      style.BodyPar {
+      "The method can be extended to handle more complex segmental changes (such as those involving context dependency). Moreover, the event-based approach has the potential to more sensibly estimate divergence times. Divergence time estimation relies on estimating the number of events that occurred along the branches of the tree. When divergence estimation is applied to abstract cognate relationships, it is not clear what exactly is being counted along the branches. Here, the events are well defined: segmental transitions, insertions, or deletions.";
+      };
+
+      style.BodyPar {
+      "In sum, our approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general, which can be expanded and refined in various ways. For example, it can be combined with methods of automatic cognate detection ";
+      Citation {References.BouchardCote2013}; DotSpace;
+      " It can also address more complicated questions, such as context-dependent changes and changes involving multiple segments (such as metathesis). ";
     };
+
   };
 }
 
@@ -1739,16 +1771,14 @@ readonly MethodsSummaryClass PaperSections.MethodsSection = new;
 class MethodsSummaryClass: ContentClass {
   Constructor {
     super.Constructor(Lang.Methods);
-    AddContent(PaperSections.DataSummary);
-    AddTable(TableFigures.ManualAlignment);
-    AddContent(PaperSections.ModelInference);
-    AddContent(PaperSections.DataCuration);
-    AddTable(Figures.PartitionAssignments);
+    AddContent(PaperSections.DataSummary, PlacementTypes.SubSection);
+    AddContent(PaperSections.ModelInference, PlacementTypes.SubSection);
+    AddContent(PaperSections.DataCuration, PlacementTypes.SubSection);
   }
 
   override GetBody(ContentStyleClass style) = Block {
     style.FirstPar {
-      "A detailed description of the model and analysis can be found in the supplemental material, [reference]. ";
+      "A detailed description of the model and analysis can be found in the Supplemental Material. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
     };
   };
@@ -1769,79 +1799,61 @@ class DataSummaryClass: ContentClass {
     var data = MainResults.Data;
 
     style.FirstPar(Title) {
-      "The initial set of data was downloaded from"; CitationName(Wiktionary); ", which was then manually checked for accuracy and augmented. ";
-      "Words were double-checked against data from"; CitationName(SoundComparisons); DotSpace;
-      "For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. ";
-      "Membership in a particular cognate set depends solely on shared descent; meaning is irrelevant. ";
-      "For instance, the Latin adjective "; textit{"gravis"}; " means "; style.SQuoteComma{"heavy"}; "but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"};
-      "Despite this semantic difference, they are assigned to the same cognate set because they are segmentally homologous"; DotSpace;
-      "Each word-form is represented phonemically in the International Phonetic Alphabet (IPA). ";
-      "Phonemic representations were used in lieu of phonetic representations since phonetic data is harder to come by especially with corpus languages such as Latin. ";
-      "Suprasegmental features such as stress are not represented in the data. ";
+      "The initial set of data was downloaded from Wiktionary ";
+      CitationName(Wiktionary);
+      ", which was then manually checked for accuracy and augmented. For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. There are often multiple sets of cognates for a given concept among our sample of languages. Selection of lexical items was oriented toward Latin in order to maximize the number of cognate word-forms in each set. ";
     };
+
+    style.BodyPar {
+      "As noted above, membership in a cognate set depends solely on shared descent: meaning is irrelevant. For instance, the Latin adjective "; textit{"gravis"};  " means "; style.SQuoteComma{"heavy"}; ", but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"}; "Despite this semantic difference, they are assigned to the same cognate set because they are segmentally homologous. Phonemic representations are used in lieu of phonetic representations for two reasons. First, phonetic data is harder to come by,  especially with corpus languages such as Latin. Second, there is considerably more variation at the phonetic level that would have to have been taken into account. Suprasegmental features such as stress are not represented in the data. Word-forms are represented in the International Phonetic Alphabet (IPA). ";
+      };
 
     style.BodyPar {
       "The raw data set contains many cognate word-forms, but data for this experiment was limited to only those cognates that have word-forms from ";
       data.WordCutoff == data.Taxa.Length ? "all " : "at least ";
-      data.WordCutoff; " languages. ";
-      "There are in total "; data.UsedConcepts.Length; " concepts, "; data.UsedCognates.Length; " cognate sets, "; data.WordCount; " word-forms, using "; data.UniqueSegments.Length; " unique segments. ";
+      data.WordCutoff;
+      " languages. There are in total "; data.UsedCognates.Length; " cognate sets, which are comprised of "; data.WordCount; " word-forms containing "; data.UniqueSegments.Length; " unique segments drawn from "; data.UsedConcepts.Length; " concepts. ";
     };
 
 //  style.FigureTable(Figures.PartitionAssignments, 8 pts);
 
     style.BodyPar {
-      "Latin is a highly inflectional language, which means that there are multiple word-forms for verbs, nouns, and adjectives. ";
-      "For verbs, infinitive forms were selected. ";
-      "For nouns, singular forms in either the accusative or (rarely) the nominative case were used, since these are the two case forms ancestral to Romance descendants. ";
-      "The selection of word-forms is not without consequences, since it impacts the rates of phonological change. ";
-      "For instance, most masculine singular nominative adjectives in Latin end in -"; textit{"us"}; DotSpace;
-      "By contrast, feminine singular nominative adjectives end in -"; textit{"a"}; DotSpace;
-      "Use of the feminine forms would increase the number of transitions originating in this vowel.";
+      "Latin is a highly inflectional language, with many word-forms for verbs, nouns, and adjectives, but only one can be analyzed. For verbs, infinitive forms were selected. For nouns, singular forms in either the accusative or (rarely) the nominative case were used, since these are the two case forms ancestral to Romance descendants. The selection of word-forms is not without consequences, since it can impact the estimated transition rates. For instance, most masculine singular nominative adjectives in Latin end in "; TextIpa{"-us"}; DotSpace; "By contrast, feminine singular nominative adjectives end in "; TextIpa{"-a"}; DotSpace; "Use of the feminine forms would increase the number of transitions originating in this vowel. ";
     };
 
     style.BodyPar {
-      "All word-forms were manually aligned, so that historically related segments occur in the same column. ";
-      "The manual alignments serve as the starting point for the MCMC sampling procedure (see below), so our analysis did not condition on any alignment of word segments being correct. ";
-      style.TableReference(TableFigures.ManualAlignment); " provides an illustrative example of the alignment for the concept ";
-      TableFigures.ManualAlignment.WordDisplay(style);
-      "The Latin form "; TextIpa{"kʷ-id"}; " begins with a voiceless velar stop with a secondary labial articulation "; W; DotSpace;
-      "In most Romance languages, this secondary articulation is lost, ";
-      "but in some, it develops into a consonant (e.g., the "; TextIpa{"kw"}; " of French and Walloon). ";
-      "To accommodate this change, the Latin form has two segmental slots before the vowel (i.e., ";
-      IPASegments.kw.ShowSegment; "-), the second of which anticipates the development of the secondary articulation " W; "in French and Walloon"; DotSpace;
+      "Manual alignments of cognate word-forms serve as the starting point for the MCMC sampling procedure (described above), so our analysis does not condition on any particular alignment of segments being correct. ";
+      style.TableReference(TableFigures.ManualAlignment); " provides an illustrative example of the manual alignment for the concept "; TableFigures.ManualAlignment.WordDisplay(style);  "Dashes (`-') denote the absence of a homologous segment present in other word-forms. The Latin form "; TextIpa{"kʷ-id"}; " begins with a voiceless labiovelar stop whose secondary articulation is lost in all of the languages in our dataset. The stressed "; TextIpa{"i"}; " in Latin develops into "; TextIpa{"wa"}; " in French and Walloon. To accommodate the presence of "; TextIpa{"w"}; ", there is an empty segmental slot before the vowel in all other languages.  ";
     };
+
+    style.TableBlock(TableFigures.ManualAlignment, 10 pts);
   };
 }
 
 //======================================================================
 
-readonly ManualAlignmentClass TableFigures.ManualAlignment = new(MainResults.Data, MainResults.Data.FigureConcept);
+readonly ManualAlignmentClass TableFigures.ManualAlignment = new;
 
 class ManualAlignmentClass: ContentClass {
-  var DataSetClass   Data;
-  var AttributeClass Concept;
-
-  Constructor(DataSetClass data, AttributeClass concept) {
-    super.Constructor("Manual Alignments");
-    Data    = data;
-    Concept = concept;
+  Constructor {
+    super.Constructor("An example of an aligned cognate set");
   }
 
-  WordDisplay(ContentStyleClass style) = style.SQuoteEnd {
+  readonly WordDisplay(ContentStyleClass style) = style.SQuoteEnd {
     TextCase: TextCases.AllLower;
-    Concept.Name;
+    MainResults.Data.FigureConcept.Name;
   };
 
-   override GetCaption(ContentStyleClass style) = Span {
+  override GetCaption(ContentStyleClass style) = Span {
     "Manual alignment of the words for the concept ";
     WordDisplay(style);
   };
 
   override GetBody(ContentStyleClass style) = LanguageTable([ColumnClass.Expand]*3) {
-    var th = Math.Max(9 pts, ExtentWidth * 0.02);
+    var th = ExtentWidth * 0.02;
     TextHeight: th;
 
-    var cognate = Data.GetCognate(Concept);
+    var cognate = MainResults.Data.GetCognate(MainResults.Data.FigureConcept);
     LanguageTitleRow {
       Lang.Language; Lang.PhonemicRep; Lang.Alignment;
     };
@@ -1946,6 +1958,8 @@ class ModelInferenceClass: ContentClass {
       (rule.Filters.Length-1)^2-1; " parameters describing rates among natural classes. ";
       "The equilibrium frequencies are modeled as random variables drawn from a flat Dirichlet prior distribution. ";
     };
+
+    style.TableBlock(Figures.PartitionAssignments);
   };
 }
 
@@ -1976,7 +1990,6 @@ class DataCurationClass: ContentClass {
     SourcePar(data, example.Concept);
 
     style.BodyPar {
-      "The dashes ("; style.SQuote{"-"}; ") denote the absence of a homologous segment present in other word-forms. ";
       "A challenge for programming in linguistics is that the IPA representation of words is expressed in Unicode (UCS), not ASCII or ANSI. ";
       "This requires care with file formats, text encodings and diacritic compositional form. ";
       "Furthermore, each IPA segment string can comprise several UCS code-points, so that the mapping between string characters and segments is not one-to-one. ";
@@ -2282,9 +2295,9 @@ class MethodsClass: ContentClass {
       "/"; ec.LangWord; "/. ";
       "The matrix for the word "; ec.Name; " also assumes that the fine-scale homology of the segments has been established. ";
       "For example, the above matrix for the concept "; style.SQuote {ec.Name};  " assumes that the first segment of the ";
-      style.TextList {ec.LangNames};
+      TextList {ec.LangNames};
       " languages (respectively, ";
-      style.TextList {
+      TextList {
         PaperStyle.IPAFamily;
         ec.FirstLetters
       };
@@ -2294,7 +2307,7 @@ class MethodsClass: ContentClass {
       ec.Name;
       " in "; ec.Callout.Language; " is also "; ec.CalloutSegment; DotSpace;
       "Why wasn't the first segment from Italian considered to be homologous to the first segments in ";
-      style.TextList {ec.LangNames};
+      TextList {ec.LangNames};
       "? ";
       "In this case, the alignment program chose the alignment that did not consider ";
       style.SQuote {ec.CalloutSegment}; " of "; ec.Callout.Language; " as homologous to the ";
