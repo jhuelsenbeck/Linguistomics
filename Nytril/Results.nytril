@@ -316,13 +316,11 @@ class RateClass: ActionClass {
   }
 
   ColorClass RateColor {
-    var r = Rate * (Diagonal ? Count.DiagFactor : Count.RateFactor);
-    return ColorClass.HeatMap(r);
+    return PaperStyle.HeatMap.InterpolateColor(Rate * (Diagonal ? Count.DiagFactor : Count.RateFactor));
   }
 
   ColorClass DirectionColor {
-    var r = 1.0 - 0.5 * Direction * Count.DirFactor;
-    return ColorClass.HeatMap(r);
+    return PaperStyle.HeatMap.InterpolateColor(1.0 - 0.5 * Direction * Count.DirFactor);
   }
 
   ShowPartition(SegPartClass s, textheight) = Canvas(textheight * 2.5) {
@@ -566,7 +564,7 @@ class AlignedCountClass: CountBaseClass {
     return null;
   }
 
-  ShowLegend(RateClass[] rates) = {
+  ShowLegend(RateClass[] rates) {
     // Show only partitions that are present in the chart
     var pmax = Partitions.Length;
     var set  = new HashSetClass<PartitionClass>(pmax);
@@ -575,11 +573,11 @@ class AlignedCountClass: CountBaseClass {
       set.Add(s.S1.Partition);
     }
 
-    Canvas(ExtentWidth) {
+    return Canvas(ExtentWidth) {
       HAlign: HAligns.Center;
       Rule.ShowBlockLegend(set.ToArray, 11 pts);
     }
-  };
+  }
 
   ShowChart(RateClass[] rates) = Chart(100%, 4 inches) {
     Type: ChartTypes.Column;

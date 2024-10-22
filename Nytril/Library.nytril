@@ -309,7 +309,7 @@ class WordClass: FactClass {
     Variable = variable;
 
     if (Text is valid) {
-      Text = (Text as string).Normalize(NormalizationForms.FormC);
+      Text = string.Normalize(Text, NormalizationForms.FormC);
 
       var segments = lookup.FindTokens(Text, IPA.NullSegment);
       Aligned  = segments.FindSlice(s => s.Segment.Gap or (not s.Punctuation));
@@ -594,7 +594,7 @@ class DataSetClass {
       if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(includewords)) {
         foreach (var cc in cvar.Children) {
           var vname = cc.Name;
-          if (vname != "Confidence" && vname != "WordType" && vname != "WordGroup") {
+          if (vname != "Confidence" and vname != "WordType" and vname != "WordGroup") {
             var count = 0;
             foreach (var wc in cc.Children) {
               var word = wc.Value;
@@ -1214,7 +1214,7 @@ class PriorCountClass: CountBaseClass {
       }
 
       var bf = count > 0 ? 0.5 * count / value.Length : 0.5 + 0.5 * value.Length * Factor;
-      var bc = ColorClass.HeatMap(bf);
+      var bc = PaperStyle.HeatMap.InterpolateColor(bf);
 
       Background: bc;
       TextColor: bc.TextCompliment;

@@ -6,11 +6,11 @@ abstract class LinguisticsPaperClass: PNASPaperClass {
   Constructor(guid id, name) {
     super.Constructor(id, name);
 
-    NoteMarkClass[] note = [new("†", "These authors contributed equally to this work")];
+    NoteMarkClass[] note = [new("†", "To whom correspondence should be addressed. E-mail: dgoldstein@humnet.ucla.edu")];
     AddAuthor(People.Goldstein_David, note);
-    AddAuthor(People.McCreight_Shawn, note);
+    AddAuthor(People.McCreight_Shawn);
     AddAuthor(People.Buchi_Éva);
-    AddAuthor(People.Huelsenbeck_John, note);
+    AddAuthor(People.Huelsenbeck_John);
   }
 }
 
@@ -19,31 +19,33 @@ abstract class LinguisticsPaperClass: PNASPaperClass {
 class PaperDocClass: LinguisticsPaperClass {
   Constructor {
     super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
-    Title                 = Info.Title;
-    Description           = "Linguistics research paper";
-    DocumentFamily        = TextFamilies.TimesNewRoman;
-    DocumentFontSize      = 12 pts;
-    SignificanceStatement = PaperSections.Significance;
-    Keywords              = [
+    Title        = Info.Title;
+    Description  = "Linguistics research paper";
+    Significance = PaperSections.Significance;
+
+    Keywords = [
       "Bayesian analysis",
       "Language Evolution",
       "Phylogeny",
       "Markov chain Monte Carlo"
     ];
 
-//    Watermark             = "Draft";
-
-
-    AddContent(PaperSections.Abstract, PlacementTypes.Section);
-    AddContent(PaperSections.Introduction, PlacementTypes.Section);
-    AddContent(Figures.LanguageDistribution, PlacementTypes.FigureFull);
-    AddContent(PaperSections.Results, PlacementTypes.Section);
-    AddContent(PaperSections.DiscussionSection, PlacementTypes.Section);
-    AddContent(PaperSections.MethodsSection, PlacementTypes.Section);
-    AddContent(PaperSections.Acknowledgements, PlacementTypes.Section);
-    AddContent(PaperSections.Contributions, PlacementTypes.Section);
+    Body.AddContent(PaperSections.Abstract);
+    Body.AddContent(PaperSections.Introduction);
+    Body.AddTable(TableFigures.CognateCoding);
+    Body.AddFigure(Figures.LanguageDistribution, true);
+    Body.AddContent(PaperSections.Results);
+    Body.AddContent(PaperSections.DiscussionSection);
+    Body.AddContent(PaperSections.MethodsSection);
+    Body.AddContent(PaperSections.Acknowledgements);
+    Body.AddContent(PaperSections.Contributions);
   }
+
+  override Preamble = super.Preamble {
+    Watermark: "DRAFT";
+  };
 }
+
 //======================================================================
 
 class SupplementalViewClass: LinguisticsPaperClass {
@@ -53,14 +55,14 @@ class SupplementalViewClass: LinguisticsPaperClass {
     SubTitle    = Span {"For: "; Style.DQuote {Info.Title}};
     Description = "Extra derivations and charts to supplement the main paper";
 
-    AddContent(PaperSections.Methods, PlacementTypes.Section);
-    AddContent(Figures.Alignment, PlacementTypes.FigureFull);
-    AddContent(Figures.ExampleTree, PlacementTypes.FigureFull);
-    AddContent(PaperSections.Conclusion, PlacementTypes.Section);
-    AddAppendix(Figures.PartitionAssignments);
-    AddAppendix(Figures.ExperimentalRuns);
-    AddAppendix(Figures.Alignments);
-    AddAppendix(new AllAlignmentsClass());
+    Body.AddContent(PaperSections.Methods);
+    Body.AddFigure(Figures.Alignment, true);
+    Body.AddFigure(Figures.ExampleTree, true);
+    Body.AddContent(PaperSections.Conclusion);
+    Appendix.AddContent(Figures.PartitionAssignments);
+    Appendix.AddContent(Figures.ExperimentalRuns);
+    Appendix.AddContent(Figures.Alignments);
+    Appendix.AddContent(new AllAlignmentsClass());
   }
 }
 

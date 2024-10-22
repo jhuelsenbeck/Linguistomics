@@ -40,6 +40,7 @@ readonly namespace PaperStyle {
   SlideHeader          = Colors.SlateGray;
   textit               = Span {TextLiteral: true; Italic};
   TextIpa              = Span {TextLiteral: true; IPAFamily; Begin:"/"; End:"/"};
+  HeatMap              = LinearGradientClass.FromColorArray([Colors.Blue, Colors.Cyan, Colors.Yellow, Colors.Pink, Colors.Red]);
 
   LanguageTable(ColumnClass[] columns) = Table(new(new(0, 2), new(2 pts, 2), new(0, 2), new(2 pts, 2)), null, columns);
 
@@ -104,6 +105,38 @@ readonly namespace PaperStyle {
         Curvature: 20%;
         Bevel: 20%;
         Marker: BranchMarker;
+      };
+      if (axis is valid) {
+        ValueLabel: axis;
+        ValueLabel: axis;
+        ValueAxis: ChartAxis;
+      }
+    };
+  };
+
+  ShowTreeHorizontal(ContentStyleClass style, NodeClass root, width, title=null, axis=null) = HBox {
+    style.SansSerif;
+
+    VAlign: VAligns.Top;
+    if (title is valid) {
+      HBox(null, null, PadR(5 pts)) {
+        VAlign: VAligns.Center;
+        Paragraph {
+          Bold;
+          title;
+        };
+      };
+    }
+
+    Tree(width, null) {
+      TextHeight: 8 pts;
+      Reorder: true;
+      Root: root;
+      Default: new NodeClass(null) {
+//        NodeGap: 5 pts;
+        Curvature: 20%;
+        Bevel: 20%;
+//        Marker: BranchMarker;
       };
       if (axis is valid) {
         ValueLabel: axis;

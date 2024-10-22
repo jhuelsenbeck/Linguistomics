@@ -31,7 +31,7 @@ readonly namespace Info {
 ShowString(text) = Span {
   if (text is valid) {
     TextColor: PaperStyle.StringColor;
-    text.ToQuoted;
+    string.ToQuoted(text);
   }
   else
     "Empty";
@@ -101,7 +101,9 @@ class ConfigFileClass {
 
   Variable(string v) = Span {
     TextColor: PaperStyle.VariableColor;
-    (v as string).ToQuoted; ": ";
+    "\"";
+    v;
+    "\": ";
   };
 
   ArraySpan(string v) = Span {
@@ -135,7 +137,7 @@ class ConfigFileClass {
       Span {Variable("NumberOfStates"); Data.UniqueSegments.Length; CommaSpace};
 
       Span {Variable("McmcSettings"); "{"};
-        StringVar("Model", Run.Model.Name.ToLower);
+        StringVar("Model", string.ToLower(Run.Model.Name));
         BoolVar("OnlyCompleteWords", false);
         AddVar("Seed", Run.Seed);
         BoolVar("CalcMarginal", Run.Marginal);
