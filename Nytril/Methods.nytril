@@ -85,42 +85,12 @@ class ModelTrees: ContentClass {
     super.Constructor("Model trees used in all analyses");
   }
 
-  ShowTrees(ContentStyleClass style, ModelClass model) = Block {
-    var anytree = false;
-    foreach (var r in model.Run) {
-      if (r.ResultTree is not null) {
-        anytree = true;
-        break;
-      }
-    }
-
-    if (anytree) {
-      style.FirstPar {
-        Lang.Model;
-        ColonSpace;
-        model.Name;
-      };
-
-      foreach (var r in model.Run) {
-        if (r.ResultTree is not null)
-          ShowTree(style, r.ResultTree, 100%, "Run {0}"(each1));
-      }
-    }
-  };
-
-  override GetCaption(ContentStyleClass style) = Span {
-    //Lang.Experiment;
-    //Space;
-    //each1;
-    //Space;
-    //style.DQuote {MainResults.Data.Name};
-  };
-
   override GetBody(ContentStyleClass style) = Block {
-    Span {
+    VBox {
+      Separation: 5 pts;
       foreach (var tree in MainResults.Data.PriorTrees)
-        ShowTree(style, tree, 30%, Lang.Tree+each1);
-    };
+        ShowTreeHorizontal(style, tree, 50%, Lang.Tree + Space + each1);
+    }
   };
 
 }
@@ -512,7 +482,7 @@ class EquilibriumFrequencyChartClass: ContentClass {
     super.Constructor("The equilibrium frequencies (π) of the segment groups");
   }
 
-  override GetBody(ContentStyleClass style) = Chart(50%, 3.5 inches) {
+  override GetBody(ContentStyleClass style) = Chart(100%, 3.5 inches) {
     Type: ChartTypes.Bar;
     style.SansSerif;
     TextHeight: 12 pts;
@@ -878,7 +848,7 @@ class ExampleConceptClass {
     TaxonIndex     = 0;
     Taxon          = data.Taxa[TaxonIndex];
     Callout        = data.Taxa[3];
-    Name           = Cognate.Concept.Name.ToLower;
+    Name           = string.ToLower(Cognate.Concept.Name);
     ExLanguages    = [Languages.French, WorldLanguages.Portuguese, WorldLanguages.Catalan, WorldLanguages.Friulian, WorldLanguages.Romanian];
     TaxonList      = data.Taxa.FindSlice(t => ExLanguages.Contains(t.Language));
     LangNames      = (each TaxonList).Language;
@@ -1244,14 +1214,14 @@ readonly ResultsSectionClass PaperSections.Results = new;
 class ResultsSectionClass: ContentClass {
   Constructor {
     super.Constructor("Results");
-    AddContent(PaperSections.PhylogenyResults, PlacementTypes.SubSection);
-    AddContent(PaperSections.SegmentModels, PlacementTypes.SubSection);
-    AddContent(Figures.ModelTreesUsed, PlacementTypes.FigureFull);
-    AddContent(PaperSections.WordTransformation, PlacementTypes.SubSection);
-    AddContent(PaperSections.WordSegmentRelationships, PlacementTypes.SubSection);
-    AddContent(Figures.RateChart, PlacementTypes.FigureFull);
-    AddContent(Figures.EquilibriumCharts, PlacementTypes.FigureFull);
-    AddContent(Figures.QRatesDiagonal, PlacementTypes.FigureHalf);
+    AddContent(PaperSections.PhylogenyResults);
+    AddContent(PaperSections.SegmentModels);
+    AddFigure(Figures.ModelTreesUsed);
+    AddContent(PaperSections.WordTransformation);
+    AddContent(PaperSections.WordSegmentRelationships);
+    AddFigure(Figures.RateChart, true);
+    AddFigure(Figures.EquilibriumCharts);
+    AddFigure(Figures.QRatesDiagonal);
  }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1460,7 +1430,7 @@ class SegmentModelsClass: ContentClass {
         }
       }
 
-      TextList {
+      style.TextList {
         TextDigits: 2;
         foreach (var p in partitions) {
           var val = stats[p.Index, p.Index].Mean * numSegments;
@@ -1471,14 +1441,14 @@ class SegmentModelsClass: ContentClass {
       };
 
       " times higher than expected under an equal rates Poisson model for ";
-      TextList {
+      style.TextList {
         TextCase: TextCases.AllLower;
         (each partitions).ShowPlural;
       };
       ", respectively. ";
 
       "(In other words, the ";
-      TextList {
+      style.TextList {
         TextCase: TextCases.AllLower;
         SelfArrow(each smallOnes);
       };
@@ -1512,7 +1482,7 @@ class SegmentModelsClass: ContentClass {
       "Second, they modify the rate of change between word segments for models "; UnequalModel; " and "; NaturalClassModel;
       ", with the rate of change being proportional to the frequency of the destination word segment. ";
       "Indeed, the rates of change to ";
-      TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
+      style.TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
       " are the highest as are the estimated equilibrium frequencies for those classes. ";
       "The estimated equilibrium frequency generally tracks the frequency of the word segments in the data. ";
     };
@@ -1605,7 +1575,7 @@ class WordSegmentRelationshipsClass: ContentClass {
       "Interestingly, the distribution of alignments depends on the model of segmental change. ";
       style.FigureReference(align2); " shows the {0} credible set of alignments for the concept "(ResultsClass.CutoffPercent);
       style.SQuote {align2.Concept}; " under the ";
-      TextList {
+      style.TextList {
         (each align2.Models).Name;
       }; DotSpace;
       "The credible set contains ";
@@ -1631,12 +1601,12 @@ readonly DiscussionSectionClass PaperSections.DiscussionSection = new;
 class DiscussionSectionClass: ContentClass {
   Constructor {
     super.Constructor("Discussion");
-    AddContent(PaperSections.OtherApproaches, PlacementTypes.SubSection);
-    AddContent(PaperSections.Limitations, PlacementTypes.SubSection);
-    AddContent(PaperSections.Advantages, PlacementTypes.SubSection);
-    AddContent(Figures.GappinessChart, PlacementTypes.FigureFull);
-    AddContent(Figures.AlignmentExample1, PlacementTypes.FigureFull);
-    AddContent(Figures.AlignmentExample2, PlacementTypes.FigureFull);
+    AddContent(PaperSections.OtherApproaches);
+    AddContent(PaperSections.Limitations);
+    AddContent(PaperSections.Advantages);
+    AddFigure(Figures.GappinessChart, true);
+    AddFigure(Figures.AlignmentExample1, true);
+    AddFigure(Figures.AlignmentExample2, true);
   }
 }
 
@@ -1771,9 +1741,11 @@ readonly MethodsSummaryClass PaperSections.MethodsSection = new;
 class MethodsSummaryClass: ContentClass {
   Constructor {
     super.Constructor(Lang.Methods);
-    AddContent(PaperSections.DataSummary, PlacementTypes.SubSection);
-    AddContent(PaperSections.ModelInference, PlacementTypes.SubSection);
-    AddContent(PaperSections.DataCuration, PlacementTypes.SubSection);
+    AddContent(PaperSections.DataSummary);
+    AddTable(TableFigures.ManualAlignment);
+    AddContent(PaperSections.ModelInference);
+    AddTable(Figures.PartitionAssignments);
+    AddContent(PaperSections.DataCuration);
   }
 
   override GetBody(ContentStyleClass style) = Block {
@@ -1825,8 +1797,6 @@ class DataSummaryClass: ContentClass {
       "Manual alignments of cognate word-forms serve as the starting point for the MCMC sampling procedure (described above), so our analysis does not condition on any particular alignment of segments being correct. ";
       style.TableReference(TableFigures.ManualAlignment); " provides an illustrative example of the manual alignment for the concept "; TableFigures.ManualAlignment.WordDisplay(style);  "Dashes (`-') denote the absence of a homologous segment present in other word-forms. The Latin form "; TextIpa{"kʷ-id"}; " begins with a voiceless labiovelar stop whose secondary articulation is lost in all of the languages in our dataset. The stressed "; TextIpa{"i"}; " in Latin develops into "; TextIpa{"wa"}; " in French and Walloon. To accommodate the presence of "; TextIpa{"w"}; ", there is an empty segmental slot before the vowel in all other languages.  ";
     };
-
-    style.TableBlock(TableFigures.ManualAlignment, 10 pts);
   };
 }
 
@@ -1850,7 +1820,7 @@ class ManualAlignmentClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style) = LanguageTable([ColumnClass.Expand]*3) {
-    var th = ExtentWidth * 0.02;
+    var th = Math.Max(ExtentWidth * 0.02, 9 pts);
     TextHeight: th;
 
     var cognate = MainResults.Data.GetCognate(MainResults.Data.FigureConcept);
@@ -1958,8 +1928,6 @@ class ModelInferenceClass: ContentClass {
       (rule.Filters.Length-1)^2-1; " parameters describing rates among natural classes. ";
       "The equilibrium frequencies are modeled as random variables drawn from a flat Dirichlet prior distribution. ";
     };
-
-    style.TableBlock(Figures.PartitionAssignments);
   };
 }
 
@@ -2295,9 +2263,9 @@ class MethodsClass: ContentClass {
       "/"; ec.LangWord; "/. ";
       "The matrix for the word "; ec.Name; " also assumes that the fine-scale homology of the segments has been established. ";
       "For example, the above matrix for the concept "; style.SQuote {ec.Name};  " assumes that the first segment of the ";
-      TextList {ec.LangNames};
+      style.TextList {ec.LangNames};
       " languages (respectively, ";
-      TextList {
+      style.TextList {
         PaperStyle.IPAFamily;
         ec.FirstLetters
       };
@@ -2307,7 +2275,7 @@ class MethodsClass: ContentClass {
       ec.Name;
       " in "; ec.Callout.Language; " is also "; ec.CalloutSegment; DotSpace;
       "Why wasn't the first segment from Italian considered to be homologous to the first segments in ";
-      TextList {ec.LangNames};
+      style.TextList {ec.LangNames};
       "? ";
       "In this case, the alignment program chose the alignment that did not consider ";
       style.SQuote {ec.CalloutSegment}; " of "; ec.Callout.Language; " as homologous to the ";
