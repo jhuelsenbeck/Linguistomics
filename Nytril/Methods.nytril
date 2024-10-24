@@ -85,14 +85,10 @@ class ModelTrees: ContentClass {
     super.Constructor("Model trees used in all analyses");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    VBox {
-      Separation: 5 pts;
-      foreach (var tree in MainResults.Data.PriorTrees)
-        ShowTreeHorizontal(style, tree, 50%, Lang.Tree + Space + each1);
-    }
+  override GetBody(ContentStyleClass style) = VBox {
+    foreach (var tree in MainResults.Data.PriorTrees)
+      ShowTreeHorizontal(style, tree, 80%, Lang.Tree + Space + each1);
   };
-
 }
 
 //======================================================================
@@ -482,10 +478,10 @@ class EquilibriumFrequencyChartClass: ContentClass {
     super.Constructor("The equilibrium frequencies (π) of the segment groups");
   }
 
-  override GetBody(ContentStyleClass style) = Chart(100%, 3.5 inches) {
+  override GetBody(ContentStyleClass style) = Chart(100%, 3 inches) {
     Type: ChartTypes.Bar;
     style.SansSerif;
-    TextHeight: 12 pts;
+    TextHeight: 11 pts;
 
     ValueLabel: Span {
       TextHeight: 20 pts;
@@ -553,7 +549,7 @@ class GappinessChartClass: ContentClass {
     VBox {
       HAlign: HAligns.Center;
       foreach (var gap in MainResults.MainRun.GapSpectrum) {
-        Chart(4 inches, 1.5 inches) {
+        Chart(ExtentWidth - 20 pts, 1.5 inches) {
           Type: ChartTypes.Column;
 
 // Possible alternate look
@@ -644,7 +640,7 @@ class LanguageDistributionClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style) = Paragraph {
-    FitBox(IO.Read(Info.ImageFolder FileName("areas.png")), 75%);
+    FitBox(IO.Read(Info.ImageFolder FileName("areas.png")), 100%);
   };
 }
 
@@ -1216,10 +1212,10 @@ class ResultsSectionClass: ContentClass {
     super.Constructor("Results");
     AddContent(PaperSections.PhylogenyResults);
     AddContent(PaperSections.SegmentModels);
-    AddFigure(Figures.ModelTreesUsed);
+    AddFigure(Figures.ModelTreesUsed, false, 70%);
     AddContent(PaperSections.WordTransformation);
     AddContent(PaperSections.WordSegmentRelationships);
-    AddFigure(Figures.RateChart, true);
+    AddFigure(Figures.RateChart, true, 60%);
     AddFigure(Figures.EquilibriumCharts);
     AddFigure(Figures.QRatesDiagonal);
  }
@@ -1604,7 +1600,7 @@ class DiscussionSectionClass: ContentClass {
     AddContent(PaperSections.OtherApproaches);
     AddContent(PaperSections.Limitations);
     AddContent(PaperSections.Advantages);
-    AddFigure(Figures.GappinessChart, true);
+    AddFigure(Figures.GappinessChart);
     AddFigure(Figures.AlignmentExample1, true);
     AddFigure(Figures.AlignmentExample2, true);
   }
