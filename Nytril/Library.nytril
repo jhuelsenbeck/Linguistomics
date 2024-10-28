@@ -71,7 +71,7 @@ class AlignPairClass: DocumentClass {
   };
 
   ShowBlock(prob, cumulative, wordset, boxheight) = VBox(null, null, new EdgeClass(0.125, 0, 50%)) {
-    Margin: PadB(10 pts);
+    Margin: PadB(6 pts);
     HAlign: HAligns.Center;
 
     HBox(null, boxheight) {
@@ -166,19 +166,18 @@ class AlignPairClass: DocumentClass {
         langbox;
       }
 
-      ShowBlocks(max, BoxSize.Height);
+      ShowBlocks(Alignments, max, BoxSize.Height);
     }
   };
 
-  ShowBlocks(max, boxheight) = Span {
+  ShowBlocks(AlignDataClass[] alignments, max, boxheight) = {
     var cumulative = 0.0;
-    foreach (var a in Alignments) {
+    foreach (var a in alignments) {
       var prob = a.Prob;
       cumulative += prob;
       var wordset = a.WordSet;
       if (wordset.Length > 0) {
         ShowBlock(prob, cumulative, wordset, boxheight);
-        Space;
         if (each1 >= max)
           break;
       }
@@ -193,11 +192,15 @@ class AlignPairClass: DocumentClass {
     HBox(ExtentWidth) {
       Separation: 10 pts;
       GetChart(new(chart, data.Taxa.Length * (h + 1)), max);
-      Frame(ExtentWidth - chart) {
-        ParAlignment: ParAlignments.Left;
-        Paragraph {
-          Languages(Data, h);
-          ShowBlocks(max, h);
+
+      VBox(ExtentWidth - chart) {
+        foreach (var a in Alignments[0..<max] / 4) {
+          HBox(100%) {
+            Justify: Justifiers.SpaceBetween;
+            if (each0 == 0)
+              Languages(Data, h);
+            ShowBlocks(a, 4, h);
+          };
         }
       };
     }
