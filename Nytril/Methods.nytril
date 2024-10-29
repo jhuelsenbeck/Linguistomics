@@ -168,7 +168,7 @@ readonly AlignmentExamplesClass Figures.AlignmentExamples = new(
 
 class SingleAlignmentClass: AlignmentExamplesClass {
   Constructor(count, name) {
-    super.Constructor("Credible sets for alignments of the cognate '{0}'"(name), [new(name, null, count)]);
+    super.Constructor("The 16 alignments of highest probabiity for the cognate '{0}'"(name), [new(name, null, count)]);
   }
 
   override GetCaption(ContentStyleClass style) = Span {
@@ -271,7 +271,7 @@ class AlignmentCompareClass: ContentClass {
 
     foreach (var m in Models) {
       Span {
-        "These "; Enumerators.Cardinal(MaxCount); " alignments under the "; m.ModelName; " account for ";
+        "The "; Enumerators.Cardinal(MaxCount); " alignments under the "; m.ModelName; " account for ";
         Span {
           TextDigits: 3;
           TextSignificant: true;
@@ -1390,7 +1390,7 @@ class SegmentModelsClass: ContentClass {
       // TODO: Maybe update the log bayes factor numbers dynamically, though this will be more tricky.
       "factors of ";
       Equation {Tex.ln; BayesFactor12; Tex.Equals; -1074.2}; " and ";
-      Equation {Tex.ln; BayesFactor12; Tex.Equals; -117.3};
+      Equation {Tex.ln; BayesFactor23; Tex.Equals; -117.3};
       ", respectively, for a comparison of "; PoissonModel; " to "; UnequalModel; " and "; UnequalModel; " to "; NaturalClassModel; ". ";
       "This indicates overwhelming support for the more parameter-rich natural class model";
       Citation {Jeffreys1939}; DotSpace;
@@ -1679,10 +1679,10 @@ class LimitationsClass: ContentClass {
     };
 
     style.BodyPar {
-      "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with "; Equation {1; Tex.leq; Defs.GMLength; Tex.leq; 10}; DotSpace;
+      "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with "; Equation {1; Tex.leq; WordLength; Tex.leq; 10}; DotSpace;
       "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length ";
       Citation{BouchardCote2013b; ", instead of the overall insertion rate being ";
-      Equation {Tex.lambda; Tex.times; InParens {Defs.GMLength + 1}};
+      Equation {Tex.lambda; Tex.times; InParens {WordLength + 1}};
       " as it is under the TKF91 model"}; DotSpace;
       "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
     };
@@ -1724,7 +1724,7 @@ class AdvantagesClass: ContentClass {
       style.BodyPar {
       "In sum, our approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general, which can be expanded and refined in various ways. For example, it can be combined with methods of automatic cognate detection ";
       Citation {References.BouchardCote2013}; DotSpace;
-      " It can also address more complicated questions, such as context-dependent changes and changes involving multiple segments (such as metathesis). ";
+      "It may be possible to extend the method to address more complicated questions, such as context-dependent changes and changes involving multiple segments (such as metathesis). ";
     };
 
   };
@@ -1773,7 +1773,7 @@ class DataSummaryClass: ContentClass {
     };
 
     style.BodyPar {
-      "As noted above, membership in a cognate set depends solely on shared descent: meaning is irrelevant. For instance, the Latin adjective "; textit{"gravis"};  " means "; style.SQuoteComma{"heavy"}; ", but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"}; "Despite this semantic difference, they are assigned to the same cognate set because they are segmentally homologous. Phonemic representations are used in lieu of phonetic representations for two reasons. First, phonetic data is harder to come by,  especially with corpus languages such as Latin. Second, there is considerably more variation at the phonetic level that would have to have been taken into account. Suprasegmental features such as stress are not represented in the data. Word-forms are represented in the International Phonetic Alphabet (IPA). ";
+      "As noted above, membership in a cognate set depends solely on shared descent: meaning is irrelevant. For instance, the Latin adjective "; textit{"gravis"};  " means "; style.SQuoteComma{"heavy"}; "but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"}; "Despite this semantic difference, they are assigned to the same cognate set because they are segmentally homologous. Phonemic representations are used in lieu of phonetic representations for two reasons. First, phonetic data is harder to come by,  especially with corpus languages such as Latin. Second, there is considerably more variation at the phonetic level that would have to have been taken into account. Suprasegmental features such as stress are not represented in the data. Word-forms are represented in the International Phonetic Alphabet (IPA). ";
       };
 
     style.BodyPar {
