@@ -14,7 +14,7 @@ class PartitionAssignmentsClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = Rule.GetCaption(style);
 
-  override GetBody(ContentStyleClass style) = Rule.ShowPartitions;
+  override GetBody(ContentStyleClass style, title) = Rule.ShowPartitions;
 }
 
 //======================================================================
@@ -57,7 +57,7 @@ class ExperimentalRunsClass: ContentClass {
     style.DQuote {MainResults.Data.Name};
   };
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     var data = MainResults.Data;
 
     Span {
@@ -85,7 +85,7 @@ class ModelTrees: ContentClass {
     super.Constructor("Model trees used in all analyses");
   }
 
-  override GetBody(ContentStyleClass style) = VBox {
+  override GetBody(ContentStyleClass style, title) = VBox {
     foreach (var tree in MainResults.Data.PriorTrees)
       ShowTreeHorizontal(style, tree, 80%, Lang.Tree + Space + each1);
   };
@@ -105,7 +105,7 @@ class TransitionRatesClass: ContentClass {
     "The width of the lines is proportional to the estimated rates. ";
   };
 
-  override GetBody(ContentStyleClass style) = new CalcRatesClass(MainResults.Data, MainResults.MainRun).PartitionDiagram(style);
+  override GetBody(ContentStyleClass style, title) = new CalcRatesClass(MainResults.Data, MainResults.MainRun).PartitionDiagram(style);
 }
 
 //======================================================================
@@ -124,7 +124,7 @@ class AlignmentsClass: ContentClass {
     " credible set of alignments";
   };
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     AlignmentResults.ShowChart(new(ExtentWidth, ExtentHeight - 1 inch));
   };
 }
@@ -141,7 +141,7 @@ class AllAlignmentsClass: ContentClass {
     " credible set of alignments";
   };
 
-  override GetBody(ContentStyleClass style) = AlignmentResults.ShowAll;
+  override GetBody(ContentStyleClass style, title) = AlignmentResults.ShowAll;
 }
 
 //======================================================================
@@ -156,7 +156,7 @@ class AlignmentExamplesClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = "Credible sets for cognate alignments";
 
-  override GetBody(ContentStyleClass style) = AlignmentResults.ShowSet(Examples, true);
+  override GetBody(ContentStyleClass style, title) = AlignmentResults.ShowSet(Examples, true);
 }
 
 readonly AlignmentExamplesClass Figures.AlignmentExamples = new(
@@ -176,7 +176,7 @@ class SingleAlignmentClass: AlignmentExamplesClass {
     "The alignments are ordered from highest posterior probability (top-left alignment) to lowest posterior probability (bottom-right alignment) in row order. ";
   };
 
-  override GetBody(ContentStyleClass style) = AlignmentResults.ShowSet(Examples, false);
+  override GetBody(ContentStyleClass style, title) = AlignmentResults.ShowSet(Examples, false);
 }
 
 readonly SingleAlignmentClass Figures.AlignmentExample1 = new(16, "Flower");
@@ -282,7 +282,7 @@ class AlignmentCompareClass: ContentClass {
     }
   };
 
-  override GetBody(ContentStyleClass style) = VBox {
+  override GetBody(ContentStyleClass style, title) = VBox {
     var data = MainResults.Data;
     foreach (var m in Models) {
       Paragraph {
@@ -308,7 +308,7 @@ class ExchangeabilityTableClass: ContentClass {
     super.Constructor(Lang.Exchangeability);
   }
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     var th = ExtentWidth * 0.015;
     style.SansSerif;
     TextHeight: th;
@@ -383,7 +383,7 @@ class NaturalClassRateChartClass: ContentClass {
     "Shaded area represents the 95% credible interval. ";
   };
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     style.SansSerif;
     TextHeight: ExtentWidth * 0.015;
 
@@ -478,7 +478,7 @@ class EquilibriumFrequencyChartClass: ContentClass {
     super.Constructor("The equilibrium frequencies (π) of the segment groups");
   }
 
-  override GetBody(ContentStyleClass style) = Chart(100%, 3 inches) {
+  override GetBody(ContentStyleClass style, title) = Chart(100%, 3 inches) {
     Type: ChartTypes.Bar;
     style.SansSerif;
     TextHeight: 11 pts;
@@ -542,7 +542,7 @@ class GappinessChartClass: ContentClass {
      ".)";
   };
 
-  override GetBody(ContentStyleClass style) = HBox {
+  override GetBody(ContentStyleClass style, title) = HBox {
     SansSerif;
     VAlign: VAligns.Center;
     PaperStyle.ValueLabel {TextHeight: 130%; "Proportion of Alignments"};
@@ -592,7 +592,7 @@ class FractionGapsChartClass: ContentClass {
     super.Constructor("Deletions at the right edge");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     PaperStyle.SansSerif;
     "To be completed";
   };
@@ -611,7 +611,7 @@ class QRatesMatrixClass: ContentClass {
     super.Constructor("Rate Matrix " Defs.RateMatrix);
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.PartitionBox(style, ExtentSize);
+  override GetBody(ContentStyleClass style, title) = MainResults.MainRun.QRates.PartitionBox(style, ExtentSize);
 }
 
 //======================================================================
@@ -623,7 +623,7 @@ class QRatesDiagonalClass: ContentClass {
     super.Constructor(Span {"The rate of change when in a particular segmental state (or "; -Defs.qii; ")"});
   }
 
-  override GetBody(ContentStyleClass style) = new DiagonalClass(MainResults.Data.Rule, MainResults.MainRun.QRates).Display(style);
+  override GetBody(ContentStyleClass style, title) = new DiagonalClass(MainResults.Data.Rule, MainResults.MainRun.QRates).Display(style);
 }
 
 //======================================================================
@@ -639,9 +639,7 @@ class LanguageDistributionClass: ContentClass {
     super.Constructor("The geographic distribution of the Romance languages examined in this study");
   }
 
-  override GetBody(ContentStyleClass style) = Paragraph {
-    FitBox(IO.Read(Info.ImageFolder FileName("areas.png")), 100%);
-  };
+  override GetBody(ContentStyleClass style, title) = FitBox(IO.Read(Info.ImageFolder FileName("areas.png")), 100%);
 }
 
 //======================================================================
@@ -653,7 +651,7 @@ class AverageAllClass: ContentClass {
     super.Constructor("All Rates");
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.ShowAllRates;
+  override GetBody(ContentStyleClass style, title) = MainResults.MainRun.QRates.ShowAllRates;
 }
 
 //======================================================================
@@ -665,7 +663,7 @@ class AverageSortedClass: ContentClass {
     super.Constructor("Rate vs. Direction");
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.ShowRateDirected;
+  override GetBody(ContentStyleClass style, title) = MainResults.MainRun.QRates.ShowRateDirected;
 }
 
 //======================================================================
@@ -677,7 +675,7 @@ class RateDirectionClass: ContentClass {
     super.Constructor("Directionality");
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.ShowDirection;
+  override GetBody(ContentStyleClass style, title) = MainResults.MainRun.QRates.ShowDirection;
 }
 
 //======================================================================
@@ -691,7 +689,7 @@ class SpecificRatesClass: ContentClass {
 
   static bool Predicate(RateClass a) = a.IsPair("p", "f") or a.IsPair("s", "h") or a.IsPair("k", "ʧ");
 
-  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.Pairs(-1, @Predicate);
+  override GetBody(ContentStyleClass style, title) = MainResults.MainRun.QRates.Pairs(-1, @Predicate);
 }
 
 TransitionTitle(type) = "The top {0} {1} transitions"(TopCount, type);
@@ -705,7 +703,7 @@ class QRatesTopClass: ContentClass {
     super.Constructor(TransitionTitle("segmental"));
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.Extrema(TopCount, true);
+  override GetBody(ContentStyleClass style, title) = MainResults.MainRun.QRates.Extrema(TopCount, true);
 }
 
 //======================================================================
@@ -720,7 +718,7 @@ class QRatesConsonantConsonantClass: ContentClass {
   static bool Predicate(RateClass a) = a.F0.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature) and
                                        a.F1.HasFlagMask(SegmentFeatures.Vowel, SegmentFeatures.NoFeature);
 
-  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.Pairs(TopCount, @Predicate);
+  override GetBody(ContentStyleClass style, title) = MainResults.MainRun.QRates.Pairs(TopCount, @Predicate);
 }
 
 //======================================================================
@@ -732,7 +730,7 @@ class QRatesOneWayClass: ContentClass {
     super.Constructor(TransitionTitle("highly directed"));
   }
 
-  override GetBody(ContentStyleClass style) = MainResults.MainRun.QRates.ShowChartPairs(TopCount, MainResults.MainRun.QRates.SortByDirection);
+  override GetBody(ContentStyleClass style, title) = MainResults.MainRun.QRates.ShowChartPairs(TopCount, MainResults.MainRun.QRates.SortByDirection);
 }
 
 //======================================================================
@@ -749,7 +747,7 @@ class AllSegmentFrequenciesClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = "The frequency of occurrance of each segment for all languages";
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     Display;
   };
 }
@@ -763,7 +761,7 @@ class ConsensusTreeClass: ContentClass {
     super.Constructor(Lang.ConsensusTree);
   }
 
-  override GetBody(ContentStyleClass style) = PaperStyle.ShowTree(style, MainResults.MainRun.Run.ResultTree, ExtentWidth);
+  override GetBody(ContentStyleClass style, title) = PaperStyle.ShowTree(style, MainResults.MainRun.Run.ResultTree, ExtentWidth);
 }
 
 //======================================================================
@@ -786,7 +784,7 @@ class SegmentOccuranceRatesClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption;
 
-  override GetBody(ContentStyleClass style) = new SegmentFrequencyClass(MainResults.Data, false).ShowChart(style);
+  override GetBody(ContentStyleClass style, title) = new SegmentFrequencyClass(MainResults.Data, false).ShowChart(style);
 }
 
 //======================================================================
@@ -798,7 +796,7 @@ class SegmentOccuranceGroupedClass: ContentClass {
     super.Constructor("Segment Occurance Rates (by partition)");
   }
 
-  override GetBody(ContentStyleClass style) = new SegmentFrequencyClass(MainResults.Data, true).ShowChart(style);
+  override GetBody(ContentStyleClass style, title) = new SegmentFrequencyClass(MainResults.Data, true).ShowChart(style);
 }
 
 //======================================================================
@@ -812,7 +810,7 @@ class PartitionFrequenciesClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption;
 
-  override GetBody(ContentStyleClass style) = new PartitionFrequencyClass(MainResults.Data).ShowChart(style);
+  override GetBody(ContentStyleClass style, title) = new PartitionFrequencyClass(MainResults.Data).ShowChart(style);
 }
 
 //======================================================================
@@ -869,7 +867,7 @@ class ExampleTreeClass: ContentClass {
     "An example tree showing the relationships of {0} languages."(SampledLanguages(MainResults.Data.LanguageSet.Length));
   };
 
-  override GetBody(ContentStyleClass style) = PaperStyle.ShowTree(style, MainResults.Data.NumberedTree, 5 inches);
+  override GetBody(ContentStyleClass style, title) = PaperStyle.ShowTree(style, MainResults.Data.NumberedTree, 5 inches);
 }
 
 //======================================================================
@@ -881,7 +879,7 @@ class ExampleConceptsClass: ContentClass {
     super.Constructor(Lang.ConceptsExamples);
   }
 
-  override GetBody(ContentStyleClass style) = AllWords.ShowTable(11 pts, MainResults.Data, 2);
+  override GetBody(ContentStyleClass style, title) = AllWords.ShowTable(11 pts, MainResults.Data, 2);
 }
 
 //======================================================================
@@ -893,7 +891,7 @@ class LanguagesUsedClass: ContentClass {
     super.Constructor(Lang.Languages);
   }
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     var rows      = 2;
     var data      = MainResults.Data;
     var cols      = (data.Taxa.Length + 1) div rows;
@@ -1115,7 +1113,7 @@ class AlignmentClass: ContentClass {
     "). ";
   };
 
-  override GetBody(ContentStyleClass style)= VBox {
+  override GetBody(ContentStyleClass style, title)= VBox {
     TextHeight: 12 pts;
     Separation: 4 pts;
     Margin: PadB(5 pts);
@@ -1220,8 +1218,8 @@ class ResultsSectionClass: ContentClass {
     AddFigure(Figures.QRatesDiagonal);
  }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "Our results are based on a data set of ";
       MainResults.Data.UsedCognates.Length;
       " cognate classes comprising ";
@@ -1243,8 +1241,8 @@ class PhylogenyResultsClass: ContentClass {
     super.Constructor("Phylogeny");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar(Title) {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "Our statistical analysis treats all model parameters as random variables with prior probability distributions. ";
       "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
       "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
@@ -1261,8 +1259,8 @@ class PhylogenyResultsClass: ContentClass {
       "This problem was likely not encountered in the other implementations of the TKF91 model";
       Citation {Lunter2004}; ", which analyzed an alignment of amino acid sequences. ";
       "In our analysis of cognate data, the insertion and deletion rates were estimated to be quite high relative to the substitution rate: ";
-      InsertionRate; Tex.Equals; run.InsertionRate; " ("; run.InsertionRateLow; ", "; run.InsertionRateHigh; ") and ";
-      DeletionRate; Tex.Equals; run.DeletionRate; " ("; run.DeletionRateLow; ", "; run.DeletionRateHigh; ") ";
+      Equation {InsertionRate; Tex.Equals; run.InsertionRate}; " ("; run.InsertionRateLow; ", "; run.InsertionRateHigh; ") and ";
+      Equation {DeletionRate; Tex.Equals; run.DeletionRate}; " ("; run.DeletionRateLow; ", "; run.DeletionRateHigh; ") ";
         "for the insertion and deletion rates, respectively. ";
       "(The credible intervals in the parentheses contain the true value of the parameter with probability {0}.) "(ResultsClass.CutoffProbability);
       "Roughly speaking, this means that for every two segmental transitions there was one insertion or deletion event. ";
@@ -1346,16 +1344,16 @@ class SegmentModelsClass: ContentClass {
     super.Constructor("Models of segmental change");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     var data = MainResults.Data;
 
     var rule = data.Rule;
 
-    style.FirstPar(Title) {
+    style.TitlePar(title) {
       "We considered three models of segmental change in this study: ";
       PoissonModel; ", a model isomorphic to the model of DNA sequence evolution first described by Jukes and Cantor";
       Citation {Jukes1969};
-      " with equal rates between all pairs of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the `Poisson' model); ";
+      " with equal rates between all pairs of states and in which the number of substitutions follows a Poisson distribution (hereafter referred to as the "; style.SQuote{Defs.PoissonModel.Name}; " model); ";
       UnequalModel; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein";
       Citation {Felsenstein1981};
       " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
@@ -1371,7 +1369,7 @@ class SegmentModelsClass: ContentClass {
       "The second model, "; UnequalModel; ", has "; segments; " free parameters (one less than the number of segments). ";
 
       "The natural class model, "; NaturalClassModel; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
-      Equation {segments; " + "; (rp*(rp-1)/2 + rp); Tex.Equals; segments + rp*(rp-1)/2 + rp}; " free parameters.";
+      Equation {segments; Tex.Plus; (rp*(rp-1)/2 + rp); Tex.Equals; segments + rp*(rp-1)/2 + rp}; " free parameters.";
     };
 
     style.BodyPar {
@@ -1496,8 +1494,8 @@ class WordTransformationClass: ContentClass {
     super.Constructor("Segmental Stability");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar(Title) {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the rate matrix of the continuous-time Markov model describing phonemic ";
           "change estimated under the natural class model. ";
       "These diagonal elements can be interpreted as a measure of segmental volatility, since they are the sum of the rates at which they transition to other segments. ";
@@ -1542,8 +1540,8 @@ class WordSegmentRelationshipsClass: ContentClass {
     super.Constructor("Segmental Alignments");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar(Title) {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       var align1 = Figures.AlignmentExample1;
       var index1 = align1.Examples[0].FindAlignment(MainResults.MainRun);
 
@@ -1615,8 +1613,8 @@ class OtherApproachesClass: ContentClass {
     super.Constructor("Relationship to other approaches");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar(Title) {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "There is a long-standing debate — known as the "; style.DQuote{"Neogrammarian controversy"}; " — about the units involved in sound change. ";
       "Leonard Bloomfield famously declared "; style.DQuote{"phonemes change"}; Citation {Bloomfield1933}; DotSpace;
       "According to this view, sound change is not only abrupt but also non-independent. ";
@@ -1649,8 +1647,9 @@ class OtherApproachesClass: ContentClass {
       " where "; NumTreeLeaves; " is the number of leaves on the tree and "; GMLength; " is the geometric mean of the word lengths ";
       Citation{Lunter2003}; DotSpace;
       "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with ";
-      1; Tex.lt; WordLength; Tex.lt; 10; DotSpace;
-      "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length, instead of the overall insertion rate being "; InsertionRate; "("; WordLength+1; ") as it is under the TKF91 model ";
+      Equations.TypicalWordLength; DotSpace;
+      "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length, instead of the overall insertion rate being ";
+      Equations.OverallInsertionRate; " as it is under the TKF91 model ";
       Citation{BouchardCote2013b}; DotSpace;
       "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
     };
@@ -1666,8 +1665,8 @@ class LimitationsClass: ContentClass {
     super.Constructor("Limitations of the event-based model");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar(Title) {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "Our results are based on a unigram model of segmental transition, in which the three possible events described above are applicable only to individual segments. ";
       "Certain patterns of sound change cannot be adequately captured under such a model. ";
       "For instance, metathesis, a change in which two segments exchange positions, is modeled as two separate transitions. ";
@@ -1679,10 +1678,11 @@ class LimitationsClass: ContentClass {
     };
 
     style.BodyPar {
-      "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with "; Equation {1; Tex.leq; WordLength; Tex.leq; 10}; DotSpace;
+      "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with ";
+      Equations.TypicalWordLength; DotSpace;
       "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length ";
       Citation{BouchardCote2013b; ", instead of the overall insertion rate being ";
-      Equation {Tex.lambda; Tex.times; InParens {WordLength + 1}};
+      Equations.OverallInsertionRate;
       " as it is under the TKF91 model"}; DotSpace;
       "This model — the Poisson Indel Process (PIP) — could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Because the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible one to apply to linguistic data. ";
     };
@@ -1708,25 +1708,24 @@ class AdvantagesClass: ContentClass {
     super.Constructor("Advantages of the event-based approach");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar(Title) {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "Our event-based approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. For example, questions related to the relationship between phonological change and the phonemic inventory of a language can now be addressed. Does the frequency of a phoneme in the words of a language affect its diachronic stability? To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? What is the role of natural classes in sound change? This last question can be addressed in particular through the comparison of models with different numbers of rate parameters.";
-      };
+     };
 
     style.BodyPar {
       "By casting the problem of language change in a statistical framework, we inherit the benefits of the statistical approach to estimate model parameters and, perhaps more importantly, to compare alternative models of language change to find the model that best explains the data. In this way,  linguists can learn about language evolution by devising models that account for potential linguistic phenomena, then testing the model against models that do not account for the linguistic feature. This approach has proven successful in molecular evolution where models have been described and tested that account for many evolutionary processes of molecular change.";
-      };
+    };
 
-      style.BodyPar {
+    style.BodyPar {
       "The method can be extended to handle more complex segmental changes (such as those involving context dependency). Moreover, the event-based approach has the potential to more sensibly estimate divergence times. Divergence time estimation relies on estimating the number of events that occurred along the branches of the tree. When divergence estimation is applied to abstract cognate relationships, it is not clear what exactly is being counted along the branches. Here, the events are well defined: segmental transitions, insertions, or deletions.";
-      };
+    };
 
-      style.BodyPar {
+    style.BodyPar {
       "In sum, our approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general, which can be expanded and refined in various ways. For example, it can be combined with methods of automatic cognate detection ";
       Citation {References.BouchardCote2013}; DotSpace;
       "It may be possible to extend the method to address more complicated questions, such as context-dependent changes and changes involving multiple segments (such as metathesis). ";
     };
-
   };
 }
 
@@ -1744,8 +1743,8 @@ class MethodsSummaryClass: ContentClass {
     AddContent(PaperSections.DataCuration);
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "A detailed description of the model and analysis can be found in the Supplemental Material. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
     };
@@ -1763,10 +1762,10 @@ class DataSummaryClass: ContentClass {
 
   readonly W = TextIpa {TextAlignment: TextAlignments.Superscript; "w"};
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     var data = MainResults.Data;
 
-    style.FirstPar(Title) {
+    style.TitlePar(title) {
       "The initial set of data was downloaded from Wiktionary ";
       CitationName(Wiktionary);
       ", which was then manually checked for accuracy and augmented. For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. There are often multiple sets of cognates for a given concept among our sample of languages. Selection of lexical items was oriented toward Latin in order to maximize the number of cognate word-forms in each set. ";
@@ -1774,7 +1773,7 @@ class DataSummaryClass: ContentClass {
 
     style.BodyPar {
       "As noted above, membership in a cognate set depends solely on shared descent: meaning is irrelevant. For instance, the Latin adjective "; textit{"gravis"};  " means "; style.SQuoteComma{"heavy"}; "but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"}; "Despite this semantic difference, they are assigned to the same cognate set because they are segmentally homologous. Phonemic representations are used in lieu of phonetic representations for two reasons. First, phonetic data is harder to come by,  especially with corpus languages such as Latin. Second, there is considerably more variation at the phonetic level that would have to have been taken into account. Suprasegmental features such as stress are not represented in the data. Word-forms are represented in the International Phonetic Alphabet (IPA). ";
-      };
+    };
 
     style.BodyPar {
       "The raw data set contains many cognate word-forms, but data for this experiment was limited to only those cognates that have word-forms from ";
@@ -1791,7 +1790,7 @@ class DataSummaryClass: ContentClass {
 
     style.BodyPar {
       "Manual alignments of cognate word-forms serve as the starting point for the MCMC sampling procedure (described above), so our analysis does not condition on any particular alignment of segments being correct. ";
-      style.TableReference(TableFigures.ManualAlignment); " provides an illustrative example of the manual alignment for the concept "; TableFigures.ManualAlignment.WordDisplay(style);  "Dashes (`-') denote the absence of a homologous segment present in other word-forms. The Latin form "; TextIpa{"kʷ-id"}; " begins with a voiceless labiovelar stop whose secondary articulation is lost in all of the languages in our dataset. The stressed "; TextIpa{"i"}; " in Latin develops into "; TextIpa{"wa"}; " in French and Walloon. To accommodate the presence of "; TextIpa{"w"}; ", there is an empty segmental slot before the vowel in all other languages.  ";
+      style.TableReference(TableFigures.ManualAlignment); " provides an illustrative example of the manual alignment for the concept "; TableFigures.ManualAlignment.WordDisplay(style);  "Dashes ("; style.SQuote {"-"} ") denote the absence of a homologous segment present in other word-forms. The Latin form "; TextIpa{"kʷ-id"}; " begins with a voiceless labiovelar stop whose secondary articulation is lost in all of the languages in our dataset. The stressed "; TextIpa{"i"}; " in Latin develops into "; TextIpa{"wa"}; " in French and Walloon. To accommodate the presence of "; TextIpa{"w"}; ", there is an empty segmental slot before the vowel in all other languages.  ";
     };
   };
 }
@@ -1815,7 +1814,7 @@ class ManualAlignmentClass: ContentClass {
     WordDisplay(style);
   };
 
-  override GetBody(ContentStyleClass style) = LanguageTable([ColumnClass.Expand]*3) {
+  override GetBody(ContentStyleClass style, title) = LanguageTable([ColumnClass.Expand]*3) {
     var th = Math.Max(ExtentWidth * 0.02, 9 pts);
     TextHeight: th;
 
@@ -1852,7 +1851,7 @@ class WordCountTableClass: ContentClass {
     };
   };
 
-  override GetBody(ContentStyleClass style) = LanguageTable([1.5 inches]) {
+  override GetBody(ContentStyleClass style, title) = LanguageTable([1.5 inches]) {
     LanguageTitleRow {
       Lang.Language; Lang.WordForms; Lang.SegmentCount;
     };
@@ -1879,16 +1878,16 @@ class ModelInferenceClass: ContentClass {
     super.Constructor("Model and Statistical Inference");
   }
 
-  InsertionLessThanDeletion = Span {InsertionRate; Tex.lt; DeletionRate};
+  InsertionLessThanDeletion = PaperStyle.Equation {InsertionRate; Tex.lt; DeletionRate};
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     var rule = MainResults.Data.Rule;
 
-    style.FirstPar(Title) {
+    style.TitlePar(title) {
       "We assume that modern languages are related to one another through an unknown phylogenetic tree, ";
       UnknownTree;
       ", that contains information on the relatedness of the languages ";
-      InParens {Topology};
+      SpanParens {Topology};
       " and the expected number of sound substitutions "; ExpectedEvents; " that occur along each branch of the tree. ";
       "Language evolves along the branches of the tree according to the TKF91 model"; Citation {Thorne1991}; " which allows either a word segment transition, insertion, or deletion to occur in an instant of time. ";
       "Insertions and deletions occur at rates "; InsertionRate; " and "; DeletionRate; " respectively, with "; InsertionLessThanDeletion; DotSpace;
@@ -1936,11 +1935,11 @@ class DataCurationClass: ContentClass {
     super.Constructor("Data Curation and Analysis");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     var data    = MainResults.Data;
     var example = new ExampleConceptClass(data, data.DataConcept);
 
-    style.FirstPar(Title) {
+    style.TitlePar(title) {
       "Our analysis is coordinated using a program written in the Nytril programming language"; Citation {Nytrilprogram}; DotSpace;
       "We created an automated framework for the experiment that comprises a reusable IPA library, word data, ";
       "data quality checks, typeset output and input files for the MCMC software (written in C++). ";
@@ -1994,8 +1993,8 @@ class AcknowledgementsClass: ContentClass {
     super.Constructor("Acknowledgements");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       style.ShowInitials(People.Huelsenbeck_John); " was supported through NSF (1759909) and the Koret Foundation. We thank "; style.ShowPerson(People.Lunter_Gerton); " for help with the TKF91 model.";
     }
   };
@@ -2010,8 +2009,8 @@ class ContributionsClass: ContentClass {
     super.Constructor("Author contributions statement");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       style.ShowInitials(People.Goldstein_David) " collected data, ";
       style.ShowInitials(People.Buchi_Éva); " corrected it, ";
       style.ShowInitials(People.McCreight_Shawn); " developed the control software, and ";
@@ -2035,18 +2034,18 @@ class MethodsClass: ContentClass {
 //    AddTable(Figures.PartitionAssignments);
   }
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     var data = MainResults.Data;
     var ec   = new ExampleConceptClass(data, data.ExampleConcept);
 
-    style.FirstPar {
+    style.TitlePar(title) {
       "We use ancestral classes, in which the descendant forms are segmentally aligned. ";
       "It is important to note that our definition of cognate refers only to segmental descent. ";
       "It takes no account of semantics whatsoever. ";
       "So the lexical items for "; style.SQuote{"ear"}; " in Romance are paired with the Latin word "; textit{"auricula"}; " which is the diminute form of "; style.SQuoteEnd{"ear"};
     };
 
-    style.FirstPar {
+    style.BodyPar {
       "Other things we have to mention: "
     };
 
@@ -2139,7 +2138,7 @@ class MethodsClass: ContentClass {
      Equation {
        Span {Bold; Time};
        Tex.Equals;
-       InParens {
+       SpanParens {
          EllipsisList {
            Time sub (NumLanguages Tex.Plus 1);
            Time sub (NumLanguages Tex.Plus 2);
@@ -2519,7 +2518,7 @@ class MethodsClass: ContentClass {
         Span {RateMatrixParams.Description; Space; Equation {RateMatrix}};
       };
       ParamRow {
-        Equation {InsertDelete(", "); Space; InParens {InsertDelete(Tex.lt)}};
+        Equation {InsertDelete(", "); Space; SpanParens {InsertDelete(Tex.lt)}};
         "The insertion and deletion rates of  segments";
       };
       ParamRow {
@@ -2775,8 +2774,8 @@ class ConclusionClass: ContentClass {
     super.Constructor("The Rate Matrix in this model of Linguistics");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "Our model describes how the segments evolve along the branches of the tree. We have three events that can occur to change a word: an insertion of a single segment, a deletion of a single segment, and a substitution of a segment.";
     };
 

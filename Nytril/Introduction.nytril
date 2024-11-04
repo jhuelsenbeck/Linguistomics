@@ -9,8 +9,8 @@ class AbstractClass: ContentClass {
     super.Constructor(Lang.Abstract);
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "Linguistic phylogenies are standardly inferred from abstract cognate relationships among lexical items. ";
       "Despite the prevalence of this practice, it suffers from well-known drawbacks: ";
           "it disregards the phylogenetic signal in the segmental form of words; ";
@@ -32,8 +32,8 @@ class SignificanceClass: ContentClass {
     super.Constructor("Significance Statement");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "Linguistic phylogenies conventionally rely on abstract cognate relationships, which are akin to morphological characters used in biology. ";
       "While this approach has proven serviceable, it constrains the range of inquiries that can be pursued. ";
       "In this study, we introduce a model of linguistic evolution that characterizes segmental change through three core processes: ";
@@ -46,24 +46,15 @@ class SignificanceClass: ContentClass {
 
 //======================================================================
 
-readonly IntroductionClass PaperSections.Introduction = new;
+readonly RootMeaningTraitsClass PaperSections.RootMeaningTraits = new;
 
-class IntroductionClass: ContentClass {
+class RootMeaningTraitsClass: ContentClass {
   Constructor {
-    super.Constructor(null);
+    super.Constructor("Root-meaning traits");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
-    style.FirstPar {
-      DropCap {"L"}; "ike biological species, languages exhibit the crucial property of descent with modification, as a result of which their histories can be described by a tree and estimated using phylogenetic methods developed within the field of evolutionary biology";
-        Citation {Atkinson2005; Croft2008; Pagel2009; Borchesius2017; Bromham2017; Pagel2017}; DotSpace;
-      "Over the past twenty years, these methods have come to play a prominent role in the investigation of linguistic history. ";
-      "Bayesian phylogenetic methods, in particular, are increasingly used to infer tree topologies, ancestral states, and divergence times";
-        Citation {Bouckaert2012; Bowern2012; Chang2015; Dunn2017; Sagart2019; Carling2021; Auderset2023}; DotSpace;
-      "Despite the undeniable advances of these methods, a fundamental problem remains unaddressed: the nature of the observations. ";
-    };
-
-    style.FirstPar("Root meaning traits") {
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "Linguistic phylogenies are typically inferred from abstract cognate relationships";
           Citation {Bouckaert2012; Bowern2012; Chang2015; Gray2000; Holden2002; Ringe2002; Gray2003}; DotSpace;
       "Cognates are linguistic units (e.g., segments, morphemes, words) that descend from a common ancestor. An example from the lexical domain is Spanish "; textit{"mano"}; " "; style.SQuoteComma{"hand"};
@@ -75,7 +66,6 @@ class IntroductionClass: ContentClass {
       "The concepts themselves are sampled from a Swadesh list, several versions of which now exist";
           Citation {Tadmor2010}; DotSpace;
     };
-
     style.BodyPar {
       style.TableReference(TableFigures.CognateCoding);
           " presents a root-meaning trait in a sample of Indo-European languages for the concept "; style.SQuoteEnd{"hand"};
@@ -121,9 +111,20 @@ class IntroductionClass: ContentClass {
       "To overcome this inconsistency, inferences should be drawn from cognate word-forms and not abstract cognate relationships, since the former are observable. ";
       "From a broader perspective, if there is a linguistic parallel to genes, it is word-forms, not cognacy relationships. ";
     };
+  };
+}
 
-    style.BodyPar {
-      style.SubSection {"Cognate word-forms"};
+//======================================================================
+
+readonly CognateWordFormsClass PaperSections.CognateWordForms = new;
+
+class CognateWordFormsClass: ContentClass {
+  Constructor {
+    super.Constructor("Cognate word-forms");
+  }
+
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
       "In this study, individual cognate word-forms are the observations from which inferences are drawn";
          Citation {BouchardCote2013}; DotSpace;
       "In contrast to root-meaning traits (such as the one illustrated in ";
@@ -145,35 +146,58 @@ class IntroductionClass: ContentClass {
     };
 
     style.BodyPar {
-       "The use of cognate words introduces several challenges, the most serious of which is establishing the relationship between homologous segments of cognate word-forms. ";
-       "In a molecular phylogenetic analysis, the fine-scale homology of nucleotides sampled from different species is established using sequence alignment programs. ";
-       "However, even for molecular data in which long nucleotide sequences are the norm, there can be substantial uncertainty in the alignment";
-          Citation {Wong2008};  DotSpace;
-       "Alignment uncertainty is exacerbated for cognates because the word-forms typically have only a handful of segments. ";
-       "We address this problem by marginalizing over segmental alignments. ";
-       "That is, we consider all possible word alignments, weighting each by its probability under the model. ";
-       "We do this by performing parameter estimation in a Bayesian framework, using Markov chain Monte Carlo, or MCMC ";
-          Citation {Metropolis1953; Hastings1970};
-          ", to sample model parameters, including segmental alignments, in proportion to their posterior probabilities.";
+      "The use of cognate words introduces several challenges, the most serious of which is establishing the relationship between homologous segments of cognate word-forms. ";
+      "In a molecular phylogenetic analysis, the fine-scale homology of nucleotides sampled from different species is established using sequence alignment programs. ";
+      "However, even for molecular data in which long nucleotide sequences are the norm, there can be substantial uncertainty in the alignment";
+         Citation {Wong2008};  DotSpace;
+      "Alignment uncertainty is exacerbated for cognates because the word-forms typically have only a handful of segments. ";
+      "We address this problem by marginalizing over segmental alignments. ";
+      "That is, we consider all possible word alignments, weighting each by its probability under the model. ";
+      "We do this by performing parameter estimation in a Bayesian framework, using Markov chain Monte Carlo, or MCMC ";
+         Citation {Metropolis1953; Hastings1970};
+         ", to sample model parameters, including segmental alignments, in proportion to their posterior probabilities.";
     };
 
     style.BodyPar {
-        "Segmental sampling is another issue that emerges in our framework";
-            Citation {Dockum2019}; DotSpace;
-        "Certain sound changes can play a crucial role in topological inference, but under a sampling scheme such as ours, "
-           "in which selection of concepts is guided by a Swadesh list, there is no guarantee that the necessary segmental correspondences will be sampled. ";
-        "There is the further question of the frequency distribution of segments in the dataset. ";
-        "Some segments will be sampled more often than others simply because they occur more frequently in a language, which can influence estimates of equilibrium frequencies and transition rates. ";
-        "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will likely ";
-           "have to be modified under our framework to consider issues of segmental distribution. ";
+     "Segmental sampling is another issue that emerges in our framework";
+         Citation {Dockum2019}; DotSpace;
+     "Certain sound changes can play a crucial role in topological inference, but under a sampling scheme such as ours, "
+        "in which selection of concepts is guided by a Swadesh list, there is no guarantee that the necessary segmental correspondences will be sampled. ";
+     "There is the further question of the frequency distribution of segments in the dataset. ";
+     "Some segments will be sampled more often than others simply because they occur more frequently in a language, which can influence estimates of equilibrium frequencies and transition rates. ";
+     "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will likely ";
+        "have to be modified under our framework to consider issues of segmental distribution. ";
     };
 
     style.BodyPar {
-        "Our approach opens a new horizon in historical linguistics by enabling researchers to investigate segmental change in a comparative phylogenetic framework. ";
-        "In particular, the TKF91 model can estimate the stability of segments over time. ";
-        "Although segmental stability is of fundamental importance for both linguistic theory and historical linguistics, attempts to measure it have been few";
-            Citation {Wichmann2009; Moran2018; Moran2021};
-            " and none has been phylogenetically based. ";
+      "Our approach opens a new horizon in historical linguistics by enabling researchers to investigate segmental change in a comparative phylogenetic framework. ";
+      "In particular, the TKF91 model can estimate the stability of segments over time. ";
+      "Although segmental stability is of fundamental importance for both linguistic theory and historical linguistics, attempts to measure it have been few";
+          Citation {Wichmann2009; Moran2018; Moran2021};
+          " and none has been phylogenetically based. ";
+    };
+  };
+}
+
+//======================================================================
+
+readonly IntroductionClass PaperSections.Introduction = new;
+
+class IntroductionClass: ContentClass {
+  Constructor {
+    super.Constructor(null);
+    AddContent(PaperSections.RootMeaningTraits);
+    AddContent(PaperSections.CognateWordForms);
+  }
+
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
+      DropCap {"L"}; "ike biological species, languages exhibit the crucial property of descent with modification, as a result of which their histories can be described by a tree and estimated using phylogenetic methods developed within the field of evolutionary biology";
+        Citation {Atkinson2005; Croft2008; Pagel2009; Borchesius2017; Bromham2017; Pagel2017}; DotSpace;
+      "Over the past twenty years, these methods have come to play a prominent role in the investigation of linguistic history. ";
+      "Bayesian phylogenetic methods, in particular, are increasingly used to infer tree topologies, ancestral states, and divergence times";
+        Citation {Bouckaert2012; Bowern2012; Chang2015; Dunn2017; Sagart2019; Carling2021; Auderset2023}; DotSpace;
+      "Despite the undeniable advances of these methods, a fundamental problem remains unaddressed: the nature of the observations. ";
     };
   };
 }
@@ -203,7 +227,7 @@ class CognateCodingClass: ContentClass {
       code;
   };
 
-  override GetBody(ContentStyleClass style) = LanguageTable([ColumnClass.Expand]*3) {
+  override GetBody(ContentStyleClass style, title) = LanguageTable([ColumnClass.Expand]*3) {
     LanguageTitleRow {
       Lang.Language;
       "Phonemic Representation";
@@ -252,7 +276,7 @@ class MultiStateCharacterClass: ContentClass {
     CognateCodingClass.LanguageLine(WorldLanguages.Russian, "отец", binary, 3);
   };
 
-  override GetBody(ContentStyleClass style) = FatherTable(style, false);
+  override GetBody(ContentStyleClass style, title) = FatherTable(style, false);
 }
 
 //======================================================================
@@ -264,7 +288,7 @@ class BinaryRepresentationClass: ContentClass {
     super.Constructor("Binary cognate classes");
   }
 
-  override GetBody(ContentStyleClass style) = MultiStateCharacterClass.FatherTable(style, true);
+  override GetBody(ContentStyleClass style, title) = MultiStateCharacterClass.FatherTable(style, true);
 }
 
 //======================================================================

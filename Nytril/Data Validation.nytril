@@ -116,12 +116,12 @@ class DiagnosticsViewClass: DocumentClass {
 
       var caption = c.GetCaption(style);
       if (caption is not null) {
-        style.FirstPar {
+        style.AppendixCaption {
           caption;
         };
       }
 
-      c.GetBody(style);
+      c.GetBody(style, null);
     }
   };
 }
@@ -133,7 +133,7 @@ class ConceptGroupsClass: DataContentClass {
     super.Constructor(data, "Concept Groups");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     WordGroups[] groups = WordGroups.ValueArray[1..];
     Table(PaperStyle.TableBorder, null, [0.25 inches] + [1 inch] * (2+groups.Length)) {
       Row {
@@ -175,7 +175,7 @@ class PriorTreeClass: DataContentClass {
     super.Constructor(data, "Prior Trees");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     Paragraph {
       foreach (var tree in Data.PriorTrees)
         PaperStyle.ShowTree(style, tree, 30%, Lang.Tree+each1);
@@ -190,7 +190,7 @@ class CognateCoverageClass: DataContentClass {
     super.Constructor(data, "Cognate Coverage");
   }
 
-  override GetBody(ContentStyleClass style) = Block {
+  override GetBody(ContentStyleClass style, title) = Block {
     style.Heading1 {
       "By Language";
     };
@@ -249,7 +249,7 @@ class AppendixClass: ContentClass {
     Body = body;
   }
 
-  override GetBody(ContentStyleClass style) = Body;
+  override GetBody(ContentStyleClass style, title) = Body;
 }
 
 //======================================================================
@@ -423,7 +423,7 @@ class SegmentTransitionClass: ContentClass {
     "The number of times that a segment on the left vertical bar differs from any other other segment at the same position. The rates of transitions to and from gaps are ignored. Partitions are ordered by frequency of occurrance. Transition counts are shown in a scaled color box. The chart has diagonal symmetry.";
   };
 
-  override GetBody(ContentStyleClass style) = new PriorCountClass(Data).PartitionBox(style, new (ExtentWidth, ExtentHeight - 1.6 inch));
+  override GetBody(ContentStyleClass style, title) = new PriorCountClass(Data).PartitionBox(style, new (ExtentWidth, ExtentHeight - 1.6 inch));
 }
 
 //======================================================================
