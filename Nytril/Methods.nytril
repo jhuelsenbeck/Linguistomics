@@ -527,8 +527,8 @@ class GappinessChartClass: ContentClass {
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    "The number of gaps observed across the "; MainResults.Data.UsedCognates.Length; " cognates analyzed in this study at the first segment (top), middle segment(s) (middle), and last segment (bottom). ";
-    "Nine languages were analyzed in this study, so it is not possible for there to be nine gaps; deletion events that led to a gap for all the languages would not be included in an alignment, and is explicitly conditioned on in Lunter et al."; Citation{Lunter2003}; DotSpace;
+    "The number of gaps observed across the "; MainResults.Data.UsedCognates.Length; " cognate sets analyzed in this study at the word-initial segment (top), word-medial segment(s) (middle), and word-final segment (bottom). ";
+    "Nine languages were analyzed in this study, so it is not possible for there to be nine gaps. Deletion events that led to a gap for all the languages would not be included in an alignment, and is explicitly conditioned on in Lunter et al."; Citation{Lunter2003}; DotSpace;
     "There is a clear, and statistically significant, pattern of an increasing number of gaps as one moves from the beginning to the end of the word. ";
     "(A likelihood ratio test of the null hypothesis that the distributions are the same at the first, middle, and last segments is highly significant, with a test statistic of ";
     Span {
@@ -1225,9 +1225,9 @@ class ResultsSectionClass: ContentClass {
       " cognate classes comprising ";
       MainResults.Data.WordCount;
       " individual words from "; Enumerators.Cardinal(MainResults.Data.LanguageSet.Length-1);
-      " Romance languages, whose geographic distribution is shown in ";
+      " Romance languages and Classical Latin. The geographic distribution of the latter is shown in ";
       style.FigureReference(Figures.LanguageDistribution);
-      ", and Classical Latin. ";
+      ". ";
     };
   };
 }
@@ -1247,10 +1247,14 @@ class PhylogenyResultsClass: ContentClass {
       "The tree topology describing the relationships of the languages is also considered a random variable with a uniform prior probability in which all possible tree topologies are assigned equal prior probability. ";
       "As described in the Methods section, we use MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
       "Our analyses consistently found a handful of topologies that best explained the data. Unfortunately, the MCMC poorly explored the tree space: ";
-        "the MCMC algorithm would find a good tree then become stuck on it. Why is this the case? In our MCMC implementation, parameters are updated in blocks. ";
+        "the MCMC algorithm would find a good tree then become stuck on it. ";
+    };
+
+    style.BodyPar {
+      "In our MCMC implementation, parameters are updated in blocks. ";
       "A parameter is randomly selected and then updated. In a single MCMC cycle, either the tree topology or the alignment is updated, but not both simultaneously. ";
       "The tree topology and alignments are confounded. As the MCMC procedure found better trees, the alignments that were accepted by the MCMC procedure tended to fit the current tree in computer memory. ";
-      "As the alignment becomes better adapted to the current tree in memory, it becomes more difficult for the MCMC procedure to accept alternative topologies, even if they would be sensible ones on a different alignment.";
+      "As the alignment becomes better adapted to the current tree in memory, it becomes more difficult for the MCMC procedure to accept alternative topologies, even if they would be sensible on a different alignment.";
     };
 
     style.BodyPar {
@@ -1272,10 +1276,10 @@ class PhylogenyResultsClass: ContentClass {
     style.BodyPar {
       "In all subsequent analyses, we examine the pattern of language change using three topologies ("
        style.FigureReference(Figures.ModelTreesUsed); "). ";
-      "Although there is considerable debate about the phylogeny of the Romance languages, in recent decades most specialists have converged on the view that the first two clades to ";
-       "form included Sardinian followed by Romanian";
+      "Although there is considerable debate about the topology of the Romance languages, in recent decades most specialists have converged on the view that the first two clades to ";
+       "form are Sardinian followed by Romanian";
        Citation {Hall1950; Hall1976; Dardel1985; Swiggers2001; Vallejo2012; Buchi2015; Dworkin2016}; DotSpace;
-      "Since Sardinian is not in our study group, the clade containing Romanian is then the first to form in each of the trees in ";
+      "Since Sardinian is not in our study group, the clade containing Romanian is the first to form in each of the trees in ";
        style.FigureReference(Figures.ModelTreesUsed); DotSpace;
       "The sub-trees containing the remaining dialects differ in their topologies, but they all contain Spanish and Portuguese as a clade, as well as Catalan, French, and Walloon. ";
       "The question of the exact relationship between Latin and Romance continues to be debated ";
