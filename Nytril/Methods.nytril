@@ -1407,7 +1407,7 @@ class SegmentModelsClass: ContentClass {
       " model. ";
       "Several patterns stand out. ";
       "For one, rates of change are generally highest among segments in the same class. ";
-      "The estimated rates of change from one word segment to another under the natural class model were ";
+      "The estimated rates of change from one segment to another under the natural class model were ";
 
       var stats       = MainResults.MainRun.NCQRates;
       var numSegments = data.UniqueSegments.Length - 1;
@@ -1461,7 +1461,7 @@ class SegmentModelsClass: ContentClass {
       if (same.Ratio > diff.Ratio) {
         "Note that "; same; " of the changes within a group are higher than expected under an equal rates model, whereas ";
         diff; " of the changes between different natural class groups are higher than expected under an equal rates model, ";
-        "supporting the pattern of a generally higher rate of change between word segments assigned to the same natural class group. ";
+        "supporting the pattern of a generally higher rate of change between segments assigned to the same natural class group. ";
       }
       else
         System.Assert(false, "Inconsistency between text and data!");
@@ -1476,13 +1476,13 @@ class SegmentModelsClass: ContentClass {
       style.FigureReference(Figures.EquilibriumCharts);
       " shows the estimated equilibrium frequencies of the natural classes under model "; NaturalClassModel; ". ";
       "The equilibrium frequencies are used in two ways when calculating the probability of the observed data. ";
-      "First, they are used at the root of the tree as the probability of the word segment state at the root. ";
-      "Second, they modify the rate of change between word segments for models "; UnequalModel; " and "; NaturalClassModel;
-      ", with the rate of change proportional to the frequency of the destination word segment. ";
+      "First, they are used at the root of the tree as the probability of the segmental state at the root. ";
+      "Second, they modify the rate of change between segments for models "; UnequalModel; " and "; NaturalClassModel;
+      ", with the rate of change proportional to the frequency of the destination segment. ";
       "Indeed, the rates of change to ";
       style.TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
       " are the highest as are the estimated equilibrium frequencies for those classes. ";
-      "The estimated equilibrium frequency generally tracks the frequency of the word segments in the data. ";
+      "The estimated equilibrium frequency generally tracks the frequency of the segments in the data. ";
     };
   };
 
@@ -1893,7 +1893,7 @@ class ModelInferenceClass: ContentClass {
       ", that contains information on the relatedness of the languages ";
       SpanParens {Topology};
       " and the expected number of sound substitutions "; ExpectedEvents; " that occur along each branch of the tree. ";
-      "Language evolves along the branches of the tree according to the TKF91 model"; Citation {Thorne1991}; " which allows either a word segment transition, insertion, or deletion to occur in an instant of time. ";
+      "Language evolves along the branches of the tree according to the TKF91 model"; Citation {Thorne1991}; " which allows either a segmental transition, insertion, or deletion to occur in an instant of time. ";
       "Insertions and deletions occur at rates "; InsertionRate; " and "; DeletionRate; " respectively, with "; InsertionLessThanDeletion; DotSpace;
       "Phonemic substitution is modeled as a continuous-time Markov model with phonemes as the states of the process (our inventory consists of "; MainResults.Data.UniqueSegments.Length; " phonemes). ";
       "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters "; Span {Bold; RateMatrixParams}; DotSpace;
@@ -1906,7 +1906,7 @@ class ModelInferenceClass: ContentClass {
     Equations.BayesianEstimation;
 
     style.ResumePar {
-      "where "; SegmentalInfo; " are the observed word segments for the cognate words. ";
+      "where "; SegmentalInfo; " are the observed segments for the cognate words. ";
       "The likelihood function, "; LiklihoodFunction;
       ", is calculated using the algorithm described by Lunter "; textit{"et al."}; Citation {Lunter2003}; DotSpace;
       "We use priors for the model parameters that are standard in phylogenetics, except for the rate parameters for the insertions and deletions, ";
@@ -1914,7 +1914,7 @@ class ModelInferenceClass: ContentClass {
       "We numerically approximate the posterior distribution of the parameters using MCMC. ";
       "Specifically, we constructed a Markov chain that has as its states the parameters of the model and a stationary distribution that is the posterior distribution of interest. ";
       "Samples from this chain when at stationarity are valid, albeit dependent, samples from the posterior distribution. ";
-      "Besides sampling the phylogenetic parameters of the model, the chain also samples word segment alignments"; Citation{Lunter2004}; DotSpace;
+      "Besides sampling the phylogenetic parameters of the model, the chain also samples segmental alignments"; Citation{Lunter2004}; DotSpace;
     };
 
     style.BodyPar {
@@ -2290,7 +2290,7 @@ class MethodsClass: ContentClass {
     style.BodyPar {
       "Note that a segmental alignment, denoted ";
       SegmentalAlignment;
-      ", is constructed by combining the word segment information for the languages of interest with information on the homology of the segments. ";
+      ", is constructed by combining the segmental information for the languages of interest with information on the homology of the segments. ";
       "The segmental information for the ";
       NumLanguages;
       " languages of interest is denoted ";
@@ -2329,8 +2329,8 @@ class MethodsClass: ContentClass {
       };
       "The alignment of the segments is accomplished by the use of a map, ";
       HomologyMap;
-      ", describing the homology of the word segments. ";
-      "The alignment is formed by combining the word segment information with the homology map, ";
+      ", describing the homology of the segments. ";
+      "The alignment is formed by combining the segment information with the homology map, ";
       Equation {
         SegmentalAlignment;
         Tex.Equals;
@@ -2784,7 +2784,7 @@ class ConclusionClass: ContentClass {
     };
 
     style.BodyPar {
-      "A substitution is the replacement of a word segment by another segment. We model substitutions as occurring according to a continuous-time Markov model. Such a model can be understood if you know two things: the possible states and the rate of change between all pairs of states. For our work, the states are the "; MainResults.Data.UniqueSegments.Length; " possible segments. The rates of change between all pairs of states are contained in a rate matrix, which we denote "; RateMatrix; DotSpace;
+      "A substitution is the replacement of one segment by another. We model substitutions as occurring according to a continuous-time Markov model. Such a model can be understood if you know two things: the possible states and the rate of change between all pairs of states. For our work, the states are the "; MainResults.Data.UniqueSegments.Length; " possible segments. The rates of change between all pairs of states are contained in a rate matrix, which we denote "; RateMatrix; DotSpace;
     };
 
     style.BodyPar {
@@ -2792,12 +2792,12 @@ class ConclusionClass: ContentClass {
     };
 
     style.BodyPar {
-      "Now, for understanding the rate matrix. Let’s denote "; qij; " as the rate of change from state "; sym.i; " to state "; sym.j; ". (It’s simply an element of the rate matrix, "; RateMatrix; "). This is literally the rate of change to that state when the process is in state "; sym.i; ". Comparing rates in the rate matrix can be useful. You can say things such as, “ This rate is higher than that rate. This makes sense because everyone knows that such changes occur frequently in language.” I would especially compare rates in a single row. Does it make sense to see, for example, that when changes occur, they are more likely to be to other states in the same class? Does it make sense that when we have a change and a segment is in the green class that it is more likely to be to a word segment in the dark gray and brown classes? That’s how I read ";
+      "Now, for understanding the rate matrix. Let’s denote "; qij; " as the rate of change from state "; sym.i; " to state "; sym.j; ". (It’s simply an element of the rate matrix, "; RateMatrix; "). This is literally the rate of change to that state when the process is in state "; sym.i; ". Comparing rates in the rate matrix can be useful. You can say things such as, “ This rate is higher than that rate. This makes sense because everyone knows that such changes occur frequently in language.” I would especially compare rates in a single row. Does it make sense to see, for example, that when changes occur, they are more likely to be to other states in the same class? Does it make sense that when we have a change and a segment is in the green class that it is more likely to be to a segment in the dark gray and brown classes? That’s how I read ";
       style.FigureReference(Figures.QRatesMatrix); DotSpace;
     };
 
     style.BodyPar {
-      "That said, I think the diagonals are quite interesting because they give you an idea of the relative volatility of the word segments. The diagonals are simply the negative of the sum of the off-diagonal components of the row:"
+      "That said, I think the diagonals are quite interesting because they give you an idea of the relative volatility of the segments. The diagonals are simply the negative of the sum of the off-diagonal components of the row:"
     };
 
     Equations.OffDiagonalComponents;
@@ -2807,7 +2807,7 @@ class ConclusionClass: ContentClass {
     };
 
     style.BodyPar {
-      "What should you look for here with respect to the linguistic data? Well, I don’t know. I’m hoping that, with this interpretation under his belt, David will see patterns that make sense. Are certain word segments known to be more volatile in language? Are others known to be more conservative? Does this background knowledge in the field match up with the rates we are getting (the diagonal values)?"
+      "What should you look for here with respect to the linguistic data? Well, I don’t know. I’m hoping that, with this interpretation under his belt, David will see patterns that make sense. Are certain segments known to be more volatile in language? Are others known to be more conservative? Does this background knowledge in the field match up with the rates we are getting (the diagonal values)?"
     };
 
     style.BodyPar {
