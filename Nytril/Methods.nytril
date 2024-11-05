@@ -82,8 +82,12 @@ readonly ModelTrees Figures.ModelTreesUsed = new;
 
 class ModelTrees: ContentClass {
   Constructor {
-    super.Constructor("Model trees used in all analyses");
+    super.Constructor("Model trees");
   }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "Model trees used in all analyses";
+  };
 
   override GetBody(ContentStyleClass style, title) = VBox {
     foreach (var tree in MainResults.Data.PriorTrees)
@@ -475,8 +479,12 @@ readonly EquilibriumFrequencyChartClass Figures.EquilibriumCharts = new;
 
 class EquilibriumFrequencyChartClass: ContentClass {
   Constructor {
-    super.Constructor("The equilibrium frequencies (π) of the segment groups");
+    super.Constructor("Equilibrium frequency chart");
   }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "The equilibrium frequencies "; Defs.EquilibriumDistribution; " of the segment groups";
+  };
 
   override GetBody(ContentStyleClass style, title) = Chart(100%, 3 inches) {
     Type: ChartTypes.Bar;
@@ -523,7 +531,7 @@ readonly GappinessSignificanceClass GapInfo = new(MainResults.MainRun);
 
 class GappinessChartClass: ContentClass {
   Constructor {
-    super.Constructor("");
+    super.Constructor("Gap frequency comparison chart");
   }
 
   override GetCaption(ContentStyleClass style) = Span {
@@ -620,8 +628,12 @@ readonly QRatesDiagonalClass Figures.QRatesDiagonal = new;
 
 class QRatesDiagonalClass: ContentClass {
   Constructor {
-    super.Constructor(Span {"The rate of change when in a particular segmental state (or "; -Defs.qii; ")"});
+    super.Constructor("Rate of segmental change");
   }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "The rate of change when in a particular segmental state (or "; -Defs.qii; ")"
+  };
 
   override GetBody(ContentStyleClass style, title) = new DiagonalClass(MainResults.Data.Rule, MainResults.MainRun.QRates).Display(style);
 }
@@ -636,10 +648,37 @@ readonly LanguageDistributionClass  Figures.LanguageDistribution = new;
 
 class LanguageDistributionClass: ContentClass {
   Constructor {
-    super.Constructor("The geographic distribution of the Romance languages examined in this study");
+    super.Constructor("Ggeographic distribution of languages");
   }
 
-  override GetBody(ContentStyleClass style, title) = FitBox(IO.Read(Info.ImageFolder FileName("areas.png")), 100%);
+  override GetCaption(ContentStyleClass style) = Span {
+    "The geographic distribution of the Romance languages examined in this study.";
+  };
+
+  override GetBody(ContentStyleClass style, title) = HBox {
+    VAlign: VAligns.Center;
+    Separation: 10 pts;
+    FitBox(IO.Read(res "Images/areas.png"), 80%, null, 0.5 pt) {
+      BorderRadius: 1 pts;
+    };
+    VBox {
+     Separation: 10 pts;
+      Justify: Justifiers.SpaceEvenly;
+      foreach (var l in MainResults.Data.LanguageSet) {
+        if (l != WorldLanguages.Latin) {
+          HBox {
+            Separation: 2 pts;
+            Canvas(8 pts, 8 pts, 0.5 pts) {
+              Baseline: 85%;
+              BorderRadius: 2 pts;
+              Background: l.MapColor;
+            };
+            l;
+          };
+        }
+      }
+    };
+  };
 }
 
 //======================================================================
@@ -1210,12 +1249,8 @@ class ResultsSectionClass: ContentClass {
     super.Constructor("Results");
     AddContent(PaperSections.PhylogenyResults);
     AddContent(PaperSections.SegmentModels);
-    AddFigure(Figures.ModelTreesUsed, false, 70%);
     AddContent(PaperSections.WordTransformation);
     AddContent(PaperSections.WordSegmentRelationships);
-    AddFigure(Figures.RateChart, true, 60%);
-    AddFigure(Figures.EquilibriumCharts);
-    AddFigure(Figures.QRatesDiagonal);
  }
 
   override GetBody(ContentStyleClass style, title) = Block {
@@ -1394,6 +1429,9 @@ class SegmentModelsClass: ContentClass {
       Citation {Jeffreys1939}; DotSpace;
     };
 
+    style.AddFigure(Figures.ModelTreesUsed, FramePlacements.TopRight, false, 70%);
+
+
     var partitions = data.Rule.Partitions;
     var diagonal   = new ListClass<PartitionValueClass>(partitions.Length);
 
@@ -1541,6 +1579,8 @@ class WordSegmentRelationshipsClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
+    style.AddFigure(Figures.QRatesDiagonal, FramePlacements.BottomLeft);
+
     style.TitlePar(title) {
       var align1 = Figures.AlignmentExample1;
       var index1 = align1.Examples[0].FindAlignment(MainResults.MainRun);
@@ -1562,6 +1602,9 @@ class WordSegmentRelationshipsClass: ContentClass {
          style.FigureReference(Figures.GappinessChart); "). ";
       "Finally, the alignments tend to assign segments from the same segment group to the same column in the alignment. ";
     };
+
+    style.AddFigure(Figures.EquilibriumCharts, FramePlacements.TopRight);
+
 
     style.BodyPar {
       var align2 = Figures.AlignmentExample2;
@@ -1585,6 +1628,8 @@ class WordSegmentRelationshipsClass: ContentClass {
       "Under the "; align2.NaturalClass.Name;
       ", however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
+
+    style.AddFigure(Figures.RateChart, FramePlacements.Top, true, 60%);
   };
 }
 
@@ -1598,9 +1643,6 @@ class DiscussionSectionClass: ContentClass {
     AddContent(PaperSections.OtherApproaches);
     AddContent(PaperSections.Limitations);
     AddContent(PaperSections.Advantages);
-    AddFigure(Figures.GappinessChart);
-    AddFigure(Figures.AlignmentExample1, true);
-    AddFigure(Figures.AlignmentExample2, true);
   }
 }
 
@@ -1713,13 +1755,19 @@ class AdvantagesClass: ContentClass {
       "Our event-based approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. For example, questions related to the relationship between phonological change and the phonemic inventory of a language can now be addressed. Does the frequency of a phoneme in the words of a language affect its diachronic stability? To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? What is the role of natural classes in sound change? This last question can be addressed in particular through the comparison of models with different numbers of rate parameters.";
      };
 
+    style.AddFigure(Figures.GappinessChart, FramePlacements.TopRight);
+
     style.BodyPar {
       "By casting the problem of language change in a statistical framework, we inherit the benefits of the statistical approach to estimate model parameters and, perhaps more importantly, to compare alternative models of language change to find the model that best explains the data. In this way,  linguists can learn about language evolution by devising models that account for potential linguistic phenomena, then testing the model against models that do not account for the linguistic feature. This approach has proven successful in molecular evolution where models have been described and tested that account for many evolutionary processes of molecular change.";
     };
 
+    style.AddFigure(Figures.AlignmentExample1, FramePlacements.Top, true);
+
     style.BodyPar {
       "The method can be extended to handle more complex segmental changes (such as those involving context dependency). Moreover, the event-based approach has the potential to more sensibly estimate divergence times. Divergence time estimation relies on estimating the number of events that occurred along the branches of the tree. When divergence estimation is applied to abstract cognate relationships, it is not clear what exactly is being counted along the branches. Here, the events are well defined: segmental transitions, insertions, or deletions.";
     };
+
+    style.AddFigure(Figures.AlignmentExample2, FramePlacements.Top, true);
 
     style.BodyPar {
       "In sum, our approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general, which can be expanded and refined in various ways. For example, it can be combined with methods of automatic cognate detection ";
@@ -1737,9 +1785,7 @@ class MethodsSummaryClass: ContentClass {
   Constructor {
     super.Constructor(Lang.Methods);
     AddContent(PaperSections.DataSummary);
-    AddTable(TableFigures.ManualAlignment);
     AddContent(PaperSections.ModelInference);
-    AddTable(Figures.PartitionAssignments);
     AddContent(PaperSections.DataCuration);
   }
 
@@ -1770,6 +1816,8 @@ class DataSummaryClass: ContentClass {
       CitationName(Wiktionary);
       ", which was then manually checked for accuracy and augmented. For each concept, lexical items descending from a common ancestor were grouped together into cognate sets. There are often multiple sets of cognates for a given concept among our sample of languages. Selection of lexical items was oriented toward Latin in order to maximize the number of cognate word-forms in each set. ";
     };
+
+    style.AddTable(TableFigures.ManualAlignment, FramePlacements.TopRight);
 
     style.BodyPar {
       "As noted above, membership in a cognate set depends solely on shared descent: meaning is irrelevant. For instance, the Latin adjective "; textit{"gravis"};  " means "; style.SQuoteComma{"heavy"}; "but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"}; "Despite this semantic difference, they are assigned to the same cognate set because they are segmentally homologous. Phonemic representations are used in lieu of phonetic representations for two reasons. First, phonetic data is harder to come by,  especially with corpus languages such as Latin. Second, there is considerably more variation at the phonetic level that would have to have been taken into account. Suprasegmental features such as stress are not represented in the data. Word-forms are represented in the International Phonetic Alphabet (IPA). ";
@@ -1895,6 +1943,8 @@ class ModelInferenceClass: ContentClass {
       "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters "; Span {Bold; RateMatrixParams}; DotSpace;
     };
 
+    style.AddTable(Figures.PartitionAssignments, FramePlacements.BottomLeft, false, 98%);
+
     style.BodyPar {
       "We perform estimation in a Bayesian framework, basing parameter estimates on the joint posterior probability distribution, ";
     };
@@ -1913,6 +1963,8 @@ class ModelInferenceClass: ContentClass {
       "Besides sampling the phylogenetic parameters of the model, the chain also samples word segment alignments"; Citation{Lunter2004}; DotSpace;
     };
 
+    style.AddFigure(Figures.ConceptEncoding, FramePlacements.BottomRight);
+
     style.BodyPar {
       "Our model of segmental transitions is based on phonological natural classes, which are groups of segments that share articulatory properties. ";
       "The segmental inventory of our dataset was exhaustively partitioned into "; Enumerators.Cardinal(rule.Filters.Length); " classes, which are presented in ";
@@ -1928,6 +1980,47 @@ class ModelInferenceClass: ContentClass {
 
 //======================================================================
 
+readonly ConceptEncodingClass Figures.ConceptEncoding = new(MainResults.Data, MainResults.Data.DataConcept);
+
+class ConceptEncodingClass: ContentClass {
+  var DataSetClass        Data;
+  var ExampleConceptClass Concept;
+
+  Constructor(DataSetClass data, AttributeClass concept) {
+    super.Constructor("Concept Encoding");
+    Data    = data;
+    Concept = new(data, concept);
+  }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "The concept "; style.SQuote{TextCase: TextCases.AllLower; Concept.Name}; " is coded in the data file.";
+  };
+
+  override GetBody(ContentStyleClass style, title) = Frame(100%) {
+    SourcePar(Data, Concept.Concept);
+  };
+}
+
+//======================================================================
+
+readonly SegmentEncodingClass Figures.SegmentEncoding = new;
+
+class SegmentEncodingClass: ContentClass {
+  Constructor {
+    super.Constructor("Segment Encoding");
+  }
+
+  override GetCaption(ContentStyleClass style) = Span {
+    "The IPA-Unicode encoding of a segment.";
+  };
+
+  override GetBody(ContentStyleClass style, title) = Frame(2 inches, 60 pts) {
+    IPASegments.VlAlveolarNSAffricate.Display(null, 20 pts);
+  };
+}
+
+//======================================================================
+
 readonly DataCurationClass PaperSections.DataCuration = new;
 
 class DataCurationClass: ContentClass {
@@ -1936,8 +2029,7 @@ class DataCurationClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
-    var data    = MainResults.Data;
-    var example = new ExampleConceptClass(data, data.DataConcept);
+    var data = MainResults.Data;
 
     style.TitlePar(title) {
       "Our analysis is coordinated using a program written in the Nytril programming language"; Citation {Nytrilprogram}; DotSpace;
@@ -1947,24 +2039,17 @@ class DataCurationClass: ContentClass {
 
     style.BodyPar {
       "Word-forms from the "; data.Taxa.Length; " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
-      "For example, the concept "; style.SQuote{TextCase: TextCases.AllLower; example.Name}; " is coded in the following way:";
+      style.FigureReference(Figures.ConceptEncoding); " shows an example. ";
     };
-
-    SourcePar(data, example.Concept);
 
     style.BodyPar {
       "A challenge for programming in linguistics is that the IPA representation of words is expressed in Unicode (UCS), not ASCII or ANSI. ";
       "This requires care with file formats, text encodings and diacritic compositional form. ";
       "Furthermore, each IPA segment string can comprise several UCS code-points, so that the mapping between string characters and segments is not one-to-one. ";
-      "Below is an example of a more complex encoding, ";
+      style.FigureReference(Figures.SegmentEncoding); " shows an example of a more complex encoding. ";
     };
 
-    style.BodyPar {
-      ParAlignment: ParAlignments.Center;
-      Frame(2 inches, 60 pts) {
-        IPASegments.VlAlveolarNSAffricate.Display(null, 20 pts);
-      };
-    };
+    style.AddFigure(Figures.SegmentEncoding, FramePlacements.TopRight, false, 50%);
 
     style.ResumePar {
       "where the numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
@@ -2049,6 +2134,8 @@ class MethodsClass: ContentClass {
       "Other things we have to mention: "
     };
 
+    style.AddFigure(Figures.ExampleTree, FramePlacements.Bottom, true, 60%);
+
     NumberList {
       "The data are surface forms, not underlying forms. ";
       "We used the accusative singular for nouns in Latin. ";
@@ -2131,6 +2218,8 @@ class MethodsClass: ContentClass {
       " possible topologies, each depicting a unique and different way the languages can be related. ";
       "For comparison, the number of atoms in the known universe is on the order of "; 10 sup 80; DotSpace;
     };
+
+    style.AddFigure(Figures.Alignment, FramePlacements.Bottom, true, 85%);
 
     style.BodyPar {
      "Ideally, the linguist would not only be able to estimate the correct topology relating the languages of interest, but also the times at which the languages diverged. ";
@@ -2791,6 +2880,8 @@ class ConclusionClass: ContentClass {
       "Now, for understanding the rate matrix. Let’s denote "; qij; " as the rate of change from state "; sym.i; " to state "; sym.j; ". (It’s simply an element of the rate matrix, "; RateMatrix; "). This is literally the rate of change to that state when the process is in state "; sym.i; ". Comparing rates in the rate matrix can be useful. You can say things such as, “ This rate is higher than that rate. This makes sense because everyone knows that such changes occur frequently in language.” I would especially compare rates in a single row. Does it make sense to see, for example, that when changes occur, they are more likely to be to other states in the same class? Does it make sense that when we have a change and a segment is in the green class that it is more likely to be to a word segment in the dark gray and brown classes? That’s how I read ";
       style.FigureReference(Figures.QRatesMatrix); DotSpace;
     };
+
+    style.AddFigure(Figures.QRatesMatrix, FramePlacements.Bottom, true);
 
     style.BodyPar {
       "That said, I think the diagonals are quite interesting because they give you an idea of the relative volatility of the word segments. The diagonals are simply the negative of the sum of the off-diagonal components of the row:"
