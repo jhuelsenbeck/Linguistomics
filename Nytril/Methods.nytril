@@ -208,12 +208,17 @@ class ModelCompareClass {
     TotalCount = align.TotalCount;
   }
 
+  override GetLayoutSpan = Span {
+    Tip: Symbol;
+    Name;
+  };
+
   ModelName = Span {
-    Symbol; " ("; Name; " model)";
+    Symbol; " ("; GetLayoutSpan; " model)";
   };
 
   ShowAlignmentNumber = Span {
-    TotalCount; " alignments under the "; Name;
+    TotalCount; " alignments under the "; GetLayoutSpan;
   };
 }
 
@@ -271,7 +276,10 @@ class AlignmentCompareClass: ContentClass {
 
   override GetCaption(ContentStyleClass style) = Span {
     "Alignments of highest posterior probability of the cognate for the concept ";
-    style.SQuoteEnd{Concept};
+    Span {
+      TextCase: TextCases.AllLower;
+      style.SQuoteEnd{Concept};
+    };
 
     foreach (var m in Models) {
       Span {
@@ -537,8 +545,8 @@ class GappinessChartClass: ContentClass {
   override GetCaption(ContentStyleClass style) = Span {
     "The number of gaps observed across the "; MainResults.Data.UsedCognates.Length; " cognate sets analyzed in this study at the word-initial segment (top), word-medial segment(s) (middle), and word-final segment (bottom). ";
     "Nine languages were analyzed in this study, so it is not possible for there to be nine gaps. Deletion events that led to a gap for all the languages would not be included in an alignment, and is explicitly conditioned on in Lunter et al."; Citation{Lunter2003}; DotSpace;
-    "There is a clear, and statistically significant, pattern of an increasing number of gaps as one moves from the beginning to the end of the word. ";
-    "(A likelihood ratio test of the null hypothesis that the distributions are the same at the first, middle, and last segments is highly significant, with a test statistic of ";
+    "There is a clear, and statistically significant, pattern of an increasing number of gaps as one moves from the initial to the final segment of the word. ";
+    "(A likelihood ratio test of the null hypothesis that the distributions are the same at the initial, medial, and final segments is highly significant, with a test statistic of ";
     Span {
       TextDigits: 2;
        GapInfo.TestStatistic;
@@ -566,7 +574,7 @@ class GappinessChartClass: ContentClass {
 //          Marker: Markers.Circle;
 
           ValueLabel: PaperStyle.ValueLabel {
-            ["First Segment", "Middle Segment(s)", "Last Segment"][each0]
+            ["Word-initial segment", "Word-medial Segment(s)", "Word-final Segment"][each0]
           };
 
           ValueAxis: ChartAxis {
@@ -1517,7 +1525,10 @@ class SegmentModelsClass: ContentClass {
       "Second, they modify the rate of change between segments for models "; UnequalModel; " and "; NaturalClassModel;
       ", with the rate of change proportional to the frequency of the destination segment. ";
       "Indeed, the rates of change to ";
-      style.TextList {diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]};
+      style.TextList {
+        TextCase: TextCases.AllLower;
+        diagonal.ToSortedArray(true, @PartitionValueClass.CompareFunction)[0..2]
+      };
       " are the highest as are the estimated equilibrium frequencies for those classes. ";
       "The estimated equilibrium frequency generally tracks the frequency of the segments in the data. ";
     };
@@ -1592,7 +1603,10 @@ class WordSegmentRelationshipsClass: ContentClass {
       "We summarize the posterior distribution by constructing a credible set of alignments, where a credible set of alignments is constructed by ordering the alignments for a cognate from the highest to lowest posterior probability. ";
       "The alignments are then included in a credible set, starting with the alignment with the highest posterior probability, until the cumulative posterior probability is {0}. "(ResultsClass.CutoffProbability);
       style.FigureReference(align1); " shows alignments for the concept ";
-      style.SQuote {align1.Examples[0].Concept};
+      style.SQuote {
+        TextCase: TextCases.AllLower;
+        align1.Examples[0].Concept
+      };
       ", which illustrates three key properties we observed for all the alignments. ";
       "First, the distributions of credible sets are heavily weighted in favor of a single alignment with most of the posterior probability. ";
       "In this case, one alignment had a posterior probability of ";
@@ -1614,21 +1628,26 @@ class WordSegmentRelationshipsClass: ContentClass {
 
       "Interestingly, the distribution of alignments depends on the model of segmental change. ";
       style.FigureReference(align2); " shows the {0} credible set of alignments for the concept "(ResultsClass.CutoffPercent);
-      style.SQuote {align2.Concept}; " under the ";
+      style.SQuote {
+        TextCase: TextCases.AllLower;
+        align2.Concept
+      };
+      " under the ";
       style.TextList {
-        (each align2.Models).Name;
-      }; " models"; DotSpace;
+        align2.Models;
+      };
+      " models. ";
       "The credible set contains ";
       align2.Poisson.ShowAlignmentNumber;
       " model, but only ";
       align2.NaturalClass.ShowAlignmentNumber;
       " model. ";
       "This difference makes sense given the rates estimated under the "
-      align2.NaturalClass.Name; " ("; style.FigureReference(Figures.RateChart); "). ";
+      align2.NaturalClass; " ("; style.FigureReference(Figures.RateChart); "). ";
       "For example, the rate of change between "; IPASegments.u; " and "; IPASegments.oh; " are estimated to be high, whereas the rate between consonants and "; IPASegments.oh; " is low. ";
       "The distribution of alignments under the ";
-      align2.Poisson.Name; " often makes consonants homologous with "; IPASegments.oh; ". ";
-      "Under the "; align2.NaturalClass.Name;
+      align2.Poisson; " often makes consonants homologous with "; IPASegments.oh; ". ";
+      "Under the "; align2.NaturalClass;
       " model, however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
 
