@@ -2,9 +2,9 @@ using Format, Units, LinkTypes;
 
 //======================================================================
 
-abstract class LinguisticsPaperClass: PNASPaperClass {
-  Constructor(guid id, name) {
-    super.Constructor(id, name);
+abstract class LinguisticsContentClass: AuthoredContentClass {
+  Constructor(name) {
+    super.Constructor(name);
 
     NoteMarkClass[] note = [new("†", "To whom correspondence should be addressed. E-mail: dgoldstein@humnet.ucla.edu")];
     AddAuthor(People.Goldstein_David, note);
@@ -16,11 +16,12 @@ abstract class LinguisticsPaperClass: PNASPaperClass {
 
 //======================================================================
 
-class PaperDocClass: LinguisticsPaperClass {
+class PaperContentClass: LinguisticsContentClass {
   Constructor {
-    super.Constructor(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper");
-    Title        = Info.Title;
-    Description  = "Linguistics research paper";
+    super.Constructor("Paper");
+    Title       = Info.Title;
+    Description = "Linguistics research paper";
+    Watermark   = "DRAFT";
 
     Keywords = [
       "Bayesian analysis",
@@ -33,30 +34,25 @@ class PaperDocClass: LinguisticsPaperClass {
     Abstract              = PaperSections.Abstract;
     Acknowledgements      = PaperSections.Acknowledgements;
 
-    Body.AddContent(PaperSections.Introduction);
-    Body.AddContent(PaperSections.Results);
-    Body.AddContent(PaperSections.DiscussionSection);
-    Body.AddContent(PaperSections.MethodsSection);
-    Body.AddContent(PaperSections.Contributions);
+    AddContent(PaperSections.Introduction);
+    AddContent(PaperSections.Results);
+    AddContent(PaperSections.DiscussionSection);
+    AddContent(PaperSections.MethodsSection);
+    AddContent(PaperSections.Contributions);
   }
-
-  override Preamble = super.Preamble {
-    Watermark: "DRAFT";
-  };
 }
 
 //======================================================================
 
-class SupplementalViewClass: LinguisticsPaperClass {
+class SupplementalContentClass: LinguisticsContentClass {
   Constructor {
-    super.Constructor(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental Material");
-    PaperColumns = 1;
+    super.Constructor("Supplemental Material");
 
-    Subtitle    = Span {"For: "; Style.DQuote {Info.Title}};
+    Subtitle    = Span {"For: "; ContentStyleClass.DQuote {Info.Title}};
     Description = "Extra derivations and charts to supplement the main paper";
 
-    Body.AddContent(PaperSections.Methods);
-    Body.AddContent(PaperSections.Conclusion);
+    AddContent(PaperSections.Methods);
+    AddContent(PaperSections.Conclusion);
     Appendix.AddContent(Figures.ExperimentalRuns);
     Appendix.AddContent(Figures.Alignments);
     Appendix.AddContent(new AllAlignmentsClass());
