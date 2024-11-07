@@ -907,6 +907,13 @@ class DiagonalClass {
 
   static int CompareData(SegDataClass d0, SegDataClass d1) = d0.Value.Compare(d1.Value);
 
+  PartitionClass[] OrderPartitions {
+    var partitions = new HashSetClass<PartitionClass>(Rule.Partitions.Length);
+    foreach (var d in Diagonal)
+      partitions.Add(d.Rate.S0.Partition);
+    return partitions.ToArray;
+  }
+
   Display(ContentStyleClass style) = VBox {
     HAlign: HAligns.Center;
     style.SansSerif;
@@ -936,7 +943,7 @@ class DiagonalClass {
       };
     };
 
-    Rule.ShowBlockLegend(Rule.Partitions, 7 pts);
+    Rule.ShowBlockLegend(OrderPartitions, 7 pts);
   };
 }
 

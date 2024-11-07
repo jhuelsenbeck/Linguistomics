@@ -37,9 +37,10 @@ class WordsContainingClass: ActionClass {
 //======================================================================
 
 class DiagnosticsViewClass: DocumentClass {
-  var DataSetClass        Data;
-  var SegmentDisplayClass Display;
-  var SearchDataClass     SearchData;
+  var DataSetClass          Data;
+  var PNASPaperStyleClass   Style;
+  var SegmentDisplayClass   Display;
+  var SearchDataClass       SearchData;
 
   Constructor(DataSetClass data) {
     super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
@@ -47,6 +48,7 @@ class DiagnosticsViewClass: DocumentClass {
     Data        = data;
     Display     = new(data);
     SearchData  = new;
+    Style       = new(1);
   }
 
   ShowSegmentTables = Block {
@@ -80,8 +82,6 @@ class DiagnosticsViewClass: DocumentClass {
   };
 
   override GetDocument = Document(new(0.5 inches, 0.75 inches, 0.5 inches, 0.5 inches)) {
-    var style = MainContentStyle;
-
     if (not System.IsPublishing)
       ShowQuery;
 
@@ -96,7 +96,7 @@ class DiagnosticsViewClass: DocumentClass {
       new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),
       new AppendixClass("Segment Groups", ShowSegmentTables),
       new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(10 pts, Data)),
-      new AppendixClass(Lang.Languages, Display.ShowLanguageDetails(style)),
+      new AppendixClass(Lang.Languages, Display.ShowLanguageDetails(Style)),
 //      new("Euler Feature Diagram", new EulerDiagramClass().FeatureChart(Data)),
     ];
 
@@ -109,19 +109,19 @@ class DiagnosticsViewClass: DocumentClass {
     }
 
     foreach (var c in content) {
-      style.Heading1 {
+      Style.Heading1 {
         PageBreakBefore: true;
         c.Title;
       };
 
-      var caption = c.GetCaption(style);
+      var caption = c.GetCaption(Style);
       if (caption is not null) {
-        style.AppendixCaption {
+        Style.AppendixCaption {
           caption;
         };
       }
 
-      c.GetBody(style, null);
+      c.GetBody(Style, null);
     }
   };
 }

@@ -176,7 +176,7 @@ class SingleAlignmentClass: AlignmentExamplesClass {
   }
 
   override GetCaption(ContentStyleClass style) = Span {
-    "Segments are colored according to natural class. Dashes denote gaps where there is no homologous segment for the alignment position. ";
+    "Segments are colored according to the "; NaturalModelName; ". Dashes denote gaps where there is no homologous segment for the alignment position. ";
     "The alignments are ordered from the highest posterior probability (top-left alignment) to the lowest posterior probability (bottom-right alignment) in row order. ";
   };
 
@@ -379,7 +379,7 @@ readonly NaturalClassRateChartClass Figures.RateChart = new;
 
 class NaturalClassRateChartClass: ContentClass {
   Constructor {
-    super.Constructor("Natural Class Rates");
+    super.Constructor(NaturalClassName + " Rates");
   }
 
   private ShowRight(number) = HBox {
@@ -390,8 +390,8 @@ class NaturalClassRateChartClass: ContentClass {
   };
 
   override GetCaption(ContentStyleClass style) = Span {
-    "The average rates of change between and within the ten segment groups of the natural class model. ";
-    "Circle area is proportional to the rate of change between natural class groups ("; Defs.qij; "). ";
+    "The average rates of change between and within the ten segment groups of the "; NaturalModelName; DotSpace;
+    "Circle area is proportional to the rate of change between groups ("; Defs.qij; "). ";
     "Shaded area represents the 95% credible interval. ";
   };
 
@@ -546,7 +546,7 @@ class GappinessChartClass: ContentClass {
     "The number of gaps observed across the "; MainResults.Data.UsedCognates.Length; " cognate sets analyzed in this study at the word-initial segment (top), word-internal segment(s) (middle), and word-final segment (bottom). ";
     "Nine languages were analyzed in this study, so it is not possible for there to be nine gaps. Deletion events that led to a gap for all the languages would not be included in an alignment, and is explicitly conditioned on in Lunter et al."; Citation{Lunter2003}; DotSpace;
     "There is a clear, and statistically significant, pattern of an increasing number of gaps as one moves from the initial to the final segment of the word. ";
-    "(A likelihood ratio test of the null hypothesis that the distributions are the same at the initial, medial, and final segments is highly significant, with a test statistic of ";
+    "(A likelihood ratio test of the null hypothesis that the distributions are the same at the initial, internal, and final segments is highly significant, with a test statistic of ";
     Span {
       TextDigits: 2;
        GapInfo.TestStatistic;
@@ -578,7 +578,7 @@ class GappinessChartClass: ContentClass {
 
           ValueLabel: PaperStyle.ValueLabel {
             TextHeight: 8 pts;
-            ["Word-initial segment", "Word-medial Segment(s)", "Word-final Segment"][each0]
+            ["Word-initial segment", "Word-internal Segment(s)", "Word-final Segment"][each0]
           };
 
           ValueAxis: ChartAxis {
@@ -1276,8 +1276,7 @@ class ResultsSectionClass: ContentClass {
       MainResults.Data.WordCount;
       " individual words from "; Enumerators.Cardinal(MainResults.Data.LanguageSet.Length-1);
       " Romance languages and Classical Latin. The geographic distribution of the latter is shown in ";
-      style.FigureReference(Figures.LanguageDistribution);
-      ". ";
+      style.FigureReference(Figures.LanguageDistribution); DotSpace;
     };
   };
 }
@@ -1335,6 +1334,9 @@ class PhylogenyResultsClass: ContentClass {
       "The question of the exact relationship between Latin and Romance continues to be debated ";
         Citation{Harris2003; Posner1996; Goldstein2024}; DotSpace;
     };
+
+    style.AddFigure(Figures.ModelTreesUsed, FramePlacements.TopRight, false, 70%);
+
   };
 }
 
@@ -1411,7 +1413,7 @@ class SegmentModelsClass: ContentClass {
       UnequalModel; ", a model isomorphic to the model of DNA sequence evolution first described by Felsenstein";
       Citation {Felsenstein1981};
       " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
-      "and "; NaturalClassModel; ", a natural class model, in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
+      "and "; NaturalClassModel; ", the "; NaturalModelName; ", in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes.";
     };
 
     var segments = data.UniqueSegments.Length - 1;
@@ -1422,7 +1424,7 @@ class SegmentModelsClass: ContentClass {
       "The first model, "; PoissonModel; ", has no free parameters. ";
       "The second model, "; UnequalModel; ", has "; segments; " free parameters (one less than the number of segments). ";
 
-      "The natural class model, "; NaturalClassModel; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
+      "The "; NaturalModelName; ", "; NaturalClassModel; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
       Equation {segments; Tex.Plus; (rp*(rp-1)/2 + rp); Tex.Equals; segments + rp*(rp-1)/2 + rp}; " free parameters.";
     };
 
@@ -1438,17 +1440,17 @@ class SegmentModelsClass: ContentClass {
       "As the models examined are nested, we could calculate the Bayes factor using the Savage-Dickey ratio";
         Citation {Dickey1971}; ", ";
         "which is the ratio of the posterior to prior densities evaluated at the restriction that makes the parameter-rich model equivalent to the simpler model. "
-      "The natural class model explains the data substantially better than the two simpler models, with log Bayes ";
+      "The "; NaturalModelName; " explains the data substantially better than the two simpler models, with log Bayes ";
       // TODO: Maybe update the log bayes factor numbers dynamically, though this will be more tricky.
       "factors of ";
       Equation {Tex.ln; BayesFactor12; Tex.Equals; -1074.2}; " and ";
       Equation {Tex.ln; BayesFactor23; Tex.Equals; -117.3};
       ", respectively, for a comparison of "; PoissonModel; " to "; UnequalModel; " and "; UnequalModel; " to "; NaturalClassModel; ". ";
-      "This indicates overwhelming support for the more parameter-rich natural class model";
+      "This indicates overwhelming support for the more parameter-rich "; NaturalModelName;
       Citation {Jeffreys1939}; DotSpace;
     };
 
-    style.AddFigure(Figures.ModelTreesUsed, FramePlacements.TopRight, false, 70%);
+    style.AddFigure(Figures.QRatesDiagonal, FramePlacements.Bottom, true);
 
 
     var partitions = data.Rule.Partitions;
@@ -1456,10 +1458,9 @@ class SegmentModelsClass: ContentClass {
 
     style.BodyPar {
       style.FigureReference(Figures.RateChart);
-      " shows the estimated rates of change between the "; rp; " groups of the natural class";
-      " model. ";
+      " shows the estimated rates of change between the "; rp; " groups of the "; NaturalModelName; DotSpace;
       "Rates of change are generally highest among segments in the same class. ";
-      "The estimated rates of change from one segment to another under the natural class model are ";
+      "The estimated rates of change from one segment to another under the "; NaturalModelName; " are ";
 
       var stats       = MainResults.MainRun.NCQRates;
       var numSegments = data.UniqueSegments.Length - 1;
@@ -1526,7 +1527,7 @@ class SegmentModelsClass: ContentClass {
 
     style.BodyPar {
       style.FigureReference(Figures.EquilibriumCharts);
-      " shows the estimated equilibrium frequencies of the natural classes under model "; NaturalClassModel; ". ";
+      " shows the estimated equilibrium frequencies of the "; NaturalModelName; " "; NaturalClassModel; DotSpace;
       "The equilibrium frequencies are used in two ways when calculating the probability of the observed data. ";
       "First, they are used as the probability of the segmental state at the root of the tree. ";
       "Second, they modify the rate of change between segments for models "; UnequalModel; " and "; NaturalClassModel;
@@ -1556,7 +1557,7 @@ class WordTransformationClass: ContentClass {
   override GetBody(ContentStyleClass style, title) = Block {
     style.TitlePar(title) {
       style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the rate matrix of the continuous-time Markov model describing phonemic ";
-          "change estimated under the natural class model. ";
+          "change estimated under the "; NaturalModelName; DotSpace;
       "These diagonal elements can be interpreted as a measure of segmental volatility, since they are the sum of the rates at which they transition to other segments. ";
       "When the process is in segment "; sym.i; ", "; -qii; " is the rate at which it changes to another segment. ";
       "The higher the rate, the more rapidly a change to another state occurs on average. ";
@@ -1597,8 +1598,6 @@ class WordSegmentRelationshipsClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
-    style.AddFigure(Figures.QRatesDiagonal, FramePlacements.Bottom, true);
-
     style.TitlePar(title) {
       var align1 = Figures.AlignmentExample1;
       var index1 = align1.Examples[0].FindAlignment(MainResults.MainRun);
@@ -1804,6 +1803,7 @@ class MethodsSummaryClass: ContentClass {
     AddContent(PaperSections.DataSummary);
     AddContent(PaperSections.ModelInference);
     AddContent(PaperSections.DataCuration);
+    AddContent(PaperSections.Contributions);
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
@@ -1956,7 +1956,7 @@ class ModelInferenceClass: ContentClass {
       "Language evolves along the branches of the tree according to the TKF91 model"; Citation {Thorne1991}; " which allows either a segmental transition, insertion, or deletion to occur in an instant of time. ";
       "Insertions and deletions occur at rates "; InsertionRate; " and "; DeletionRate; " respectively, with "; InsertionLessThanDeletion; DotSpace;
       "Phonemic substitution is modeled as a continuous-time Markov model with phonemes as the states of the process (our inventory consists of "; MainResults.Data.UniqueSegments.Length; " phonemes). ";
-      "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters "; Span {Bold; RateMatrixParams}; DotSpace;
+      "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters ";  RateMatrixParams; DotSpace;
     };
 
     style.AddTable(Figures.PartitionAssignments, FramePlacements.BottomLeft, false, 98%);
@@ -2053,22 +2053,15 @@ class DataCurationClass: ContentClass {
       "data quality checks, typeset output and input files for the MCMC software (written in C++). ";
     };
 
-    style.BodyPar {
-      "Word-forms from the "; data.Taxa.Length; " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
-      style.FigureReference(Figures.ConceptEncoding); " shows an example. ";
-    };
+    style.AddFigure(Figures.SegmentEncoding, FramePlacements.TopRight, false, 50%);
 
     style.BodyPar {
+      "Word-forms from the "; data.Taxa.Length; " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
+      style.FigureReference(Figures.ConceptEncoding); " shows an example of the raw data for the concept "; style.SQuoteEnd {Figures.ConceptEncoding.Concept.Name};
       "A challenge for programming in linguistics is that the IPA representation of words is expressed in Unicode (UCS), not ASCII or ANSI. ";
       "This requires care with file formats, text encodings and diacritic compositional form. ";
       "Furthermore, each IPA segment string can comprise several UCS code-points, so that the mapping between string characters and segments is not one-to-one. ";
-      style.FigureReference(Figures.SegmentEncoding); " shows an example of a more complex encoding. ";
-    };
-
-    style.AddFigure(Figures.SegmentEncoding, FramePlacements.TopRight, false, 50%);
-
-    style.ResumePar {
-      "where the numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
+      style.FigureReference(Figures.SegmentEncoding); " shows an example of a more complex encoding where the numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
       "Since our analysis requires each word to be separated into segments, a parser converts word strings into arrays of segment objects that facilitate the manipulation of segments at a high level. ";
       "A reusable library of such objects endows each segment with linguistic features that can be used for analysis. ";
       "After the input step, all steps are coded using properties such as "; style.SQuote{"vowel"}; " and "; style.SQuote{"nasal"}; ", rather than working with strings of characters directly.";

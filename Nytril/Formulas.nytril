@@ -205,10 +205,10 @@ readonly namespace Defs {
   DefClass ModelJ                  = new(#3496e72c-c7f1-4e5b-bb1c-2f332dbb962c#, sym.M sub sym.j, "Model",  "Model j for linguistic parameters");
   DefClass PoissonModel            = new(#cc0d07da-003b-4990-9456-b52d2a7c1d00#, sym.M sub ("1"), "Poisson",  "An equal rates model isomorphic to the Jukes-Cantor (1969) model of nucleotide substitution");
   DefClass UnequalModel            = new(#2d0bd0c6-c585-4b8f-84a1-bd7d04c10433#, sym.M sub ("2"), "Unequal Rates",  "A model in which rates are proportional to the equilibrium frequency of the destination segment, and isomorphic to the Felsenstein (1981) model of nucleotide substitution");
-  DefClass NaturalClassModel       = new(#9077ffa9-578f-4f47-99d3-b935f875e207#, sym.M sub ("3"), "Natural Class",  "A model that allows rates to be different between different groups of segments");
+  DefClass NaturalClassModel       = new(#9077ffa9-578f-4f47-99d3-b935f875e207#, sym.M sub ("3"), NaturalClassName,  "A model that allows rates to be different between different groups of segments");
   DefClass BayesFactor             = new(#81d76a56-bdff-4876-8794-62d3dcff6346#, sym.BF, "Bayes Factor", "The ratio of the marginal likelihoods of two models");
   DefClass BayesFactor12           = new(#9a174abe-925f-40e5-9489-7452105d0c20#, sym.BF sub ("12"), "Bayes Factor", "The ratio of the marginal likelihoods of the Poisson and Unequal Rates models");
-  DefClass BayesFactor23           = new(#ac15c705-d52e-4b4f-88f8-d0f8dcf172c3#, sym.BF sub ("23"), "Bayes Factor", "The ratio of the Unequal Rates models and Natural Class models");
+  DefClass BayesFactor23           = new(#ac15c705-d52e-4b4f-88f8-d0f8dcf172c3#, sym.BF sub ("23"), "Bayes Factor", "The ratio of the Unequal Rates models and {0} models"(NaturalClassName));
   DefClass Unknown                 = new(#b201f529-2e31-4ccd-927c-3bcd5dbef524#, BoldSymbol "X", "Unknown", Empty);
   DefClass PossibleRootedTrees     = new(#7a776122-8f31-49ff-94e0-e8124fa9b5b5#, BoldSymbol "B", "Possible rooted trees", Empty);
   DefClass BN                      = new(#c7fecde1-fcb0-4b68-9bc2-69622b63a7f6#, Equation {PossibleRootedTrees; "("; NumLanguages; ")"}, "Possible rooted trees as a function of the number of languages", "");
@@ -228,15 +228,15 @@ readonly namespace Defs {
 readonly EquationClass Equations.LikelihoodComplexity = new(#0eef75c7-cb5a-4fd9-9c47-26a32dbfe7bc#, "Complexity of likelihood calculation") {
   Formula: Equation {
     FunctionO;
-    Arguments {
-      2 ^ NumTreeLeaves * GMLength ^ NumTreeLeaves;
+    SpanParens {
+      2 sup NumTreeLeaves; GMLength sup NumTreeLeaves;
     };
   };
 };
 
 readonly EquationClass Equations.OverallInsertionRate = new(#0a2b44d5-3187-4315-ae87-fca61377eafd#, "Insertion Rate") {
   Formula: Equation {
-    InsertionRate * (WordLength+1);
+    InsertionRate; SpanParens {WordLength; Tex.Plus; 1};
   };
 };
 
