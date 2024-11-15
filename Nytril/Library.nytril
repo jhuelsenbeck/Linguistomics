@@ -166,12 +166,41 @@ class AlignPairClass: DocumentClass {
         langbox;
       }
 
-      ShowBlocks(Alignments, max, BoxSize.Height);
+      double cumulative = 0.0;
+      ShowBlocks(Alignments, max, BoxSize.Height, ref cumulative);
     }
   };
 
-  ShowBlocks(AlignDataClass[] alignments, max, boxheight) = {
-    var cumulative = 0.0;
+  ShowAll = Block {
+    var textheight = 8 pts;
+    var height     = 10 pts;
+    var max        = 20;
+    BoxSize = new(BoxSize.Width, height);
+
+    TextHeight: textheight;
+
+    Paragraph(null, [3 inches]) {
+      KeepWithNext: true;
+      TextHeight: textheight + 4 pts;
+      SpaceAfter: 10 pts;
+      HBox(100%) {
+        Justify: Justifiers.SpaceBetween;
+        Name;
+        if (Alignments.Length > 1)
+          GetChart(new(3 inch, 0.75 inch), max);
+      };
+    };
+
+    Paragraph {
+      ParAlignment: ParAlignments.Justify;
+      Separator: Space;
+      Languages(Data, height);
+      double cumulative = 0.0;
+      ShowBlocks(Alignments, max, height, ref cumulative);
+    };
+  };
+
+  ShowBlocks(AlignDataClass[] alignments, max, boxheight, ref double cumulative) = {
     foreach (var a in alignments) {
       var prob = a.Prob;
       cumulative += prob;
@@ -193,13 +222,14 @@ class AlignPairClass: DocumentClass {
       Separation: 10 pts;
       GetChart(new(chart, data.Taxa.Length * (h + 1)), max);
 
+      double cumulative = 0.0;
       VBox(ExtentWidth - chart) {
         foreach (var a in Alignments[0..<max] / 4) {
           HBox(100%) {
             Justify: Justifiers.SpaceBetween;
             if (each0 == 0)
               Languages(Data, h);
-            ShowBlocks(a, 4, h);
+            ShowBlocks(a, 4, h, ref cumulative);
           };
         }
       };
