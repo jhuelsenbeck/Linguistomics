@@ -1045,8 +1045,7 @@ class AlignmentClass: ContentClass {
   };
 
   SegmentTable(ExampleConceptClass example, DataSetClass data, aligned) = MatrixBlock {
-    TextHeight: 9 pts;
-
+    VAlign: VAligns.Center;
     foreach (var taxon in data.Taxa) {
       Row {
         TName(taxon);
@@ -1075,6 +1074,7 @@ class AlignmentClass: ContentClass {
   };
 
   MapTable(ExampleConceptClass example, DataSetClass data, map, text) = MatrixBlock {
+    VAlign: VAligns.Center;
     foreach (var taxon in data.Taxa) {
       Row {
         TName(taxon);
@@ -1139,7 +1139,6 @@ class AlignmentClass: ContentClass {
       Empty;
       Canvas {
         TextColor: ArrowColor;
-        Margin: PadB(5 pts);
         TextHeight: 20 pts;
         HAlign: HAligns.Center;
         Span {
@@ -1168,7 +1167,7 @@ class AlignmentClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style, title)= VBox {
-    TextHeight: 12 pts;
+    TextHeight: 10 pts;
     Separation: 4 pts;
     Margin: PadB(5 pts);
     HAlign: HAligns.Center;
@@ -1187,7 +1186,7 @@ class AlignmentClass: ContentClass {
         VAlign: VAligns.Top;
         LabelBox(SegmentalInfo);
         ContentBox(SegmentTable(example, data, false)) {
-          Margin: PadRB(10 pts);
+          Margin: PadRB(5 pts);
         };
       };
       ArrowFigure(fsize);
@@ -1335,7 +1334,7 @@ class PhylogenyResultsClass: ContentClass {
         Citation{Harris2003; Posner1996; Goldstein2024}; DotSpace;
     };
 
-    style.AddFigure(Figures.ModelTreesUsed, FramePlacements.TopRight, false, 70%);
+    style.AddFigure(Figures.ModelTreesUsed, FigureOptions.Top | FigureOptions.Bottom, 70%);
 
   };
 }
@@ -1450,7 +1449,7 @@ class SegmentModelsClass: ContentClass {
       Citation {Jeffreys1939}; DotSpace;
     };
 
-    style.AddFigure(Figures.QRatesDiagonal, FramePlacements.Bottom, true);
+    style.AddFigure(Figures.QRatesDiagonal, FigureOptions.Top | FigureOptions.Bottom | FigureOptions.Full);
 
 
     var partitions = data.Rule.Partitions;
@@ -1623,7 +1622,7 @@ class WordSegmentRelationshipsClass: ContentClass {
       "Finally, the alignments tend to assign segments from the same class to the same column in the alignment. ";
     };
 
-    style.AddFigure(Figures.EquilibriumCharts, FramePlacements.TopRight);
+    style.AddFigure(Figures.EquilibriumCharts, FigureOptions.Top | FigureOptions.Bottom);
 
 
     style.BodyPar {
@@ -1654,7 +1653,7 @@ class WordSegmentRelationshipsClass: ContentClass {
       " model, however, the same alignments are improbable, as the rates of substitution between those alignments are low.";
     };
 
-    style.AddFigure(Figures.RateChart, FramePlacements.Top, true, 60%);
+    style.AddFigure(Figures.RateChart, FigureOptions.Top | FigureOptions.Full, 60%);
   };
 }
 
@@ -1771,19 +1770,19 @@ class AdvantagesClass: ContentClass {
       "Our event-based approach to linguistic history has the power to transform the discipline by offering an inroad into questions that were previously intractable. For example, questions related to the relationship between phonological change and the phonemic inventory of a language can now be addressed. Does the frequency of a phoneme affect its diachronic stability? To what extent is phonemic change sensitive to the size and structure of the phonemic inventory of a language? What is the role of natural classes in sound change? This last question can be addressed through the comparison of models with different numbers of rate parameters.";
      };
 
-    style.AddFigure(Figures.GappinessChart, FramePlacements.TopRight);
+    style.AddFigure(Figures.GappinessChart, FigureOptions.Top | FigureOptions.Bottom);
 
     style.BodyPar {
       "By casting the problem of language change in a statistical framework, we inherit the benefits of the statistical approach to estimate model parameters and, perhaps more importantly, to compare alternative models of language change to find the model that best explains the data. In this way, linguists can learn about language evolution by devising models that account for potential linguistic phenomena, then testing the model against models that do not account for the linguistic feature. This approach has proven successful in molecular evolution where models have been described and tested that account for many evolutionary processes of molecular change.";
     };
 
-    style.AddFigure(Figures.AlignmentExample1, FramePlacements.Top, true);
+    style.AddFigure(Figures.AlignmentExample1, FigureOptions.Top | FigureOptions.Bottom | FigureOptions.Full);
 
     style.BodyPar {
       "The method can be extended to handle more complex segmental changes (such as those involving context dependency). Moreover, the event-based approach has the potential to improve divergence-time estinmation. Divergence-time estimation relies on estimating the number of events that occurred along the branches of the tree. When applied to abstract cognate relationships, it is not clear what exactly is being counted along the branches. By contrast, the possible events in our event-based approach are well defined: segmental transitions, insertions, or deletions.";
     };
 
-    style.AddFigure(Figures.AlignmentExample2, FramePlacements.Top, true);
+    style.AddFigure(Figures.AlignmentExample2, FigureOptions.Top | FigureOptions.Bottom | FigureOptions.Full);
 
     style.BodyPar {
       "In sum, our approach offers not simply a new framework for linguistic phylogenetics, but one for computational historical linguistics in general, which can be expanded and refined in various ways. For example, it can be combined with methods of automatic cognate detection ";
@@ -1823,8 +1822,6 @@ class DataSummaryClass: ContentClass {
     super.Constructor(Lang.Data);
   }
 
-  readonly W = TextIpa {TextAlignment: TextAlignments.Superscript; "w"};
-
   override GetBody(ContentStyleClass style, title) = Block {
     var data = MainResults.Data;
 
@@ -1833,7 +1830,7 @@ class DataSummaryClass: ContentClass {
       ", which was then manually checked for accuracy and augmented. For each concept, lexical items descending from a common ancestor are grouped together into cognate sets. There are often multiple sets of cognates for a given concept among our sample of languages. Selection of lexical items was oriented toward Latin in order to maximize the number of cognate word-forms in each set. ";
     };
 
-    style.AddTable(TableFigures.ManualAlignment, FramePlacements.TopRight);
+    style.AddTable(TableFigures.ManualAlignment, FigureOptions.Top | FigureOptions.Bottom);
 
     style.BodyPar {
       "As noted above, membership in a cognate set depends solely on shared descent: meaning is irrelevant. For instance, the Latin adjective "; textit{"gravis"};  " means "; style.SQuoteComma{"heavy"}; "but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"}; "Despite this semantic difference, they are assigned to the same cognate set because they are segmentally homologous. Phonemic representations are used in lieu of phonetic representations for two reasons. First, phonetic data is harder to come by,  especially with corpus languages such as Latin. Second, there is considerably more variation at the phonetic level that would have to have been taken into account. Suprasegmental features such as stress are not represented in the data. Word-forms are represented in the International Phonetic Alphabet (IPA). ";
@@ -1845,8 +1842,6 @@ class DataSummaryClass: ContentClass {
       data.WordCutoff;
       " languages were used. In this dataset, there are "; data.UsedCognates.Length; " cognate sets, which are comprised of "; data.WordCount; " word-forms containing "; data.UniqueSegments.Length; " unique segments drawn from "; data.UsedConcepts.Length; " concepts. ";
     };
-
-//  style.FigureTable(Figures.PartitionAssignments, 8 pts);
 
     style.BodyPar {
       "Latin is a highly synthetic language, with many word-forms for each verb, noun, and adjective. In this experiment, only a single word-form was analyzed for each lexical item. Infinitive forms are used for verbs. For nouns, singular forms in either the accusative or (rarely) the nominative case are used, since these are the two case forms ancestral to Romance descendants. The selection of word-forms is not without consequences, since it can impact the estimated transition rates. For instance, most masculine singular nominative adjectives in Latin end in "; TextIpa{"-us"}; DotSpace; "By contrast, feminine singular nominative adjectives end in "; TextIpa{"-a"}; DotSpace; "Use of the feminine forms would increase the number of transitions originating in this vowel. ";
@@ -1959,7 +1954,7 @@ class ModelInferenceClass: ContentClass {
       "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which has parameters ";  RateMatrixParams; DotSpace;
     };
 
-    style.AddTable(Figures.PartitionAssignments, FramePlacements.BottomLeft, false, 98%);
+    style.AddTable(Figures.PartitionAssignments, FigureOptions.Top | FigureOptions.Bottom, 98%);
 
     style.BodyPar {
       "We perform estimation in a Bayesian framework, basing parameter estimates on the joint posterior probability distribution, ";
@@ -1979,7 +1974,7 @@ class ModelInferenceClass: ContentClass {
       "Besides sampling the phylogenetic parameters of the model, the chain also samples segmental alignments"; Citation{Lunter2004}; DotSpace;
     };
 
-    style.AddFigure(Figures.ConceptEncoding, FramePlacements.BottomRight);
+    style.AddFigure(Figures.ConceptEncoding, FigureOptions.Top | FigureOptions.Bottom);
 
     style.BodyPar {
       "Our model of segmental transitions is based on phonological natural classes, which are classes of segments that share phonetic properties. ";
@@ -2053,7 +2048,7 @@ class DataCurationClass: ContentClass {
       "data quality checks, typeset output and input files for the MCMC software (written in C++). ";
     };
 
-    style.AddFigure(Figures.SegmentEncoding, FramePlacements.TopRight, false, 50%);
+    style.AddFigure(Figures.SegmentEncoding, FigureOptions.Top | FigureOptions.Bottom, 50%);
 
     style.BodyPar {
       "Word-forms from the "; data.Taxa.Length; " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
@@ -2143,7 +2138,7 @@ class MethodsClass: ContentClass {
       "Other things we have to mention: "
     };
 
-    style.AddFigure(Figures.ExampleTree, FramePlacements.Bottom, true, 60%);
+    style.AddFigure(Figures.ExampleTree, FigureOptions.Top | FigureOptions.Bottom | FigureOptions.Full, 60%);
 
     NumberList {
       "The data are surface forms, not underlying forms. ";
@@ -2228,7 +2223,7 @@ class MethodsClass: ContentClass {
       "For comparison, the number of atoms in the known universe is on the order of "; 10 sup 80; DotSpace;
     };
 
-    style.AddFigure(Figures.Alignment, FramePlacements.Bottom, true, 85%);
+    style.AddFigure(Figures.Alignment, FigureOptions.Top | FigureOptions.Bottom | FigureOptions.Full, 80%);
 
     style.BodyPar {
      "Ideally, the linguist would not only be able to estimate the correct topology relating the languages of interest, but also the times at which the languages diverged. ";
@@ -2852,13 +2847,15 @@ class MethodsClass: ContentClass {
 
 //======================================================================
 
-SegmentTable(ExampleConceptClass example, DataSetClass data, aligned) = BodyTable([1.5 inches, 16 pts]) {
+SegmentTable(ExampleConceptClass example, DataSetClass data, aligned) = BodyTable([1 inches, 14 pts]) {
   var words = example.Cognate.Words;
   foreach (var taxon in data.Taxa) {
     Row {
       taxon.Language;
-      var list = aligned ? words[taxon.Index].Padded : words[taxon.Index].Segments;
-      (each list).ShowSegment;
+      var w    = words[taxon.Index];
+      var list = aligned ? w.Padded : w.Segments;
+      foreach (var s in list)
+        s.ShowSegment;
     }
   }
 };
@@ -2890,7 +2887,7 @@ class ConclusionClass: ContentClass {
       style.FigureReference(Figures.QRatesMatrix); DotSpace;
     };
 
-    style.AddFigure(Figures.QRatesMatrix, FramePlacements.Bottom, true);
+    style.AddFigure(Figures.QRatesMatrix, FigureOptions.Bottom | FigureOptions.Full);
 
     style.BodyPar {
       "That said, I think the diagonals are quite interesting because they give you an idea of the relative volatility of the segments. The diagonals are simply the negative of the sum of the off-diagonal components of the row:"

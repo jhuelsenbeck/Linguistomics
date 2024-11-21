@@ -614,16 +614,24 @@ class SegmentDisplayClass {
   ShowLanguageDetails(ContentStyleClass style) = Block {
     foreach (var taxon in Data.Taxa) {
       var language = taxon.Language;
-      style.Heading2 {
-        language.Name;
-      };
-      Block {
-        Paragraph {
-          ParAlignment: ParAlignments.Center;
-          language.ShowMap(5 inches, 3 inches);
+      Paragraph {
+        SpaceAfter: 10 pts;
+        HBox(100%, null, BorderT(1 pt) + PadT(16 pts)) {
+          VAlign: VAligns.Center;
+          Frame(40%) {
+            style.Heading2 {
+              language.Name;
+            };
+            Block {
+              ParAlignment: ParAlignments.Justify;
+              language.Description;
+            }
+          };
+          HBox(60%) {
+            HAlign: HAligns.Center;
+            language.ShowMap(3.5 inches, 2 inches);
+          }
         };
-        language.Description(style);
-        language.Details(style);
       }
     }
   };
