@@ -138,9 +138,9 @@ class EulerDiagramClass {
 //======================================================================
 
 readonly namespace DisplayWords {
-  WordRow(WordClass word, index) = PaperStyle.RowBar(index) {
+  WordRow(ContentStyleClass style, WordClass word, index) = PaperStyle.RowBar(index) {
     Span {
-      PaperStyle.SansSerif;
+      style.SansSerif;
       word.Cognate.GetTitle;
     };
 
@@ -155,15 +155,15 @@ readonly namespace DisplayWords {
   };
 
   HeaderCell(d) = Cell(new(new(0, 2 pts), new(0, 2 pts), new(0, 2 pts), new(1, 2 pts))) {
-    PaperStyle.SansSerif;
     PaperStyle.TitleBackground;
     d
   };
 
-  ShowLanguage(DataSetClass data, TaxonClass taxon) = Block {
+  ShowLanguage(ContentStyleClass style, DataSetClass data, TaxonClass taxon) = Block {
     PaperStyle.TitleBar {taxon.Language};
     Table(0.5, null, [new(ColumnClass.Fit(2.1 inches), null, PadLR(10)), new(ColumnClass.Fit(1.5 inches), null, PadR(10)), ColumnClass.Expand]) {
       Row {
+        style.SansSerif;
         HeaderCell(Lang.Cognate);
         HeaderCell(Lang.IPA);
         HeaderCell(Lang.Segments);
@@ -173,15 +173,15 @@ readonly namespace DisplayWords {
       foreach (var cognate in data.GetSortedCognates) {
         foreach (var word in cognate.Words[taxon.Index]) {
           if (word.Segments is valid)
-            WordRow(word, i++);
+            WordRow(style, word, i++);
         }
       }
     };
     Paragraph;
   };
 
-  ShowWordsByLanguage(DataSetClass data) = Block {
-    ShowLanguage(data, each data.Taxa);
+  ShowWordsByLanguage(ContentStyleClass style, DataSetClass data) = Block {
+    ShowLanguage(style, data, each data.Taxa);
   };
 }
 //======================================================================
@@ -192,42 +192,42 @@ readonly namespace AllWords {
     cognate.Words[taxon.Index].ShowPaddedBlocks(textheight);
   };
 
-  AddRow(TaxonClass taxon, CognateClass[] cognates, textheight) = Row {
+  AddRow(ContentStyleClass style, TaxonClass taxon, CognateClass[] cognates, textheight) = Row {
     Cell(PadL(1 pt)) {
-      PaperStyle.SansSerif;
+      style.SansSerif;
       TextColor: Colors.DarkGray;
       taxon.Language;
     };
     AddCell(taxon, each cognates, textheight)
   };
 
-  ConceptTable(DataSetClass data, textheight, wordsperline, CognateClass[] cognates) = HBox {
+  ConceptTable(ContentStyleClass style, DataSetClass data, textheight, wordsperline, CognateClass[] cognates) = HBox {
     var first = 84 pts;
     var w     = (ExtentWidth - first) / wordsperline;
     Table(0.5, null, [first] + [w] * wordsperline) {
       PaperStyle.IPAFamily;
       Row {
         PaperStyle.TitleBackground;
-        PaperStyle.SansSerif;
+        style.SansSerif;
         Empty;
         (each cognates).GetTitle;
       };
 
-      AddRow(each data.Taxa, cognates, textheight);
+      AddRow(style, each data.Taxa, cognates, textheight);
     };
     Paragraph;
   };
 
-  ShowConceptTable(DataSetClass data, CognateClass cognate) = ConceptTable(data, 10 pts, 7, [cognate]);
+  ShowConceptTable(ContentStyleClass style, DataSetClass data, CognateClass cognate) = ConceptTable(style, data, 10 pts, 7, [cognate]);
 
-  ShowTable(textheight, DataSetClass data, int max=1000000) = Block {
+  ShowTable(ContentStyleClass style, DataSetClass data, textheight, int max=1000000) = Block {
     TextHeight: textheight;
     var wordsperline = Math.Round(ExtentWidth / (13 * (textheight intu pixels)));
 
     foreach (var cognates in (data.GetSortedCognates / wordsperline)) {
       if (each0 >= max)
         break;
-      ConceptTable(data, textheight, wordsperline, cognates);
+      ConceptTable(style, data, textheight, wordsperline, cognates);
     }
   };
 }
@@ -334,7 +334,7 @@ class TabOptionsClass {
     return data.UniqueSegments.FindFirstIndex(segment => MatchInclude(segment, place));
   }
 
-  ShowTable(DataSetClass data, SegmentSetClass set) = Block {
+  ShowTable(ContentStyleClass style, DataSetClass data, SegmentSetClass set) = Block {
     PaperStyle.TitleBar {
       Title
     };
@@ -349,13 +349,13 @@ class TabOptionsClass {
       Table(PaperStyle.TableBorder, null, [new ColumnClass(first, BorderR(0.5 pts))] + [new ColumnClass(cw, null, null, HAligns.Center)]) {
         Row {
           TextHeight: 6 pts;
-          PaperStyle.HeaderCell {
+          PaperStyle.HeaderCell(style) {
             Bold;
             Lang.Manner;
           };
 
           foreach (var place in places) {
-            PaperStyle.HeaderCell {
+            PaperStyle.HeaderCell(style) {
               place;
             };
           }
@@ -451,7 +451,7 @@ readonly namespace MatchingVowels {
     AddCell(segments, set, open, each Backnesses.ValueArray, features)
   };
 
-  ShowVowelTable(SegPartClass[] segments, SegmentSetClass set, SegmentFeatures features) = Block {
+  ShowVowelTable(ContentStyleClass style, SegPartClass[] segments, SegmentSetClass set, SegmentFeatures features) = Block {
     PaperStyle.TitleBar {
       Separator: "-";
       each features;
@@ -462,9 +462,9 @@ readonly namespace MatchingVowels {
       HAlign: HAligns.Center;
       Row {
         TextHeight: 10 pts;
-        PaperStyle.HeaderCell;
+        PaperStyle.HeaderCell(style);
         foreach (var b in Backnesses.ValueArray) {
-          PaperStyle.HeaderCell {
+          PaperStyle.HeaderCell(style) {
             b;
           };
         }
@@ -473,16 +473,16 @@ readonly namespace MatchingVowels {
     };
   };
 
-  ShowTable(SegPartClass[] segments, SegmentSetClass set) = Block {
+  ShowTable(ContentStyleClass style, SegPartClass[] segments, SegmentSetClass set) = Block {
     Lang.SymbolPairRounded;
-    ShowVowelTable(segments, set, Vowel);
-    ShowVowelTable(segments, set, Vowel LongVowel);
-    ShowVowelTable(segments, set, Vowel Nasal);
-    ShowVowelTable(segments, set, Vowel LongVowel Nasal);
-    ShowVowelTable(segments, set, Vowel Diphthong);
-    ShowVowelTable(segments, set, Vowel Nasal Diphthong);
-    ShowVowelTable(segments, set, Vowel NonSylabic);
-    ShowVowelTable(segments, set, Vowel NonSylabic Diphthong);
+    ShowVowelTable(style, segments, set, Vowel);
+    ShowVowelTable(style, segments, set, Vowel LongVowel);
+    ShowVowelTable(style, segments, set, Vowel Nasal);
+    ShowVowelTable(style, segments, set, Vowel LongVowel Nasal);
+    ShowVowelTable(style, segments, set, Vowel Diphthong);
+    ShowVowelTable(style, segments, set, Vowel Nasal Diphthong);
+    ShowVowelTable(style, segments, set, Vowel NonSylabic);
+    ShowVowelTable(style, segments, set, Vowel NonSylabic Diphthong);
   };
 }
 //======================================================================
@@ -571,9 +571,9 @@ class SegmentDisplayClass {
     return i;
   }
 
-  FrequencyChart(SizeClass size) = Chart(size.Width, size.Height) {
+  FrequencyChart(ContentStyleClass style, SizeClass size) = Chart(size.Width, size.Height) {
     TextHeight: 11 pts;
-    PaperStyle.SansSerif;
+    style.SansSerif;
     Type: ChartTypes.Column;
     Legend: ChartLegend {Placement: Placements.Bottom};
     ValueLabel: PaperStyle.ValueLabel {

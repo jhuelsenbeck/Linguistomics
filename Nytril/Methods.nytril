@@ -129,7 +129,7 @@ class AlignmentsClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style, title) = Block {
-    AlignmentResults.ShowChart(new(ExtentWidth, ExtentHeight - 1 inch));
+    AlignmentResults.ShowChart(style, new(ExtentWidth, ExtentHeight - 1 inch));
   };
 }
 
@@ -559,7 +559,7 @@ class GappinessChartClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style, title) = HBox {
-    SansSerif;
+    style.SansSerif;
     VAlign: VAligns.Center;
     PaperStyle.ValueLabel {
       TextHeight: 130%;
@@ -616,7 +616,7 @@ class FractionGapsChartClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
-    PaperStyle.SansSerif;
+    style.SansSerif;
     "To be completed";
   };
 }
@@ -796,13 +796,13 @@ class AllSegmentFrequenciesClass: ContentClass {
 
   Constructor {
     super.Constructor("Segment occurrance rates for all languages");
-    Display = new SegmentDisplayClass(MainResults.Data).FrequencyChart(new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
+    Display = new SegmentDisplayClass(MainResults.Data);
   }
 
   override GetCaption(ContentStyleClass style) = "The frequency of occurrance of each segment for all languages";
 
   override GetBody(ContentStyleClass style, title) = Block {
-    Display;
+    Display.FrequencyChart(style, new(ExtentWidth, Math.Min(ExtentHeight, 5 inches)));
   };
 }
 
@@ -1013,42 +1013,42 @@ class AlignmentClass: ContentClass {
     "001111101",
     "100011111",
     "100011101",
-    "011011111",
+    "011011011",
     "101010101",
+    "101010100",
+    "101010000",
+    "010011101",
     "101011101",
-    "100011111",
-    "000011101",
-    "100011101",
-    "100111111",
+    "100111011",
   ];
 
   const HMap2 = [
     "1111100001",
-    "0001111001",
-    "0001111111",
-    "0001111111",
+    "1001111001",
+    "0101011010",
+    "0001111110",
     "1010101001",
-    "0001011111",
-    "0001011111",
-    "0001110001",
-    "1111000001",
-    "0001111111",
+    "0001010110",
+    "0001001001",
+    "1001110001",
+    "1111001001",
+    "0101100111",
   ];
 
   Constructor {
     super.Constructor(Lang.Alignment);
   }
 
-  TName(TaxonClass taxon) = Cell {
-    PaperStyle.SansSerif;
+  TName(ContentStyleClass style, TaxonClass taxon) = Span {
+    style.SansSerif;
     taxon.Language;
   };
 
-  SegmentTable(ExampleConceptClass example, DataSetClass data, aligned) = MatrixBlock {
+  SegmentTable(ContentStyleClass style, DataSetClass data, ExampleConceptClass example, aligned) = MatrixBlock {
     VAlign: VAligns.Center;
     foreach (var taxon in data.Taxa) {
       Row {
-        TName(taxon);
+        TName(style, taxon);
         Cell {
           IPAFamily;
           Span {
@@ -1061,47 +1061,41 @@ class AlignmentClass: ContentClass {
     }
   };
 
-  AlignSegments(SegPartClass[] segments, map) = Span {
+  MapTable(ContentStyleClass style, DataSetClass data, ExampleConceptClass example, map, text) = Block {
     IPAFamily;
-
-    var i = 0;
-    foreach (var c in map) {
-      if (c == '1' and i < segments.Length)
-        segments[i++].ShowBlock;
-      else
-        IPASegments.GapSegment.ShowBlock;
-    }
-  };
-
-  MapTable(ExampleConceptClass example, DataSetClass data, map, text) = MatrixBlock {
-    VAlign: VAligns.Center;
     foreach (var taxon in data.Taxa) {
-      Row {
-        TName(taxon);
-        Cell {
-          var t = map[each0];
-          Span {
-            if (text)
-              AlignSegments(example.Cognate.Words[taxon.Index].Segments, t);
-            else {
-              TextFixed: true;
-              t;
-            }
+      Paragraph(null, 60 pts) {
+        TName(style, taxon);
+        Tab;
+        var t        = map[each0];
+        var segments = example.Cognate.Words[taxon.Index].Segments;
+        if (text) {
+          var i        = 0;
+          foreach (var c in t) {
+            if (c == '1' and i < segments.Length)
+              segments[i++].ShowBlock;
+            else
+              IPASegments.GapSegment.ShowBlock;
           }
-        };
+        }
+        else {
+          int ones = 0;
+          foreach (var c in t) {
+            if (c == '1')
+              ++ones;
+            HBox(10 pts) {HAlign: HAligns.Center; c}
+          }
+          System.Assert(ones == segments.Length, taxon.ShortName);
+        }
       }
     }
   };
 
   LabelBox(label) = HBox {
+    Margin: PadR(5);
     TextHeight: 18 pts;
     Bold;
     Equation {label};
-  };
-
-  ContentBox(content) = HBox(null, null, new EdgeClass(0.5 pts, 5 pts, ArrowColor)) {
-    Margin: PadL(4 pts);
-    content;
   };
 
   ArrowFigure(SizeClass size) = Canvas(size.Width, size.Height) {
@@ -1127,34 +1121,38 @@ class AlignmentClass: ContentClass {
     };
   };
 
-  NumBox(num, c1, c2) = MatrixBlock {
-    VAlign: VAligns.Top;
+  HomBox(ContentStyleClass style, DataSetClass data, ExampleConceptClass example, num, EdgeClass edge, map) = VBox {
     HAlign: HAligns.Center;
-    ColumnGap: 0;
-    Row {
+    HBox {
+      VAlign: VAligns.Top;
+      HAlign: HAligns.Center;
+
       LabelBox(HomologyMap sub num);
-      ContentBox(c1);
+      HBox(null, null, edge) {
+        MapTable(style, data, example, map, false);
+      };
     };
-    Row {
-      Empty;
-      Canvas {
-        TextColor: ArrowColor;
-        TextHeight: 20 pts;
-        HAlign: HAligns.Center;
-        Span {
-          Tex.downarrow;
-          X: 1 pts;
-        };
-        "=";
-      }
+    Canvas {
+
+      TextColor: ArrowColor;
+      TextHeight: 20 pts;
+      HAlign: HAligns.Center;
+      Span {
+        Tex.downarrow;
+        X: 1 pts;
+      };
+      "=";
     };
-    Row {
+    HBox {
+      VAlign: VAligns.Top;
+      HAlign: HAligns.Center;
+
       LabelBox(SegmentalAlignment sub num);
-      ContentBox(c2);
+      HBox(null, null, edge) {
+        MapTable(style, data, example, map, true);
+      };
     };
   };
-
-  HomBox(ExampleConceptClass example, DataSetClass data, i, map) = NumBox(i, MapTable(example, data, map, false), MapTable(example, data, map, true));
 
   override GetCaption(ContentStyleClass style) = Span {
     "Alignments (";
@@ -1174,6 +1172,8 @@ class AlignmentClass: ContentClass {
 
     var data    = MainResults.Data;
     var example = new ExampleConceptClass(data, data.ExampleConcept);
+    var edge    = new EdgeClass(0.5 pts, 2 pts, ArrowColor);
+
 
     HBox {
       VAlign: VAligns.Bottom;
@@ -1185,16 +1185,16 @@ class AlignmentClass: ContentClass {
       HBox {
         VAlign: VAligns.Top;
         LabelBox(SegmentalInfo);
-        ContentBox(SegmentTable(example, data, false)) {
-          Margin: PadRB(5 pts);
+        HBox(null, null, edge) {
+          SegmentTable(style, data, example, false);
         };
       };
       ArrowFigure(fsize);
     };
     HBox {
-      HomBox(example, data, 1, HMap1);
+      HomBox(style, data, example, 1, edge, HMap1);
       Separation: 24 pts;
-      HomBox(example, data, 2, HMap2);
+      HomBox(style, data, example, 2, edge, HMap2);
     }
   };
 }

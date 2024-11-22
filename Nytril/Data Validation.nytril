@@ -38,22 +38,22 @@ class WordsContainingClass: ActionClass {
 
 class DiagnosticsViewClass: DocumentClass {
   var DataSetClass        Data;
-  var PNASStyleClass      Style;
+  var ContentStyleClass   Style;
   var SegmentDisplayClass Display;
   var SearchDataClass     SearchData;
 
-  Constructor(DataSetClass data) {
+  Constructor(ContentStyleClass style, DataSetClass data) {
     super.Constructor(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, "Diagnostics");
     Description = "Summary of the data used in the experiment with diagnostic views";
     Data        = data;
     Display     = new(data);
     SearchData  = new;
-    Style       = new(1);
+    Style       = style;
   }
 
   ShowSegmentTables = Block {
     SegmentSetClass set = new(512);
-    MatchingVowels.ShowTable(Display.DisplaySegments, set);
+    MatchingVowels.ShowTable(Style, Display.DisplaySegments, set);
     MatchingConsonants.PulmonicTable.ShowTable(Data, set);
     MatchingConsonants.NonPulmonicTable.ShowTable(Data, set);
     MatchingConsonants.PulmonicAffricatesTable.ShowTable(Data, set);
@@ -93,9 +93,9 @@ class DiagnosticsViewClass: DocumentClass {
       new SegmentAssignmentsClass(Data),
       new SegmentTransitionClass(Data),
       new AppendixClass("Words containing each segment", Display.ShowWordsForEachSegment),
-      new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Data)),
+      new AppendixClass("Word Lists by Language", DisplayWords.ShowWordsByLanguage(Style, Data)),
       new AppendixClass("Segment Groups", ShowSegmentTables),
-      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(10 pts, Data)),
+      new AppendixClass(Lang.ConceptsUsed, AllWords.ShowTable(Style, Data, 10 pts)),
       new AppendixClass(Lang.Languages, Display.ShowLanguageDetails(Style)),
 //      new("Euler Feature Diagram", new EulerDiagramClass().FeatureChart(Data)),
     ];
@@ -137,15 +137,15 @@ class ConceptGroupsClass: DataContentClass {
     WordGroups[] groups = WordGroups.ValueArray[1..];
     Table(PaperStyle.TableBorder, null, [0.25 inches] + [1 inch] * (2+groups.Length)) {
       Row {
-        PaperStyle.HeaderCell;
-        PaperStyle.HeaderCell {
+        PaperStyle.HeaderCell(style);
+        PaperStyle.HeaderCell(style) {
           Lang.Concept;
         };
-        PaperStyle.HeaderCell {
+        PaperStyle.HeaderCell(style) {
           "Type";
         };
         foreach (var g in groups) {
-          PaperStyle.HeaderCell {
+          PaperStyle.HeaderCell(style) {
             g.Name;
           };
         }
