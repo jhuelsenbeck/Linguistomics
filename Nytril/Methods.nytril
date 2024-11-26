@@ -1875,20 +1875,25 @@ class ManualAlignmentClass: ContentClass {
     WordDisplay(style);
   };
 
-  override GetBody(ContentStyleClass style, title) = LanguageTable([ColumnClass.Expand]*3) {
+  override GetBody(ContentStyleClass style, title) = LanguageTable([1 inch, 1 inch, ColumnClass.Expand]) {
     var th = Math.Max(ExtentWidth * 0.02, 9 pts);
     TextHeight: th;
 
     var cognate = MainResults.Data.GetCognate(MainResults.Data.FigureConcept);
     LanguageTitleRow {
-      Lang.Language; Lang.PhonemicRep; Lang.Alignment;
+      Lang.Language;
+      Lang.PhonemicRep;
+      Cell(null, 4) {
+        Lang.Alignment;
+      }
     };
 
     foreach (var word in cognate.Words) {
       Row {
         word.Language;
         TextIpa {word};
-        word.ShowPaddedBlocks(th);
+        foreach (var segment in word.Padded)
+          segment.ShowSegment;
       };
     }
   };
