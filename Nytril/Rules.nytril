@@ -162,24 +162,23 @@ abstract class RuleClass {
     return segments.FindSlice(part => MatchesRule(filter, part.Segment));
   }
 
-  ShowLegend(ContentStyleClass style, textheight, width, padding) = VBox(width, null, padding) {
-    Table(null, null, [textheight*1.7, textheight, width - textheight*2.7]) {
-      style.SansSerif;
-      TextHeight: textheight;
+  ShowLegend(ContentStyleClass style, textheight, padding) = VBox(null, null, padding) {
+    style.SansSerif;
+    TextHeight: textheight;
 
-      foreach (var partition in Partitions) {
-        Row {
-          VAlign: VAligns.Center;
-          Span {each1; ")"};
-          Span {
-            TextColor: partition.Color;
-            TextHeight: 125%;
-            Tex.blackcirc;
-          };
-          partition;
-        }
-      }
-    };
+    foreach (var partition in Partitions) {
+      HBox {
+        HBox(textheight * 1.7) {
+          Enumerators.NumberParen(each1);
+        };
+        Span {
+          TextColor: partition.Color;
+          Tex.blackcirc;
+          Space;
+        };
+        partition;
+      };
+    }
   };
 
   ShowBlockLegend(PartitionClass[] partitions, textheight) = Frame {

@@ -42,12 +42,14 @@ class ResultsClass {
 class CognateIdClass {
   var Concept,
       Cognate,
-      Count;
+      Count,
+      Blocks;
 
-  Constructor(concept, cognate, count) {
+  Constructor(concept, cognate, count, blocks) {
     Concept = concept;
     Cognate = cognate ?? DefaultCognate;
     Count   = count;
+    Blocks  = blocks;
   }
 
   AlignIndexClass FindAlignment(RunResultsClass run) {
@@ -226,7 +228,7 @@ class AlignmentChartClass {
               e.Cognate Italic;
             };
           }
-          ap.ShowFigureDetails(Data, e.Count);
+          ap.ShowFigureDetails(Data, e.Count, e.Blocks);
         };
       }
       else
@@ -877,9 +879,10 @@ class CalcRatesClass {
   PartitionDiagram(ContentStyleClass style) = HBox {
     VAlign: VAligns.Center;
 
-    var legend = 1.5 inches;
-    Rule.ShowLegend(style, 10 pts, legend, 0);
-    MainDiagram(style, Math.Min(ExtentWidth - legend, ExtentHeight));
+    var legend = Rule.ShowLegend(style, 10 pts, 0);
+    var ls     = GetLayoutSize(legend);
+    legend;
+    MainDiagram(style, Math.Min(ExtentWidth - ls.Width, ExtentHeight));
   };
 
   TranLink(i0, i1) = "Tran{0}:{1}"(i0, i1);

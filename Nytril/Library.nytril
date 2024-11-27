@@ -192,7 +192,6 @@ class AlignPairClass: DocumentClass {
     };
 
     Paragraph {
-      ParAlignment: ParAlignments.Justify;
       Separator: Space;
       Languages(Data, height);
       double cumulative = 0.0;
@@ -213,7 +212,7 @@ class AlignPairClass: DocumentClass {
     }
   };
 
-  ShowFigureDetails(DataSetClass data, int max) = Block {
+  ShowFigureDetails(DataSetClass data, int max, int blocks) = Block {
     var chart = 1.25 inch;
     var h     = 7 pts;
     BoxSize = new(BoxSize.Width, h);
@@ -224,12 +223,12 @@ class AlignPairClass: DocumentClass {
 
       double cumulative = 0.0;
       VBox(ExtentWidth - chart - 15) {
-        foreach (var a in Alignments[0..<max] / 4) {
+        foreach (var a in Alignments[0..<max] / blocks) {
           HBox(100%) {
             Justify: Justifiers.SpaceBetween;
             if (each0 == 0)
               Languages(Data, h);
-            ShowBlocks(a, 4, h, ref cumulative);
+            ShowBlocks(a, blocks, h, ref cumulative);
           };
         }
       };
@@ -1420,7 +1419,7 @@ abstract class FrequencyChartClass {
 
   ShowChart(ContentStyleClass style) = HBox {
     VAlign: VAligns.Center;
-    Rule.ShowLegend(style, 10 pts, 1.4 inch, new EdgeClass(0.25 pts, 5, 80%)) {
+    Rule.ShowLegend(style, 10 pts, new EdgeClass(0.25 pts, 5, 80%)) {
       Margin: PadR(12 pts);
     };
     OccurranceChart(new(ExtentWidth - 2 inches, ExtentHeight));
