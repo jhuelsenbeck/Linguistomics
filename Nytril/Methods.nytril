@@ -173,8 +173,8 @@ readonly AlignmentExamplesClass Figures.AlignmentExamples = new(
 //======================================================================
 
 class SingleAlignmentClass: AlignmentExamplesClass {
-  Constructor(count, name) {
-    super.Constructor("The 16 alignments of highest probabiity for the cognate '{0}'"(name), [new(name, null, count, 4)]);
+  Constructor(count, row, name) {
+    super.Constructor("Highest probability alignments for '{0}'"(name), [new(name, null, count, row)]);
   }
 
   override GetCaption(ContentStyleClass style) = Span {
@@ -185,7 +185,7 @@ class SingleAlignmentClass: AlignmentExamplesClass {
   override GetBody(ContentStyleClass style, title) = AlignmentResults.ShowSet(Examples, false);
 }
 
-readonly SingleAlignmentClass Figures.AlignmentExample1 = new(16, "Flower");
+readonly SingleAlignmentClass Figures.AlignmentExample1 = new(16, 4, "Flower");
 
 //======================================================================
 
@@ -260,17 +260,18 @@ class GappinessSignificanceClass {
 //======================================================================
 
 class AlignmentCompareClass: ContentClass {
-  const int    MaxCount = 8;
   const string Concept  = "Sky";
 
   var ModelCompareClass   Poisson,
                           NaturalClass;
   var ModelCompareClass[] Models;
   var CognateIdClass      Example;
+  var int                 MaxCount;
 
-  Constructor {
+  Constructor(maxcount, row) {
     super.Constructor("Alignment comparison");
-    Example      = new(Concept, null, MaxCount, 4);
+    MaxCount     = maxcount;
+    Example      = new(Concept, null, MaxCount, row);
     Poisson      = new(MainResults.Poisson, PoissonModel, Example, MaxCount);
     NaturalClass = new(MainResults.NaturalClass, NaturalClassModel, Example, MaxCount);
     Models       = [Poisson, NaturalClass];
@@ -311,7 +312,7 @@ class AlignmentCompareClass: ContentClass {
   };
 }
 
-readonly AlignmentCompareClass Figures.AlignmentExample2 = new;
+readonly AlignmentCompareClass Figures.AlignmentExample2 = new(8, 4);
 
 //======================================================================
 
@@ -564,13 +565,15 @@ class GappinessChartClass: ContentClass {
     style.SansSerif;
     VAlign: VAligns.Center;
     PaperStyle.ValueLabel {
-      TextHeight: 130%;
+      TextHeight: 12 pts;
       "Proportion of Alignments"
     };
+    var gaps        = MainResults.MainRun.GapSpectrum;
+    var chartheight = (ExtentHeight - 40 pts) / gaps.Length;
     VBox {
       HAlign: HAligns.Center;
-      foreach (var gap in MainResults.MainRun.GapSpectrum) {
-        Chart(ExtentWidth - 20 pts, 1.5 inches) {
+      foreach (var gap in gaps) {
+        Chart(ExtentWidth - 20 pts, Math.Min(chartheight, 1.5 inches)) {
           Type: ChartTypes.Column;
 
 // Possible alternate look
@@ -601,7 +604,7 @@ class GappinessChartClass: ContentClass {
         }
       }
       Span {
-        TextHeight: 130%;
+        TextHeight: 12 pts;
         "Number of Gaps"
       };
     };
@@ -1858,16 +1861,19 @@ class DataSummaryClass: ContentClass {
 
 //======================================================================
 
-readonly ManualAlignmentClass TableFigures.ManualAlignment = new;
+readonly ManualAlignmentClass TableFigures.ManualAlignment = new(MainResults.Data);
 
 class ManualAlignmentClass: ContentClass {
-  Constructor {
+  var DataSetClass Data;
+
+  Constructor(DataSetClass data) {
     super.Constructor("An example of an aligned cognate set");
+    Data = data;
   }
 
-  readonly WordDisplay(ContentStyleClass style) = style.SQuoteEnd {
+  WordDisplay(ContentStyleClass style) = style.SQuoteEnd {
     TextCase: TextCases.AllLower;
-    MainResults.Data.FigureConcept.Name;
+    Data.FigureConcept.Name;
   };
 
   override GetCaption(ContentStyleClass style) = Span {
@@ -1875,10 +1881,11 @@ class ManualAlignmentClass: ContentClass {
     WordDisplay(style);
   };
 
-  override GetBody(ContentStyleClass style, title) = LanguageTable([ColumnClass.Fit(2 inch), ColumnClass.Fit(2 inch), ColumnClass.Expand]) {
+  override GetBody(ContentStyleClass style, title) = LanguageTable([ColumnClass.Fit(2 inch), ColumnClass.Fit(2 inch), ColumnClass.Fit(1 inch)]) {
+    ParAlignment: ParAlignments.Center;
     TextHeight: Math.Max(ExtentWidth * 0.02, 9 pts);
 
-    var cognate = MainResults.Data.GetCognate(MainResults.Data.FigureConcept);
+    var cognate = Data.GetCognate(Data.FigureConcept);
     LanguageTitleRow {
       Lang.Language;
       Lang.PhonemicRep;
@@ -1900,18 +1907,21 @@ class ManualAlignmentClass: ContentClass {
 
 //======================================================================
 
-readonly WordCountTableClass TableFigures.WordCountTable = new;
+readonly WordCountTableClass TableFigures.WordCountTable = new(MainResults.Data);
 
 class WordCountTableClass: ContentClass {
-  Constructor {
+  var DataSetClass Data;
+
+  Constructor(DataSetClass data) {
     super.Constructor("Manual Alignment");
+    Data = data;
   }
 
   override GetCaption(ContentStyleClass style) = Span {
     "Manual alignment of the words for the concept ";
     style.SQuote {
       TextCase: TextCases.AllLower;
-      MainResults.Data.FigureConcept.Name;
+      Data.FigureConcept.Name;
       DotSpace;
     };
   };
@@ -1921,7 +1931,7 @@ class WordCountTableClass: ContentClass {
       Lang.Language; Lang.WordForms; Lang.SegmentCount;
     };
 
-    foreach (var taxon in MainResults.Data.Taxa) {
+    foreach (var taxon in Data.Taxa) {
       Row {
         taxon.Language;
         taxon.WordCount;
