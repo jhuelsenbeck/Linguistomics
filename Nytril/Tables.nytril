@@ -138,22 +138,6 @@ class EulerDiagramClass {
 //======================================================================
 
 readonly namespace DisplayWords {
-  WordRow(ContentStyleClass style, WordClass word, index) = PaperStyle.RowBar(index) {
-    Span {
-      style.SansSerif;
-      word.Cognate.GetTitle;
-    };
-
-    Cell {
-      word.ShowPlain;
-    };
-    Cell {
-      Span {
-        (each word.Segments).ShowBlock;
-      }
-    }
-  };
-
   HeaderCell(d) = Cell(new(new(0, 2 pts), new(0, 2 pts), new(0, 2 pts), new(1, 2 pts))) {
     PaperStyle.TitleBackground;
     d
@@ -162,8 +146,8 @@ readonly namespace DisplayWords {
   ShowLanguage(ContentStyleClass style, DataSetClass data, TaxonClass taxon) = Block {
     PaperStyle.TitleBar {taxon.Language};
     Table(0.5, null, [new(ColumnClass.Fit(2.1 inches), null, PadLR(10)), new(ColumnClass.Fit(1.5 inches), null, PadR(10)), ColumnClass.Expand]) {
+      style.SansSerif;
       Row {
-        style.SansSerif;
         HeaderCell(Lang.Cognate);
         HeaderCell(Lang.IPA);
         HeaderCell(Lang.Segments);
@@ -172,8 +156,15 @@ readonly namespace DisplayWords {
       var i = 0;
       foreach (var cognate in data.GetSortedCognates) {
         foreach (var word in cognate.Words[taxon.Index]) {
-          if (word.Segments is valid)
-            WordRow(style, word, i++);
+          if (word.Segments is valid) {
+            PaperStyle.RowBar(i++) {
+              word.Cognate.GetTitle;
+              word.ShowPlain;
+              Span {
+                (each word.Segments).ShowBlock;
+              }
+            };
+          }
         }
       }
     };

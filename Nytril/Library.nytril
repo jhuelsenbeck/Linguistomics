@@ -467,6 +467,11 @@ class ConceptClass: FactClass {
     System.Assert(WordGroup != WordGroups.None);
   }
 
+  GetTitle = Span {
+    Name;
+    Action: new ActionClass(Actions.ToSource, Attribute.Value);
+  };
+
   override IconClass GetIcon = Icons.category;
 
   override GetLayoutTip = Span {Name; "-"; Confidence};
@@ -475,6 +480,7 @@ class ConceptClass: FactClass {
     return Name.Compare(c.Name);
   }
 }
+
 //======================================================================
 
 class CognateClass: FactClass {
@@ -484,11 +490,11 @@ class CognateClass: FactClass {
   var                MaxLength;
   var AttributeClass Attribute;
 
-  Constructor(ConceptClass concept, AttributeClass a) {
-    super.Constructor(guid.FromHash(a.FullName));
+  Constructor(ConceptClass concept, AttributeClass cognate) {
+    super.Constructor(guid.FromHash(cognate.FullName));
 
-    Name      = a.Name;
-    Attribute = a;
+    Name      = cognate.Name;
+    Attribute = cognate;
     Concept   = concept;
     MaxLength = 0;
 
@@ -497,11 +503,16 @@ class CognateClass: FactClass {
 
   override IconClass GetIcon = Icons.format_list_bulleted;
 
-  GetSource = Concept.Name + '-' + Name;
+  GetSource = Span {
+    Concept.Name;
+    if (Name != DefaultCognate) {
+      '-';
+      Name;
+    }
+  };
 
-  GetTitle = Span {
-    Concept.Name; '-'; Name;
-    Action: new ActionClass(Actions.ToSource, Attribute);
+  GetTitle = GetSource {
+    Action: new ActionClass(Actions.ToSource, Attribute.Value);
   };
 
   override int Compare(c) {
@@ -511,6 +522,7 @@ class CognateClass: FactClass {
     return i;
   }
 }
+
 //======================================================================
 
 class TaxonClass {
@@ -534,6 +546,7 @@ class TaxonClass {
     TipAction: Language;
   };
 }
+
 //======================================================================
 
 class WordPairClass {
@@ -631,6 +644,10 @@ class DataSetClass {
       System.Assert(good, "Improper concept", conceptvar);
 
       if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(includewords)) {
+        var concept = new ConceptClass(cvar);
+        concept.CheckRaw;
+        UsedConcepts.Add(concept);
+
         foreach (var cc in cvar.Children) {
           var vname = cc.Name;
           if (vname != "Confidence" and vname != "WordType" and vname != "WordGroup") {
@@ -644,12 +661,8 @@ class DataSetClass {
               }
             }
 
-            if (count >= cutoff) {
-              var concept = new ConceptClass(cvar);
-              concept.CheckRaw;
-              UsedConcepts.Add(concept);
-              UsedCognates.Add(new(concept, cvar));
-            }
+            if (count >= cutoff)
+              UsedCognates.Add(new(concept, cc));
           }
         }
       }
@@ -789,8 +802,6 @@ class DataSetClass {
   }
 
   CognateClass[] GetSortedCognates {
-//    SortedCognates ??= UsedCognates.ToSortedArray(false);
-
     SortedCognates ??= UsedCognates.ToArray;
     return SortedCognates;
   }
@@ -800,25 +811,23 @@ class DataSetClass {
   void ComputeRawCognate(SegPartDictionary lookup, CognateClass cognate) {
     WordList.SetAllValues(DefWord);
     var maxlength = 0;
-    foreach (var cvar in cognate.Attribute.Children) {
-      foreach (var tvar in cvar.Children) {
-        var text  = tvar.Value;
-        var taxon = TaxonSet.GetValue(tvar.Name);
-        if (taxon is valid) {
-          var word = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.ShortName, text, taxon, cognate);
-          word.InitRaw(text, lookup);
-          maxlength = Math.Max(maxlength, word.Aligned.Length);
+    foreach (var tvar in cognate.Attribute.Children) {
+      var text  = tvar.Value;
+      var taxon = TaxonSet.GetValue(tvar.Name);
+      if (taxon is valid) {
+        var word = new WordClass(text+cognate.Concept.Name+cognate.Name+taxon.ShortName, text, taxon, cognate);
+        word.InitRaw(text, lookup);
+        maxlength = Math.Max(maxlength, word.Aligned.Length);
 
-          int count = 0;
-          foreach (var s in word.Segments) {
-            if (s.Index >= 0)
-              ++count;
-          }
-
-          SegmentCount       += count;
-          taxon.SegmentCount += count;
-          WordList.SetValue(taxon.Index, word);
+        int count = 0;
+        foreach (var s in word.Segments) {
+          if (s.Index >= 0)
+            ++count;
         }
+
+        SegmentCount       += count;
+        taxon.SegmentCount += count;
+        WordList.SetValue(taxon.Index, word);
       }
     }
 
