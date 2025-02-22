@@ -49,7 +49,8 @@ class CreateExperimentClass: ActionClass {
 
     if (not FolderExists(root))
       CreateFolder(root);
-    (each data.TreeSets).InitFolders(data);
+    foreach (var set in data.TreeSets)
+      set.InitFolders(data);
 
     if (Write(new WordViewClass(data, data.Rule.Partitions).GetDocument, Info.ExperimentRoot data.WordFile))
       return EventResponses.MessageTip("Files Written");
@@ -73,7 +74,15 @@ class CreateViewClass: DocumentClass {
       Underline;
       "Experimental parameters";
     };
+
+    int words = 0;
+    foreach (var t in Data.UsedCognates)
+      words += t.Words.Length;
+
+
     ShowField("Unique Segments", Data.UniqueSegments.Length);
+    ShowField("Languages", Data.TaxonSet.Length);
+    ShowField("Words", words);
     ShowField("Output Path", Info.ExperimentRoot Data.RootFolder);
     Paragraph;
 
