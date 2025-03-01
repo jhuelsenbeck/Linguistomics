@@ -10,11 +10,6 @@ class LangNodeClass: NodeClass {
   }
 
   override void ResolveData {
-    if (Name is valid) {
-      var f = WorldLanguageList.FindFirst(l => l.Name == Name);
-      if (f is valid)
-        Label = f;
-    }
     if (Probability is valid and HasChildren) {
       Label = Span {
         TextColor: Colors.LightGray;
@@ -23,6 +18,8 @@ class LangNodeClass: NodeClass {
         Probability * 100.0;
       };
     }
+    else if (Name is valid)
+      Label = WorldLanguages.FindChildValue(Name);
   }
 }
 
