@@ -1,4 +1,5 @@
 using Format, Units, SegmentFeatures, Math;
+
 //======================================================================
 
 flags WordGroups {
@@ -98,11 +99,11 @@ flags SegmentFeatures {
   Lowered     (Lang.Lowered),
   Advanced    (Lang.Advanced),
 }
+
 //======================================================================
 
 typedef SegmentSetClass HashSetClass<SegPartClass>;
 typedef SegPartDictionary StringDictionaryClass<SegPartClass>;
-
 
 class SegmentClass: FactClass {
   field string          Ipa;
@@ -233,6 +234,7 @@ class SegmentClass: FactClass {
 //    };
   };
 }
+
 //======================================================================
 
 class SegPartClass {
@@ -293,6 +295,7 @@ class PunctuationClass: SegmentClass {
     Punctuation = true;
   }
 }
+
 //======================================================================
 
 class ImpossibleClass: SegmentClass {
@@ -303,6 +306,7 @@ class ImpossibleClass: SegmentClass {
     Impossible = true;
   }
 }
+
 //======================================================================
 
 class DiacriticClass: SegmentClass {
@@ -312,6 +316,7 @@ class DiacriticClass: SegmentClass {
     Description = description;
   }
 }
+
 //======================================================================
 
 class ConsonantClass: SegmentClass {
@@ -396,72 +401,72 @@ readonly ImpossibleClass[] ImpossibleSegments = [
 
 //======================================================================
 
-readonly namespace DiacriticModifiers {
-  DiacriticClass UndefinedEscapeCharacter     = new("Undefined escape character", null, "*");
-  DiacriticClass Nasalized                    = new("Nasalized", "\u0303", "_~");
-  DiacriticClass Centralized                  = new("Centralized", "\u0308", "_\"");
-  DiacriticClass Advanced                     = new("Advanced", "\u031F", "_+");
-  DiacriticClass Retracted                    = new("Retracted", "\u0320", "_-");
-  DiacriticClass RisingTone                   = new("RisingTone ", "\u030C", "_R");
-  DiacriticClass Voiceless                    = new("Voiceless", "\u0325", "_0");
-  DiacriticClass Implosive                    = new("Implosive", null, "_<");
-  DiacriticClass Syllabic                     = new("Syllabic", "\u0329", "_=");
-  DiacriticClass Ejective                     = new("Ejective", "\u02BC", "_>");
-  DiacriticClass Pharyngealized               = new("Pharyngealized ", "\u02E4", "_?\\");
-  DiacriticClass FallingTone                  = new("Falling tone", "\u0302", "_F");
-  DiacriticClass NonSyllabic                  = new("Non-syllabic", "\u032F", "_^");
-  DiacriticClass NoAudibleRelease             = new("No audible release", "\u031A", "_}");
-  DiacriticClass RhoticHook                   = new("Rhotic hook", "\u02DE", "`");
-  DiacriticClass AdvancedTongueRoot           = new("Advanced tongue root ", "\u0318", "_A");
-  DiacriticClass Apical                       = new("Apical", "\u033A", "_a");
-  DiacriticClass ExtraLowTone                 = new("Extra low tone", "\u030F", "_B");
-  DiacriticClass LessRounded                  = new("Less rounded", "\u031C", "_c");
-  DiacriticClass Dental                       = new("Dental", "\u032A", "_d");
-  DiacriticClass VelarizedOrPharyngealized    = new("Velarized or Pharyngealized", "\u0334", "_e");
-  DiacriticClass GlobalFall                   = new("Global fall", "\u2198", "<F>");
-  DiacriticClass Velarized                    = new("Velarized", "\u02E0", "_G");
-  DiacriticClass HighTone                     = new("High tone", "\u0301", "_H");
-  DiacriticClass Aspirated                    = new("Aspirated", "\u02B0", "_h");
-  DiacriticClass Palatalized                  = new("Palatalized", "\u02B2", "_j");
-  DiacriticClass CreakyVoiced                 = new("Creaky voiced", "\u0330", "_k");
-  DiacriticClass LowTone                      = new("Low tone", "\u0300", "_L");
-  DiacriticClass LateralRelease               = new("Lateral release", "\u02E1", "_l");
-  DiacriticClass MidTone                      = new("Mid tone", "\u0304", "_M");
-  DiacriticClass Laminal                      = new("Laminal", "\u033B", "_m");
-  DiacriticClass LinguoLabial                 = new("Linguo-Labial", "\u033C", "_N");
-  DiacriticClass NasalRelease                 = new("Nasal release", "\u207F", "_n");
-  DiacriticClass MoreRounded                  = new("More rounded", "\u0339", "_O");
-  DiacriticClass Lowered                      = new("Lowered", "\u031E", "_o");
-  DiacriticClass RetractedTongueRoot          = new("Retracted tongue root", "\u0319", "_q");
-  DiacriticClass GlobalRise                   = new("Global rise", "\u2197", "<R>");
-  DiacriticClass Raised                       = new("Raised", "\u031D", "_r");
-  DiacriticClass ExtraHighTone                = new("Extra high tone", "\u030B", "_T");
-  DiacriticClass BreathyVoiced                = new("Breathy voiced", "\u0324", "_t");
-  DiacriticClass Voiced                       = new("Voiced", "\u032C", "_v");
-  DiacriticClass Labialized                   = new("Labialized", "\u02B7", "_W");
-  DiacriticClass ExtraShort                   = new("Extra short", "\u02D8", "_X");
-  DiacriticClass MidCentralized               = new("Mid-centralized", "\u033D", "_x");
-  DiacriticClass Downstep                     = new("Down-step", "↓", "!");
-  DiacriticClass Upstep                       = new("Up-step", "↑", "^");
-  DiacriticClass Long                         = new("Long", "ː", ":");
-  DiacriticClass HalfLong                     = new("Half-long", "ˑ", ":\\");
-  DiacriticClass IndeterminacyinFrenchVowels  = new("Indeterminacy in french vowels", null, "/");
-  DiacriticClass BeginNonsegmentalNotation    = new("Begin Non-segmental notation", null, "<");
-  DiacriticClass Endnonsegmentalnotation      = new("End non-segmental notation", "", ">");
-  DiacriticClass Voicedepiglottalfricative    = new("Voiced epiglottal fricative", "ʢ", "<\\");
-  DiacriticClass Postalveolarclick            = new("Post-alveolar click", "ǃ", "!\\");
-  DiacriticClass MinorGroup                   = new("Minor group", " | ", " | ");
-  DiacriticClass Dentalclick                  = new("Dental click", "ǀ", " | \\");
-  DiacriticClass MajorGroup                   = new("Major group", "‖", " |  | ");
-  DiacriticClass Alveolarlateralclick         = new("Alveolar lateral click", "ǁ", " | \\ | \\");
-  DiacriticClass Palatalclick                 = new("Palatal click", "ǂ", "");
-  DiacriticClass VoicelessDescender           = new("Voiceless descender", "\u030A", "");
-  DiacriticClass CombiningMacron              = new("Combining macron", "\u0331", "");
-  DiacriticClass TieBarBelow                  = new("Tie-bar below", "\u035C", "");
-  DiacriticClass TieBarAbove                  = new("Tie-bar above", "\u0361", "");
-  DiacriticClass ReadyMadeCombination         = new("Ready made combination", "\u026B", "");
-  DiacriticClass Becomes                      = new("Becomes", "→", "");
-  DiacriticClass Separator                    = new("Separator", "", "-");
+readonly namespace<DiacriticClass> DiacriticModifiers {
+  UndefinedEscapeCharacter     = new("Undefined escape character", null, "*");
+  Nasalized                    = new("Nasalized", "\u0303", "_~");
+  Centralized                  = new("Centralized", "\u0308", "_\"");
+  Advanced                     = new("Advanced", "\u031F", "_+");
+  Retracted                    = new("Retracted", "\u0320", "_-");
+  RisingTone                   = new("RisingTone ", "\u030C", "_R");
+  Voiceless                    = new("Voiceless", "\u0325", "_0");
+  Implosive                    = new("Implosive", null, "_<");
+  Syllabic                     = new("Syllabic", "\u0329", "_=");
+  Ejective                     = new("Ejective", "\u02BC", "_>");
+  Pharyngealized               = new("Pharyngealized ", "\u02E4", "_?\\");
+  FallingTone                  = new("Falling tone", "\u0302", "_F");
+  NonSyllabic                  = new("Non-syllabic", "\u032F", "_^");
+  NoAudibleRelease             = new("No audible release", "\u031A", "_}");
+  RhoticHook                   = new("Rhotic hook", "\u02DE", "`");
+  AdvancedTongueRoot           = new("Advanced tongue root ", "\u0318", "_A");
+  Apical                       = new("Apical", "\u033A", "_a");
+  ExtraLowTone                 = new("Extra low tone", "\u030F", "_B");
+  LessRounded                  = new("Less rounded", "\u031C", "_c");
+  Dental                       = new("Dental", "\u032A", "_d");
+  VelarizedOrPharyngealized    = new("Velarized or Pharyngealized", "\u0334", "_e");
+  GlobalFall                   = new("Global fall", "\u2198", "<F>");
+  Velarized                    = new("Velarized", "\u02E0", "_G");
+  HighTone                     = new("High tone", "\u0301", "_H");
+  Aspirated                    = new("Aspirated", "\u02B0", "_h");
+  Palatalized                  = new("Palatalized", "\u02B2", "_j");
+  CreakyVoiced                 = new("Creaky voiced", "\u0330", "_k");
+  LowTone                      = new("Low tone", "\u0300", "_L");
+  LateralRelease               = new("Lateral release", "\u02E1", "_l");
+  MidTone                      = new("Mid tone", "\u0304", "_M");
+  Laminal                      = new("Laminal", "\u033B", "_m");
+  LinguoLabial                 = new("Linguo-Labial", "\u033C", "_N");
+  NasalRelease                 = new("Nasal release", "\u207F", "_n");
+  MoreRounded                  = new("More rounded", "\u0339", "_O");
+  Lowered                      = new("Lowered", "\u031E", "_o");
+  RetractedTongueRoot          = new("Retracted tongue root", "\u0319", "_q");
+  GlobalRise                   = new("Global rise", "\u2197", "<R>");
+  Raised                       = new("Raised", "\u031D", "_r");
+  ExtraHighTone                = new("Extra high tone", "\u030B", "_T");
+  BreathyVoiced                = new("Breathy voiced", "\u0324", "_t");
+  Voiced                       = new("Voiced", "\u032C", "_v");
+  Labialized                   = new("Labialized", "\u02B7", "_W");
+  ExtraShort                   = new("Extra short", "\u02D8", "_X");
+  MidCentralized               = new("Mid-centralized", "\u033D", "_x");
+  Downstep                     = new("Down-step", "↓", "!");
+  Upstep                       = new("Up-step", "↑", "^");
+  Long                         = new("Long", "ː", ":");
+  HalfLong                     = new("Half-long", "ˑ", ":\\");
+  IndeterminacyinFrenchVowels  = new("Indeterminacy in french vowels", null, "/");
+  BeginNonsegmentalNotation    = new("Begin Non-segmental notation", null, "<");
+  Endnonsegmentalnotation      = new("End non-segmental notation", "", ">");
+  Voicedepiglottalfricative    = new("Voiced epiglottal fricative", "ʢ", "<\\");
+  Postalveolarclick            = new("Post-alveolar click", "ǃ", "!\\");
+  MinorGroup                   = new("Minor group", " | ", " | ");
+  Dentalclick                  = new("Dental click", "ǀ", " | \\");
+  MajorGroup                   = new("Major group", "‖", " |  | ");
+  Alveolarlateralclick         = new("Alveolar lateral click", "ǁ", " | \\ | \\");
+  Palatalclick                 = new("Palatal click", "ǂ", "");
+  VoicelessDescender           = new("Voiceless descender", "\u030A", "");
+  CombiningMacron              = new("Combining macron", "\u0331", "");
+  TieBarBelow                  = new("Tie-bar below", "\u035C", "");
+  TieBarAbove                  = new("Tie-bar above", "\u0361", "");
+  ReadyMadeCombination         = new("Ready made combination", "\u026B", "");
+  Becomes                      = new("Becomes", "→", "");
+  Separator                    = new("Separator", "", "-");
 
 // Glyphs are not in the font
 //    Linkingmark                = new DiacriticClass("Linking Mark", "\u203f", "-\\");
@@ -469,8 +474,10 @@ readonly namespace DiacriticModifiers {
 //    HighRisingTone               = new DiacriticClass("High rising tone", "\u1DC4", "_H_T");
 //    RisingFallingTone            = new DiacriticClass("Rising falling tone", "\u1DC8", "_R_F");
 }
+
 //======================================================================
 
-readonly IPA.NullSegment = new SegmentClass(Tex.bigotimes, "!?", true);
+readonly SegmentClass IPA.NullSegment = new(Tex.bigotimes, "!?", true);
 
+//======================================================================
 
