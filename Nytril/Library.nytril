@@ -711,12 +711,12 @@ class DataSetClass {
 
     foreach (var cvar in concepts.Children) {
       var conceptvar = cvar.Value;
-      var good       = exists conceptvar.?Confidence and
-                       exists conceptvar.?WordType and
+      var confidence = conceptvar.?Confidence ?? 0;
+      var good       = exists conceptvar.?WordType and
                        exists conceptvar.?WordGroup;
       System.Assert(good, "Improper concept", conceptvar);
 
-      if (good and conceptvar.Confidence > 0 and conceptvar.WordGroup.HasFlag(includewords)) {
+      if (good and confidence > 0 and conceptvar.WordGroup.HasFlag(includewords)) {
         var concept = new ConceptClass(cvar);
         concept.CheckRaw;
         UsedConcepts.Add(concept);
