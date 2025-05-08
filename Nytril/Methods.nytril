@@ -674,28 +674,31 @@ class LanguageDistributionClass: ContentClass {
     "Approximate geographic distribution of the Romance languages examined in this study.";
   };
 
-  override GetBody(ContentStyleClass style, title) = HBox {
-    VAlign: Center;
-    style.SansSerif;
-    Separation: 10 pts;
-    FitBox(IO.Read(res "Images/areas.png"), 80%, null, 0.5 pt) {
-      BorderRadius: 1 pts;
-    };
-    VBox {
-      Separation: 4 pts;
-      foreach (var l in MainResults.Data.LanguageSet) {
-        if (l != WorldLanguages.Latin) {
-          HBox {
-            Separation: 2 pts;
-            Canvas(8 pts, 8 pts, 0.5 pts) {
-              Baseline: 85%;
-              BorderRadius: 2 pts;
-              Background: l.MapColor;
+  override GetBody(ContentStyleClass style, title) = Paragraph {
+    ParAlignment: Center;
+    HBox {
+      VAlign: Center;
+      style.SansSerif;
+      Separation: 10 pts;
+      FitBox(IO.Read(res "Images/areas.png"), 80%, null, 0.5 pt) {
+        BorderRadius: 1 pts;
+      };
+      VBox {
+        Separation: 4 pts;
+        foreach (var l in MainResults.Data.LanguageSet) {
+          if (l != WorldLanguages.Latin) {
+            HBox {
+              Separation: 2 pts;
+              Canvas(8 pts, 8 pts, 0.5 pts) {
+                Baseline: 85%;
+                BorderRadius: 2 pts;
+                Background: l.MapColor;
+              };
+              l;
             };
-            l;
-          };
+          }
         }
-      }
+      };
     };
   };
 }
@@ -1436,7 +1439,9 @@ class SegmentModelsClass: ContentClass {
       "The Bayes factor is the ratio of the marginal likelihoods, ";
     };
 
-    Equations.BayesFactorEq;
+    style.AlignEquations {
+      style.LineEquation(Equations.BayesFactorEq);
+    };
 
     style.ResumePar {
       "with ratios greater than one favoring model "; ModelI; ". ";
@@ -1881,7 +1886,7 @@ class ManualAlignmentClass: ContentClass {
   }
 
   WordDisplay(ContentStyleClass style) = style.SQuoteEnd {
-    TextCase: TextCases.AllLower;
+    TextCase: AllLower;
     Data.FigureConcept.Name;
   };
 
@@ -1891,7 +1896,7 @@ class ManualAlignmentClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style, title) = LanguageTable([ColumnClass.Fit(2 inch), ColumnClass.Fit(2 inch), ColumnClass.Fit(1 inch)]) {
-    ParAlignment: ParAlignments.Center;
+    ParAlignment: Center;
     TextHeight: Math.Max(ExtentWidth * 0.02, 9 pts);
 
     var cognate = Data.GetCognate(Data.FigureConcept);
@@ -1929,7 +1934,7 @@ class WordCountTableClass: ContentClass {
   override GetCaption(ContentStyleClass style) = Span {
     "Manual alignment of the words for the concept ";
     style.SQuote {
-      TextCase: TextCases.AllLower;
+      TextCase: AllLower;
       Data.FigureConcept.Name;
       DotSpace;
     };
@@ -1985,7 +1990,9 @@ class ModelInferenceClass: ContentClass {
       "We perform estimation in a Bayesian framework, basing parameter estimates on the joint posterior probability distribution, ";
     };
 
-    Equations.BayesianEstimation;
+    style.AlignEquations {
+      style.LineEquation(Equations.BayesianEstimation);
+    };
 
     style.ResumePar {
       "where "; SegmentalInfo; " are the observed segments for the cognate words. ";
@@ -2032,8 +2039,11 @@ class ConceptEncodingClass: ContentClass {
     "The concept "; style.SQuote{TextCase: TextCases.AllLower; Concept.Name}; " is coded in the data file.";
   };
 
-  override GetBody(ContentStyleClass style, title) = Frame(100%) {
-    SourcePar(Data, Concept.Concept);
+  override GetBody(ContentStyleClass style, title) = Paragraph {
+    ParAlignment: Center;
+    Frame(2.5 inches) {
+      SourcePar(Data, Concept.Concept)
+    };
   };
 }
 
@@ -2050,8 +2060,11 @@ class SegmentEncodingClass: ContentClass {
     "The IPA-Unicode encoding of a segment.";
   };
 
-  override GetBody(ContentStyleClass style, title) = Frame(2 inches, 60 pts) {
-    IPASegments.VlAlveolarNSAffricate.Display(null, 20 pts);
+  override GetBody(ContentStyleClass style, title) = Paragraph {
+    ParAlignment: Center;
+    Frame {
+      IPASegments.VlAlveolarNSAffricate.Display(null, 20 pts);
+    }
   };
 }
 
@@ -2094,6 +2107,22 @@ class DataCurationClass: ContentClass {
       "Samples taken during the first "; Span {config.PreBurn; TextGroup: true}; " cycles of the chain are discarded as burn-in. ";
       "When the analysis is complete, the results are read back into the control program. ";
       "The resulting tables, trees and graphical figures are automatically generated from the MCMC output and combined with narrative elements created by the authors to make the final paper and supplemental materials. ";
+    }
+  };
+}
+
+//======================================================================
+
+readonly ConclusionClass PaperSections.Conclusion = new;
+
+class ConclusionClass: ContentClass {
+  Constructor {
+    super.Constructor("Conclusion");
+  }
+
+  override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
+      "Here we sum it all up.";
     }
   };
 }
@@ -2796,11 +2825,11 @@ SegmentTable(ExampleConceptClass example, DataSetClass data, aligned) = BodyTabl
 
 //======================================================================
 
-readonly ConclusionClass PaperSections.Conclusion = new;
+readonly RateMatrixDiscussionClass PaperSections.RateMatrixDiscussion = new;
 
-class ConclusionClass: ContentClass {
+class RateMatrixDiscussionClass: ContentClass {
   Constructor {
-    super.Constructor("Conclusion");
+    super.Constructor("Rate Matrix Discussion");
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
@@ -2827,7 +2856,9 @@ class ConclusionClass: ContentClass {
       "That said, I think the diagonals are quite interesting because they give you an idea of the relative volatility of the segments. The diagonals are simply the negative of the sum of the off-diagonal components of the row:"
     };
 
-    Equations.OffDiagonalComponents;
+    style.AlignEquations {
+      style.LineEquation(Equations.OffDiagonalComponents);
+    };  
 
     style.BodyPar {
       "where "; sym.j; " is iterated over all states (for "; sym.i; Tex.neq; sym.j; "). What does this mean? Let’s consider two segments one of which has a diagonal value of –1.0 and the other that has a value of –2.0. The rate of change for the first, then, is 1.0 and the second is 2.0. This means that the second segment is in a sense more volatile than the first. When we are in the second segment, we move to another state at a rate 2.0 which is twice the rate of the first segment."
