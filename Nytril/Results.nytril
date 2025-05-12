@@ -15,11 +15,15 @@ class ResultsClass {
   const double CutoffProbability = 0.95;
   const        CutoffPercent     = (CutoffProbability * 100.0) %;
 
-  var DataSetClass      Data;
-  var RunResultsClass   Poisson,
-                        NaturalClass,
-                        MainRun;
-  var RunResultsClass[] ModelRuns;
+  var DataSetClass    Data;
+  var RunResultsClass Poisson,
+                      NaturalClass,
+                      MainRun;
+
+  LoadFile(RunResultsClass results, TaskClass task) {
+    results.LoadFile(Data, task);
+    return null;
+  }
 
   Constructor {
     Data = new(null, "Europe3", "Europe3");
@@ -28,12 +32,8 @@ class ResultsClass {
 
     Poisson      = new(set.Models[1].Run[1]); // For some reason, this run succeeded but not Run[0]
     NaturalClass = new(set.Models[0].Run[0]);
-    ModelRuns    = [Poisson, NaturalClass];
     MainRun      = NaturalClass;
-
-    var paths = IO.ReadScripts((each ModelRuns).AlignmentFile);
-    foreach (var a in paths)
-      ModelRuns[each0].ReadAlignments(Data, a.Root);
+    [Poisson, NaturalClass].ParallelEach(@LoadFile, 100%);
   }
 }
 
@@ -126,16 +126,15 @@ class RunResultsClass {
     return c;
   }
 
-  void ReadAlignments(DataSetClass data, align) {
+  void LoadFile(DataSetClass data, TaskClass _) {
+    var align    = IO.ReadScript(AlignmentFile).Root;
     var treefile = Info.ExperimentRoot Run.RootFolder Info.TreeFile;
     Complete = IO.FileExists(treefile);
     if (Complete)
       Run.ResultTree = IO.ReadTree(treefile, attribute LangNodeClass);
 
-
     QRates                 = new(data, align.QRates, false);
     AverageRates           = new(data, align.AverageRates, true);
-
     NCQFreqs               = align.?NCQFreqs as StatArray;
     TransitionStats        = align.?TransitionStats as StatMat;
     NCQRates               = align.?NCQRates as StatMat;
