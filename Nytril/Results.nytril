@@ -20,20 +20,15 @@ class ResultsClass {
                       NaturalClass,
                       MainRun;
 
-  LoadFile(RunResultsClass results, TaskClass task) {
-    results.LoadFile(Data, task);
-    return null;
-  }
-
   Constructor {
     Data = new(null, "Europe3", "Europe3");
 
     var set = Data.TreeSets[0];
 
-    Poisson      = new(set.Models[1].Run[1]); // For some reason, this run succeeded but not Run[0]
-    NaturalClass = new(set.Models[0].Run[0]);
+    Poisson      = new(Data, set.Models[1].Run[1]); // For some reason, this run succeeded but not Run[0]
+    NaturalClass = new(Data, set.Models[0].Run[0]);
     MainRun      = NaturalClass;
-    [Poisson, NaturalClass].ParallelEach(@LoadFile, 100%);
+    Parallel.ParallelEach([Poisson, NaturalClass], 100%);
   }
 }
 
@@ -95,7 +90,8 @@ class StatClass {
 
 //======================================================================
 
-class RunResultsClass {
+class RunResultsClass: Parallel.ThreadClass {
+  var DataSetClass       Data;
   var RunExperimentClass Run;
   var StatMat            NCQRates,
                          TransitionStats;
@@ -114,8 +110,10 @@ class RunResultsClass {
                          EquilibriumFrequencies,
                          AlignmentFile;
 
-  Constructor(RunExperimentClass run) {
+  Constructor(DataSetClass data, RunExperimentClass run) {
+    super.Constructor;
     Run           = run;
+    Data          = data;
     AlignmentFile = Info.ExperimentRoot run.RootFolder Info.AlignmentFile;
   }
 
@@ -126,38 +124,42 @@ class RunResultsClass {
     return c;
   }
 
-  void LoadFile(DataSetClass data, TaskClass _) {
+  override bool Execute {
     var align    = IO.ReadScript(AlignmentFile).Root;
     var treefile = Info.ExperimentRoot Run.RootFolder Info.TreeFile;
-    Complete = IO.FileExists(treefile);
-    if (Complete)
+    if (IO.FileExists(treefile)) {
       Run.ResultTree = IO.ReadTree(treefile, attribute LangNodeClass);
 
-    QRates                 = new(data, align.QRates, false);
-    AverageRates           = new(data, align.AverageRates, true);
-    NCQFreqs               = align.?NCQFreqs as StatArray;
-    TransitionStats        = align.?TransitionStats as StatMat;
-    NCQRates               = align.?NCQRates as StatMat;
-    EquilibriumFrequencies = align.?EquilibriumFrequencies;
-    InsertionRate          = align.?InsertionRateMean;
-    InsertionRateLow       = align.?InsertionRateLow;
-    InsertionRateHigh      = align.?InsertionRateHigh;
-    DeletionRate           = align.?DeletionRateMean;
-    DeletionRateLow        = align.?DeletionRateLow;
-    DeletionRateHigh       = align.?DeletionRateHigh;
-    GapSpectrum            = align.?GapSpectrum;
+      if (Run.ResultTree is valid) {
+        QRates                 = new(Data, align.QRates, false);
+        AverageRates           = new(Data, align.AverageRates, true);
+        NCQFreqs               = align.?NCQFreqs as StatArray;
+        TransitionStats        = align.?TransitionStats as StatMat;
+        NCQRates               = align.?NCQRates as StatMat;
+        EquilibriumFrequencies = align.?EquilibriumFrequencies;
+        InsertionRate          = align.?InsertionRateMean;
+        InsertionRateLow       = align.?InsertionRateLow;
+        InsertionRateHigh      = align.?InsertionRateHigh;
+        DeletionRate           = align.?DeletionRateMean;
+        DeletionRateLow        = align.?DeletionRateLow;
+        DeletionRateHigh       = align.?DeletionRateHigh;
+        GapSpectrum            = align.?GapSpectrum;
 
-    var alignments = new ListClass<AlignIndexClass>(1024);
-    foreach (var a in align.Alignments) {
-      foreach (var c in data.UsedCognates) {
-        if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
-          a.Cognate = c;
-          alignments.Add(a);
-          break;
+        var alignments = new ListClass<AlignIndexClass>(1024);
+        foreach (var a in align.Alignments) {
+          foreach (var c in Data.UsedCognates) {
+            if (c.Concept.Name == a.ConceptName and c.Name == a.CognateName) {
+              a.Cognate = c;
+              alignments.Add(a);
+              break;
+            }
+          }
         }
+        Alignments = alignments.ToSortedArray(false, @CompareAlignment);
+        return true;
       }
     }
-    Alignments = alignments.ToSortedArray(false, @CompareAlignment);
+    return false;
   }
 }
 
