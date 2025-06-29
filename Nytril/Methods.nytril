@@ -1807,6 +1807,7 @@ readonly MethodsSummaryClass PaperSections.MethodsSection = new;
 class MethodsSummaryClass: ContentClass {
   Constructor {
     super.Constructor(Lang.Methods);
+    AddContent(PaperSections.CognateWordForms);
     AddContent(PaperSections.DataSummary);
     AddContent(PaperSections.ModelInference);
     AddContent(PaperSections.DataCuration);
@@ -1834,16 +1835,12 @@ class DataSummaryClass: ContentClass {
 
     style.AddTable(TableFigures.ManualAlignment, FigureOptions.Top | FigureOptions.Bottom);
 
-
-
     style.BodyPar {
       "The raw data set contains many cognate sets, but in this experiment only those with word-forms from ";
       data.WordCutoff == data.Taxa.Length ? "all " : "at least ";
       data.WordCutoff;
       " languages were used. In this dataset, there are "; data.UsedCognates.Length; " cognate sets, which are comprised of "; data.WordCount; " word-forms containing "; data.UniqueSegments.Length; " unique segments drawn from "; data.UsedConcepts.Length; " concepts. ";
     };
-
-
 
     style.BodyPar {
       "Manual alignments of cognate word-forms serve as the starting point for the MCMC sampling procedure (described above), so our analysis does not condition on any particular alignment of segments being correct. ";
@@ -2101,9 +2098,15 @@ class ConclusionClass: ContentClass {
 
   override GetBody(ContentStyleClass style, title) = Block {
     style.TitlePar(title) {
-      "Here we sum it all up.";
+      "Here we sum it all up. ";
 
-      "The code and data for this study are available here.";
+      "The code and data for this study are available ";
+      Span {
+        TipAction: new URLClass("https://github.com/jhuelsenbeck/Linguistomics");
+        TextColor: Colors.Blue; 
+        "here";
+      };
+      DotSpace;
     }
   };
 }
