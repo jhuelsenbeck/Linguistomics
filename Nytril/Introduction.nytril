@@ -54,7 +54,7 @@ class RootMeaningTraitsClass: ContentClass {
   override GetBody(ContentStyleClass style, title) = Block {
     style.TitlePar(title) {
       "Linguistic phylogenies are typically inferred from abstract cognate relationships";
-          Citation {Bouckaert2012; Bowern2012; Chang2015; Gray2000; Holden2002; Ringe2002; Gray2003}; DotSpace;
+          Citation {Gray2000; Holden2002; Ringe2002; Gray2003; Bouckaert2012; Bowern2012; Chang2015}; DotSpace;
       "Cognates are linguistic units (e.g., segments, morphemes, words) that share a common ancestor. An example from the lexical domain is Spanish "; textit{"mano"}; " "; style.SQuoteComma{"hand"};
           "French "; textit{"main"}; ", and Italian "; textit{"mano"}; ", which all descend from Latin "; textit{"manum"}; ". ";
       "At least four types of lexical cognacy have been identified in the literature, but studies of linguistic phylogenetics rely overwhelming on one, root-meaning traits";
@@ -216,21 +216,78 @@ class DataSectionClass: ContentClass {
 
   override GetBody(ContentStyleClass style, title) = Block {
     style.TitlePar(title) {
-      "The initial data were downloaded from Wiktionary"; Citation{Wiktionary};
-      ", which was then manually checked for accuracy and augmented. For each concept, lexical items descending from a common ancestor are grouped together into cognate sets. There are often multiple sets of cognates for a given concept among our sample of languages. Selection of lexical items was oriented toward Latin in order to maximize the number of cognate word-forms in each set. ";
+      "This study is based on a dataset of cognate word-forms from a sample of eight Romance languages and Latin. ";
+
+      "The word-forms are cognate in the traditional sense in that they refer to word-forms that descend from a common ancestor"; Citation {new CitationClass(Chang2015, 201..201)}; DotSpace;
+
+      "In contrast to root-meaning traits (such as the one illustrated in ";
+         style.TableReference(TableFigures.CognateCoding); "), meaning is irrelevant, since shared segmental ancestry alone determines cognacy. ";
+
+      "For instance, the Latin adjective "; textit{"gravis"};  " means "; style.SQuoteComma{"heavy"}; "but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"};
+
+      "Despite this semantic difference, they are assigned to the same cognate set because they are segmentally homologous. ";
+
     };
 
     style.BodyPar {
-      "In contrast to root-meaning traits (such as the one illustrated in ";
-         style.TableReference(TableFigures.CognateCoding); "), meaning is irrelevant: ";
-         "shared segmental ancestry alone determines cognacy. The word-forms themselves can be represented as either phonetic or phonemic sequences. ";
-      "Here we use phonemic representations. ";
+        "The cognate word-forms were selected as follows"; DotSpace;
+
+        "On the basis of the Swadesh 207 list of concepts, we identified basic vocabulary items in Latin"; DotSpace;
+
+        "For each Latin lexical item, we then collected its cognates in our eight Romance languages from etymological dictionaries"; DotSpace;
+
+        "Forms thought to be due to borrowing either from Latin or from another Romance language were excluded"; DotSpace;
+
+        "The orientation toward Latin is purely practical"; DotSpace;
+
+        "For this study, we only used complete cognate sets and by starting from Latin we maximized the chances of finding cognates in each of the Romance languages in our sample"; DotSpace;
+
+        "PUT NUMBERS RE COGNATE SETS FROM BELOW RIGHT HERE"; DotSpace;
+      };
+
+         style.BodyPar {
+
+         "The word-forms can be represented as either phonetic or phonemic sequences. ";
+
+         "We use phonemic representations for two reasons. ";
+
+         "First, phonetic data is harder to come by, especially with a corpus language such as Latin. ";
+
+         "Second, the current implementation of the model has no way to take into account phonetic variation in a single word-form"; DotSpace;
+
+         "Consequently, use of phonetic word-forms would have required selecting a single representative"; DotSpace;
+
+         "The representation of word-forms is strictly segmental"; DotSpace;
+
+         "No attempt was made to incorporate suprasegemental features such as stress"; DotSpace;
+
+         "The word-forms are represented in the International Phonetic Alphabet (IPA). ";
+         };
+
+
+    style.BodyPar {
+        "The word-forms in each cognate set are manually aligned, an example of which is provided in "; style.TableReference(TableFigures.ManualAlignment);
+
+        " for the concept "; TableFigures.ManualAlignment.WordDisplay(style);  "Dashes ("; style.SQuote {"-"} ") denote the absence of a homologous segment present in other word-forms. The Latin form "; TextIpa{"kʷ-id"}; " begins with a voiceless labiovelar stop whose secondary articulation is lost in all of the Romance languages in our sample"; DotSpace;
+
+        "The "; TextIpa{"i"}; " develops into "; TextIpa{"wa"}; " in French and Walloon. To accommodate the emergence of "; TextIpa{"w"}; ", there is an empty segmental slot before the vowel in all other languages"; DotSpace;
+
+        "As described below in Section 3, the manual alignments of cognate word-forms serve as the starting point for the MCMC sampling procedure, ";
+
+        "so our analysis does not condition on any particular alignment of segments. ";
     };
+
 
     style.AddFigure(Figures.LanguageDistribution, FigureOptions.Top | FigureOptions.Bottom | FigureOptions.Full, 60%);
 
     style.BodyPar {
-      "Latin is a highly synthetic language, with many word-forms for each verb, noun, and adjective. In this study, only a single word-form was analyzed for each lexical item. Infinitive forms are used for verbs. For nouns, singular forms in either the accusative or (rarely) the nominative case are used, since these are the two case forms ancestral to Romance descendants. The selection of word-forms is not without consequences, since it can impact the estimated transition rates. For instance, most masculine singular nominative adjectives in Latin end in "; TextIpa{"-us"}; DotSpace; "By contrast, feminine singular nominative adjectives end in "; TextIpa{"-a"}; DotSpace; "Use of the feminine forms would increase the number of transitions originating in this vowel. ";
+      "Latin is a highly synthetic language, with many word-forms for each verb, noun, and adjective. ";
+      "In this study, only a single word-form was analyzed for each lexical item. ";
+      " Infinitive forms are used for verbs. ";
+      "For nouns, singular forms in either the accusative or (rarely) the nominative case are used, since these are the two case forms ancestral to Romance descendants. ";
+      "The selection of word-forms is not without consequences, since it can impact the estimated transition rates. For instance, most masculine singular nominative adjectives in Latin end in "; TextIpa{"-us"}; DotSpace;
+      "By contrast, feminine singular nominative adjectives end in "; TextIpa{"-a"}; DotSpace;
+      "Use of the feminine forms would increase the number of transitions originating in this vowel. ";
     };
 
     style.BodyPar{
@@ -246,16 +303,7 @@ class DataSectionClass: ContentClass {
       "For instance, the Dictionnaire Étymologique Roman (DÉRom) reconstructs a subset of the Proto-Romance lexicon from a dataset similar in spirit to ours. ";
     };
 
-    style.BodyPar {
-      "As noted above, membership in a cognate set depends solely on shared descent: meaning is irrelevant. ";
-      "For instance, the Latin adjective "; textit{"gravis"};  " means "; style.SQuoteComma{"heavy"}; "but its French descendant "; textit{"grave"}; " means "; style.SQuoteEnd{"serious"};
-      "Despite this semantic difference, they are assigned to the same cognate set because they are segmentally homologous. ";
-      "Phonemic representations are used in lieu of phonetic representations for two reasons. ";
-      "First, phonetic data is harder to come by, especially with corpus languages such as Latin. ";
-      "Second, there is considerably more variation at the phonetic level that would have to have been taken into account. ";
-      "Suprasegmental features such as stress are not represented in the data. ";
-      "Word-forms are represented in the International Phonetic Alphabet (IPA). ";
-    };
+
 
   };
 }
