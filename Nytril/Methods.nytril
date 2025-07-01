@@ -1273,18 +1273,6 @@ class ResultsSectionClass: ContentClass {
     AddContent(PaperSections.WordTransformation);
     AddContent(PaperSections.WordSegmentRelationships);
  }
-
-  override GetBody(ContentStyleClass style, title) = Block {
-    style.TitlePar(title) {
-      "Our results are based on a data set of ";
-      MainResults.Data.UsedCognates.Length;
-      " cognate classes comprising ";
-      MainResults.Data.WordCount;
-      " individual words from "; Enumerators.Cardinal(MainResults.Data.LanguageSet.Length-1);
-      " Romance languages and Classical Latin. The geographic distribution of the latter is shown in ";
-      style.FigureReference(Figures.LanguageDistribution); DotSpace;
-    };
-  };
 }
 
 //======================================================================
@@ -1808,43 +1796,13 @@ class MethodsSummaryClass: ContentClass {
   Constructor {
     super.Constructor(Lang.Methods);
     AddContent(PaperSections.CognateWordForms);
-    AddContent(PaperSections.DataSummary);
     AddContent(PaperSections.ModelInference);
-    AddContent(PaperSections.DataCuration);
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
     style.TitlePar(title) {
       "A detailed description of the model and analysis can be found in the Supplemental Material. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
-    };
-  };
-}
-
-//======================================================================
-
-readonly DataSummaryClass PaperSections.DataSummary = new;
-
-class DataSummaryClass: ContentClass {
-  Constructor {
-    super.Constructor(Lang.Data);
-  }
-
-  override GetBody(ContentStyleClass style, title) = Block {
-    var data = MainResults.Data;
-
-    style.AddTable(TableFigures.ManualAlignment, FigureOptions.Top | FigureOptions.Bottom);
-
-    style.BodyPar {
-      "The raw data set contains many cognate sets, but in this experiment only those with word-forms from ";
-      data.WordCutoff == data.Taxa.Length ? "all " : "at least ";
-      data.WordCutoff;
-      " languages were used. In this dataset, there are "; data.UsedCognates.Length; " cognate sets, which are comprised of "; data.WordCount; " word-forms containing "; data.UniqueSegments.Length; " unique segments drawn from "; data.UsedConcepts.Length; " concepts. ";
-    };
-
-    style.BodyPar {
-      "Manual alignments of cognate word-forms serve as the starting point for the MCMC sampling procedure (described above), so our analysis does not condition on any particular alignment of segments being correct. ";
-      style.TableReference(TableFigures.ManualAlignment); " provides an illustrative example of the manual alignment for the concept "; TableFigures.ManualAlignment.WordDisplay(style);  "Dashes ("; style.SQuote {"-"} ") denote the absence of a homologous segment present in other word-forms. The Latin form "; TextIpa{"kʷ-id"}; " begins with a voiceless labiovelar stop whose secondary articulation is lost in all of the languages in our dataset. The stressed "; TextIpa{"i"}; " in Latin develops into "; TextIpa{"wa"}; " in French and Walloon. To accommodate the emergence of "; TextIpa{"w"}; ", there is an empty segmental slot before the vowel in all other languages.  ";
     };
   };
 }
