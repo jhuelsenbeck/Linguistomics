@@ -212,25 +212,12 @@ readonly DataSectionClass PaperSections.Data = new;
 class DataSectionClass: ContentClass {
   Constructor {
     super.Constructor("Data");
-    AddContent(PaperSections.DataCuration);
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
-    var data = MainResults.Data;
-
     style.TitlePar(title) {
       "The initial data were downloaded from Wiktionary"; Citation{Wiktionary};
       ", which was then manually checked for accuracy and augmented. For each concept, lexical items descending from a common ancestor are grouped together into cognate sets. There are often multiple sets of cognates for a given concept among our sample of languages. Selection of lexical items was oriented toward Latin in order to maximize the number of cognate word-forms in each set. ";
-    };
-
-    style.BodyPar {
-      "Our results are based on a data set of ";
-      data.UsedCognates.Length;
-      " cognate classes comprising ";
-      data.WordCount;
-      " individual words from "; Enumerators.Cardinal(data.LanguageSet.Length-1);
-      " Romance languages and Classical Latin. The geographic distribution of the latter is shown in ";
-      style.FigureReference(Figures.LanguageDistribution); DotSpace;
     };
 
     style.BodyPar {
@@ -268,20 +255,6 @@ class DataSectionClass: ContentClass {
       "Second, there is considerably more variation at the phonetic level that would have to have been taken into account. ";
       "Suprasegmental features such as stress are not represented in the data. ";
       "Word-forms are represented in the International Phonetic Alphabet (IPA). ";
-    };
-
-    style.AddTable(TableFigures.ManualAlignment, FigureOptions.Top | FigureOptions.Bottom);
-
-    style.BodyPar {
-      "The raw data set contains many cognate sets, but in this experiment only those with word-forms from ";
-      data.WordCutoff == data.Taxa.Length ? "all " : "at least ";
-      data.WordCutoff;
-      " languages were used. In this dataset, there are "; data.UsedCognates.Length; " cognate sets, which are comprised of "; data.WordCount; " word-forms containing "; data.UniqueSegments.Length; " unique segments drawn from "; data.UsedConcepts.Length; " concepts. ";
-    };
-
-    style.BodyPar {
-      "Manual alignments of cognate word-forms serve as the starting point for the MCMC sampling procedure (described above), so our analysis does not condition on any particular alignment of segments being correct. ";
-      style.TableReference(TableFigures.ManualAlignment); " provides an illustrative example of the manual alignment for the concept "; TableFigures.ManualAlignment.WordDisplay(style);  "Dashes ("; style.SQuote {"-"} ") denote the absence of a homologous segment present in other word-forms. The Latin form "; TextIpa{"kʷ-id"}; " begins with a voiceless labiovelar stop whose secondary articulation is lost in all of the languages in our dataset. The stressed "; TextIpa{"i"}; " in Latin develops into "; TextIpa{"wa"}; " in French and Walloon. To accommodate the emergence of "; TextIpa{"w"}; ", there is an empty segmental slot before the vowel in all other languages.  ";
     };
 
   };
