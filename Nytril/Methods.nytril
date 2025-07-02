@@ -1808,9 +1808,7 @@ class MethodsSummaryClass: ContentClass {
   Constructor {
     super.Constructor(Lang.Methods);
     AddContent(PaperSections.CognateWordForms);
-    AddContent(PaperSections.DataSummary);
     AddContent(PaperSections.ModelInference);
-    AddContent(PaperSections.DataCuration);
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
@@ -1818,25 +1816,6 @@ class MethodsSummaryClass: ContentClass {
       "A detailed description of the model and analysis can be found in the Supplemental Material. ";
       "What follows is an outline, sufficient in detail to provide an understanding of the model and experiments performed in this study.";
     };
-  };
-}
-
-//======================================================================
-
-readonly DataSummaryClass PaperSections.DataSummary = new;
-
-class DataSummaryClass: ContentClass {
-  Constructor {
-    super.Constructor(Lang.Data);
-  }
-
-  override GetBody(ContentStyleClass style, title) = Block {
-    var data = MainResults.Data;
-
-    style.AddTable(TableFigures.ManualAlignment, FigureOptions.Top | FigureOptions.Bottom);
-
-
-
   };
 }
 
@@ -2037,49 +2016,6 @@ class SegmentEncodingClass: ContentClass {
 
 //======================================================================
 
-readonly DataCurationClass PaperSections.DataCuration = new;
-
-class DataCurationClass: ContentClass {
-  Constructor {
-    super.Constructor("Data Curation and Analysis");
-  }
-
-  override GetBody(ContentStyleClass style, title) = Block {
-    var data = MainResults.Data;
-
-    style.TitlePar(title) {
-      "Our analysis is coordinated using a program written in the Nytril programming language"; Citation {Nytrilprogram}; DotSpace;
-      "We created an automated framework for the experiment that comprises a reusable IPA library, word data, ";
-      "data quality checks, typeset output and input files for the MCMC software (written in C++). ";
-    };
-
-    style.AddFigure(Figures.SegmentEncoding, FigureOptions.Top | FigureOptions.Bottom, 50%);
-
-    style.BodyPar {
-      "Word-forms from the "; data.Taxa.Length; " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
-      style.FigureReference(Figures.ConceptEncoding); " shows an example of the raw data for the concept "; style.SQuoteEnd {Figures.ConceptEncoding.Concept.Name};
-      "A challenge for programming in linguistics is that the IPA representation of words is expressed in Unicode (UCS), not ASCII or ANSI. ";
-      "This requires care with file formats, text encodings and diacritic compositional form. ";
-      "Furthermore, each IPA segment string can comprise several UCS code-points, so that the mapping between string characters and segments is not one-to-one. ";
-      style.FigureReference(Figures.SegmentEncoding); " shows an example of a more complex encoding where the numbers in grey are the hexadecimal UCS code points for the letters and diacritics. ";
-      "Since our analysis requires each word to be separated into segments, a parser converts word strings into arrays of segment objects that facilitate the manipulation of segments at a high level. ";
-      "A reusable library of such objects endows each segment with linguistic features that can be used for analysis. ";
-      "After the input step, all steps are coded using properties such as "; style.SQuote{"vowel"}; " and "; style.SQuote{"nasal"}; ", rather than working with strings of characters directly.";
-    };
-
-    style.BodyPar {
-      var config = MainResults.MainRun.Run.Config;
-      "After the raw input is parsed, the control program aggregates and partitions the words and builds the data files for the MCMC program to perform Bayesian phylogenetic analysis under the TKF91 model. ";
-      "The MCMC analysis runs for "; Span {config.Generations; TextGroup: true}; " cycles and repeats to check for convergence. ";
-      "Samples taken during the first "; Span {config.PreBurn; TextGroup: true}; " cycles of the chain are discarded as burn-in. ";
-      "When the analysis is complete, the results are read back into the control program. ";
-      "The resulting tables, trees and graphical figures are automatically generated from the MCMC output and combined with narrative elements created by the authors to make the final paper and supplemental materials. ";
-    }
-  };
-}
-
-//======================================================================
-
 readonly ConclusionClass PaperSections.Conclusion = new;
 
 class ConclusionClass: ContentClass {
@@ -2091,11 +2027,11 @@ class ConclusionClass: ContentClass {
     style.TitlePar(title) {
       "Here we sum it all up. ";
 
-      "The code and data for this study are available ";
+      "The code and data for this study are available on ";
       Span {
         TipAction: new URLClass("https://github.com/jhuelsenbeck/Linguistomics");
         TextColor: Colors.Blue;
-        "here";
+        "GitHub";
       };
       DotSpace;
     }
