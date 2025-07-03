@@ -215,6 +215,36 @@ class DataSectionClass: ContentClass {
     super.Constructor("Data");
   }
 
+  ConceptList(DataSetClass data, ContentStyleClass style) = style.TextList {
+    TextCase: AllLower;
+    foreach (var concept in data.UsedConcepts.ToSortedArray()) {
+      Span {
+        string n = concept.Name;
+        switch (n) {
+          case "ToTurnIntransitive":
+            "turn";
+            break;
+
+          case "YouPlural":
+            "you (pl.)";
+            break;
+
+          case "YouSingular":
+            "you (sg.)";
+            break;
+
+          default:
+            if (n.StartsWith("To") and n.Length > 2 and n[2].IsUpper())
+              n[2..];
+            else
+              n;
+            break;
+        }
+        Action: new ActionClass(Actions.ToSource, concept.Attribute.Value);
+      };
+    }
+  };
+
   override GetBody(ContentStyleClass style, title) = Block {
     var data = MainResults.Data;
 
@@ -257,7 +287,7 @@ class DataSectionClass: ContentClass {
 
       " unique segments drawn from the following "; data.UsedConcepts.Length; " concepts: ";
 
-      style.TextList {(each data.UsedConcepts.ToSortedArray()).GetTitle}; DotSpace;
+      ConceptList(data, style); DotSpace;
     };
 
     style.BodyPar {

@@ -1269,7 +1269,6 @@ class ResultsSectionClass: ContentClass {
   Constructor {
     super.Constructor("Results");
     AddContent(PaperSections.PhylogenyResults);
-    AddContent(PaperSections.SegmentModels);
     AddContent(PaperSections.WordTransformation);
     AddContent(PaperSections.WordSegmentRelationships);
  }
@@ -1409,10 +1408,8 @@ class SegmentModelsClass: ContentClass {
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
-    var data = MainResults.Data;
-
-    var rule = data.Rule;
-
+    var data     = MainResults.Data;
+    var rule     = data.Rule;
     var segments = data.UniqueSegments.Length - 1;
     var rp       = rule.Filters.Length;
 
@@ -1434,6 +1431,24 @@ class SegmentModelsClass: ContentClass {
       "The "; NaturalModelName; ", "; NaturalClassModel; ", has "; rp*(rp-1)/2 + rp; " additional segmental class rate parameters: ";
       Equation {segments; Tex.Plus; (rp*(rp-1)/2 + rp); Tex.Equals; segments + rp*(rp-1)/2 + rp}; " free parameters.";
     };
+  };
+}
+
+//======================================================================
+
+readonly ModelComparisonClass PaperSections.ModelComparison = new;
+
+class ModelComparisonClass: ContentClass {
+  Constructor {
+    super.Constructor("Model Comparison");
+  }
+
+  SelfArrow(text) = Span {text; Tex.rightarrow; text};
+
+  override GetBody(ContentStyleClass style, title) = Block {
+    var data = MainResults.Data;
+    var rule = data.Rule;
+    var rp   = rule.Filters.Length;
 
     style.BodyPar {
       "We compared the fit of the models to the data using the Bayes factor. ";
@@ -1549,10 +1564,8 @@ class SegmentModelsClass: ContentClass {
       " are the highest as are the estimated equilibrium frequencies for those classes. ";
       "The estimated equilibrium frequency generally tracks the frequency of the segments in the data. ";
     };
-  };
-
-  SelfArrow(text) = Span {text; Tex.rightarrow; text};
- }
+ };
+}
 
 //======================================================================
 
@@ -1810,6 +1823,8 @@ class MethodsSummaryClass: ContentClass {
     super.Constructor(Lang.Methods);
     AddContent(PaperSections.ModelInference);
     AddContent(PaperSections.CognateWordForms);
+    AddContent(PaperSections.SegmentModels);
+    AddContent(PaperSections.ModelComparison);
     AddContent(PaperSections.DataCuration);
   }
 
