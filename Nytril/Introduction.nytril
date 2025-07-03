@@ -52,6 +52,8 @@ readonly RootMeaningTraitsClass PaperSections.RootMeaningTraits = new;
 class RootMeaningTraitsClass: ContentClass {
 
   override GetBody(ContentStyleClass style, title) = Block {
+    var data = MainResults.Data;
+
     style.TitlePar(title) {
       "Linguistic phylogenies are typically inferred from abstract cognate relationships";
           Citation {Gray2000; Holden2002; Ringe2002; Gray2003; Bouckaert2012; Bowern2012; Chang2015}; DotSpace;
@@ -141,12 +143,14 @@ class RootMeaningTraitsClass: ContentClass {
      "Although the TKF91 model can be used to infer phylogenies, we focus in this study on its ability to estimate rates of changes among segments, as it is of central importance to both linguistic theory and linguistic typology. ";
      "There are a variety of methods for estimating the diachronic stability of segments ";
      Citation {Wichmann2009; Moran2018; Moran2021};
-      ", but none is phylogenetically based or uses models of segmental transitions. ";
+     ", but none is phylogenetically based or uses models of segmental transitions. ";
      "Indeed, one of the strengths of our approach is that it can take advantage of a rich set of segment-transition models, which are not limited by considerations of the labeling assigned to the states. ";
-      "We illustrate the power of the TKF91 model with a sample of eight Romance languages and Latin, on the basis of which three robust properties of sound change. ";
-      "First, vowels are for the most part less stable over time than consonants. " ;
-      "Second, a model of sound change in which parameters are shared among natural classes of phonemes outperforms simpler models. " ;
-      "Finally, the equilibrium frequencies, which represent the long-run frequencies of segmental classes, are highest among short vowels, followed by stops, nasal consonants and liquids." ;
+     "We illustrate the power of the TKF91 model with a sample of ";
+     Enumerators.Cardinal(data.Taxa.Length-1);
+     " Romance languages and Latin, on the basis of which three robust properties of sound change. ";
+     "First, vowels are for the most part less stable over time than consonants. " ;
+     "Second, a model of sound change in which parameters are shared among natural classes of phonemes outperforms simpler models. " ;
+     "Finally, the equilibrium frequencies, which represent the long-run frequencies of segmental classes, are highest among short vowels, followed by stops, nasal consonants and liquids." ;
     };
 
     style.BodyPar {
@@ -246,10 +250,11 @@ class DataSectionClass: ContentClass {
   };
 
   override GetBody(ContentStyleClass style, title) = Block {
-    var data = MainResults.Data;
+    var data      = MainResults.Data;
+    var langcount = Enumerators.Cardinal(data.Taxa.Length-1);
 
     style.TitlePar(title) {
-      "This study is based on a dataset of cognate word-forms from a sample of eight Romance languages and Latin. ";
+      "This study is based on a dataset of cognate word-forms from a sample of "; langcount; " Romance languages and Latin. ";
 
       "The specific Romance languages and their geographic distribution are presented in ";
       style.FigureReference(Figures.LanguageDistribution); DotSpace;
@@ -269,7 +274,7 @@ class DataSectionClass: ContentClass {
 
       "On the basis of the Swadesh 207 list of concepts, we identified basic vocabulary items in Latin. ";
 
-      "For each Latin lexical item, we then collected its cognates in our eight Romance languages from etymological dictionaries. ";
+      "For each Latin lexical item, we then collected its cognates in our "; langcount; " Romance languages from etymological dictionaries. ";
 
       "Forms thought to be due to borrowing either from Latin or from another Romance language were excluded. ";
 
@@ -369,7 +374,7 @@ class DataCurationClass: ContentClass {
     style.AddFigure(Figures.SegmentEncoding, FigureOptions.Top | FigureOptions.Bottom, 50%);
 
     style.BodyPar {
-      "Word-forms from the "; data.Taxa.Length; " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
+      "Word-forms from the "; Enumerators.Cardinal(data.Taxa.Length); " languages in our study, coded in standard Unicode IPA, are organized into classes by concept and then by cognate class. ";
       style.FigureReference(Figures.ConceptEncoding); " shows an example of the raw data for the concept "; style.SQuoteEnd {Figures.ConceptEncoding.Concept.Name};
       "A challenge for programming in linguistics is that the IPA representation of words is expressed in Unicode (UCS), not ASCII or ANSI. ";
       "This requires care with file formats, text encodings and diacritic compositional form. ";
