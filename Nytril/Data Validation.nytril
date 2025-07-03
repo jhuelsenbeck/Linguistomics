@@ -82,8 +82,8 @@ class DiagnosticsViewClass: DocumentClass {
   };
 
   override GetDocument = Document(new(0.5 inches, 0.75 inches, 0.5 inches, 0.5 inches)) {
-    if (not System.IsPublishing)
-      ShowQuery;
+//    if (not System.IsPublishing)
+//      ShowQuery;
 
     TextHeight: 9 pts;
 
@@ -149,8 +149,9 @@ class ConceptGroupsClass: DataContentClass {
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
+    var concepts = Data.UsedConcepts.ToSortedArray();
     WordGroups[] groups = WordGroups.ValueArray[1..];
-    Table(PaperStyle.TableBorder, null, [0.25 inches] + [1 inch] * (2+groups.Length)) {
+    Table(PaperStyle.TableBorder, null, [ColumnClass.Fit(2 inches)]) {
       Row {
         PaperStyle.HeaderCell(style);
         PaperStyle.HeaderCell(style) {
@@ -165,9 +166,9 @@ class ConceptGroupsClass: DataContentClass {
           };
         }
       };
-      foreach (var concept in Data.UsedConcepts) {
+      foreach (var concept in concepts) {
         PaperStyle.RowBar(each0) {
-          each0;
+          each1;
           concept.GetTitle;
           concept.WordType.Name;
           foreach (var g in groups) {
