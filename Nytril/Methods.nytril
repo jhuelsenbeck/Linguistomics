@@ -1268,8 +1268,8 @@ readonly ResultsSectionClass PaperSections.Results = new;
 class ResultsSectionClass: ContentClass {
   Constructor {
     super.Constructor("Results");
-    AddContent(PaperSections.ModelComparison);
     AddContent(PaperSections.PhylogenyResults);
+    AddContent(PaperSections.ModelComparison);
     AddContent(PaperSections.WordTransformation);
     AddContent(PaperSections.WordSegmentRelationships);
  }
@@ -1424,7 +1424,7 @@ class SegmentModelsClass: ContentClass {
       Citation {Felsenstein1981};
       " in which the rate of change between a pair of segments is proportional to the equilibrium frequency of the destination segment; ";
       "and "; NaturalClassModel; ", the "; NaturalModelName; ", in which segments that share articulatory properties are grouped together with different rates of change within and between these segmental classes. ";
-      
+
     };
 
     style.BodyPar {
@@ -1692,8 +1692,9 @@ class DiscussionSectionClass: ContentClass {
   Constructor {
     super.Constructor("Discussion");
     AddContent(PaperSections.OtherApproaches);
-    AddContent(PaperSections.Limitations);
-    AddContent(PaperSections.Advantages);
+    AddContent(PaperSections.SegmentalSampling);
+    //AddContent(PaperSections.Limitations);
+    //AddContent(PaperSections.Advantages);
   }
 }
 
@@ -1754,6 +1755,30 @@ class OtherApproachesClass: ContentClass {
 
 //======================================================================
 
+readonly SegmentalSamplingClass PaperSections.SegmentalSampling = new;
+
+class SegmentalSamplingClass: ContentClass {
+  Constructor {
+    super.Constructor("Segmental sampling");
+  }
+
+   override GetBody(ContentStyleClass style, title) = Block {
+    style.TitlePar(title) {
+      "Under our framework a new issue in linguistic phylogenetics emerges, segmental sampling"; Citation {References.Dockum2019}; DotSpace;
+      "Certain segmental transitions can play a crucial role in topological inference, but under a sampling scheme such as ours, in which selection of concepts is guided by a Swadesh list, ";
+      "there is no guarantee that the necessary segmental correspondences will be sampled. ";
+      "There is the further question of the frequency distribution of segments in the dataset. ";
+      "Some segments will be sampled more often than others simply because they are more frequent in a language. ";
+      "The sampling can thus influence estimates of equilibrium frequencies and transition rates. ";
+      "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will likely have to be modified under our framework to take into account issues of segmental distribution. ";
+    };
+  };
+
+ }
+
+
+//======================================================================
+
 readonly LimitationsClass PaperSections.Limitations = new;
 
 class LimitationsClass: ContentClass {
@@ -1772,16 +1797,6 @@ class LimitationsClass: ContentClass {
       "A second limitation is that the context in which a segmental transition takes place plays no role in the estimation of transition rates. ";
       "It is well known that the evolution of phonemes can be sensitive to neighboring sounds. ";
       "Finally, there is currently no straightforward way to incorporate supersegmental features such as stress, although it plays a crucial role in the phonological history of the Romance languages. ";
-    };
-
-    style.BodyPar {
-      "Under our framework a new issue in linguistic phylogenetics emerges, segmental sampling"; Citation {References.Dockum2019}; DotSpace;
-      "Certain segmental transitions can play a crucial role in topological inference, but under a sampling scheme such as ours, in which selection of concepts is guided by a Swadesh list, ";
-      "there is no guarantee that the necessary segmental correspondences will be sampled. ";
-      "There is the further question of the frequency distribution of segments in the dataset. ";
-      "Some segments will be sampled more often than others simply because they are more frequent in a language. ";
-      "The sampling can thus influence estimates of equilibrium frequencies and transition rates. ";
-      "The principles that guide the creation of Swadesh sampling schemes (namely low rates of borrowing and lexical change) will likely have to be modified under our framework to take into account issues of segmental distribution. ";
     };
   };
 }
@@ -2045,6 +2060,8 @@ readonly ConclusionClass PaperSections.Conclusion = new;
 class ConclusionClass: ContentClass {
   Constructor {
     super.Constructor("Conclusion");
+    AddContent(PaperSections.Limitations);
+    AddContent(PaperSections.Advantages);
   }
 
   override GetBody(ContentStyleClass style, title) = Block {
