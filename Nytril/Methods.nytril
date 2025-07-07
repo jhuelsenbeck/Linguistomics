@@ -827,8 +827,8 @@ class ConsensusTreeClass: ContentClass {
 
 //======================================================================
 
-readonly SegmentOccuranceCaption = Span {
-  var l0 = MainResults.Data.Taxa[0].Language;
+SegmentOccuranceCaption(DataSetClass data) = Span {
+  var l0 = data.Taxa[0].Language;
 
   "Comparison of occurance rates of segments in each language. Segments are sorted by the rates in ";
   l0;
@@ -836,42 +836,43 @@ readonly SegmentOccuranceCaption = Span {
   "Languages are ordered by their Euclidian distance from "; l0; " indicated by the red line.";
 };
 
-readonly SegmentOccuranceRatesClass Figures.SegmentOccuranceRates = new;
+readonly SegmentOccuranceRatesClass Figures.SegmentOccuranceRates = new(MainResults.Data);
 
-class SegmentOccuranceRatesClass: ContentClass {
-  Constructor {
-    super.Constructor("Segment Occurance Rates");
+class SegmentOccuranceRatesClass: DataContentClass {
+  Constructor(DataSetClass data) {
+    super.Constructor(data, "Segment Occurance Rates");
+    Data = data;
   }
 
-  override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption;
+  override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption(Data);
 
-  override GetBody(ContentStyleClass style, title) = new SegmentFrequencyClass(MainResults.Data, false).ShowChart(style);
+  override GetBody(ContentStyleClass style, title) = new SegmentFrequencyClass(Data, false).ShowChart(style);
 }
 
 //======================================================================
 
-readonly SegmentOccuranceGroupedClass Figures.SegmentOccuranceGrouped = new;
+readonly SegmentOccuranceGroupedClass Figures.SegmentOccuranceGrouped = new(MainResults.Data);
 
-class SegmentOccuranceGroupedClass: ContentClass {
-  Constructor {
-    super.Constructor("Segment Occurance Rates (by partition)");
+class SegmentOccuranceGroupedClass: DataContentClass {
+  Constructor(DataSetClass data) {
+    super.Constructor(data, "Segment Occurance Rates (by partition)");
   }
 
-  override GetBody(ContentStyleClass style, title) = new SegmentFrequencyClass(MainResults.Data, true).ShowChart(style);
+  override GetBody(ContentStyleClass style, title) = new SegmentFrequencyClass(Data, true).ShowChart(style);
 }
 
 //======================================================================
 
-readonly PartitionFrequenciesClass Figures.PartitionFrequencies = new;
+readonly PartitionFrequenciesClass Figures.PartitionFrequencies = new(MainResults.Data);
 
-class PartitionFrequenciesClass: ContentClass {
-  Constructor {
-    super.Constructor("Partition Occurance Rates");
+class PartitionFrequenciesClass: DataContentClass {
+  Constructor(DataSetClass data) {
+    super.Constructor(data, "Partition Occurance Rates");
   }
 
-  override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption;
+  override GetCaption(ContentStyleClass style) = SegmentOccuranceCaption(Data);
 
-  override GetBody(ContentStyleClass style, title) = new PartitionFrequencyClass(MainResults.Data).ShowChart(style);
+  override GetBody(ContentStyleClass style, title) = new PartitionFrequencyClass(Data).ShowChart(style);
 }
 
 //======================================================================
@@ -1865,7 +1866,11 @@ class SegmentalSamplingClass: ContentClass {
 
       "For instance, Romanian merges Proto-Romance */ɔ/ and */o/ to /o/ and */ʊ/ and */u/ to /u/ (in terms of classical Latin, it neutralizes vowel length distinctions)"; DotSpace;
 
+<<<<<<< HEAD
       "By contrast, Italo-Western Proto-Romance (i.e., the common ancestor of all other languages in our sample) merges */ʊ/ and */o/ to /o/ (in terms of classical Latin, it merged short <u> and long <o>)"; DotSpace;
+=======
+      "There is the further question of the frequency distribution of segments in each of the languages in the dataset, which are presented in "; style.FigureReference(Figures.SegmentOccuranceRates);
+>>>>>>> 46a3fed73d3474f5883656df95da63a708d8244a
 
       "As a result, Latin "; textit{"buccam"}; Space; style.SQuote{"mouth"}; " and Romanian "; textit{"bucă"}; " preserve "; IPASegments.u; " against the " IPASegments.oh; " of, for instance, Italian "; textit{"bocca"}; DotSpace;
 
