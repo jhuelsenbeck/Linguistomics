@@ -295,9 +295,6 @@ class LanguageClass: FactClass {
       Bold;
       TextHeight: 14 pts;
       Name;
-      var r = FindFacts(ReferenceClass);
-      if (r is valid)
-        Citation {r};
     };
     Paragraph {
       ParAlignment: Justify;
@@ -1396,17 +1393,17 @@ abstract class FrequencyChartClass {
   abstract SegmentBar(RateDataClass rate, index, width, height);
   abstract OccurranceChart(SizeClass size);
 
-  LangCanvas(RateDataClass rate, width, height) = HBox(null, height, BorderB(0.25 pts)) {
+  LangCanvas(RateDataClass rate, width, height) = HBox(null, null, BorderB(0.25 pts)) {
     VAlign: Bottom;
-    SegmentBar(rate, each SortedIndexes, width, ExtentHeight);
+    SegmentBar(rate, each SortedIndexes, width, height - 0.25 pts);
   };
 
-  ShowChart(ContentStyleClass style) = HBox {
-    VAlign: Center;
-    Rule.ShowLegend(style, 10 pts, new EdgeClass(0.25 pts, 5, 80%)) {
-      Margin: PadR(12 pts);
+  ShowChart(ContentStyleClass style) = VBox {
+    HAlign: Center;
+    OccurranceChart(new(ExtentWidth, Math.Min(5 inches, ExtentHeight)));
+    Rule.ShowHLegend(style, 8 pts, null) {
+      Margin: PadTB(8 pts);
     };
-    OccurranceChart(new(ExtentWidth - 2 inches, ExtentHeight));
   };
 }
 
@@ -1453,9 +1450,11 @@ class SegmentFrequencyClass: FrequencyChartClass {
     return Canvas(width-1, height * f) {
       Margin: PadR(1);
       var s = Segments[index];
-      Background: s.Partition.Color;
+      if (f > 0)
+        Background: s.Partition.Color;
       TipAction: new SegmentActionClass(rate, s, rate.Count[index], f);
     };
+    return null;  
   }
 
   SegmentLabel(SegPartClass[] segments, index, width, height) = HBox(width, height) {
@@ -1468,6 +1467,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     var cw     = size.Width - lw;
     var bw     = cw / Segments.Length;
     var bh     = bw * 1.5;
+    var sep    = 2;
     var h      = (size.Height - bh) / Taxa.Length;
     var r0     = SortedRates[0];
     var factor = 1.0 / MaxDistance;
@@ -1475,7 +1475,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
     TextHeight: 12 pts;
     VAlign: Bottom;
     foreach (var rate in SortedRates) {
-      Row {
+      Row(PadB(sep)) {
         Cell(PadR(3 pts)) {
           Frame(lw) {
             rate.Taxon.Language;
@@ -1488,7 +1488,7 @@ class SegmentFrequencyClass: FrequencyChartClass {
             };
           }
         };
-        LangCanvas(rate, bw, h);
+        LangCanvas(rate, bw, h-sep);
       };
     }
 

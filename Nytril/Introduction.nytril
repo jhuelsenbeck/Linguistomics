@@ -220,11 +220,14 @@ class DataSectionClass: ContentClass {
   }
 
   ConceptList(DataSetClass data, ContentStyleClass style) = style.TextList {
-    TextCase: AllLower;
     foreach (var concept in data.UsedConcepts.ToSortedArray()) {
       Span {
         string n = concept.Name;
         switch (n) {
+          case "I":
+            "I";
+          break;
+
           case "ToTurnIntransitive":
             "turn";
             break;
@@ -239,9 +242,8 @@ class DataSectionClass: ContentClass {
 
           default:
             if (n.StartsWith("To") and n.Length > 2 and n[2].IsUpper())
-              n[2..];
-            else
-              n;
+              n = n[2..];
+            string.ToLower(n);
             break;
         }
         Action: new ActionClass(Actions.ToSource, concept.Attribute.Value);
@@ -358,7 +360,7 @@ class DataSectionClass: ContentClass {
 
       "Two reasons are responsible for this reduced risk. ";
 
-      "First, our dataset focuses on basic vocabulary, where lexical borrowing is less common"; Citation {Tadmor2010}; Citation {new CitationClass(Carling2019, 2)}; DotSpace;
+      "First, our dataset focuses on basic vocabulary, where lexical borrowing is less common"; Citation {Tadmor2010; new CitationClass(Carling2019, 2)}; DotSpace;
 
       "Second, the phonological developments of the Romance languages are sufficiently well understood that borrowings and Latinisms can often be detected. ";
 
@@ -366,7 +368,7 @@ class DataSectionClass: ContentClass {
 
       "Romance cognates are therefore appropriate for our analysis for the same reason that scholars have been able to reconstruct Proto-Romance lexemes using the traditional comparative method. ";
 
-      "For instance, the "; textit{"Dictionnaire"}; textit{" Étymologique "}; textit{"Roman"}; Citation{Derom}; " reconstructs a subset of the Proto-Romance lexicon from a dataset similar in spirit to ours. ";
+      "For instance, the "; textit{"Dictionnaire Étymologique Roman"}; Citation{Derom}; " reconstructs a subset of the Proto-Romance lexicon from a dataset similar in spirit to ours. ";
     };
   };
 }
