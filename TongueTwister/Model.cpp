@@ -513,7 +513,7 @@ std::vector<Alignment*> Model::initializeAlignments(nlohmann::json& j) {
         {
         std::cout << "   * These words were not included because at least one " << std::endl;
         std::cout << "     taxon had no word segments: ";
-        int cnt = 28;
+        int cnt = 0;
         for (int i=0; i<rejectedWords.size(); i++)
             {
             std::cout << rejectedWords[i];
