@@ -1442,13 +1442,7 @@ class ModelComparisonClass: ContentClass {
     super.Constructor("Model Comparison");
   }
 
-  SelfArrow(text) = Span {text; Tex.rightarrow; text};
-
   override GetBody(ContentStyleClass style, title) = Block {
-    var data = MainResults.Data;
-    var rule = data.Rule;
-    var rp   = rule.Filters.Length;
-
     style.BodyPar {
       "We compared the fit of the three models described above in section 3 to the data using the Bayes factor. ";
       "The Bayes factor is the ratio of the marginal likelihoods, ";
@@ -1486,7 +1480,33 @@ class WordTransformationClass: ContentClass {
     super.Constructor("Segmental Change");
   }
 
+  SelfArrow(text) = Span {text; Tex.rightarrow; text};
+
   override GetBody(ContentStyleClass style, title) = Block {
+    var data       = MainResults.Data;
+    var rule       = data.Rule;
+    var rp         = rule.Filters.Length;
+    var partitions = data.Rule.Partitions;
+    var diagonal   = new ListClass<PartitionValueClass>(partitions.Length);
+    var stats       = MainResults.MainRun.NCQRates;
+    var numSegments = data.UniqueSegments.Length - 1;
+    var smallOnes   = new ListClass<PartitionClass>(partitions.Length);
+    var numClasses  = partitions.Length;
+    var cntSame     = 0;
+    var cntDiff     = 0;
+    foreach (var pi in partitions) {
+      diagonal.Add(new(pi, stats[pi.Index, pi.Index].Mean));
+      foreach (var pj in partitions) {
+        var val = stats[pi.Index, pj.Index].Mean * numSegments;
+        if (val >= 1.0) {
+          if (pi == pj)
+            cntSame++;
+          else
+            cntDiff++;
+        }
+      }
+    }
+
     style.TitlePar(title) {
       style.FigureReference(Figures.QRatesDiagonal); " presents the absolute values of the diagonal elements of the rate matrix of the continuous-time Markov model describing phonemic ";
           "change estimated under the "; NaturalModelName; DotSpace;
@@ -1512,10 +1532,9 @@ class WordTransformationClass: ContentClass {
       //"Although there are eight transitions in the graph, there are only two output segments, the mid-high front vowel /e/ and the high back vowel /u/. ";
     };
 
-        style.AddFigure(Figures.QRatesDiagonal, FigureOptions.Top | FigureOptions.Bottom | FigureOptions.Full);
+    style.AddFigure(Figures.QRatesDiagonal, FigureOptions.Top | FigureOptions.Bottom | FigureOptions.Full);
 
-
-        style.BodyPar {
+    style.BodyPar {
       style.FigureReference(Figures.EquilibriumCharts);
       " shows the estimated equilibrium frequencies of the "; NaturalModelName; " "; NaturalClassModel; DotSpace;
       "The equilibrium frequencies are used in two ways when calculating the probability of the observed data. ";
@@ -1531,34 +1550,11 @@ class WordTransformationClass: ContentClass {
       "The estimated equilibrium frequency generally tracks the frequency of the segments in the data. ";
     };
 
-    var partitions = data.Rule.Partitions;
-    var diagonal   = new ListClass<PartitionValueClass>(partitions.Length);
-
-
-        style.BodyPar {
+    style.BodyPar {
       style.FigureReference(Figures.RateChart);
       " shows the estimated rates of change between the "; rp; " groups of the "; NaturalModelName; DotSpace;
       "Rates of change are generally highest among segments in the same class. ";
       "The estimated rates of change from one segment to another under the "; NaturalModelName; " are ";
-
-      var stats       = MainResults.MainRun.NCQRates;
-      var numSegments = data.UniqueSegments.Length - 1;
-      var smallOnes   = new ListClass<PartitionClass>(partitions.Length);
-      var numClasses  = partitions.Length;
-      var cntSame     = 0;
-      var cntDiff     = 0;
-      foreach (var pi in partitions) {
-        diagonal.Add(new(pi, stats[pi.Index, pi.Index].Mean));
-        foreach (var pj in partitions) {
-          var val = stats[pi.Index, pj.Index].Mean * numSegments;
-          if (val >= 1.0) {
-            if (pi == pj)
-              cntSame++;
-            else
-              cntDiff++;
-          }
-        }
-      }
 
       style.TextList {
         TextDigits: 2;
