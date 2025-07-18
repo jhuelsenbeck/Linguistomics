@@ -1735,7 +1735,7 @@ class OtherApproachesClass: ContentClass {
       "The application of the TKF91 model to linguistic data is not as problematic as it is for DNA sequence data because words are much shorter than DNA sequences, with ";
       Equations.TypicalWordLength; DotSpace;
       "That said, one can obtain likelihood calculations that are linear in the number of tips if one assumes that the insertion rate is independent of the word length, instead of the overall insertion rate being ";
-      Equations.OverallInsertionRate; " as it is under the TKF91 model ";
+      Equations.OverallInsertionRate; " as it is under the TKF91 model";
       Citation{BouchardCote2013b}; DotSpace;
       "This model—the Poisson Indel Process (PIP)—could be applied to linguistic data sets that are composed of many more languages than we analyzed here. Since the alignments visited by the MCMC procedure are similar in length, the PIP model might be a sensible option for linguistic data. ";
     };
@@ -2073,8 +2073,6 @@ class ModelInferenceClass: ContentClass {
       "The rates of change between all pairs of states are contained in the rate matrix "; RateMatrix; ", which is governed by parameters ";  RateMatrixParams; DotSpace;
     };
 
-    style.AddTable(Figures.PartitionAssignments, FigureOptions.Top | FigureOptions.Bottom, 98%);
-
     style.BodyPar {
       "We perform estimation in a Bayesian framework, basing parameter estimates on the joint posterior probability distribution, ";
     };
@@ -2095,7 +2093,7 @@ class ModelInferenceClass: ContentClass {
       "Besides sampling the phylogenetic parameters of the model, the chain also samples segmental alignments"; Citation{Lunter2004}; DotSpace;
     };
 
-    style.AddFigure(Figures.ConceptEncoding, FigureOptions.Top | FigureOptions.Bottom);
+    style.AddTable(Figures.PartitionAssignments, FigureOptions.Top | FigureOptions.Bottom, 98%);
 
     style.BodyPar {
       var number = Enumerators.Cardinal(rule.Filters.Length);
@@ -2198,7 +2196,13 @@ class AcknowledgementsClass: ContentClass {
 
   override GetBody(ContentStyleClass style, title) = Block {
     style.TitlePar(title) {
-      style.ShowInitials(People.Huelsenbeck_John); " was supported through NSF (1759909) and the Koret Foundation. We thank "; style.ShowPerson(People.Lunter_Gerton); " for help with the TKF91 model.";
+      if (style.IsAnonymous)
+        DocLang.Anonymous;
+      else {
+        style.ShowInitials(People.Huelsenbeck_John);
+        " was supported through NSF (1759909) and the Koret Foundation. ";
+        "We thank "; style.ShowPerson(People.Lunter_Gerton); " for help with the TKF91 model.";
+      }
     }
   };
 }
@@ -2214,13 +2218,17 @@ class ContributionsClass: ContentClass {
 
   override GetBody(ContentStyleClass style, title) = Block {
     style.TitlePar(title) {
-      style.ShowInitials(People.Goldstein_David) " collected data, ";
-      style.ShowInitials(People.Buchi_Éva); " reviewed it, ";
-      style.ShowInitials(People.McCreight_Shawn); " developed the control software, and ";
-      style.ShowInitials(People.Huelsenbeck_John); " developed the MCMC software. ";
-      style.ShowInitials(People.Goldstein_David); CommaSpace;
-      style.ShowInitials(People.McCreight_Shawn); ", and ";
-      style.ShowInitials(People.Huelsenbeck_John); " wrote the manuscript. ";
+      if (style.IsAnonymous)
+        DocLang.Anonymous;
+      else {
+        style.ShowInitials(People.Goldstein_David) " collected data, ";
+        style.ShowInitials(People.Buchi_Éva); " reviewed it, ";
+        style.ShowInitials(People.McCreight_Shawn); " developed the control software, and ";
+        style.ShowInitials(People.Huelsenbeck_John); " developed the MCMC software. ";
+        style.ShowInitials(People.Goldstein_David); CommaSpace;
+        style.ShowInitials(People.McCreight_Shawn); ", and ";
+        style.ShowInitials(People.Huelsenbeck_John); " wrote the manuscript. ";
+      }
     }
   };
 }
@@ -2244,6 +2252,8 @@ class MethodsClass: ContentClass {
     style.TitlePar(title) {
       "We describe the assumptions of the models, how their parameters are estimated, and how different models of segmental evolution can be compared in a statistical framework.";
     };
+
+    style.AddFigure(Figures.ExampleTree, FigureOptions.Bottom | FigureOptions.Top | FigureOptions.Full, 70%);
 
     style.BodyPar {
       BodyTitle {"Phylogeny relating languages"}; DotSpace;
@@ -2270,9 +2280,6 @@ class MethodsClass: ContentClass {
       "The branch is assigned the label from its descendant node. In "; style.FigureReference(Figures.ExampleTree);
       ", for instance, the branch connecting nodes 13 and 14 is labeled 15. ";
     };
-
-    style.AddFigure(Figures.ExampleTree, FigureOptions.Bottom | FigureOptions.Full, 70%);
-
 
     style.BodyPar {
       "A phylogeny is an information-rich graph. ";
@@ -2361,8 +2368,6 @@ class MethodsClass: ContentClass {
      ", which are in units of expected number of substitutions per segment (as described below). ";
     };
 
-    style.AddFigure(Figures.Alignment, FigureOptions.Top | FigureOptions.Bottom | FigureOptions.Full, 80%);
-
     style.BodyPar {
       BodyTitle {"Data"}; DotSpace;
       "The similarities of words from different languages are informative about how the languages are related. ";
@@ -2423,6 +2428,8 @@ class MethodsClass: ContentClass {
     };
 
     SegmentTable(ec, data, true);
+
+    style.AddFigure(Figures.Alignment, FigureOptions.Top | FigureOptions.Full, 80%);
 
     style.ResumePar {
       "The word for "; style.SQuote {ec.Name}; " in "; ec.Taxon.Language; ", for example, is "
