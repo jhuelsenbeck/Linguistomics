@@ -28,38 +28,39 @@ include "NSF Grant";
 
 //======================================================================
 
-readonly JLEStyleClass JLEStyle     = new;
+readonly JOLEStyleClass  JOLEStyle  = new;
 readonly OtherStyleClass OtherStyle = new;
 
-readonly ContentStyleClass MainContentStyle = JLEStyle;
-readonly PaperContentClass PaperContent     = new;
-readonly SiteClass         Main.Site        = new LinguistomicsSiteClass;
-readonly                   Main.Facts       = WorldLanguages;
+readonly ContentStyleClass MainContentStyle  = JOLEStyle;
+readonly ContentStyleClass SlideContentStyle = OtherStyle;
+readonly PaperContentClass PaperContent      = new;
+readonly SiteClass         Main.Site         = new LinguistomicsSiteClass;
+readonly                   Main.Facts        = WorldLanguages;
 
 readonly namespace Main.Documents {
   HomePageClass          HomePage          = new;
   StyleDocumentClass     PaperPNAS         = new(#670da93e-0b8c-46f0-8ab2-01de4ea8ebdb#, "Paper PNAS", PaperContent, OtherStyle);
-  StyleDocumentClass     PaperJLE          = new(#d8c22a4e-4dde-44a7-b762-9a15a2de11fb#, "Paper JLE", PaperContent, JLEStyle);
+  StyleDocumentClass     PaperJOLE         = new(#d8c22a4e-4dde-44a7-b762-9a15a2de11fb#, "Paper JOLE", PaperContent, JOLEStyle);
   StyleDocumentClass     Supplemental      = new(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplemental", new SupplementalContentClass, MainContentStyle);
-  StyleDocumentClass     NSFGRant          = new(#d35c199e-8be1-45ab-930c-a250ee0ffc63#, "NSF Grant Proposal", new NSFGrantContentClass, new MLAStyleClass);
   DavidPresentationClass DavidPresentation = new;
   JohnPresentationClass  JohnPresentation  = new;
   DiagnosticsViewClass   Diagnostic        = new(MainContentStyle, MainResults.Data);
-  TexDocumentClass       TexPaper          = new(#687fb991-b2b4-4552-811f-b088a78ebc56#, PaperJLE);
-//  TexDocumentClass       TexSupplemental   = new(#e3ae406a-67f5-453c-9621-56b5f34afdbb#, Supplemental);
+//  TexDocumentClass       TexPaper          = new(#687fb991-b2b4-4552-811f-b088a78ebc56#, PaperJOLE);
 }
 
 //===============================================================
 
-class JLEStyleClass: OUPStyleClass {
+class JOLEStyleClass: OUPStyleClass {
   Constructor {
     super.Constructor("Journal of Language Evolution", TemplateOptions.LineNumbers | TemplateOptions.SectionNumbers | TemplateOptions.Anonymous);
-    TexPackages.AddEach(["noto"]);
+    TexPackages.AddEach(["fontspec"]);
+    TexFont   = "Libertinus Serif";
+    SansSerif = TextFamily: TextFamilies.LibertinusSans;
   }
 
   override SetTextStyle = {
     TextHeight: 12 pts;
-    TextFamily: TextFamilies.LinuxLibertineO;
+    TextFamily: TextFamilies.LibertinusSerif;
   };
 
   override SetDocumentOptions = {
@@ -76,7 +77,7 @@ class OtherStyleClass: PNASStyleClass {
   }
 
   override SetTextStyle = {
-    TextFamily: TextFamilies.CMUSerif;
+    TextFamily: TextFamilies.LibertinusSerif;
     TextHeight: 9 pts;
   };
 }
@@ -88,7 +89,7 @@ class HomePageClass: SitePageClass {
     super.Constructor(Main.Site, #29f0a41f-f0f2-4830-bcaa-70418aa20157#, "Home", "Linguistics Research Project");
 
     Tiles = [
-      new DocTileClass(Main.Documents.PaperJLE, Icons.article),
+      new DocTileClass(Main.Documents.PaperJOLE, Icons.article),
       new DocTileClass(Main.Documents.Supplemental, Icons.add_circle),
       new DocTileClass(Main.Documents.DavidPresentation, Icons.slideshow),
       new DocTileClass(Main.Documents.JohnPresentation, Icons.slideshow),
