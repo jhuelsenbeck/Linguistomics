@@ -22,7 +22,8 @@ include "Visuals";
 include "Methods";
 include "Introduction";
 include "Slideshow";
-include "John Slides";
+include "Readme";
+include "Overview";
 include "David's Slides";
 include "Data Validation";
 //======================================================================
@@ -55,7 +56,7 @@ class ExperimentResults {
 
 readonly LinguisticsPaper    MainPaper         = new;
 readonly SupplementalContent SupplementalPaper = new;
-ContentStyle                 FinalStyle        = new JOLEStyle(None);
+ContentStyle                 FinalStyle        = new JOLEStyle(TwoColumn);
 ContentStyle                 SupplementStyle   = new PlainStyle;
 
 //==================================================
@@ -64,20 +65,22 @@ readonly RealmSite Main.Site  = new LinguistomicsSite;
 readonly           Main.Facts = [People, References, Equations, WorldLanguages];
 
 readonly namespace Main.Documents {
-  HomePage            HomePage           = new;
-  StyleDocument       PaperJOLE          = new(#d8c22a4e-4dde-44a7-b762-9a15a2de11fb#, "Paper JOLE", MainPaper, FinalStyle);
-  StyleDocument       Supplemental       = new(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplement", SupplementalPaper, SupplementStyle);
-  StyleDocument       Analysis           = new(#7b30102b-51a7-4fc6-b28e-e97cc851afcd#, "Graphs", new RelationshipContent, SupplementStyle);
-  DavidSlideShow      DavidPresentation  = new(MainResults);
-  JohnSlideShow       JohnPresentation   = new(MainResults);
-  DiagnosticsDocument Diagnostic         = new(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, FinalStyle, MainResults.Data);
-  StyleDocument       Biography          = new(#295e8621-eab4-44c0-b037-732af0b8e776#, "Biography", new PaperBiography, FinalStyle);
+  HomePage             HomePage           = new(MainPaper);
+  StyleDocument        PaperJOLE          = new(#d8c22a4e-4dde-44a7-b762-9a15a2de11fb#, "Paper JOLE", MainPaper, FinalStyle);
+  StyleDocument        Supplemental       = new(#9082a441-cf06-4a95-b484-2cb5f5484c59#, "Supplement", SupplementalPaper, SupplementStyle);
+  StyleDocument        Graphs             = new(#7b30102b-51a7-4fc6-b28e-e97cc851afcd#, "Graphs", new GraphContent, SupplementStyle);
+  DavidSlideShow       DavidPresentation  = new(MainResults);
+  OverviewPresentation Overview           = new(MainResults, GMBH26);
+  DiagnosticsDocument  Diagnostic         = new(#ded5b32d-f925-4ca0-b6b6-cfec8100fd42#, FinalStyle, MainResults.Data);
+  CiteDocument         CitationDoc        = new(#0b9a02da-1c60-4050-9e65-76233e9e7d48#, "Cite", FinalStyle, GMBH26, new Image(res "Images/JOLE11Cover.jpg", Organizations.JournalLanguageEvolution.Name));
+  StyleDocument        Acknowledgements   = new(#295e8621-eab4-44c0-b037-732af0b8e776#, "Acknowledgments", new AcknowledgmentContent, SupplementStyle);
+  ReplicationDocument  Replication        = new;
 
-//  ContentStyle      ReviewStyle        = new JOLEStyle(LineNumbers Anonymous) {ReviewMode: ContentStyle.ReviewModes.MarkupAll};
-//  StyleDocument     TitlePaper         = new(#84acc9fb-0e65-4940-a8e0-cb356167f4cb#, "Title Page", new LinguisticsTitle, FinalStyle);
-//  StyleDocument     PaperJOLEReview    = new(#9cf9afd6-9897-47be-8f4c-6e820b08779b#, "Paper JOLE (Review)", MainPaper, ReviewStyle);
-//  StyleDocument     SupplementalReview = new(#874a4d17-46bb-45b5-838d-19d6296287ea#, "Supplement (Review)", SupplementalPaper, ReviewStyle);
-//  TexDocument       TexPaper           = new(#687fb991-b2b4-4552-811f-b088a78ebc56#, PaperJOLE);
+//  ContentStyle       ReviewStyle        = new JOLEStyle(LineNumbers Anonymous) {ReviewMode: ContentStyle.ReviewModes.MarkupAll};
+//  StyleDocument      TitlePaper         = new(#84acc9fb-0e65-4940-a8e0-cb356167f4cb#, "Title Page", new LinguisticsTitle, FinalStyle);
+//  StyleDocument      PaperJOLEReview    = new(#9cf9afd6-9897-47be-8f4c-6e820b08779b#, "Paper JOLE (Review)", MainPaper, ReviewStyle);
+//  StyleDocument      SupplementalReview = new(#874a4d17-46bb-45b5-838d-19d6296287ea#, "Supplement (Review)", SupplementalPaper, ReviewStyle);
+//  TexDocument        TexPaper           = new(#687fb991-b2b4-4552-811f-b088a78ebc56#, PaperJOLE);
 }
 
 //======================================================================
@@ -96,7 +99,7 @@ class BioSummary: Fact {
 readonly namespace<BioSummary> BioSummaries {
   David = new(People.Goldstein_David, "A. Richard Diebold Jr. Professor of Indo-European Studies, Professor of Linguistics, Professor of Classics, University of California, Los Angeles");
   Shawn = new(People.McCreight_Shawn, "Founded Guidance Software, Inc. in 1997 and served as Chairman and CTO until 2016. Founded Nytril LLC in 2017 and currently serves as CEO and software architect. He is currently developing the Nytril platform to enable the creation of computable documentation.");
-  Eva   = new(People.Buchi_Éva, "Senior researcher at CNRS (ATILF, Nancy) and a lecturer at Université de Lorraine. Her research focuses on historical Romance linguistics, particularly etymology. She published in 1996 a monograph on the \"Französisches Etymologisches Wörterbuch\" (FEW) and in 2010 a dictionary of Romance loanwords from Russian. Together with Wolfgang Schweickard (Saarland University), she heads the \"Dictionnaire Étymologique Roman\" (DÉRom, 2008). Currently she is working on a handbook of Romance lexical etymology she has been commissioned to edit for De Gruyter’s Manuals of Romance Linguistics (MRL) series.");
+  Eva   = new(People.Buchi_Éva, "Senior researcher at CNRS (ATILF, Nancy) and a lecturer at Université de Lorraine. Her research focuses on historical Romance linguistics, particularly etymology. She published in 1996 a monograph on the \"Französisches Etymologisches Wörterbuch\" (FEW) and in 2010 a dictionary of Romance loanwords from Russian. Together with Wolfgang Schweickard (Saarland University), she heads the \"Dictionnaire Étymologique Roman\" (DÉRom, 2008—). Currently she is working on a handbook of Romance lexical etymology she has been commissioned to edit for De Gruyter’s Manuals of Romance Linguistics (MRL) series.");
   John  = new(People.Huelsenbeck_John, "McCreight Chancellor's Chair in Computational Biology, Professor of Integrative Biology, University of California, Berkeley");
 }
 
@@ -104,16 +107,11 @@ readonly namespace<BioSummary> BioSummaries {
 
 class JOLEStyle: OUPStyle {
   Constructor(TemplateOptions options) {
-    super.Constructor("Journal of Language Evolution", options | SectionNumbers);
+    super.Constructor(Organizations.OxfordPress, options | SectionNumbers);
     TexPackages.AddEach(["fontspec"]);
     TexFont   = "Libertinus Serif";
     SansSerif = TextFamily: TextFamilies.LibertinusSans;
   }
-
-  override SetTextStyle = {
-    TextHeight: 12pt;
-    TextFamily: TextFamilies.LibertinusSerif;
-  };
 }
 
 //===============================================================
@@ -136,7 +134,7 @@ class PlainStyle: ContentStyle {
 
 class OtherStyle: PNASStyle {
   Constructor {
-    super.Constructor(null, LineNumbers | TwoColumn);
+    super.Constructor(Organizations.OxfordPress, LineNumbers | TwoColumn);
     TexPackages.AddEach(["jabbrv", "fontspec", "noto", "xspace"]);
   }
 
@@ -149,14 +147,21 @@ class OtherStyle: PNASStyle {
 //===============================================================
 
 class HomePage: SitePage {
-  Constructor {
-    super.Constructor(Main.Site, #29f0a41f-f0f2-4830-bcaa-70418aa20157#, "Home", "Linguistics Research Project");
+  var AuthoredContent Content;
+
+  Constructor(AuthoredContent content) {
+    super.Constructor(Main.Site, #29f0a41f-f0f2-4830-bcaa-70418aa20157#, "Home", content.Reference.Title);
+    Content = content;
 
     Tiles = [
-      new DocTile(Main.Documents.PaperJOLE, Icons.article, "Paper"),
+      new DocTile(Main.Documents.PaperJOLE, Icons.article, "White Paper"),
       new DocTile(Main.Documents.Supplemental, Icons.add_circle),
       new DocTile(Main.Documents.Diagnostic, Icons.settings),
-      new DocTile(Main.Documents.Biography, Icons.person_search, "Acknowlegments") {Description: "Author bios and comments"},
+      new DocTile(Main.Documents.Graphs, Icons.insights),
+      new DocTile(Main.Documents.CitationDoc, Icons.format_quote),
+      new DocTile(Main.Documents.Overview, Icons.slideshow, "Overview"),
+      new DocTile(Main.Documents.Replication, Icons.read_more),
+      new DocTile(Main.Documents.Acknowledgements, Icons.person_search),
     ];
   }
 
@@ -164,13 +169,31 @@ class HomePage: SitePage {
     Paragraph {
       TextHeight: 20pt;
       SpaceAfter: 20pt;
-      MainPaper.Title;
+      Content.Title;
     };
 
-    FinalStyle.ShowAuthorList(MainPaper, true);
-    Paragraph {
-      SpaceAfter: 20pt;
-    };
+    FinalStyle.ShowAuthorList(Content, true);
+
+    var abs = Content.Reference.Abstract;
+    if (abs is not null) {
+      Paragraph {
+        SpaceBefore: 10pt;
+        TextHeight: 14pt;
+        Bold;
+        Lang.Abstract;
+      };
+
+      Block {
+        TextHeight: 12pt;
+        LeftIndent: 10pt;
+        RightIndent: 10pt;
+        abs;
+      };
+
+      Paragraph {
+        SpaceAfter: 20pt;
+      };
+    }
   };
 }
 

@@ -1,18 +1,33 @@
-using Format;
+using Format, LinkTypes;
+
+//======================================================================
+
+readonly DocReference GMBH26 = new(#560f96ac-83e2-4450-ac5e-e965a9213f0e#, Article) {
+  Title   : "Phylogenetic inference from cognate word forms";
+  Date    : #2026-4-8#;
+  Volume  : 11;
+  Pages   : "lzag001";
+  Abstract: AbstractBody as string;
+  ISSN    : "2058-458X";
+  DOI     : "10.1093/jole/lzag001";
+
+  Link to new URL("doi.org/10.1093/jole/lzag001");
+
+//    .new URL("https://academic.oup.com/jole/article/doi/10.1093/jole/lzag001/8644220")
+
+
+  EPrintLink to new URL("academic.oup.com/jole/article-pdf/doi/10.1093/jole/lzag001/67992300/lzag001.pdf");
+  AuthorLink to [People.Goldstein_David, People.McCreight_Shawn, People.Buchi_Éva, People.Huelsenbeck_John];
+  JournalLink to Organizations.JournalLanguageEvolution;
+};
 
 //======================================================================
 
 abstract class LinguisticsContent: AuthoredContent {
   Constructor(name, description) {
-    super.Constructor(name);
+    super.Constructor(name, GMBH26);
     Description = description;
-
-    Title = "Phylogenetic inference from cognate word forms";
-
-    AddAuthor(People.Goldstein_David, true);
-    AddAuthor(People.McCreight_Shawn);
-    AddAuthor(People.Buchi_Éva);
-    AddAuthor(People.Huelsenbeck_John);
+    SetCorrespondant(People.Goldstein_David);
   }
 }
 
@@ -20,7 +35,7 @@ abstract class LinguisticsContent: AuthoredContent {
 
 class LinguisticsPaper: LinguisticsContent {
   Constructor {
-    super.Constructor("Paper", "Linguistics research paper");
+    super.Constructor("White Paper", "Published version of the paper");
     SignificanceStatement = PaperSections.Significance;
     Abstract              = PaperSections.Abstract;
     Acknowledgements      = PaperSections.Acknowledgements;
@@ -46,16 +61,16 @@ class LinguisticsPaper: LinguisticsContent {
 
 //======================================================================
 
-readonly BiographySection PaperSections.Biography = new;
+readonly AcknowledgmentsSection PaperSections.Acknowledgments = new;
 
-class BiographySection: Content {
+class AcknowledgmentsSection: Content {
   Constructor {
-    super.Constructor("Biography");
+    super.Constructor("Acknowledgments");
   }
 
   override GetBody(ContentStyle style) = Block {
     style.Par {
-      "Brief biographies of the authors. ";
+      "Acknowledgments and brief biographies of the authors. ";
     };
 
     style.NumberedList {
@@ -75,12 +90,13 @@ class BiographySection: Content {
 
 //======================================================================
 
-class PaperBiography: LinguisticsContent {
+class AcknowledgmentContent: LinguisticsContent {
   Constructor {
-    super.Constructor("Biography", "Author Biographies and Acknowledgments");
+    super.Constructor("Acknowledgments", "Acknowledgments and Author Biographies");
+    Title            = "Acknowledgments";
     Acknowledgements = PaperSections.Acknowledgements;
     Funding          = PaperSections.Funding;
-    ExtraSections    = [Acknowledgements, Funding, PaperSections.Biography];
+    ExtraSections    = [Acknowledgements, Funding, PaperSections.Acknowledgments];
   }
 }
 
@@ -90,7 +106,7 @@ class SupplementalContent: LinguisticsContent {
   Constructor {
     super.Constructor("Supplement", "Extra derivations and charts to supplement the main paper");
     Title    = "Supplementary Material";
-    Subtitle = Span {"For: "; ContentStyle.DQuote {MainPaper.Title}};
+//    Subtitle = Span {"For: "; ContentStyle.DQuote {MainPaper.Title}};
 
     AddContent(PaperSections.Methods);
     Appendix.AddContent(Figures.Alignments);
@@ -136,11 +152,11 @@ class GraphSection: Content {
 
 //======================================================================
 
-class RelationshipContent: LinguisticsContent {
+class GraphContent: LinguisticsContent {
   Constructor {
-    super.Constructor("Graphs", "Graphs of linguistic connections");
+    super.Constructor("Graphs", "Graphs of links between facts");
 
-    Subtitle = Span {"For: "; ContentStyle.DQuote {Title}};
+    Title = "Graphs";
 
     AddContent(PaperSections.Connections);
   }

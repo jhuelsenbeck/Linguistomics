@@ -62,24 +62,23 @@ class StatClass {
 //======================================================================
 
 class RunResultsThread: Parallel.Thread {
-  var ExperimentData    Data;
-  var ExperimentRun     Run;
-  var StatMat           NCQRates,
-                        TransitionStats;
-  var StatArray         NCQFreqs;
-  var AlignedCountClass QRates,
-                        AverageRates;
-  var AlignIndexClass[] Alignments;
-  var double            InsertionRate,
-                        InsertionRateLow,
-                        InsertionRateHigh,
-                        DeletionRate,
-                        DeletionRateLow,
-                        DeletionRateHigh;
-  var bool              Complete;
-  var                   GapSpectrum,
-                        EquilibriumFrequencies,
-                        AlignmentFile;
+  var ExperimentData     Data;
+  var ExperimentRun      Run;
+  var StatMat            NCQRates,
+                         TransitionStats;
+  var StatArray          NCQFreqs;
+  var AlignedCountClass  QRates;
+  var AlignIndexClass[]  Alignments;
+  var double             InsertionRate,
+                         InsertionRateLow,
+                         InsertionRateHigh,
+                         DeletionRate,
+                         DeletionRateLow,
+                         DeletionRateHigh;
+  var double[]           EquilibriumFrequencies;
+  var bool               Complete;
+  var                    GapSpectrum,
+                         AlignmentFile;
 
   Constructor(ExperimentData data, ExperimentRun run) {
     super.Constructor;
@@ -131,11 +130,10 @@ class RunResultsThread: Parallel.Thread {
       var qrates = align.?QRates;
       if (Run.ResultTree is valid and qrates is valid) {
         QRates                 = new(this, qrates, false);
-        AverageRates           = new(this, align.AverageRates, true);
         NCQFreqs               = align.?NCQFreqs as StatArray;
         TransitionStats        = align.?TransitionStats as StatMat;
         NCQRates               = align.?NCQRates as StatMat;
-        EquilibriumFrequencies = align.?EquilibriumFrequencies;
+        EquilibriumFrequencies = align.?EquilibriumFrequencies as double[];
         InsertionRate          = align.?InsertionRateMean;
         InsertionRateLow       = align.?InsertionRateLow;
         InsertionRateHigh      = align.?InsertionRateHigh;
@@ -319,13 +317,7 @@ class SegmentRate: Action {
     return S0.Segment.Ipa == ipa0 and S1.Segment.Ipa == ipa1;
   }
 
-  Color RateColor {
-    return PaperStyle.HeatMap.InterpolateColor(Rate * (Diagonal ? Count.DiagFactor : Count.RateFactor));
-  }
-
-  Color DirectionColor {
-    return PaperStyle.HeatMap.InterpolateColor(1.0 - 0.5 * Direction * Count.DirFactor);
-  }
+  double DirectionHeat = 1.0 - 0.5 * Direction * Count.DirFactor;
 
   ShowPartition(SegmentPart s, textheight) = Canvas(textheight * 2.5) {
     BorderRadius: PaperStyle.BorderSize;
@@ -360,31 +352,33 @@ class SegmentRate: Action {
     };
   };
 
-  GetExamples(int max) = Block {
-    TextHeight: 14pt;
-    GetLayoutSpan;
+  GetExamples(th, int max) = Block {
+    TextHeight: th;
+    ShowBox(th);
     Paragraph {
-      "Value: ";
+//      "Value: ";
       TextScientific: true;
       TextDigits: 2;
       Original;
     };
 
+/*
     ShowNumber(RateDescriptor(Lang.RateFactor), Rate);
     if (!Symmetric) {
       ShowNumber(RateDescriptor("Reverse Factor"), Reverse);
       Span {
-        var c = DirectionColor;
+        var c = PaperStyle.HeatMap.InterpolateColor(DirectionHeat);
         TextBackground: c;
         TextColor: c.TextCompliment;
         ShowNumber(RateDescriptor("Direction"), Direction);
       }
     }
-
+*/
     var sorted = GetList;
     max = Math.Min(sorted.Length, max);
     if (sorted is valid) {
       Paragraph {
+        TextHeight: 12pt;
         SpaceBefore: 6pt;
         "Examples:";
       };
@@ -399,9 +393,9 @@ class SegmentRate: Action {
     }
   };
 
-  override GetLayoutTip = GetExamples(10);
+  override GetLayoutTip = GetExamples(24pt, 10);
 
-  override GetDocument = GetExamples(100);
+  override GetDocument = GetExamples(14pt, 100);
 
   static int CompareProb(AlignSort s1, AlignSort s2) = s1.Data.Prob.Compare(s2.Data.Prob);
 
@@ -449,7 +443,7 @@ class SegmentRate: Action {
 
 class SegDataClass {
   var SegmentRate Rate;
-  var double    Value;
+  var double      Value;
 
   Constructor(SegmentRate rate) {
     Rate  = rate;
@@ -548,30 +542,12 @@ class AlignedCountClass: CountBase {
     SortByDirection = rl.ToSortedArray(SegmentRate.SortDescending, @SegmentRate.CompareDirection);
   }
 
-  override AddEntry(SegmentPart si, SegmentPart sj, x, y, Size size) {
+  override CountBox AddEntry(SegmentPart si, SegmentPart sj) {
     if (si.Index == sj.Index)
-      return null;
+      return CountBox.Null;
 
     var rate = RateMatrix[si.Index, sj.Index];
-    if (rate is not null) {
-      return Canvas(size.Width, size.Height) {
-        X: x;
-        Y: y;
-        HAlign: Center;
-        VAlign: Center;
-        TipNoPublish: true;
-        TipAction: rate;
-        var c = rate.RateColor;
-        Span {
-          TextDigits: 0;
-          TextHeight: size.Height * 0.7;
-          TextColor: c.TextCompliment;
-          rate.Rate;
-        };
-        Background: c;
-      };
-    }
-    return null;
+    return new(Span {TextHeight: 40%; TextDigits: 2; TextScientific: true; rate.Original}, Math.Log(rate.Original), rate);
   }
 
   ShowLegend(SegmentRate[] rates) {
@@ -729,18 +705,18 @@ class AlignedCountClass: CountBase {
 //======================================================================
 
 class CalcRatesClass {
-  var ExperimentData  Data;
-  var RateTransition Transition;
-  var PartitionRule   Rule;
+  var ExperimentData   Data;
+  var RateTransition   Transition;
+  var PartitionRule    Rule;
   var RunResultsThread Run;
-  var                 MaxLine,
-                      ArrowGap,
-                      GapAngle,
-                      LoopRadius,
-                      LoopDistance,
-                      MaxExtent,
-                      MaxRadius,
-                      RateScale;
+  var                  MaxLine,
+                       ArrowGap,
+                       GapAngle,
+                       LoopRadius,
+                       LoopDistance,
+                       MaxExtent,
+                       MaxRadius,
+                       RateScale;
 
   Constructor(ExperimentData data, RunResultsThread run) {
     Run        = run;
@@ -923,7 +899,7 @@ class PartitionAction: Action {
                        P2;
 
   Constructor(PartitionRule rule, StatClass rate, SegmentPartition p1, SegmentPartition p2) {
-    super.Constructor(Actions.ToSource, rule);
+    super.Constructor(Actions.ToSource, rule, Guid.FromHash("partitionrate{0}{1}"(p1.FactId, p2.FactId)));
     Rate = rate;
     P1   = p1;
     P2   = p2;
