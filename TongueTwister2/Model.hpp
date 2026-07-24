@@ -11,6 +11,7 @@ class RandomVariable;
 class RateMatrix;
 class States;
 class ThreadPool;
+class TKF91StochasticMapping;
 class TransitionProbabilities;
 
 
@@ -23,7 +24,8 @@ class Model {
                                                ~Model(void);
         template<typename T> T*                 findParameter(void);
         template<typename T> bool               isType(Parameter* parm);
-        const std::vector<LikelihoodCalculator*>& getCalculators(void) const { return calculators; }
+        void                                    sampleHistories(long generation, std::string& baseOutputFileName);
+        const std::vector<LikelihoodCalculator*>&   getCalculators(void) const { return calculators; }
         size_t                                  getNumCalculators(void) const { return calculators.size(); }
         size_t                                  getNumStates(void) { return numStates; }
         const std::vector<Parameter*>&          getParameters(void) { return parameters; }
@@ -58,6 +60,7 @@ class Model {
         size_t                                  numStates;
         std::vector<Parameter*>                 parameters;
         std::vector<LikelihoodCalculator*>      calculators;
+        std::vector<TKF91StochasticMapping*>    mappers;
         std::set<unsigned>                      uniqueTaxonCombinations;
         
                                                 // current state: cached log-likelihoods (the accepted/known-good values)

@@ -80,7 +80,10 @@ void McmcPosterior::run(void) {
             
         // sample chain
         if (n >= 0 && n % sampleFrequency == 0)
+            {
             output.sample(n, currentLnL, currentLnP);
+            myModel->sampleHistories(n, baseOutputFileName);
+            }
             
         // tune updates
         if (n < 0 && n % tuneFrequency == 0)
