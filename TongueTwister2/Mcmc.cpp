@@ -19,6 +19,7 @@ Mcmc::Mcmc(RandomVariable* r, Model* m) : rng(r), myModel(m) {
     numDigits          = (numCycles == 0) ? 1 : static_cast<int>(log10(numCycles)) + 1;
     printFrequency     = settings.getPrintFrequency();
     sampleFrequency    = settings.getSampleFrequency();
+    mappingFrequency   = settings.getMappingFrequency();
     baseOutputFileName = settings.getOutFile();
     updateMngr         = new UpdateManager(myModel, rng);
 }

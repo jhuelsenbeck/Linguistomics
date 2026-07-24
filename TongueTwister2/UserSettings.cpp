@@ -34,6 +34,7 @@ UserSettings::UserSettings(void) {
     burnLength                  = 0;
     sampleLength                = 20000;
     sampleFrequency             = 100;
+    mappingFrequency            = 0;
 }
 
 std::string UserSettings::getVariable(nlohmann::json &settings, const char* name) {
@@ -144,6 +145,12 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
         .default_value(100)
         .scan<'i', int>()
         .help("Chain sample frequency");
+
+    // stochastic mapping frequency
+    program.add_argument("-h", "--map-freq")
+        .default_value(100)
+        .scan<'i', int>()
+        .help("Chain stochastic mapping frequency");
     
     // checkpoint frequency
     program.add_argument("-cp", "--checkpoint-freq")
@@ -203,6 +210,7 @@ void UserSettings::readCommandLineArguments(int argc, char* argv[]) {
     numMcmcCycles       = program.get<int>("-n");
     printFrequency      = program.get<int>("-p");
     sampleFrequency     = program.get<int>("-s");
+    mappingFrequency    = program.get<int>("-h");
     checkPointFrequency = program.get<int>("-cp");
     numRateCategories   = program.get<int>("-g");
     numIndelCategories  = program.get<int>("-i");
@@ -347,6 +355,10 @@ void UserSettings::readJsonSettings(void) {
         if (it2 != jsonSettings.end())
             sampleFrequency = jsonSettings["SampleFreq"];
 
+        it2 = jsonSettings.find("MappingFreq");
+        if (it2 != jsonSettings.end())
+            mappingFrequency = jsonSettings["MappingFreq"];
+
         it2 = jsonSettings.find("CheckPtFreq");
         if (it2 != jsonSettings.end())
             {
@@ -438,6 +450,7 @@ void UserSettings::print(void) {
         std::cout << "   * Number of MCMC cycles                   = " << numMcmcCycles << std::endl;
         std::cout << "   * Print-to-screen frequency               = " << printFrequency << std::endl;
         std::cout << "   * Chain sample frequency                  = " << sampleFrequency << std::endl;
+        std::cout << "   * Chain stochastic mapping frequency      = " << mappingFrequency << std::endl;
         //std::cout << "   * Check point frequency                   = " << checkPointFrequency << std::endl;
         }
    else

@@ -78,12 +78,13 @@ void McmcPosterior::run(void) {
             updateMngr->reject(update);
             }
             
-        // sample chain
+        // sample chain states
         if (n >= 0 && n % sampleFrequency == 0)
-            {
             output.sample(n, currentLnL, currentLnP);
+        
+        // stochastic mapping
+        if (mappingFrequency != 0 && n >= 0 && n % mappingFrequency == 0)
             myModel->sampleHistories(n, baseOutputFileName);
-            }
             
         // tune updates
         if (n < 0 && n % tuneFrequency == 0)
