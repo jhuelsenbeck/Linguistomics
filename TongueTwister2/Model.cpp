@@ -17,6 +17,7 @@
 #include "RateMatrix.hpp"
 #include "States.hpp"
 #include "Threads.hpp"
+#include "TKF91StochasticMapping.hpp"
 #include "TransitionProbabilitiesCpu.hpp"
 #include "TransitionProbabilitiesGpu.hpp"
 
@@ -71,6 +72,8 @@ Model::~Model(void) {
         delete parameters[i];
     for (size_t i=0; i<calculators.size(); i++)
         delete calculators[i];
+    for (size_t i=0; i<mappers.size(); i++)
+        delete mappers[i];
     delete tiProbs;
     if (rateMatrix != nullptr)
         delete rateMatrix;
@@ -270,7 +273,9 @@ bool Model::initializeCalculators(void) {
             {
             ParameterAlignment* aln = dynamic_cast<ParameterAlignment*>(parameters[i]);
             LikelihoodCalculator* calc = new LikelihoodCalculator(tiProbs, aln, t, r, f);
+            TKF91StochasticMapping* mapper = new TKF91StochasticMapping(tiProbs, aln, t, r, f, rateMatrix, modelType, rng);
             calculators.push_back(calc);
+            mappers.push_back(mapper);
             
             // store the cognate index in the alignment parameter for quick lookup
             aln->setCognateIndex(cognateIdx);
@@ -619,4 +624,14 @@ void Model::restoreLikelihoodCache(void) {
         }
     
     proposedTotalLnL = cachedTotalLnL;
+}
+
+void Model::sampleHistories(long generation, std::string& baseOutputFileName) {
+
+    for (auto& mapper : mappers)
+        {
+        MappedHistory history = mapper->sampleHistory();
+        std::string fn = baseOutputFileName + "_" + std::to_string(mapper->getCognateIndex()) + ".json";
+        mapper->appendHistoryToJsonFile(history, fn, (int)mapper->getCognateIndex(), generation);
+        }
 }

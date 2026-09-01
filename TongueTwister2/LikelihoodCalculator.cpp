@@ -1,4 +1,9 @@
+#include <cmath>
+#include <cstdint>
 #include <cstring>
+#include <limits>
+#include <iomanip>
+#include <iostream>
 #include "Alignment.hpp"
 #include "LikelihoodCalculator.hpp"
 #include "Msg.hpp"
@@ -11,537 +16,204 @@
 #include "Tree.hpp"
 
 
+static inline bool isNotFinite(double x) {
 
-LikelihoodCalculator::LikelihoodCalculator(TransitionProbabilities* tpc, ParameterAlignment* a, ParameterTree* t, ParameterIndelRates* r, ParameterFrequencies* f) : 
+    uint64_t bits;
+    std::memcpy(&bits, &x, sizeof(bits));
+    return ((bits >> 52) & 0x7FFULL) == 0x7FFULL;      // all-ones exponent: Inf or NaN
+}
+
+/* The value must be a real, strictly positive number. Replaces !(x > 0.0),
+   which silently stops catching NaN under -ffinite-math-only. */
+static inline bool isPositiveFinite(double x) {
+
+    return (isNotFinite(x) == false) && (x > 0.0);
+}
+
+LikelihoodCalculator::LikelihoodCalculator(TransitionProbabilities* tpc, ParameterAlignment* a, ParameterTree* t, ParameterIndelRates* r, ParameterFrequencies* f) :
     tiProbs(tpc), myAlignment(a), myTree(t), myIndelRates(r), myFrequencies(f) {
 
-    // set the alignment for this calculator
     alignment = myAlignment->getAlignment();
-    
-    // and the taxon mask
+    if (alignment == nullptr)
+        Msg::error("Null alignment when initializing the TKF91 calculator");
+
     taxonMask = myAlignment->getTaxonMask();
 
-    // and the number of states 
     numStates = myAlignment->getNumStates();
-    
-    // allocate the stationary frequencies
+    if (numStates == 0)
+        Msg::error("Expecting at least one character state in the TKF91 calculator");
+
     equilibriumFrequencies = new double[numStates];
 
-    // tree information
     tree = myTree->getTree(taxonMask);
     if (tree == nullptr)
-        Msg::error("Could not find tree when initializing TKF91 calculator");
-    numTaxa = tree->getNumTaxa();
-    numNodes = 2 * numTaxa - 1;
-    if (tree->isBinary() == false)
-        Msg::error("Expecting a rooted and binary tree");
+        Msg::error("Could not find tree when initializing the TKF91 calculator");
 
-    // determine number of taxa, segments, and states from alignment
     numSegments = alignment->getNumSegments();
-    if (alignment->getNumTaxa() != numTaxa)
-        {
-        tree->print();
-        alignment->print();
-        Msg::error("Inconsistent number of taxa in the tree and the alignment");
-        }
-            
-    // store TKF91 rates
-    tkf91Probs.insertionRate = myIndelRates->getInsertionRate();
-    tkf91Probs.deletionRate = myIndelRates->getDeletionRate();
-    
-    // allocate probability arrays
-    allocateTKF91Probabilities(numNodes);
-    allocateTKF91Combinatorics(numNodes);
-    allocateConditionalProbs();
-    
-    // allocate cached transition matrix pointer array
-    cachedTiMatrices = new double*[numNodes];
-    for (size_t i = 0; i < numNodes; i++)
-        cachedTiMatrices[i] = nullptr;
-    
-    // allocate signature array (reused across all likelihood calculations)
-    signature = new int[numTaxa];
-    
-    // initialize leaf index mapping
-    initializeLeafIndices();
+
+    // initializeTopology establishes numNodes, numTaxa and every derived size
+    initializeTopology();
 }
 
 LikelihoodCalculator::~LikelihoodCalculator(void) {
 
-    freeTKF91Probabilities();
-    freeTKF91Combinatorics();
-    freeConditionalProbs();
-    delete [] cachedTiMatrices;
-    delete [] signature;
     delete [] equilibriumFrequencies;
 }
 
-void LikelihoodCalculator::allocateTKF91Probabilities(size_t nn) {
+void LikelihoodCalculator::initializeTopology(void) {
 
-    tkf91Probs.beta = new double[nn];
-    tkf91Probs.birthProbability = new double[nn];
-    tkf91Probs.extinctionProbability = new double[nn];
-    tkf91Probs.homologousProbability = new double[nn];
-    tkf91Probs.nonHomologousProbability = new double[nn];
-    for (size_t i=0; i<nn; i++)
+    const std::vector<Node*>& postOrder = tree->getPostOrder();
+
+    numNodes = postOrder.size();
+    if (numNodes == 0)
+        Msg::error("Empty post-order traversal in the TKF91 calculator");
+
+    // a state is a bitmask over post-order positions, so the tree must fit a uint64_t
+    if (numNodes > maxNodes)
+        Msg::error("The exact TKF91 calculator handles at most " + std::to_string(maxNodes) +
+                   " nodes (" + std::to_string(maxNodes / 2) + " taxa); this tree has " +
+                   std::to_string(numNodes));
+
+    poNode.assign(numNodes, nullptr);
+    poLeft.assign(numNodes, -1);
+    poRight.assign(numNodes, -1);
+    poSeqRow.assign(numNodes, -1);
+    poIsLeaf.assign(numNodes, 0);
+    poSubtreeSize.assign(numNodes, 0);
+    poSubtree.assign(numNodes, 0);
+    poDisjointLower.assign(numNodes, 0);
+    poTiMatrix.assign(numNodes, nullptr);
+
+    // map each Node to its post-order position. Held as a member so the buckets
+    // survive between evaluations; this runs on every likelihood call.
+    std::unordered_map<const Node*,int>& position = nodePosition;
+    position.clear();
+    position.reserve(numNodes * 2);
+    for (size_t i=0; i<numNodes; i++)
         {
-        tkf91Probs.beta[i] = 0.0;
-        tkf91Probs.birthProbability[i] = 0.0;
-        tkf91Probs.extinctionProbability[i] = 0.0;
-        tkf91Probs.homologousProbability[i] = 0.0;
-        tkf91Probs.nonHomologousProbability[i] = 0.0;
+        if (postOrder[i] == nullptr)
+            Msg::error("Null node at post-order position " + std::to_string(i) +
+                       " in the TKF91 calculator");
+        poNode[i] = postOrder[i];
+        position[postOrder[i]] = (int)i;
         }
-}
 
-void LikelihoodCalculator::allocateTKF91Combinatorics(size_t nn) {
+    size_t numRoots = 0;
+    size_t numLeaves = 0;
 
-    tkf91Combos.nodeHomology = new int[nn];
-    tkf91Combos.numHomologousEmissions = new int[nn];
-    for (size_t i=0; i<nn; i++)
+    for (size_t i=0; i<numNodes; i++)
         {
-        tkf91Combos.nodeHomology[i] = 0;
-        tkf91Combos.numHomologousEmissions[i] = 0;
+        Node* p = poNode[i];
+
+        if (p->getAncestor() == nullptr)
+            numRoots++;
+        else if (position.find(p->getAncestor()) == position.end())
+            Msg::error("Node at post-order position " + std::to_string(i) +
+                       " has an ancestor that is not in the traversal; the tree passed to the "
+                       "TKF91 calculator is not a single connected tree");
+
+        poIsLeaf[i] = (p->getIsLeaf() == true) ? 1 : 0;
+
+        if (poIsLeaf[i])
+            {
+            numLeaves++;
+            poSeqRow[i] = p->getIndex();
+            }
+        else
+            {
+            // children precede their parent in post-order, so they are already placed
+            Node* lft = p->getDescendant(0);
+            Node* rht = p->getDescendant(1);
+            if (lft == nullptr || rht == nullptr)
+                Msg::error("Interior node at post-order position " + std::to_string(i) +
+                           " has " + std::to_string(p->numDescendants()) +
+                           " descendants; the TKF91 calculator expects a rooted binary tree");
+            poLeft[i] = position[lft];
+            poRight[i] = position[rht];
+            }
+
+        uint64_t m = ((uint64_t)1 << i);
+        size_t sz = 1;
+        if (poLeft[i] >= 0)
+            {
+            m |= poSubtree[poLeft[i]];
+            sz += poSubtreeSize[poLeft[i]];
+            }
+        if (poRight[i] >= 0)
+            {
+            m |= poSubtree[poRight[i]];
+            sz += poSubtreeSize[poRight[i]];
+            }
+        poSubtree[i] = m;
+        poSubtreeSize[i] = sz;
         }
-}
 
-void LikelihoodCalculator::allocateConditionalProbs(void) {
+    if (numRoots != 1)
+        Msg::error("Found " + std::to_string(numRoots) + " nodes without an ancestor in the tree "
+                   "passed to the TKF91 calculator; expecting exactly one root");
 
-    // fH[nodeIdx][state] for state 0..numStates-1 (homologous contributions)
-    // fI[nodeIdx][state] for state 0..numStates-1, plus fI[nodeIdx][numStates] for gap
-    size_t numStates1 = numStates + 1;
-    
-    fH = new double*[numNodes];
-    fH[0] = new double[numNodes * numStates];
-    for (size_t i=1; i<numNodes; i++)
-        fH[i] = fH[i-1] + numStates;
-    
-    fI = new double*[numNodes];
-    fI[0] = new double[numNodes * numStates1];
-    for (size_t i=1; i<numNodes; i++)
-        fI[i] = fI[i-1] + numStates1;
+    // The alignment supplies one row per leaf of THIS tree. If a subtree is being
+    // scored, its alignment must have been reduced to match it.
+    numTaxa = numLeaves;
+    if (alignment->getNumTaxa() != numTaxa)
+        Msg::error("The tree passed to the TKF91 calculator has " + std::to_string(numTaxa) +
+                   " leaves but the alignment has " + std::to_string(alignment->getNumTaxa()) +
+                   " rows (post-order length " + std::to_string(numNodes) +
+                   ", Tree::getNumNodes() " + std::to_string(tree->getNumNodes()) + ")");
+
+    std::vector<int> seen(numTaxa, 0);
+    for (size_t i=0; i<numNodes; i++)
+        {
+        if (poIsLeaf[i] == 0)
+            continue;
+        const int row = poSeqRow[i];
+        if (row < 0 || (size_t)row >= numTaxa)
+            Msg::error("Leaf at post-order position " + std::to_string(i) + " has Node::index " +
+                       std::to_string(row) + ", which is not a valid alignment row for a tree with " +
+                       std::to_string(numTaxa) + " leaves. If this is a subtree, its leaves are "
+                       "probably still carrying indices from the full taxon list.");
+        if (seen[row] != 0)
+            Msg::error("Alignment row " + std::to_string(row) +
+                       " is claimed by more than one leaf in the TKF91 calculator");
+        seen[row] = 1;
+        }
+
+    for (size_t r=0; r<numNodes; r++)
+        {
+        uint64_t m = 0;
+        for (size_t k=0; k<r; k++)
+            {
+            const bool kBelowR = ((poSubtree[r] >> k) & 1) != 0;
+            const bool rBelowK = ((poSubtree[k] >> r) & 1) != 0;
+            if (kBelowR == false && rBelowK == false)
+                m |= ((uint64_t)1 << k);
+            }
+        poDisjointLower[r] = m;
+        }
+
+    tkf91Probs.beta.resize(numNodes);
+    tkf91Probs.birthProbability.resize(numNodes);
+    tkf91Probs.extinctionProbability.resize(numNodes);
+    tkf91Probs.homologousProbability.resize(numNodes);
+    tkf91Probs.nonHomologousProbability.resize(numNodes);
+    fWork.resize(numNodes * numStates);
 }
 
 void LikelihoodCalculator::cacheTransitionMatrices(void) {
 
-    // cache raw pointers to transition probability matrices for all non-root nodes
-    // this avoids repeated map/hash lookups in the inner site loop
-    const std::vector<Node*>& postOrder = tree->getPostOrder();
-    for (Node* p : postOrder)
+    for (size_t i=0; i<numNodes; i++)
         {
-        if (p->getAncestor() != nullptr)  // skip root (no branch)
-            {
-            const int pIdx = p->getIndex();
-            DoubleMatrix& tp = tiProbs->getTransitionProbability(p->getBranchLength());
-            cachedTiMatrices[pIdx] = tp.begin();
-            }
-        }
-}
-
-void LikelihoodCalculator::computeFForInternalNode(Node* p) {
-
-    // get descendant nodes
-    Node* lftDescendant = p->getDescendant(0);
-    Node* rhtDescendant = p->getDescendant(1);
-    if (lftDescendant == nullptr || rhtDescendant == nullptr)
-        Msg::error("Did not find descendants of node indexed " + std::to_string(p->getIndex()));
-    const int pIdx = p->getIndex();
-    const int lftChildIdx = lftDescendant->getIndex();
-    const int rhtChildIdx = rhtDescendant->getIndex();
-    
-    // get homology class for this node and children
-    const int nodeHomologyI = tkf91Combos.nodeHomology[pIdx];
-    const int nodeHomologyLft = tkf91Combos.nodeHomology[lftChildIdx];
-    const int nodeHomologyRht = tkf91Combos.nodeHomology[rhtChildIdx];
-    
-    // use cached transition probability matrix pointers (avoids map lookup)
-    double* const tpLftData = cachedTiMatrices[lftChildIdx];
-    double* const tpRhtData = cachedTiMatrices[rhtChildIdx];
-    const size_t n = numStates;
-    
-    // pointers to descendant conditional likelihoods
-    double* const fHLeft  = fH[lftChildIdx];
-    double* const fHRight = fH[rhtChildIdx];
-    double* const fILeft  = fI[lftChildIdx];
-    double* const fIRight = fI[rhtChildIdx];
-    
-    // pointers to parent conditional likelihoods
-    double* const fHIdx = fH[pIdx];
-    double* const fIIdx = fI[pIdx];
-
-    if ((nodeHomologyI != 0) && (nodeHomologyI == nodeHomologyLft) && (nodeHomologyI == nodeHomologyRht))
-        {
-        // Case 1: Homologous nucleotide travels down both edges
-        const double probLeft  = tkf91Probs.homologousProbability[lftChildIdx];
-        const double probRight = tkf91Probs.homologousProbability[rhtChildIdx];
-        
-        for (size_t i = 0; i < n; i++)
-            {
-            const double* tpLftRow = tpLftData + i * n;
-            const double* tpRhtRow = tpRhtData + i * n;
-            double lft = 0.0, rht = 0.0;
-            for (size_t j = 0; j < n; j++)
-                {
-                lft += fHLeft[j]  * tpLftRow[j];
-                rht += fHRight[j] * tpRhtRow[j];
-                }
-            fHIdx[i] = (lft * probLeft) * (rht * probRight);
-            }
-        // fI values remain zero for this case
-        }
-    else if (nodeHomologyI != 0)
-        {
-        // Case 2: Homologous nucleotide travels down one specific edge
-        int homologousChildIdx, inhomologousChildIdx;
-        double* tpHomData;
-        double* tpInhomData;
-        double* fH_hom;
-        double* fH_inhom;
-        double* fI_inhom;
-        
-        if (nodeHomologyI == nodeHomologyLft)
-            {
-            homologousChildIdx   = lftChildIdx;
-            inhomologousChildIdx = rhtChildIdx;
-            tpHomData   = tpLftData;
-            tpInhomData = tpRhtData;
-            fH_hom   = fHLeft;
-            fH_inhom = fHRight;
-            fI_inhom = fIRight;
-            }
-        else
-            {
-            homologousChildIdx   = rhtChildIdx;
-            inhomologousChildIdx = lftChildIdx;
-            tpHomData   = tpRhtData;
-            tpInhomData = tpLftData;
-            fH_hom   = fHRight;
-            fH_inhom = fHLeft;
-            fI_inhom = fILeft;
-            }
-        
-        const double birthProb            = tkf91Probs.birthProbability[inhomologousChildIdx];
-        const double extinctionProb       = tkf91Probs.extinctionProbability[inhomologousChildIdx];
-        const double homologousProb_hom   = tkf91Probs.homologousProbability[homologousChildIdx];
-        const double homologousProb_inhom = tkf91Probs.homologousProbability[inhomologousChildIdx];
-        const double nonHomologousProb    = tkf91Probs.nonHomologousProbability[inhomologousChildIdx];
-        const double rhtStartProb         = extinctionProb * fI_inhom[n];
-        const double factor1              = nonHomologousProb - extinctionProb * birthProb;
-        
-        // precompute frequency-weighted sum (constant across i)
-        double freqSum = 0.0;
-        for (size_t j = 0; j < n; j++)
-            freqSum += (fH_inhom[j] + fI_inhom[j]) * equilibriumFrequencies[j];
-        const double freqTerm = factor1 * freqSum;
-        
-        for (size_t i = 0; i < n; i++)
-            {
-            const double* tpHomRow = tpHomData + i * n;
-            const double* tpInhomRow = tpInhomData + i * n;
-            double lft = 0.0;
-            double rht = 0.0;
-            for (size_t j = 0; j < n; j++)
-                {
-                lft += fH_hom[j] * tpHomRow[j];
-                rht += fI_inhom[j] * tpInhomRow[j];
-                }
-            fHIdx[i] = (lft * homologousProb_hom) * (rhtStartProb + freqTerm + rht * homologousProb_inhom);
-            }
-        // fI values remain zero for this case
-        }
-    else
-        {
-        // Case 3: No homology family's spanning tree intersects either child edge
-        const double extinctionProbabilityLeft  = tkf91Probs.extinctionProbability[lftChildIdx];
-        const double extinctionProbabilityRight = tkf91Probs.extinctionProbability[rhtChildIdx];
-        const double homologousProbabilityLeft  = tkf91Probs.homologousProbability[lftChildIdx];
-        const double homologousProbabilityRight = tkf91Probs.homologousProbability[rhtChildIdx];
-        const double birthProbabilityLeft  = tkf91Probs.birthProbability[lftChildIdx];
-        const double birthProbabilityRight = tkf91Probs.birthProbability[rhtChildIdx];
-        const double nonHomologousProbabilityLeft  = tkf91Probs.nonHomologousProbability[lftChildIdx];
-        const double nonHomologousProbabilityRight = tkf91Probs.nonHomologousProbability[rhtChildIdx];
-        
-        const double lfactor = nonHomologousProbabilityLeft  - extinctionProbabilityLeft  * birthProbabilityLeft;
-        const double rfactor = nonHomologousProbabilityRight - extinctionProbabilityRight * birthProbabilityRight;
-        
-        const double rht1Base = extinctionProbabilityLeft  * fILeft[n];
-        const double rht2Base = extinctionProbabilityRight * fIRight[n];
-        
-        // precompute frequency-weighted sums (constant across i)
-        double freqSumLeft = 0.0, freqSumRight = 0.0;
-        for (size_t j = 0; j < n; j++)
-            {
-            freqSumLeft  += (fHLeft[j]  + fILeft[j])  * equilibriumFrequencies[j];
-            freqSumRight += (fHRight[j] + fIRight[j]) * equilibriumFrequencies[j];
-            }
-        const double freqTermLeft  = lfactor * freqSumLeft;
-        const double freqTermRight = rfactor * freqSumRight;
-        
-        for (size_t i = 0; i < n; i++)
-            {
-            const double* tpLftRow = tpLftData + i * n;
-            const double* tpRhtRow = tpRhtData + i * n;
-            
-            double lft1 = 0.0, lft2 = 0.0;
-            double rht1 = 0.0, rht2 = 0.0;
-            
-            for (size_t j = 0; j < n; j++)
-                {
-                const double tpLftIJ = tpLftRow[j];
-                const double tpRhtIJ = tpRhtRow[j];
-                
-                lft1 += fHLeft[j]  * tpLftIJ;
-                lft2 += fHRight[j] * tpRhtIJ;
-                rht1 += fILeft[j]  * tpLftIJ;
-                rht2 += fIRight[j] * tpRhtIJ;
-                }
-            
-            lft1 *= homologousProbabilityLeft;
-            lft2 *= homologousProbabilityRight;
-            rht1 = rht1Base + freqTermLeft  + rht1 * homologousProbabilityLeft;
-            rht2 = rht2Base + freqTermRight + rht2 * homologousProbabilityRight;
-            
-            fHIdx[i] = lft1 * rht2 + lft2 * rht1;
-            fIIdx[i] = rht1 * rht2;
-            }
-        
-        // Compute fI[p][numStates] (gap state)
-        const double left  = fILeft[n]  - birthProbabilityLeft  * freqSumLeft;
-        const double right = fIRight[n] - birthProbabilityRight * freqSumRight;
-        fIIdx[n] = left * right;
-        }
-}
-
-void LikelihoodCalculator::computeFForLeafNode(Node* p, int* sig, size_t site) {
-
-    const int pIdx = p->getIndex();
-    const int leafIdx = getLeafIndex(p);
-
-    // initialize all values to zero
-    double* const fHPtr = fH[pIdx];
-    double* const fIPtr = fI[pIdx];
-    std::memset(fHPtr, 0, numStates * sizeof(double));
-    std::memset(fIPtr, 0, (numStates + 1) * sizeof(double));
-    
-    // set homology tracking for this leaf
-    tkf91Combos.nodeHomology[pIdx] = sig[leafIdx];
-    tkf91Combos.numHomologousEmissions[pIdx] = (sig[leafIdx] != 0) ? 1 : 0;
-    
-    // set values based on signature (gap vs character)
-    if (sig[leafIdx] == 0)
-        {
-        // gap at this position
-        fIPtr[numStates] = 1.0;
-        }
-    else
-        {
-        // character at this position
-        const size_t charState = (*alignment)(leafIdx, site);
-        if (charState < numStates)
-            {
-            fHPtr[charState] = 1.0;
-            }
-        else
-            {
-            // this shouldn't happen if signature is correct
-            Msg::warning("Character state >= numStates at leaf " + std::to_string(pIdx));
-            fIPtr[numStates] = 1.0;
-            }
-        }
-}
-
-double LikelihoodCalculator::computeLnLikelihood(void) {
-
-    // get the number of columns in the alignment
-    numSegments = alignment->getNumSegments();
-    if (numSegments == 0)
-        return 0.0;
-
-    // set TKF91 parameters
-    setBirthDeathProbabilities();
-    
-    // set the stationary frequencies
-    setStationaryFrequencies();
-
-    // get the tree
-    tree = myTree->getTree(taxonMask);
-    if (tree == nullptr)
-        Msg::error("Could not find tree when initializing TKF91 calculator");
-    
-    // cache transition probability matrix pointers (avoids repeated lookups per site)
-    cacheTransitionMatrices();
-    
-    // compute the null emission factor (all gaps)
-    // (use member signature array, zero it out for null signature)
-    std::memset(signature, 0, numTaxa * sizeof(int));
-    double nullFactor = computeRootFI(signature, -1);
-    
-    // initialize probability with immortal link contribution
-    // P(0) = prod_{n in T} (1 - B_n) / G^0(r, -)
-    double prob = log(tkf91Probs.immortalProbability) - log(nullFactor);
-    
-#   if defined(DEBUG_TKF91)
-    std::cout << "immortalProbability = " << tkf91Probs.immortalProbability << std::endl;
-    std::cout << "Null emission factor = " << nullFactor << std::endl;
-    std::cout << "Initial P(0) = " << prob << std::endl;
-#   endif
-    
-    // process each column of the alignment
-    // P(K) = P(K-v) * (-G^v(r,-)) / G^0(r,-)
-    for (size_t segment=0; segment<numSegments; segment++)
-        {
-        // build signature for this column (1 if character, 0 if gap)
-        for (size_t i=0; i<numTaxa; i++)
-            {
-            const size_t charState = (*alignment)(i, segment);
-            signature[i] = (charState == numStates) ? 0 : 1;
-            }
-        
-        // compute emission factor for this column
-        const double Gv = computeRootFI(signature, segment);
-        
-        // update probability: P(K) = P(K-v) * (-G^v) / G^0
-        const double factor = -Gv / nullFactor;
-        prob += log(factor);
-        
-#       if defined(DEBUG_TKF91)
-        std::cout << "Site " << site << ": signature=(";
-        for (size_t i = 0; i < numTaxa; i++)
-            std::cout << signature[i] << (i < numTaxa-1 ? "," : "");
-        std::cout << std::scientific << std::setprecision(10);
-        std::cout << "), Gv=" << Gv << ", factor=" << factor << ", prob=" << prob << std::endl;
-#       endif
-        }
-        
-    return prob;
-}
-
-double LikelihoodCalculator::computeRootFI(int* sig, size_t site) {
-
-    // initialize all fH, fI, and homology tracking values
-    const size_t numStates1 = numStates + 1;
-    std::memset(fH[0], 0, numNodes * numStates * sizeof(double));
-    std::memset(fI[0], 0, numNodes * numStates1 * sizeof(double));
-    std::memset(tkf91Combos.nodeHomology, 0, numNodes * sizeof(int));
-    std::memset(tkf91Combos.numHomologousEmissions, 0, numNodes * sizeof(int));
-
-    // count total emissions for the homology class (class 1 = has character)
-    int numHomologousEmissionsForClass1 = 0;
-    for (size_t i = 0; i < numTaxa; i++)
-        {
-        if (sig[i] != 0)
-            numHomologousEmissionsForClass1++;
-        }
-    
-    // get post-order traversal (tips to root)
-    const std::vector<Node*>& postOrder = tree->getPostOrder();
-    
-    // first pass: initialize leaves
-    for (Node* p : postOrder)
-        {
-        if (p->getIsLeaf() == true)
-            computeFForLeafNode(p, sig, site);
-        }
-    
-    // second pass: propagate homology information from descendants to ancestors
-    for (Node* p : postOrder)
-        {
+        Node* p = poNode[i];
         if (p->getAncestor() != nullptr)
             {
-            const int pIdx = p->getIndex();
-            const int pAncIdx = p->getAncestor()->getIndex();
-            
-            const int numHomologousEmission = tkf91Combos.numHomologousEmissions[pIdx];
-            const int nodeHomologyI = tkf91Combos.nodeHomology[pIdx];
-            
-            if (nodeHomologyI == 0)
-                {
-                // gap node - do nothing
-                }
-            else if (numHomologousEmission == numHomologousEmissionsForClass1)
-                {
-                // this node is the MRCA of all homologous taxa - do not propagate
-                }
-            else
-                {
-                // not yet MRCA, propagate to ancestor
-                const int nodeHomologyAnc = tkf91Combos.nodeHomology[pAncIdx];
-                if (nodeHomologyAnc == 0 || nodeHomologyAnc == nodeHomologyI)
-                    {
-                    tkf91Combos.nodeHomology[pAncIdx] = nodeHomologyI;
-                    tkf91Combos.numHomologousEmissions[pAncIdx] += numHomologousEmission;
-                    }
-                }
+            DoubleMatrix& tp = tiProbs->getTransitionProbability(p->getBranchLength());
+            poTiMatrix[i] = tp.begin();
             }
-        }
-    
-    // third pass: compute conditional probabilities
-    for (Node* p : postOrder)
-        {
-        if (p->getIsLeaf() == false)
-            computeFForInternalNode(p);
-        }
-    
-    // compute result at root with correction
-    const int rootIdx = tree->getRoot()->getIndex();
-    const double* const fIRoot = fI[rootIdx];
-    const double* const fHRoot = fH[rootIdx];
-    const double birthProbRoot = tkf91Probs.birthProbability[rootIdx];
-    
-    double res = fIRoot[numStates];
-    double freqSum = 0.0;
-    for (size_t i=0; i<numStates; i++)
-        freqSum += (fIRoot[i] + fHRoot[i]) * equilibriumFrequencies[i];
-    res -= birthProbRoot * freqSum;
-    
-    return res;
-}
-
-void LikelihoodCalculator::freeTKF91Probabilities(void) {
-
-    delete [] tkf91Probs.beta;
-    delete [] tkf91Probs.birthProbability;
-    delete [] tkf91Probs.extinctionProbability;
-    delete [] tkf91Probs.homologousProbability;
-    delete [] tkf91Probs.nonHomologousProbability;
-}
-
-void LikelihoodCalculator::freeTKF91Combinatorics(void) {
-
-    delete [] tkf91Combos.nodeHomology;
-    delete [] tkf91Combos.numHomologousEmissions;
-}
-
-void LikelihoodCalculator::freeConditionalProbs(void) {
-
-    delete [] fH[0];
-    delete [] fH;
-    delete [] fI[0];
-    delete [] fI;
-}
-
-int LikelihoodCalculator::getLeafIndex(Node* n) {
-
-    return leafIndexMap[n->getIndex()];
-}
-
-void LikelihoodCalculator::initializeLeafIndices(void) {
-
-    leafIndexMap.resize(2*numTaxa-1, -1);
-    
-    // leaf nodes have indices 0, 1, 2, ... which directly corresponds to sequence order
-    const std::vector<Node*>& postOrder = tree->getPostOrder();
-    for (Node* p : postOrder)
-        {
-        if (p->getIsLeaf() == true)
+        else
             {
-            const int pIdx = p->getIndex();
-            leafIndexMap[pIdx] = pIdx;
+            poTiMatrix[i] = nullptr;
             }
         }
-#   if defined(DEBUG_TKF91)
-    for (size_t i = 0; i < leafIndexMap.size(); i++)
-        std::cout << i << " -> " << leafIndexMap[i] << std::endl;
-#   endif
 }
 
 void LikelihoodCalculator::setBirthDeathProbabilities(void) {
@@ -551,46 +223,40 @@ void LikelihoodCalculator::setBirthDeathProbabilities(void) {
 
     const double lambda = tkf91Probs.insertionRate;
     const double mu     = tkf91Probs.deletionRate;
-    
+
+    // TKF91 requires lambda < mu for a finite equilibrium sequence length. Without
+    // it beta and the root factors are meaningless rather than merely extreme.
+    if (isPositiveFinite(lambda) == false || isNotFinite(mu) || !(mu > lambda))
+        Msg::error("TKF91 requires 0 < lambda < mu");
+
     tkf91Probs.immortalProbability = 1.0;
-    const std::vector<Node*>& postOrder = tree->getPostOrder();
-    for (Node* p : postOrder)
+    for (size_t i=0; i<numNodes; i++)
         {
-        const int pIdx = p->getIndex();
+        Node* p = poNode[i];
         const double v = p->getBranchLength();
         if (p->getAncestor() == nullptr)
             {
-            // root node
-            tkf91Probs.beta[pIdx] = 1.0 / mu;
-            tkf91Probs.homologousProbability[pIdx] = 0.0;
+            // Root: tau = infinity by the stationarity assumption, so beta -> 1/mu,
+            // giving B = lambda/mu, E = 1 and H = N = 0.
+            tkf91Probs.beta[i] = 1.0 / mu;
+            tkf91Probs.homologousProbability[i] = 0.0;
             }
         else
             {
-            // internal node or tip
             const double expPart = std::exp((lambda - mu) * v);
-            tkf91Probs.beta[pIdx] = (1.0 - expPart) / (mu - lambda * expPart);
-            tkf91Probs.homologousProbability[pIdx] = std::exp(-mu * v) * (1.0 - lambda * tkf91Probs.beta[pIdx]);
+            tkf91Probs.beta[i] = (1.0 - expPart) / (mu - lambda * expPart);
+            tkf91Probs.homologousProbability[i] = std::exp(-mu * v) * (1.0 - lambda * tkf91Probs.beta[i]);
             }
-        tkf91Probs.birthProbability[pIdx]         = lambda * tkf91Probs.beta[pIdx];
-        tkf91Probs.extinctionProbability[pIdx]    = mu * tkf91Probs.beta[pIdx];
-        tkf91Probs.nonHomologousProbability[pIdx] = (1.0 - mu * tkf91Probs.beta[pIdx]) * 
-                                                    (1.0 - tkf91Probs.birthProbability[pIdx]) - 
-                                                    tkf91Probs.homologousProbability[pIdx];
-        tkf91Probs.immortalProbability *= (1.0 - tkf91Probs.birthProbability[pIdx]);
+        tkf91Probs.birthProbability[i]      = lambda * tkf91Probs.beta[i];
+        tkf91Probs.extinctionProbability[i] = mu * tkf91Probs.beta[i];
+        // N = (1 - e^{-mu t} - mu beta)(1 - lambda beta), written here as
+        // (1 - mu beta)(1 - B) - H, which is the same expression rearranged.
+        tkf91Probs.nonHomologousProbability[i] = (1.0 - mu * tkf91Probs.beta[i]) *
+                                                 (1.0 - tkf91Probs.birthProbability[i]) -
+                                                 tkf91Probs.homologousProbability[i];
+        // the immortal link prefactor of Theorem 1 runs over all nodes, root included
+        tkf91Probs.immortalProbability *= (1.0 - tkf91Probs.birthProbability[i]);
         }
-    
-#   if defined(DEBUG_TKF91)
-    std::cout << "TKF91 event probabilities:" << std::endl;
-    std::cout << std::fixed << std::setprecision(6);
-    for (size_t i = 0; i < numNodes; i++)
-        {
-        std::cout << "  Node " << i << ": B=" << tkf91Probs.birthProbability[i]
-                  << " E=" << tkf91Probs.extinctionProbability[i]
-                  << " H=" << tkf91Probs.homologousProbability[i]
-                  << " N=" << tkf91Probs.nonHomologousProbability[i] << std::endl;
-        }
-    std::cout << "  Immortal prob = " << tkf91Probs.immortalProbability << std::endl;
-#   endif
 }
 
 void LikelihoodCalculator::setStationaryFrequencies(void) {
@@ -598,13 +264,314 @@ void LikelihoodCalculator::setStationaryFrequencies(void) {
     if (myFrequencies == nullptr)
         {
         const double x = 1.0 / numStates;
-        for (double* p = equilibriumFrequencies, *end = equilibriumFrequencies + numStates; p < end; p++)
-            (*p) = x;
+        for (size_t i=0; i<numStates; i++)
+            equilibriumFrequencies[i] = x;
         }
     else
         {
         std::vector<double>& x = myFrequencies->getFrequencies();
-        for (double* p = equilibriumFrequencies, *q = x.data(), *end = equilibriumFrequencies + numStates; p < end; p++, q++)
-            (*p) = (*q);
+        if (x.size() != numStates)
+            Msg::error("Stationary frequency vector has the wrong dimension in the TKF91 calculator");
+        for (size_t i=0; i<numStates; i++)
+            equilibriumFrequencies[i] = x[i];
         }
+}
+
+/* Turn the fixed alignment into one emission bitmask per column. Bits are
+   post-order positions of the emitting leaves. */
+void LikelihoodCalculator::buildColumns(void) {
+
+    columnEmit.assign(numSegments, 0);
+
+    for (size_t segment=0; segment<numSegments; segment++)
+        {
+        uint64_t emit = 0;
+        for (size_t i=0; i<numNodes; i++)
+            {
+            if (poIsLeaf[i] == 0)
+                continue;
+            const size_t charState = (size_t)(*alignment)(poSeqRow[i], segment);
+            if (charState == numStates)
+                continue;                       // gap
+            if (charState > numStates)
+                {
+                Msg::error("Unrepresentable character state " + std::to_string(charState) +
+                           " at alignment row " + std::to_string(poSeqRow[i]) +
+                           ", column " + std::to_string(segment) +
+                           " (ambiguity codes are not supported by the TKF91 calculator)");
+                }
+            emit |= ((uint64_t)1 << i);
+            }
+
+        if (emit == 0)
+            Msg::error("All-gap column " + std::to_string(segment) + " in the TKF91 alignment");
+
+        columnEmit[segment] = emit;
+        }
+}
+
+void LikelihoodCalculator::enumerateAlivePatterns(int r, uint64_t emitMask, std::vector<uint64_t>& out) {
+
+    out.clear();
+
+    if (poIsLeaf[r])
+        {
+        // a leaf birth node is alive by definition, so it must be the emitting leaf
+        if ((emitMask >> r) & 1)
+            out.push_back((uint64_t)1 << r);
+        return;
+        }
+
+    std::vector<uint64_t> lftOptions;
+    std::vector<uint64_t> rhtOptions;
+
+    for (int pass=0; pass<2; pass++)
+        {
+        const int c = (pass == 0) ? poLeft[r] : poRight[r];
+        std::vector<uint64_t>& options = (pass == 0) ? lftOptions : rhtOptions;
+        options.clear();
+
+        const uint64_t needed = emitMask & poSubtree[c];
+        if (needed == 0)
+            options.push_back(0);               // the whole child subtree dies
+
+        if (poIsLeaf[c])
+            {
+            if (needed != 0)
+                options.push_back((uint64_t)1 << c);
+            }
+        else
+            {
+            std::vector<uint64_t> sub;
+            enumerateAlivePatterns(c, emitMask, sub);
+            for (uint64_t s : sub)
+                options.push_back(s);
+            }
+        }
+
+    const uint64_t rBit = ((uint64_t)1 << r);
+    for (uint64_t l : lftOptions)
+        {
+        for (uint64_t h : rhtOptions)
+            out.push_back(rBit | l | h);
+        }
+}
+
+double LikelihoodCalculator::patternWeight(int r, uint64_t aliveMask, size_t column) {
+
+    const size_t n = numStates;
+    const size_t lo = (size_t)r + 1 - poSubtreeSize[r];
+
+    for (size_t i=lo; i<=(size_t)r; i++)
+        {
+        if (((aliveMask >> i) & 1) == 0)
+            continue;
+
+        double* const fi = fWork.data() + i * n;
+
+        if (poIsLeaf[i])
+            {
+            // f(leaf)[alpha] = 1 for the observed character, 0 otherwise
+            std::memset(fi, 0, n * sizeof(double));
+            const size_t charState = (size_t)(*alignment)(poSeqRow[i], column);
+            fi[charState] = 1.0;
+            continue;
+            }
+
+        for (size_t a=0; a<n; a++)
+            fi[a] = 1.0;
+
+        for (int pass=0; pass<2; pass++)
+            {
+            const int c = (pass == 0) ? poLeft[i] : poRight[i];
+
+            if (((aliveMask >> c) & 1) == 0)
+                {
+                // the child is labelled "-", contributing p(-|X^gamma) = E_c, and
+                // everything below it is also "-", contributing p(-|-) = 1
+                const double e = tkf91Probs.extinctionProbability[c];
+                for (size_t a=0; a<n; a++)
+                    fi[a] *= e;
+                continue;
+                }
+
+            const double* const fc = fWork.data() + (size_t)c * n;
+            const double* const tp = poTiMatrix[c];
+            const double hc = tkf91Probs.homologousProbability[c];
+            const double nc = tkf91Probs.nonHomologousProbability[c];
+
+            // sum_gamma ( H_c p_c(alpha->gamma) + N_c pi(gamma) ) f(c)[gamma].
+            // The N part does not depend on alpha, so it is hoisted.
+            double piDotF = 0.0;
+            for (size_t g=0; g<n; g++)
+                piDotF += equilibriumFrequencies[g] * fc[g];
+            const double newTerm = nc * piDotF;
+
+            for (size_t a=0; a<n; a++)
+                {
+                const double* const row = tp + a * n;   // row = from-state, column = to-state
+                double dot = 0.0;
+                for (size_t g=0; g<n; g++)
+                    dot += row[g] * fc[g];
+                fi[a] *= (hc * dot + newTerm);
+                }
+            }
+        }
+
+    // the birth itself: p(B^alpha|-) = B_r pi(alpha)
+    const double* const fr = fWork.data() + (size_t)r * n;
+    double total = 0.0;
+    for (size_t a=0; a<n; a++)
+        total += equilibriumFrequencies[a] * fr[a];
+
+    return tkf91Probs.birthProbability[r] * total;
+}
+
+void LikelihoodCalculator::buildEventTable(uint64_t emitMask, size_t column, std::vector<TKF91Event>& out) {
+
+    out.clear();
+
+    for (size_t r=0; r<numNodes; r++)
+        {
+        if ((emitMask & ~poSubtree[r]) != 0)
+            continue;                           // some emitting leaf lies outside subtree(r)
+
+        enumerateAlivePatterns((int)r, emitMask, patternWork);
+
+        for (uint64_t alive : patternWork)
+            {
+            const double w = patternWeight((int)r, alive, column);
+            if (w == 0.0)
+                continue;
+            TKF91Event e;
+            e.birthBit  = ((uint64_t)1 << r);
+            e.aliveMask = alive;
+            e.clearMask = poSubtree[r] | poDisjointLower[r];
+            e.weight    = w;
+            out.push_back(e);
+            }
+        }
+}
+
+void LikelihoodCalculator::applyEvents(const std::vector<TKF91Event>& events, const StateMap& in, StateMap& out) {
+
+    out.clear();
+
+    for (const auto& entry : in)
+        {
+        const uint64_t state = entry.first;
+        const double a = entry.second;
+
+        for (const TKF91Event& e : events)
+            {
+            // The birth node is the only node in the event whose liveness has to
+            // be tested. This is the legality condition r(e) in S.
+            if ((state & e.birthBit) == 0)
+                continue;
+
+            const uint64_t next = (state & ~e.clearMask) | e.aliveMask;
+            out[next] += a * e.weight;
+            }
+        }
+}
+
+void LikelihoodCalculator::silentClosure(StateMap& a) {
+
+    closureCurrent = a;
+
+    double totalMass = 0.0;
+    for (const auto& entry : a)
+        totalMass += std::fabs(entry.second);
+
+    for (size_t iter=0; iter<maxClosureIterations; iter++)
+        {
+        applyEvents(silentEvents, closureCurrent, closureNext);
+        if (closureNext.empty())
+            return;
+
+        double addedMass = 0.0;
+        for (const auto& entry : closureNext)
+            {
+            a[entry.first] += entry.second;
+            addedMass += std::fabs(entry.second);
+            }
+
+        if (addedMass <= closureTolerance * (totalMass > 0.0 ? totalMass : 1.0))
+            return;
+        totalMass += addedMass;
+
+        closureCurrent.swap(closureNext);
+        }
+
+    Msg::error("Silent-event series failed to converge in the TKF91 calculator");
+}
+
+double LikelihoodCalculator::computeLnLikelihood(void) {
+
+    tree = myTree->getTree(taxonMask);
+    if (tree == nullptr)
+        Msg::error("Could not find tree when computing the TKF91 likelihood");
+    alignment = myAlignment->getAlignment();
+    if (alignment == nullptr)
+        Msg::error("Could not find alignment when computing the TKF91 likelihood");
+
+    numSegments = alignment->getNumSegments();
+    if (numSegments == 0)
+        return 0.0;
+
+    initializeTopology();
+    setBirthDeathProbabilities();
+    setStationaryFrequencies();
+    cacheTransitionMatrices();
+    buildColumns();
+
+    // silent events do not depend on the column, so their table is built once
+    buildEventTable(0, silentColumn, silentEvents);
+
+    // The chain starts with every node live, carrying the immortal link prefactor
+    // prod_n (1 - B_n) of Theorem 1.
+    const uint64_t fullState = (numNodes == 64) ? ~(uint64_t)0 : (((uint64_t)1 << numNodes) - 1);
+    alphaCurrent.clear();
+    alphaCurrent[fullState] = 1.0;
+
+    double lnScale = std::log(tkf91Probs.immortalProbability);
+
+    silentClosure(alphaCurrent);
+
+    for (size_t segment=0; segment<numSegments; segment++)
+        {
+        buildEventTable(columnEmit[segment], segment, columnEvents);
+
+        applyEvents(columnEvents, alphaCurrent, alphaNext);
+        if (alphaNext.empty())
+            return impossibleLnLikelihood;
+
+        alphaCurrent.swap(alphaNext);
+        silentClosure(alphaCurrent);
+
+        double biggest = 0.0;
+        for (const auto& entry : alphaCurrent)
+            {
+            const double m = std::fabs(entry.second);
+            if (m > biggest)
+                biggest = m;
+            }
+        if (isPositiveFinite(biggest) == false)
+            return impossibleLnLikelihood;
+
+        const double inv = 1.0 / biggest;
+        for (auto& entry : alphaCurrent)
+            entry.second *= inv;
+        lnScale += std::log(biggest);
+        }
+
+    // every state is joined to the end state by an edge of probability one
+    double total = 0.0;
+    for (const auto& entry : alphaCurrent)
+        total += entry.second;
+
+    if (isPositiveFinite(total) == false)
+        return impossibleLnLikelihood;
+
+    return lnScale + std::log(total);
 }

@@ -23,6 +23,7 @@ class UserSettings {
         int                     getFirstBurnLength(void) { return firstBurnLength; }
         MatrixExpBackend        getMatrixExpBackend(void) { return matrixExpBackend; }
         std::string             getOutFile(void) { return outFile; }
+        int                     getMappingFrequency(void) { return mappingFrequency; }
         int                     getNumChains(void) { return numChains; }
         int                     getNumMcmcCycles(void) { return numMcmcCycles; }
         int                     getNumIndelCategories(void) { return numIndelCategories; }
@@ -68,6 +69,7 @@ class UserSettings {
         int                     burnLength;
         int                     sampleLength;
         int                     sampleFrequency;
+        int                     mappingFrequency;
 };
 
 #endif
