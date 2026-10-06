@@ -63,10 +63,59 @@ class ProgramAnnouncementIntroductionSection: Content {
       "The output is a probability distribution of evolutionary trees conditioned on the cognate coding scheme, often accompanied by posterior distributions for the other parameters of the phylogenetic model. ";
     };
 
-     style.Par {
-      "Next paragraph. ";
-      
-    };
+style.Par {
+  "The comparative method in linguistics treats cognates much like biologists treat anatomical or morphological data. ";
+  "A biologist, through detailed study of the anatomy of a group, assigns discrete states to species for a given trait. ";
+  "A study that includes vertebrates, for example, might include a character such as “presence or absence of hair,” with mammals coded as state 1 and all other vertebrates coded as state 0. ";
+  "Similarly, a linguist codes a cognate observed in several languages using states that reflect similarities and differences among the words. ";
+  "This procedure has been used to great success, allowing linguists to reconstruct language trees and estimate divergence times within a rigorous statistical framework. ";
+};
+
+style.Par {
+  "The morphological models used in these analyses are continuous-time Markov models. ";
+  "Such a model is fully specified by the set of states that the process can visit and the rates of change between all pairs of states. ";
+  "These rates are arranged in a rate matrix, Q, in which the off-diagonal entries are positive and represent the rate of change from state i to state j (q_{ij}, i neq j), while the diagonal entries are defined so that each row sums to zero, q_{ii} = -(q_{i1} + q_{i2} + ldots + q_{ik}). ";
+  "The morphological models implemented in MrBayes and BEAST are so-called $M_k$ models: for each cognate character with $k$ observed states, evolution is modeled as a continuous-time Markov process with $k$ states. ";
+};
+
+style.Par {
+  "The $M_k$ framework has several limitations. ";
+  "First, one must condition on the absence of constant patterns. ";
+  "Linguists (and biologists) typically do not code characters in which all languages share the same state, so likelihood calculations must be conditioned on such patterns being absent. ";
+  "Second, because state labels are arbitrary—one can relabel all 0s as 1s and all 1s as 0s for a given cognate without changing its meaning—the model should impose symmetry on the rates so that the probability of the character is invariant to state flipping. ";
+  "Third, because the same state label has different meanings across different cognates, information cannot be pooled across cognates to learn about the dynamics of language change. ";
+};
+
+style.Par {
+  "An alternative approach is to code the information contained in a word in the same way that biologists treat DNA sequences: as a sequence of states. ";
+  "In biology, a DNA sequence is a string of nucleotides drawn from the alphabet of nucleotides {A, C, G, T}. ";
+  "Unlike morphological codings, one cannot arbitrarily relabel the states of a sequence without changing its meaning; invariant sites are common and informative; and one can learn about substitution dynamics by pooling information across sites. ";
+  "In linguistics, the information in a word can be represented as a sequence of phonemes, one for each segment of the word. ";
+  "The phoneme alphabet is typically much larger than that of DNA, which contains only four nucleotides (or 20 amino acids in proteins). ";
+};
+
+style.Par {
+  "The main obstacle to treating cognates as phoneme sequences is alignment. ";
+  "In biology, alignment establishes the fine-scale homology of the nucleotides. ";
+  "The aligned DNA sequences are already assumed to be homologous, using criteria such as sequence similarity, genomic context and synteny, and phylogenetic coherence; the alignment procedure establishes which nucleotides from one sequence are homologous to the nucleotides of the other sequences. ";
+  "In biology, homologous DNA sequences are aligned using algorithms that maximize similarity among long sequences. ";
+  "These procedures are more reliable when the sequences are long, because they can use conserved regions of the sequences to anchor the alignment. ";
+  "Words, however, typically contain only a handful of segments, so alignment is highly uncertain. ";
+  "The most principled way to account for this uncertainty is by marginalization: parameter estimates are averaged over all possible alignments, with each alignment weighted by its probability under the model. ";
+};
+
+style.Par {
+  "A natural way to achieve such marginalization is to use a model of sequence evolution that allows sequences to grow or shrink through the insertion or deletion of segments over time. ";
+  "The TKF91 model, introduced by Thorne et al. (1991), is precisely such a model. ";
+  "It describes a historical process that allows a sequence to evolve through three types of events: substitution of one segment for another, deletion of a segment, or insertion of a new segment. ";
+  "Under the TKF91 model, probability calculations can account for any alignment pattern. ";
+  "When combined with Markov chain Monte Carlo (MCMC), the model allows exploration of alternative evolutionary histories while naturally marginalizing over alignment uncertainty. ";
+};
+
+style.Par {
+  "The TongueTwister program, described here, implements the TKF91 model in a fully Bayesian framework, using MCMC to numerically approximate the posterior probability distribution of the model parameters. ";
+};
+
   };
 
 
