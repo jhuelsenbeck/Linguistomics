@@ -1,22 +1,6 @@
-using Format, SegmentFeatures;
+using Format;
 
 //======================================================================
-
-flags WordGroups {
-  None(Lang.None),
-  Leipzig("Leipzig/Jakarta"),
-  Swadesh100("Swadesh 100"),
-  Swadesh207("Swadesh 207"),
-}
-
-enum WordTypes {
-  None(Lang.None),
-  Noun(Lang.Noun),
-  Verb(Lang.Verb),
-  Adjective(Lang.Adjective),
-  Number(Lang.Number),
-  Function(Lang.Function),
-}
 
 enum Opens {
   Close(Lang.Close),
@@ -29,7 +13,7 @@ enum Opens {
   High(Lang.High),
 }
 
-enum Backnesses {
+enum Backs {
   Front(Lang.Front),
   NearFront(Lang.NearFront),
   Central(Lang.Central),
@@ -62,7 +46,7 @@ flags SegmentFeatures {
   Rounded     (Lang.Rounded),
   Vocoid      (Lang.Vocoid),
   Semivowel   (Lang.SemiVowel),
-  LongVowel   (Lang.LongVowel),
+  Long        (Lang.LongVowel),
   Voiced      (Lang.Voiced),
   Velarized   (Lang.Velarized),
   Ejective    (Lang.Ejective),
@@ -109,7 +93,7 @@ class VocalSegment: Fact {
   field string          Ipa;
   field SegmentFeatures Features;
   var Opens             Open;
-  var Backnesses        Backness;
+  var Backs             Back;
   var Places            Place;
   var bool              Punctuation,
                         Gap,
@@ -138,7 +122,7 @@ class VocalSegment: Fact {
     if (Features.HasFlag(Vowel)) {
       Open;
       Space;
-      Backness;
+      Back;
     }
     else
       Place;
@@ -335,11 +319,11 @@ class SegmentConsonant: VocalSegment {
 //======================================================================
 
 class SegmentVowel: VocalSegment {
-  Constructor(ipa, SegmentFeatures features, Opens open, Backnesses backness, sampa=null) {
+  Constructor(ipa, SegmentFeatures features, Opens open, Backs back, sampa=null) {
     super.Constructor(ipa, sampa);
     Features = features | Vowel;
     Open     = open;
-    Backness = backness;
+    Back     = back;
   }
 }
 
